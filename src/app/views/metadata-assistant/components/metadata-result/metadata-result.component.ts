@@ -72,6 +72,15 @@ export class MetadataResultComponent {
     this.documentSelected.emit({ file, index });
   }
 
+  onFrenchDocumentFileSelected(file: File, index: number): void {
+    // Handle French document upload for comparison
+    console.log('French document selected for result index:', index, file.name);
+  }
+
+  onDocumentModeChanged(mode: string, index: number): void {
+    console.log('Document mode changed for result index:', index, mode);
+  }
+
   canUploadDocument(result: MetadataResult): boolean {
     return this.showTranslations &&
            !!result.frenchTranslatedDescription &&

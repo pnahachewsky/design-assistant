@@ -42,20 +42,8 @@
   border-left: 3px solid var(--primary-300);
 }
 
-.text-primary {
-  color: var(--primary-color);
-}
-
 .hover\:underline:hover {
   text-decoration: underline;
-}
-
-.text-400 {
-  color: var(--text-color-secondary);
-}
-
-.text-500 {
-  color: var(--text-color);
 }
 
 :host ::ng-deep .p-accordion .p-accordion-header-link {
@@ -78,6 +66,5 @@
 :host ::ng-deep .p-chip {
   background: var(--primary-100);
   color: var(--primary-700);
-  font-size: 0.85rem;
   padding: 0.25rem 0.5rem;
 }

@@ -20,7 +20,6 @@
 }
 
 .preview-table table {
-  font-size: 0.75rem;
   table-layout: fixed;
 }
 
@@ -34,18 +33,6 @@
   color: var(--text-color-secondary);
 }
 
-.text-overflow-ellipsis {
-  text-overflow: ellipsis;
-}
-
-.white-space-nowrap {
-  white-space: nowrap;
-}
-
-.overflow-hidden {
-  overflow: hidden;
-}
-
 .export-actions {
   display: flex;
   gap: 0.5rem;
@@ -54,17 +41,4 @@
 .export-note {
   padding-top: 0.5rem;
   border-top: 1px solid var(--surface-200);
-}
-
-.text-primary {
-  color: var(--primary-color);
-}
-
-.border-bottom-1 {
-  border-bottom-width: 1px;
-  border-bottom-style: solid;
-}
-
-.surface-border {
-  border-color: var(--surface-border);
 }

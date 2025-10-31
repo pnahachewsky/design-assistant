@@ -2,10 +2,32 @@ import { Injectable } from '@angular/core';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { MetadataResult } from './metadata-assistant.service';
 
+export type DocumentMode = 'english-only' | 'french-only' | 'both';
+
+export interface ComparisonResult {
+  englishMetadata: {
+    description: string;
+    keywords: string;
+  };
+  autoTranslatedFrench: {
+    description: string;
+    keywords: string;
+  };
+  frenchDocMetadata: {
+    description: string;
+    keywords: string;
+  };
+  suggested: {
+    description: string;
+    keywords: string;
+  };
+  rationale: string;
+}
+
 export interface MetadataProcessingState {
   isProcessing: boolean;
   currentUrl: string;
-  currentStep: 'idle' | 'scraping' | 'generating' | 'translating' | 'extracting-text' | 'processing-document' | 'evaluating' | 'complete';
+  currentStep: 'idle' | 'scraping' | 'generating' | 'translating' | 'extracting-text' | 'processing-document' | 'evaluating' | 'comparing' | 'complete';
   progress: number;
   totalUrls: number;
   processedUrls: number;
@@ -14,6 +36,10 @@ export interface MetadataProcessingState {
   selectedModel: string;
   translateToFrench: boolean;
   documentProcessingIndex: number | null;
+  documentMode: DocumentMode;
+  englishDocument: File | null;
+  frenchDocument: File | null;
+  comparisonResult: ComparisonResult | null;
 }
 
 @Injectable({
@@ -29,9 +55,13 @@ export class MetadataAssistantStateService {
     processedUrls: 0,
     results: [],
     error: null,
-    selectedModel: 'mistralai/mistral-small-3.2-24b-instruct:free',
+    selectedModel: 'openai/gpt-oss-20b:free',
     translateToFrench: false,
-    documentProcessingIndex: null
+    documentProcessingIndex: null,
+    documentMode: 'english-only',
+    englishDocument: null,
+    frenchDocument: null,
+    comparisonResult: null
   };
 
   private stateSubject = new BehaviorSubject<MetadataProcessingState>(this.initialState);
@@ -153,5 +183,36 @@ export class MetadataAssistantStateService {
 
   setDocumentProcessingIndex(index: number | null): void {
     this.updateState({ documentProcessingIndex: index });
+  }
+
+  // New document mode management methods
+  setDocumentMode(mode: DocumentMode): void {
+    this.updateState({
+      documentMode: mode,
+      englishDocument: null,
+      frenchDocument: null,
+      comparisonResult: null
+    });
+  }
+
+  setEnglishDocument(file: File | null): void {
+    this.updateState({ englishDocument: file });
+  }
+
+  setFrenchDocument(file: File | null): void {
+    this.updateState({ frenchDocument: file });
+  }
+
+  setComparisonResult(result: ComparisonResult | null): void {
+    this.updateState({ comparisonResult: result });
+  }
+
+  clearDocumentData(): void {
+    this.updateState({
+      documentMode: 'english-only',
+      englishDocument: null,
+      frenchDocument: null,
+      comparisonResult: null
+    });
   }
 }

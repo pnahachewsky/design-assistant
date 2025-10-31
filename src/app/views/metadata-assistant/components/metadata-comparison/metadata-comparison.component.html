@@ -1,0 +1,63 @@
+<div class="comparison-container" *ngIf="comparisonData">
+  <p-card [header]="'metadata.comparison.title' | translate" styleClass="mb-4">
+
+    <!-- Description Comparison -->
+    <div class="comparison-section mb-4">
+      <h3 class="text-xl font-semibold mb-3">
+        {{ 'metadata.comparison.description' | translate }}
+      </h3>
+
+      <!-- Diff View -->
+      <div class="diff-container mb-4" #descriptionDiff></div>
+
+      <!-- Suggested Version -->
+      <p-accordion [activeIndex]="0" styleClass="mb-3">
+        <p-accordionTab [header]="'metadata.comparison.suggested' | translate">
+          <div class="suggested-content">
+            <p class="text-content">{{ comparisonData.suggested.description }}</p>
+            <span class="character-count text-sm">
+              {{ comparisonData.suggested.description.length }} {{ 'metadata.results.metaDescription' | translate }}
+            </span>
+          </div>
+        </p-accordionTab>
+      </p-accordion>
+    </div>
+
+    <!-- Keywords Comparison -->
+    <div class="comparison-section mb-4">
+      <h3 class="text-xl font-semibold mb-3">
+        {{ 'metadata.comparison.keywords' | translate }}
+      </h3>
+
+      <!-- Diff View -->
+      <div class="diff-container mb-4" #keywordsDiff></div>
+
+      <!-- Suggested Version -->
+      <p-accordion [activeIndex]="0" styleClass="mb-3">
+        <p-accordionTab [header]="'metadata.comparison.suggested' | translate">
+          <div class="suggested-content">
+            <p class="text-content">{{ comparisonData.suggested.keywords }}</p>
+          </div>
+        </p-accordionTab>
+      </p-accordion>
+    </div>
+
+    <!-- Rationale -->
+    <div class="rationale-section">
+      <h3 class="text-xl font-semibold mb-3">
+        {{ 'metadata.comparison.rationale' | translate }}
+      </h3>
+      <p-card styleClass="rationale-card">
+        <p class="text-content whitespace-pre-wrap">{{ comparisonData.rationale }}</p>
+      </p-card>
+    </div>
+  </p-card>
+</div>
+
+<div class="no-comparison" *ngIf="!comparisonData">
+  <p-card>
+    <p class="text-center text-gray-600">
+      {{ 'metadata.comparison.noComparison' | translate }}
+    </p>
+  </p-card>
+</div>

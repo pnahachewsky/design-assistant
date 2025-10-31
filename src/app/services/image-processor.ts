@@ -19,8 +19,14 @@ export interface VisionAnalysisResult {
 export class ImageProcessorService {
   private readonly MAX_IMAGE_SIZE = 1024; // Max width/height for resizing
   private readonly OPENROUTER_API_URL = "https://openrouter.ai/api/v1/chat/completions";
-  // --- UPDATED: New Translation Model and specific prompt ---
-  private readonly TRANSLATION_MODEL_FOR_CRA = "mistralai/mistral-small-3.2-24b-instruct:free"; // Using Mistral Small for reliable free translation
+
+  // Translation models with fallback for rate limit handling
+  private readonly TRANSLATION_MODELS = [
+    'mistralai/mistral-small-3.2-24b-instruct:free',
+    'openai/gpt-oss-20b:free',
+    'meta-llama/llama-3.3-70b-instruct:free',
+    'google/gemma-3-27b-it:free'
+  ];
 
   private http = inject(HttpClient);
   private apiKeyService = inject(ApiKeyService);
@@ -310,13 +316,28 @@ export class ImageProcessorService {
       return from([""]);
     }
 
-    // --- UPDATED SYSTEM PROMPT FOR CRA-SPECIFIC TERMINOLOGY ---
+    return this.translateWithFallback(text, apiKey, identifier, 0);
+  }
+
+  private translateWithFallback(text: string, apiKey: string, identifier: string, attemptIndex: number): Observable<string> {
+    if (attemptIndex >= this.TRANSLATION_MODELS.length) {
+      return throwError(() => new Error('All translation models failed due to rate limits or errors'));
+    }
+
+    const translationModel = this.TRANSLATION_MODELS[attemptIndex];
+    console.log(`Attempting translation with model: ${translationModel} for ${identifier} (attempt ${attemptIndex + 1}/${this.TRANSLATION_MODELS.length})`);
+
     const systemPrompt = `You are a professional translator for the Canada Revenue Agency (CRA).
-                          Your task is to translate the following English text into clear, concise, and accurate Canadian French,
-                          using official CRA terminology and tone where applicable.
-                          CRITICAL INSTRUCTION: Provide ONLY the direct translation. DO NOT include any explanations, notes,
-                          disclaimers, or additional commentary of any kind. DO NOT include phrases like 'Here is the translation:'.
-                          DO NOT wrap your response in quotes. Simply translate the text directly.`;
+Your task is to translate the following English text into clear, concise, and accurate Canadian French,
+using official CRA terminology and tone where applicable.
+
+CRITICAL INSTRUCTIONS:
+- Provide ONLY the direct translation
+- DO NOT include any explanations, notes, disclaimers, or additional commentary of any kind
+- DO NOT include phrases like 'Here is the translation:'
+- DO NOT wrap your response in quotes
+- DO NOT show your reasoning or train of thought
+- Simply translate the text directly`;
 
     const messages = [
       { "role": "system", "content": systemPrompt },
@@ -324,7 +345,7 @@ export class ImageProcessorService {
     ];
 
     const payload = {
-      model: this.TRANSLATION_MODEL_FOR_CRA,
+      model: translationModel,
       messages: messages,
       temperature: 0.1,
       max_tokens: Math.max(500, Math.ceil(text.length * 2.5)),
@@ -337,7 +358,7 @@ export class ImageProcessorService {
     });
 
     interface OpenRouterTranslationResponse {
-      choices?: { message?: { content?: string } }[];
+      choices?: { message?: { content?: string; reasoning?: string } }[];
     }
 
     return this.http.post<OpenRouterTranslationResponse>(this.OPENROUTER_API_URL, payload, { headers }).pipe(
@@ -351,41 +372,60 @@ export class ImageProcessorService {
           console.error(`Invalid response structure from translation model for ${identifier}:`, response);
           throw new Error("Invalid response structure from translation model.");
         }
-        
-        let translation = response.choices[0]?.message?.content;
-        
-        // Check if content exists
+
+        const message = response.choices[0]?.message;
+
+        // Some reasoning models put output in 'reasoning' field instead of 'content'
+        // Try content first, then reasoning field
+        let translation = message?.content || message?.reasoning || '';
+
+        // Check if we got any content
         if (!translation || typeof translation !== 'string') {
           console.error(`No content in translation response for ${identifier}. Full response:`, JSON.stringify(response, null, 2));
           throw new Error("Translation model returned empty content.");
         }
-        
+
         translation = translation.trim();
-        
+
         // If still empty after trimming
         if (!translation) {
           console.error(`Translation content is empty after trimming for ${identifier}`);
           throw new Error("Translation model returned empty content after trimming.");
         }
-        
+
         // Basic cleanup (though prompt aims to prevent this)
         translation = translation.replace(/^Voici la traduction\s*:\s*/i, '');
         translation = translation.replace(/^Translation\s*:\s*/i, '');
         translation = translation.replace(/^Here is the translation\s*:\s*/i, '');
-        
+
         return translation;
       }),
       catchError((error: HttpErrorResponse) => {
+        console.warn(`Translation model ${translationModel} failed for ${identifier}:`, error);
+
+        // Check if it's a rate limit error
+        if (this.isRateLimitError(error)) {
+          console.log(`Rate limit detected for ${translationModel}, trying next model...`);
+          return this.translateWithFallback(text, apiKey, identifier, attemptIndex + 1);
+        }
+
+        // For other errors, still try fallback if available
+        if (attemptIndex < this.TRANSLATION_MODELS.length - 1) {
+          console.log(`Error with ${translationModel}, trying next model...`);
+          return this.translateWithFallback(text, apiKey, identifier, attemptIndex + 1);
+        }
+
+        // If no more models to try, throw the error
         let errorMessage = `Translation API Error (${error.status || 'Network Error'}): ${error.statusText || 'Unknown Error'}`;
         if (error.error && error.error.error && error.error.error.message) {
           errorMessage += ` - ${error.error.error.message}`;
         }
-        
+
         // Check if this is a key limit exceeded error for translation
         if (error.status === 403 && error.error?.error?.message?.toLowerCase().includes('key limit exceeded')) {
           errorMessage = 'KEY_LIMIT_EXCEEDED';
         }
-        
+
         console.error(`Error translating text for ${identifier}:`, errorMessage, error);
         return throwError(() => new Error(errorMessage));
       })

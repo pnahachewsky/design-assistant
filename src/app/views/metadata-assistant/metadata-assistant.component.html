@@ -134,7 +134,9 @@
             <!-- Document Upload -->
             <ca-document-upload
               [disabled]="state.isProcessing"
-              (fileSelected)="onDocumentFileSelected($event)">
+              (englishFileSelected)="onEnglishDocumentSelected($event)"
+              (frenchFileSelected)="onFrenchDocumentSelected($event)"
+              (modeChanged)="onDocumentModeChanged($event)">
             </ca-document-upload>
 
             <!-- Model Selector -->
@@ -226,15 +228,22 @@
         <div class="results-section mt-4" *ngIf="documentResults.length > 0">
           <ca-metadata-result
             [results]="documentResults"
-            [showTranslations]="false"
+            [showTranslations]="state.documentMode === 'english-only'"
             [isProcessing]="state.isProcessing"
             [processingIndex]="null">
           </ca-metadata-result>
 
+          <!-- Comparison View (shown when both documents processed) -->
+          <div class="mt-4" *ngIf="state.comparisonResult">
+            <ca-metadata-comparison
+              [comparisonData]="state.comparisonResult">
+            </ca-metadata-comparison>
+          </div>
+
           <!-- CSV Export -->
           <ca-metadata-csv-export
             [results]="documentResults"
-            [includeTranslations]="false">
+            [includeTranslations]="state.documentMode === 'english-only'">
           </ca-metadata-csv-export>
         </div>
       </p-tabpanel>

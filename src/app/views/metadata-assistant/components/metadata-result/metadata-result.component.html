@@ -141,7 +141,10 @@
             <div *ngIf="canUploadDocument(result)" class="document-upload-section mt-4">
               <ca-document-upload
                 [disabled]="isProcessingDocument(i)"
-                (fileSelected)="onDocumentFileSelected($event, i)">
+                [simplifiedMode]="showTranslations"
+                (englishFileSelected)="onDocumentFileSelected($event, i)"
+                (frenchFileSelected)="onFrenchDocumentFileSelected($event, i)"
+                (modeChanged)="onDocumentModeChanged($event, i)">
               </ca-document-upload>
             </div>
 

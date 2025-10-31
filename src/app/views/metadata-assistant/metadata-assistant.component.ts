@@ -10,7 +10,7 @@ import { TabsModule } from 'primeng/tabs';
 import { MessageService } from 'primeng/api';
 import { Subject, takeUntil } from 'rxjs';
 import { MetadataAssistantService, MetadataResult } from '../../services/metadata-assistant.service';
-import { MetadataAssistantStateService, MetadataProcessingState } from '../../services/metadata-assistant-state.service';
+import { MetadataAssistantStateService, MetadataProcessingState, ComparisonResult, DocumentMode } from '../../services/metadata-assistant-state.service';
 import { ApiKeyService } from '../../services/api-key.service';
 import { SharedModelSelectorComponent, ModelOption } from '../../components/model-selector/model-selector.component';
 import { ProgressIndicatorComponent } from '../../components/progress-indicator/progress-indicator.component';
@@ -18,6 +18,7 @@ import { UrlInputComponent } from './components/url-input/url-input.component';
 import { MetadataResultComponent } from './components/metadata-result/metadata-result.component';
 import { CsvExportComponent } from './components/csv-export/csv-export.component';
 import { DocumentUploadComponent } from './components/document-upload/document-upload.component';
+import { MetadataComparisonComponent } from './components/metadata-comparison/metadata-comparison.component';
 
 @Component({
   selector: 'ca-metadata-assistant',
@@ -36,7 +37,8 @@ import { DocumentUploadComponent } from './components/document-upload/document-u
     UrlInputComponent,
     MetadataResultComponent,
     CsvExportComponent,
-    DocumentUploadComponent
+    DocumentUploadComponent,
+    MetadataComparisonComponent
   ],
   providers: [MessageService],
   templateUrl: './metadata-assistant.component.html',
@@ -60,9 +62,13 @@ export class MetadataAssistantComponent implements OnInit, OnDestroy {
     processedUrls: 0,
     results: [],
     error: null,
-    selectedModel: 'mistralai/mistral-small-3.2-24b-instruct:free',
+    selectedModel: 'openai/gpt-oss-20b:free',
     translateToFrench: false,
-    documentProcessingIndex: null
+    documentProcessingIndex: null,
+    documentMode: 'english-only',
+    englishDocument: null,
+    frenchDocument: null,
+    comparisonResult: null
   };
 
   urlInput = '';
@@ -76,9 +82,19 @@ export class MetadataAssistantComponent implements OnInit, OnDestroy {
 
   models: ModelOption[] = [
     {
-      name: 'Mistral Small 3.2 24B',
-      value: 'mistralai/mistral-small-3.2-24b-instruct:free',
-      description: 'metadata.models.mistralDescription'
+      name: 'OpenAI GPT-OSS 20B',
+      value: 'openai/gpt-oss-20b:free',
+      description: 'metadata.models.gptOssDescription'
+    },
+    {
+      name: 'Claude 3 Haiku (paid)',
+      value: 'anthropic/claude-3-haiku',
+      description: 'metadata.models.claudeHaikuDescription'
+    },
+    {
+      name: 'GPT-4.1 Mini (paid)',
+      value: 'openai/gpt-4.1-mini',
+      description: 'metadata.models.gpt41MiniDescription'
     },
     {
       name: 'Meta Llama 3.3 70B',
@@ -94,6 +110,36 @@ export class MetadataAssistantComponent implements OnInit, OnDestroy {
       name: 'Tencent Hunyuan A13B',
       value: 'tencent/hunyuan-a13b-instruct:free',
       description: 'metadata.models.hunyuanDescription'
+    },
+    {
+      name: 'Qwen 3 4B',
+      value: 'qwen/qwen3-4b:free',
+      description: 'metadata.models.qwen3_4bDescription'
+    },
+    {
+      name: 'Qwen 3 8B',
+      value: 'qwen/qwen3-8b:free',
+      description: 'metadata.models.qwen3_8bDescription'
+    },
+    {
+      name: 'Qwen 3 14B',
+      value: 'qwen/qwen3-14b:free',
+      description: 'metadata.models.qwen3_14bDescription'
+    },
+    {
+      name: 'Qwen 3 30B',
+      value: 'qwen/qwen3-30b-a3b:free',
+      description: 'metadata.models.qwen3_30bDescription'
+    },
+    {
+      name: 'Qwen 3 235B',
+      value: 'qwen/qwen3-235b-a22b:free',
+      description: 'metadata.models.qwen3_235bDescription'
+    },
+    {
+      name: 'Microsoft MAI-DS R1',
+      value: 'microsoft/mai-ds-r1:free',
+      description: 'metadata.models.maiDsR1Description'
     }
   ];
 
@@ -306,6 +352,26 @@ export class MetadataAssistantComponent implements OnInit, OnDestroy {
     });
   }
 
+  onEnglishDocumentSelected(file: File): void {
+    this.selectedDocument = file;
+    this.documentLanguage = null;
+    this.documentText = '';
+  }
+
+  onFrenchDocumentSelected(file: File): void {
+    // Store French file for comparison
+    console.log('French document selected:', file.name);
+  }
+
+  onDocumentModeChanged(mode: string): void {
+    console.log('Document mode changed to:', mode);
+    this.selectedDocument = null;
+    this.documentLanguage = null;
+    this.documentText = '';
+    this.documentResults = [];
+  }
+
+  // Keep old handler for compatibility
   onDocumentFileSelected(file: File): void {
     this.selectedDocument = file;
     this.documentLanguage = null;
@@ -318,7 +384,18 @@ export class MetadataAssistantComponent implements OnInit, OnDestroy {
       return;
     }
 
-    if (!this.selectedDocument) {
+    const mode = this.state.documentMode;
+
+    // Validate files are present for the selected mode
+    if (mode === 'english-only' && !this.state.englishDocument) {
+      this.stateService.setError(this.translate.instant('metadata.document.errors.processingFailed'));
+      return;
+    }
+    if (mode === 'french-only' && !this.state.frenchDocument) {
+      this.stateService.setError(this.translate.instant('metadata.document.errors.processingFailed'));
+      return;
+    }
+    if (mode === 'both' && (!this.state.englishDocument || !this.state.frenchDocument)) {
       this.stateService.setError(this.translate.instant('metadata.document.errors.processingFailed'));
       return;
     }
@@ -327,20 +404,47 @@ export class MetadataAssistantComponent implements OnInit, OnDestroy {
       isProcessing: true,
       currentStep: 'extracting-text',
       totalUrls: 1,
-      processedUrls: 0,
-      currentUrl: this.selectedDocument.name
+      processedUrls: 0
     });
 
-    this.metadataService.processDocumentForMetadata(
-      this.selectedDocument,
-      this.state.selectedModel
-    ).pipe(
+    // Route to appropriate processing method based on mode
+    switch (mode) {
+      case 'english-only':
+        this.processEnglishOnly();
+        break;
+      case 'french-only':
+        this.processFrenchOnly();
+        break;
+      case 'both':
+        this.processBothDocuments();
+        break;
+    }
+  }
+
+  private processEnglishOnly(): void {
+    const englishFile = this.state.englishDocument!;
+
+    this.stateService.updateState({
+      currentUrl: englishFile.name,
+      currentStep: 'generating'
+    });
+
+    this.metadataService.processEnglishDocument(englishFile, this.state.selectedModel).pipe(
       takeUntil(this.destroy$)
     ).subscribe({
       next: (result) => {
-        this.documentLanguage = result.language;
-        this.documentText = result.text;
-        this.documentResults = [result.metadata];
+        this.documentLanguage = 'en';
+        this.documentResults = [{
+          url: englishFile.name,
+          scrapedContent: '',
+          metaDescription: result.englishMetadata.description,
+          metaKeywords: result.englishMetadata.keywords,
+          frenchTranslatedDescription: result.frenchTranslation.description,
+          frenchTranslatedKeywords: result.frenchTranslation.keywords,
+          language: 'en',
+          modelUsed: this.state.selectedModel,
+          fallbackUsed: false
+        }];
 
         this.stateService.updateState({
           isProcessing: false,
@@ -352,23 +456,144 @@ export class MetadataAssistantComponent implements OnInit, OnDestroy {
           severity: 'success',
           summary: this.translate.instant('metadata.progress.completeTitle'),
           detail: this.translate.instant('metadata.document.languageDetected') + ': ' +
-                  this.translate.instant(result.language === 'en' ? 'common.language.english' : 'common.language.french'),
+                  this.translate.instant('common.language.english'),
           life: 4000
         });
       },
       error: (error) => {
-        console.error('Document processing error:', error);
+        this.handleDocumentProcessingError(error);
+      }
+    });
+  }
+
+  private processFrenchOnly(): void {
+    const frenchFile = this.state.frenchDocument!;
+
+    this.stateService.updateState({
+      currentUrl: frenchFile.name,
+      currentStep: 'generating'
+    });
+
+    this.metadataService.processFrenchDocument(frenchFile).pipe(
+      takeUntil(this.destroy$)
+    ).subscribe({
+      next: (result) => {
+        this.documentLanguage = 'fr';
+        this.documentResults = [{
+          url: frenchFile.name,
+          scrapedContent: '',
+          metaDescription: result.description,
+          metaKeywords: result.keywords,
+          language: 'fr',
+          modelUsed: 'mistralai/mistral-small-3.2-24b-instruct:free',
+          fallbackUsed: false
+        }];
+
         this.stateService.updateState({
           isProcessing: false,
-          currentStep: 'idle'
+          currentStep: 'complete',
+          processedUrls: 1
         });
+
         this.messageService.add({
-          severity: 'error',
-          summary: this.translate.instant('metadata.document.errors.processingFailed'),
-          detail: error.message,
-          life: 5000
+          severity: 'success',
+          summary: this.translate.instant('metadata.progress.completeTitle'),
+          detail: this.translate.instant('metadata.document.languageDetected') + ': ' +
+                  this.translate.instant('common.language.french'),
+          life: 4000
         });
+      },
+      error: (error) => {
+        this.handleDocumentProcessingError(error);
       }
+    });
+  }
+
+  private processBothDocuments(): void {
+    const englishFile = this.state.englishDocument!;
+    const frenchFile = this.state.frenchDocument!;
+
+    this.stateService.updateState({
+      currentUrl: `${englishFile.name}, ${frenchFile.name}`,
+      currentStep: 'comparing'
+    });
+
+    this.metadataService.processBothDocuments(
+      englishFile,
+      frenchFile,
+      this.state.selectedModel
+    ).pipe(
+      takeUntil(this.destroy$)
+    ).subscribe({
+      next: (result) => {
+        this.documentLanguage = 'en';
+
+        // Store comparison result in state
+        const comparisonResult: ComparisonResult = {
+          englishMetadata: {
+            description: result.englishMetadata.description,
+            keywords: result.englishMetadata.keywords
+          },
+          autoTranslatedFrench: {
+            description: result.autoTranslatedFrench.description,
+            keywords: result.autoTranslatedFrench.keywords
+          },
+          frenchDocMetadata: {
+            description: result.frenchDocMetadata.description,
+            keywords: result.frenchDocMetadata.keywords
+          },
+          suggested: {
+            description: result.comparison.suggestedDescription,
+            keywords: result.comparison.suggestedKeywords
+          },
+          rationale: result.comparison.rationale
+        };
+
+        this.stateService.setComparisonResult(comparisonResult);
+
+        // Also store as regular result for display
+        this.documentResults = [{
+          url: `${englishFile.name} & ${frenchFile.name}`,
+          scrapedContent: '',
+          metaDescription: result.englishMetadata.description,
+          metaKeywords: result.englishMetadata.keywords,
+          frenchTranslatedDescription: result.autoTranslatedFrench.description,
+          frenchTranslatedKeywords: result.autoTranslatedFrench.keywords,
+          language: 'en',
+          modelUsed: this.state.selectedModel,
+          fallbackUsed: false
+        }];
+
+        this.stateService.updateState({
+          isProcessing: false,
+          currentStep: 'complete',
+          processedUrls: 1
+        });
+
+        this.messageService.add({
+          severity: 'success',
+          summary: this.translate.instant('metadata.progress.completeTitle'),
+          detail: this.translate.instant('metadata.comparison.title'),
+          life: 4000
+        });
+      },
+      error: (error) => {
+        this.handleDocumentProcessingError(error);
+      }
+    });
+  }
+
+  private handleDocumentProcessingError(error: Error): void {
+    console.error('Document processing error:', error);
+    this.stateService.updateState({
+      isProcessing: false,
+      currentStep: 'idle'
+    });
+    this.messageService.add({
+      severity: 'error',
+      summary: this.translate.instant('metadata.document.errors.processingFailed'),
+      detail: error.message,
+      life: 5000
     });
   }
 
@@ -377,6 +602,7 @@ export class MetadataAssistantComponent implements OnInit, OnDestroy {
     this.documentLanguage = null;
     this.documentText = '';
     this.documentResults = [];
+    this.stateService.clearDocumentData();
     this.stateService.updateState({
       isProcessing: false,
       currentStep: 'idle',
@@ -385,8 +611,21 @@ export class MetadataAssistantComponent implements OnInit, OnDestroy {
   }
 
   canProcessDocument(): boolean {
-    return this.apiKeyService.hasApiKey$.value &&
-           this.selectedDocument !== null &&
-           !this.state.isProcessing;
+    if (!this.apiKeyService.hasApiKey$.value || this.state.isProcessing) {
+      return false;
+    }
+
+    const mode = this.state.documentMode;
+
+    switch (mode) {
+      case 'english-only':
+        return this.state.englishDocument !== null;
+      case 'french-only':
+        return this.state.frenchDocument !== null;
+      case 'both':
+        return this.state.englishDocument !== null && this.state.frenchDocument !== null;
+      default:
+        return false;
+    }
   }
 }

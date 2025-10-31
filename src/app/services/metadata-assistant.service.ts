@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable, from, of, throwError } from 'rxjs';
-import { catchError, map, retry, timeout, switchMap } from 'rxjs/operators';
+import { catchError, map, retry, timeout, switchMap, delay, tap } from 'rxjs/operators';
 import { ApiKeyService } from './api-key.service';
 import { FileParseService } from './file-parse.service';
 
@@ -58,6 +58,14 @@ export class MetadataAssistantService {
   // Default fallback models in order of preference
   private readonly DEFAULT_FALLBACK_MODELS = [
     'mistralai/mistral-small-3.2-24b-instruct:free',
+    'meta-llama/llama-3.3-70b-instruct:free',
+    'google/gemma-3-27b-it:free'
+  ];
+
+  // Translation models with fallback for rate limit handling
+  private readonly TRANSLATION_MODELS = [
+    'mistralai/mistral-small-3.2-24b-instruct:free',
+    'openai/gpt-oss-20b:free',
     'meta-llama/llama-3.3-70b-instruct:free',
     'google/gemma-3-27b-it:free'
   ];
@@ -395,15 +403,18 @@ export class MetadataAssistantService {
 
   private isRateLimitError(error: unknown): boolean {
     if (!error) return false;
-    
-    const errorMessage = (error as Error)?.message || (error as object)?.toString() || '';
-    const errorLower = errorMessage.toLowerCase();
-    
-    return errorLower.includes('rate limit') || 
-           errorLower.includes('quota exceeded') || 
+
+    const errorAny = error as { status?: number; error?: { error?: { code?: number; message?: string } }; message?: string };
+    const errorMessage = errorAny.error?.error?.message || errorAny.message || '';
+    const errorLower = typeof errorMessage === 'string' ? errorMessage.toLowerCase() : '';
+
+    return errorLower.includes('rate limit') ||
+           errorLower.includes('quota exceeded') ||
            errorLower.includes('too many requests') ||
            errorLower.includes('429') ||
-           ((error as { status?: number })?.status === 429);
+           errorLower.includes('key limit exceeded') ||
+           errorAny.status === 403 ||
+           errorAny.status === 429;
   }
 
   private generateMetadata(content: string, model: string, language: 'en' | 'fr'): Observable<{description: string, keywords: string}> {
@@ -413,13 +424,51 @@ export class MetadataAssistantService {
     }
 
     // Generate description
-    const descriptionPrompt = language === 'en' 
-      ? `As a search engine optimization expert, analyze the following content carefully and provide a concise, complete summary suitable for a meta description in English. The summary MUST be highly relevant to the specific content provided and capture its main topic and purpose. Use topic-specific terms found in the content, write in full sentences, and ensure the summary ends concisely within 275 characters. IMPORTANT: Provide ONLY the meta description itself with NO additional commentary or explanations.\n\n${content}\n\nSummary:`
-      : `En tant qu'expert en référencement, analysez attentivement le contenu suivant et fournissez un résumé concis et complet adapté à une méta-description en français. Le résumé DOIT être parfaitement adapté au contenu spécifique fourni. Utilisez des termes spécifiques au sujet, écrivez en phrases complètes, et assurez-vous que le résumé se termine de manière concise dans les 275 caractères. IMPORTANT: Fournissez UNIQUEMENT la méta-description elle-même SANS commentaire supplémentaire.\n\n${content}\n\nRésumé:`;
+    const descriptionPrompt = language === 'en'
+      ? `As a Canada Revenue Agency search engine optimization expert, analyze the following content carefully and provide a concise, complete summary suitable for a meta description in English. The summary MUST be highly relevant to the specific content provided and capture its main topic and purpose. Use topic-specific terms found in the content, write in full sentences, and ensure the summary ends concisely within 275 characters.
+
+CRITICAL INSTRUCTIONS:
+- Provide ONLY the meta description itself with NO additional commentary, NO reasoning, NO explanations, NO thinking process, and NO train of thought
+- Do NOT show your thought process, reasoning, or train of thought
+- Give ONLY the final answer
+
+${content}
+
+Summary:`
+      : `En tant qu'expert en référencement de l'Agence du revenu du Canada, analysez attentivement le contenu suivant et fournissez un résumé concis et complet adapté à une méta-description en français. Le résumé DOIT être parfaitement adapté au contenu spécifique fourni. Utilisez des termes spécifiques au sujet, écrivez en phrases complètes, et assurez-vous que le résumé se termine de manière concise dans les 275 caractères.
+
+INSTRUCTIONS CRITIQUES:
+- Fournissez UNIQUEMENT la méta-description elle-même SANS commentaire supplémentaire, SANS raisonnement, SANS explications, SANS processus de réflexion, et SANS chaîne de pensée
+- NE montrez PAS votre processus de pensée, raisonnement, ou chaîne de pensée
+- Donnez UNIQUEMENT la réponse finale
+
+${content}
+
+Résumé:`;
 
     const keywordsPrompt = language === 'en'
-      ? `As a search engine optimization expert, carefully analyze the following content and identify 10 meaningful, topic-specific meta keywords that are DIRECTLY EXTRACTED from or strongly implied by the content. IMPORTANT: Return ONLY a comma-separated list of keywords with absolutely NO additional notes or commentary. Exclude 'Canada Revenue Agency' from the keywords.\n\n${content}\n\nKeywords:`
-      : `En tant qu'expert en optimisation pour les moteurs de recherche, analysez attentivement le contenu suivant et identifiez 10 mots-clés méta significatifs qui sont DIRECTEMENT EXTRAITS du contenu. IMPORTANT: Retournez UNIQUEMENT une liste de mots-clés séparés par des virgules sans AUCUNE note supplémentaire. Excluez 'Agence du revenu du Canada' des mots-clés.\n\n${content}\n\nMots-clés:`;
+      ? `As a Canada Revenue Agency search engine optimization expert, carefully analyze the following content and identify 10 meaningful, topic-specific meta keywords that are DIRECTLY EXTRACTED from or strongly implied by the content.
+
+CRITICAL INSTRUCTIONS:
+- Return ONLY a comma-separated list of keywords with absolutely NO additional notes, NO commentary, NO reasoning, NO thinking process, and NO train of thought
+- Do NOT show your thought process or train of thought
+- Exclude 'Canada Revenue Agency' from the keywords
+- Give ONLY the final answer
+
+${content}
+
+Keywords:`
+      : `En tant qu'expert en optimisation pour les moteurs de recherche de l'Agence du revenu du Canada, analysez attentivement le contenu suivant et identifiez 10 mots-clés méta significatifs qui sont DIRECTEMENT EXTRAITS du contenu.
+
+INSTRUCTIONS CRITIQUES:
+- Retournez UNIQUEMENT une liste de mots-clés séparés par des virgules sans AUCUNE note supplémentaire, SANS commentaire, SANS raisonnement, SANS processus de réflexion, et SANS chaîne de pensée
+- NE montrez PAS votre processus de pensée ou chaîne de pensée
+- Excluez 'Agence du revenu du Canada' des mots-clés
+- Donnez UNIQUEMENT la réponse finale
+
+${content}
+
+Mots-clés:`;
 
     return this.callOpenRouter(descriptionPrompt, model, 200).pipe(
       switchMap(description => {
@@ -434,15 +483,18 @@ export class MetadataAssistantService {
   }
 
   private translateMetadata(metadata: {description: string, keywords: string}): Observable<{description: string, keywords: string}> {
-    const apiKey = this.apiKeyService.getCurrentKey();
-    if (!apiKey) {
-      return throwError(() => new Error('API key not configured'));
+    return this.translateWithFallback(metadata, 0);
+  }
+
+  private translateWithFallback(metadata: {description: string, keywords: string}, attemptIndex: number): Observable<{description: string, keywords: string}> {
+    if (attemptIndex >= this.TRANSLATION_MODELS.length) {
+      return throwError(() => new Error('All translation models failed due to rate limits or errors'));
     }
 
-    // Use Mistral Small for translation (same as image-assistant)
-    const translationModel = 'mistralai/mistral-small-3.2-24b-instruct:free';
+    const translationModel = this.TRANSLATION_MODELS[attemptIndex];
+    console.log(`Attempting translation with model: ${translationModel} (attempt ${attemptIndex + 1}/${this.TRANSLATION_MODELS.length})`);
 
-    const descriptionPrompt = `You are a professional translator specializing in Canadian government content. Translate the following English meta description to French, maintaining the formal tone used by the Canada Revenue Agency (CRA). 
+    const descriptionPrompt = `You are a professional translator specializing in Canadian government content. Translate the following English meta description to French, maintaining the formal tone used by the Canada Revenue Agency (CRA).
 
 Important CRA-specific terminology:
 - "Canada Revenue Agency" → "Agence du revenu du Canada"
@@ -456,13 +508,22 @@ Important CRA-specific terminology:
 - "tax-free savings account (TFSA)" → "compte d'épargne libre d'impôt (CELI)"
 - "registered retirement savings plan (RRSP)" → "régime enregistré d'épargne-retraite (REER)"
 
-IMPORTANT: Your response must contain ONLY the direct translation, with absolutely NO commentary, NO suggestions, NO explanations, and NO additional text of any kind. Return ONLY the translated text itself:
+CRITICAL INSTRUCTIONS:
+- Your response must contain ONLY the direct translation, with absolutely NO commentary, NO suggestions, NO explanations, NO thinking process, NO train of thought, NO reasoning, and NO additional text of any kind
+- Do NOT show your reasoning or thought process
+- Return ONLY the translated text itself - nothing else
 
 ${metadata.description}
 
 French translation:`;
 
-    const keywordsPrompt = `Translate each of these English keywords to French. IMPORTANT: Return ONLY the translated keywords in a comma-separated list. Provide absolutely NO commentary, NO suggestions, NO explanations, and NO additional text of any kind. Return ONLY a comma-separated list of the translated keywords:
+    const keywordsPrompt = `Translate each of these English keywords to French.
+
+CRITICAL INSTRUCTIONS:
+- Return ONLY the translated keywords in a comma-separated list
+- Provide absolutely NO commentary, NO suggestions, NO explanations, NO reasoning, NO thinking process, NO train of thought, and NO additional text of any kind
+- Do NOT show your thought process
+- Return ONLY a comma-separated list of the translated keywords - nothing else
 
 ${metadata.keywords}
 
@@ -478,6 +539,24 @@ French keywords (comma-separated):`;
             keywords: this.cleanKeywordsResponse(keywords)
           }))
         );
+      }),
+      catchError(error => {
+        console.warn(`Translation model ${translationModel} failed:`, error);
+
+        // Check if it's a rate limit error
+        if (this.isRateLimitError(error)) {
+          console.log(`Rate limit detected for ${translationModel}, trying next model...`);
+          return this.translateWithFallback(metadata, attemptIndex + 1);
+        }
+
+        // For other errors, still try fallback if available
+        if (attemptIndex < this.TRANSLATION_MODELS.length - 1) {
+          console.log(`Error with ${translationModel}, trying next model...`);
+          return this.translateWithFallback(metadata, attemptIndex + 1);
+        }
+
+        // If no more models to try, throw the error
+        return throwError(() => error);
       })
     );
   }
@@ -502,19 +581,37 @@ French keywords (comma-separated):`;
       temperature: 0.3
     };
 
-    return this.http.post<{ choices?: { message?: { content?: string } }[] }>(this.OPENROUTER_URL, payload, { headers }).pipe(
+    return this.http.post<{ choices?: { message?: { content?: string; reasoning?: string } }[]; error?: { message?: string; code?: number } }>(this.OPENROUTER_URL, payload, { headers }).pipe(
       timeout(timeoutMs),
       map(response => {
-        if (response.choices && response.choices[0]?.message?.content) {
-          return response.choices[0].message.content;
+        // Check if the response has an error message
+        if (response.error?.message) {
+          console.error('API returned error:', response.error.message);
+          throw new Error(response.error.message);
         }
+
+        if (response.choices && response.choices[0]?.message) {
+          const message = response.choices[0].message;
+
+          // Some reasoning models put output in 'reasoning' field instead of 'content'
+          // Try content first, then reasoning field
+          const result = message.content || message.reasoning || '';
+
+          if (result && result.trim()) {
+            return result.trim();
+          }
+        }
+
+        console.error('Invalid API response structure:', JSON.stringify(response));
         throw new Error('Invalid response from API');
       }),
       catchError(error => {
         console.error('OpenRouter API error:', error);
-        
+
         // Preserve the original error structure for better fallback detection
         const httpError = error as { status?: number; error?: { error?: { code?: number; message?: string } }; message?: string };
+
+        // Handle rate limit errors (429)
         if (httpError.status === 429 || (httpError.error?.error?.code === 429)) {
           return throwError(() => {
             const rateLimitError = new Error('Rate limit exceeded') as Error & { status: number; originalError: unknown };
@@ -523,9 +620,30 @@ French keywords (comma-separated):`;
             return rateLimitError;
           });
         }
-        
+
+        // Handle service unavailable errors (503)
+        if (httpError.status === 503) {
+          return throwError(() => {
+            const serviceError = new Error('OpenRouter service temporarily unavailable. Please try again in a few moments.') as Error & { status: number; originalError: unknown };
+            serviceError.status = 503;
+            serviceError.originalError = error;
+            return serviceError;
+          });
+        }
+
+        // Handle bad gateway errors (502)
+        if (httpError.status === 502) {
+          return throwError(() => {
+            const gatewayError = new Error('OpenRouter gateway error. The AI model provider may be temporarily unavailable.') as Error & { status: number; originalError: unknown };
+            gatewayError.status = 502;
+            gatewayError.originalError = error;
+            return gatewayError;
+          });
+        }
+
         // For other errors, preserve status if available
-        const newError = new Error(httpError.error?.error?.message || httpError.message || 'Failed to generate content') as Error & { status?: number; originalError: unknown };
+        const errorMessage = httpError.error?.error?.message || httpError.message || 'Failed to generate content';
+        const newError = new Error(errorMessage) as Error & { status?: number; originalError: unknown };
         newError.status = httpError.status;
         newError.originalError = error;
         return throwError(() => newError);
@@ -604,6 +722,76 @@ French keywords (comma-separated):`;
     );
   }
 
+  // New document processing methods for enhanced document upload
+  processEnglishDocument(file: File, model: string): Observable<{
+    englishMetadata: DocumentMetadata;
+    frenchTranslation: DocumentMetadata;
+  }> {
+    return from(this.extractDocumentText(file)).pipe(
+      switchMap(content => {
+        if (!content || content.length < 50) {
+          return throwError(() => new Error('Document content too short or invalid for processing'));
+        }
+
+        // Generate English metadata
+        return this.generateMetadata(content, model, 'en').pipe(
+          switchMap(englishMetadata => {
+            // Translate to French with CRA terminology
+            return this.translateMetadata(englishMetadata).pipe(
+              map(frenchTranslation => ({
+                englishMetadata,
+                frenchTranslation
+              }))
+            );
+          })
+        );
+      })
+    );
+  }
+
+  processFrenchDocument(file: File): Observable<DocumentMetadata> {
+    return from(this.extractDocumentText(file)).pipe(
+      switchMap(content => {
+        if (!content || content.length < 50) {
+          return throwError(() => new Error('Document content too short or invalid for processing'));
+        }
+        // Generate French metadata directly
+        return this.generateMetadataFromDocument(content);
+      })
+    );
+  }
+
+  processBothDocuments(
+    englishFile: File,
+    frenchFile: File,
+    model: string
+  ): Observable<{
+    englishMetadata: DocumentMetadata;
+    autoTranslatedFrench: DocumentMetadata;
+    frenchDocMetadata: DocumentMetadata;
+    comparison: EvaluationResult;
+  }> {
+    // Process English document first
+    return this.processEnglishDocument(englishFile, model).pipe(
+      switchMap(englishResult => {
+        // Process French document
+        return this.processFrenchDocument(frenchFile).pipe(
+          switchMap(frenchDocMetadata => {
+            // Compare the auto-translated French with French document metadata
+            return this.evaluateMetadata(englishResult.frenchTranslation, frenchDocMetadata).pipe(
+              map(comparison => ({
+                englishMetadata: englishResult.englishMetadata,
+                autoTranslatedFrench: englishResult.frenchTranslation,
+                frenchDocMetadata,
+                comparison
+              }))
+            );
+          })
+        );
+      })
+    );
+  }
+
   // New method for document tab - extracts text, detects language, generates metadata
   processDocumentForMetadata(file: File, model: string): Observable<{language: 'en' | 'fr', text: string, metadata: MetadataResult}> {
     return from(this.extractDocumentText(file)).pipe(
@@ -667,16 +855,59 @@ French keywords (comma-separated):`;
     }
 
     // Use same prompts as French metadata generation but for French content
-    const descriptionPrompt = `En tant qu'expert en référencement, analysez attentivement le contenu suivant et fournissez un résumé concis et complet adapté à une méta-description en français. Le résumé DOIT être parfaitement adapté au contenu spécifique fourni. Utilisez des termes spécifiques au sujet, écrivez en phrases complètes, et assurez-vous que le résumé se termine de manière concise dans les 275 caractères. IMPORTANT: Fournissez UNIQUEMENT la méta-description elle-même SANS commentaire supplémentaire.\n\n${content}\n\nRésumé:`;
+    const descriptionPrompt = `En tant qu'expert en référencement de l'Agence du revenu du Canada, analysez attentivement le contenu suivant et fournissez un résumé concis et complet adapté à une méta-description en français. Le résumé DOIT être parfaitement adapté au contenu spécifique fourni. Utilisez des termes spécifiques au sujet, écrivez en phrases complètes, et assurez-vous que le résumé se termine de manière concise dans les 275 caractères.
 
-    const keywordsPrompt = `En tant qu'expert en optimisation pour les moteurs de recherche, analysez attentivement le contenu suivant et identifiez 10 mots-clés méta significatifs qui sont DIRECTEMENT EXTRAITS du contenu. IMPORTANT: Retournez UNIQUEMENT une liste de mots-clés séparés par des virgules sans AUCUNE note supplémentaire. Excluez 'Agence du revenu du Canada' des mots-clés.\n\n${content}\n\nMots-clés:`;
+INSTRUCTIONS CRITIQUES:
+- Fournissez UNIQUEMENT la méta-description elle-même SANS commentaire supplémentaire, SANS raisonnement, SANS explications, SANS processus de réflexion, et SANS chaîne de pensée
+- NE montrez PAS votre processus de pensée, raisonnement, ou chaîne de pensée
+- Donnez UNIQUEMENT la réponse finale
+
+${content}
+
+Résumé:`;
+
+    const keywordsPrompt = `En tant qu'expert en optimisation pour les moteurs de recherche de l'Agence du revenu du Canada, analysez attentivement le contenu suivant et identifiez 10 mots-clés méta significatifs qui sont DIRECTEMENT EXTRAITS du contenu.
+
+INSTRUCTIONS CRITIQUES:
+- Retournez UNIQUEMENT une liste de mots-clés séparés par des virgules sans AUCUNE note supplémentaire, SANS commentaire, SANS raisonnement, SANS processus de réflexion, et SANS chaîne de pensée
+- NE montrez PAS votre processus de pensée ou chaîne de pensée
+- Excluez 'Agence du revenu du Canada' des mots-clés
+- Donnez UNIQUEMENT la réponse finale
+
+${content}
+
+Mots-clés:`;
 
     // Use Mistral Small for French metadata generation
     const model = 'mistralai/mistral-small-3.2-24b-instruct:free';
 
     return this.callOpenRouter(descriptionPrompt, model, 200).pipe(
+      retry({
+        count: 2,
+        delay: (error: Error & { status?: number }, retryCount) => {
+          // Retry on 503 (service unavailable) and 502 (bad gateway) with exponential backoff
+          if (error.status === 503 || error.status === 502) {
+            const delayMs = 3000 * Math.pow(2, retryCount - 1); // 3s, 6s
+            console.log(`Retrying after ${delayMs}ms due to ${error.status} error...`);
+            return of(error).pipe(delay(delayMs));
+          }
+          // Don't retry for other errors
+          throw error;
+        }
+      }),
       switchMap(description => {
         return this.callOpenRouter(keywordsPrompt, model, 100).pipe(
+          retry({
+            count: 2,
+            delay: (error: Error & { status?: number }, retryCount) => {
+              if (error.status === 503 || error.status === 502) {
+                const delayMs = 3000 * Math.pow(2, retryCount - 1);
+                console.log(`Retrying keywords after ${delayMs}ms due to ${error.status} error...`);
+                return of(error).pipe(delay(delayMs));
+              }
+              throw error;
+            }
+          }),
           map(keywords => ({
             description: this.cleanMetadataResponse(description),
             keywords: this.cleanKeywordsResponse(keywords)

@@ -41,7 +41,6 @@ legend {
 }
 
 .upload-icon {
-  font-size: 3rem;
   color: var(--primary-color);
   margin-bottom: 1rem;
   display: block;
@@ -49,7 +48,6 @@ legend {
 
 .upload-title {
   margin-bottom: 0.5rem;
-  font-size: 1.1rem;
 }
 
 .upload-description {
@@ -58,6 +56,5 @@ legend {
 }
 
 .upload-formats {
-  font-size: 0.875rem;
   color: var(--text-color-secondary);
 }

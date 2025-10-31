@@ -66,6 +66,11 @@ export class ImageAssistantComponent implements OnInit, OnDestroy {
       description: 'image.model.qwen72Description'
     },
     {
+      name: 'image.model.qwen3vl30b',
+      value: 'qwen/qwen3-vl-30b-a3b-instruct',
+      description: 'image.model.qwen3vl30bDescription'
+    },
+    {
       name: 'image.model.gemma',
       value: 'google/gemma-3-27b-it:free',
       description: 'image.model.gemmaDescription'
