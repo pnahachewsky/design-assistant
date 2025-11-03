@@ -38,11 +38,7 @@ import { CsvDownloadComponent } from './components/csv-download/csv-download.com
   ],
   providers: [MessageService],
   templateUrl: './image-assistant.component.html',
-  styles: [`
-    .results-section {
-      margin-top: 2rem;
-    }
-  `]
+  styles: []
 })
 export class ImageAssistantComponent implements OnInit, OnDestroy {
   // Processing State
@@ -61,11 +57,6 @@ export class ImageAssistantComponent implements OnInit, OnDestroy {
       description: 'image.model.qwen32Description'
     },
     {
-      name: 'image.model.qwen72',
-      value: 'qwen/qwen2.5-vl-72b-instruct:free',
-      description: 'image.model.qwen72Description'
-    },
-    {
       name: 'image.model.qwen3vl30b',
       value: 'qwen/qwen3-vl-30b-a3b-instruct',
       description: 'image.model.qwen3vl30bDescription'
@@ -81,7 +72,40 @@ export class ImageAssistantComponent implements OnInit, OnDestroy {
       description: 'image.model.llamaDescription'
     }
   ];
-  
+
+  translationModels: ModelOption[] = [
+    {
+      name: 'Claude 3.5 Sonnet (paid)',
+      value: 'anthropic/claude-3.5-sonnet',
+      description: ''
+    },
+    {
+      name: 'GPT-4o mini (paid)',
+      value: 'openai/gpt-4o-mini',
+      description: ''
+    },
+    {
+      name: 'Gemini 2.0 Flash (free)',
+      value: 'google/gemini-2.0-flash-exp:free',
+      description: ''
+    },
+    {
+      name: 'Llama 3.3 70B (free)',
+      value: 'meta-llama/llama-3.3-70b-instruct:free',
+      description: ''
+    },
+    {
+      name: 'Gemma 3 27B (free)',
+      value: 'google/gemma-3-27b-it:free',
+      description: ''
+    },
+    {
+      name: 'GPT-OSS 20B (free)',
+      value: 'openai/gpt-oss-20b:free',
+      description: ''
+    }
+  ];
+
   private subscriptions: Subscription[] = [];
 
   public readonly apiKeyService = inject(ApiKeyService);
@@ -161,6 +185,10 @@ export class ImageAssistantComponent implements OnInit, OnDestroy {
     this.stateService.resetState();
   }
 
+  onTranslationModelChange(model: string): void {
+    this.stateService.setSelectedTranslationModel(model);
+  }
+
   private async processNextFile(): Promise<void> {
     if (this.filesToProcess.length === 0) {
       this.finalizeProcessing();
@@ -234,7 +262,9 @@ export class ImageAssistantComponent implements OnInit, OnDestroy {
           .map(m => m.value)
           .filter(m => m !== this.selectedVisionModel);
 
-        this.imageProcessorService.analyzeImage(file, this.selectedVisionModel, displayName, isPdfPage, fallbackModels).subscribe({
+        const translationModel = this.stateService.getCurrentState().selectedTranslationModel;
+
+        this.imageProcessorService.analyzeImage(file, this.selectedVisionModel, displayName, isPdfPage, fallbackModels, translationModel).subscribe({
           next: (result: VisionAnalysisResult) => {
             // Check for specific error types and translate them
             let errorMessage = result.error;

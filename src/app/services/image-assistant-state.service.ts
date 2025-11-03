@@ -20,6 +20,7 @@ export interface ProcessingState {
   processedCount: number;
   progressText: string;
   showProgressArea: boolean;
+  selectedTranslationModel: string;
 }
 
 @Injectable({
@@ -31,7 +32,8 @@ export class ImageAssistantStateService {
     filesInProgress: 0,
     processedCount: 0,
     progressText: '',
-    showProgressArea: false
+    showProgressArea: false,
+    selectedTranslationModel: 'anthropic/claude-3.5-sonnet' // Default to best translation model
   });
 
   public state$ = this.stateSubject.asObservable();
@@ -61,13 +63,19 @@ export class ImageAssistantStateService {
   }
 
   resetState(): void {
+    const currentState = this.stateSubject.value;
     this.stateSubject.next({
       results: {},
       filesInProgress: 0,
       processedCount: 0,
       progressText: '',
-      showProgressArea: false
+      showProgressArea: false,
+      selectedTranslationModel: currentState.selectedTranslationModel // Preserve selected model
     });
+  }
+
+  setSelectedTranslationModel(model: string): void {
+    this.updateState({ selectedTranslationModel: model });
   }
 
   incrementProcessedCount(): void {

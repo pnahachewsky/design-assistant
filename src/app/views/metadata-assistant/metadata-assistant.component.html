@@ -4,7 +4,7 @@
 <p>{{ 'metadata.description' | translate }}</p>
 
 <!-- API Key Status -->
-<section class="api-key-status mb-4">
+<section class="mb-4">
   <div>
     <strong>{{ 'page.apiKey.status' | translate }}</strong>
     <span *ngIf="apiKeyService.hasApiKey$ | async" class="text-green-600">
@@ -54,6 +54,20 @@
                 [disabled]="state.isProcessing"
                 (modelChange)="onModelChange($event)"
                 (translateChange)="onTranslateToggle($event)">
+              </ca-shared-model-selector>
+            </div>
+
+            <!-- Translation Model Selector (shown when translation is enabled) -->
+            <div class="mt-3" *ngIf="state.translateToFrench">
+              <ca-shared-model-selector
+                [selectedModel]="state.selectedTranslationModel"
+                [models]="translationModels"
+                [label]="'metadata.translationModelSelector.modelLabel'"
+                [cardTitle]="'metadata.translationModelSelector.title'"
+                [showCard]="true"
+                [showTranslateOption]="false"
+                [disabled]="state.isProcessing"
+                (modelChange)="onTranslationModelChange($event)">
               </ca-shared-model-selector>
             </div>
 
@@ -108,7 +122,7 @@
         </div>
 
         <!-- Results Section -->
-        <div class="results-section mt-4" *ngIf="state.results.length > 0">
+        <div class="mt-4" *ngIf="state.results.length > 0">
           <!-- Metadata Results -->
           <ca-metadata-result
             [results]="state.results"
@@ -150,6 +164,20 @@
                 [showTranslateOption]="false"
                 [disabled]="state.isProcessing"
                 (modelChange)="onModelChange($event)">
+              </ca-shared-model-selector>
+            </div>
+
+            <!-- Translation Model Selector (shown for English or Both modes) -->
+            <div class="mt-3" *ngIf="state.documentMode === 'english-only' || state.documentMode === 'both'">
+              <ca-shared-model-selector
+                [selectedModel]="state.selectedTranslationModel"
+                [models]="translationModels"
+                [label]="'metadata.translationModelSelector.modelLabel'"
+                [cardTitle]="'metadata.translationModelSelector.title'"
+                [showCard]="true"
+                [showTranslateOption]="false"
+                [disabled]="state.isProcessing"
+                (modelChange)="onTranslationModelChange($event)">
               </ca-shared-model-selector>
             </div>
 
@@ -225,7 +253,7 @@
         </div>
 
         <!-- Results Section for Documents -->
-        <div class="results-section mt-4" *ngIf="documentResults.length > 0">
+        <div class="mt-4" *ngIf="documentResults.length > 0">
           <ca-metadata-result
             [results]="documentResults"
             [showTranslations]="state.documentMode === 'english-only'"

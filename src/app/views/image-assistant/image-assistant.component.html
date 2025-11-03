@@ -4,7 +4,7 @@
 <p>{{ 'image.description' | translate }}</p>
 
 <!-- API Key Status -->
-<section class="api-key-status mb-4">
+<section class="mb-4">
   <div>
     <strong>{{ 'page.apiKey.status' | translate }}</strong>
     <span *ngIf="apiKeyService.hasApiKey$ | async" class="text-green-600">
@@ -28,7 +28,22 @@
     [showTranslateOption]="false"
     (modelChange)="onModelChange($event)">
   </ca-shared-model-selector>
-  
+
+  <!-- Translation Model Selector -->
+  <ng-container *ngIf="state$ | async as state">
+    <div class="mt-3">
+      <ca-shared-model-selector
+        [selectedModel]="state.selectedTranslationModel"
+        [models]="translationModels"
+        [label]="'image.translationModelSelector.modelLabel'"
+        [cardTitle]="'image.translationModelSelector.title'"
+        [showCard]="true"
+        [showTranslateOption]="false"
+        (modelChange)="onTranslationModelChange($event)">
+      </ca-shared-model-selector>
+    </div>
+  </ng-container>
+
   <!-- File Upload -->
   <ca-file-upload
     (filesSelected)="onFilesSelected($event)">
@@ -44,7 +59,7 @@
     </ca-progress-indicator>
     
     <!-- Results Display -->
-    <div class="results-section" *ngIf="getResultsArray(state.results).length > 0">
+    <div class="mt-4" *ngIf="getResultsArray(state.results).length > 0">
       <ca-image-result 
         *ngFor="let result of getResultsArray(state.results)"
         [result]="result">

@@ -22,10 +22,12 @@ export class ImageProcessorService {
 
   // Translation models with fallback for rate limit handling
   private readonly TRANSLATION_MODELS = [
-    'mistralai/mistral-small-3.2-24b-instruct:free',
-    'openai/gpt-oss-20b:free',
-    'meta-llama/llama-3.3-70b-instruct:free',
-    'google/gemma-3-27b-it:free'
+    'anthropic/claude-3.5-sonnet',        // Best for translation - WMT24 winner
+    'openai/gpt-4o-mini',                  // Cost-effective paid model
+    'google/gemini-2.0-flash-exp:free',    // Free, fast, good multilingual
+    'meta-llama/llama-3.3-70b-instruct:free', // Free fallback
+    'google/gemma-3-27b-it:free',          // Free fallback
+    'openai/gpt-oss-20b:free'              // Free fallback
   ];
 
   private http = inject(HttpClient);
@@ -38,9 +40,10 @@ export class ImageProcessorService {
    * @param identifier A unique identifier for logging (e.g., file name).
    * @param isPdfPage Whether this image is from a PDF page (for different prompting).
    * @param fallbackModels Optional array of fallback model IDs to try if primary fails.
+   * @param selectedTranslationModel Optional selected translation model (uses fallback array if not provided).
    * @returns An Observable emitting the analysis result.
    */
-  analyzeImage(file: File, selectedVisionModel: string, identifier: string, isPdfPage = false, fallbackModels: string[] = []): Observable<VisionAnalysisResult> {
+  analyzeImage(file: File, selectedVisionModel: string, identifier: string, isPdfPage = false, fallbackModels: string[] = [], selectedTranslationModel?: string): Observable<VisionAnalysisResult> {
     console.log('ImageProcessorService.analyzeImage called with:', file.name, selectedVisionModel);
     const apiKey = this.apiKeyService.getCurrentKey();
     if (!apiKey) {
@@ -70,7 +73,7 @@ export class ImageProcessorService {
           return from([visionResult]); // If vision failed or no English, just pass it through
         }
         // If vision succeeded, translate the English text to French using the specific CRA prompt
-        return this.translateToFrench(visionResult.english, apiKey, identifier).pipe(
+        return this.translateToFrench(visionResult.english, apiKey, identifier, selectedTranslationModel).pipe(
           map(frenchText => ({
             english: visionResult.english,
             french: frenchText,
@@ -310,13 +313,105 @@ export class ImageProcessorService {
     );
   }
 
-  private translateToFrench(text: string, apiKey: string, identifier: string): Observable<string> {
+  private translateToFrench(text: string, apiKey: string, identifier: string, selectedModel?: string): Observable<string> {
     if (!text) {
       console.log(`Skipping translation for empty text: ${identifier}`);
       return from([""]);
     }
 
+    // If a specific translation model is selected, use it directly without fallback
+    if (selectedModel) {
+      console.log(`Using user-selected translation model: ${selectedModel} for ${identifier}`);
+      return this.callTranslationAPI(text, apiKey, selectedModel, identifier).pipe(
+        catchError((error: HttpErrorResponse) => {
+          console.error(`Error with selected translation model ${selectedModel} for ${identifier}:`, error);
+
+          // Check if this is a key limit exceeded error
+          if (error.status === 403 && error.error?.error?.message?.toLowerCase().includes('key limit exceeded')) {
+            return throwError(() => new Error('KEY_LIMIT_EXCEEDED'));
+          }
+
+          let errorMessage = `Translation API Error (${error.status || 'Network Error'}): ${error.statusText || 'Unknown Error'}`;
+          if (error.error && error.error.error && error.error.error.message) {
+            errorMessage += ` - ${error.error.error.message}`;
+          }
+          return throwError(() => new Error(errorMessage));
+        })
+      );
+    }
+    // Otherwise use the fallback array
     return this.translateWithFallback(text, apiKey, identifier, 0);
+  }
+
+  private callTranslationAPI(text: string, apiKey: string, model: string, identifier: string): Observable<string> {
+    const systemPrompt = `You are a professional translator for the Canada Revenue Agency (CRA).
+Your task is to translate the following English text into clear, concise, and accurate Canadian French,
+using official CRA terminology and tone where applicable.
+
+CRITICAL INSTRUCTIONS:
+- Provide ONLY the direct translation
+- DO NOT include any explanations, notes, disclaimers, or additional commentary of any kind
+- DO NOT include phrases like 'Here is the translation:'
+- DO NOT wrap your response in quotes
+- DO NOT show your reasoning or train of thought
+- Simply translate the text directly`;
+
+    const messages = [
+      { "role": "system", "content": systemPrompt },
+      { "role": "user", "content": text }
+    ];
+
+    const payload = {
+      model: model,
+      messages: messages,
+      temperature: 0.1,
+      max_tokens: Math.max(500, Math.ceil(text.length * 2.5)),
+      top_p: 0.9
+    };
+
+    const headers = new HttpHeaders({
+      "Authorization": `Bearer ${apiKey}`,
+      "Content-Type": "application/json"
+    });
+
+    interface OpenRouterTranslationResponse {
+      choices?: { message?: { content?: string; reasoning?: string } }[];
+    }
+
+    return this.http.post<OpenRouterTranslationResponse>(this.OPENROUTER_API_URL, payload, { headers }).pipe(
+      timeout(90000),
+      retry({ count: 1, delay: 2000 }),
+      map(response => {
+        console.log(`Translation response for ${identifier}:`, response);
+
+        if (!response || !response.choices || !Array.isArray(response.choices) || response.choices.length === 0) {
+          console.error(`Invalid response structure from translation model for ${identifier}:`, response);
+          throw new Error("Invalid response structure from translation model.");
+        }
+
+        const message = response.choices[0]?.message;
+        let translation = message?.content || message?.reasoning || '';
+
+        if (!translation || typeof translation !== 'string') {
+          console.error(`No content in translation response for ${identifier}. Full response:`, JSON.stringify(response, null, 2));
+          throw new Error("Translation model returned empty content.");
+        }
+
+        translation = translation.trim();
+
+        if (!translation) {
+          console.error(`Translation content is empty after trimming for ${identifier}`);
+          throw new Error("Translation model returned empty content after trimming.");
+        }
+
+        // Basic cleanup
+        translation = translation.replace(/^Voici la traduction\s*:\s*/i, '');
+        translation = translation.replace(/^Translation\s*:\s*/i, '');
+        translation = translation.replace(/^Here is the translation\s*:\s*/i, '');
+
+        return translation;
+      })
+    );
   }
 
   private translateWithFallback(text: string, apiKey: string, identifier: string, attemptIndex: number): Observable<string> {

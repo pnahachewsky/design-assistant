@@ -1,94 +1,9 @@
-.comparison-container {
-  width: 100%;
-}
-
-.comparison-section {
-  margin-bottom: 2rem;
-}
-
-.diff-container {
-  border: 1px solid var(--surface-border);
-  border-radius: var(--border-radius);
-  overflow: auto;
-  background-color: var(--surface-card);
-  padding: 0.5rem;
-}
-
-/* Override diff2html styles to match PrimeNG theme */
-:host ::ng-deep .d2h-wrapper {
-  font-family: inherit;
-}
-
-:host ::ng-deep .d2h-file-header {
-  background-color: var(--surface-100);
-  border-color: var(--surface-border);
-}
-
-:host ::ng-deep .d2h-code-line {
-  padding: 0.5rem;
-}
-
-:host ::ng-deep .d2h-code-line-ctn {
-  word-break: break-word;
-}
-
-:host ::ng-deep .d2h-ins {
-  background-color: #d4edda;
-  color: #155724;
-}
-
-:host ::ng-deep .d2h-del {
-  background-color: #f8d7da;
-  color: #721c24;
-}
-
-:host ::ng-deep .d2h-info {
-  background-color: var(--surface-100);
-  border-color: var(--surface-border);
-}
-
-.suggested-content {
-  background-color: var(--surface-50);
-  padding: 1rem;
-  border-radius: var(--border-radius);
+/* Custom left border for suggested content section */
+.border-left-primary {
   border-left: 4px solid var(--primary-color);
 }
 
-.text-content {
-  line-height: 1.6;
-  margin-bottom: 0.5rem;
-  color: var(--text-color);
-}
-
-.character-count {
-  color: var(--text-color-secondary);
-  font-style: italic;
-}
-
-.rationale-section {
-  margin-top: 2rem;
-}
-
-.rationale-card {
-  background-color: var(--highlight-bg);
-}
-
-.no-comparison {
-  padding: 2rem;
-  text-align: center;
-}
-
-/* Dark mode adjustments */
-:host-context(.dark-mode) .suggested-content {
-  background-color: var(--surface-700);
-}
-
-:host-context(.dark-mode) :host ::ng-deep .d2h-ins {
-  background-color: #1e4620;
-  color: #9ae6a5;
-}
-
-:host-context(.dark-mode) :host ::ng-deep .d2h-del {
-  background-color: #4a1f1f;
-  color: #f5a5a5;
+/* Custom background for comparison sections */
+.comparison-card {
+  background: var(--surface-50);
 }

@@ -63,6 +63,7 @@ export class MetadataAssistantComponent implements OnInit, OnDestroy {
     results: [],
     error: null,
     selectedModel: 'openai/gpt-oss-20b:free',
+    selectedTranslationModel: 'anthropic/claude-3.5-sonnet',
     translateToFrench: false,
     documentProcessingIndex: null,
     documentMode: 'english-only',
@@ -82,7 +83,7 @@ export class MetadataAssistantComponent implements OnInit, OnDestroy {
 
   models: ModelOption[] = [
     {
-      name: 'OpenAI GPT-OSS 20B',
+      name: 'OpenAI GPT-OSS 20B (free)',
       value: 'openai/gpt-oss-20b:free',
       description: 'metadata.models.gptOssDescription'
     },
@@ -97,49 +98,82 @@ export class MetadataAssistantComponent implements OnInit, OnDestroy {
       description: 'metadata.models.gpt41MiniDescription'
     },
     {
-      name: 'Meta Llama 3.3 70B',
+      name: 'Meta Llama 3.3 70B (free)',
       value: 'meta-llama/llama-3.3-70b-instruct:free',
       description: 'metadata.models.llamaDescription'
     },
     {
-      name: 'Google Gemma 3 27B',
+      name: 'Google Gemma 3 27B (free)',
       value: 'google/gemma-3-27b-it:free',
       description: 'metadata.models.gemmaDescription'
     },
     {
-      name: 'Tencent Hunyuan A13B',
+      name: 'Tencent Hunyuan A13B (free)',
       value: 'tencent/hunyuan-a13b-instruct:free',
       description: 'metadata.models.hunyuanDescription'
     },
     {
-      name: 'Qwen 3 4B',
+      name: 'Qwen 3 4B (free)',
       value: 'qwen/qwen3-4b:free',
       description: 'metadata.models.qwen3_4bDescription'
     },
     {
-      name: 'Qwen 3 8B',
+      name: 'Qwen 3 8B (free)',
       value: 'qwen/qwen3-8b:free',
       description: 'metadata.models.qwen3_8bDescription'
     },
     {
-      name: 'Qwen 3 14B',
+      name: 'Qwen 3 14B (free)',
       value: 'qwen/qwen3-14b:free',
       description: 'metadata.models.qwen3_14bDescription'
     },
     {
-      name: 'Qwen 3 30B',
+      name: 'Qwen 3 30B (free)',
       value: 'qwen/qwen3-30b-a3b:free',
       description: 'metadata.models.qwen3_30bDescription'
     },
     {
-      name: 'Qwen 3 235B',
+      name: 'Qwen 3 235B (free)',
       value: 'qwen/qwen3-235b-a22b:free',
       description: 'metadata.models.qwen3_235bDescription'
     },
     {
-      name: 'Microsoft MAI-DS R1',
+      name: 'Microsoft MAI-DS R1 (free)',
       value: 'microsoft/mai-ds-r1:free',
       description: 'metadata.models.maiDsR1Description'
+    }
+  ];
+
+  translationModels: ModelOption[] = [
+    {
+      name: 'Claude 3.5 Sonnet (paid)',
+      value: 'anthropic/claude-3.5-sonnet',
+      description: ''
+    },
+    {
+      name: 'GPT-4o mini (paid)',
+      value: 'openai/gpt-4o-mini',
+      description: ''
+    },
+    {
+      name: 'Gemini 2.0 Flash (free)',
+      value: 'google/gemini-2.0-flash-exp:free',
+      description: ''
+    },
+    {
+      name: 'Llama 3.3 70B (free)',
+      value: 'meta-llama/llama-3.3-70b-instruct:free',
+      description: ''
+    },
+    {
+      name: 'Gemma 3 27B (free)',
+      value: 'google/gemma-3-27b-it:free',
+      description: ''
+    },
+    {
+      name: 'GPT-OSS 20B (free)',
+      value: 'openai/gpt-oss-20b:free',
+      description: ''
     }
   ];
 
@@ -177,6 +211,10 @@ export class MetadataAssistantComponent implements OnInit, OnDestroy {
     this.stateService.setSelectedModel(model);
   }
 
+  onTranslationModelChange(model: string): void {
+    this.stateService.setSelectedTranslationModel(model);
+  }
+
   onTranslateToggle(translate: boolean): void {
     this.stateService.setTranslateToFrench(translate);
   }
@@ -206,6 +244,7 @@ export class MetadataAssistantComponent implements OnInit, OnDestroy {
       urls: this.urls,
       model: this.state.selectedModel,
       translateToFrench: this.state.translateToFrench,
+      translationModel: this.state.selectedTranslationModel,
       fallbackModels: fallbackModels
     }).pipe(
       takeUntil(this.destroy$)
@@ -429,7 +468,7 @@ export class MetadataAssistantComponent implements OnInit, OnDestroy {
       currentStep: 'generating'
     });
 
-    this.metadataService.processEnglishDocument(englishFile, this.state.selectedModel).pipe(
+    this.metadataService.processEnglishDocument(englishFile, this.state.selectedModel, this.state.selectedTranslationModel).pipe(
       takeUntil(this.destroy$)
     ).subscribe({
       next: (result) => {

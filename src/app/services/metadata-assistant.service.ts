@@ -34,6 +34,7 @@ export interface ProcessingOptions {
   urls: string[];
   model: string;
   translateToFrench: boolean;
+  translationModel?: string;  // Selected translation model (uses default if not provided)
   fallbackModels?: string[];
 }
 
@@ -57,17 +58,21 @@ export class MetadataAssistantService {
   
   // Default fallback models in order of preference
   private readonly DEFAULT_FALLBACK_MODELS = [
-    'mistralai/mistral-small-3.2-24b-instruct:free',
+    'openai/gpt-4o-mini',                  // Cost-effective, excellent performance
+    'google/gemini-2.0-flash-exp:free',    // Fast free option
     'meta-llama/llama-3.3-70b-instruct:free',
     'google/gemma-3-27b-it:free'
   ];
 
   // Translation models with fallback for rate limit handling
+  // Ordered by translation quality: Claude 3.5 Sonnet (best), GPT-4o mini (cost-effective), then free models
   private readonly TRANSLATION_MODELS = [
-    'mistralai/mistral-small-3.2-24b-instruct:free',
-    'openai/gpt-oss-20b:free',
-    'meta-llama/llama-3.3-70b-instruct:free',
-    'google/gemma-3-27b-it:free'
+    'anthropic/claude-3.5-sonnet',        // Best for translation - WMT24 winner, 78% "good" rating
+    'openai/gpt-4o-mini',                  // Cost-effective paid model - excellent French support
+    'google/gemini-2.0-flash-exp:free',    // Free, fast, good multilingual
+    'meta-llama/llama-3.3-70b-instruct:free', // Free fallback
+    'google/gemma-3-27b-it:free',          // Free fallback
+    'openai/gpt-oss-20b:free'              // Free fallback
   ];
 
   private http = inject(HttpClient);
@@ -77,9 +82,9 @@ export class MetadataAssistantService {
   processUrls(options: ProcessingOptions): Observable<MetadataResult[]> {
     const results: MetadataResult[] = [];
     const fallbackModels = options.fallbackModels || this.DEFAULT_FALLBACK_MODELS;
-    
+
     return from(options.urls).pipe(
-      switchMap(url => this.processUrl(url, options.model, options.translateToFrench, fallbackModels)),
+      switchMap(url => this.processUrl(url, options.model, options.translateToFrench, fallbackModels, options.translationModel)),
       map(result => {
         results.push(result);
         return results;
@@ -91,7 +96,7 @@ export class MetadataAssistantService {
     );
   }
 
-  private processUrl(url: string, model: string, translateToFrench: boolean, fallbackModels: string[]): Observable<MetadataResult> {
+  private processUrl(url: string, model: string, translateToFrench: boolean, fallbackModels: string[], translationModel?: string): Observable<MetadataResult> {
     return this.scrapeUrl(url).pipe(
       switchMap(scrapedContent => {
         if (!scrapedContent || scrapedContent.length < 50) {
@@ -99,7 +104,7 @@ export class MetadataAssistantService {
         }
 
         const language = this.detectLanguage(scrapedContent);
-        
+
         return this.generateMetadataWithFallback(scrapedContent, model, language, fallbackModels).pipe(
           switchMap(metadata => {
             const result: MetadataResult = {
@@ -113,7 +118,7 @@ export class MetadataAssistantService {
             };
 
             if (translateToFrench && language === 'en') {
-              return this.translateMetadata(metadata).pipe(
+              return this.translateMetadata(metadata, translationModel).pipe(
                 map(translated => ({
                   ...result,
                   frenchTranslatedDescription: translated.description,
@@ -427,48 +432,82 @@ export class MetadataAssistantService {
     const descriptionPrompt = language === 'en'
       ? `As a Canada Revenue Agency search engine optimization expert, analyze the following content carefully and provide a concise, complete summary suitable for a meta description in English. The summary MUST be highly relevant to the specific content provided and capture its main topic and purpose. Use topic-specific terms found in the content, write in full sentences, and ensure the summary ends concisely within 275 characters.
 
-CRITICAL INSTRUCTIONS:
-- Provide ONLY the meta description itself with NO additional commentary, NO reasoning, NO explanations, NO thinking process, and NO train of thought
-- Do NOT show your thought process, reasoning, or train of thought
-- Give ONLY the final answer
+⚠️ CRITICAL OUTPUT FORMAT REQUIREMENTS - READ CAREFULLY:
+- Your ENTIRE response must be ONLY the meta description text itself
+- Do NOT include ANY of the following:
+  ✗ NO reasoning or thinking process
+  ✗ NO step-by-step analysis
+  ✗ NO explanations of your approach
+  ✗ NO preambles like "Here is..." or "The description is..."
+  ✗ NO commentary about the content
+  ✗ NO labels like "Summary:", "Meta description:", "Answer:", etc.
+  ✗ NO train of thought or internal monologue
+  ✗ NO markdown formatting, asterisks, or bold text
+- Simply output the meta description sentence(s) and nothing else
+- The first character of your response should be the first character of the meta description
 
 ${content}
 
-Summary:`
+Meta description (output text only):`
       : `En tant qu'expert en référencement de l'Agence du revenu du Canada, analysez attentivement le contenu suivant et fournissez un résumé concis et complet adapté à une méta-description en français. Le résumé DOIT être parfaitement adapté au contenu spécifique fourni. Utilisez des termes spécifiques au sujet, écrivez en phrases complètes, et assurez-vous que le résumé se termine de manière concise dans les 275 caractères.
 
-INSTRUCTIONS CRITIQUES:
-- Fournissez UNIQUEMENT la méta-description elle-même SANS commentaire supplémentaire, SANS raisonnement, SANS explications, SANS processus de réflexion, et SANS chaîne de pensée
-- NE montrez PAS votre processus de pensée, raisonnement, ou chaîne de pensée
-- Donnez UNIQUEMENT la réponse finale
+⚠️ EXIGENCES CRITIQUES DE FORMAT DE SORTIE - LISEZ ATTENTIVEMENT:
+- Votre réponse COMPLÈTE doit être UNIQUEMENT le texte de la méta-description
+- N'incluez AUCUN des éléments suivants:
+  ✗ AUCUN raisonnement ou processus de réflexion
+  ✗ AUCUNE analyse étape par étape
+  ✗ AUCUNE explication de votre approche
+  ✗ AUCUN préambule comme "Voici..." ou "La description est..."
+  ✗ AUCUN commentaire sur le contenu
+  ✗ AUCUNE étiquette comme "Résumé:", "Méta-description:", "Réponse:", etc.
+  ✗ AUCUNE chaîne de pensée ou monologue interne
+  ✗ AUCUN formatage markdown, astérisques ou texte en gras
+- Sortez simplement la ou les phrases de méta-description et rien d'autre
+- Le premier caractère de votre réponse doit être le premier caractère de la méta-description
 
 ${content}
 
-Résumé:`;
+Méta-description (texte uniquement):`;
 
     const keywordsPrompt = language === 'en'
       ? `As a Canada Revenue Agency search engine optimization expert, carefully analyze the following content and identify 10 meaningful, topic-specific meta keywords that are DIRECTLY EXTRACTED from or strongly implied by the content.
 
-CRITICAL INSTRUCTIONS:
-- Return ONLY a comma-separated list of keywords with absolutely NO additional notes, NO commentary, NO reasoning, NO thinking process, and NO train of thought
-- Do NOT show your thought process or train of thought
+⚠️ CRITICAL OUTPUT FORMAT REQUIREMENTS - READ CAREFULLY:
+- Your ENTIRE response must be ONLY a comma-separated list of keywords
+- Do NOT include ANY of the following:
+  ✗ NO reasoning or thinking process
+  ✗ NO analysis or explanations
+  ✗ NO preambles like "Here are..." or "The keywords are..."
+  ✗ NO labels like "Keywords:", "Answer:", etc.
+  ✗ NO numbering or bullet points
+  ✗ NO train of thought
+  ✗ NO markdown formatting or asterisks
 - Exclude 'Canada Revenue Agency' from the keywords
-- Give ONLY the final answer
+- Simply output: keyword1, keyword2, keyword3, etc.
+- The first character of your response should be the first letter of the first keyword
 
 ${content}
 
-Keywords:`
+Keywords (comma-separated list only):`
       : `En tant qu'expert en optimisation pour les moteurs de recherche de l'Agence du revenu du Canada, analysez attentivement le contenu suivant et identifiez 10 mots-clés méta significatifs qui sont DIRECTEMENT EXTRAITS du contenu.
 
-INSTRUCTIONS CRITIQUES:
-- Retournez UNIQUEMENT une liste de mots-clés séparés par des virgules sans AUCUNE note supplémentaire, SANS commentaire, SANS raisonnement, SANS processus de réflexion, et SANS chaîne de pensée
-- NE montrez PAS votre processus de pensée ou chaîne de pensée
+⚠️ EXIGENCES CRITIQUES DE FORMAT DE SORTIE - LISEZ ATTENTIVEMENT:
+- Votre réponse COMPLÈTE doit être UNIQUEMENT une liste de mots-clés séparés par des virgules
+- N'incluez AUCUN des éléments suivants:
+  ✗ AUCUN raisonnement ou processus de réflexion
+  ✗ AUCUNE analyse ou explication
+  ✗ AUCUN préambule comme "Voici..." ou "Les mots-clés sont..."
+  ✗ AUCUNE étiquette comme "Mots-clés:", "Réponse:", etc.
+  ✗ AUCUNE numérotation ou puces
+  ✗ AUCUNE chaîne de pensée
+  ✗ AUCUN formatage markdown ou astérisques
 - Excluez 'Agence du revenu du Canada' des mots-clés
-- Donnez UNIQUEMENT la réponse finale
+- Sortez simplement: mot-clé1, mot-clé2, mot-clé3, etc.
+- Le premier caractère de votre réponse doit être la première lettre du premier mot-clé
 
 ${content}
 
-Mots-clés:`;
+Mots-clés (liste séparée par des virgules uniquement):`;
 
     return this.callOpenRouter(descriptionPrompt, model, 200).pipe(
       switchMap(description => {
@@ -482,8 +521,84 @@ Mots-clés:`;
     );
   }
 
-  private translateMetadata(metadata: {description: string, keywords: string}): Observable<{description: string, keywords: string}> {
+  private translateMetadata(
+    metadata: {description: string, keywords: string},
+    selectedModel?: string
+  ): Observable<{description: string, keywords: string}> {
+    // If a specific translation model is selected, use it directly without fallback
+    if (selectedModel) {
+      console.log(`Using user-selected translation model: ${selectedModel}`);
+      return this.translateWithModel(metadata, selectedModel);
+    }
+    // Otherwise use the fallback array
     return this.translateWithFallback(metadata, 0);
+  }
+
+  private translateWithModel(
+    metadata: {description: string, keywords: string},
+    model: string
+  ): Observable<{description: string, keywords: string}> {
+    const descriptionPrompt = `You are a professional translator specializing in Canadian government content. Translate the following English meta description to French, maintaining the formal tone used by the Canada Revenue Agency (CRA).
+
+Important CRA-specific terminology:
+- "Canada Revenue Agency" → "Agence du revenu du Canada"
+- "income tax" → "impôt sur le revenu"
+- "benefits" → "prestations"
+- "tax return" → "déclaration de revenus"
+- "GST/HST" → "TPS/TVH"
+- "business number" → "numéro d'entreprise"
+- "tax credit" → "crédit d'impôt"
+- "deduction" → "déduction"
+- "tax-free savings account (TFSA)" → "compte d'épargne libre d'impôt (CELI)"
+- "registered retirement savings plan (RRSP)" → "régime enregistré d'épargne-retraite (REER)"
+
+⚠️ CRITICAL OUTPUT FORMAT REQUIREMENTS - READ CAREFULLY:
+- Your ENTIRE response must be ONLY the French translation
+- Do NOT include ANY of the following:
+  ✗ NO reasoning or thinking process
+  ✗ NO explanations of translation choices
+  ✗ NO preambles like "Here is..." or "The translation is..."
+  ✗ NO labels like "French translation:", "Answer:", etc.
+  ✗ NO commentary about the text
+  ✗ NO train of thought
+  ✗ NO markdown formatting or asterisks
+- Simply output the translated French text and nothing else
+- The first character of your response should be the first character of the French translation
+
+${metadata.description}
+
+French translation (text only):`;
+
+    const keywordsPrompt = `Translate each of these English keywords to French.
+
+⚠️ CRITICAL OUTPUT FORMAT REQUIREMENTS - READ CAREFULLY:
+- Your ENTIRE response must be ONLY a comma-separated list of French keywords
+- Do NOT include ANY of the following:
+  ✗ NO reasoning or thinking process
+  ✗ NO analysis or explanations
+  ✗ NO preambles like "Here are..." or "The keywords are..."
+  ✗ NO labels like "French keywords:", "Answer:", etc.
+  ✗ NO train of thought
+  ✗ NO markdown formatting or asterisks
+- Simply output: mot-clé1, mot-clé2, mot-clé3, etc.
+- The first character of your response should be the first letter of the first keyword
+
+${metadata.keywords}
+
+French keywords (comma-separated list only):`;
+
+    return this.callOpenRouter(descriptionPrompt, model, 200, this.TRANSLATION_TIMEOUT).pipe(
+      retry({ count: 1, delay: 2000 }), // Retry once after 2 seconds for cold starts
+      switchMap(description => {
+        return this.callOpenRouter(keywordsPrompt, model, 100, this.TRANSLATION_TIMEOUT).pipe(
+          retry({ count: 1, delay: 2000 }),
+          map(keywords => ({
+            description: this.cleanMetadataResponse(description),
+            keywords: this.cleanKeywordsResponse(keywords)
+          }))
+        );
+      })
+    );
   }
 
   private translateWithFallback(metadata: {description: string, keywords: string}, attemptIndex: number): Observable<{description: string, keywords: string}> {
@@ -508,26 +623,40 @@ Important CRA-specific terminology:
 - "tax-free savings account (TFSA)" → "compte d'épargne libre d'impôt (CELI)"
 - "registered retirement savings plan (RRSP)" → "régime enregistré d'épargne-retraite (REER)"
 
-CRITICAL INSTRUCTIONS:
-- Your response must contain ONLY the direct translation, with absolutely NO commentary, NO suggestions, NO explanations, NO thinking process, NO train of thought, NO reasoning, and NO additional text of any kind
-- Do NOT show your reasoning or thought process
-- Return ONLY the translated text itself - nothing else
+⚠️ CRITICAL OUTPUT FORMAT REQUIREMENTS - READ CAREFULLY:
+- Your ENTIRE response must be ONLY the French translation
+- Do NOT include ANY of the following:
+  ✗ NO reasoning or thinking process
+  ✗ NO explanations of translation choices
+  ✗ NO preambles like "Here is..." or "The translation is..."
+  ✗ NO labels like "French translation:", "Answer:", etc.
+  ✗ NO commentary about the text
+  ✗ NO train of thought
+  ✗ NO markdown formatting or asterisks
+- Simply output the translated French text and nothing else
+- The first character of your response should be the first character of the French translation
 
 ${metadata.description}
 
-French translation:`;
+French translation (text only):`;
 
     const keywordsPrompt = `Translate each of these English keywords to French.
 
-CRITICAL INSTRUCTIONS:
-- Return ONLY the translated keywords in a comma-separated list
-- Provide absolutely NO commentary, NO suggestions, NO explanations, NO reasoning, NO thinking process, NO train of thought, and NO additional text of any kind
-- Do NOT show your thought process
-- Return ONLY a comma-separated list of the translated keywords - nothing else
+⚠️ CRITICAL OUTPUT FORMAT REQUIREMENTS - READ CAREFULLY:
+- Your ENTIRE response must be ONLY a comma-separated list of French keywords
+- Do NOT include ANY of the following:
+  ✗ NO reasoning or thinking process
+  ✗ NO analysis or explanations
+  ✗ NO preambles like "Here are..." or "The keywords are..."
+  ✗ NO labels like "French keywords:", "Answer:", etc.
+  ✗ NO train of thought
+  ✗ NO markdown formatting or asterisks
+- Simply output: mot-clé1, mot-clé2, mot-clé3, etc.
+- The first character of your response should be the first letter of the first keyword
 
 ${metadata.keywords}
 
-French keywords (comma-separated):`;
+French keywords (comma-separated list only):`;
 
     return this.callOpenRouter(descriptionPrompt, translationModel, 200, this.TRANSLATION_TIMEOUT).pipe(
       retry({ count: 1, delay: 2000 }), // Retry once after 2 seconds for cold starts
@@ -574,11 +703,29 @@ French keywords (comma-separated):`;
       'X-Title': 'Content Assistant'
     });
 
-    const payload = {
+    // System message to disable reasoning and enforce direct output
+    const systemMessage = {
+      role: 'system',
+      content: 'You are a precise metadata generator. Output ONLY the requested content with absolutely NO reasoning, NO explanations, NO thinking process, NO preamble, and NO additional commentary. Your response must contain ONLY the final answer.'
+    };
+
+    const payload: {
+      model: string;
+      messages: { role: string; content: string }[];
+      max_tokens: number;
+      temperature: number;
+      stop?: string[];
+      provider?: {
+        order?: string[];
+        allow_fallbacks?: boolean;
+        require_parameters?: boolean;
+      };
+    } = {
       model: model,
-      messages: [{ role: 'user', content: prompt }],
+      messages: [systemMessage, { role: 'user', content: prompt }],
       max_tokens: maxTokens,
-      temperature: 0.3
+      temperature: 0.1, // Lower temperature for more deterministic output
+      stop: ['Reasoning:', 'Thoughts:', 'Thinking:', 'Analysis:', 'Explanation:', 'Step by step:', 'Let me think', 'First,', 'To answer'], // Stop tokens to prevent reasoning
     };
 
     return this.http.post<{ choices?: { message?: { content?: string; reasoning?: string } }[]; error?: { message?: string; code?: number } }>(this.OPENROUTER_URL, payload, { headers }).pipe(
@@ -593,12 +740,13 @@ French keywords (comma-separated):`;
         if (response.choices && response.choices[0]?.message) {
           const message = response.choices[0].message;
 
-          // Some reasoning models put output in 'reasoning' field instead of 'content'
-          // Try content first, then reasoning field
-          const result = message.content || message.reasoning || '';
+          // ONLY use content field - ignore reasoning field entirely
+          let result = message.content || '';
 
           if (result && result.trim()) {
-            return result.trim();
+            // Aggressively strip any reasoning-like content that leaked through
+            result = this.stripReasoningFromResponse(result.trim());
+            return result;
           }
         }
 
@@ -651,8 +799,48 @@ French keywords (comma-separated):`;
     );
   }
 
-  private cleanMetadataResponse(response: string): string {
+  private stripReasoningFromResponse(response: string): string {
     let cleaned = response.trim();
+
+    // Remove any reasoning blocks that start with common reasoning indicators
+    const reasoningPatterns = [
+      /^(?:Reasoning|Thoughts?|Thinking|Analysis|Explanation|Step by step|Let me think|First,|To answer|Here's my reasoning):\s*/i,
+      /^(?:Certainly|Sure|Of course|Absolutely)[,!]?\s+(?:let me|I'll|I will)\s+/i,
+      /^(?:I|I'll|I will|Let me)\s+(?:analyze|think|consider|explain|provide|generate)\s+/i,
+      /\*\*(?:Reasoning|Thoughts?|Analysis|Explanation):\*\*[\s\S]*$/i,
+      /---\s*(?:Reasoning|Analysis|Explanation)[\s\S]*$/i
+    ];
+
+    for (const pattern of reasoningPatterns) {
+      cleaned = cleaned.replace(pattern, '');
+    }
+
+    // Remove content between reasoning delimiters
+    cleaned = cleaned.replace(/\[(?:Reasoning|Thoughts?|Analysis)\][\s\S]*?\[\/(?:Reasoning|Thoughts?|Analysis)\]/gi, '');
+
+    // Remove markdown-style reasoning sections
+    cleaned = cleaned.replace(/#{1,6}\s+(?:Reasoning|Analysis|Explanation|Thoughts?)[\s\S]*?(?=\n#{1,6}|\n\n|$)/gi, '');
+
+    // If response contains common reasoning introducers, take only the part after them
+    const splitPatterns = [
+      /(?:^|\n)(?:Final answer|Answer|Result|Output):\s*/i,
+      /(?:^|\n)(?:Meta )?(?:description|keywords):\s*/i
+    ];
+
+    for (const pattern of splitPatterns) {
+      const match = cleaned.match(pattern);
+      if (match && match.index !== undefined) {
+        cleaned = cleaned.substring(match.index + match[0].length);
+        break;
+      }
+    }
+
+    return cleaned.trim();
+  }
+
+  private cleanMetadataResponse(response: string): string {
+    // First strip any reasoning content
+    let cleaned = this.stripReasoningFromResponse(response);
 
     // Remove quotes if present
     if (cleaned.startsWith('"') && cleaned.endsWith('"')) {
@@ -663,7 +851,8 @@ French keywords (comma-separated):`;
     const prefixes = [
       'Here is a summary:', 'Summary:', 'Meta description:',
       'Voici un résumé:', 'Résumé:', 'Méta-description:',
-      'French translation:', 'Translation:'
+      'French translation:', 'Translation:', 'Final answer:',
+      'Answer:', 'Result:', 'Output:'
     ];
 
     for (const prefix of prefixes) {
@@ -671,6 +860,9 @@ French keywords (comma-separated):`;
         cleaned = cleaned.substring(prefix.length).trim();
       }
     }
+
+    // Remove any remaining asterisks, markdown formatting
+    cleaned = cleaned.replace(/\*\*/g, '');
 
     // Truncate to 275 characters if needed
     if (cleaned.length > 275) {
@@ -686,7 +878,8 @@ French keywords (comma-separated):`;
   }
 
   private cleanKeywordsResponse(response: string): string {
-    let cleaned = response.trim();
+    // First strip any reasoning content
+    let cleaned = this.stripReasoningFromResponse(response);
 
     // Remove quotes if present
     if (cleaned.startsWith('"') && cleaned.endsWith('"')) {
@@ -696,7 +889,8 @@ French keywords (comma-separated):`;
     // Remove common prefixes
     const prefixes = [
       'Keywords:', 'Here are the keywords:', 'Meta keywords:',
-      'Mots-clés:', 'Voici les mots-clés:', 'French keywords:'
+      'Mots-clés:', 'Voici les mots-clés:', 'French keywords:',
+      'Final answer:', 'Answer:', 'Result:', 'Output:'
     ];
 
     for (const prefix of prefixes) {
@@ -705,13 +899,16 @@ French keywords (comma-separated):`;
       }
     }
 
+    // Remove any remaining asterisks, markdown formatting
+    cleaned = cleaned.replace(/\*\*/g, '');
+
     // Clean up the keywords list
     const keywords = cleaned.split(',').map(k => k.trim()).filter(k => k.length > 0);
     return keywords.join(', ');
   }
 
   // Document processing methods
-  processDocument(file: File): Observable<DocumentMetadata> {
+  processDocument(file: File, translationModel?: string): Observable<DocumentMetadata> {
     return from(this.extractDocumentText(file)).pipe(
       switchMap(content => {
         if (!content || content.length < 50) {
@@ -723,7 +920,7 @@ French keywords (comma-separated):`;
   }
 
   // New document processing methods for enhanced document upload
-  processEnglishDocument(file: File, model: string): Observable<{
+  processEnglishDocument(file: File, model: string, translationModel?: string): Observable<{
     englishMetadata: DocumentMetadata;
     frenchTranslation: DocumentMetadata;
   }> {
@@ -737,7 +934,7 @@ French keywords (comma-separated):`;
         return this.generateMetadata(content, model, 'en').pipe(
           switchMap(englishMetadata => {
             // Translate to French with CRA terminology
-            return this.translateMetadata(englishMetadata).pipe(
+            return this.translateMetadata(englishMetadata, translationModel).pipe(
               map(frenchTranslation => ({
                 englishMetadata,
                 frenchTranslation
@@ -816,7 +1013,7 @@ French keywords (comma-separated):`;
                 metaDescription: metadata.description,
                 metaKeywords: metadata.keywords,
                 language: 'fr' as const,
-                modelUsed: 'mistralai/mistral-small-3.2-24b-instruct:free',
+                modelUsed: 'anthropic/claude-3.5-sonnet',
                 fallbackUsed: false
               }
             }))
@@ -857,29 +1054,46 @@ French keywords (comma-separated):`;
     // Use same prompts as French metadata generation but for French content
     const descriptionPrompt = `En tant qu'expert en référencement de l'Agence du revenu du Canada, analysez attentivement le contenu suivant et fournissez un résumé concis et complet adapté à une méta-description en français. Le résumé DOIT être parfaitement adapté au contenu spécifique fourni. Utilisez des termes spécifiques au sujet, écrivez en phrases complètes, et assurez-vous que le résumé se termine de manière concise dans les 275 caractères.
 
-INSTRUCTIONS CRITIQUES:
-- Fournissez UNIQUEMENT la méta-description elle-même SANS commentaire supplémentaire, SANS raisonnement, SANS explications, SANS processus de réflexion, et SANS chaîne de pensée
-- NE montrez PAS votre processus de pensée, raisonnement, ou chaîne de pensée
-- Donnez UNIQUEMENT la réponse finale
+⚠️ EXIGENCES CRITIQUES DE FORMAT DE SORTIE - LISEZ ATTENTIVEMENT:
+- Votre réponse COMPLÈTE doit être UNIQUEMENT le texte de la méta-description
+- N'incluez AUCUN des éléments suivants:
+  ✗ AUCUN raisonnement ou processus de réflexion
+  ✗ AUCUNE analyse étape par étape
+  ✗ AUCUNE explication de votre approche
+  ✗ AUCUN préambule comme "Voici..." ou "La description est..."
+  ✗ AUCUN commentaire sur le contenu
+  ✗ AUCUNE étiquette comme "Résumé:", "Méta-description:", "Réponse:", etc.
+  ✗ AUCUNE chaîne de pensée ou monologue interne
+  ✗ AUCUN formatage markdown, astérisques ou texte en gras
+- Sortez simplement la ou les phrases de méta-description et rien d'autre
+- Le premier caractère de votre réponse doit être le premier caractère de la méta-description
 
 ${content}
 
-Résumé:`;
+Méta-description (texte uniquement):`;
 
     const keywordsPrompt = `En tant qu'expert en optimisation pour les moteurs de recherche de l'Agence du revenu du Canada, analysez attentivement le contenu suivant et identifiez 10 mots-clés méta significatifs qui sont DIRECTEMENT EXTRAITS du contenu.
 
-INSTRUCTIONS CRITIQUES:
-- Retournez UNIQUEMENT une liste de mots-clés séparés par des virgules sans AUCUNE note supplémentaire, SANS commentaire, SANS raisonnement, SANS processus de réflexion, et SANS chaîne de pensée
-- NE montrez PAS votre processus de pensée ou chaîne de pensée
+⚠️ EXIGENCES CRITIQUES DE FORMAT DE SORTIE - LISEZ ATTENTIVEMENT:
+- Votre réponse COMPLÈTE doit être UNIQUEMENT une liste de mots-clés séparés par des virgules
+- N'incluez AUCUN des éléments suivants:
+  ✗ AUCUN raisonnement ou processus de réflexion
+  ✗ AUCUNE analyse ou explication
+  ✗ AUCUN préambule comme "Voici..." ou "Les mots-clés sont..."
+  ✗ AUCUNE étiquette comme "Mots-clés:", "Réponse:", etc.
+  ✗ AUCUNE numérotation ou puces
+  ✗ AUCUNE chaîne de pensée
+  ✗ AUCUN formatage markdown ou astérisques
 - Excluez 'Agence du revenu du Canada' des mots-clés
-- Donnez UNIQUEMENT la réponse finale
+- Sortez simplement: mot-clé1, mot-clé2, mot-clé3, etc.
+- Le premier caractère de votre réponse doit être la première lettre du premier mot-clé
 
 ${content}
 
-Mots-clés:`;
+Mots-clés (liste séparée par des virgules uniquement):`;
 
-    // Use Mistral Small for French metadata generation
-    const model = 'mistralai/mistral-small-3.2-24b-instruct:free';
+    // Use Claude 3.5 Sonnet for French metadata generation - best translation model
+    const model = 'anthropic/claude-3.5-sonnet';
 
     return this.callOpenRouter(descriptionPrompt, model, 200).pipe(
       retry({
@@ -947,7 +1161,7 @@ DESCRIPTION: [votre méta-description suggérée]
 KEYWORDS: [vos mots-clés suggérés]
 RATIONALE: [votre justification]`;
 
-    const model = 'mistralai/mistral-small-3.2-24b-instruct:free';
+    const model = 'anthropic/claude-3.5-sonnet'; // Best model for French evaluation
 
     return this.callOpenRouter(evaluationPrompt, model, 400, this.TRANSLATION_TIMEOUT).pipe(
       retry({ count: 1, delay: 2000 }),
@@ -960,19 +1174,41 @@ RATIONALE: [votre justification]`;
   }
 
   private parseEvaluationResponse(response: string): EvaluationResult {
-    const lines = response.trim().split('\n');
+    const text = response.trim();
     let suggestedDescription = '';
     let suggestedKeywords = '';
     let rationale = '';
 
-    for (const line of lines) {
-      const trimmedLine = line.trim();
-      if (trimmedLine.startsWith('DESCRIPTION:')) {
-        suggestedDescription = trimmedLine.substring('DESCRIPTION:'.length).trim();
-      } else if (trimmedLine.startsWith('KEYWORDS:')) {
-        suggestedKeywords = trimmedLine.substring('KEYWORDS:'.length).trim();
-      } else if (trimmedLine.startsWith('RATIONALE:')) {
-        rationale = trimmedLine.substring('RATIONALE:'.length).trim();
+    // Use regex to extract sections that may span multiple lines
+    const descriptionMatch = text.match(/DESCRIPTION:\s*\n?([\s\S]*?)(?=KEYWORDS:|$)/i);
+    const keywordsMatch = text.match(/KEYWORDS:\s*\n?([\s\S]*?)(?=RATIONALE:|$)/i);
+    const rationaleMatch = text.match(/RATIONALE:\s*\n?([\s\S]*?)$/i);
+
+    if (descriptionMatch && descriptionMatch[1]) {
+      suggestedDescription = descriptionMatch[1].trim();
+    }
+
+    if (keywordsMatch && keywordsMatch[1]) {
+      suggestedKeywords = keywordsMatch[1].trim();
+    }
+
+    if (rationaleMatch && rationaleMatch[1]) {
+      rationale = rationaleMatch[1].trim();
+    }
+
+    // Individual fallbacks for each field that failed
+    if (!suggestedDescription || !suggestedKeywords || !rationale) {
+      const lines = text.split('\n');
+      for (const line of lines) {
+        const trimmedLine = line.trim();
+
+        if (!suggestedDescription && trimmedLine.startsWith('DESCRIPTION:')) {
+          suggestedDescription = trimmedLine.substring('DESCRIPTION:'.length).trim();
+        } else if (!suggestedKeywords && trimmedLine.startsWith('KEYWORDS:')) {
+          suggestedKeywords = trimmedLine.substring('KEYWORDS:'.length).trim();
+        } else if (!rationale && trimmedLine.startsWith('RATIONALE:')) {
+          rationale = trimmedLine.substring('RATIONALE:'.length).trim();
+        }
       }
     }
 

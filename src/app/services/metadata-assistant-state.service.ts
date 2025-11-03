@@ -34,6 +34,7 @@ export interface MetadataProcessingState {
   results: MetadataResult[];
   error: string | null;
   selectedModel: string;
+  selectedTranslationModel: string;
   translateToFrench: boolean;
   documentProcessingIndex: number | null;
   documentMode: DocumentMode;
@@ -56,6 +57,7 @@ export class MetadataAssistantStateService {
     results: [],
     error: null,
     selectedModel: 'openai/gpt-oss-20b:free',
+    selectedTranslationModel: 'anthropic/claude-3.5-sonnet', // Default to best translation model
     translateToFrench: false,
     documentProcessingIndex: null,
     documentMode: 'english-only',
@@ -135,6 +137,10 @@ export class MetadataAssistantStateService {
 
   setSelectedModel(model: string): void {
     this.updateState({ selectedModel: model });
+  }
+
+  setSelectedTranslationModel(model: string): void {
+    this.updateState({ selectedTranslationModel: model });
   }
 
   setTranslateToFrench(translate: boolean): void {
