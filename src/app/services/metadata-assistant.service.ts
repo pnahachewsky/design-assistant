@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable, from, of, throwError } from 'rxjs';
-import { catchError, map, retry, timeout, switchMap, delay, tap } from 'rxjs/operators';
+import { catchError, map, retry, timeout, switchMap, delay } from 'rxjs/operators';
 import { ApiKeyService } from './api-key.service';
 import { FileParseService } from './file-parse.service';
 
@@ -908,7 +908,7 @@ French keywords (comma-separated list only):`;
   }
 
   // Document processing methods
-  processDocument(file: File, translationModel?: string): Observable<DocumentMetadata> {
+  processDocument(file: File): Observable<DocumentMetadata> {
     return from(this.extractDocumentText(file)).pipe(
       switchMap(content => {
         if (!content || content.length < 50) {

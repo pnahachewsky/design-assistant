@@ -10,7 +10,7 @@ import { TabsModule } from 'primeng/tabs';
 import { MessageService } from 'primeng/api';
 import { Subject, takeUntil } from 'rxjs';
 import { MetadataAssistantService, MetadataResult } from '../../services/metadata-assistant.service';
-import { MetadataAssistantStateService, MetadataProcessingState, ComparisonResult, DocumentMode } from '../../services/metadata-assistant-state.service';
+import { MetadataAssistantStateService, MetadataProcessingState, ComparisonResult } from '../../services/metadata-assistant-state.service';
 import { ApiKeyService } from '../../services/api-key.service';
 import { SharedModelSelectorComponent, ModelOption } from '../../components/model-selector/model-selector.component';
 import { ProgressIndicatorComponent } from '../../components/progress-indicator/progress-indicator.component';
@@ -83,64 +83,44 @@ export class MetadataAssistantComponent implements OnInit, OnDestroy {
 
   models: ModelOption[] = [
     {
-      name: 'OpenAI GPT-OSS 20B (free)',
-      value: 'openai/gpt-oss-20b:free',
-      description: 'metadata.models.gptOssDescription'
+      name: 'Claude Sonnet 4.5 (paid)',
+      value: 'anthropic/claude-sonnet-4.5',
+      description: ''
     },
     {
-      name: 'Claude 3 Haiku (paid)',
-      value: 'anthropic/claude-3-haiku',
-      description: 'metadata.models.claudeHaikuDescription'
+      name: 'GPT-4o mini (paid)',
+      value: 'openai/gpt-4o-mini',
+      description: ''
     },
     {
-      name: 'GPT-4.1 Mini (paid)',
-      value: 'openai/gpt-4.1-mini',
-      description: 'metadata.models.gpt41MiniDescription'
-    },
-    {
-      name: 'Meta Llama 3.3 70B (free)',
-      value: 'meta-llama/llama-3.3-70b-instruct:free',
-      description: 'metadata.models.llamaDescription'
-    },
-    {
-      name: 'Google Gemma 3 27B (free)',
-      value: 'google/gemma-3-27b-it:free',
-      description: 'metadata.models.gemmaDescription'
-    },
-    {
-      name: 'Tencent Hunyuan A13B (free)',
-      value: 'tencent/hunyuan-a13b-instruct:free',
-      description: 'metadata.models.hunyuanDescription'
-    },
-    {
-      name: 'Qwen 3 4B (free)',
-      value: 'qwen/qwen3-4b:free',
-      description: 'metadata.models.qwen3_4bDescription'
-    },
-    {
-      name: 'Qwen 3 8B (free)',
-      value: 'qwen/qwen3-8b:free',
-      description: 'metadata.models.qwen3_8bDescription'
-    },
-    {
-      name: 'Qwen 3 14B (free)',
-      value: 'qwen/qwen3-14b:free',
-      description: 'metadata.models.qwen3_14bDescription'
-    },
-    {
-      name: 'Qwen 3 30B (free)',
-      value: 'qwen/qwen3-30b-a3b:free',
-      description: 'metadata.models.qwen3_30bDescription'
+      name: 'Gemini 2.5 Pro (paid)',
+      value: 'google/gemini-2.5-pro',
+      description: ''
     },
     {
       name: 'Qwen 3 235B (free)',
       value: 'qwen/qwen3-235b-a22b:free',
-      description: 'metadata.models.qwen3_235bDescription'
+      description: ''
     },
     {
-      name: 'Microsoft MAI-DS R1 (free)',
-      value: 'microsoft/mai-ds-r1:free',
-      description: 'metadata.models.maiDsR1Description'
+      name: 'Gemini 2.0 Flash (free)',
+      value: 'google/gemini-2.0-flash-exp:free',
+      description: ''
+    },
+    {
+      name: 'Meta Llama 3.3 70B (free)',
+      value: 'meta-llama/llama-3.3-70b-instruct:free',
+      description: ''
+    },
+    {
+      name: 'Google Gemma 3 27B (free)',
+      value: 'google/gemma-3-27b-it:free',
+      description: ''
+    },
+    {
+      name: 'OpenAI GPT-OSS 20B (free)',
+      value: 'openai/gpt-oss-20b:free',
+      description: ''
     }
   ];
 
