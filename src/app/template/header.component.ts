@@ -82,7 +82,6 @@ export class HeaderComponent {
   // constructor(public langToggle: LangToggleService){} //putting the code below into a service works but we aren't calling it anywhere else
   constructor() {
     const curLang = this.localStore.getData('lang') || this.translate.getBrowserLang() || 'en';
-    console.log(this.translate.getBrowserLang());
     this.translate.addLangs(['en', 'fr']);
     this.translate.setDefaultLang('en');
     this.translate.use(curLang);

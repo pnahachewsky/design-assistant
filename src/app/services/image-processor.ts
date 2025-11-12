@@ -1,8 +1,8 @@
-// src/app/services/image-processor.ts
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpHeaders, HttpErrorResponse } from '@angular/common/http';
 import { Observable, from, throwError } from 'rxjs';
 import { catchError, map, switchMap, timeout, retry } from 'rxjs/operators';
+import { TranslateService } from '@ngx-translate/core';
 import { ApiKeyService } from './api-key.service';
 
 // Define interfaces for better type safety
@@ -19,6 +19,7 @@ export interface VisionAnalysisResult {
 export class ImageProcessorService {
   private readonly MAX_IMAGE_SIZE = 1024; // Max width/height for resizing
   private readonly OPENROUTER_API_URL = "https://openrouter.ai/api/v1/chat/completions";
+  private readonly KEY_LIMIT_ERROR_CODE = 'KEY_LIMIT_EXCEEDED'; // Internal error code for rate limits
 
   // Translation models with fallback for rate limit handling
   private readonly TRANSLATION_MODELS = [
@@ -30,8 +31,9 @@ export class ImageProcessorService {
     'openai/gpt-oss-20b:free'              // Free fallback
   ];
 
-  private http = inject(HttpClient);
-  private apiKeyService = inject(ApiKeyService);
+  private readonly http = inject(HttpClient);
+  private readonly apiKeyService = inject(ApiKeyService);
+  private readonly translate = inject(TranslateService);
 
   /**
    * Main method to analyze an image file using OpenRouter's vision API with fallback support.
@@ -48,7 +50,7 @@ export class ImageProcessorService {
     const apiKey = this.apiKeyService.getCurrentKey();
     if (!apiKey) {
       console.error('No API key found');
-      return throwError(() => new Error("OpenRouter API Key is missing. Please provide it."));
+      return throwError(() => new Error(this.translate.instant('image.error.apiKeyMissing')));
     }
     console.log('API key found, loading image...');
 
@@ -82,9 +84,10 @@ export class ImageProcessorService {
           })),
           catchError(translateError => {
             console.error(`Translation error for ${identifier}:`, translateError);
+            const errorMsg = translateError.message || this.translate.instant('image.error.unknown');
             return from([{
               english: visionResult.english,
-              french: `[Translation Error: ${translateError.message || 'Unknown error'}]`,
+              french: this.translate.instant('image.error.translationError', { error: errorMsg }),
               error: translateError.message,
               imageBase64: visionResult.imageBase64
             }]);
@@ -94,18 +97,18 @@ export class ImageProcessorService {
       catchError(error => {
         console.error(`Error in image analysis pipeline for ${identifier}:`, error);
         // Check if this is a key limit error from vision model
-        if (error.message === 'KEY_LIMIT_EXCEEDED') {
+        if (error.message === this.KEY_LIMIT_ERROR_CODE) {
           return from([{
             english: null,
             french: null,
-            error: 'KEY_LIMIT_EXCEEDED',
+            error: this.KEY_LIMIT_ERROR_CODE,
             imageBase64: null
           }]);
         }
         return from([{
           english: null,
           french: null,
-          error: error.message || 'Unknown error',
+          error: error.message || this.translate.instant('image.error.unknown'),
           imageBase64: null
         }]);
       })
@@ -122,12 +125,12 @@ export class ImageProcessorService {
           observer.complete();
         };
         img.onerror = () => {
-          observer.error(new Error(`Failed to load image '${file.name}'.`));
+          observer.error(new Error(this.translate.instant('image.error.failedToLoadImage', { fileName: file.name })));
         };
         img.src = e.target?.result as string;
       };
       reader.onerror = () => {
-        observer.error(new Error(`Failed to read file '${file.name}'.`));
+        observer.error(new Error(this.translate.instant('image.error.failedToReadFile', { fileName: file.name })));
       };
       reader.readAsDataURL(file);
     });
@@ -152,7 +155,7 @@ export class ImageProcessorService {
     canvas.height = height;
     const ctx = canvas.getContext('2d');
     if (!ctx) {
-      throw new Error("Could not get 2D context from canvas for image resizing.");
+      throw new Error(this.translate.instant('image.error.canvasContext'));
     }
     ctx.drawImage(img, 0, 0, width, height);
     return canvas.toDataURL('image/png');
@@ -170,7 +173,7 @@ export class ImageProcessorService {
       return from([{
         english: null,
         french: null,
-        error: 'All vision models failed due to rate limits or errors'
+        error: this.translate.instant('image.error.allVisionModelsFailed')
       }]);
     }
 
@@ -197,7 +200,7 @@ export class ImageProcessorService {
         return from([{
           english: null,
           french: null,
-          error: error.error || error.message || 'All vision models failed'
+          error: error.error || error.message || this.translate.instant('image.error.allVisionModelsFailed')
         }]);
       })
     );
@@ -289,7 +292,7 @@ export class ImageProcessorService {
         const englishText = response?.choices?.[0]?.message?.content?.trim();
         if (!englishText) {
           console.warn(`No content or unexpected structure from vision model for ${identifier}. Response:`, response);
-          throw new Error("No content returned from vision model.");
+          throw new Error(this.translate.instant('image.error.noContentFromVision'));
         }
         return { english: englishText, french: null, error: null };
       }),
@@ -303,7 +306,7 @@ export class ImageProcessorService {
         
         // Check if this is a key limit exceeded error
         if (error.status === 403 && errorMessage.toLowerCase().includes('key limit exceeded')) {
-          errorMessage = 'KEY_LIMIT_EXCEEDED';
+          errorMessage = this.KEY_LIMIT_ERROR_CODE;
         }
         
         console.error(`Error in vision API call for ${identifier}:`, errorMessage, error);
@@ -328,13 +331,12 @@ export class ImageProcessorService {
 
           // Check if this is a key limit exceeded error
           if (error.status === 403 && error.error?.error?.message?.toLowerCase().includes('key limit exceeded')) {
-            return throwError(() => new Error('KEY_LIMIT_EXCEEDED'));
+            return throwError(() => new Error(this.KEY_LIMIT_ERROR_CODE));
           }
 
-          let errorMessage = `Translation API Error (${error.status || 'Network Error'}): ${error.statusText || 'Unknown Error'}`;
-          if (error.error && error.error.error && error.error.error.message) {
-            errorMessage += ` - ${error.error.error.message}`;
-          }
+          const status = error.status || 'Network Error';
+          const statusText = error.statusText || this.translate.instant('image.error.unknown');
+          const errorMessage = this.translate.instant('image.error.translationApiError', { status, statusText });
           return throwError(() => new Error(errorMessage));
         })
       );
@@ -386,7 +388,7 @@ CRITICAL INSTRUCTIONS:
 
         if (!response || !response.choices || !Array.isArray(response.choices) || response.choices.length === 0) {
           console.error(`Invalid response structure from translation model for ${identifier}:`, response);
-          throw new Error("Invalid response structure from translation model.");
+          throw new Error(this.translate.instant('image.error.invalidTranslationResponse'));
         }
 
         const message = response.choices[0]?.message;
@@ -394,14 +396,14 @@ CRITICAL INSTRUCTIONS:
 
         if (!translation || typeof translation !== 'string') {
           console.error(`No content in translation response for ${identifier}. Full response:`, JSON.stringify(response, null, 2));
-          throw new Error("Translation model returned empty content.");
+          throw new Error(this.translate.instant('image.error.emptyTranslationContent'));
         }
 
         translation = translation.trim();
 
         if (!translation) {
           console.error(`Translation content is empty after trimming for ${identifier}`);
-          throw new Error("Translation model returned empty content after trimming.");
+          throw new Error(this.translate.instant('image.error.emptyTranslationContent'));
         }
 
         // Basic cleanup
@@ -416,7 +418,7 @@ CRITICAL INSTRUCTIONS:
 
   private translateWithFallback(text: string, apiKey: string, identifier: string, attemptIndex: number): Observable<string> {
     if (attemptIndex >= this.TRANSLATION_MODELS.length) {
-      return throwError(() => new Error('All translation models failed due to rate limits or errors'));
+      return throwError(() => new Error(this.translate.instant('image.error.allTranslationModelsFailed')));
     }
 
     const translationModel = this.TRANSLATION_MODELS[attemptIndex];
@@ -465,7 +467,7 @@ CRITICAL INSTRUCTIONS:
         // Check if the response has the expected structure
         if (!response || !response.choices || !Array.isArray(response.choices) || response.choices.length === 0) {
           console.error(`Invalid response structure from translation model for ${identifier}:`, response);
-          throw new Error("Invalid response structure from translation model.");
+          throw new Error(this.translate.instant('image.error.invalidTranslationResponse'));
         }
 
         const message = response.choices[0]?.message;
@@ -477,7 +479,7 @@ CRITICAL INSTRUCTIONS:
         // Check if we got any content
         if (!translation || typeof translation !== 'string') {
           console.error(`No content in translation response for ${identifier}. Full response:`, JSON.stringify(response, null, 2));
-          throw new Error("Translation model returned empty content.");
+          throw new Error(this.translate.instant('image.error.emptyTranslationContent'));
         }
 
         translation = translation.trim();
@@ -485,7 +487,7 @@ CRITICAL INSTRUCTIONS:
         // If still empty after trimming
         if (!translation) {
           console.error(`Translation content is empty after trimming for ${identifier}`);
-          throw new Error("Translation model returned empty content after trimming.");
+          throw new Error(this.translate.instant('image.error.emptyTranslationContent'));
         }
 
         // Basic cleanup (though prompt aims to prevent this)
@@ -511,15 +513,16 @@ CRITICAL INSTRUCTIONS:
         }
 
         // If no more models to try, throw the error
-        let errorMessage = `Translation API Error (${error.status || 'Network Error'}): ${error.statusText || 'Unknown Error'}`;
-        if (error.error && error.error.error && error.error.error.message) {
-          errorMessage += ` - ${error.error.error.message}`;
-        }
-
         // Check if this is a key limit exceeded error for translation
         if (error.status === 403 && error.error?.error?.message?.toLowerCase().includes('key limit exceeded')) {
-          errorMessage = 'KEY_LIMIT_EXCEEDED';
+          const errorMessage = this.KEY_LIMIT_ERROR_CODE;
+          console.error(`Error translating text for ${identifier}:`, errorMessage, error);
+          return throwError(() => new Error(errorMessage));
         }
+
+        const status = error.status || 'Network Error';
+        const statusText = error.statusText || this.translate.instant('image.error.unknown');
+        const errorMessage = this.translate.instant('image.error.translationApiError', { status, statusText });
 
         console.error(`Error translating text for ${identifier}:`, errorMessage, error);
         return throwError(() => new Error(errorMessage));

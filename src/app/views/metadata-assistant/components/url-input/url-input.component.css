@@ -1,31 +1,9 @@
-.url-input-container {
-  width: 100%;
-}
-
-.url-input-content {
-  padding: 0;
-}
-
-.field label {
-  font-weight: 600;
-  color: var(--text-color);
-}
-
+/* Minimal CSS for textarea monospace (URL-specific need) */
 textarea {
   font-family: monospace;
-  line-height: 1.5;
 }
 
-.url-validation {
-  padding: 1rem;
-  background-color: var(--surface-50);
-  border-radius: var(--border-radius);
-}
-
+/* PrimeNG component overrides for compact chip display */
 :host ::ng-deep .p-chip {
   padding: 0.25rem 0.5rem;
-}
-
-:host ::ng-deep .p-message {
-  margin: 0;
 }

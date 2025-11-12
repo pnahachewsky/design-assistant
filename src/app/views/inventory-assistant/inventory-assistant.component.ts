@@ -19,7 +19,7 @@ interface MetadataResult {
 }
 
 // Global cache for loaded CSV data
-let csvCache: Record<string, any[]> = {};
+const csvCache: Record<string, any[]> = {};
 
 @Injectable({
   providedIn: 'root'
@@ -39,8 +39,8 @@ export class InventoryAssistantComponent {
   loading = false;
   errorMessage = '';
   urlsInput = '';
-  selectedSourceOption: string = 'canadaOrGithub'; // Default radio button selection
-  previewInput: string = '';
+  selectedSourceOption = 'canadaOrGithub'; // Default radio button selection
+  previewInput = '';
 
 
   /**

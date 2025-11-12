@@ -35,6 +35,7 @@ export class MetadataResultComponent {
   @Output() documentSelected = new EventEmitter<{ file: File, index: number }>();
 
   expandedStates: Record<number, boolean> = {};
+  uploadedDocuments: Record<number, File> = {};
 
   toggleExpanded(index: number): void {
     this.expandedStates[index] = !this.expandedStates[index];
@@ -73,8 +74,8 @@ export class MetadataResultComponent {
   }
 
   onFrenchDocumentFileSelected(file: File, index: number): void {
-    // Handle French document upload for comparison
-    console.log('French document selected for result index:', index, file.name);
+    // Store the uploaded French document for this result
+    this.uploadedDocuments[index] = file;
   }
 
   onDocumentModeChanged(mode: string, index: number): void {
@@ -82,13 +83,26 @@ export class MetadataResultComponent {
   }
 
   canUploadDocument(result: MetadataResult): boolean {
+    const hasFrenchTranslation = !!result.frenchTranslatedDescription && !!result.frenchTranslatedKeywords;
+    const hasEnglishTranslation = !!result.englishTranslatedDescription && !!result.englishTranslatedKeywords;
+
     return this.showTranslations &&
-           !!result.frenchTranslatedDescription &&
-           !!result.frenchTranslatedKeywords &&
+           (hasFrenchTranslation || hasEnglishTranslation) &&
            !result.evaluationResult;
   }
 
   isProcessingDocument(index: number): boolean {
     return this.isProcessing && this.processingIndex === index;
+  }
+
+  hasUploadedDocument(index: number): boolean {
+    return !!this.uploadedDocuments[index];
+  }
+
+  processDocument(index: number): void {
+    const file = this.uploadedDocuments[index];
+    if (file) {
+      this.documentSelected.emit({ file, index });
+    }
   }
 }

@@ -42,7 +42,7 @@ import { CsvDownloadComponent } from './components/csv-download/csv-download.com
 })
 export class ImageAssistantComponent implements OnInit, OnDestroy {
   // Processing State
-  selectedVisionModel = 'qwen/qwen2.5-vl-32b-instruct:free';
+  selectedVisionModel = 'qwen/qwen3-vl-8b-instruct';
   filesToProcess: {file: File, displayName: string}[] = [];
   state$!: Observable<ProcessingState>;
   
@@ -52,9 +52,9 @@ export class ImageAssistantComponent implements OnInit, OnDestroy {
   // Model options for the shared selector
   visionModels: ModelOption[] = [
     {
-      name: 'image.model.qwen32',
-      value: 'qwen/qwen2.5-vl-32b-instruct:free',
-      description: 'image.model.qwen32Description'
+      name: 'image.model.qwen3vl8b',
+      value: 'qwen/qwen3-vl-8b-instruct',
+      description: 'image.model.qwen3vl8bDescription'
     },
     {
       name: 'image.model.qwen3vl30b',
@@ -75,34 +75,34 @@ export class ImageAssistantComponent implements OnInit, OnDestroy {
 
   translationModels: ModelOption[] = [
     {
-      name: 'Claude 3.5 Sonnet (paid)',
+      name: 'image.translationModel.claude35Sonnet',
       value: 'anthropic/claude-3.5-sonnet',
-      description: ''
+      description: 'image.translationModel.claude35SonnetDescription'
     },
     {
-      name: 'GPT-4o mini (paid)',
+      name: 'image.translationModel.gpt4oMini',
       value: 'openai/gpt-4o-mini',
-      description: ''
+      description: 'image.translationModel.gpt4oMiniDescription'
     },
     {
-      name: 'Gemini 2.0 Flash (free)',
+      name: 'image.translationModel.gemini20Flash',
       value: 'google/gemini-2.0-flash-exp:free',
-      description: ''
+      description: 'image.translationModel.gemini20FlashDescription'
     },
     {
-      name: 'Llama 3.3 70B (free)',
+      name: 'image.translationModel.llama33',
       value: 'meta-llama/llama-3.3-70b-instruct:free',
-      description: ''
+      description: 'image.translationModel.llama33Description'
     },
     {
-      name: 'Gemma 3 27B (free)',
+      name: 'image.translationModel.gemma327b',
       value: 'google/gemma-3-27b-it:free',
-      description: ''
+      description: 'image.translationModel.gemma327bDescription'
     },
     {
-      name: 'GPT-OSS 20B (free)',
+      name: 'image.translationModel.gptOss20b',
       value: 'openai/gpt-oss-20b:free',
-      description: ''
+      description: 'image.translationModel.gptOss20bDescription'
     }
   ];
 
@@ -138,9 +138,6 @@ export class ImageAssistantComponent implements OnInit, OnDestroy {
   }
 
   onFilesSelected(files: FileList): void {
-    console.log('Files selected:', files);
-    console.time("Image processing time");
-    
     // Start timing
     this.processingStartTime = performance.now();
     
@@ -226,11 +223,9 @@ export class ImageAssistantComponent implements OnInit, OnDestroy {
     try {
       // Handle PDFs by converting to images first
       if (file.type === 'application/pdf') {
-        console.log('Converting PDF to images:', displayName);
         const images = await this.pdfConverterService.convertPdfToImages(file);
-        
+
         if (images.length > 0) {
-          console.log(`PDF has ${images.length} pages. Processing all pages...`);
           
           // Add each page as a separate file to process
           images.forEach((imageDataUrl, index) => {
@@ -349,9 +344,8 @@ export class ImageAssistantComponent implements OnInit, OnDestroy {
     this.stateService.updateState({
       progressText: this.translate.instant('image.progress.complete', { count: state.processedCount })
     });
-    
+
     // Calculate and show processing time
-    console.timeEnd("Image processing time");
     const endTime = performance.now();
     const durationInSeconds = ((endTime - this.processingStartTime) / 1000).toFixed(2);
     

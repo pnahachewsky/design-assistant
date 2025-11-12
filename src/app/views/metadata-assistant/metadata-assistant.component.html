@@ -150,7 +150,8 @@
               [disabled]="state.isProcessing"
               (englishFileSelected)="onEnglishDocumentSelected($event)"
               (frenchFileSelected)="onFrenchDocumentSelected($event)"
-              (modeChanged)="onDocumentModeChanged($event)">
+              (modeChanged)="onDocumentModeChanged($event)"
+              (translateOptionChanged)="onDocumentTranslateOptionChanged($event)">
             </ca-document-upload>
 
             <!-- Model Selector -->
@@ -167,13 +168,13 @@
               </ca-shared-model-selector>
             </div>
 
-            <!-- Translation Model Selector (shown for English or Both modes) -->
-            <div class="mt-3" *ngIf="state.documentMode === 'english-only' || state.documentMode === 'both'">
+            <!-- Translation Model Selector (shown when translation is enabled) -->
+            <div class="mt-3" *ngIf="shouldShowTranslationModelSelector()">
               <ca-shared-model-selector
                 [selectedModel]="state.selectedTranslationModel"
                 [models]="translationModels"
                 [label]="'metadata.translationModelSelector.modelLabel'"
-                [cardTitle]="'metadata.translationModelSelector.title'"
+                [cardTitle]="getTranslationModelSelectorTitle()"
                 [showCard]="true"
                 [showTranslateOption]="false"
                 [disabled]="state.isProcessing"
@@ -256,9 +257,10 @@
         <div class="mt-4" *ngIf="documentResults.length > 0">
           <ca-metadata-result
             [results]="documentResults"
-            [showTranslations]="state.documentMode === 'english-only'"
+            [showTranslations]="(state.documentMode === 'english-only' || state.documentMode === 'french-only') && documentTranslateOption"
             [isProcessing]="state.isProcessing"
-            [processingIndex]="null">
+            [processingIndex]="documentProcessingIndex"
+            (documentSelected)="onDocumentUploadEvaluation($event)">
           </ca-metadata-result>
 
           <!-- Comparison View (shown when both documents processed) -->

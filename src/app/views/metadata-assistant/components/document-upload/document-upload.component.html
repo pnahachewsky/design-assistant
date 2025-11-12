@@ -7,7 +7,7 @@
   </ng-template>
 
   <!-- Mode Selection (hidden in simplified mode) -->
-  <div class="mode-selection mb-4" *ngIf="!simplifiedMode">
+  <div class="p-3 surface-50 border-round mb-4" *ngIf="!simplifiedMode">
     <span class="font-semibold text-lg mb-2 block">
       {{ 'metadata.document.processingMode' | translate }}
     </span>
@@ -54,14 +54,14 @@
     </div>
   </div>
 
-  <!-- English Document Upload (shown for english-only and both modes, hidden in simplified mode) -->
-  <div class="upload-section mb-3" *ngIf="!simplifiedMode && (selectedMode === 'english-only' || selectedMode === 'both')">
+  <!-- English Document Upload (shown for english-only, both modes, or french-only with translation enabled, hidden in simplified mode) -->
+  <div class="mb-4" *ngIf="!simplifiedMode && (selectedMode === 'english-only' || selectedMode === 'both' || (selectedMode === 'french-only' && translateToOtherLanguage))">
     <span class="font-semibold mb-2 block">
-      {{ 'metadata.document.uploadEnglish' | translate }}
+      {{ getEnglishUploadLabel() | translate }}
     </span>
 
     <div
-      class="upload-zone"
+      class="upload-zone flex flex-column align-items-center justify-content-center p-4 border-2 border-dashed border-round surface-100"
       [class.dragging]="isDraggingEnglish"
       [class.has-file]="englishFile"
       role="button"
@@ -83,8 +83,8 @@
         (change)="onEnglishFileSelected($event)" />
 
       <ng-container *ngIf="englishFile; else englishDragArea">
-        <i class="pi pi-file-word text-4xl mb-2 file-icon"></i>
-        <p class="text-xl text-center mb-2 file-name">{{ englishFile.name }}</p>
+        <i class="pi pi-file-word text-4xl mb-2 text-blue-500"></i>
+        <p class="text-xl text-center mb-2" style="word-break: break-word; max-width: 90%;">{{ englishFile.name }}</p>
         <p-button
           [label]="'metadata.document.clearFile' | translate"
           icon="pi pi-times"
@@ -96,22 +96,22 @@
       </ng-container>
 
       <ng-template #englishDragArea>
-        <i class="pi pi-upload upload-icon text-5xl"></i>
-        <p class="m-0 text-center text-sm upload-text">
+        <i class="pi pi-upload text-5xl text-color-secondary border-2 border-round-3xl p-4 mb-3" style="border-color: var(--surface-300);"></i>
+        <p class="m-0 text-center text-sm text-color-secondary">
           {{ 'metadata.document.dragDrop' | translate }}
         </p>
       </ng-template>
     </div>
   </div>
 
-  <!-- French Document Upload (shown for french-only and both modes, or always in simplified mode) -->
-  <div class="upload-section" *ngIf="simplifiedMode || selectedMode === 'french-only' || selectedMode === 'both'">
+  <!-- French Document Upload (shown for french-only, both modes, or english-only with translation enabled, or always in simplified mode) -->
+  <div class="mb-4" *ngIf="simplifiedMode || selectedMode === 'french-only' || selectedMode === 'both' || (selectedMode === 'english-only' && translateToOtherLanguage)">
     <span class="font-semibold mb-2 block" *ngIf="!simplifiedMode">
-      {{ (selectedMode === 'both' ? 'metadata.document.uploadFrench' : 'metadata.document.uploadEnglish') | translate }}
+      {{ getFrenchUploadLabel() | translate }}
     </span>
 
     <div
-      class="upload-zone"
+      class="upload-zone flex flex-column align-items-center justify-content-center p-4 border-2 border-dashed border-round surface-100"
       [class.dragging]="isDraggingFrench"
       [class.has-file]="frenchFile"
       role="button"
@@ -133,8 +133,8 @@
         (change)="onFrenchFileSelected($event)" />
 
       <ng-container *ngIf="frenchFile; else frenchDragArea">
-        <i class="pi pi-file-word text-4xl mb-2 file-icon"></i>
-        <p class="text-xl text-center mb-2 file-name">{{ frenchFile.name }}</p>
+        <i class="pi pi-file-word text-4xl mb-2 text-blue-500"></i>
+        <p class="text-xl text-center mb-2" style="word-break: break-word; max-width: 90%;">{{ frenchFile.name }}</p>
         <p-button
           [label]="'metadata.document.clearFile' | translate"
           icon="pi pi-times"
@@ -146,11 +146,26 @@
       </ng-container>
 
       <ng-template #frenchDragArea>
-        <i class="pi pi-upload upload-icon text-5xl"></i>
-        <p class="m-0 text-center text-sm upload-text">
+        <i class="pi pi-upload text-5xl text-color-secondary border-2 border-round-3xl p-4 mb-3" style="border-color: var(--surface-300);"></i>
+        <p class="m-0 text-center text-sm text-color-secondary">
           {{ 'metadata.document.dragDrop' | translate }}
         </p>
       </ng-template>
+    </div>
+  </div>
+
+  <!-- Translation Option (shown for english-only and french-only modes) -->
+  <div class="translation-option mt-3" *ngIf="shouldShowTranslateOption()">
+    <div class="flex align-items-center">
+      <p-checkbox
+        [(ngModel)]="translateToOtherLanguage"
+        (ngModelChange)="onTranslateOptionChange()"
+        [binary]="true"
+        inputId="translateOption">
+      </p-checkbox>
+      <label for="translateOption" class="ml-2 cursor-pointer">
+        {{ getTranslateLabel() | translate }}
+      </label>
     </div>
   </div>
 </p-card>

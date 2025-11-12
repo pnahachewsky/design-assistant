@@ -1,10 +1,1 @@
-/* Custom monospace styling for code display */
-.meta-content {
-  font-family: 'Monaco', 'Courier New', monospace;
-  word-break: break-word;
-}
-
-/* Custom left border for translation section */
-.translation-section {
-  border-left: 3px solid var(--primary-300);
-}
+/* No custom CSS needed - using PrimeNG utilities */

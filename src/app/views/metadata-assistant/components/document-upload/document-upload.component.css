@@ -1,26 +1,8 @@
-.mode-selection {
-  padding: 1rem;
-  background-color: var(--surface-50);
-  border-radius: var(--border-radius);
-  margin-bottom: 1.5rem;
-}
-
-.upload-section {
-  margin-bottom: 1.5rem;
-}
-
+/* Minimal CSS for upload zone states that PrimeNG doesn't cover */
 .upload-zone {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 2rem;
-  border: 2px dashed var(--surface-border);
-  border-radius: var(--border-radius);
-  background-color: var(--surface-100);
-  min-height: 200px;
-  cursor: pointer;
   transition: all 0.3s ease;
+  cursor: pointer;
+  min-height: 200px;
 }
 
 .upload-zone:hover {
@@ -38,37 +20,7 @@
   background-color: var(--green-50);
 }
 
-.upload-icon {
-  color: var(--text-color-secondary);
-  border: 2px solid var(--surface-300);
-  border-radius: 50%;
-  padding: 1.5rem;
-  margin-bottom: 1rem;
-}
-
-.upload-text {
-  color: var(--text-color-secondary);
-}
-
-.file-icon {
-  color: var(--blue-500);
-}
-
-.file-name {
-  color: var(--text-color);
-  word-break: break-word;
-  max-width: 90%;
-}
-
 /* Dark mode adjustments */
-:host-context(.dark-mode) .mode-selection {
-  background-color: var(--surface-800);
-}
-
-:host-context(.dark-mode) .upload-zone {
-  background-color: var(--surface-800);
-}
-
 :host-context(.dark-mode) .upload-zone:hover {
   background-color: var(--surface-700);
 }

@@ -2,6 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable, from, of, throwError } from 'rxjs';
 import { catchError, map, retry, timeout, switchMap, delay } from 'rxjs/operators';
+import { TranslateService } from '@ngx-translate/core';
 import { ApiKeyService } from './api-key.service';
 import { FileParseService } from './file-parse.service';
 
@@ -14,6 +15,7 @@ export interface EvaluationResult {
   suggestedDescription: string;
   suggestedKeywords: string;
   rationale: string;
+  rationaleEnglish: string;
 }
 
 export interface MetadataResult {
@@ -23,6 +25,8 @@ export interface MetadataResult {
   metaKeywords: string;
   frenchTranslatedDescription?: string;
   frenchTranslatedKeywords?: string;
+  englishTranslatedDescription?: string;
+  englishTranslatedKeywords?: string;
   documentMetadata?: DocumentMetadata;
   evaluationResult?: EvaluationResult;
   language: 'en' | 'fr';
@@ -78,6 +82,7 @@ export class MetadataAssistantService {
   private http = inject(HttpClient);
   private apiKeyService = inject(ApiKeyService);
   private fileParseService = inject(FileParseService);
+  private translate = inject(TranslateService);
 
   processUrls(options: ProcessingOptions): Observable<MetadataResult[]> {
     const results: MetadataResult[] = [];
@@ -100,7 +105,7 @@ export class MetadataAssistantService {
     return this.scrapeUrl(url).pipe(
       switchMap(scrapedContent => {
         if (!scrapedContent || scrapedContent.length < 50) {
-          return throwError(() => new Error('Content too short or invalid for processing'));
+          return throwError(() => new Error(this.translate.instant('metadata.errors.contentTooShort')));
         }
 
         const language = this.detectLanguage(scrapedContent);
@@ -140,11 +145,11 @@ export class MetadataAssistantService {
       const parsedUrl = new URL(url);
       if (!ALLOWED_HOSTS.has(parsedUrl.host)) {
         return throwError(() => new Error(
-          `Host not allowed: ${parsedUrl.host}. Only government domains are supported.`
+          this.translate.instant('metadata.errors.hostNotAllowed', { host: parsedUrl.host })
         ));
       }
     } catch {
-      return throwError(() => new Error('Invalid URL format'));
+      return throwError(() => new Error(this.translate.instant('metadata.urlInput.errors.invalidFormat')));
     }
 
     // Fetch with cache busting like page assistant
@@ -156,7 +161,7 @@ export class MetadataAssistantService {
       timeout(this.SCRAPING_TIMEOUT),
       switchMap(response => {
         if (!response.ok) {
-          throw new Error(`Failed to fetch URL: HTTP ${response.status}`);
+          throw new Error(this.translate.instant('metadata.errors.failedToFetch', { status: response.status }));
         }
         return from(response.text());
       }),
@@ -167,7 +172,7 @@ export class MetadataAssistantService {
           return throwError(() => error);
         }
         return throwError(() => new Error(
-          `Failed to scrape URL: ${error.message || 'Unknown error'}`
+          this.translate.instant('metadata.errors.failedToScrape', { error: error.message || this.translate.instant('image.error.unknown') })
         ));
       })
     );
@@ -372,7 +377,7 @@ export class MetadataAssistantService {
 
   private tryModelsInSequence(content: string, models: string[], language: 'en' | 'fr', attemptIndex: number, primaryModel: string): Observable<{description: string, keywords: string, modelUsed: string, fallbackUsed: boolean}> {
     if (attemptIndex >= models.length) {
-      return throwError(() => new Error('All models failed due to rate limits or other errors'));
+      return throwError(() => new Error(this.translate.instant('metadata.errors.allModelsFailed')));
     }
 
     const currentModel = models[attemptIndex];
@@ -425,7 +430,7 @@ export class MetadataAssistantService {
   private generateMetadata(content: string, model: string, language: 'en' | 'fr'): Observable<{description: string, keywords: string}> {
     const apiKey = this.apiKeyService.getCurrentKey();
     if (!apiKey) {
-      return throwError(() => new Error('API key not configured'));
+      return throwError(() => new Error(this.translate.instant('metadata.errors.noApiKey')));
     }
 
     // Generate description
@@ -603,7 +608,7 @@ French keywords (comma-separated list only):`;
 
   private translateWithFallback(metadata: {description: string, keywords: string}, attemptIndex: number): Observable<{description: string, keywords: string}> {
     if (attemptIndex >= this.TRANSLATION_MODELS.length) {
-      return throwError(() => new Error('All translation models failed due to rate limits or errors'));
+      return throwError(() => new Error(this.translate.instant('metadata.error.allTranslationModelsFailed')));
     }
 
     const translationModel = this.TRANSLATION_MODELS[attemptIndex];
@@ -693,7 +698,7 @@ French keywords (comma-separated list only):`;
   private callOpenRouter(prompt: string, model: string, maxTokens: number, timeoutMs: number = this.API_TIMEOUT): Observable<string> {
     const apiKey = this.apiKeyService.getCurrentKey();
     if (!apiKey) {
-      return throwError(() => new Error('API key not configured'));
+      return throwError(() => new Error(this.translate.instant('metadata.errors.noApiKey')));
     }
 
     const headers = new HttpHeaders({
@@ -751,7 +756,7 @@ French keywords (comma-separated list only):`;
         }
 
         console.error('Invalid API response structure:', JSON.stringify(response));
-        throw new Error('Invalid response from API');
+        throw new Error(this.translate.instant('metadata.errors.invalidApiResponse'));
       }),
       catchError(error => {
         console.error('OpenRouter API error:', error);
@@ -762,7 +767,7 @@ French keywords (comma-separated list only):`;
         // Handle rate limit errors (429)
         if (httpError.status === 429 || (httpError.error?.error?.code === 429)) {
           return throwError(() => {
-            const rateLimitError = new Error('Rate limit exceeded') as Error & { status: number; originalError: unknown };
+            const rateLimitError = new Error(this.translate.instant('metadata.error.rateLimitExceeded')) as Error & { status: number; originalError: unknown };
             rateLimitError.status = 429;
             rateLimitError.originalError = error;
             return rateLimitError;
@@ -772,7 +777,7 @@ French keywords (comma-separated list only):`;
         // Handle service unavailable errors (503)
         if (httpError.status === 503) {
           return throwError(() => {
-            const serviceError = new Error('OpenRouter service temporarily unavailable. Please try again in a few moments.') as Error & { status: number; originalError: unknown };
+            const serviceError = new Error(this.translate.instant('metadata.errors.serviceUnavailable')) as Error & { status: number; originalError: unknown };
             serviceError.status = 503;
             serviceError.originalError = error;
             return serviceError;
@@ -782,7 +787,7 @@ French keywords (comma-separated list only):`;
         // Handle bad gateway errors (502)
         if (httpError.status === 502) {
           return throwError(() => {
-            const gatewayError = new Error('OpenRouter gateway error. The AI model provider may be temporarily unavailable.') as Error & { status: number; originalError: unknown };
+            const gatewayError = new Error(this.translate.instant('metadata.errors.gatewayError')) as Error & { status: number; originalError: unknown };
             gatewayError.status = 502;
             gatewayError.originalError = error;
             return gatewayError;
@@ -790,7 +795,7 @@ French keywords (comma-separated list only):`;
         }
 
         // For other errors, preserve status if available
-        const errorMessage = httpError.error?.error?.message || httpError.message || 'Failed to generate content';
+        const errorMessage = httpError.error?.error?.message || httpError.message || this.translate.instant('metadata.errors.failedToGenerate');
         const newError = new Error(errorMessage) as Error & { status?: number; originalError: unknown };
         newError.status = httpError.status;
         newError.originalError = error;
@@ -912,7 +917,7 @@ French keywords (comma-separated list only):`;
     return from(this.extractDocumentText(file)).pipe(
       switchMap(content => {
         if (!content || content.length < 50) {
-          return throwError(() => new Error('Document content too short or invalid for processing'));
+          return throwError(() => new Error(this.translate.instant('metadata.errors.documentContentTooShort')));
         }
         return this.generateMetadataFromDocument(content);
       })
@@ -927,7 +932,7 @@ French keywords (comma-separated list only):`;
     return from(this.extractDocumentText(file)).pipe(
       switchMap(content => {
         if (!content || content.length < 50) {
-          return throwError(() => new Error('Document content too short or invalid for processing'));
+          return throwError(() => new Error(this.translate.instant('metadata.errors.documentContentTooShort')));
         }
 
         // Generate English metadata
@@ -950,10 +955,106 @@ French keywords (comma-separated list only):`;
     return from(this.extractDocumentText(file)).pipe(
       switchMap(content => {
         if (!content || content.length < 50) {
-          return throwError(() => new Error('Document content too short or invalid for processing'));
+          return throwError(() => new Error(this.translate.instant('metadata.errors.documentContentTooShort')));
         }
         // Generate French metadata directly
         return this.generateMetadataFromDocument(content);
+      })
+    );
+  }
+
+  processFrenchDocumentWithEnglishTranslation(file: File, model: string, translationModel?: string): Observable<{
+    frenchMetadata: DocumentMetadata;
+    englishTranslation: DocumentMetadata;
+  }> {
+    return from(this.extractDocumentText(file)).pipe(
+      switchMap(content => {
+        if (!content || content.length < 50) {
+          return throwError(() => new Error(this.translate.instant('metadata.errors.documentContentTooShort')));
+        }
+
+        // Generate French metadata
+        return this.generateMetadata(content, model, 'fr').pipe(
+          switchMap(frenchMetadata => {
+            // Translate to English
+            return this.translateMetadataToEnglish(frenchMetadata, translationModel).pipe(
+              map(englishTranslation => ({
+                frenchMetadata,
+                englishTranslation
+              }))
+            );
+          })
+        );
+      })
+    );
+  }
+
+  private translateMetadataToEnglish(
+    metadata: {description: string, keywords: string},
+    selectedModel?: string
+  ): Observable<{description: string, keywords: string}> {
+    const model = selectedModel || 'anthropic/claude-3.5-sonnet';
+    console.log(`Translating French to English using model: ${model}`);
+
+    const descriptionPrompt = `You are a professional translator specializing in Canadian government content. Translate the following French meta description to English, maintaining the formal tone used by the Canada Revenue Agency (CRA).
+
+Important CRA-specific terminology:
+- "Agence du revenu du Canada" → "Canada Revenue Agency"
+- "impôt sur le revenu" → "income tax"
+- "prestations" → "benefits"
+- "déclaration de revenus" → "tax return"
+- "TPS/TVH" → "GST/HST"
+- "numéro d'entreprise" → "business number"
+- "crédit d'impôt" → "tax credit"
+- "déduction" → "deduction"
+- "compte d'épargne libre d'impôt (CELI)" → "tax-free savings account (TFSA)"
+- "régime enregistré d'épargne-retraite (REER)" → "registered retirement savings plan (RRSP)"
+
+⚠️ CRITICAL OUTPUT FORMAT REQUIREMENTS - READ CAREFULLY:
+- Your ENTIRE response must be ONLY the English translation
+- Do NOT include ANY of the following:
+  ✗ NO reasoning or thinking process
+  ✗ NO explanations of translation choices
+  ✗ NO preambles like "Here is..." or "The translation is..."
+  ✗ NO labels like "English translation:", "Answer:", etc.
+  ✗ NO commentary about the text
+  ✗ NO train of thought
+  ✗ NO markdown formatting or asterisks
+- Simply output the translated English text and nothing else
+- The first character of your response should be the first character of the English translation
+
+${metadata.description}
+
+English translation (text only):`;
+
+    const keywordsPrompt = `Translate each of these French keywords to English.
+
+⚠️ CRITICAL OUTPUT FORMAT REQUIREMENTS - READ CAREFULLY:
+- Your ENTIRE response must be ONLY a comma-separated list of English keywords
+- Do NOT include ANY of the following:
+  ✗ NO reasoning or thinking process
+  ✗ NO analysis or explanations
+  ✗ NO preambles like "Here are..." or "The keywords are..."
+  ✗ NO labels like "English keywords:", "Answer:", etc.
+  ✗ NO train of thought
+  ✗ NO markdown formatting or asterisks
+- Simply output: keyword1, keyword2, keyword3, etc.
+- The first character of your response should be the first letter of the first keyword
+
+${metadata.keywords}
+
+English keywords (comma-separated list only):`;
+
+    return this.callOpenRouter(descriptionPrompt, model, 200, this.TRANSLATION_TIMEOUT).pipe(
+      retry({ count: 1, delay: 2000 }),
+      switchMap(description => {
+        return this.callOpenRouter(keywordsPrompt, model, 100, this.TRANSLATION_TIMEOUT).pipe(
+          retry({ count: 1, delay: 2000 }),
+          map(keywords => ({
+            description: this.cleanMetadataResponse(description),
+            keywords: this.cleanKeywordsResponse(keywords)
+          }))
+        );
       })
     );
   }
@@ -994,7 +1095,7 @@ French keywords (comma-separated list only):`;
     return from(this.extractDocumentText(file)).pipe(
       switchMap(content => {
         if (!content || content.length < 50) {
-          return throwError(() => new Error('Document content too short or invalid for processing'));
+          return throwError(() => new Error(this.translate.instant('metadata.errors.documentContentTooShort')));
         }
 
         // Detect language
@@ -1048,7 +1149,7 @@ French keywords (comma-separated list only):`;
   private generateMetadataFromDocument(content: string): Observable<DocumentMetadata> {
     const apiKey = this.apiKeyService.getCurrentKey();
     if (!apiKey) {
-      return throwError(() => new Error('API key not configured'));
+      return throwError(() => new Error(this.translate.instant('metadata.errors.noApiKey')));
     }
 
     // Use same prompts as French metadata generation but for French content
@@ -1137,7 +1238,7 @@ Mots-clés (liste séparée par des virgules uniquement):`;
   ): Observable<EvaluationResult> {
     const apiKey = this.apiKeyService.getCurrentKey();
     if (!apiKey) {
-      return throwError(() => new Error('API key not configured'));
+      return throwError(() => new Error(this.translate.instant('metadata.errors.noApiKey')));
     }
 
     const evaluationPrompt = `Vous êtes un expert en optimisation pour les moteurs de recherche (SEO) pour l'Agence du revenu du Canada. Vous devez évaluer deux versions de métadonnées en français et suggérer la meilleure version finale.
@@ -1150,22 +1251,63 @@ VERSION 2 - Généré à partir du document français:
 Description: ${documentMetadata.description}
 Mots-clés: ${documentMetadata.keywords}
 
-Analysez ces deux versions et fournissez:
-1. Une méta-description finale suggérée (maximum 275 caractères)
-2. Des mots-clés méta finaux suggérés (format: liste séparée par des virgules)
-3. Une brève justification de vos choix
+Tâche:
+1. Comparez les deux versions et identifiez les forces de chacune
+2. Créez une méta-description finale optimale (maximum 275 caractères)
+3. Créez une liste de mots-clés méta finaux optimale (format: liste séparée par des virgules)
+4. Expliquez brièvement quelle version vous avez privilégiée et pourquoi (basé sur: clarté, précision terminologique, complétude, pertinence du contenu)
 
-IMPORTANT: Votre réponse DOIT être structurée EXACTEMENT comme suit, sans texte supplémentaire:
+⚠️ EXIGENCES CRITIQUES DE FORMAT DE SORTIE:
+- Votre réponse COMPLÈTE doit contenir EXACTEMENT trois lignes
+- La PREMIÈRE ligne DOIT commencer par "DESCRIPTION:"
+- La DEUXIÈME ligne DOIT commencer par "KEYWORDS:"
+- La TROISIÈME ligne DOIT commencer par "RATIONALE:"
+- N'incluez AUCUN texte avant la première ligne "DESCRIPTION:"
+- N'incluez AUCUN raisonnement, AUCUNE pensée, AUCUNE analyse
+- N'incluez AUCUN texte après RATIONALE
 
-DESCRIPTION: [votre méta-description suggérée]
-KEYWORDS: [vos mots-clés suggérés]
-RATIONALE: [votre justification]`;
+Format EXACT requis (copiez cette structure):
+
+DESCRIPTION: [la méta-description finale suggérée, maximum 275 caractères]
+KEYWORDS: [les mots-clés finaux suggérés, séparés par des virgules]
+RATIONALE: [expliquez quelle version vous avez privilégiée et pourquoi, basé sur: clarté, précision terminologique, complétude, ou combinaison]`;
 
     const model = 'anthropic/claude-3.5-sonnet'; // Best model for French evaluation
 
-    return this.callOpenRouter(evaluationPrompt, model, 400, this.TRANSLATION_TIMEOUT).pipe(
+    return this.callOpenRouter(evaluationPrompt, model, 500, this.TRANSLATION_TIMEOUT).pipe(
       retry({ count: 1, delay: 2000 }),
-      map(response => this.parseEvaluationResponse(response)),
+      map(response => {
+        console.log('===== RAW EVALUATION RESPONSE START =====');
+        console.log(response);
+        console.log('===== RAW EVALUATION RESPONSE END =====');
+        return this.parseEvaluationResponse(response);
+      }),
+      switchMap(result => {
+        // Translate the French rationale to English
+        const translationPrompt = `Translate the following text from French to English. Maintain the professional tone.
+
+⚠️ CRITICAL: Output ONLY the English translation, with no labels, preambles, or explanations.
+
+${result.rationale}
+
+English translation:`;
+
+        return this.callOpenRouter(translationPrompt, model, 300, this.TRANSLATION_TIMEOUT).pipe(
+          retry({ count: 1, delay: 2000 }),
+          map(englishRationale => ({
+            ...result,
+            rationaleEnglish: this.cleanMetadataResponse(englishRationale)
+          })),
+          catchError(error => {
+            // If translation fails, use French rationale for both
+            console.warn('Failed to translate rationale to English:', error);
+            return of({
+              ...result,
+              rationaleEnglish: result.rationale
+            });
+          })
+        );
+      }),
       catchError(error => {
         console.error('Error evaluating metadata:', error);
         return throwError(() => error);
@@ -1173,53 +1315,195 @@ RATIONALE: [votre justification]`;
     );
   }
 
+  evaluateMetadataEnglish(
+    translatedMetadata: { description: string, keywords: string },
+    documentMetadata: DocumentMetadata
+  ): Observable<EvaluationResult> {
+    const apiKey = this.apiKeyService.getCurrentKey();
+    if (!apiKey) {
+      return throwError(() => new Error(this.translate.instant('metadata.errors.noApiKey')));
+    }
+
+    const evaluationPrompt = `You are a search engine optimization (SEO) expert for the Canada Revenue Agency. You must evaluate two versions of English metadata and suggest the best final version.
+
+VERSION 1 - Translated from French:
+Description: ${translatedMetadata.description}
+Keywords: ${translatedMetadata.keywords}
+
+VERSION 2 - Generated from English document:
+Description: ${documentMetadata.description}
+Keywords: ${documentMetadata.keywords}
+
+Task:
+1. Compare the two versions and identify the strengths of each
+2. Create an optimal final meta description (maximum 275 characters)
+3. Create an optimal final meta keywords list (format: comma-separated list)
+4. Briefly explain which version you preferred and why (based on: clarity, terminological precision, completeness, content relevance)
+
+⚠️ CRITICAL OUTPUT FORMAT REQUIREMENTS:
+- Your COMPLETE response must contain EXACTLY three lines
+- The FIRST line MUST start with "DESCRIPTION:"
+- The SECOND line MUST start with "KEYWORDS:"
+- The THIRD line MUST start with "RATIONALE:"
+- Include NO text before the first "DESCRIPTION:" line
+- Include NO reasoning, NO thoughts, NO analysis
+- Include NO text after RATIONALE
+
+EXACT required format (copy this structure):
+
+DESCRIPTION: [the suggested final meta description, maximum 275 characters]
+KEYWORDS: [the suggested final keywords, comma-separated]
+RATIONALE: [explain which version you preferred and why, based on: clarity, terminological precision, completeness, or combination]`;
+
+    const model = 'anthropic/claude-3.5-sonnet'; // Best model for English evaluation
+
+    return this.callOpenRouter(evaluationPrompt, model, 500, this.TRANSLATION_TIMEOUT).pipe(
+      retry({ count: 1, delay: 2000 }),
+      map(response => {
+        console.log('===== RAW EVALUATION RESPONSE (ENGLISH) START =====');
+        console.log(response);
+        console.log('===== RAW EVALUATION RESPONSE (ENGLISH) END =====');
+        const parsed = this.parseEvaluationResponse(response);
+        // For English evaluation, rationale is already in English
+        return {
+          ...parsed,
+          rationaleEnglish: parsed.rationale
+        };
+      }),
+      catchError(error => {
+        console.error('Error evaluating metadata (English):', error);
+        return throwError(() => error);
+      })
+    );
+  }
+
   private parseEvaluationResponse(response: string): EvaluationResult {
     const text = response.trim();
+    console.log('=== PARSING EVALUATION RESPONSE ===');
+
     let suggestedDescription = '';
     let suggestedKeywords = '';
     let rationale = '';
 
-    // Use regex to extract sections that may span multiple lines
-    const descriptionMatch = text.match(/DESCRIPTION:\s*\n?([\s\S]*?)(?=KEYWORDS:|$)/i);
-    const keywordsMatch = text.match(/KEYWORDS:\s*\n?([\s\S]*?)(?=RATIONALE:|$)/i);
-    const rationaleMatch = text.match(/RATIONALE:\s*\n?([\s\S]*?)$/i);
+    // DON'T strip reasoning - the LLM might not include DESCRIPTION: label
+    const cleanedText = text;
 
-    if (descriptionMatch && descriptionMatch[1]) {
-      suggestedDescription = descriptionMatch[1].trim();
+    // Check if DESCRIPTION: label exists
+    const hasDescriptionLabel = cleanedText.search(/DESCRIPTION:/i) !== -1;
+    console.log('Has DESCRIPTION: label?', hasDescriptionLabel);
+
+    if (!hasDescriptionLabel) {
+      // If no DESCRIPTION: label, everything before KEYWORDS: is the description
+      console.log('No DESCRIPTION: label found, treating content before KEYWORDS: as description');
     }
 
-    if (keywordsMatch && keywordsMatch[1]) {
-      suggestedKeywords = keywordsMatch[1].trim();
-    }
+    console.log('Text to parse (first 500 chars):', cleanedText.substring(0, 500));
 
-    if (rationaleMatch && rationaleMatch[1]) {
-      rationale = rationaleMatch[1].trim();
-    }
-
-    // Individual fallbacks for each field that failed
-    if (!suggestedDescription || !suggestedKeywords || !rationale) {
-      const lines = text.split('\n');
-      for (const line of lines) {
-        const trimmedLine = line.trim();
-
-        if (!suggestedDescription && trimmedLine.startsWith('DESCRIPTION:')) {
-          suggestedDescription = trimmedLine.substring('DESCRIPTION:'.length).trim();
-        } else if (!suggestedKeywords && trimmedLine.startsWith('KEYWORDS:')) {
-          suggestedKeywords = trimmedLine.substring('KEYWORDS:'.length).trim();
-        } else if (!rationale && trimmedLine.startsWith('RATIONALE:')) {
-          rationale = trimmedLine.substring('RATIONALE:'.length).trim();
-        }
+    // Strategy 1: Try extracting based on labels
+    // Handle case where DESCRIPTION: label might be missing
+    if (hasDescriptionLabel) {
+      const descriptionMatch = cleanedText.match(/DESCRIPTION:\s*(.+?)(?=\s*KEYWORDS:)/is);
+      if (descriptionMatch && descriptionMatch[1]) {
+        suggestedDescription = descriptionMatch[1].trim();
+        console.log('Strategy 1 - Extracted description (with label):', suggestedDescription);
+      }
+    } else {
+      // No DESCRIPTION: label, so extract everything before KEYWORDS:
+      const descriptionMatch = cleanedText.match(/^(.+?)(?=\s*KEYWORDS:)/is);
+      if (descriptionMatch && descriptionMatch[1]) {
+        suggestedDescription = descriptionMatch[1].trim();
+        console.log('Strategy 1 - Extracted description (no label, before KEYWORDS:):', suggestedDescription);
       }
     }
 
-    // Clean up the extracted values
-    suggestedDescription = this.cleanMetadataResponse(suggestedDescription);
-    suggestedKeywords = this.cleanKeywordsResponse(suggestedKeywords);
+    // Keywords always has a label
+    const keywordsMatch = cleanedText.match(/KEYWORDS:\s*(.+?)(?=\s*RATIONALE:)/is);
+    if (keywordsMatch && keywordsMatch[1]) {
+      suggestedKeywords = keywordsMatch[1].trim();
+      console.log('Strategy 1 - Extracted keywords:', suggestedKeywords);
+    }
+
+    // Rationale always has a label
+    const rationaleMatch = cleanedText.match(/RATIONALE:\s*(.+?)$/is);
+    if (rationaleMatch && rationaleMatch[1]) {
+      rationale = rationaleMatch[1].trim();
+      console.log('Strategy 1 - Extracted rationale:', rationale);
+    }
+
+    // Strategy 2: If Strategy 1 failed, try line-by-line for single-line format
+    if (!suggestedDescription || !suggestedKeywords || !rationale) {
+      console.log('Strategy 1 incomplete, trying Strategy 2 (line-by-line)');
+      const lines = cleanedText.split('\n');
+      let beforeKeywords = true;
+      const descriptionLines: string[] = [];
+
+      for (let i = 0; i < lines.length; i++) {
+        const line = lines[i];
+        const trimmedLine = line.trim();
+
+        if (trimmedLine.startsWith('KEYWORDS:')) {
+          beforeKeywords = false;
+          if (!suggestedKeywords) {
+            suggestedKeywords = trimmedLine.substring('KEYWORDS:'.length).trim();
+            console.log('Strategy 2 - Line-by-line extracted keywords:', suggestedKeywords);
+          }
+        } else if (trimmedLine.startsWith('RATIONALE:')) {
+          if (!rationale) {
+            // For rationale, collect this line and all subsequent lines
+            rationale = trimmedLine.substring('RATIONALE:'.length).trim();
+            for (let j = i + 1; j < lines.length; j++) {
+              const nextLine = lines[j].trim();
+              if (nextLine && !nextLine.startsWith('DESCRIPTION:') && !nextLine.startsWith('KEYWORDS:')) {
+                rationale += ' ' + nextLine;
+              }
+            }
+            console.log('Strategy 2 - Line-by-line extracted rationale:', rationale);
+          }
+        } else if (trimmedLine.startsWith('DESCRIPTION:')) {
+          if (!suggestedDescription) {
+            suggestedDescription = trimmedLine.substring('DESCRIPTION:'.length).trim();
+            console.log('Strategy 2 - Line-by-line extracted description:', suggestedDescription);
+          }
+        } else if (beforeKeywords && !suggestedDescription && trimmedLine) {
+          // If we haven't hit KEYWORDS: yet and no description found, collect lines
+          descriptionLines.push(trimmedLine);
+        }
+      }
+
+      // If description still not found but we collected lines before KEYWORDS:
+      if (!suggestedDescription && descriptionLines.length > 0) {
+        suggestedDescription = descriptionLines.join(' ');
+        console.log('Strategy 2 - Extracted description from lines before KEYWORDS:', suggestedDescription);
+      }
+    }
+
+    // Clean up the extracted values (remove quotes, extra whitespace, etc.)
+    if (suggestedDescription) {
+      suggestedDescription = this.cleanMetadataResponse(suggestedDescription);
+    }
+    if (suggestedKeywords) {
+      suggestedKeywords = this.cleanKeywordsResponse(suggestedKeywords);
+    }
+    if (rationale) {
+      // Basic cleanup for rationale
+      rationale = rationale.trim().replace(/^["']|["']$/g, '');
+    }
+
+    // Final validation and logging
+    console.log('=== FINAL PARSED VALUES ===');
+    console.log('Description:', suggestedDescription || 'EMPTY');
+    console.log('Keywords:', suggestedKeywords || 'EMPTY');
+    console.log('Rationale:', rationale || 'EMPTY');
+
+    if (!suggestedDescription) console.error('❌ Failed to extract description from response');
+    if (!suggestedKeywords) console.error('❌ Failed to extract keywords from response');
+    if (!rationale) console.error('❌ Failed to extract rationale from response');
 
     return {
-      suggestedDescription,
-      suggestedKeywords,
-      rationale: rationale || 'No rationale provided'
+      suggestedDescription: suggestedDescription || this.translate.instant('metadata.results.noDescriptionProvided'),
+      suggestedKeywords: suggestedKeywords || this.translate.instant('metadata.results.noKeywordsProvided'),
+      rationale: rationale || this.translate.instant('metadata.results.noRationaleProvided'),
+      rationaleEnglish: '' // Will be filled in by evaluateMetadata
     };
   }
 }

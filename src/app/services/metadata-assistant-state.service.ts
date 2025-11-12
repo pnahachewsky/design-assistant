@@ -22,6 +22,7 @@ export interface ComparisonResult {
     keywords: string;
   };
   rationale: string;
+  rationaleEnglish: string;
 }
 
 export interface MetadataProcessingState {
@@ -56,7 +57,7 @@ export class MetadataAssistantStateService {
     processedUrls: 0,
     results: [],
     error: null,
-    selectedModel: 'openai/gpt-oss-20b:free',
+    selectedModel: 'qwen/qwen3-235b-a22b:free',
     selectedTranslationModel: 'anthropic/claude-3.5-sonnet', // Default to best translation model
     translateToFrench: false,
     documentProcessingIndex: null,
@@ -171,7 +172,7 @@ export class MetadataAssistantStateService {
     }
   }
 
-  updateResultWithEvaluation(index: number, evaluationResult: { suggestedDescription: string, suggestedKeywords: string, rationale: string }): void {
+  updateResultWithEvaluation(index: number, evaluationResult: { suggestedDescription: string, suggestedKeywords: string, rationale: string, rationaleEnglish: string }): void {
     const state = this.getState();
     const updatedResults = [...state.results];
     if (updatedResults[index]) {

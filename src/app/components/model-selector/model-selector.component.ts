@@ -1,8 +1,9 @@
-import { Component, Input, Output, EventEmitter, OnInit, OnDestroy } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnInit, OnDestroy, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { DropdownModule } from 'primeng/dropdown';
+import { DropdownChangeEvent } from 'primeng/dropdown';
 import { CardModule } from 'primeng/card';
 import { CheckboxModule } from 'primeng/checkbox';
 import { Subject, takeUntil } from 'rxjs';
@@ -44,8 +45,7 @@ export class SharedModelSelectorComponent implements OnInit, OnDestroy {
 
   localModels: ModelOption[] = [];
   private destroy$ = new Subject<void>();
-
-  constructor(private translate: TranslateService) {}
+  private translate = inject(TranslateService);
 
   ngOnInit(): void {
     // Initialize models with translations
@@ -74,8 +74,8 @@ export class SharedModelSelectorComponent implements OnInit, OnDestroy {
     }
   }
 
-  onModelChange(event: any): void {
-    const value = event.value || event;
+  onModelChange(event: DropdownChangeEvent | string): void {
+    const value = typeof event === 'string' ? event : event.value;
     this.selectedModel = value;
     this.modelChange.emit(value);
   }

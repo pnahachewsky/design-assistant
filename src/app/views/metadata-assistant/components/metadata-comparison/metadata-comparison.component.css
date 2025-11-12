@@ -1,9 +1,1 @@
-/* Custom left border for suggested content section */
-.border-left-primary {
-  border-left: 4px solid var(--primary-color);
-}
-
-/* Custom background for comparison sections */
-.comparison-card {
-  background: var(--surface-50);
-}
+/* No custom styles needed - using PrimeNG utilities */

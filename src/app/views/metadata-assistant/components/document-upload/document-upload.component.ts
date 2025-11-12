@@ -5,6 +5,7 @@ import { TranslateModule } from '@ngx-translate/core';
 import { CardModule } from 'primeng/card';
 import { ButtonModule } from 'primeng/button';
 import { RadioButtonModule } from 'primeng/radiobutton';
+import { CheckboxModule } from 'primeng/checkbox';
 import { MetadataAssistantStateService, DocumentMode } from '../../../../services/metadata-assistant-state.service';
 
 @Component({
@@ -16,7 +17,8 @@ import { MetadataAssistantStateService, DocumentMode } from '../../../../service
     TranslateModule,
     CardModule,
     ButtonModule,
-    RadioButtonModule
+    RadioButtonModule,
+    CheckboxModule
   ],
   templateUrl: './document-upload.component.html',
   styleUrls: ['./document-upload.component.css']
@@ -27,6 +29,7 @@ export class DocumentUploadComponent {
   @Output() englishFileSelected = new EventEmitter<File>();
   @Output() frenchFileSelected = new EventEmitter<File>();
   @Output() modeChanged = new EventEmitter<DocumentMode>();
+  @Output() translateOptionChanged = new EventEmitter<boolean>();
 
   private stateService = inject(MetadataAssistantStateService);
 
@@ -35,11 +38,45 @@ export class DocumentUploadComponent {
   frenchFile: File | null = null;
   isDraggingEnglish = false;
   isDraggingFrench = false;
+  translateToOtherLanguage = false;
 
   onModeChange(): void {
     this.clearFiles();
+    this.translateToOtherLanguage = false; // Reset translation option when mode changes
     this.modeChanged.emit(this.selectedMode);
     this.stateService.setDocumentMode(this.selectedMode);
+  }
+
+  onTranslateOptionChange(): void {
+    this.translateOptionChanged.emit(this.translateToOtherLanguage);
+  }
+
+  shouldShowTranslateOption(): boolean {
+    return !this.simplifiedMode && (this.selectedMode === 'english-only' || this.selectedMode === 'french-only');
+  }
+
+  getTranslateLabel(): string {
+    return this.selectedMode === 'english-only' ? 'metadata.document.translateToFrench' : 'metadata.document.translateToEnglish';
+  }
+
+  getFrenchUploadLabel(): string {
+    if (this.selectedMode === 'both') {
+      return 'metadata.document.uploadFrench';
+    } else if (this.selectedMode === 'english-only' && this.translateToOtherLanguage) {
+      return 'metadata.document.uploadFrenchOptional';
+    } else {
+      return 'metadata.document.uploadEnglish';
+    }
+  }
+
+  getEnglishUploadLabel(): string {
+    if (this.selectedMode === 'both') {
+      return 'metadata.document.uploadEnglish';
+    } else if (this.selectedMode === 'french-only' && this.translateToOtherLanguage) {
+      return 'metadata.document.uploadEnglishOptional';
+    } else {
+      return 'metadata.document.uploadEnglish';
+    }
   }
 
   // English file handlers
@@ -51,8 +88,6 @@ export class DocumentUploadComponent {
         this.englishFile = file;
         this.englishFileSelected.emit(this.englishFile);
         this.stateService.setEnglishDocument(this.englishFile);
-      } else {
-        console.warn('Invalid file type. Please select a .docx file.');
       }
     }
     input.value = '';
@@ -101,8 +136,6 @@ export class DocumentUploadComponent {
         this.frenchFile = file;
         this.frenchFileSelected.emit(this.frenchFile);
         this.stateService.setFrenchDocument(this.frenchFile);
-      } else {
-        console.warn('Invalid file type. Please select a .docx file.');
       }
     }
     input.value = '';

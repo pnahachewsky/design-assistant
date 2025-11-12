@@ -50,7 +50,7 @@
               <div class="flex align-items-center justify-content-between mb-1">
                 <span class="font-semibold text-500 text-sm">
                   {{ 'metadata.results.metaDescription' | translate }}
-                  <span class="text-xs text-400 ml-1">({{ result.metaDescription.length }} chars)</span>
+                  <span class="text-xs text-400 ml-1">({{ result.metaDescription.length }} {{ 'common.chars' | translate }})</span>
                 </span>
                 <p-button 
                   icon="pi pi-copy" 
@@ -61,7 +61,7 @@
                   [pTooltip]="'metadata.results.copyToClipboard' | translate">
                 </p-button>
               </div>
-              <div class="meta-content p-2 surface-50 border-round">
+              <div class="p-2 surface-50 border-round" style="word-break: break-word;">
                 <code class="text-sm">{{ result.metaDescription }}</code>
               </div>
             </div>
@@ -71,7 +71,7 @@
               <div class="flex align-items-center justify-content-between mb-1">
                 <span class="font-semibold text-500 text-sm">
                   {{ 'metadata.results.metaKeywords' | translate }}
-                  <span class="text-xs text-400 ml-1">({{ result.metaKeywords.length }} chars)</span>
+                  <span class="text-xs text-400 ml-1">({{ result.metaKeywords.length }} {{ 'common.chars' | translate }})</span>
                 </span>
                 <p-button 
                   icon="pi pi-copy" 
@@ -82,13 +82,13 @@
                   [pTooltip]="'metadata.results.copyToClipboard' | translate">
                 </p-button>
               </div>
-              <div class="meta-content p-2 surface-50 border-round">
+              <div class="p-2 surface-50 border-round" style="word-break: break-word;">
                 <code class="text-sm">{{ result.metaKeywords }}</code>
               </div>
             </div>
 
             <!-- French Translations (if available) -->
-            <div *ngIf="showTranslations && result.frenchTranslatedDescription" class="translation-section mt-4 p-3 surface-100 border-round">
+            <div *ngIf="showTranslations && result.frenchTranslatedDescription" class="mt-4 p-3 surface-100 border-round border-left-3 border-primary">
               <h4 class="flex align-items-center gap-2 mb-3">
                 <i class="pi pi-language"></i>
                 {{ 'metadata.results.frenchTranslation' | translate }}
@@ -99,7 +99,7 @@
                 <div class="flex align-items-center justify-content-between mb-1">
                   <span class="font-semibold text-500 text-sm">
                     {{ 'metadata.results.translatedDescription' | translate }}
-                    <span class="text-xs text-400 ml-1">({{ result.frenchTranslatedDescription.length }} chars)</span>
+                    <span class="text-xs text-400 ml-1">({{ result.frenchTranslatedDescription.length }} {{ 'common.chars' | translate }})</span>
                   </span>
                   <p-button
                     icon="pi pi-copy"
@@ -110,7 +110,7 @@
                     [pTooltip]="'metadata.results.copyToClipboard' | translate">
                   </p-button>
                 </div>
-                <div class="meta-content p-2 surface-50 border-round">
+                <div class="p-2 surface-50 border-round" style="word-break: break-word;">
                   <code class="text-sm">{{ result.frenchTranslatedDescription }}</code>
                 </div>
               </div>
@@ -120,7 +120,7 @@
                 <div class="flex align-items-center justify-content-between mb-1">
                   <span class="font-semibold text-500 text-sm">
                     {{ 'metadata.results.translatedKeywords' | translate }}
-                    <span class="text-xs text-400 ml-1">({{ result.frenchTranslatedKeywords!.length }} chars)</span>
+                    <span class="text-xs text-400 ml-1">({{ result.frenchTranslatedKeywords!.length }} {{ 'common.chars' | translate }})</span>
                   </span>
                   <p-button
                     icon="pi pi-copy"
@@ -131,8 +131,58 @@
                     [pTooltip]="'metadata.results.copyToClipboard' | translate">
                   </p-button>
                 </div>
-                <div class="meta-content p-2 surface-50 border-round">
+                <div class="p-2 surface-50 border-round" style="word-break: break-word;">
                   <code class="text-sm">{{ result.frenchTranslatedKeywords }}</code>
+                </div>
+              </div>
+            </div>
+
+            <!-- English Translations (if available) -->
+            <div *ngIf="showTranslations && result.englishTranslatedDescription" class="mt-4 p-3 surface-100 border-round border-left-3 border-primary">
+              <h4 class="flex align-items-center gap-2 mb-3">
+                <i class="pi pi-language"></i>
+                {{ 'metadata.results.englishTranslation' | translate }}
+              </h4>
+
+              <!-- Translated Description -->
+              <div class="mb-3">
+                <div class="flex align-items-center justify-content-between mb-1">
+                  <span class="font-semibold text-500 text-sm">
+                    {{ 'metadata.results.translatedDescription' | translate }}
+                    <span class="text-xs text-400 ml-1">({{ result.englishTranslatedDescription.length }} {{ 'common.chars' | translate }})</span>
+                  </span>
+                  <p-button
+                    icon="pi pi-copy"
+                    [text]="true"
+                    [rounded]="true"
+                    size="small"
+                    (onClick)="copyToClipboard(result.englishTranslatedDescription!)"
+                    [pTooltip]="'metadata.results.copyToClipboard' | translate">
+                  </p-button>
+                </div>
+                <div class="p-2 surface-50 border-round" style="word-break: break-word;">
+                  <code class="text-sm">{{ result.englishTranslatedDescription }}</code>
+                </div>
+              </div>
+
+              <!-- Translated Keywords -->
+              <div>
+                <div class="flex align-items-center justify-content-between mb-1">
+                  <span class="font-semibold text-500 text-sm">
+                    {{ 'metadata.results.translatedKeywords' | translate }}
+                    <span class="text-xs text-400 ml-1">({{ result.englishTranslatedKeywords!.length }} {{ 'common.chars' | translate }})</span>
+                  </span>
+                  <p-button
+                    icon="pi pi-copy"
+                    [text]="true"
+                    [rounded]="true"
+                    size="small"
+                    (onClick)="copyToClipboard(result.englishTranslatedKeywords!)"
+                    [pTooltip]="'metadata.results.copyToClipboard' | translate">
+                  </p-button>
+                </div>
+                <div class="p-2 surface-50 border-round" style="word-break: break-word;">
+                  <code class="text-sm">{{ result.englishTranslatedKeywords }}</code>
                 </div>
               </div>
             </div>
@@ -146,6 +196,19 @@
                 (frenchFileSelected)="onFrenchDocumentFileSelected($event, i)"
                 (modeChanged)="onDocumentModeChanged($event, i)">
               </ca-document-upload>
+
+              <!-- Process Button -->
+              <div class="mt-3" *ngIf="hasUploadedDocument(i)">
+                <p-button
+                  [label]="isProcessingDocument(i) ? ('metadata.document.processing' | translate) : ('metadata.document.processButton' | translate)"
+                  icon="pi pi-sparkles"
+                  [disabled]="isProcessingDocument(i)"
+                  [loading]="isProcessingDocument(i)"
+                  severity="primary"
+                  styleClass="w-full"
+                  (onClick)="processDocument(i)">
+                </p-button>
+              </div>
             </div>
 
             <!-- Document Metadata (if available) -->
@@ -160,7 +223,7 @@
                 <div class="flex align-items-center justify-content-between mb-1">
                   <span class="font-semibold text-500 text-sm">
                     {{ 'metadata.results.documentDescription' | translate }}
-                    <span class="text-xs text-400 ml-1">({{ result.documentMetadata.description.length }} chars)</span>
+                    <span class="text-xs text-400 ml-1">({{ result.documentMetadata.description.length }} {{ 'common.chars' | translate }})</span>
                   </span>
                   <p-button
                     icon="pi pi-copy"
@@ -171,7 +234,7 @@
                     [pTooltip]="'metadata.results.copyToClipboard' | translate">
                   </p-button>
                 </div>
-                <div class="meta-content p-2 surface-50 border-round">
+                <div class="p-2 surface-50 border-round" style="word-break: break-word;">
                   <code class="text-sm">{{ result.documentMetadata.description }}</code>
                 </div>
               </div>
@@ -181,7 +244,7 @@
                 <div class="flex align-items-center justify-content-between mb-1">
                   <span class="font-semibold text-500 text-sm">
                     {{ 'metadata.results.documentKeywords' | translate }}
-                    <span class="text-xs text-400 ml-1">({{ result.documentMetadata.keywords.length }} chars)</span>
+                    <span class="text-xs text-400 ml-1">({{ result.documentMetadata.keywords.length }} {{ 'common.chars' | translate }})</span>
                   </span>
                   <p-button
                     icon="pi pi-copy"
@@ -192,72 +255,179 @@
                     [pTooltip]="'metadata.results.copyToClipboard' | translate">
                   </p-button>
                 </div>
-                <div class="meta-content p-2 surface-50 border-round">
+                <div class="p-2 surface-50 border-round" style="word-break: break-word;">
                   <code class="text-sm">{{ result.documentMetadata.keywords }}</code>
                 </div>
               </div>
             </div>
 
             <!-- Evaluation Results (if available) -->
-            <div *ngIf="result.evaluationResult" class="evaluation-section mt-4 p-3 border-round" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
-              <h4 class="flex align-items-center gap-2 mb-3">
-                <i class="pi pi-check-circle"></i>
-                {{ 'metadata.results.evaluation' | translate }}
-              </h4>
+            <div *ngIf="result.evaluationResult" class="evaluation-section mt-4">
+              <p-card [header]="'metadata.comparison.title' | translate">
 
-              <!-- Suggested Description -->
-              <div class="mb-3">
-                <div class="flex align-items-center justify-content-between mb-1">
-                  <span class="font-semibold text-sm">
-                    {{ 'metadata.results.suggestedDescription' | translate }}
-                    <span class="text-xs ml-1 opacity-80">({{ result.evaluationResult.suggestedDescription.length }} chars)</span>
-                  </span>
-                  <p-button
-                    icon="pi pi-copy"
-                    [text]="true"
-                    [rounded]="true"
-                    size="small"
-                    styleClass="text-white"
-                    (onClick)="copyToClipboard(result.evaluationResult.suggestedDescription)"
-                    [pTooltip]="'metadata.results.copyToClipboard' | translate">
-                  </p-button>
-                </div>
-                <div class="p-2 border-round" style="background: rgba(255,255,255,0.9); color: #333;">
-                  <code class="text-sm">{{ result.evaluationResult.suggestedDescription }}</code>
-                </div>
-              </div>
+                <!-- Description Comparison -->
+                <div class="mb-5">
+                  <h3 class="text-xl font-semibold mb-3">
+                    {{ 'metadata.comparison.description' | translate }}
+                  </h3>
 
-              <!-- Suggested Keywords -->
-              <div class="mb-3">
-                <div class="flex align-items-center justify-content-between mb-1">
-                  <span class="font-semibold text-sm">
-                    {{ 'metadata.results.suggestedKeywords' | translate }}
-                    <span class="text-xs ml-1 opacity-80">({{ result.evaluationResult.suggestedKeywords.length }} chars)</span>
-                  </span>
-                  <p-button
-                    icon="pi pi-copy"
-                    [text]="true"
-                    [rounded]="true"
-                    size="small"
-                    styleClass="text-white"
-                    (onClick)="copyToClipboard(result.evaluationResult.suggestedKeywords)"
-                    [pTooltip]="'metadata.results.copyToClipboard' | translate">
-                  </p-button>
-                </div>
-                <div class="p-2 border-round" style="background: rgba(255,255,255,0.9); color: #333;">
-                  <code class="text-sm">{{ result.evaluationResult.suggestedKeywords }}</code>
-                </div>
-              </div>
+                  <!-- Side-by-side comparison -->
+                  <div class="grid mb-3">
+                    <!-- Auto-Translated Version -->
+                    <div class="col-12 md:col-6">
+                      <div class="p-3 border-round surface-50 h-full">
+                        <div class="flex align-items-center justify-content-between mb-2">
+                          <strong class="text-primary">{{ 'metadata.comparison.autoTranslated' | translate }}</strong>
+                          <p-button
+                            icon="pi pi-copy"
+                            [text]="true"
+                            [rounded]="true"
+                            size="small"
+                            (onClick)="copyToClipboard(result.frenchTranslatedDescription || result.englishTranslatedDescription!)"
+                            [pTooltip]="'metadata.results.copyToClipboard' | translate">
+                          </p-button>
+                        </div>
+                        <p class="mb-2 line-height-3">{{ result.frenchTranslatedDescription || result.englishTranslatedDescription }}</p>
+                        <span class="text-sm text-color-secondary">
+                          {{ (result.frenchTranslatedDescription || result.englishTranslatedDescription)!.length }} {{ 'common.chars' | translate }}
+                        </span>
+                      </div>
+                    </div>
 
-              <!-- Rationale -->
-              <div>
-                <span class="font-semibold text-sm mb-1 block">
-                  {{ 'metadata.results.rationale' | translate }}
-                </span>
-                <div class="p-2 border-round" style="background: rgba(255,255,255,0.9); color: #333;">
-                  <p class="text-sm m-0">{{ result.evaluationResult.rationale }}</p>
+                    <!-- From Document -->
+                    <div class="col-12 md:col-6">
+                      <div class="p-3 border-round surface-50 h-full">
+                        <div class="flex align-items-center justify-content-between mb-2">
+                          <strong class="text-primary">{{ result.frenchTranslatedDescription ? ('metadata.comparison.fromFrenchDoc' | translate) : ('metadata.comparison.fromEnglishDoc' | translate) }}</strong>
+                          <p-button
+                            icon="pi pi-copy"
+                            [text]="true"
+                            [rounded]="true"
+                            size="small"
+                            (onClick)="copyToClipboard(result.documentMetadata!.description)"
+                            [pTooltip]="'metadata.results.copyToClipboard' | translate">
+                          </p-button>
+                        </div>
+                        <p class="mb-2 line-height-3">{{ result.documentMetadata!.description }}</p>
+                        <span class="text-sm text-color-secondary">
+                          {{ result.documentMetadata!.description.length }} {{ 'common.chars' | translate }}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- AI Suggested Final Description -->
+                  <div class="p-3 border-round surface-100 border-left-3 border-primary">
+                    <div class="flex align-items-center justify-content-between mb-2">
+                      <strong class="text-lg">{{ 'metadata.comparison.suggestedDescription' | translate }}</strong>
+                      <p-button
+                        icon="pi pi-copy"
+                        [text]="true"
+                        [rounded]="true"
+                        size="small"
+                        (onClick)="copyToClipboard(result.evaluationResult.suggestedDescription)"
+                        [pTooltip]="'metadata.results.copyToClipboard' | translate">
+                      </p-button>
+                    </div>
+                    <p class="mb-2 line-height-3">{{ result.evaluationResult.suggestedDescription }}</p>
+                    <span class="text-sm text-color-secondary">
+                      {{ result.evaluationResult.suggestedDescription.length }} {{ 'common.chars' | translate }}
+                    </span>
+                  </div>
                 </div>
-              </div>
+
+                <!-- Keywords Comparison -->
+                <div class="mb-5">
+                  <h3 class="text-xl font-semibold mb-3">
+                    {{ 'metadata.comparison.keywords' | translate }}
+                  </h3>
+
+                  <!-- Side-by-side comparison -->
+                  <div class="grid mb-3">
+                    <!-- Auto-Translated Version -->
+                    <div class="col-12 md:col-6">
+                      <div class="p-3 border-round surface-50 h-full">
+                        <div class="flex align-items-center justify-content-between mb-2">
+                          <strong class="text-primary">{{ 'metadata.comparison.autoTranslated' | translate }}</strong>
+                          <p-button
+                            icon="pi pi-copy"
+                            [text]="true"
+                            [rounded]="true"
+                            size="small"
+                            (onClick)="copyToClipboard(result.frenchTranslatedKeywords || result.englishTranslatedKeywords!)"
+                            [pTooltip]="'metadata.results.copyToClipboard' | translate">
+                          </p-button>
+                        </div>
+                        <p class="mb-0 line-height-3">{{ result.frenchTranslatedKeywords || result.englishTranslatedKeywords }}</p>
+                      </div>
+                    </div>
+
+                    <!-- From Document -->
+                    <div class="col-12 md:col-6">
+                      <div class="p-3 border-round surface-50 h-full">
+                        <div class="flex align-items-center justify-content-between mb-2">
+                          <strong class="text-primary">{{ result.frenchTranslatedDescription ? ('metadata.comparison.fromFrenchDoc' | translate) : ('metadata.comparison.fromEnglishDoc' | translate) }}</strong>
+                          <p-button
+                            icon="pi pi-copy"
+                            [text]="true"
+                            [rounded]="true"
+                            size="small"
+                            (onClick)="copyToClipboard(result.documentMetadata!.keywords)"
+                            [pTooltip]="'metadata.results.copyToClipboard' | translate">
+                          </p-button>
+                        </div>
+                        <p class="mb-0 line-height-3">{{ result.documentMetadata!.keywords }}</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- AI Suggested Final Keywords -->
+                  <div class="p-3 border-round surface-100 border-left-3 border-primary">
+                    <div class="flex align-items-center justify-content-between mb-2">
+                      <strong class="text-lg">{{ 'metadata.comparison.suggestedKeywords' | translate }}</strong>
+                      <p-button
+                        icon="pi pi-copy"
+                        [text]="true"
+                        [rounded]="true"
+                        size="small"
+                        (onClick)="copyToClipboard(result.evaluationResult.suggestedKeywords)"
+                        [pTooltip]="'metadata.results.copyToClipboard' | translate">
+                      </p-button>
+                    </div>
+                    <p class="mb-2 line-height-3">{{ result.evaluationResult.suggestedKeywords }}</p>
+                    <span class="text-sm text-color-secondary">
+                      {{ result.evaluationResult.suggestedKeywords.length }} {{ 'common.chars' | translate }}
+                    </span>
+                  </div>
+                </div>
+
+                <!-- Rationale (Bilingual) -->
+                <div>
+                  <h3 class="text-xl font-semibold mb-3">
+                    {{ 'metadata.comparison.rationale' | translate }}
+                  </h3>
+
+                  <!-- French Rationale -->
+                  <div class="mb-3" *ngIf="result.evaluationResult.rationale">
+                    <div class="flex align-items-center gap-2 mb-2">
+                      <strong class="text-primary">{{ 'common.language.french' | translate }}</strong>
+                    </div>
+                    <div class="p-3 border-round surface-card">
+                      <p class="mb-0 line-height-3 white-space-pre-wrap">{{ result.evaluationResult.rationale }}</p>
+                    </div>
+                  </div>
+
+                  <!-- English Rationale -->
+                  <div *ngIf="result.evaluationResult.rationaleEnglish">
+                    <div class="flex align-items-center gap-2 mb-2">
+                      <strong class="text-primary">{{ 'common.language.english' | translate }}</strong>
+                    </div>
+                    <div class="p-3 border-round surface-card">
+                      <p class="mb-0 line-height-3 white-space-pre-wrap">{{ result.evaluationResult.rationaleEnglish }}</p>
+                    </div>
+                  </div>
+                </div>
+              </p-card>
             </div>
           </div>
         </p-accordionTab>
