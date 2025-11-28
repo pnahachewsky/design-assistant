@@ -1,10 +1,10 @@
-<div class="url-input-container">
+<div class="w-full">
   <p-card>
     <ng-template pTemplate="header">
       <div class="flex align-items-center justify-content-between p-3">
         <h3 class="m-0">{{ 'metadata.urlInput.title' | translate }}</h3>
         <div class="flex gap-2">
-          <p-button 
+          <p-button
             [label]="'metadata.urlInput.clear' | translate"
             icon="pi pi-times"
             severity="secondary"
@@ -16,20 +16,20 @@
       </div>
     </ng-template>
 
-    <div class="url-input-content">
+    <div class="p-0">
       <div class="field">
-        <label for="urls" class="block mb-2">
+        <label for="urls" class="block mb-2 font-semibold">
           {{ 'metadata.urlInput.label' | translate }}
         </label>
-        <textarea 
-          pInputTextarea 
+        <textarea
+          pInputTextarea
           id="urls"
           [(ngModel)]="urlText"
           (ngModelChange)="onTextChange()"
           [disabled]="disabled"
           [rows]="8"
           [placeholder]="'metadata.urlInput.placeholder' | translate"
-          class="w-full">
+          class="w-full line-height-3">
         </textarea>
         <small class="block mt-1 text-500">
           {{ 'metadata.urlInput.help' | translate }}
@@ -40,7 +40,7 @@
         </small>
       </div>
 
-      <div class="url-validation mt-3">
+      <div class="p-3 surface-50 border-round mt-3">
         <div *ngIf="validUrls.length > 0" class="mb-2">
           <div class="flex align-items-center gap-2 mb-2">
             <i class="pi pi-check-circle text-green-500"></i>
@@ -63,10 +63,10 @@
         </div>
 
         <div *ngIf="invalidUrls.length > 0">
-          <p-message 
-            severity="warn" 
+          <p-message
+            severity="warn"
             [text]="'metadata.urlInput.invalidUrls' | translate"
-            styleClass="w-full">
+            styleClass="w-full m-0">
           </p-message>
           <div class="mt-2 text-orange-600">
             <ul class="m-0 pl-3">

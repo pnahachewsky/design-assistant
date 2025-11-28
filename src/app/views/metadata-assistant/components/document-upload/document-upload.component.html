@@ -2,50 +2,170 @@
   <ng-template pTemplate="header">
     <div class="flex align-items-center p-3">
       <i class="pi pi-file-word mr-2"></i>
-      <h4 class="m-0">{{ 'metadata.document.title' | translate }}</h4>
+      <h4 class="m-0">{{ (simplifiedMode ? 'metadata.document.frenchReviewTitle' : 'metadata.document.title') | translate }}</h4>
     </div>
   </ng-template>
 
-  <p class="mb-3">{{ 'metadata.document.description' | translate }}</p>
+  <!-- Mode Selection (hidden in simplified mode) -->
+  <div class="p-3 surface-50 border-round mb-4" *ngIf="!simplifiedMode">
+    <span class="font-semibold text-lg mb-2 block">
+      {{ 'metadata.document.processingMode' | translate }}
+    </span>
 
-  <!-- Upload Section -->
-  <div
-    class="flex flex-column align-items-center justify-content-center p-3 border-dashed border-round border-200 surface-100 hover:surface-200 hover:border-primary-400 transition-colors transition-duration-300 cursor-pointer w-full min-h-12rem"
-    [class.border-primary-400]="isDragging"
-    role="button"
-    tabindex="0"
-    (click)="fileInput.click()"
-    (keydown.enter)="fileInput.click()"
-    (keydown.space)="fileInput.click(); $event.preventDefault()"
-    (dragover)="onDragOver($event)"
-    (dragleave)="onDragLeave($event)"
-    (drop)="onDrop($event)">
+    <div class="flex flex-column gap-3">
+      <div class="flex align-items-center">
+        <p-radiobutton
+          name="documentMode"
+          value="english-only"
+          [(ngModel)]="selectedMode"
+          (ngModelChange)="onModeChange()"
+          inputId="mode-english">
+        </p-radiobutton>
+        <label for="mode-english" class="ml-2 cursor-pointer">
+          {{ 'metadata.document.mode.englishOnly' | translate }}
+        </label>
+      </div>
 
-    <input
-      type="file"
-      accept=".docx"
-      #fileInput
-      style="display: none"
-      [disabled]="disabled"
-      (click)="onFileInputClick($event)"
-      (change)="onFileSelected($event)" />
+      <div class="flex align-items-center">
+        <p-radiobutton
+          name="documentMode"
+          value="french-only"
+          [(ngModel)]="selectedMode"
+          (ngModelChange)="onModeChange()"
+          inputId="mode-french">
+        </p-radiobutton>
+        <label for="mode-french" class="ml-2 cursor-pointer">
+          {{ 'metadata.document.mode.frenchOnly' | translate }}
+        </label>
+      </div>
 
-    <ng-container *ngIf="selectedFile; else dragArea">
-      <i class="pi pi-file-word text-blue-500 text-4xl mb-2"></i>
-      <p class="text-xl text-center mb-2">{{ selectedFile.name }}</p>
-      <p-button
-        [label]="'metadata.document.clearFile' | translate"
-        icon="pi pi-times"
-        severity="secondary"
-        [outlined]="true"
-        size="small"
-        (onClick)="clearFile(); $event.stopPropagation()">
-      </p-button>
-    </ng-container>
+      <div class="flex align-items-center">
+        <p-radiobutton
+          name="documentMode"
+          value="both"
+          [(ngModel)]="selectedMode"
+          (ngModelChange)="onModeChange()"
+          inputId="mode-both">
+        </p-radiobutton>
+        <label for="mode-both" class="ml-2 cursor-pointer">
+          {{ 'metadata.document.mode.both' | translate }}
+        </label>
+      </div>
+    </div>
+  </div>
 
-    <ng-template #dragArea>
-      <i class="pi pi-upload border-2 border-circle border-300 p-3 text-3xl text-color-secondary mb-2"></i>
-      <p class="m-0 text-center text-sm">{{ 'metadata.document.dragDrop' | translate }}</p>
-    </ng-template>
+  <!-- English Document Upload (shown for english-only, both modes, or french-only with translation enabled, hidden in simplified mode) -->
+  <div class="mb-4" *ngIf="!simplifiedMode && (selectedMode === 'english-only' || selectedMode === 'both' || (selectedMode === 'french-only' && translateToOtherLanguage))">
+    <span class="font-semibold mb-2 block">
+      {{ getEnglishUploadLabel() | translate }}
+    </span>
+
+    <div
+      class="upload-zone flex flex-column align-items-center justify-content-center p-4 border-2 border-dashed border-round surface-100"
+      [class.dragging]="isDraggingEnglish"
+      [class.has-file]="englishFile"
+      role="button"
+      tabindex="0"
+      (click)="englishFileInput.click()"
+      (keydown.enter)="englishFileInput.click()"
+      (keydown.space)="englishFileInput.click(); $event.preventDefault()"
+      (dragover)="onEnglishDragOver($event)"
+      (dragleave)="onEnglishDragLeave($event)"
+      (drop)="onEnglishDrop($event)">
+
+      <input
+        type="file"
+        accept=".docx"
+        #englishFileInput
+        style="display: none"
+        [disabled]="disabled"
+        (click)="onEnglishFileInputClick($event)"
+        (change)="onEnglishFileSelected($event)" />
+
+      <ng-container *ngIf="englishFile; else englishDragArea">
+        <i class="pi pi-file-word text-4xl mb-2 text-blue-500"></i>
+        <p class="text-xl text-center mb-2" style="word-break: break-word; max-width: 90%;">{{ englishFile.name }}</p>
+        <p-button
+          [label]="'metadata.document.clearFile' | translate"
+          icon="pi pi-times"
+          severity="secondary"
+          [outlined]="true"
+          size="small"
+          (onClick)="clearEnglishFile(); $event.stopPropagation()">
+        </p-button>
+      </ng-container>
+
+      <ng-template #englishDragArea>
+        <i class="pi pi-upload text-5xl text-color-secondary border-2 border-round-3xl p-4 mb-3" style="border-color: var(--surface-300);"></i>
+        <p class="m-0 text-center text-sm text-color-secondary">
+          {{ 'metadata.document.dragDrop' | translate }}
+        </p>
+      </ng-template>
+    </div>
+  </div>
+
+  <!-- French Document Upload (shown for french-only, both modes, or english-only with translation enabled, or always in simplified mode) -->
+  <div class="mb-4" *ngIf="simplifiedMode || selectedMode === 'french-only' || selectedMode === 'both' || (selectedMode === 'english-only' && translateToOtherLanguage)">
+    <span class="font-semibold mb-2 block" *ngIf="!simplifiedMode">
+      {{ getFrenchUploadLabel() | translate }}
+    </span>
+
+    <div
+      class="upload-zone flex flex-column align-items-center justify-content-center p-4 border-2 border-dashed border-round surface-100"
+      [class.dragging]="isDraggingFrench"
+      [class.has-file]="frenchFile"
+      role="button"
+      tabindex="0"
+      (click)="frenchFileInput.click()"
+      (keydown.enter)="frenchFileInput.click()"
+      (keydown.space)="frenchFileInput.click(); $event.preventDefault()"
+      (dragover)="onFrenchDragOver($event)"
+      (dragleave)="onFrenchDragLeave($event)"
+      (drop)="onFrenchDrop($event)">
+
+      <input
+        type="file"
+        accept=".docx"
+        #frenchFileInput
+        style="display: none"
+        [disabled]="disabled"
+        (click)="onFrenchFileInputClick($event)"
+        (change)="onFrenchFileSelected($event)" />
+
+      <ng-container *ngIf="frenchFile; else frenchDragArea">
+        <i class="pi pi-file-word text-4xl mb-2 text-blue-500"></i>
+        <p class="text-xl text-center mb-2" style="word-break: break-word; max-width: 90%;">{{ frenchFile.name }}</p>
+        <p-button
+          [label]="'metadata.document.clearFile' | translate"
+          icon="pi pi-times"
+          severity="secondary"
+          [outlined]="true"
+          size="small"
+          (onClick)="clearFrenchFile(); $event.stopPropagation()">
+        </p-button>
+      </ng-container>
+
+      <ng-template #frenchDragArea>
+        <i class="pi pi-upload text-5xl text-color-secondary border-2 border-round-3xl p-4 mb-3" style="border-color: var(--surface-300);"></i>
+        <p class="m-0 text-center text-sm text-color-secondary">
+          {{ 'metadata.document.dragDrop' | translate }}
+        </p>
+      </ng-template>
+    </div>
+  </div>
+
+  <!-- Translation Option (shown for english-only and french-only modes) -->
+  <div class="translation-option mt-3" *ngIf="shouldShowTranslateOption()">
+    <div class="flex align-items-center">
+      <p-checkbox
+        [(ngModel)]="translateToOtherLanguage"
+        (ngModelChange)="onTranslateOptionChange()"
+        [binary]="true"
+        inputId="translateOption">
+      </p-checkbox>
+      <label for="translateOption" class="ml-2 cursor-pointer">
+        {{ getTranslateLabel() | translate }}
+      </label>
+    </div>
   </div>
 </p-card>

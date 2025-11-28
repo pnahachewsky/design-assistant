@@ -2,18 +2,46 @@ import { Injectable } from '@angular/core';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { MetadataResult } from './metadata-assistant.service';
 
+export type DocumentMode = 'english-only' | 'french-only' | 'both';
+
+export interface ComparisonResult {
+  englishMetadata: {
+    description: string;
+    keywords: string;
+  };
+  autoTranslatedFrench: {
+    description: string;
+    keywords: string;
+  };
+  frenchDocMetadata: {
+    description: string;
+    keywords: string;
+  };
+  suggested: {
+    description: string;
+    keywords: string;
+  };
+  rationale: string;
+  rationaleEnglish: string;
+}
+
 export interface MetadataProcessingState {
   isProcessing: boolean;
   currentUrl: string;
-  currentStep: 'idle' | 'scraping' | 'generating' | 'translating' | 'extracting-text' | 'processing-document' | 'evaluating' | 'complete';
+  currentStep: 'idle' | 'scraping' | 'generating' | 'translating' | 'extracting-text' | 'processing-document' | 'evaluating' | 'comparing' | 'complete';
   progress: number;
   totalUrls: number;
   processedUrls: number;
   results: MetadataResult[];
   error: string | null;
   selectedModel: string;
+  selectedTranslationModel: string;
   translateToFrench: boolean;
   documentProcessingIndex: number | null;
+  documentMode: DocumentMode;
+  englishDocument: File | null;
+  frenchDocument: File | null;
+  comparisonResult: ComparisonResult | null;
 }
 
 @Injectable({
@@ -29,9 +57,14 @@ export class MetadataAssistantStateService {
     processedUrls: 0,
     results: [],
     error: null,
-    selectedModel: 'mistralai/mistral-small-3.2-24b-instruct:free',
+    selectedModel: 'qwen/qwen3-235b-a22b:free',
+    selectedTranslationModel: 'anthropic/claude-3.5-sonnet', // Default to best translation model
     translateToFrench: false,
-    documentProcessingIndex: null
+    documentProcessingIndex: null,
+    documentMode: 'english-only',
+    englishDocument: null,
+    frenchDocument: null,
+    comparisonResult: null
   };
 
   private stateSubject = new BehaviorSubject<MetadataProcessingState>(this.initialState);
@@ -107,6 +140,10 @@ export class MetadataAssistantStateService {
     this.updateState({ selectedModel: model });
   }
 
+  setSelectedTranslationModel(model: string): void {
+    this.updateState({ selectedTranslationModel: model });
+  }
+
   setTranslateToFrench(translate: boolean): void {
     this.updateState({ translateToFrench: translate });
   }
@@ -135,7 +172,7 @@ export class MetadataAssistantStateService {
     }
   }
 
-  updateResultWithEvaluation(index: number, evaluationResult: { suggestedDescription: string, suggestedKeywords: string, rationale: string }): void {
+  updateResultWithEvaluation(index: number, evaluationResult: { suggestedDescription: string, suggestedKeywords: string, rationale: string, rationaleEnglish: string }): void {
     const state = this.getState();
     const updatedResults = [...state.results];
     if (updatedResults[index]) {
@@ -153,5 +190,36 @@ export class MetadataAssistantStateService {
 
   setDocumentProcessingIndex(index: number | null): void {
     this.updateState({ documentProcessingIndex: index });
+  }
+
+  // New document mode management methods
+  setDocumentMode(mode: DocumentMode): void {
+    this.updateState({
+      documentMode: mode,
+      englishDocument: null,
+      frenchDocument: null,
+      comparisonResult: null
+    });
+  }
+
+  setEnglishDocument(file: File | null): void {
+    this.updateState({ englishDocument: file });
+  }
+
+  setFrenchDocument(file: File | null): void {
+    this.updateState({ frenchDocument: file });
+  }
+
+  setComparisonResult(result: ComparisonResult | null): void {
+    this.updateState({ comparisonResult: result });
+  }
+
+  clearDocumentData(): void {
+    this.updateState({
+      documentMode: 'english-only',
+      englishDocument: null,
+      frenchDocument: null,
+      comparisonResult: null
+    });
   }
 }

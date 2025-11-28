@@ -1,0 +1,175 @@
+<div *ngIf="comparisonData">
+  <p-card [header]="'metadata.comparison.title' | translate" styleClass="mb-4">
+
+    <!-- Description Comparison -->
+    <div class="mb-5">
+      <h3 class="text-xl font-semibold mb-3">
+        {{ 'metadata.comparison.description' | translate }}
+      </h3>
+
+      <!-- Side-by-side comparison -->
+      <div class="grid mb-3">
+        <!-- Auto-Translated Version -->
+        <div class="col-12 md:col-6">
+          <div class="p-3 border-round surface-50 h-full">
+            <div class="flex align-items-center justify-content-between mb-2">
+              <strong class="text-primary">{{ 'metadata.comparison.autoTranslated' | translate }}</strong>
+              <p-button
+                icon="pi pi-copy"
+                [text]="true"
+                [rounded]="true"
+                size="small"
+                (click)="copyToClipboard(comparisonData.autoTranslatedFrench.description, $event)"
+                [pTooltip]="'metadata.results.copyToClipboard' | translate">
+              </p-button>
+            </div>
+            <p class="mb-2 line-height-3">{{ comparisonData.autoTranslatedFrench.description }}</p>
+            <span class="text-sm text-color-secondary">
+              {{ comparisonData.autoTranslatedFrench.description.length }} {{ 'metadata.results.metaDescription' | translate }}
+            </span>
+          </div>
+        </div>
+
+        <!-- From French Document -->
+        <div class="col-12 md:col-6">
+          <div class="p-3 border-round surface-50 h-full">
+            <div class="flex align-items-center justify-content-between mb-2">
+              <strong class="text-primary">{{ 'metadata.comparison.fromFrenchDoc' | translate }}</strong>
+              <p-button
+                icon="pi pi-copy"
+                [text]="true"
+                [rounded]="true"
+                size="small"
+                (click)="copyToClipboard(comparisonData.frenchDocMetadata.description, $event)"
+                [pTooltip]="'metadata.results.copyToClipboard' | translate">
+              </p-button>
+            </div>
+            <p class="mb-2 line-height-3">{{ comparisonData.frenchDocMetadata.description }}</p>
+            <span class="text-sm text-color-secondary">
+              {{ comparisonData.frenchDocMetadata.description.length }} {{ 'metadata.results.metaDescription' | translate }}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- AI Suggested Final Description -->
+      <div class="p-3 border-round surface-100 border-left-3 border-primary">
+        <div class="flex align-items-center justify-content-between mb-2">
+          <strong class="text-lg">{{ 'metadata.comparison.suggestedDescription' | translate }}</strong>
+          <p-button
+            icon="pi pi-copy"
+            [text]="true"
+            [rounded]="true"
+            size="small"
+            (click)="copyToClipboard(comparisonData.suggested.description, $event)"
+            [pTooltip]="'metadata.results.copyToClipboard' | translate">
+          </p-button>
+        </div>
+        <p class="mb-2 line-height-3">{{ comparisonData.suggested.description }}</p>
+        <span class="text-sm text-color-secondary">
+          {{ comparisonData.suggested.description.length }} {{ 'metadata.results.metaDescription' | translate }}
+        </span>
+      </div>
+    </div>
+
+    <!-- Keywords Comparison -->
+    <div class="mb-5">
+      <h3 class="text-xl font-semibold mb-3">
+        {{ 'metadata.comparison.keywords' | translate }}
+      </h3>
+
+      <!-- Side-by-side comparison -->
+      <div class="grid mb-3">
+        <!-- Auto-Translated Version -->
+        <div class="col-12 md:col-6">
+          <div class="p-3 border-round surface-50 h-full">
+            <div class="flex align-items-center justify-content-between mb-2">
+              <strong class="text-primary">{{ 'metadata.comparison.autoTranslated' | translate }}</strong>
+              <p-button
+                icon="pi pi-copy"
+                [text]="true"
+                [rounded]="true"
+                size="small"
+                (click)="copyToClipboard(comparisonData.autoTranslatedFrench.keywords, $event)"
+                [pTooltip]="'metadata.results.copyToClipboard' | translate">
+              </p-button>
+            </div>
+            <p class="mb-0 line-height-3">{{ comparisonData.autoTranslatedFrench.keywords }}</p>
+          </div>
+        </div>
+
+        <!-- From French Document -->
+        <div class="col-12 md:col-6">
+          <div class="p-3 border-round surface-50 h-full">
+            <div class="flex align-items-center justify-content-between mb-2">
+              <strong class="text-primary">{{ 'metadata.comparison.fromFrenchDoc' | translate }}</strong>
+              <p-button
+                icon="pi pi-copy"
+                [text]="true"
+                [rounded]="true"
+                size="small"
+                (click)="copyToClipboard(comparisonData.frenchDocMetadata.keywords, $event)"
+                [pTooltip]="'metadata.results.copyToClipboard' | translate">
+              </p-button>
+            </div>
+            <p class="mb-0 line-height-3">{{ comparisonData.frenchDocMetadata.keywords }}</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- AI Suggested Final Keywords -->
+      <div class="p-3 border-round surface-100 border-left-3 border-primary">
+        <div class="flex align-items-center justify-content-between mb-2">
+          <strong class="text-lg">{{ 'metadata.comparison.suggestedKeywords' | translate }}</strong>
+          <p-button
+            icon="pi pi-copy"
+            [text]="true"
+            [rounded]="true"
+            size="small"
+            (click)="copyToClipboard(comparisonData.suggested.keywords, $event)"
+            [pTooltip]="'metadata.results.copyToClipboard' | translate">
+          </p-button>
+        </div>
+        <p class="mb-2 line-height-3">{{ comparisonData.suggested.keywords }}</p>
+        <span class="text-sm text-color-secondary">
+          {{ comparisonData.suggested.keywords.length }} {{ 'common.chars' | translate }}
+        </span>
+      </div>
+    </div>
+
+    <!-- Rationale (Bilingual) -->
+    <div>
+      <h3 class="text-xl font-semibold mb-3">
+        {{ 'metadata.comparison.rationale' | translate }}
+      </h3>
+
+      <!-- French Rationale -->
+      <div class="mb-3" *ngIf="comparisonData.rationale">
+        <div class="flex align-items-center gap-2 mb-2">
+          <strong class="text-primary">{{ 'common.language.french' | translate }}</strong>
+        </div>
+        <div class="p-3 border-round surface-card">
+          <p class="mb-0 line-height-3 white-space-pre-wrap">{{ comparisonData.rationale }}</p>
+        </div>
+      </div>
+
+      <!-- English Rationale -->
+      <div *ngIf="comparisonData.rationaleEnglish">
+        <div class="flex align-items-center gap-2 mb-2">
+          <strong class="text-primary">{{ 'common.language.english' | translate }}</strong>
+        </div>
+        <div class="p-3 border-round surface-card">
+          <p class="mb-0 line-height-3 white-space-pre-wrap">{{ comparisonData.rationaleEnglish }}</p>
+        </div>
+      </div>
+    </div>
+  </p-card>
+</div>
+
+<div class="p-4 text-center" *ngIf="!comparisonData">
+  <p-card>
+    <p class="text-color-secondary mb-0">
+      {{ 'metadata.comparison.noComparison' | translate }}
+    </p>
+  </p-card>
+</div>

@@ -1,9 +1,11 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
+import { TranslateService } from '@ngx-translate/core';
 
 @Injectable({
   providedIn: 'root'
 })
 export class PdfConverterService {
+  private readonly translate = inject(TranslateService);
   private pdfjsLib: typeof import('pdfjs-dist') | null = null;
   private isInitialized = false;
 
@@ -39,7 +41,7 @@ export class PdfConverterService {
     await this.initializePdfJs();
 
     if (!this.pdfjsLib) {
-      throw new Error('PDF.js library failed to initialize');
+      throw new Error(this.translate.instant('pdf.error.failedToInitialize'));
     }
 
     const arrayBuffer = await file.arrayBuffer();
@@ -55,7 +57,7 @@ export class PdfConverterService {
       const canvas = document.createElement('canvas');
       const context = canvas.getContext('2d');
       if (!context) {
-        throw new Error('Failed to get canvas context');
+        throw new Error(this.translate.instant('pdf.error.failedToGetContext'));
       }
       
       canvas.height = viewport.height;

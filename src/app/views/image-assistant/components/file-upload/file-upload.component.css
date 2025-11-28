@@ -1,15 +1,4 @@
-fieldset {
-  border: none;
-  padding: 0;
-  margin: 0;
-}
-
-legend {
-  font-weight: 600;
-  margin-bottom: 0.5rem;
-  color: var(--text-color);
-}
-
+/* PrimeNG file upload customization - necessary for component styling */
 :host ::ng-deep .p-fileupload {
   margin-top: 1rem;
 }
@@ -34,30 +23,4 @@ legend {
 
 :host ::ng-deep .p-fileupload-buttonbar {
   display: none;
-}
-
-.upload-content {
-  width: 100%;
-}
-
-.upload-icon {
-  font-size: 3rem;
-  color: var(--primary-color);
-  margin-bottom: 1rem;
-  display: block;
-}
-
-.upload-title {
-  margin-bottom: 0.5rem;
-  font-size: 1.1rem;
-}
-
-.upload-description {
-  color: var(--text-color-secondary);
-  margin-bottom: 0.5rem;
-}
-
-.upload-formats {
-  font-size: 0.875rem;
-  color: var(--text-color-secondary);
 }

@@ -9,14 +9,7 @@ import { FileProcessingResult } from '../../../../services/image-assistant-state
   standalone: true,
   imports: [CommonModule, TranslateModule, ButtonModule],
   templateUrl: './csv-download.component.html',
-  styles: [`
-    .csv-download-container {
-      margin-top: 2rem;
-      padding: 1rem;
-      background-color: var(--surface-100);
-      border-radius: 8px;
-    }
-  `]
+  styles: []
 })
 export class CsvDownloadComponent {
   @Input() results: Record<string, FileProcessingResult> = {};

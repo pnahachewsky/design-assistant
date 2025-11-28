@@ -14,15 +14,15 @@
     [chooseLabel]="'image.upload.chooseLabel' | translate">
 
     <ng-template pTemplate="content">
-      <div class="upload-content">
-        <i class="pi pi-cloud-upload upload-icon"></i>
-        <p class="upload-title">
+      <div class="w-full">
+        <i class="pi pi-cloud-upload text-5xl text-primary mb-3 block"></i>
+        <p class="text-lg mb-2">
           <strong>{{ 'image.upload.title' | translate }}</strong>
         </p>
-        <p class="upload-description">
+        <p class="text-color-secondary mb-2">
           {{ 'image.upload.dragDropOrClick' | translate }}
         </p>
-        <p class="upload-formats">
+        <p class="text-sm text-color-secondary">
           {{ 'image.upload.accept' | translate }}
         </p>
       </div>

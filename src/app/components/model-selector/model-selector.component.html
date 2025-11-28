@@ -1,4 +1,4 @@
-<div class="model-selector-container">
+<div class="w-full">
   <p-card *ngIf="showCard">
     <ng-template pTemplate="header">
       <div class="flex align-items-center p-3">
@@ -6,32 +6,32 @@
         <h3 class="m-0">{{ cardTitle | translate }}</h3>
       </div>
     </ng-template>
-    
+
     <ng-container *ngTemplateOutlet="selectorContent"></ng-container>
   </p-card>
-  
+
   <div *ngIf="!showCard">
     <ng-container *ngTemplateOutlet="selectorContent"></ng-container>
   </div>
 </div>
 
 <ng-template #selectorContent>
-  <div class="model-selector-content">
+  <div class="p-0">
     <div class="field">
       <label for="model" class="block mb-2 font-semibold">
         {{ label | translate }}
       </label>
-      <p-dropdown 
-        [options]="localModels" 
+      <p-dropdown
+        [options]="localModels"
         [(ngModel)]="selectedModel"
         (ngModelChange)="onModelChange($event)"
-        optionLabel="name" 
+        optionLabel="name"
         optionValue="value"
         [disabled]="disabled"
         styleClass="w-full"
         [placeholder]="'common.modelSelector.placeholder' | translate">
       </p-dropdown>
-      <small class="block mt-2 text-500" *ngIf="getModelDescription()">
+      <small class="block mt-2 text-color-secondary" *ngIf="getModelDescription()">
         {{ getModelDescription() }}
       </small>
     </div>
@@ -39,7 +39,7 @@
     <!-- Translation option for metadata assistant -->
     <div class="field mt-4" *ngIf="showTranslateOption">
       <div class="flex align-items-center">
-        <p-checkbox 
+        <p-checkbox
           [(ngModel)]="translateToFrench"
           (ngModelChange)="onTranslateChange($event)"
           [disabled]="disabled"
@@ -50,7 +50,7 @@
           {{ 'metadata.modelSelector.translateToFrench' | translate }}
         </label>
       </div>
-      <small class="block mt-2 ml-4 text-500">
+      <small class="block mt-2 ml-4 text-color-secondary">
         {{ 'metadata.modelSelector.translateDescription' | translate }}
       </small>
     </div>

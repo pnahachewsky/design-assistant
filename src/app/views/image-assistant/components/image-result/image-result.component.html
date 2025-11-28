@@ -1,4 +1,4 @@
-<div class="result-container">
+<div class="mb-4">
   <p-card>
     <ng-template pTemplate="header">
       <h4>{{ 'image.result.title' | translate: { fileName: result.fileName } }}</h4>
@@ -13,7 +13,7 @@
       </p-message>
       
       <!-- Processing state -->
-      <div *ngIf="result.status === 'processing'" class="processing-message">
+      <div *ngIf="result.status === 'processing'" class="flex align-items-center gap-3">
         <p-progressSpinner 
           [style]="{width: '30px', height: '30px'}" 
           strokeWidth="4">
@@ -28,13 +28,13 @@
           *ngIf="result.data.imageBase64"
           [src]="result.data.imageBase64"
           [alt]="'image.result.previewFor' | translate: { fileName: result.fileName }"
-          class="result-image">
+          class="max-h-13rem w-auto border-1 surface-border mb-3 block border-round">
         
-        <div class="result-columns">
+        <div class="grid gap-4">
           <!-- English Alt Text -->
-          <div class="result-column">
+          <div class="col-12 md:col-6 p-3 surface-50 border-round">
             <strong>{{ 'image.result.english' | translate }}</strong>
-            <div class="collapsible-container">
+            <div class="my-2">
               <div *ngIf="!result.showFullText">
                 {{ getTruncatedText(result.data.english) }}
                 <span *ngIf="shouldShowToggle(result.data.english)">...</span>
@@ -59,9 +59,9 @@
           </div>
           
           <!-- French Alt Text -->
-          <div class="result-column">
+          <div class="col-12 md:col-6 p-3 surface-50 border-round">
             <strong>{{ 'image.result.french' | translate }}</strong>
-            <div class="collapsible-container">
+            <div class="my-2">
               <div *ngIf="!result.showFullText">
                 {{ getTruncatedText(result.data.french) }}
                 <span *ngIf="shouldShowToggle(result.data.french)">...</span>
