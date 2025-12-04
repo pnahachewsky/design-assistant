@@ -60,7 +60,7 @@ export class FetchService {
       try {
         const response =
           mode === "HEAD"
-            ? await fetch(url, { method: "HEAD", cache: "no-store" })
+            ? await fetch(url, { method: "HEAD" }) //removed cache: "no-store" from { method: "HEAD", cache: "no-store" } 
             : await fetch(url); // plain GET to avoid CORS error
         if (response.ok) return response;
         else {
