@@ -82,6 +82,7 @@ export class MetadataAssistantComponent implements OnInit, OnDestroy {
   documentResults: MetadataResult[] = [];
   documentTranslateOption = false;
   documentProcessingIndex: number | null = null;
+  activeTabIndex = '0';
 
   models: ModelOption[] = [
     {
@@ -189,6 +190,14 @@ export class MetadataAssistantComponent implements OnInit, OnDestroy {
 
   onTranslateToggle(translate: boolean): void {
     this.stateService.setTranslateToFrench(translate);
+  }
+
+  onTabChange(index: string | number): void {
+    this.activeTabIndex = String(index);
+    // Reset currentStep to idle when switching tabs (unless currently processing)
+    if (!this.state.isProcessing) {
+      this.stateService.updateState({ currentStep: 'idle' });
+    }
   }
 
   startProcessing(): void {
