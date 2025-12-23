@@ -91,7 +91,7 @@ export class ExportGithubComponent implements OnInit {
 
   updateOwner() {
     this.gitHubData().owner = this.gitHubData().owner.trim().toLowerCase().replace(/^[-]+|[-]+$/g, '').replace(/[-]{2,}/g, '-');
-    if (!this.gitHubData().owner) { this.gitHubData().owner = 'cra-design'; }
+    if (!this.gitHubData().owner) { this.gitHubData().owner = 'proto-cra'; }
   }
 
   async updateRepo() {

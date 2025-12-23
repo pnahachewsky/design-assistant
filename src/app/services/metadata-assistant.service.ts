@@ -44,6 +44,7 @@ export interface ProcessingOptions {
 
 // Allowed hosts that support CORS - same as page assistant
 const ALLOWED_HOSTS = new Set([
+  'proto-cra.github.io',
   'cra-design.github.io',
   'cra-proto.github.io',
   'gc-proto.github.io',
@@ -59,7 +60,7 @@ export class MetadataAssistantService {
   private readonly SCRAPING_TIMEOUT = 30000; // 30 seconds
   private readonly API_TIMEOUT = 60000; // 60 seconds
   private readonly TRANSLATION_TIMEOUT = 90000; // 90 seconds with retry
-  
+
   // Default fallback models in order of preference
   private readonly DEFAULT_FALLBACK_MODELS = [
     'openai/gpt-4o-mini',                  // Cost-effective, excellent performance
@@ -182,7 +183,7 @@ export class MetadataAssistantService {
     // Parse HTML using DOMParser
     const parser = new DOMParser();
     const doc = parser.parseFromString(html, 'text/html');
-    
+
     // Find main element - matching Python's _find_main_element logic
     let mainElement = this.findMainElement(doc);
 
@@ -266,12 +267,12 @@ export class MetadataAssistantService {
             return;
           }
         }
-        
+
         // Skip li elements that are part of "On this page" navigation
         if (tag === 'li' && element.hasAttribute('data-on-this-page')) {
           return;
         }
-        
+
         const text = element.textContent?.trim();
         if (text && text.length > 0) {  // Only add non-empty text
           textContent.push(text);
@@ -281,7 +282,7 @@ export class MetadataAssistantService {
 
     // Join with space and truncate to 2500 characters
     const fullText = textContent.join(' ');
-    
+
     // Log extraction details for debugging
     console.log(`Extracted ${fullText.length} characters of content`);
     if (fullText.length < 100) {
@@ -289,7 +290,7 @@ export class MetadataAssistantService {
     } else if (fullText.length > 2500) {
       console.log(`Content truncated from ${fullText.length} to 2500 characters`);
     }
-    
+
     return fullText.substring(0, 2500);
   }
 
@@ -368,14 +369,14 @@ export class MetadataAssistantService {
     return frenchRatio > 0.05 ? 'fr' : 'en';
   }
 
-  private generateMetadataWithFallback(content: string, primaryModel: string, language: 'en' | 'fr', fallbackModels: string[]): Observable<{description: string, keywords: string, modelUsed: string, fallbackUsed: boolean}> {
+  private generateMetadataWithFallback(content: string, primaryModel: string, language: 'en' | 'fr', fallbackModels: string[]): Observable<{ description: string, keywords: string, modelUsed: string, fallbackUsed: boolean }> {
     // Try primary model first, then fallbacks
     const modelsToTry = [primaryModel, ...fallbackModels.filter(m => m !== primaryModel)];
-    
+
     return this.tryModelsInSequence(content, modelsToTry, language, 0, primaryModel);
   }
 
-  private tryModelsInSequence(content: string, models: string[], language: 'en' | 'fr', attemptIndex: number, primaryModel: string): Observable<{description: string, keywords: string, modelUsed: string, fallbackUsed: boolean}> {
+  private tryModelsInSequence(content: string, models: string[], language: 'en' | 'fr', attemptIndex: number, primaryModel: string): Observable<{ description: string, keywords: string, modelUsed: string, fallbackUsed: boolean }> {
     if (attemptIndex >= models.length) {
       return throwError(() => new Error(this.translate.instant('metadata.errors.allModelsFailed')));
     }
@@ -392,19 +393,19 @@ export class MetadataAssistantService {
       })),
       catchError(error => {
         console.warn(`Model ${currentModel} failed:`, error.message);
-        
+
         // Check if it's a rate limit error
         if (this.isRateLimitError(error)) {
           console.log(`Rate limit detected for ${currentModel}, trying next model...`);
           return this.tryModelsInSequence(content, models, language, attemptIndex + 1, primaryModel);
         }
-        
+
         // For other errors, still try fallback if available
         if (attemptIndex < models.length - 1) {
           console.log(`Error with ${currentModel}, trying next model...`);
           return this.tryModelsInSequence(content, models, language, attemptIndex + 1, primaryModel);
         }
-        
+
         // Re-throw the error if no more models to try
         return throwError(() => error);
       })
@@ -419,15 +420,15 @@ export class MetadataAssistantService {
     const errorLower = typeof errorMessage === 'string' ? errorMessage.toLowerCase() : '';
 
     return errorLower.includes('rate limit') ||
-           errorLower.includes('quota exceeded') ||
-           errorLower.includes('too many requests') ||
-           errorLower.includes('429') ||
-           errorLower.includes('key limit exceeded') ||
-           errorAny.status === 403 ||
-           errorAny.status === 429;
+      errorLower.includes('quota exceeded') ||
+      errorLower.includes('too many requests') ||
+      errorLower.includes('429') ||
+      errorLower.includes('key limit exceeded') ||
+      errorAny.status === 403 ||
+      errorAny.status === 429;
   }
 
-  private generateMetadata(content: string, model: string, language: 'en' | 'fr'): Observable<{description: string, keywords: string}> {
+  private generateMetadata(content: string, model: string, language: 'en' | 'fr'): Observable<{ description: string, keywords: string }> {
     const apiKey = this.apiKeyService.getCurrentKey();
     if (!apiKey) {
       return throwError(() => new Error(this.translate.instant('metadata.errors.noApiKey')));
@@ -527,9 +528,9 @@ Mots-clés (liste séparée par des virgules uniquement):`;
   }
 
   private translateMetadata(
-    metadata: {description: string, keywords: string},
+    metadata: { description: string, keywords: string },
     selectedModel?: string
-  ): Observable<{description: string, keywords: string}> {
+  ): Observable<{ description: string, keywords: string }> {
     // If a specific translation model is selected, use it directly without fallback
     if (selectedModel) {
       console.log(`Using user-selected translation model: ${selectedModel}`);
@@ -540,9 +541,9 @@ Mots-clés (liste séparée par des virgules uniquement):`;
   }
 
   private translateWithModel(
-    metadata: {description: string, keywords: string},
+    metadata: { description: string, keywords: string },
     model: string
-  ): Observable<{description: string, keywords: string}> {
+  ): Observable<{ description: string, keywords: string }> {
     const descriptionPrompt = `You are a professional translator specializing in Canadian government content. Translate the following English meta description to French, maintaining the formal tone used by the Canada Revenue Agency (CRA).
 
 Important CRA-specific terminology:
@@ -606,7 +607,7 @@ French keywords (comma-separated list only):`;
     );
   }
 
-  private translateWithFallback(metadata: {description: string, keywords: string}, attemptIndex: number): Observable<{description: string, keywords: string}> {
+  private translateWithFallback(metadata: { description: string, keywords: string }, attemptIndex: number): Observable<{ description: string, keywords: string }> {
     if (attemptIndex >= this.TRANSLATION_MODELS.length) {
       return throwError(() => new Error(this.translate.instant('metadata.error.allTranslationModelsFailed')));
     }
@@ -990,9 +991,9 @@ French keywords (comma-separated list only):`;
   }
 
   private translateMetadataToEnglish(
-    metadata: {description: string, keywords: string},
+    metadata: { description: string, keywords: string },
     selectedModel?: string
-  ): Observable<{description: string, keywords: string}> {
+  ): Observable<{ description: string, keywords: string }> {
     const model = selectedModel || 'anthropic/claude-3.5-sonnet';
     console.log(`Translating French to English using model: ${model}`);
 
@@ -1091,7 +1092,7 @@ English keywords (comma-separated list only):`;
   }
 
   // New method for document tab - extracts text, detects language, generates metadata
-  processDocumentForMetadata(file: File, model: string): Observable<{language: 'en' | 'fr', text: string, metadata: MetadataResult}> {
+  processDocumentForMetadata(file: File, model: string): Observable<{ language: 'en' | 'fr', text: string, metadata: MetadataResult }> {
     return from(this.extractDocumentText(file)).pipe(
       switchMap(content => {
         if (!content || content.length < 50) {

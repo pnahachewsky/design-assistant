@@ -37,6 +37,7 @@ export class UrlInputComponent {
 
   // Allowed hosts - same as metadata service
   private allowedHosts = new Set([
+    'proto-cra.github.io',
     'cra-design.github.io',
     'cra-proto.github.io',
     'gc-proto.github.io',
@@ -79,7 +80,7 @@ export class UrlInputComponent {
       return false;
     }
   }
-  
+
   getInvalidReason(url: string): string {
     try {
       const urlObj = new URL(url);
@@ -104,7 +105,7 @@ export class UrlInputComponent {
     this.urlText = 'https://www.canada.ca/en/revenue-agency.html\nhttps://www.canada.ca/fr/agence-revenu.html\nhttps://www.canada.ca/en/revenue-agency/services/tax/businesses.html';
     this.parseUrls();
   }
-  
+
   getAllowedDomainsText(): string {
     return Array.from(this.allowedHosts).join(', ');
   }

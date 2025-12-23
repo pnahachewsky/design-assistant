@@ -143,7 +143,7 @@ export class IaStateService {
 
   // Step 5: GitHub export (optional)
   private gitHubData = signal<GitHubData>({
-    owner: 'cra-design',
+    owner: 'proto-cra',
     repo: '',
     branch: 'main',
   });
@@ -174,7 +174,7 @@ export class IaStateService {
         isOk: false,
         urlPairs: [],
       });
-      this.gitHubData.set({ owner: 'cra-design', repo: '', branch: 'main' });
+      this.gitHubData.set({ owner: 'proto-cra', repo: '', branch: 'main' });
     }
 
     //reset breadcrumb data
@@ -390,7 +390,7 @@ export class IaStateService {
         this.searchData.set(state.searchData);
         this.updateTerms(); //rebuild terms from rawTerms
         this.iaData.set(state.iaData);
-        this.gitHubData.set(state.gitHubData || { owner: 'cra-design', repo: '', branch: 'main' });
+        this.gitHubData.set(state.gitHubData || { owner: 'proto-cra', repo: '', branch: 'main' });
         this.saveToLocalStorage();
         console.log('IA state successfully imported');
       } catch (error) {
