@@ -14,16 +14,16 @@ describe('AppComponent', () => {
     expect(app).toBeTruthy();
   });
 
-  it(`should have the 'content-assistant' title`, () => {
+  it(`should have the 'design-assistant' title`, () => {
     const fixture = TestBed.createComponent(AppComponent);
     const app = fixture.componentInstance;
-    expect(app.title).toEqual('content-assistant');
+    expect(app.title).toEqual('design-assistant');
   });
 
   it('should render title', () => {
     const fixture = TestBed.createComponent(AppComponent);
     fixture.detectChanges();
     const compiled = fixture.nativeElement as HTMLElement;
-    expect(compiled.querySelector('h1')?.textContent).toContain('Hello, content-assistant');
+    expect(compiled.querySelector('h1')?.textContent).toContain('Hello, design-assistant');
   });
 });

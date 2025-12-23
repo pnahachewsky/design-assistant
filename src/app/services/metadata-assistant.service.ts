@@ -705,8 +705,8 @@ French keywords (comma-separated list only):`;
     const headers = new HttpHeaders({
       'Authorization': `Bearer ${apiKey}`,
       'Content-Type': 'application/json',
-      'HTTP-Referer': 'https://content-assistant.app',
-      'X-Title': 'Content Assistant'
+      'HTTP-Referer': 'https://design-assistant.app',
+      'X-Title': 'Design Assistant'
     });
 
     // System message to disable reasoning and enforce direct output
