@@ -119,14 +119,23 @@
 
   <ng-template pTemplate="rowexpansion" let-row>
     <tr>
-      <td colspan="7">
+      <td colspan="6">
         <div class="p-3">
           <div *ngIf="(row.issues?.length || 0) > 0; else rationaleOnlyExpanded">
             <h4>Issues</h4>
-            <ul class="issues">
-              <li *ngFor="let it of row.issues">{{ it }}</li>
-            </ul>
-            <div class="muted" *ngIf="row.rationale">{{ row.rationale }}</div>
+            <p-table [value]="row.issues" styleClass="p-datatable-sm" [rows]="10">
+              <ng-template pTemplate="header">
+                <tr>
+                  <th>Issue</th>
+                </tr>
+              </ng-template>
+              <ng-template pTemplate="body" let-issue>
+                <tr>
+                  <td>{{ issue }}</td>
+                </tr>
+              </ng-template>
+            </p-table>
+            <div class="muted" *ngIf="row.rationale" style="margin-top: 1rem;">{{ row.rationale }}</div>
           </div>
           <ng-template #rationaleOnlyExpanded>
             <span>{{ row.rationale || "—" }}</span>
