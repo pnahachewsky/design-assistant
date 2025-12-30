@@ -1,4 +1,5 @@
 <p-table
+  #dt
   [value]="tableRows"
   dataKey="url"
   styleClass="p-datatable-sm"
@@ -6,9 +7,13 @@
   selectionMode="multiple"
   [customSort]="true"
   (sortFunction)="onCustomSort($event)"
+  expandableRows
 >
   <ng-template pTemplate="header">
     <tr>
+      <!-- row toggle column -->
+      <th style="width: 3rem; text-align: center"></th>
+
       <!-- checkbox column -->
       <th style="width: 3rem; text-align: center">
         <p-tableHeaderCheckbox></p-tableHeaderCheckbox>
@@ -41,8 +46,15 @@
     </tr>
   </ng-template>
 
-  <ng-template pTemplate="body" let-row let-rowIndex="rowIndex">
+  <ng-template pTemplate="body" let-row let-rowIndex="rowIndex" let-expanded="expanded">
     <tr [pSelectableRow]="row">
+      <!-- row toggler -->
+      <td style="text-align: center">
+        <a pRowToggler [row]="row" class="p-row-toggler" aria-label="Toggle row">
+          <i class="pi" [ngClass]="{ 'pi-chevron-down': expanded, 'pi-chevron-right': !expanded }" aria-hidden="true"></i>
+        </a>
+      </td>
+
       <!-- checkbox cell -->
       <td style="text-align: center">
         <p-tableCheckbox [value]="row"></p-tableCheckbox>
@@ -97,6 +109,25 @@
         <ng-template #rationaleOnly>
           <span>{{ row.rationale || "—" }}</span>
         </ng-template>
+      </td>
+    </tr>
+  </ng-template>
+
+  <ng-template pTemplate="rowexpansion" let-row>
+    <tr>
+      <td colspan="7">
+        <div class="p-3">
+          <div *ngIf="(row.issues?.length || 0) > 0; else rationaleOnlyExpanded">
+            <h4>Issues</h4>
+            <ul class="issues">
+              <li *ngFor="let it of row.issues">{{ it }}</li>
+            </ul>
+            <div class="muted" *ngIf="row.rationale">{{ row.rationale }}</div>
+          </div>
+          <ng-template #rationaleOnlyExpanded>
+            <span>{{ row.rationale || "—" }}</span>
+          </ng-template>
+        </div>
       </td>
     </tr>
   </ng-template>
