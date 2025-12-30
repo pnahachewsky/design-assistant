@@ -50,9 +50,9 @@
     <tr [pSelectableRow]="row">
       <!-- row toggler -->
       <td style="text-align: center">
-        <a pRowToggler [row]="row" class="p-row-toggler" aria-label="Toggle row">
+        <button pButton type="button" pRowToggler [row]="row" class="p-button-text p-button-rounded p-button-plain" aria-label="Toggle row">
           <i class="pi" [ngClass]="{ 'pi-chevron-down': expanded, 'pi-chevron-right': !expanded }" aria-hidden="true"></i>
-        </a>
+        </button>
       </td>
 
       <!-- checkbox cell -->
