@@ -70,7 +70,6 @@ import {
   Router,
   RouterLink,
   RouterModule,
-  RowToggler,
   SelectableRow,
   SharedModule,
   SortIcon,
@@ -129,7 +128,7 @@ import {
   unblockBodyScroll,
   uuid,
   zindexutils
-} from "./chunk-7JXZSRMW.js";
+} from "./chunk-LFKTG5ST.js";
 import {
   ChangeDetectionStrategy,
   Component,
@@ -25225,34 +25224,31 @@ function ComponentGuidanceComponent_ng_template_2_Template(rf, ctx) {
     \u0275\u0275element(7, "p-sortIcon", 12);
     \u0275\u0275elementEnd();
     \u0275\u0275elementStart(8, "th")(9, "span");
-    \u0275\u0275text(10, "Component");
+    \u0275\u0275text(10, "UCDG guidance for component");
     \u0275\u0275elementEnd()();
-    \u0275\u0275elementStart(11, "th")(12, "span");
-    \u0275\u0275text(13, "UCDG guidance");
-    \u0275\u0275elementEnd()();
-    \u0275\u0275elementStart(14, "th", 13)(15, "span");
-    \u0275\u0275text(16, "Health");
+    \u0275\u0275elementStart(11, "th", 13)(12, "span");
+    \u0275\u0275text(13, "Health");
     \u0275\u0275elementEnd();
-    \u0275\u0275element(17, "p-sortIcon", 14);
+    \u0275\u0275element(14, "p-sortIcon", 14);
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(18, "th");
-    \u0275\u0275text(19, "Pain points");
+    \u0275\u0275elementStart(15, "th");
+    \u0275\u0275text(16, "Pain points");
     \u0275\u0275elementEnd()();
   }
 }
-function ComponentGuidanceComponent_ng_template_3_div_19_li_2_Template(rf, ctx) {
+function ComponentGuidanceComponent_ng_template_3_div_17_li_2_Template(rf, ctx) {
   if (rf & 1) {
     \u0275\u0275elementStart(0, "li");
     \u0275\u0275text(1);
     \u0275\u0275elementEnd();
   }
   if (rf & 2) {
-    const it_r2 = ctx.$implicit;
+    const it_r5 = ctx.$implicit;
     \u0275\u0275advance();
-    \u0275\u0275textInterpolate(it_r2);
+    \u0275\u0275textInterpolate(it_r5);
   }
 }
-function ComponentGuidanceComponent_ng_template_3_div_19_div_3_Template(rf, ctx) {
+function ComponentGuidanceComponent_ng_template_3_div_17_div_3_Template(rf, ctx) {
   if (rf & 1) {
     \u0275\u0275elementStart(0, "div", 28);
     \u0275\u0275text(1);
@@ -25264,12 +25260,12 @@ function ComponentGuidanceComponent_ng_template_3_div_19_div_3_Template(rf, ctx)
     \u0275\u0275textInterpolate(row_r3.rationale);
   }
 }
-function ComponentGuidanceComponent_ng_template_3_div_19_Template(rf, ctx) {
+function ComponentGuidanceComponent_ng_template_3_div_17_Template(rf, ctx) {
   if (rf & 1) {
     \u0275\u0275elementStart(0, "div")(1, "ul", 25);
-    \u0275\u0275template(2, ComponentGuidanceComponent_ng_template_3_div_19_li_2_Template, 2, 1, "li", 26);
+    \u0275\u0275template(2, ComponentGuidanceComponent_ng_template_3_div_17_li_2_Template, 2, 1, "li", 26);
     \u0275\u0275elementEnd();
-    \u0275\u0275template(3, ComponentGuidanceComponent_ng_template_3_div_19_div_3_Template, 2, 1, "div", 27);
+    \u0275\u0275template(3, ComponentGuidanceComponent_ng_template_3_div_17_div_3_Template, 2, 1, "div", 27);
     \u0275\u0275elementEnd();
   }
   if (rf & 2) {
@@ -25280,7 +25276,7 @@ function ComponentGuidanceComponent_ng_template_3_div_19_Template(rf, ctx) {
     \u0275\u0275property("ngIf", row_r3.rationale);
   }
 }
-function ComponentGuidanceComponent_ng_template_3_ng_template_20_Template(rf, ctx) {
+function ComponentGuidanceComponent_ng_template_3_ng_template_18_Template(rf, ctx) {
   if (rf & 1) {
     \u0275\u0275elementStart(0, "span");
     \u0275\u0275text(1);
@@ -25294,7 +25290,14 @@ function ComponentGuidanceComponent_ng_template_3_ng_template_20_Template(rf, ct
 }
 function ComponentGuidanceComponent_ng_template_3_Template(rf, ctx) {
   if (rf & 1) {
+    const _r2 = \u0275\u0275getCurrentView();
     \u0275\u0275elementStart(0, "tr", 15)(1, "td", 16)(2, "button", 17);
+    \u0275\u0275listener("click", function ComponentGuidanceComponent_ng_template_3_Template_button_click_2_listener() {
+      const row_r3 = \u0275\u0275restoreView(_r2).$implicit;
+      \u0275\u0275nextContext();
+      const dt_r4 = \u0275\u0275reference(1);
+      return \u0275\u0275resetView(dt_r4.toggleRow(row_r3));
+    });
     \u0275\u0275element(3, "i", 18);
     \u0275\u0275elementEnd()();
     \u0275\u0275elementStart(4, "td", 16);
@@ -25303,49 +25306,42 @@ function ComponentGuidanceComponent_ng_template_3_Template(rf, ctx) {
     \u0275\u0275elementStart(6, "td");
     \u0275\u0275text(7);
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(8, "td");
-    \u0275\u0275text(9);
-    \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(10, "td")(11, "a", 20);
-    \u0275\u0275text(12);
+    \u0275\u0275elementStart(8, "td")(9, "a", 20);
+    \u0275\u0275text(10);
     \u0275\u0275elementEnd()();
-    \u0275\u0275elementStart(13, "td", 21)(14, "span", 22);
-    \u0275\u0275element(15, "i", 18);
-    \u0275\u0275elementStart(16, "span", 23);
-    \u0275\u0275text(17);
+    \u0275\u0275elementStart(11, "td", 21)(12, "span", 22);
+    \u0275\u0275element(13, "i", 18);
+    \u0275\u0275elementStart(14, "span", 23);
+    \u0275\u0275text(15);
     \u0275\u0275elementEnd()()();
-    \u0275\u0275elementStart(18, "td");
-    \u0275\u0275template(19, ComponentGuidanceComponent_ng_template_3_div_19_Template, 4, 2, "div", 24)(20, ComponentGuidanceComponent_ng_template_3_ng_template_20_Template, 2, 1, "ng-template", null, 1, \u0275\u0275templateRefExtractor);
+    \u0275\u0275elementStart(16, "td");
+    \u0275\u0275template(17, ComponentGuidanceComponent_ng_template_3_div_17_Template, 4, 2, "div", 24)(18, ComponentGuidanceComponent_ng_template_3_ng_template_18_Template, 2, 1, "ng-template", null, 1, \u0275\u0275templateRefExtractor);
     \u0275\u0275elementEnd()();
   }
   if (rf & 2) {
     const row_r3 = ctx.$implicit;
-    const expanded_r4 = ctx.expanded;
-    const rationaleOnly_r5 = \u0275\u0275reference(21);
-    const ctx_r5 = \u0275\u0275nextContext();
+    const expanded_r6 = ctx.expanded;
+    const rationaleOnly_r7 = \u0275\u0275reference(19);
+    const ctx_r7 = \u0275\u0275nextContext();
     \u0275\u0275property("pSelectableRow", row_r3);
-    \u0275\u0275advance(2);
-    \u0275\u0275property("pRowToggler", row_r3);
-    \u0275\u0275advance();
-    \u0275\u0275property("ngClass", \u0275\u0275pureFunction2(13, _c06, expanded_r4, !expanded_r4));
+    \u0275\u0275advance(3);
+    \u0275\u0275property("ngClass", \u0275\u0275pureFunction2(11, _c06, expanded_r6, !expanded_r6));
     \u0275\u0275advance(2);
     \u0275\u0275property("value", row_r3);
     \u0275\u0275advance(2);
     \u0275\u0275textInterpolate(row_r3.order);
     \u0275\u0275advance(2);
-    \u0275\u0275textInterpolate(row_r3.component);
-    \u0275\u0275advance(2);
     \u0275\u0275property("href", row_r3.url, \u0275\u0275sanitizeUrl);
     \u0275\u0275advance();
-    \u0275\u0275textInterpolate(row_r3.url);
+    \u0275\u0275textInterpolate(row_r3.component);
     \u0275\u0275advance(2);
-    \u0275\u0275property("ngClass", \u0275\u0275pureFunction4(16, _c14, row_r3.health === "severe", row_r3.health === "minor", row_r3.health === "ok", !row_r3.health || row_r3.health === "unknown"));
+    \u0275\u0275property("ngClass", \u0275\u0275pureFunction4(14, _c14, row_r3.health === "severe", row_r3.health === "minor", row_r3.health === "ok", !row_r3.health || row_r3.health === "unknown"));
     \u0275\u0275advance();
-    \u0275\u0275property("ngClass", \u0275\u0275pureFunction4(21, _c24, row_r3.health === "severe", row_r3.health === "minor", row_r3.health === "ok", !row_r3.health || row_r3.health === "unknown"));
+    \u0275\u0275property("ngClass", \u0275\u0275pureFunction4(19, _c24, row_r3.health === "severe", row_r3.health === "minor", row_r3.health === "ok", !row_r3.health || row_r3.health === "unknown"));
     \u0275\u0275advance(2);
-    \u0275\u0275textInterpolate1(" ", ctx_r5.healthLabel(row_r3.health), " ");
+    \u0275\u0275textInterpolate1(" ", ctx_r7.healthLabel(row_r3.health), " ");
     \u0275\u0275advance(2);
-    \u0275\u0275property("ngIf", ((row_r3.issues == null ? null : row_r3.issues.length) || 0) > 0)("ngIfElse", rationaleOnly_r5);
+    \u0275\u0275property("ngIf", ((row_r3.issues == null ? null : row_r3.issues.length) || 0) > 0)("ngIfElse", rationaleOnly_r7);
   }
 }
 function ComponentGuidanceComponent_ng_template_4_div_3_li_4_Template(rf, ctx) {
@@ -25355,9 +25351,9 @@ function ComponentGuidanceComponent_ng_template_4_div_3_li_4_Template(rf, ctx) {
     \u0275\u0275elementEnd();
   }
   if (rf & 2) {
-    const it_r7 = ctx.$implicit;
+    const it_r9 = ctx.$implicit;
     \u0275\u0275advance();
-    \u0275\u0275textInterpolate(it_r7);
+    \u0275\u0275textInterpolate(it_r9);
   }
 }
 function ComponentGuidanceComponent_ng_template_4_div_3_div_5_Template(rf, ctx) {
@@ -25367,9 +25363,9 @@ function ComponentGuidanceComponent_ng_template_4_div_3_div_5_Template(rf, ctx) 
     \u0275\u0275elementEnd();
   }
   if (rf & 2) {
-    const row_r8 = \u0275\u0275nextContext(2).$implicit;
+    const row_r10 = \u0275\u0275nextContext(2).$implicit;
     \u0275\u0275advance();
-    \u0275\u0275textInterpolate(row_r8.rationale);
+    \u0275\u0275textInterpolate(row_r10.rationale);
   }
 }
 function ComponentGuidanceComponent_ng_template_4_div_3_Template(rf, ctx) {
@@ -25384,11 +25380,11 @@ function ComponentGuidanceComponent_ng_template_4_div_3_Template(rf, ctx) {
     \u0275\u0275elementEnd();
   }
   if (rf & 2) {
-    const row_r8 = \u0275\u0275nextContext().$implicit;
+    const row_r10 = \u0275\u0275nextContext().$implicit;
     \u0275\u0275advance(4);
-    \u0275\u0275property("ngForOf", row_r8.issues);
+    \u0275\u0275property("ngForOf", row_r10.issues);
     \u0275\u0275advance();
-    \u0275\u0275property("ngIf", row_r8.rationale);
+    \u0275\u0275property("ngIf", row_r10.rationale);
   }
 }
 function ComponentGuidanceComponent_ng_template_4_ng_template_4_Template(rf, ctx) {
@@ -25398,9 +25394,9 @@ function ComponentGuidanceComponent_ng_template_4_ng_template_4_Template(rf, ctx
     \u0275\u0275elementEnd();
   }
   if (rf & 2) {
-    const row_r8 = \u0275\u0275nextContext().$implicit;
+    const row_r10 = \u0275\u0275nextContext().$implicit;
     \u0275\u0275advance();
-    \u0275\u0275textInterpolate(row_r8.rationale || "\u2014");
+    \u0275\u0275textInterpolate(row_r10.rationale || "\u2014");
   }
 }
 function ComponentGuidanceComponent_ng_template_4_Template(rf, ctx) {
@@ -25410,10 +25406,10 @@ function ComponentGuidanceComponent_ng_template_4_Template(rf, ctx) {
     \u0275\u0275elementEnd()()();
   }
   if (rf & 2) {
-    const row_r8 = ctx.$implicit;
-    const rationaleOnlyExpanded_r9 = \u0275\u0275reference(5);
+    const row_r10 = ctx.$implicit;
+    const rationaleOnlyExpanded_r11 = \u0275\u0275reference(5);
     \u0275\u0275advance(3);
-    \u0275\u0275property("ngIf", ((row_r8.issues == null ? null : row_r8.issues.length) || 0) > 0)("ngIfElse", rationaleOnlyExpanded_r9);
+    \u0275\u0275property("ngIf", ((row_r10.issues == null ? null : row_r10.issues.length) || 0) > 0)("ngIfElse", rationaleOnlyExpanded_r11);
   }
 }
 var ComponentGuidanceComponent = class _ComponentGuidanceComponent {
@@ -25427,6 +25423,7 @@ var ComponentGuidanceComponent = class _ComponentGuidanceComponent {
   rows = [];
   // multi-select
   selectedRows = [];
+  expandedRows = [];
   isLoading = false;
   cols = [
     { field: "order", header: "Index" },
@@ -25588,7 +25585,7 @@ var ComponentGuidanceComponent = class _ComponentGuidanceComponent {
   static \u0275fac = function ComponentGuidanceComponent_Factory(__ngFactoryType__) {
     return new (__ngFactoryType__ || _ComponentGuidanceComponent)();
   };
-  static \u0275cmp = /* @__PURE__ */ \u0275\u0275defineComponent({ type: _ComponentGuidanceComponent, selectors: [["ca-component-guidance"]], decls: 9, vars: 8, consts: [["dt", ""], ["rationaleOnly", ""], ["rationaleOnlyExpanded", ""], ["dataKey", "url", "styleClass", "p-datatable-sm", "selectionMode", "multiple", "expandableRows", "", 3, "selectionChange", "sortFunction", "value", "selection", "customSort"], ["pTemplate", "header"], ["pTemplate", "body"], ["pTemplate", "rowexpansion"], [1, "mt-3"], ["pButton", "", "type", "button", "aria-label", "Get GenAI recommendations based on user data", "pTooltip", "Select one or more components", 1, "ai-btn", 3, "click", "label", "icon", "disabled", "showDelay", "hideDelay"], [1, "sr-only"], [2, "width", "3rem", "text-align", "center"], ["pSortableColumn", "order"], ["field", "order"], ["pSortableColumn", "health", 1, "health-col"], ["field", "health"], [3, "pSelectableRow"], [2, "text-align", "center"], ["pButton", "", "type", "button", "aria-label", "Toggle row", 1, "p-button-text", "p-button-rounded", "p-button-plain", 3, "pRowToggler"], ["aria-hidden", "true", 1, "pi", 3, "ngClass"], [3, "value"], ["target", "_blank", "rel", "noopener", 3, "href"], [1, "health-cell", "health-col"], [1, "chip", 3, "ngClass"], [1, "chip-label"], [4, "ngIf", "ngIfElse"], [1, "issues"], [4, "ngFor", "ngForOf"], ["class", "muted", 4, "ngIf"], [1, "muted"], ["colspan", "7"], [1, "p-3"]], template: function ComponentGuidanceComponent_Template(rf, ctx) {
+  static \u0275cmp = /* @__PURE__ */ \u0275\u0275defineComponent({ type: _ComponentGuidanceComponent, selectors: [["ca-component-guidance"]], decls: 9, vars: 8, consts: [["dt", ""], ["rationaleOnly", ""], ["rationaleOnlyExpanded", ""], ["dataKey", "url", "styleClass", "p-datatable-sm", "selectionMode", "multiple", "expandableRows", "", 3, "selectionChange", "sortFunction", "value", "selection", "customSort"], ["pTemplate", "header"], ["pTemplate", "body"], ["pTemplate", "rowexpansion"], [1, "mt-3"], ["pButton", "", "type", "button", "aria-label", "Get GenAI recommendations based on user data", "pTooltip", "Select one or more components", 1, "ai-btn", 3, "click", "label", "icon", "disabled", "showDelay", "hideDelay"], [1, "sr-only"], [2, "width", "3rem", "text-align", "center"], ["pSortableColumn", "order"], ["field", "order"], ["pSortableColumn", "health", 1, "health-col"], ["field", "health"], [3, "pSelectableRow"], [2, "text-align", "center"], ["pButton", "", "type", "button", "aria-label", "Toggle row", 1, "p-button-text", "p-button-rounded", "p-button-plain", 3, "click"], ["aria-hidden", "true", 1, "pi", 3, "ngClass"], [3, "value"], ["target", "_blank", "rel", "noopener", 3, "href"], [1, "health-cell", "health-col"], [1, "chip", 3, "ngClass"], [1, "chip-label"], [4, "ngIf", "ngIfElse"], [1, "issues"], [4, "ngFor", "ngForOf"], ["class", "muted", 4, "ngIf"], [1, "muted"], ["colspan", "7"], [1, "p-3"]], template: function ComponentGuidanceComponent_Template(rf, ctx) {
     if (rf & 1) {
       const _r1 = \u0275\u0275getCurrentView();
       \u0275\u0275elementStart(0, "p-table", 3, 0);
@@ -25601,7 +25598,7 @@ var ComponentGuidanceComponent = class _ComponentGuidanceComponent {
         \u0275\u0275restoreView(_r1);
         return \u0275\u0275resetView(ctx.onCustomSort($event));
       });
-      \u0275\u0275template(2, ComponentGuidanceComponent_ng_template_2_Template, 20, 0, "ng-template", 4)(3, ComponentGuidanceComponent_ng_template_3_Template, 22, 26, "ng-template", 5)(4, ComponentGuidanceComponent_ng_template_4_Template, 6, 2, "ng-template", 6);
+      \u0275\u0275template(2, ComponentGuidanceComponent_ng_template_2_Template, 17, 0, "ng-template", 4)(3, ComponentGuidanceComponent_ng_template_3_Template, 20, 24, "ng-template", 5)(4, ComponentGuidanceComponent_ng_template_4_Template, 6, 2, "ng-template", 6);
       \u0275\u0275elementEnd();
       \u0275\u0275elementStart(5, "div", 7)(6, "button", 8);
       \u0275\u0275listener("click", function ComponentGuidanceComponent_Template_button_click_6_listener() {
@@ -25630,7 +25627,6 @@ var ComponentGuidanceComponent = class _ComponentGuidanceComponent {
     PrimeTemplate,
     SortableColumn,
     SelectableRow,
-    RowToggler,
     SortIcon,
     TableCheckbox,
     TableHeaderCheckbox,
@@ -25681,13 +25677,12 @@ var ComponentGuidanceComponent = class _ComponentGuidanceComponent {
       </th>\r
 \r
       <!-- Component -->\r
-      <th>\r
+      <!--<th>\r
         <span>Component</span>\r
-      </th>\r
-\r
+      </th>-->\r
       <!-- UCDG guidance URL -->\r
       <th>\r
-        <span>UCDG guidance</span>\r
+        <span>UCDG guidance for component</span>\r
       </th>\r
 \r
       <!-- Health (custom sort) -->\r
@@ -25705,7 +25700,12 @@ var ComponentGuidanceComponent = class _ComponentGuidanceComponent {
     <tr [pSelectableRow]="row">\r
       <!-- row toggler -->\r
       <td style="text-align: center">\r
-        <button pButton type="button" [pRowToggler]="row" class="p-button-text p-button-rounded p-button-plain" aria-label="Toggle row">\r
+        <button \r
+          pButton \r
+          type="button" \r
+          (click)="dt.toggleRow(row)"\r
+          class="p-button-text p-button-rounded p-button-plain" \r
+          aria-label="Toggle row">\r
           <i class="pi" [ngClass]="{ 'pi-chevron-down': expanded, 'pi-chevron-right': !expanded }" aria-hidden="true"></i>\r
         </button>\r
       </td>\r
@@ -25719,11 +25719,11 @@ var ComponentGuidanceComponent = class _ComponentGuidanceComponent {
       <td>{{ row.order }}</td>\r
 \r
       <!-- Component -->\r
-      <td>{{ row.component }}</td>\r
+      <!--<td>{{ row.component }}</td>-->\r
 \r
       <!-- URL -->\r
       <td>\r
-        <a [href]="row.url" target="_blank" rel="noopener">{{ row.url }}</a>\r
+        <a [href]="row.url" target="_blank" rel="noopener">{{ row.component }}</a>\r
       </td>\r
 \r
       <!-- Health -->\r
@@ -32569,4 +32569,4 @@ ${base}`;
 export {
   PageAssistantCompareComponent
 };
-//# sourceMappingURL=chunk-DMKGUQH6.js.map
+//# sourceMappingURL=chunk-SXHPD5S6.js.map
