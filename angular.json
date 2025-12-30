@@ -67,7 +67,6 @@
               }
             ],
             "styles": [
-              "node_modules/@primeng/themes/lara/lara-light-blue.css",
               "node_modules/primeflex/primeflex.css",
               "node_modules/primeicons/primeicons.css",
               "src/styles.css",
