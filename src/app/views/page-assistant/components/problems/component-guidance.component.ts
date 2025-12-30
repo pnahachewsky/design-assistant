@@ -145,6 +145,7 @@ export class ComponentGuidanceComponent implements OnInit {
 
   // multi-select
   selectedRows: GuidanceRow[] = [];
+  expandedRows: GuidanceRow[] = [];
   isLoading = false;
 
   cols = [

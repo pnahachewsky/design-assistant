@@ -8,6 +8,7 @@
   [customSort]="true"
   (sortFunction)="onCustomSort($event)"
   expandableRows
+  [(expandedRows)]="expandedRows"
 >
   <ng-template pTemplate="header">
     <tr>
@@ -26,13 +27,12 @@
       </th>
 
       <!-- Component -->
-      <th>
+      <!--<th>
         <span>Component</span>
-      </th>
-
+      </th>-->
       <!-- UCDG guidance URL -->
       <th>
-        <span>UCDG guidance</span>
+        <span>UCDG guidance for component</span>
       </th>
 
       <!-- Health (custom sort) -->
@@ -50,7 +50,12 @@
     <tr [pSelectableRow]="row">
       <!-- row toggler -->
       <td style="text-align: center">
-        <button pButton type="button" [pRowToggler]="row" class="p-button-text p-button-rounded p-button-plain" aria-label="Toggle row">
+        <button 
+          pButton 
+          type="button" 
+          (click)="dt.toggleRow(row)"
+          class="p-button-text p-button-rounded p-button-plain" 
+          aria-label="Toggle row">
           <i class="pi" [ngClass]="{ 'pi-chevron-down': expanded, 'pi-chevron-right': !expanded }" aria-hidden="true"></i>
         </button>
       </td>
@@ -64,11 +69,11 @@
       <td>{{ row.order }}</td>
 
       <!-- Component -->
-      <td>{{ row.component }}</td>
+      <!--<td>{{ row.component }}</td>-->
 
       <!-- URL -->
       <td>
-        <a [href]="row.url" target="_blank" rel="noopener">{{ row.url }}</a>
+        <a [href]="row.url" target="_blank" rel="noopener">{{ row.component }}</a>
       </td>
 
       <!-- Health -->
