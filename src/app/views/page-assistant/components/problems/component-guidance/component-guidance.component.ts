@@ -129,6 +129,13 @@ interface GuidanceRow {
         border: 0;
       }
     `,
+    `
+      .caption-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 0.5rem;
+      }
+    `,
   ],
 })
 export class ComponentGuidanceComponent implements OnInit {
