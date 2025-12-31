@@ -9,17 +9,17 @@ import { TooltipModule } from 'primeng/tooltip';
 import { TranslateService, TranslateModule } from '@ngx-translate/core';
 import { SortEvent } from 'primeng/api';
 
-import { UploadStateService } from '../../services/upload-state.service';
-import { ValidatorService } from '../../services/validator.service';
+import { UploadStateService } from '../../../services/upload-state.service';
+import { ValidatorService } from '../../../services/validator.service';
 import {
   ComponentAiService,
   ComponentAiInput,
   ComponentAiResult,
-} from '../../services/component-ai.service';
+} from '../../../services/component-ai.service';
 
 import { HttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
-import { environment } from '../../../../../environments/environment';
+import { environment } from '../../../../../../environments/environment';
 
 // UI shows these:
 type UiHealth = 'severe' | 'minor' | 'ok' | 'unknown';

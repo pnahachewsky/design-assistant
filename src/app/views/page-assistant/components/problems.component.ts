@@ -9,7 +9,7 @@ import { TranslateModule } from '@ngx-translate/core';
 
 //components
 import { HeadingStructureComponent } from './problems/heading-structure.component';
-import { ComponentGuidanceComponent } from './problems/component-guidance.component';
+import { ComponentGuidanceComponent } from './problems/component-guidance/component-guidance.component';
 import { SeoComponent } from './problems/seo.component';
 import { UserInsightsComponent } from './problems/user-insights.component';
 import { LinkReportComponent } from './problems/link-report.component';
