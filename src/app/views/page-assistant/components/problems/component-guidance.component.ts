@@ -1,8 +1,8 @@
 // src/app/views/page-assistant/components/tools/component-guidance.component.ts
-import { Component, OnInit, inject, ViewChild } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { TableModule, Table } from 'primeng/table';
+import { TableModule } from 'primeng/table';
 import { ButtonModule } from 'primeng/button';
 import { CheckboxModule } from 'primeng/checkbox';
 import { TooltipModule } from 'primeng/tooltip';
@@ -62,7 +62,7 @@ interface GuidanceRow {
         padding-left: 1rem;
       }
       .health-cell {
-        //display: flex; ;
+        display: flex;
         gap: 0.4rem;
         align-items: center;
         flex-wrap: wrap;
@@ -145,10 +145,7 @@ export class ComponentGuidanceComponent implements OnInit {
 
   // multi-select
   selectedRows: GuidanceRow[] = [];
-  expandedRows: GuidanceRow[] = [];
   isLoading = false;
-
-  @ViewChild('dt') dt?: Table;
 
   cols = [
     { field: 'order', header: 'Index' },
@@ -340,13 +337,5 @@ export class ComponentGuidanceComponent implements OnInit {
   // Expose computed table rows if you still want via getter:
   get tableRows(): GuidanceRow[] {
     return this.rows;
-  }
-
-  onToggleRow(row: GuidanceRow): void {
-    try {
-      // eslint-disable-next-line no-console
-      console.log('onToggleRow', row);
-    } catch (e) {}
-    this.dt?.toggleRow?.(row);
   }
 }
