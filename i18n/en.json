@@ -161,6 +161,8 @@
   "page.tools.guidance.gcCore.borders.url": "https://design.cra-arc.alpha.canada.ca/en/design-systems/gcweb/tables/index.html",
   "page.tools.guidance.gcCore.buttons.title": "Buttons",
   "page.tools.guidance.gcCore.buttons.url": "https://design.cra-arc.alpha.canada.ca/en/design-systems/gcweb/tables/index.html",
+  "page.tools.guidance.gcCore.features.title": "Features",
+  "page.tools.guidance.gcCore.features.url": "https://design.canada.ca/common-design-patterns/feature-tiles.html",
   "--------IMAGE ASSISTANT--------------": "--------------------------------IMAGE ASSISTANT--------------------------------------",
   "image.csv.download": "Download CSV",
   "image.csv.noData": "No data processed successfully to generate CSV.",
