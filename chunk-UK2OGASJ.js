@@ -70,6 +70,7 @@ import {
   Router,
   RouterLink,
   RouterModule,
+  RowToggler,
   SelectableRow,
   SharedModule,
   SortIcon,
@@ -128,7 +129,7 @@ import {
   unblockBodyScroll,
   uuid,
   zindexutils
-} from "./chunk-LFKTG5ST.js";
+} from "./chunk-7JXZSRMW.js";
 import {
   ChangeDetectionStrategy,
   Component,
@@ -25213,203 +25214,188 @@ var _c14 = (a0, a1, a2, a3) => ({ "chip-severe": a0, "chip-minor": a1, "chip-ok"
 var _c24 = (a0, a1, a2, a3) => ({ "pi-exclamation-triangle": a0, "pi-times-circle": a1, "pi-check-circle": a2, "pi-question-circle": a3 });
 function ComponentGuidanceComponent_ng_template_2_Template(rf, ctx) {
   if (rf & 1) {
+    const _r2 = \u0275\u0275getCurrentView();
+    \u0275\u0275elementStart(0, "div", 10)(1, "button", 11);
+    \u0275\u0275listener("click", function ComponentGuidanceComponent_ng_template_2_Template_button_click_1_listener() {
+      \u0275\u0275restoreView(_r2);
+      const ctx_r2 = \u0275\u0275nextContext();
+      return \u0275\u0275resetView(ctx_r2.expandAll());
+    });
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(2, "button", 12);
+    \u0275\u0275listener("click", function ComponentGuidanceComponent_ng_template_2_Template_button_click_2_listener() {
+      \u0275\u0275restoreView(_r2);
+      const ctx_r2 = \u0275\u0275nextContext();
+      return \u0275\u0275resetView(ctx_r2.collapseAll());
+    });
+    \u0275\u0275elementEnd()();
+  }
+}
+function ComponentGuidanceComponent_ng_template_4_Template(rf, ctx) {
+  if (rf & 1) {
     \u0275\u0275elementStart(0, "tr");
-    \u0275\u0275element(1, "th", 10);
-    \u0275\u0275elementStart(2, "th", 10);
+    \u0275\u0275element(1, "th", 13);
+    \u0275\u0275elementStart(2, "th", 13);
     \u0275\u0275element(3, "p-tableHeaderCheckbox");
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(4, "th", 11)(5, "span");
+    \u0275\u0275elementStart(4, "th", 14)(5, "span");
     \u0275\u0275text(6, "Index");
     \u0275\u0275elementEnd();
-    \u0275\u0275element(7, "p-sortIcon", 12);
+    \u0275\u0275element(7, "p-sortIcon", 15);
     \u0275\u0275elementEnd();
     \u0275\u0275elementStart(8, "th")(9, "span");
     \u0275\u0275text(10, "UCDG guidance for component");
     \u0275\u0275elementEnd()();
-    \u0275\u0275elementStart(11, "th", 13)(12, "span");
+    \u0275\u0275elementStart(11, "th", 16)(12, "span");
     \u0275\u0275text(13, "Health");
     \u0275\u0275elementEnd();
-    \u0275\u0275element(14, "p-sortIcon", 14);
+    \u0275\u0275element(14, "p-sortIcon", 17);
     \u0275\u0275elementEnd();
     \u0275\u0275elementStart(15, "th");
     \u0275\u0275text(16, "Pain points");
     \u0275\u0275elementEnd()();
   }
 }
-function ComponentGuidanceComponent_ng_template_3_div_17_li_2_Template(rf, ctx) {
+function ComponentGuidanceComponent_ng_template_5_div_17_li_2_Template(rf, ctx) {
   if (rf & 1) {
     \u0275\u0275elementStart(0, "li");
     \u0275\u0275text(1);
     \u0275\u0275elementEnd();
   }
   if (rf & 2) {
-    const it_r2 = ctx.$implicit;
+    const it_r4 = ctx.$implicit;
     \u0275\u0275advance();
-    \u0275\u0275textInterpolate(it_r2);
+    \u0275\u0275textInterpolate(it_r4);
   }
 }
-function ComponentGuidanceComponent_ng_template_3_div_17_div_3_Template(rf, ctx) {
+function ComponentGuidanceComponent_ng_template_5_div_17_div_3_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275elementStart(0, "div", 28);
+    \u0275\u0275elementStart(0, "div", 31);
     \u0275\u0275text(1);
     \u0275\u0275elementEnd();
   }
   if (rf & 2) {
-    const row_r3 = \u0275\u0275nextContext(2).$implicit;
+    const row_r5 = \u0275\u0275nextContext(2).$implicit;
     \u0275\u0275advance();
-    \u0275\u0275textInterpolate(row_r3.rationale);
+    \u0275\u0275textInterpolate(row_r5.rationale);
   }
 }
-function ComponentGuidanceComponent_ng_template_3_div_17_Template(rf, ctx) {
+function ComponentGuidanceComponent_ng_template_5_div_17_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275elementStart(0, "div")(1, "ul", 25);
-    \u0275\u0275template(2, ComponentGuidanceComponent_ng_template_3_div_17_li_2_Template, 2, 1, "li", 26);
+    \u0275\u0275elementStart(0, "div")(1, "ul", 28);
+    \u0275\u0275template(2, ComponentGuidanceComponent_ng_template_5_div_17_li_2_Template, 2, 1, "li", 29);
     \u0275\u0275elementEnd();
-    \u0275\u0275template(3, ComponentGuidanceComponent_ng_template_3_div_17_div_3_Template, 2, 1, "div", 27);
+    \u0275\u0275template(3, ComponentGuidanceComponent_ng_template_5_div_17_div_3_Template, 2, 1, "div", 30);
     \u0275\u0275elementEnd();
   }
   if (rf & 2) {
-    const row_r3 = \u0275\u0275nextContext().$implicit;
+    const row_r5 = \u0275\u0275nextContext().$implicit;
     \u0275\u0275advance(2);
-    \u0275\u0275property("ngForOf", row_r3.issues);
+    \u0275\u0275property("ngForOf", row_r5.issues);
     \u0275\u0275advance();
-    \u0275\u0275property("ngIf", row_r3.rationale);
+    \u0275\u0275property("ngIf", row_r5.rationale);
   }
 }
-function ComponentGuidanceComponent_ng_template_3_ng_template_18_Template(rf, ctx) {
+function ComponentGuidanceComponent_ng_template_5_ng_template_18_Template(rf, ctx) {
   if (rf & 1) {
     \u0275\u0275elementStart(0, "span");
     \u0275\u0275text(1);
     \u0275\u0275elementEnd();
   }
   if (rf & 2) {
-    const row_r3 = \u0275\u0275nextContext().$implicit;
+    const row_r5 = \u0275\u0275nextContext().$implicit;
     \u0275\u0275advance();
-    \u0275\u0275textInterpolate(row_r3.rationale || "\u2014");
+    \u0275\u0275textInterpolate(row_r5.rationale || "\u2014");
   }
 }
-function ComponentGuidanceComponent_ng_template_3_Template(rf, ctx) {
+function ComponentGuidanceComponent_ng_template_5_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275elementStart(0, "tr", 15)(1, "td", 16)(2, "button", 17);
-    \u0275\u0275element(3, "i", 18);
+    \u0275\u0275elementStart(0, "tr", 18)(1, "td", 19)(2, "button", 20);
+    \u0275\u0275element(3, "i", 21);
     \u0275\u0275elementEnd()();
-    \u0275\u0275elementStart(4, "td", 16);
-    \u0275\u0275element(5, "p-tableCheckbox", 19);
+    \u0275\u0275elementStart(4, "td", 19);
+    \u0275\u0275element(5, "p-tableCheckbox", 22);
     \u0275\u0275elementEnd();
     \u0275\u0275elementStart(6, "td");
     \u0275\u0275text(7);
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(8, "td")(9, "a", 20);
+    \u0275\u0275elementStart(8, "td")(9, "a", 23);
     \u0275\u0275text(10);
     \u0275\u0275elementEnd()();
-    \u0275\u0275elementStart(11, "td", 21)(12, "span", 22);
-    \u0275\u0275element(13, "i", 18);
-    \u0275\u0275elementStart(14, "span", 23);
+    \u0275\u0275elementStart(11, "td", 24)(12, "span", 25);
+    \u0275\u0275element(13, "i", 21);
+    \u0275\u0275elementStart(14, "span", 26);
     \u0275\u0275text(15);
     \u0275\u0275elementEnd()()();
     \u0275\u0275elementStart(16, "td");
-    \u0275\u0275template(17, ComponentGuidanceComponent_ng_template_3_div_17_Template, 4, 2, "div", 24)(18, ComponentGuidanceComponent_ng_template_3_ng_template_18_Template, 2, 1, "ng-template", null, 1, \u0275\u0275templateRefExtractor);
+    \u0275\u0275template(17, ComponentGuidanceComponent_ng_template_5_div_17_Template, 4, 2, "div", 27)(18, ComponentGuidanceComponent_ng_template_5_ng_template_18_Template, 2, 1, "ng-template", null, 2, \u0275\u0275templateRefExtractor);
     \u0275\u0275elementEnd()();
   }
   if (rf & 2) {
-    const row_r3 = ctx.$implicit;
-    const expanded_r4 = ctx.expanded;
-    const rationaleOnly_r5 = \u0275\u0275reference(19);
-    const ctx_r5 = \u0275\u0275nextContext();
-    \u0275\u0275property("pSelectableRow", row_r3);
-    \u0275\u0275advance(3);
-    \u0275\u0275property("ngClass", \u0275\u0275pureFunction2(11, _c06, expanded_r4, !expanded_r4));
+    const row_r5 = ctx.$implicit;
+    const expanded_r6 = ctx.expanded;
+    const rationaleOnly_r7 = \u0275\u0275reference(19);
+    const ctx_r2 = \u0275\u0275nextContext();
+    \u0275\u0275property("pSelectableRow", row_r5);
     \u0275\u0275advance(2);
-    \u0275\u0275property("value", row_r3);
-    \u0275\u0275advance(2);
-    \u0275\u0275textInterpolate(row_r3.order);
-    \u0275\u0275advance(2);
-    \u0275\u0275property("href", row_r3.url, \u0275\u0275sanitizeUrl);
+    \u0275\u0275property("pRowToggler", row_r5);
     \u0275\u0275advance();
-    \u0275\u0275textInterpolate(row_r3.component);
+    \u0275\u0275property("ngClass", \u0275\u0275pureFunction2(12, _c06, expanded_r6, !expanded_r6));
     \u0275\u0275advance(2);
-    \u0275\u0275property("ngClass", \u0275\u0275pureFunction4(14, _c14, row_r3.health === "severe", row_r3.health === "minor", row_r3.health === "ok", !row_r3.health || row_r3.health === "unknown"));
+    \u0275\u0275property("value", row_r5);
+    \u0275\u0275advance(2);
+    \u0275\u0275textInterpolate(row_r5.order);
+    \u0275\u0275advance(2);
+    \u0275\u0275property("href", row_r5.url, \u0275\u0275sanitizeUrl);
     \u0275\u0275advance();
-    \u0275\u0275property("ngClass", \u0275\u0275pureFunction4(19, _c24, row_r3.health === "severe", row_r3.health === "minor", row_r3.health === "ok", !row_r3.health || row_r3.health === "unknown"));
+    \u0275\u0275textInterpolate(row_r5.component);
     \u0275\u0275advance(2);
-    \u0275\u0275textInterpolate1(" ", ctx_r5.healthLabel(row_r3.health), " ");
+    \u0275\u0275property("ngClass", \u0275\u0275pureFunction4(15, _c14, row_r5.health === "severe", row_r5.health === "minor", row_r5.health === "ok", !row_r5.health || row_r5.health === "unknown"));
+    \u0275\u0275advance();
+    \u0275\u0275property("ngClass", \u0275\u0275pureFunction4(20, _c24, row_r5.health === "severe", row_r5.health === "minor", row_r5.health === "ok", !row_r5.health || row_r5.health === "unknown"));
     \u0275\u0275advance(2);
-    \u0275\u0275property("ngIf", ((row_r3.issues == null ? null : row_r3.issues.length) || 0) > 0)("ngIfElse", rationaleOnly_r5);
+    \u0275\u0275textInterpolate1(" ", ctx_r2.healthLabel(row_r5.health), " ");
+    \u0275\u0275advance(2);
+    \u0275\u0275property("ngIf", ((row_r5.issues == null ? null : row_r5.issues.length) || 0) > 0)("ngIfElse", rationaleOnly_r7);
   }
 }
-function ComponentGuidanceComponent_ng_template_4_div_3_ng_template_4_Template(rf, ctx) {
+function ComponentGuidanceComponent_ng_template_6_ng_template_4_Template(rf, ctx) {
   if (rf & 1) {
     \u0275\u0275elementStart(0, "tr")(1, "th");
-    \u0275\u0275text(2, "Issue");
+    \u0275\u0275text(2, "Column 1");
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(3, "th");
+    \u0275\u0275text(4, "Column 2");
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(5, "th");
+    \u0275\u0275text(6, "Column 3");
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(7, "th");
+    \u0275\u0275text(8, "Column 4");
     \u0275\u0275elementEnd()();
   }
 }
-function ComponentGuidanceComponent_ng_template_4_div_3_ng_template_5_Template(rf, ctx) {
+function ComponentGuidanceComponent_ng_template_6_ng_template_5_Template(rf, ctx) {
   if (rf & 1) {
     \u0275\u0275elementStart(0, "tr")(1, "td");
-    \u0275\u0275text(2);
+    \u0275\u0275text(2, "Data 1");
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(3, "td");
+    \u0275\u0275text(4, "Data 2");
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(5, "td");
+    \u0275\u0275text(6, "Data 3");
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(7, "td");
+    \u0275\u0275text(8, "Data 4");
     \u0275\u0275elementEnd()();
   }
-  if (rf & 2) {
-    const issue_r7 = ctx.$implicit;
-    \u0275\u0275advance(2);
-    \u0275\u0275textInterpolate(issue_r7);
-  }
 }
-function ComponentGuidanceComponent_ng_template_4_div_3_div_6_Template(rf, ctx) {
+function ComponentGuidanceComponent_ng_template_6_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275elementStart(0, "div", 33);
-    \u0275\u0275text(1);
-    \u0275\u0275elementEnd();
-  }
-  if (rf & 2) {
-    const row_r8 = \u0275\u0275nextContext(2).$implicit;
-    \u0275\u0275advance();
-    \u0275\u0275textInterpolate(row_r8.rationale);
-  }
-}
-function ComponentGuidanceComponent_ng_template_4_div_3_Template(rf, ctx) {
-  if (rf & 1) {
-    \u0275\u0275elementStart(0, "div")(1, "h4");
-    \u0275\u0275text(2, "Issues");
-    \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(3, "p-table", 31);
-    \u0275\u0275template(4, ComponentGuidanceComponent_ng_template_4_div_3_ng_template_4_Template, 3, 0, "ng-template", 4)(5, ComponentGuidanceComponent_ng_template_4_div_3_ng_template_5_Template, 3, 1, "ng-template", 5);
-    \u0275\u0275elementEnd();
-    \u0275\u0275template(6, ComponentGuidanceComponent_ng_template_4_div_3_div_6_Template, 2, 1, "div", 32);
-    \u0275\u0275elementEnd();
-  }
-  if (rf & 2) {
-    const row_r8 = \u0275\u0275nextContext().$implicit;
-    \u0275\u0275advance(3);
-    \u0275\u0275property("value", row_r8.issues)("rows", 10);
-    \u0275\u0275advance(3);
-    \u0275\u0275property("ngIf", row_r8.rationale);
-  }
-}
-function ComponentGuidanceComponent_ng_template_4_ng_template_4_Template(rf, ctx) {
-  if (rf & 1) {
-    \u0275\u0275elementStart(0, "span");
-    \u0275\u0275text(1);
-    \u0275\u0275elementEnd();
-  }
-  if (rf & 2) {
-    const row_r8 = \u0275\u0275nextContext().$implicit;
-    \u0275\u0275advance();
-    \u0275\u0275textInterpolate(row_r8.rationale || "\u2014");
-  }
-}
-function ComponentGuidanceComponent_ng_template_4_Template(rf, ctx) {
-  if (rf & 1) {
-    \u0275\u0275elementStart(0, "tr")(1, "td", 29)(2, "div", 30);
-    \u0275\u0275template(3, ComponentGuidanceComponent_ng_template_4_div_3_Template, 7, 3, "div", 24)(4, ComponentGuidanceComponent_ng_template_4_ng_template_4_Template, 2, 1, "ng-template", null, 2, \u0275\u0275templateRefExtractor);
-    \u0275\u0275elementEnd()()();
-  }
-  if (rf & 2) {
-    const row_r8 = ctx.$implicit;
-    const rationaleOnlyExpanded_r9 = \u0275\u0275reference(5);
-    \u0275\u0275advance(3);
-    \u0275\u0275property("ngIf", ((row_r8.issues == null ? null : row_r8.issues.length) || 0) > 0)("ngIfElse", rationaleOnlyExpanded_r9);
+    \u0275\u0275elementStart(0, "tr")(1, "td", 32)(2, "div", 33)(3, "p-table", 34);
+    \u0275\u0275template(4, ComponentGuidanceComponent_ng_template_6_ng_template_4_Template, 9, 0, "ng-template", 4)(5, ComponentGuidanceComponent_ng_template_6_ng_template_5_Template, 9, 0, "ng-template", 5);
+    \u0275\u0275elementEnd()()()();
   }
 }
 var ComponentGuidanceComponent = class _ComponentGuidanceComponent {
@@ -25424,6 +25410,8 @@ var ComponentGuidanceComponent = class _ComponentGuidanceComponent {
   // multi-select
   selectedRows = [];
   isLoading = false;
+  // controlled expansion keys for PrimeNG table
+  expandedRows = {};
   cols = [
     { field: "order", header: "Index" },
     { field: "component", header: "Component" },
@@ -25581,10 +25569,21 @@ var ComponentGuidanceComponent = class _ComponentGuidanceComponent {
   get tableRows() {
     return this.rows;
   }
+  // ---- Row expansion control (for PrimeNG controlled expansion) ----
+  onRowExpand(event) {
+  }
+  onRowCollapse(event) {
+  }
+  expandAll() {
+    this.expandedRows = Object.fromEntries(this.tableRows.map((r) => [r.url, true]));
+  }
+  collapseAll() {
+    this.expandedRows = {};
+  }
   static \u0275fac = function ComponentGuidanceComponent_Factory(__ngFactoryType__) {
     return new (__ngFactoryType__ || _ComponentGuidanceComponent)();
   };
-  static \u0275cmp = /* @__PURE__ */ \u0275\u0275defineComponent({ type: _ComponentGuidanceComponent, selectors: [["ca-component-guidance"]], decls: 9, vars: 8, consts: [["dt", ""], ["rationaleOnly", ""], ["rationaleOnlyExpanded", ""], ["dataKey", "url", "styleClass", "p-datatable-sm", "selectionMode", "multiple", "expandableRows", "", 3, "selectionChange", "sortFunction", "value", "selection", "customSort"], ["pTemplate", "header"], ["pTemplate", "body"], ["pTemplate", "rowexpansion"], [1, "mt-3"], ["pButton", "", "type", "button", "aria-label", "Get GenAI recommendations based on user data", "pTooltip", "Select one or more components", 1, "ai-btn", 3, "click", "label", "icon", "disabled", "showDelay", "hideDelay"], [1, "sr-only"], [2, "width", "3rem", "text-align", "center"], ["pSortableColumn", "order"], ["field", "order"], ["pSortableColumn", "health", 1, "health-col"], ["field", "health"], [3, "pSelectableRow"], [2, "text-align", "center"], ["pButton", "", "type", "button", "aria-label", "Toggle row", 1, "p-button-text", "p-button-rounded", "p-button-plain"], ["aria-hidden", "true", 1, "pi", 3, "ngClass"], [3, "value"], ["target", "_blank", "rel", "noopener", 3, "href"], [1, "health-cell", "health-col"], [1, "chip", 3, "ngClass"], [1, "chip-label"], [4, "ngIf", "ngIfElse"], [1, "issues"], [4, "ngFor", "ngForOf"], ["class", "muted", 4, "ngIf"], [1, "muted"], ["colspan", "6"], [1, "p-3"], ["styleClass", "p-datatable-sm", 3, "value", "rows"], ["class", "muted", "style", "margin-top: 1rem;", 4, "ngIf"], [1, "muted", 2, "margin-top", "1rem"]], template: function ComponentGuidanceComponent_Template(rf, ctx) {
+  static \u0275cmp = /* @__PURE__ */ \u0275\u0275defineComponent({ type: _ComponentGuidanceComponent, selectors: [["ca-component-guidance"]], decls: 11, vars: 10, consts: [["dt", ""], ["caption", ""], ["rationaleOnly", ""], ["dataKey", "url", "styleClass", "p-datatable-sm", "selectionMode", "multiple", "expandableRows", "", 3, "selectionChange", "sortFunction", "onRowExpand", "onRowCollapse", "value", "selection", "customSort", "resizableColumns", "expandedRowKeys"], ["pTemplate", "header"], ["pTemplate", "body"], ["pTemplate", "rowexpansion"], [1, "mt-3"], ["pButton", "", "type", "button", "aria-label", "Get GenAI recommendations based on user data", "pTooltip", "Select one or more components", 1, "ai-btn", 3, "click", "label", "icon", "disabled", "showDelay", "hideDelay"], [1, "sr-only"], [1, "flex", "gap-2", "justify-end"], ["pButton", "", "type", "button", "label", "Expand All", "icon", "pi pi-plus", 1, "p-button-text", 3, "click"], ["pButton", "", "type", "button", "label", "Collapse All", "icon", "pi pi-minus", 1, "p-button-text", 3, "click"], [2, "width", "3rem", "text-align", "center"], ["pSortableColumn", "order"], ["field", "order"], ["pSortableColumn", "health", 1, "health-col"], ["field", "health"], [3, "pSelectableRow"], [2, "text-align", "center"], ["pButton", "", "type", "button", "aria-label", "Toggle row", 1, "p-button-text", "p-button-rounded", "p-button-plain", 3, "pRowToggler"], ["aria-hidden", "true", 1, "pi", 3, "ngClass"], [3, "value"], ["target", "_blank", "rel", "noopener", 3, "href"], [1, "health-cell", "health-col"], [1, "chip", 3, "ngClass"], [1, "chip-label"], [4, "ngIf", "ngIfElse"], [1, "issues"], [4, "ngFor", "ngForOf"], ["class", "muted", 4, "ngIf"], [1, "muted"], ["colspan", "6"], [1, "p-3"], ["styleClass", "p-datatable-sm"]], template: function ComponentGuidanceComponent_Template(rf, ctx) {
     if (rf & 1) {
       const _r1 = \u0275\u0275getCurrentView();
       \u0275\u0275elementStart(0, "p-table", 3, 0);
@@ -25596,23 +25595,29 @@ var ComponentGuidanceComponent = class _ComponentGuidanceComponent {
       \u0275\u0275listener("sortFunction", function ComponentGuidanceComponent_Template_p_table_sortFunction_0_listener($event) {
         \u0275\u0275restoreView(_r1);
         return \u0275\u0275resetView(ctx.onCustomSort($event));
+      })("onRowExpand", function ComponentGuidanceComponent_Template_p_table_onRowExpand_0_listener($event) {
+        \u0275\u0275restoreView(_r1);
+        return \u0275\u0275resetView(ctx.onRowExpand($event));
+      })("onRowCollapse", function ComponentGuidanceComponent_Template_p_table_onRowCollapse_0_listener($event) {
+        \u0275\u0275restoreView(_r1);
+        return \u0275\u0275resetView(ctx.onRowCollapse($event));
       });
-      \u0275\u0275template(2, ComponentGuidanceComponent_ng_template_2_Template, 17, 0, "ng-template", 4)(3, ComponentGuidanceComponent_ng_template_3_Template, 20, 24, "ng-template", 5)(4, ComponentGuidanceComponent_ng_template_4_Template, 6, 2, "ng-template", 6);
+      \u0275\u0275template(2, ComponentGuidanceComponent_ng_template_2_Template, 3, 0, "ng-template", null, 1, \u0275\u0275templateRefExtractor)(4, ComponentGuidanceComponent_ng_template_4_Template, 17, 0, "ng-template", 4)(5, ComponentGuidanceComponent_ng_template_5_Template, 20, 25, "ng-template", 5)(6, ComponentGuidanceComponent_ng_template_6_Template, 6, 0, "ng-template", 6);
       \u0275\u0275elementEnd();
-      \u0275\u0275elementStart(5, "div", 7)(6, "button", 8);
-      \u0275\u0275listener("click", function ComponentGuidanceComponent_Template_button_click_6_listener() {
+      \u0275\u0275elementStart(7, "div", 7)(8, "button", 8);
+      \u0275\u0275listener("click", function ComponentGuidanceComponent_Template_button_click_8_listener() {
         \u0275\u0275restoreView(_r1);
         return \u0275\u0275resetView(ctx.sendToAI());
       });
-      \u0275\u0275elementStart(7, "span", 9);
-      \u0275\u0275text(8, "Get GenAI recommendations based on user data");
+      \u0275\u0275elementStart(9, "span", 9);
+      \u0275\u0275text(10, "Get GenAI recommendations based on user data");
       \u0275\u0275elementEnd()()();
     }
     if (rf & 2) {
       \u0275\u0275property("value", ctx.tableRows);
       \u0275\u0275twoWayProperty("selection", ctx.selectedRows);
-      \u0275\u0275property("customSort", true);
-      \u0275\u0275advance(6);
+      \u0275\u0275property("customSort", true)("resizableColumns", true)("expandedRowKeys", ctx.expandedRows);
+      \u0275\u0275advance(8);
       \u0275\u0275property("label", "Get GenAI recommendations based on user data")("icon", "pi pi-sparkles")("disabled", !ctx.selectedRows.length || ctx.isLoading)("showDelay", 1e3)("hideDelay", 300);
     }
   }, dependencies: [
@@ -25626,6 +25631,7 @@ var ComponentGuidanceComponent = class _ComponentGuidanceComponent {
     PrimeTemplate,
     SortableColumn,
     SelectableRow,
+    RowToggler,
     SortIcon,
     TableCheckbox,
     TableHeaderCheckbox,
@@ -25657,8 +25663,18 @@ var ComponentGuidanceComponent = class _ComponentGuidanceComponent {
   selectionMode="multiple"\r
   [customSort]="true"\r
   (sortFunction)="onCustomSort($event)"\r
+  [resizableColumns]="true"\r
   expandableRows\r
+  [expandedRowKeys]="expandedRows"\r
+  (onRowExpand)="onRowExpand($event)"\r
+  (onRowCollapse)="onRowCollapse($event)"\r
 >\r
+  <ng-template #caption>\r
+    <div class="flex gap-2 justify-end">\r
+      <button pButton type="button" label="Expand All" icon="pi pi-plus" class="p-button-text" (click)="expandAll()"></button>\r
+      <button pButton type="button" label="Collapse All" icon="pi pi-minus" class="p-button-text" (click)="collapseAll()"></button>\r
+    </div>\r
+  </ng-template>\r
   <ng-template pTemplate="header">\r
     <tr>\r
       <!-- row toggle column -->\r
@@ -25699,11 +25715,13 @@ var ComponentGuidanceComponent = class _ComponentGuidanceComponent {
     <tr [pSelectableRow]="row">\r
       <!-- row toggler -->\r
       <td style="text-align: center">\r
-        <button \r
-          pButton \r
-          type="button" \r
-          class="p-button-text p-button-rounded p-button-plain" \r
-          aria-label="Toggle row">\r
+        <button\r
+          pButton\r
+          type="button"\r
+          [pRowToggler]="row"\r
+          class="p-button-text p-button-rounded p-button-plain"\r
+          aria-label="Toggle row"\r
+        >\r
           <i class="pi" [ngClass]="{ 'pi-chevron-down': expanded, 'pi-chevron-right': !expanded }" aria-hidden="true"></i>\r
         </button>\r
       </td>\r
@@ -25770,7 +25788,8 @@ var ComponentGuidanceComponent = class _ComponentGuidanceComponent {
     <tr>\r
       <td colspan="6">\r
         <div class="p-3">\r
-          <div *ngIf="(row.issues?.length || 0) > 0; else rationaleOnlyExpanded">\r
+          <!-- Expansion content -->\r
+        <!--           <div *ngIf="(row.issues?.length || 0) > 0; else rationaleOnlyExpanded">\r
             <h4>Issues</h4>\r
             <p-table [value]="row.issues" styleClass="p-datatable-sm" [rows]="10">\r
               <ng-template pTemplate="header">\r
@@ -25789,6 +25808,25 @@ var ComponentGuidanceComponent = class _ComponentGuidanceComponent {
           <ng-template #rationaleOnlyExpanded>\r
             <span>{{ row.rationale || "\u2014" }}</span>\r
           </ng-template>\r
+          -->\r
+          <p-table styleClass="p-datatable-sm">\r
+            <ng-template pTemplate="header">\r
+              <tr>\r
+                <th>Column 1</th>\r
+                <th>Column 2</th>\r
+                <th>Column 3</th>\r
+                <th>Column 4</th>\r
+              </tr>\r
+            </ng-template>\r
+            <ng-template pTemplate="body">\r
+              <tr>\r
+                <td>Data 1</td>\r
+                <td>Data 2</td>\r
+                <td>Data 3</td>\r
+                <td>Data 4</td>\r
+              </tr>\r
+            </ng-template>\r
+          </p-table>\r
         </div>\r
       </td>\r
     </tr>\r
@@ -32575,4 +32613,4 @@ ${base}`;
 export {
   PageAssistantCompareComponent
 };
-//# sourceMappingURL=chunk-6OMZYICV.js.map
+//# sourceMappingURL=chunk-UK2OGASJ.js.map
