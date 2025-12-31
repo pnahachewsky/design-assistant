@@ -1,4 +1,5 @@
 <p-table
+  #dt
   [value]="tableRows"
   dataKey="url"
   styleClass="p-datatable-sm"
@@ -6,9 +7,13 @@
   selectionMode="multiple"
   [customSort]="true"
   (sortFunction)="onCustomSort($event)"
+  expandableRows
 >
   <ng-template pTemplate="header">
     <tr>
+      <!-- row toggle column -->
+      <th style="width: 3rem; text-align: center"></th>
+
       <!-- checkbox column -->
       <th style="width: 3rem; text-align: center">
         <p-tableHeaderCheckbox></p-tableHeaderCheckbox>
@@ -21,13 +26,12 @@
       </th>
 
       <!-- Component -->
-      <th>
+      <!--<th>
         <span>Component</span>
-      </th>
-
+      </th>-->
       <!-- UCDG guidance URL -->
       <th>
-        <span>UCDG guidance</span>
+        <span>UCDG guidance for component</span>
       </th>
 
       <!-- Health (custom sort) -->
@@ -41,8 +45,19 @@
     </tr>
   </ng-template>
 
-  <ng-template pTemplate="body" let-row let-rowIndex="rowIndex">
+  <ng-template pTemplate="body" let-row let-rowIndex="rowIndex" let-expanded="expanded">
     <tr [pSelectableRow]="row">
+      <!-- row toggler -->
+      <td style="text-align: center">
+        <button 
+          pButton 
+          type="button" 
+          class="p-button-text p-button-rounded p-button-plain" 
+          aria-label="Toggle row">
+          <i class="pi" [ngClass]="{ 'pi-chevron-down': expanded, 'pi-chevron-right': !expanded }" aria-hidden="true"></i>
+        </button>
+      </td>
+
       <!-- checkbox cell -->
       <td style="text-align: center">
         <p-tableCheckbox [value]="row"></p-tableCheckbox>
@@ -52,11 +67,11 @@
       <td>{{ row.order }}</td>
 
       <!-- Component -->
-      <td>{{ row.component }}</td>
+      <!--<td>{{ row.component }}</td>-->
 
       <!-- URL -->
       <td>
-        <a [href]="row.url" target="_blank" rel="noopener">{{ row.url }}</a>
+        <a [href]="row.url" target="_blank" rel="noopener">{{ row.component }}</a>
       </td>
 
       <!-- Health -->
@@ -97,6 +112,34 @@
         <ng-template #rationaleOnly>
           <span>{{ row.rationale || "—" }}</span>
         </ng-template>
+      </td>
+    </tr>
+  </ng-template>
+
+  <ng-template pTemplate="rowexpansion" let-row>
+    <tr>
+      <td colspan="6">
+        <div class="p-3">
+          <div *ngIf="(row.issues?.length || 0) > 0; else rationaleOnlyExpanded">
+            <h4>Issues</h4>
+            <p-table [value]="row.issues" styleClass="p-datatable-sm" [rows]="10">
+              <ng-template pTemplate="header">
+                <tr>
+                  <th>Issue</th>
+                </tr>
+              </ng-template>
+              <ng-template pTemplate="body" let-issue>
+                <tr>
+                  <td>{{ issue }}</td>
+                </tr>
+              </ng-template>
+            </p-table>
+            <div class="muted" *ngIf="row.rationale" style="margin-top: 1rem;">{{ row.rationale }}</div>
+          </div>
+          <ng-template #rationaleOnlyExpanded>
+            <span>{{ row.rationale || "—" }}</span>
+          </ng-template>
+        </div>
       </td>
     </tr>
   </ng-template>
