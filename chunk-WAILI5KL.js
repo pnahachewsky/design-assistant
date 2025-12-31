@@ -25571,8 +25571,18 @@ var ComponentGuidanceComponent = class _ComponentGuidanceComponent {
   }
   // ---- Row expansion control (for PrimeNG controlled expansion) ----
   onRowExpand(event) {
+    const key2 = event?.data?.url;
+    if (!key2)
+      return;
+    this.expandedRows = __spreadProps(__spreadValues({}, this.expandedRows), { [key2]: true });
   }
   onRowCollapse(event) {
+    const key2 = event?.data?.url;
+    if (!key2)
+      return;
+    const copy = __spreadValues({}, this.expandedRows);
+    delete copy[key2];
+    this.expandedRows = copy;
   }
   expandAll() {
     this.expandedRows = Object.fromEntries(this.tableRows.map((r) => [r.url, true]));
@@ -32613,4 +32623,4 @@ ${base}`;
 export {
   PageAssistantCompareComponent
 };
-//# sourceMappingURL=chunk-UK2OGASJ.js.map
+//# sourceMappingURL=chunk-WAILI5KL.js.map
