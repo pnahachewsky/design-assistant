@@ -343,12 +343,17 @@ export class ComponentGuidanceComponent implements OnInit {
 
   // ---- Row expansion control (for PrimeNG controlled expansion) ----
   onRowExpand(event: any): void {
-    // placeholder for expansion handling (e.g., analytics or toasts)
-    // event.data contains the expanded row
+    const key = event?.data?.url;
+    if (!key) return;
+    this.expandedRows = { ...this.expandedRows, [key]: true };
   }
 
   onRowCollapse(event: any): void {
-    // placeholder for collapse handling
+    const key = event?.data?.url;
+    if (!key) return;
+    const copy = { ...this.expandedRows };
+    delete copy[key];
+    this.expandedRows = copy;
   }
 
   expandAll(): void {
