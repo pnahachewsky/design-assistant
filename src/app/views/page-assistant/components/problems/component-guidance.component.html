@@ -52,7 +52,7 @@
         <button 
           pButton 
           type="button" 
-          (click)="onToggleRow(row)"
+          [pRowToggler]="row"
           class="p-button-text p-button-rounded p-button-plain" 
           aria-label="Toggle row">
           <i class="pi" [ngClass]="{ 'pi-chevron-down': expanded, 'pi-chevron-right': !expanded }" aria-hidden="true"></i>
