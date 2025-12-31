@@ -146,6 +146,8 @@ export class ComponentGuidanceComponent implements OnInit {
   // multi-select
   selectedRows: GuidanceRow[] = [];
   isLoading = false;
+  // controlled expansion keys for PrimeNG table
+  expandedRows: Record<string, boolean> = {};
 
   cols = [
     { field: 'order', header: 'Index' },
@@ -337,5 +339,23 @@ export class ComponentGuidanceComponent implements OnInit {
   // Expose computed table rows if you still want via getter:
   get tableRows(): GuidanceRow[] {
     return this.rows;
+  }
+
+  // ---- Row expansion control (for PrimeNG controlled expansion) ----
+  onRowExpand(event: any): void {
+    // placeholder for expansion handling (e.g., analytics or toasts)
+    // event.data contains the expanded row
+  }
+
+  onRowCollapse(event: any): void {
+    // placeholder for collapse handling
+  }
+
+  expandAll(): void {
+    this.expandedRows = Object.fromEntries(this.tableRows.map((r) => [r.url, true]));
+  }
+
+  collapseAll(): void {
+    this.expandedRows = {};
   }
 }
