@@ -237,15 +237,3 @@ html.dark-mode .secondary-outline {
 .p-chip.text-black .p-chip-icon {
   color: black;
 }
-
-/* Fix for PrimeNG nested table/header border overlap in expansions */
-.p-datatable table {
-  border-collapse: collapse;
-}
-.p-datatable .p-datatable-thead th {
-  position: static !important;
-}
-.p-datatable .p-datatable-tbody > tr > td {
-  /* ensure consistent bottom border for body rows */
-  border-bottom: 1px solid rgba(0,0,0,0.08);
-}
