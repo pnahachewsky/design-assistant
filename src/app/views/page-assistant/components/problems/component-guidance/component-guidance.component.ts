@@ -127,6 +127,11 @@ interface AlertIssue {
         padding: 0;
         margin: 0;
       }
+      /* Expansion tables */
+      :host ::ng-deep .expansion-table .p-datatable-table {
+        border: 1px solid #d1d5db;
+        border-radius: 6px;
+      }
 
       .tag {
         font-size: 11px;

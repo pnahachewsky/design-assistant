@@ -145,7 +145,7 @@
       <td colspan="6">
         <div class="p-3">
           @if (row.__nameKey === 'page.tools.guidance.craVariant.alerts.title') {
-            <p-table [value]="alertIssues" styleClass="p-datatable-sm alert-table">
+            <p-table [value]="alertIssues" styleClass="p-datatable-sm alert-table expansion-table">
               <ng-template pTemplate="header">
                 <tr>
                   <th>Pain point category</th>
@@ -168,7 +168,7 @@
               </ng-template>
             </p-table>
           } @else {
-            <p-table styleClass="p-datatable-sm">
+            <p-table styleClass="p-datatable-sm expansion-table">
               <ng-template pTemplate="header">
                 <tr>
                   <th>Column 1</th>
