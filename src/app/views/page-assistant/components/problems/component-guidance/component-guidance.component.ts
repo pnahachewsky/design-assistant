@@ -114,6 +114,12 @@ interface AlertIssue {
         border-color: #cbd5e1;
         color: #334155;
       }
+      /* Highlight variant (currently same as unknown) */
+      .chip-hghlght {
+        background: #e5e7eb;
+        border-color: #cbd5e1;
+        color: #334155;
+      }
 
       .tag {
         font-size: 11px;

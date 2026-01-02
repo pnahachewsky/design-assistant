@@ -117,14 +117,14 @@
       <!-- Pain points -->
       <td>
         @if (row.__nameKey === alertsNameKey) {
-          <ul class="issues">
-            <li *ngFor="let cat of alertPainPointCategories">{{ cat }}</li>
-          </ul>
+          <span class="chip chip-hghlght">
+            {{ alertPainPointCategories.join(', ') }}
+          </span>
         } @else {
           @if ((row.issues?.length || 0) > 0) {
-            <ul class="issues">
-              <li *ngFor="let it of row.issues">{{ it }}</li>
-            </ul>
+            <span class="chip chip-hghlght">
+              {{ row.issues?.join(', ') }}
+            </span>
             @if (row.rationale) {
               <div class="muted">{{ row.rationale }}</div>
             }
