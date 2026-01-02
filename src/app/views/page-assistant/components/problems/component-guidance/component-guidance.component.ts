@@ -144,6 +144,21 @@ interface AlertIssue {
         gap: 0.5rem;
       }
     `,
+    `
+      /* Alerts sub-table tweaks */
+      .alert-table .p-datatable-tbody > tr > td,
+      .alert-table .p-datatable-thead > tr > th {
+        white-space: normal;
+        vertical-align: top;
+      }
+      .alert-table .wrap-col {
+        min-width: 180px;
+      }
+      .alert-table .include-col {
+        width: 140px;
+        text-align: center;
+      }
+    `,
   ],
 })
 export class ComponentGuidanceComponent implements OnInit {
