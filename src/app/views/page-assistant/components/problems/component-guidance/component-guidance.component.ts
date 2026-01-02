@@ -155,6 +155,9 @@ interface AlertIssue {
       :host ::ng-deep .alert-table .wrap-col {
         min-width: 180px;
       }
+      :host ::ng-deep .alert-table .severity-col {
+        white-space: nowrap !important;
+      }
       :host ::ng-deep .alert-table .include-col {
         width: 140px;
         text-align: center;
@@ -207,6 +210,12 @@ export class ComponentGuidanceComponent implements OnInit {
     },
   ];
 
+  private readonly ALERT_SEVERITY_RANK: Record<string, number> = {
+    high: 3,
+    medium: 2,
+    low: 1,
+  };
+
   // multi-select
   selectedRows: GuidanceRow[] = [];
   isLoading = false;
@@ -230,6 +239,7 @@ export class ComponentGuidanceComponent implements OnInit {
   };
 
   ngOnInit() {
+    this.sortAlertIssues();
     const data = this.uploadState.getUploadData();
     if (data?.originalHtml) {
       this.guidanceList = this.validator.collectGuidanceUrls(data.originalHtml);
@@ -426,5 +436,10 @@ export class ComponentGuidanceComponent implements OnInit {
 
   collapseAll(): void {
     this.expandedRows = {};
+  }
+
+  private sortAlertIssues(): void {
+    const rank = this.ALERT_SEVERITY_RANK;
+    this.alertIssues.sort((a, b) => (rank[b.severity.toLowerCase()] ?? 0) - (rank[a.severity.toLowerCase()] ?? 0));
   }
 }

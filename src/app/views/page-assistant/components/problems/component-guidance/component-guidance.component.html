@@ -138,18 +138,18 @@
               <ng-template pTemplate="header">
                 <tr>
                   <th>Pain point category</th>
-                  <th>Severity</th>
                   <th class="wrap-col">Description</th>
                   <th class="wrap-col">Recommendation</th>
+                  <th class="severity-col">Severity</th>
                   <th class="include-col">Include in fix</th>
                 </tr>
               </ng-template>
               <ng-template pTemplate="body" let-issue>
                 <tr>
                   <td>{{ issue.category }}</td>
-                  <td>{{ issue.severity }}</td>
                   <td class="wrap-col">{{ issue.description }}</td>
                   <td class="wrap-col">{{ issue.recommendation }}</td>
+                  <td class="severity-col">{{ issue.severity }}</td>
                   <td class="include-col">
                     <p-checkbox [binary]="true" [(ngModel)]="issue.include"></p-checkbox>
                   </td>
