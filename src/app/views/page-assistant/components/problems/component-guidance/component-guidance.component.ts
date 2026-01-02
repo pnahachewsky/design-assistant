@@ -146,17 +146,21 @@ interface AlertIssue {
     `,
     `
       /* Alerts sub-table tweaks */
-      .alert-table .p-datatable-tbody > tr > td,
-      .alert-table .p-datatable-thead > tr > th {
-        white-space: normal;
+      :host ::ng-deep .alert-table .p-datatable-tbody > tr > td,
+      :host ::ng-deep .alert-table .p-datatable-thead > tr > th {
+        white-space: normal !important;
+        word-break: break-word;
         vertical-align: top;
       }
-      .alert-table .wrap-col {
+      :host ::ng-deep .alert-table .wrap-col {
         min-width: 180px;
       }
-      .alert-table .include-col {
+      :host ::ng-deep .alert-table .include-col {
         width: 140px;
         text-align: center;
+      }
+      :host ::ng-deep .alert-table .include-col .p-checkbox {
+        display: inline-flex;
       }
     `,
   ],
