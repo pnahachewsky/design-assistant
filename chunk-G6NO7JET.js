@@ -25256,67 +25256,43 @@ function ComponentGuidanceComponent_ng_template_3_Template(rf, ctx) {
     \u0275\u0275elementEnd()();
   }
 }
-function ComponentGuidanceComponent_ng_template_4_Conditional_17_li_1_Template(rf, ctx) {
-  if (rf & 1) {
-    \u0275\u0275elementStart(0, "li");
-    \u0275\u0275text(1);
-    \u0275\u0275elementEnd();
-  }
-  if (rf & 2) {
-    const cat_r4 = ctx.$implicit;
-    \u0275\u0275advance();
-    \u0275\u0275textInterpolate(cat_r4);
-  }
-}
 function ComponentGuidanceComponent_ng_template_4_Conditional_17_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275elementStart(0, "ul", 26);
-    \u0275\u0275template(1, ComponentGuidanceComponent_ng_template_4_Conditional_17_li_1_Template, 2, 1, "li", 27);
+    \u0275\u0275elementStart(0, "span", 26);
+    \u0275\u0275text(1);
     \u0275\u0275elementEnd();
   }
   if (rf & 2) {
     const ctx_r2 = \u0275\u0275nextContext(2);
     \u0275\u0275advance();
-    \u0275\u0275property("ngForOf", ctx_r2.alertPainPointCategories);
-  }
-}
-function ComponentGuidanceComponent_ng_template_4_Conditional_18_Conditional_0_li_1_Template(rf, ctx) {
-  if (rf & 1) {
-    \u0275\u0275elementStart(0, "li");
-    \u0275\u0275text(1);
-    \u0275\u0275elementEnd();
-  }
-  if (rf & 2) {
-    const it_r5 = ctx.$implicit;
-    \u0275\u0275advance();
-    \u0275\u0275textInterpolate(it_r5);
+    \u0275\u0275textInterpolate1(" ", ctx_r2.alertPainPointCategories.join(", "), " ");
   }
 }
 function ComponentGuidanceComponent_ng_template_4_Conditional_18_Conditional_0_Conditional_2_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275elementStart(0, "div", 28);
+    \u0275\u0275elementStart(0, "div", 27);
     \u0275\u0275text(1);
     \u0275\u0275elementEnd();
   }
   if (rf & 2) {
-    const row_r6 = \u0275\u0275nextContext(3).$implicit;
+    const row_r4 = \u0275\u0275nextContext(3).$implicit;
     \u0275\u0275advance();
-    \u0275\u0275textInterpolate(row_r6.rationale);
+    \u0275\u0275textInterpolate(row_r4.rationale);
   }
 }
 function ComponentGuidanceComponent_ng_template_4_Conditional_18_Conditional_0_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275elementStart(0, "ul", 26);
-    \u0275\u0275template(1, ComponentGuidanceComponent_ng_template_4_Conditional_18_Conditional_0_li_1_Template, 2, 1, "li", 27);
+    \u0275\u0275elementStart(0, "span", 26);
+    \u0275\u0275text(1);
     \u0275\u0275elementEnd();
-    \u0275\u0275template(2, ComponentGuidanceComponent_ng_template_4_Conditional_18_Conditional_0_Conditional_2_Template, 2, 1, "div", 28);
+    \u0275\u0275template(2, ComponentGuidanceComponent_ng_template_4_Conditional_18_Conditional_0_Conditional_2_Template, 2, 1, "div", 27);
   }
   if (rf & 2) {
-    const row_r6 = \u0275\u0275nextContext(2).$implicit;
+    const row_r4 = \u0275\u0275nextContext(2).$implicit;
     \u0275\u0275advance();
-    \u0275\u0275property("ngForOf", row_r6.issues);
+    \u0275\u0275textInterpolate1(" ", row_r4.issues == null ? null : row_r4.issues.join(", "), " ");
     \u0275\u0275advance();
-    \u0275\u0275conditional(row_r6.rationale ? 2 : -1);
+    \u0275\u0275conditional(row_r4.rationale ? 2 : -1);
   }
 }
 function ComponentGuidanceComponent_ng_template_4_Conditional_18_Conditional_1_Template(rf, ctx) {
@@ -25326,9 +25302,9 @@ function ComponentGuidanceComponent_ng_template_4_Conditional_18_Conditional_1_T
     \u0275\u0275elementEnd();
   }
   if (rf & 2) {
-    const row_r6 = \u0275\u0275nextContext(2).$implicit;
+    const row_r4 = \u0275\u0275nextContext(2).$implicit;
     \u0275\u0275advance();
-    \u0275\u0275textInterpolate(row_r6.rationale || "?");
+    \u0275\u0275textInterpolate(row_r4.rationale || "?");
   }
 }
 function ComponentGuidanceComponent_ng_template_4_Conditional_18_Template(rf, ctx) {
@@ -25336,8 +25312,8 @@ function ComponentGuidanceComponent_ng_template_4_Conditional_18_Template(rf, ct
     \u0275\u0275template(0, ComponentGuidanceComponent_ng_template_4_Conditional_18_Conditional_0_Template, 3, 2)(1, ComponentGuidanceComponent_ng_template_4_Conditional_18_Conditional_1_Template, 2, 1, "span");
   }
   if (rf & 2) {
-    const row_r6 = \u0275\u0275nextContext().$implicit;
-    \u0275\u0275conditional(((row_r6.issues == null ? null : row_r6.issues.length) || 0) > 0 ? 0 : 1);
+    const row_r4 = \u0275\u0275nextContext().$implicit;
+    \u0275\u0275conditional(((row_r4.issues == null ? null : row_r4.issues.length) || 0) > 0 ? 0 : 1);
   }
 }
 function ComponentGuidanceComponent_ng_template_4_Template(rf, ctx) {
@@ -25360,34 +25336,34 @@ function ComponentGuidanceComponent_ng_template_4_Template(rf, ctx) {
     \u0275\u0275text(15);
     \u0275\u0275elementEnd()()();
     \u0275\u0275elementStart(16, "td");
-    \u0275\u0275template(17, ComponentGuidanceComponent_ng_template_4_Conditional_17_Template, 2, 1, "ul", 26)(18, ComponentGuidanceComponent_ng_template_4_Conditional_18_Template, 2, 1);
+    \u0275\u0275template(17, ComponentGuidanceComponent_ng_template_4_Conditional_17_Template, 2, 1, "span", 26)(18, ComponentGuidanceComponent_ng_template_4_Conditional_18_Template, 2, 1);
     \u0275\u0275elementEnd()();
   }
   if (rf & 2) {
-    const row_r6 = ctx.$implicit;
-    const expanded_r7 = ctx.expanded;
+    const row_r4 = ctx.$implicit;
+    const expanded_r5 = ctx.expanded;
     const ctx_r2 = \u0275\u0275nextContext();
-    \u0275\u0275property("pSelectableRow", row_r6);
+    \u0275\u0275property("pSelectableRow", row_r4);
     \u0275\u0275advance(2);
-    \u0275\u0275property("pRowToggler", row_r6);
+    \u0275\u0275property("pRowToggler", row_r4);
     \u0275\u0275advance();
-    \u0275\u0275property("ngClass", \u0275\u0275pureFunction2(11, _c06, expanded_r7, !expanded_r7));
+    \u0275\u0275property("ngClass", \u0275\u0275pureFunction2(11, _c06, expanded_r5, !expanded_r5));
     \u0275\u0275advance(2);
-    \u0275\u0275property("value", row_r6);
+    \u0275\u0275property("value", row_r4);
     \u0275\u0275advance(2);
-    \u0275\u0275textInterpolate(row_r6.order);
+    \u0275\u0275textInterpolate(row_r4.order);
     \u0275\u0275advance(2);
-    \u0275\u0275property("href", row_r6.url, \u0275\u0275sanitizeUrl);
+    \u0275\u0275property("href", row_r4.url, \u0275\u0275sanitizeUrl);
     \u0275\u0275advance();
-    \u0275\u0275textInterpolate(row_r6.component);
+    \u0275\u0275textInterpolate(row_r4.component);
     \u0275\u0275advance(2);
-    \u0275\u0275property("ngClass", \u0275\u0275pureFunction4(14, _c14, row_r6.health === "severe", row_r6.health === "minor", row_r6.health === "ok", !row_r6.health || row_r6.health === "unknown"));
+    \u0275\u0275property("ngClass", \u0275\u0275pureFunction4(14, _c14, row_r4.health === "severe", row_r4.health === "minor", row_r4.health === "ok", !row_r4.health || row_r4.health === "unknown"));
     \u0275\u0275advance();
-    \u0275\u0275property("ngClass", \u0275\u0275pureFunction4(19, _c24, row_r6.health === "severe", row_r6.health === "minor", row_r6.health === "ok", !row_r6.health || row_r6.health === "unknown"));
+    \u0275\u0275property("ngClass", \u0275\u0275pureFunction4(19, _c24, row_r4.health === "severe", row_r4.health === "minor", row_r4.health === "ok", !row_r4.health || row_r4.health === "unknown"));
     \u0275\u0275advance(2);
-    \u0275\u0275textInterpolate1(" ", ctx_r2.healthLabel(row_r6.health), " ");
+    \u0275\u0275textInterpolate1(" ", ctx_r2.healthLabel(row_r4.health), " ");
     \u0275\u0275advance(2);
-    \u0275\u0275conditional(row_r6.__nameKey === ctx_r2.alertsNameKey ? 17 : 18);
+    \u0275\u0275conditional(row_r4.__nameKey === ctx_r2.alertsNameKey ? 17 : 18);
   }
 }
 function ComponentGuidanceComponent_ng_template_5_Conditional_3_ng_template_1_Template(rf, ctx) {
@@ -25395,61 +25371,61 @@ function ComponentGuidanceComponent_ng_template_5_Conditional_3_ng_template_1_Te
     \u0275\u0275elementStart(0, "tr")(1, "th");
     \u0275\u0275text(2, "Pain point category");
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(3, "th", 33);
+    \u0275\u0275elementStart(3, "th", 32);
     \u0275\u0275text(4, "Description");
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(5, "th", 33);
+    \u0275\u0275elementStart(5, "th", 32);
     \u0275\u0275text(6, "Recommendation");
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(7, "th", 34);
+    \u0275\u0275elementStart(7, "th", 33);
     \u0275\u0275text(8, "Severity");
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(9, "th", 35);
+    \u0275\u0275elementStart(9, "th", 34);
     \u0275\u0275text(10, "Include in fix");
     \u0275\u0275elementEnd()();
   }
 }
 function ComponentGuidanceComponent_ng_template_5_Conditional_3_ng_template_2_Template(rf, ctx) {
   if (rf & 1) {
-    const _r8 = \u0275\u0275getCurrentView();
+    const _r6 = \u0275\u0275getCurrentView();
     \u0275\u0275elementStart(0, "tr")(1, "td");
     \u0275\u0275text(2);
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(3, "td", 33);
+    \u0275\u0275elementStart(3, "td", 32);
     \u0275\u0275text(4);
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(5, "td", 33);
+    \u0275\u0275elementStart(5, "td", 32);
     \u0275\u0275text(6);
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(7, "td", 34);
+    \u0275\u0275elementStart(7, "td", 33);
     \u0275\u0275text(8);
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(9, "td", 35)(10, "p-checkbox", 36);
+    \u0275\u0275elementStart(9, "td", 34)(10, "p-checkbox", 35);
     \u0275\u0275twoWayListener("ngModelChange", function ComponentGuidanceComponent_ng_template_5_Conditional_3_ng_template_2_Template_p_checkbox_ngModelChange_10_listener($event) {
-      const issue_r9 = \u0275\u0275restoreView(_r8).$implicit;
-      \u0275\u0275twoWayBindingSet(issue_r9.include, $event) || (issue_r9.include = $event);
+      const issue_r7 = \u0275\u0275restoreView(_r6).$implicit;
+      \u0275\u0275twoWayBindingSet(issue_r7.include, $event) || (issue_r7.include = $event);
       return \u0275\u0275resetView($event);
     });
     \u0275\u0275elementEnd()()();
   }
   if (rf & 2) {
-    const issue_r9 = ctx.$implicit;
+    const issue_r7 = ctx.$implicit;
     \u0275\u0275advance(2);
-    \u0275\u0275textInterpolate(issue_r9.category);
+    \u0275\u0275textInterpolate(issue_r7.category);
     \u0275\u0275advance(2);
-    \u0275\u0275textInterpolate(issue_r9.description);
+    \u0275\u0275textInterpolate(issue_r7.description);
     \u0275\u0275advance(2);
-    \u0275\u0275textInterpolate(issue_r9.recommendation);
+    \u0275\u0275textInterpolate(issue_r7.recommendation);
     \u0275\u0275advance(2);
-    \u0275\u0275textInterpolate(issue_r9.severity);
+    \u0275\u0275textInterpolate(issue_r7.severity);
     \u0275\u0275advance(2);
     \u0275\u0275property("binary", true);
-    \u0275\u0275twoWayProperty("ngModel", issue_r9.include);
+    \u0275\u0275twoWayProperty("ngModel", issue_r7.include);
   }
 }
 function ComponentGuidanceComponent_ng_template_5_Conditional_3_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275elementStart(0, "p-table", 31);
+    \u0275\u0275elementStart(0, "p-table", 30);
     \u0275\u0275template(1, ComponentGuidanceComponent_ng_template_5_Conditional_3_ng_template_1_Template, 11, 0, "ng-template", 3)(2, ComponentGuidanceComponent_ng_template_5_Conditional_3_ng_template_2_Template, 11, 6, "ng-template", 4);
     \u0275\u0275elementEnd();
   }
@@ -25492,21 +25468,21 @@ function ComponentGuidanceComponent_ng_template_5_Conditional_4_ng_template_2_Te
 }
 function ComponentGuidanceComponent_ng_template_5_Conditional_4_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275elementStart(0, "p-table", 32);
+    \u0275\u0275elementStart(0, "p-table", 31);
     \u0275\u0275template(1, ComponentGuidanceComponent_ng_template_5_Conditional_4_ng_template_1_Template, 9, 0, "ng-template", 3)(2, ComponentGuidanceComponent_ng_template_5_Conditional_4_ng_template_2_Template, 9, 0, "ng-template", 4);
     \u0275\u0275elementEnd();
   }
 }
 function ComponentGuidanceComponent_ng_template_5_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275elementStart(0, "tr")(1, "td", 29)(2, "div", 30);
-    \u0275\u0275template(3, ComponentGuidanceComponent_ng_template_5_Conditional_3_Template, 3, 1, "p-table", 31)(4, ComponentGuidanceComponent_ng_template_5_Conditional_4_Template, 3, 0, "p-table", 32);
+    \u0275\u0275elementStart(0, "tr")(1, "td", 28)(2, "div", 29);
+    \u0275\u0275template(3, ComponentGuidanceComponent_ng_template_5_Conditional_3_Template, 3, 1, "p-table", 30)(4, ComponentGuidanceComponent_ng_template_5_Conditional_4_Template, 3, 0, "p-table", 31);
     \u0275\u0275elementEnd()()();
   }
   if (rf & 2) {
-    const row_r10 = ctx.$implicit;
+    const row_r8 = ctx.$implicit;
     \u0275\u0275advance(3);
-    \u0275\u0275conditional(row_r10.__nameKey === "page.tools.guidance.craVariant.alerts.title" ? 3 : 4);
+    \u0275\u0275conditional(row_r8.__nameKey === "page.tools.guidance.craVariant.alerts.title" ? 3 : 4);
   }
 }
 var ComponentGuidanceComponent = class _ComponentGuidanceComponent {
@@ -25753,7 +25729,7 @@ var ComponentGuidanceComponent = class _ComponentGuidanceComponent {
   static \u0275fac = function ComponentGuidanceComponent_Factory(__ngFactoryType__) {
     return new (__ngFactoryType__ || _ComponentGuidanceComponent)();
   };
-  static \u0275cmp = /* @__PURE__ */ \u0275\u0275defineComponent({ type: _ComponentGuidanceComponent, selectors: [["ca-component-guidance"]], decls: 10, vars: 10, consts: [["dt", ""], ["dataKey", "url", "styleClass", "p-datatable-sm", "selectionMode", "multiple", "expandableRows", "", 3, "selectionChange", "sortFunction", "onRowExpand", "onRowCollapse", "value", "selection", "customSort", "resizableColumns", "expandedRowKeys"], ["pTemplate", "caption"], ["pTemplate", "header"], ["pTemplate", "body"], ["pTemplate", "expandedrow"], [1, "mt-3"], ["pButton", "", "type", "button", "aria-label", "Get GenAI recommendations based on user data", "pTooltip", "Select one or more components", 1, "ai-btn", 3, "click", "label", "icon", "disabled", "showDelay", "hideDelay"], [1, "sr-only"], [1, "caption-actions"], ["pButton", "", "type", "button", "label", "Expand All", "icon", "pi pi-plus", 1, "p-button-text", 3, "click"], ["pButton", "", "type", "button", "label", "Collapse All", "icon", "pi pi-minus", 1, "p-button-text", 3, "click"], [2, "width", "3rem", "text-align", "center"], ["pSortableColumn", "order"], ["field", "order"], ["pSortableColumn", "health", 1, "health-col"], ["field", "health"], [3, "pSelectableRow"], [2, "text-align", "center"], ["pButton", "", "type", "button", "aria-label", "Toggle row", 1, "p-button-text", "p-button-rounded", "p-button-plain", 3, "pRowToggler"], ["aria-hidden", "true", 1, "pi", 3, "ngClass"], [3, "value"], ["target", "_blank", "rel", "noopener", 3, "href"], [1, "health-cell", "health-col"], [1, "chip", 3, "ngClass"], [1, "chip-label"], [1, "issues"], [4, "ngFor", "ngForOf"], [1, "muted"], ["colspan", "6"], [1, "p-3"], ["styleClass", "p-datatable-sm alert-table", 3, "value"], ["styleClass", "p-datatable-sm"], [1, "wrap-col"], [1, "severity-col"], [1, "include-col"], [3, "ngModelChange", "binary", "ngModel"]], template: function ComponentGuidanceComponent_Template(rf, ctx) {
+  static \u0275cmp = /* @__PURE__ */ \u0275\u0275defineComponent({ type: _ComponentGuidanceComponent, selectors: [["ca-component-guidance"]], decls: 10, vars: 10, consts: [["dt", ""], ["dataKey", "url", "styleClass", "p-datatable-sm", "selectionMode", "multiple", "expandableRows", "", 3, "selectionChange", "sortFunction", "onRowExpand", "onRowCollapse", "value", "selection", "customSort", "resizableColumns", "expandedRowKeys"], ["pTemplate", "caption"], ["pTemplate", "header"], ["pTemplate", "body"], ["pTemplate", "expandedrow"], [1, "mt-3"], ["pButton", "", "type", "button", "aria-label", "Get GenAI recommendations based on user data", "pTooltip", "Select one or more components", 1, "ai-btn", 3, "click", "label", "icon", "disabled", "showDelay", "hideDelay"], [1, "sr-only"], [1, "caption-actions"], ["pButton", "", "type", "button", "label", "Expand All", "icon", "pi pi-plus", 1, "p-button-text", 3, "click"], ["pButton", "", "type", "button", "label", "Collapse All", "icon", "pi pi-minus", 1, "p-button-text", 3, "click"], [2, "width", "3rem", "text-align", "center"], ["pSortableColumn", "order"], ["field", "order"], ["pSortableColumn", "health", 1, "health-col"], ["field", "health"], [3, "pSelectableRow"], [2, "text-align", "center"], ["pButton", "", "type", "button", "aria-label", "Toggle row", 1, "p-button-text", "p-button-rounded", "p-button-plain", 3, "pRowToggler"], ["aria-hidden", "true", 1, "pi", 3, "ngClass"], [3, "value"], ["target", "_blank", "rel", "noopener", 3, "href"], [1, "health-cell", "health-col"], [1, "chip", 3, "ngClass"], [1, "chip-label"], [1, "chip", "chip-hghlght"], [1, "muted"], ["colspan", "6"], [1, "p-3"], ["styleClass", "p-datatable-sm alert-table", 3, "value"], ["styleClass", "p-datatable-sm"], [1, "wrap-col"], [1, "severity-col"], [1, "include-col"], [3, "ngModelChange", "binary", "ngModel"]], template: function ComponentGuidanceComponent_Template(rf, ctx) {
     if (rf & 1) {
       const _r1 = \u0275\u0275getCurrentView();
       \u0275\u0275elementStart(0, "p-table", 1, 0);
@@ -25790,7 +25766,7 @@ var ComponentGuidanceComponent = class _ComponentGuidanceComponent {
       \u0275\u0275advance(7);
       \u0275\u0275property("label", "Get GenAI recommendations based on user data")("icon", "pi pi-sparkles")("disabled", !ctx.selectedRows.length || ctx.isLoading)("showDelay", 1e3)("hideDelay", 300);
     }
-  }, dependencies: [CommonModule, NgClass, NgForOf, FormsModule, NgControlStatus, NgModel, TableModule, Table, PrimeTemplate, SortableColumn, SelectableRow, RowToggler, SortIcon, TableCheckbox, TableHeaderCheckbox, ButtonModule, ButtonDirective, CheckboxModule, Checkbox, TooltipModule, Tooltip, TranslateModule], styles: ["\n\n.muted[_ngcontent-%COMP%] {\n  color: #6b7280;\n  font-size: 12px;\n}\n.issues[_ngcontent-%COMP%] {\n  margin: 0;\n  padding-left: 1rem;\n}\n.health-cell[_ngcontent-%COMP%] {\n  //display: flex;\n  gap: 0.4rem;\n  align-items: center;\n  flex-wrap: wrap;\n}\n.chip[_ngcontent-%COMP%] {\n  display: inline-flex;\n  align-items: center;\n  gap: 0.4rem;\n  padding: 0.15rem 0.55rem;\n  border-radius: 9999px;\n  border: 1px solid transparent;\n  font-weight: 500;\n  line-height: 1.1;\n}\n.chip[_ngcontent-%COMP%]   .pi[_ngcontent-%COMP%] {\n  color: inherit !important;\n}\n.chip-severe[_ngcontent-%COMP%] {\n  background: #fee2e2;\n  border-color: #fecaca;\n  color: #b91c1c;\n}\n.chip-minor[_ngcontent-%COMP%] {\n  background: #fef3c7;\n  border-color: #fde68a;\n  color: #92400e;\n}\n.chip-ok[_ngcontent-%COMP%] {\n  background: #dcfce7;\n  border-color: #86efac;\n  color: #166534;\n}\n.chip-unk[_ngcontent-%COMP%] {\n  background: #e5e7eb;\n  border-color: #cbd5e1;\n  color: #334155;\n}\n.tag[_ngcontent-%COMP%] {\n  font-size: 11px;\n  padding: 0.05rem 0.4rem;\n  border-radius: 6px;\n  border: 1px solid transparent;\n}\n.ai-btn[_ngcontent-%COMP%] {\n  font-weight: 600;\n}\n.sr-only[_ngcontent-%COMP%] {\n  position: absolute;\n  width: 1px;\n  height: 1px;\n  padding: 0;\n  margin: -1px;\n  overflow: hidden;\n  clip: rect(0, 0, 0, 0);\n  white-space: nowrap;\n  border: 0;\n}\n/*# sourceMappingURL=component-guidance.component.css.map */", "\n\n.caption-actions[_ngcontent-%COMP%] {\n  display: flex;\n  justify-content: flex-end;\n  gap: 0.5rem;\n}\n/*# sourceMappingURL=component-guidance.component.css.map */", "\n\n[_nghost-%COMP%]     .alert-table .p-datatable-tbody > tr > td, \n[_nghost-%COMP%]     .alert-table .p-datatable-thead > tr > th {\n  white-space: normal !important;\n  word-break: normal;\n  overflow-wrap: normal;\n  vertical-align: top;\n}\n[_nghost-%COMP%]     .alert-table .wrap-col {\n  min-width: 180px;\n}\n[_nghost-%COMP%]     .alert-table .severity-col {\n  white-space: nowrap !important;\n}\n[_nghost-%COMP%]     .alert-table .include-col {\n  width: 140px;\n  text-align: center;\n}\n[_nghost-%COMP%]     .alert-table .include-col .p-checkbox {\n  display: inline-flex;\n}\n/*# sourceMappingURL=component-guidance.component.css.map */"] });
+  }, dependencies: [CommonModule, NgClass, FormsModule, NgControlStatus, NgModel, TableModule, Table, PrimeTemplate, SortableColumn, SelectableRow, RowToggler, SortIcon, TableCheckbox, TableHeaderCheckbox, ButtonModule, ButtonDirective, CheckboxModule, Checkbox, TooltipModule, Tooltip, TranslateModule], styles: ["\n\n.muted[_ngcontent-%COMP%] {\n  color: #6b7280;\n  font-size: 12px;\n}\n.issues[_ngcontent-%COMP%] {\n  margin: 0;\n  padding-left: 1rem;\n}\n.health-cell[_ngcontent-%COMP%] {\n  //display: flex;\n  gap: 0.4rem;\n  align-items: center;\n  flex-wrap: wrap;\n}\n.chip[_ngcontent-%COMP%] {\n  display: inline-flex;\n  align-items: center;\n  gap: 0.4rem;\n  padding: 0.15rem 0.55rem;\n  border-radius: 9999px;\n  border: 1px solid transparent;\n  font-weight: 500;\n  line-height: 1.1;\n}\n.chip[_ngcontent-%COMP%]   .pi[_ngcontent-%COMP%] {\n  color: inherit !important;\n}\n.chip-severe[_ngcontent-%COMP%] {\n  background: #fee2e2;\n  border-color: #fecaca;\n  color: #b91c1c;\n}\n.chip-minor[_ngcontent-%COMP%] {\n  background: #fef3c7;\n  border-color: #fde68a;\n  color: #92400e;\n}\n.chip-ok[_ngcontent-%COMP%] {\n  background: #dcfce7;\n  border-color: #86efac;\n  color: #166534;\n}\n.chip-unk[_ngcontent-%COMP%] {\n  background: #e5e7eb;\n  border-color: #cbd5e1;\n  color: #334155;\n}\n.chip-hghlght[_ngcontent-%COMP%] {\n  background: #e5e7eb;\n  border-color: #cbd5e1;\n  color: #334155;\n}\n.tag[_ngcontent-%COMP%] {\n  font-size: 11px;\n  padding: 0.05rem 0.4rem;\n  border-radius: 6px;\n  border: 1px solid transparent;\n}\n.ai-btn[_ngcontent-%COMP%] {\n  font-weight: 600;\n}\n.sr-only[_ngcontent-%COMP%] {\n  position: absolute;\n  width: 1px;\n  height: 1px;\n  padding: 0;\n  margin: -1px;\n  overflow: hidden;\n  clip: rect(0, 0, 0, 0);\n  white-space: nowrap;\n  border: 0;\n}\n/*# sourceMappingURL=component-guidance.component.css.map */", "\n\n.caption-actions[_ngcontent-%COMP%] {\n  display: flex;\n  justify-content: flex-end;\n  gap: 0.5rem;\n}\n/*# sourceMappingURL=component-guidance.component.css.map */", "\n\n[_nghost-%COMP%]     .alert-table .p-datatable-tbody > tr > td, \n[_nghost-%COMP%]     .alert-table .p-datatable-thead > tr > th {\n  white-space: normal !important;\n  word-break: normal;\n  overflow-wrap: normal;\n  vertical-align: top;\n}\n[_nghost-%COMP%]     .alert-table .wrap-col {\n  min-width: 180px;\n}\n[_nghost-%COMP%]     .alert-table .severity-col {\n  white-space: nowrap !important;\n}\n[_nghost-%COMP%]     .alert-table .include-col {\n  width: 140px;\n  text-align: center;\n}\n[_nghost-%COMP%]     .alert-table .include-col .p-checkbox {\n  display: inline-flex;\n}\n/*# sourceMappingURL=component-guidance.component.css.map */"] });
 };
 (() => {
   (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(ComponentGuidanceComponent, [{
@@ -25922,14 +25898,14 @@ var ComponentGuidanceComponent = class _ComponentGuidanceComponent {
       <!-- Pain points -->
       <td>
         @if (row.__nameKey === alertsNameKey) {
-          <ul class="issues">
-            <li *ngFor="let cat of alertPainPointCategories">{{ cat }}</li>
-          </ul>
+          <span class="chip chip-hghlght">
+            {{ alertPainPointCategories.join(', ') }}
+          </span>
         } @else {
           @if ((row.issues?.length || 0) > 0) {
-            <ul class="issues">
-              <li *ngFor="let it of row.issues">{{ it }}</li>
-            </ul>
+            <span class="chip chip-hghlght">
+              {{ row.issues?.join(', ') }}
+            </span>
             @if (row.rationale) {
               <div class="muted">{{ row.rationale }}</div>
             }
@@ -26012,11 +25988,11 @@ var ComponentGuidanceComponent = class _ComponentGuidanceComponent {
     <span class="sr-only">Get GenAI recommendations based on user data</span>
   </button>
 </div>
-`, styles: ["/* angular:styles/component:css;4d7de8cafdda9cc7384c7978315ddcfbef02a9c3e25940b611b95f1ed944dd3d;C:/my-working-files/GitHub/design-assistant/src/app/views/page-assistant/components/problems/component-guidance/component-guidance.component.ts */\n.muted {\n  color: #6b7280;\n  font-size: 12px;\n}\n.issues {\n  margin: 0;\n  padding-left: 1rem;\n}\n.health-cell {\n  //display: flex;\n  gap: 0.4rem;\n  align-items: center;\n  flex-wrap: wrap;\n}\n.chip {\n  display: inline-flex;\n  align-items: center;\n  gap: 0.4rem;\n  padding: 0.15rem 0.55rem;\n  border-radius: 9999px;\n  border: 1px solid transparent;\n  font-weight: 500;\n  line-height: 1.1;\n}\n.chip .pi {\n  color: inherit !important;\n}\n.chip-severe {\n  background: #fee2e2;\n  border-color: #fecaca;\n  color: #b91c1c;\n}\n.chip-minor {\n  background: #fef3c7;\n  border-color: #fde68a;\n  color: #92400e;\n}\n.chip-ok {\n  background: #dcfce7;\n  border-color: #86efac;\n  color: #166534;\n}\n.chip-unk {\n  background: #e5e7eb;\n  border-color: #cbd5e1;\n  color: #334155;\n}\n.tag {\n  font-size: 11px;\n  padding: 0.05rem 0.4rem;\n  border-radius: 6px;\n  border: 1px solid transparent;\n}\n.ai-btn {\n  font-weight: 600;\n}\n.sr-only {\n  position: absolute;\n  width: 1px;\n  height: 1px;\n  padding: 0;\n  margin: -1px;\n  overflow: hidden;\n  clip: rect(0, 0, 0, 0);\n  white-space: nowrap;\n  border: 0;\n}\n/*# sourceMappingURL=component-guidance.component.css.map */\n", "/* angular:styles/component:css;5c3a53843de4532a27b918fe7e333a6960eea73b66088ec078ac37f14456832f;C:/my-working-files/GitHub/design-assistant/src/app/views/page-assistant/components/problems/component-guidance/component-guidance.component.ts */\n.caption-actions {\n  display: flex;\n  justify-content: flex-end;\n  gap: 0.5rem;\n}\n/*# sourceMappingURL=component-guidance.component.css.map */\n", "/* angular:styles/component:css;633733ff03b29eec55a1c45c573da8c4cad67ebeed145ecb43f11bb648b6ef4c;C:/my-working-files/GitHub/design-assistant/src/app/views/page-assistant/components/problems/component-guidance/component-guidance.component.ts */\n:host ::ng-deep .alert-table .p-datatable-tbody > tr > td,\n:host ::ng-deep .alert-table .p-datatable-thead > tr > th {\n  white-space: normal !important;\n  word-break: normal;\n  overflow-wrap: normal;\n  vertical-align: top;\n}\n:host ::ng-deep .alert-table .wrap-col {\n  min-width: 180px;\n}\n:host ::ng-deep .alert-table .severity-col {\n  white-space: nowrap !important;\n}\n:host ::ng-deep .alert-table .include-col {\n  width: 140px;\n  text-align: center;\n}\n:host ::ng-deep .alert-table .include-col .p-checkbox {\n  display: inline-flex;\n}\n/*# sourceMappingURL=component-guidance.component.css.map */\n"] }]
+`, styles: ["/* angular:styles/component:css;cc56985159cb1143dead272ebe6adc2826b1aec78fdf06a302d62655c8c6becb;C:/my-working-files/GitHub/design-assistant/src/app/views/page-assistant/components/problems/component-guidance/component-guidance.component.ts */\n.muted {\n  color: #6b7280;\n  font-size: 12px;\n}\n.issues {\n  margin: 0;\n  padding-left: 1rem;\n}\n.health-cell {\n  //display: flex;\n  gap: 0.4rem;\n  align-items: center;\n  flex-wrap: wrap;\n}\n.chip {\n  display: inline-flex;\n  align-items: center;\n  gap: 0.4rem;\n  padding: 0.15rem 0.55rem;\n  border-radius: 9999px;\n  border: 1px solid transparent;\n  font-weight: 500;\n  line-height: 1.1;\n}\n.chip .pi {\n  color: inherit !important;\n}\n.chip-severe {\n  background: #fee2e2;\n  border-color: #fecaca;\n  color: #b91c1c;\n}\n.chip-minor {\n  background: #fef3c7;\n  border-color: #fde68a;\n  color: #92400e;\n}\n.chip-ok {\n  background: #dcfce7;\n  border-color: #86efac;\n  color: #166534;\n}\n.chip-unk {\n  background: #e5e7eb;\n  border-color: #cbd5e1;\n  color: #334155;\n}\n.chip-hghlght {\n  background: #e5e7eb;\n  border-color: #cbd5e1;\n  color: #334155;\n}\n.tag {\n  font-size: 11px;\n  padding: 0.05rem 0.4rem;\n  border-radius: 6px;\n  border: 1px solid transparent;\n}\n.ai-btn {\n  font-weight: 600;\n}\n.sr-only {\n  position: absolute;\n  width: 1px;\n  height: 1px;\n  padding: 0;\n  margin: -1px;\n  overflow: hidden;\n  clip: rect(0, 0, 0, 0);\n  white-space: nowrap;\n  border: 0;\n}\n/*# sourceMappingURL=component-guidance.component.css.map */\n", "/* angular:styles/component:css;5c3a53843de4532a27b918fe7e333a6960eea73b66088ec078ac37f14456832f;C:/my-working-files/GitHub/design-assistant/src/app/views/page-assistant/components/problems/component-guidance/component-guidance.component.ts */\n.caption-actions {\n  display: flex;\n  justify-content: flex-end;\n  gap: 0.5rem;\n}\n/*# sourceMappingURL=component-guidance.component.css.map */\n", "/* angular:styles/component:css;633733ff03b29eec55a1c45c573da8c4cad67ebeed145ecb43f11bb648b6ef4c;C:/my-working-files/GitHub/design-assistant/src/app/views/page-assistant/components/problems/component-guidance/component-guidance.component.ts */\n:host ::ng-deep .alert-table .p-datatable-tbody > tr > td,\n:host ::ng-deep .alert-table .p-datatable-thead > tr > th {\n  white-space: normal !important;\n  word-break: normal;\n  overflow-wrap: normal;\n  vertical-align: top;\n}\n:host ::ng-deep .alert-table .wrap-col {\n  min-width: 180px;\n}\n:host ::ng-deep .alert-table .severity-col {\n  white-space: nowrap !important;\n}\n:host ::ng-deep .alert-table .include-col {\n  width: 140px;\n  text-align: center;\n}\n:host ::ng-deep .alert-table .include-col .p-checkbox {\n  display: inline-flex;\n}\n/*# sourceMappingURL=component-guidance.component.css.map */\n"] }]
   }], null, null);
 })();
 (() => {
-  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(ComponentGuidanceComponent, { className: "ComponentGuidanceComponent", filePath: "src/app/views/page-assistant/components/problems/component-guidance/component-guidance.component.ts", lineNumber: 172 });
+  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(ComponentGuidanceComponent, { className: "ComponentGuidanceComponent", filePath: "src/app/views/page-assistant/components/problems/component-guidance/component-guidance.component.ts", lineNumber: 178 });
 })();
 
 // src/app/views/page-assistant/components/problems/seo.component.ts
@@ -32775,4 +32751,4 @@ ${base}`;
 export {
   PageAssistantCompareComponent
 };
-//# sourceMappingURL=chunk-MLAH7AXS.js.map
+//# sourceMappingURL=chunk-G6NO7JET.js.map
