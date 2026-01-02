@@ -38,6 +38,14 @@ interface GuidanceRow {
   __urlKey?: string;
 }
 
+interface AlertIssue {
+  category: string;
+  severity: string;
+  description: string;
+  recommendation: string;
+  include: boolean;
+}
+
 @Component({
   selector: 'ca-component-guidance',
   standalone: true,
@@ -149,6 +157,36 @@ export class ComponentGuidanceComponent implements OnInit {
 
   guidanceList: { name: string; url: string }[] = [];
   rows: GuidanceRow[] = [];
+  alertIssues: AlertIssue[] = [
+    {
+      category: 'Too wordy',
+      severity: 'Medium',
+      description: 'Alert contains 4 sentences; guidance recommends 1-2',
+      recommendation: "Rewrite to: 'Processing for the Disability tax credit...'.",
+      include: true,
+    },
+    {
+      category: 'Too many links',
+      severity: 'Low',
+      description: 'Alert contains references to multiple tools/links (Process...)',
+      recommendation: 'Limit to one primary link',
+      include: true,
+    },
+    {
+      category: 'Missing heading',
+      severity: 'High',
+      description: 'Alert lacs a descriptive heading, reducing accessibility...',
+      recommendation: "Add a heading like 'Processing update'.",
+      include: true,
+    },
+    {
+      category: 'Accessibility - Focus order',
+      severity: 'High',
+      description: 'Lack of heading prevents efficient screen reader navigation...',
+      recommendation: 'Implement semantic heading tag within the alert component...',
+      include: true,
+    },
+  ];
 
   // multi-select
   selectedRows: GuidanceRow[] = [];

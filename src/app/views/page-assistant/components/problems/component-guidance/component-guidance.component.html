@@ -52,7 +52,7 @@
       </th>
 
       <!-- Pain points (not sortable) -->
-      <th>Pain points</th>
+      <th>Pain point categories</th>
     </tr>
   </ng-template>
 
@@ -134,30 +134,25 @@
       <td colspan="6">
         <div class="p-3">
           @if (row.__nameKey === 'page.tools.guidance.craVariant.alerts.title') {
-            <p-table styleClass="p-datatable-sm">
+            <p-table [value]="alertIssues" styleClass="p-datatable-sm">
               <ng-template pTemplate="header">
                 <tr>
-                  <th>Alert Type</th>
-                  <th>Message</th>
-                  <th>Dismissible</th>
-                  <th>CTA Label</th>
-                  <th>CTA Target</th>
+                  <th>Pain point category</th>
+                  <th>Severity</th>
+                  <th>Description</th>
+                  <th>Recommendation</th>
+                  <th>Include in fix</th>
                 </tr>
               </ng-template>
-              <ng-template pTemplate="body">
+              <ng-template pTemplate="body" let-issue>
                 <tr>
-                  <td>Warning</td>
-                  <td>Use alerts to highlight key issues.</td>
-                  <td>Yes</td>
-                  <td>View details</td>
-                  <td>/alerts/example</td>
-                </tr>
-                <tr>
-                  <td>Success</td>
-                  <td>Show confirmation messages.</td>
-                  <td>No</td>
-                  <td>Return</td>
-                  <td>/alerts/return</td>
+                  <td>{{ issue.category }}</td>
+                  <td>{{ issue.severity }}</td>
+                  <td>{{ issue.description }}</td>
+                  <td>{{ issue.recommendation }}</td>
+                  <td style="text-align: center">
+                    <p-checkbox [binary]="true" [(ngModel)]="issue.include"></p-checkbox>
+                  </td>
                 </tr>
               </ng-template>
             </p-table>
