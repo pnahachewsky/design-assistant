@@ -149,7 +149,8 @@ interface AlertIssue {
       :host ::ng-deep .alert-table .p-datatable-tbody > tr > td,
       :host ::ng-deep .alert-table .p-datatable-thead > tr > th {
         white-space: normal !important;
-        word-break: break-word;
+        word-break: normal;
+        overflow-wrap: normal;
         vertical-align: top;
       }
       :host ::ng-deep .alert-table .wrap-col {
