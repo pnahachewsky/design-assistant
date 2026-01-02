@@ -120,6 +120,13 @@ interface AlertIssue {
         border-color: #cbd5e1;
         color: #334155;
       }
+      .chip-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.25rem;
+        padding: 0;
+        margin: 0;
+      }
 
       .tag {
         font-size: 11px;
