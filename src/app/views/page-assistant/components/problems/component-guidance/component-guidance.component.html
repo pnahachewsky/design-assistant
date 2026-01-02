@@ -116,15 +116,22 @@
 
       <!-- Pain points -->
       <td>
-        <div *ngIf="(row.issues?.length || 0) > 0; else rationaleOnly">
+        @if (row.__nameKey === alertsNameKey) {
           <ul class="issues">
-            <li *ngFor="let it of row.issues">{{ it }}</li>
+            <li *ngFor="let cat of alertPainPointCategories">{{ cat }}</li>
           </ul>
-          <div class="muted" *ngIf="row.rationale">{{ row.rationale }}</div>
-        </div>
-        <ng-template #rationaleOnly>
-          <span>{{ row.rationale || '?' }}</span>
-        </ng-template>
+        } @else {
+          @if ((row.issues?.length || 0) > 0) {
+            <ul class="issues">
+              <li *ngFor="let it of row.issues">{{ it }}</li>
+            </ul>
+            @if (row.rationale) {
+              <div class="muted">{{ row.rationale }}</div>
+            }
+          } @else {
+            <span>{{ row.rationale || '?' }}</span>
+          }
+        }
       </td>
     </tr>
   </ng-template>

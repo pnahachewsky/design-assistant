@@ -222,6 +222,7 @@ export class ComponentGuidanceComponent implements OnInit {
   isLoading = false;
   // controlled expansion keys for PrimeNG table
   expandedRows: Record<string, boolean> = {};
+  readonly alertsNameKey = 'page.tools.guidance.craVariant.alerts.title';
 
   cols = [
     { field: 'order', header: 'Index' },
@@ -442,5 +443,13 @@ export class ComponentGuidanceComponent implements OnInit {
   private sortAlertIssues(): void {
     const rank = this.ALERT_SEVERITY_RANK;
     this.alertIssues.sort((a, b) => (rank[b.severity.toLowerCase()] ?? 0) - (rank[a.severity.toLowerCase()] ?? 0));
+  }
+
+  get alertPainPointCategories(): string[] {
+    const unique = new Set<string>();
+    for (const issue of this.alertIssues) {
+      if (issue.category) unique.add(issue.category);
+    }
+    return [...unique];
   }
 }
