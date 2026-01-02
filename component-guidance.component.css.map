@@ -1,7 +1,7 @@
 {
   "version": 3,
-  "sources": ["angular:styles/component:css;27e52daf331cf3c78e89d4728405c353117f38babc7034d4029c8fa1339004b0;C:/my-working-files/GitHub/design-assistant/src/app/views/page-assistant/components/problems/component-guidance/component-guidance.component.ts"],
-  "sourcesContent": ["\n      /* Alerts sub-table tweaks */\n      .alert-table .p-datatable-tbody > tr > td,\n      .alert-table .p-datatable-thead > tr > th {\n        white-space: normal;\n        vertical-align: top;\n      }\n      .alert-table .wrap-col {\n        min-width: 180px;\n      }\n      .alert-table .include-col {\n        width: 140px;\n        text-align: center;\n      }\n    "],
-  "mappings": ";AAEM,CAAC,YAAY,CAAC,kBAAkB,EAAE,GAAG,EAAE;AACvC,CADC,YACY,CAAC,kBAAkB,EAAE,GAAG,EAAE;AACrC,eAAa;AACb,kBAAgB;AAClB;AACA,CALC,YAKY,CAAC;AACZ,aAAW;AACb;AACA,CARC,YAQY,CAAC;AACZ,SAAO;AACP,cAAY;AACd;",
+  "sources": ["angular:styles/component:css;5c3a53843de4532a27b918fe7e333a6960eea73b66088ec078ac37f14456832f;C:/my-working-files/GitHub/design-assistant/src/app/views/page-assistant/components/problems/component-guidance/component-guidance.component.ts"],
+  "sourcesContent": ["\n      .caption-actions {\n        display: flex;\n        justify-content: flex-end;\n        gap: 0.5rem;\n      }\n    "],
+  "mappings": ";AACM,CAAC;AACC,WAAS;AACT,mBAAiB;AACjB,OAAK;AACP;",
   "names": []
 }
