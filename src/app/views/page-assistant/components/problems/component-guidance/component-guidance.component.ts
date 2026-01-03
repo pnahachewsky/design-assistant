@@ -263,6 +263,7 @@ export class ComponentGuidanceComponent implements OnInit {
     if (data?.originalHtml) {
       this.guidanceList = this.validator.collectGuidanceUrls(data.originalHtml);
       this.rows = this.buildRows(this.guidanceList);
+      this.ensureAlertRowSelection();
     }
   }
 
@@ -468,6 +469,19 @@ export class ComponentGuidanceComponent implements OnInit {
 
   private setAlertIncludes(flag: boolean): void {
     this.alertIssues = this.alertIssues.map((issue) => ({ ...issue, include: flag }));
+  }
+
+  private ensureAlertRowSelection(): void {
+    const alertRow = this.rows.find((r) => r.__nameKey === this.alertsNameKey);
+    if (!alertRow) return;
+    const hasIssues = this.alertIssues.length > 0;
+    const selected = this.selectedRows.some((r) => r.url === alertRow.url);
+    if (hasIssues && !selected) {
+      this.selectedRows = [...this.selectedRows, alertRow];
+      this.setAlertIncludes(true);
+    } else if (!hasIssues && selected) {
+      this.selectedRows = this.selectedRows.filter((r) => r.url !== alertRow.url);
+    }
   }
 
   private sortAlertIssues(): void {
