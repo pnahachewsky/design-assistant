@@ -47,34 +47,20 @@ export const DEFAULT_ALERT_ISSUES: AlertIssue[] = [
     recommendation: 'Implement semantic heading tag within the alert component...',
     include: true,
   },
-    {
-    category: 'Too wordy',
-    severity: 'low',
-    description: 'Alert contains 4 sentences; guidance recommends 1-2',
-    recommendation: "Rewrite to: 'Processing for the Disability tax credit...'.",
-    include: true,
-  },
   {
-    category: 'Too many links',
+    category: 'testing 123 testing 123testing 123',
     severity: 'Low',
-    description: 'Alert contains references to multiple tools/links (Process...)',
-    recommendation: 'Limit to one primary link',
-    include: true,
-  },
-  {
-    category: 'Missing heading',
-    severity: 'High',
-    description: 'Alert lacs a descriptive heading, reducing accessibility...',
-    recommendation: "Add a heading like 'Processing update'.",
-    include: true,
-  },
-  {
-    category: 'Accessibility - Focus order',
-    severity: 'low',
     description: 'Lack of heading prevents efficient screen reader navigation...',
     recommendation: 'Implement semantic heading tag within the alert component...',
     include: true,
-  }
+  },
+  {
+    category: 'testing 456 testing 456testing 456',
+    severity: 'Medium',
+    description: 'Lack of heading prevents efficient screen reader navigation...',
+    recommendation: 'Implement semantic heading tag within the alert component...',
+    include: true,
+  },
 ];
 
 export function computeAlertCategories(
