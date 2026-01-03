@@ -49,7 +49,7 @@ export const DEFAULT_ALERT_ISSUES: AlertIssue[] = [
   },
     {
     category: 'Too wordy',
-    severity: 'Medium',
+    severity: 'low',
     description: 'Alert contains 4 sentences; guidance recommends 1-2',
     recommendation: "Rewrite to: 'Processing for the Disability tax credit...'.",
     include: true,
@@ -70,7 +70,7 @@ export const DEFAULT_ALERT_ISSUES: AlertIssue[] = [
   },
   {
     category: 'Accessibility - Focus order',
-    severity: 'High',
+    severity: 'low',
     description: 'Lack of heading prevents efficient screen reader navigation...',
     recommendation: 'Implement semantic heading tag within the alert component...',
     include: true,
@@ -93,14 +93,7 @@ export function computeAlertCategories(
       bestSeverity.set(cat, next);
     }
   }
-  return Array.from(bestSeverity.entries())
-    .map(([label, severity]) => ({ label, severity }))
-    .sort((a, b) => {
-      const ra = rank[a.severity.toLowerCase()] ?? -1;
-      const rb = rank[b.severity.toLowerCase()] ?? -1;
-      if (ra !== rb) return rb - ra;
-      return a.label.localeCompare(b.label, undefined, { sensitivity: 'base' });
-    });
+  return Array.from(bestSeverity.entries()).map(([label, severity]) => ({ label, severity }));
 }
 
 export function computeAlertMaxSeverity(
@@ -136,7 +129,6 @@ export class AlertsGuidanceComponent implements OnInit, OnChanges {
   issues: AlertIssue[] = DEFAULT_ALERT_ISSUES.map((i) => ({ ...i }));
 
   ngOnInit(): void {
-    this.sortIssues();
     this.applySelectAll(this.selectAll);
     this.emitDerived();
   }
@@ -154,15 +146,6 @@ export class AlertsGuidanceComponent implements OnInit, OnChanges {
 
   private applySelectAll(flag: boolean): void {
     this.issues = this.issues.map((issue) => ({ ...issue, include: flag }));
-  }
-
-  private sortIssues(): void {
-    this.issues = [...this.issues].sort((a, b) => {
-      const ra = ALERT_SEVERITY_RANK[a.severity.toLowerCase()] ?? -1;
-      const rb = ALERT_SEVERITY_RANK[b.severity.toLowerCase()] ?? -1;
-      if (ra !== rb) return rb - ra;
-      return a.category.localeCompare(b.category, undefined, { sensitivity: 'base' });
-    });
   }
 
   private emitDerived(): void {
