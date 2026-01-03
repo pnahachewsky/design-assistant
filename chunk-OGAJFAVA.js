@@ -24607,29 +24607,15 @@ var DEFAULT_ALERT_ISSUES = [
     include: true
   },
   {
-    category: "Too wordy",
-    severity: "low",
-    description: "Alert contains 4 sentences; guidance recommends 1-2",
-    recommendation: "Rewrite to: 'Processing for the Disability tax credit...'.",
-    include: true
-  },
-  {
-    category: "Too many links",
+    category: "testing 123 testing 123testing 123",
     severity: "Low",
-    description: "Alert contains references to multiple tools/links (Process...)",
-    recommendation: "Limit to one primary link",
+    description: "Lack of heading prevents efficient screen reader navigation...",
+    recommendation: "Implement semantic heading tag within the alert component...",
     include: true
   },
   {
-    category: "Missing heading",
-    severity: "High",
-    description: "Alert lacs a descriptive heading, reducing accessibility...",
-    recommendation: "Add a heading like 'Processing update'.",
-    include: true
-  },
-  {
-    category: "Accessibility - Focus order",
-    severity: "low",
+    category: "testing 456 testing 456testing 456",
+    severity: "Medium",
     description: "Lack of heading prevents efficient screen reader navigation...",
     recommendation: "Implement semantic heading tag within the alert component...",
     include: true
@@ -24728,7 +24714,7 @@ var AlertsGuidanceComponent = class _AlertsGuidanceComponent {
   }] });
 })();
 (() => {
-  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(AlertsGuidanceComponent, { className: "AlertsGuidanceComponent", filePath: "src/app/views/page-assistant/components/problems/component-guidance/alerts-guidance/alerts-guidance.component.ts", lineNumber: 124 });
+  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(AlertsGuidanceComponent, { className: "AlertsGuidanceComponent", filePath: "src/app/views/page-assistant/components/problems/component-guidance/alerts-guidance/alerts-guidance.component.ts", lineNumber: 110 });
 })();
 
 // src/app/views/page-assistant/data/css-list.config.ts
@@ -33034,4 +33020,4 @@ ${base}`;
 export {
   PageAssistantCompareComponent
 };
-//# sourceMappingURL=chunk-674UKKXH.js.map
+//# sourceMappingURL=chunk-OGAJFAVA.js.map
