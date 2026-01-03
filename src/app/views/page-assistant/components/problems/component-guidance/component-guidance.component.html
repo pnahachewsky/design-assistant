@@ -152,26 +152,26 @@
             <p-table [value]="alertIssues" styleClass="p-datatable-sm alert-table expansion-table">
               <ng-template pTemplate="header">
                 <tr>
+                  <th class="include-col">Include in fix</th>
+                  <th class="severity-col">Severity</th>
                   <th>Pain point category</th>
                   <th class="wrap-col">Description</th>
                   <th class="wrap-col">Recommendation</th>
-                  <th class="severity-col">Severity</th>
-                  <th class="include-col">Include in fix</th>
                 </tr>
               </ng-template>
               <ng-template pTemplate="body" let-issue>
                 <tr>
-                  <td>{{ issue.category }}</td>
-                  <td class="wrap-col">{{ issue.description }}</td>
-                  <td class="wrap-col">{{ issue.recommendation }}</td>
+                  <td class="include-col">
+                    <p-checkbox [binary]="true" [(ngModel)]="issue.include"></p-checkbox>
+                  </td>
                   <td class="severity-col">
                     <span class="chip" [ngClass]="severityChip(issue.severity)">
                       {{ issue.severity }}
                     </span>
                   </td>
-                  <td class="include-col">
-                    <p-checkbox [binary]="true" [(ngModel)]="issue.include"></p-checkbox>
-                  </td>
+                  <td>{{ issue.category }}</td>
+                  <td class="wrap-col">{{ issue.description }}</td>
+                  <td class="wrap-col">{{ issue.recommendation }}</td>
                 </tr>
               </ng-template>
             </p-table>

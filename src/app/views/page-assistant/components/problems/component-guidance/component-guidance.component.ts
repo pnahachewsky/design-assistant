@@ -104,6 +104,11 @@ interface AlertIssue {
         border-color: #fde68a;
         color: #92400e;
       }
+      .chip-med {
+        background: #fde7c3;
+        border-color: #f9d29b;
+        color: #9a4a00;
+      }
       .chip-ok {
         background: #dcfce7;
         border-color: #86efac;
@@ -494,7 +499,8 @@ export class ComponentGuidanceComponent implements OnInit {
   severityChip(severity: string | undefined | null): string {
     const s = (severity || '').toLowerCase();
     if (s === 'low') return 'chip-minor';
-    if (s === 'medium' || s === 'high') return 'chip-severe';
+    if (s === 'medium') return 'chip-med';
+    if (s === 'high') return 'chip-severe';
     return 'chip-unk';
   }
 }
