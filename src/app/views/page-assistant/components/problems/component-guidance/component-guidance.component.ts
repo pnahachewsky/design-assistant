@@ -82,6 +82,11 @@ interface GuidanceRow {
         padding: 0;
         margin: 0;
       }
+      .chip-list .chip {
+        white-space: normal;
+        word-break: break-word;
+        max-width: 100%;
+      }
       /* Expansion tables */
       :host ::ng-deep .expansion-table .p-datatable-table {
         border: 1px solid #d1d5db;
