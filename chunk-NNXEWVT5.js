@@ -25627,6 +25627,7 @@ var ComponentGuidanceComponent = class _ComponentGuidanceComponent {
     if (data?.originalHtml) {
       this.guidanceList = this.validator.collectGuidanceUrls(data.originalHtml);
       this.rows = this.buildRows(this.guidanceList);
+      this.ensureAlertRowSelection();
     }
   }
   /** Build sorted, de-duped table rows from validator findings. */
@@ -25797,6 +25798,19 @@ var ComponentGuidanceComponent = class _ComponentGuidanceComponent {
   }
   setAlertIncludes(flag) {
     this.alertIssues = this.alertIssues.map((issue) => __spreadProps(__spreadValues({}, issue), { include: flag }));
+  }
+  ensureAlertRowSelection() {
+    const alertRow = this.rows.find((r) => r.__nameKey === this.alertsNameKey);
+    if (!alertRow)
+      return;
+    const hasIssues = this.alertIssues.length > 0;
+    const selected = this.selectedRows.some((r) => r.url === alertRow.url);
+    if (hasIssues && !selected) {
+      this.selectedRows = [...this.selectedRows, alertRow];
+      this.setAlertIncludes(true);
+    } else if (!hasIssues && selected) {
+      this.selectedRows = this.selectedRows.filter((r) => r.url !== alertRow.url);
+    }
   }
   sortAlertIssues() {
     const rank = this.ALERT_SEVERITY_RANK;
@@ -32909,4 +32923,4 @@ ${base}`;
 export {
   PageAssistantCompareComponent
 };
-//# sourceMappingURL=chunk-TR3TE7NM.js.map
+//# sourceMappingURL=chunk-NNXEWVT5.js.map

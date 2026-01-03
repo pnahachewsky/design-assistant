@@ -1,7 +1,7 @@
 {
   "version": 3,
-  "sources": ["angular:styles/component:css;633733ff03b29eec55a1c45c573da8c4cad67ebeed145ecb43f11bb648b6ef4c;C:/my-working-files/GitHub/design-assistant/src/app/views/page-assistant/components/problems/component-guidance/component-guidance.component.ts"],
-  "sourcesContent": ["\n      /* Alerts sub-table tweaks */\n      :host ::ng-deep .alert-table .p-datatable-tbody > tr > td,\n      :host ::ng-deep .alert-table .p-datatable-thead > tr > th {\n        white-space: normal !important;\n        word-break: normal;\n        overflow-wrap: normal;\n        vertical-align: top;\n      }\n      :host ::ng-deep .alert-table .wrap-col {\n        min-width: 180px;\n      }\n      :host ::ng-deep .alert-table .severity-col {\n        white-space: nowrap !important;\n      }\n      :host ::ng-deep .alert-table .include-col {\n        width: 140px;\n        text-align: center;\n      }\n      :host ::ng-deep .alert-table .include-col .p-checkbox {\n        display: inline-flex;\n      }\n    "],
-  "mappings": ";AAEM,MAAM,UAAU,CAAC,YAAY,CAAC,kBAAkB,EAAE,GAAG,EAAE;AACvD,MAAM,UAAU,CADC,YACY,CAAC,kBAAkB,EAAE,GAAG,EAAE;AACrD,eAAa;AACb,cAAY;AACZ,iBAAe;AACf,kBAAgB;AAClB;AACA,MAAM,UAAU,CAPC,YAOY,CAAC;AAC5B,aAAW;AACb;AACA,MAAM,UAAU,CAVC,YAUY,CAAC;AAC5B,eAAa;AACf;AACA,MAAM,UAAU,CAbC,YAaY,CAAC;AAC5B,SAAO;AACP,cAAY;AACd;AACA,MAAM,UAAU,CAjBC,YAiBY,CAJC,YAIY,CAAC;AACzC,WAAS;AACX;",
+  "sources": ["angular:styles/component:css;5c3a53843de4532a27b918fe7e333a6960eea73b66088ec078ac37f14456832f;C:/my-working-files/GitHub/design-assistant/src/app/views/page-assistant/components/problems/component-guidance/component-guidance.component.ts"],
+  "sourcesContent": ["\n      .caption-actions {\n        display: flex;\n        justify-content: flex-end;\n        gap: 0.5rem;\n      }\n    "],
+  "mappings": ";AACM,CAAC;AACC,WAAS;AACT,mBAAiB;AACjB,OAAK;AACP;",
   "names": []
 }
