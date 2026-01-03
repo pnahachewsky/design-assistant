@@ -25717,6 +25717,7 @@ var ComponentGuidanceComponent = class _ComponentGuidanceComponent {
   alertMaxSeverity = computeAlertMaxSeverity(DEFAULT_ALERT_ISSUES);
   alertSelectAll = true;
   alertHasIssues = DEFAULT_ALERT_ISSUES.length > 0;
+  prevAlertHasIssues = false;
   // multi-select
   selectedRows = [];
   isLoading = false;
@@ -25742,7 +25743,7 @@ var ComponentGuidanceComponent = class _ComponentGuidanceComponent {
     if (data?.originalHtml) {
       this.guidanceList = this.validator.collectGuidanceUrls(data.originalHtml);
       this.rows = this.buildRows(this.guidanceList);
-      this.ensureAlertRowSelection();
+      this.syncAlertRowSelection(true);
     }
   }
   /** Build sorted, de-duped table rows from validator findings. */
@@ -25912,25 +25913,32 @@ var ComponentGuidanceComponent = class _ComponentGuidanceComponent {
     this.alertSelectAll = alertSelected;
   }
   ensureAlertRowSelection() {
-    const alertRow = this.rows.find((r) => r.__nameKey === this.alertsNameKey);
-    if (!alertRow)
-      return;
-    const hasIssues = this.alertHasIssues;
-    const selected = this.selectedRows.some((r) => r.url === alertRow.url);
-    if (hasIssues && !selected) {
-      this.selectedRows = [...this.selectedRows, alertRow];
-      this.alertSelectAll = true;
-    } else if (!hasIssues && selected) {
-      this.selectedRows = this.selectedRows.filter((r) => r.url !== alertRow.url);
-    }
+    this.syncAlertRowSelection();
   }
   onAlertCategoriesChange(cats) {
     this.alertCategories = cats ?? [];
     this.alertHasIssues = this.alertCategories.length > 0;
-    this.ensureAlertRowSelection();
+    this.syncAlertRowSelection();
+    this.prevAlertHasIssues = this.alertHasIssues;
   }
   onAlertMaxSeverityChange(sev) {
     this.alertMaxSeverity = sev;
+  }
+  syncAlertRowSelection(force = false) {
+    const alertRow = this.rows.find((r) => r.__nameKey === this.alertsNameKey);
+    if (!alertRow)
+      return;
+    const selected = this.selectedRows.some((r) => r.url === alertRow.url);
+    if (!this.alertHasIssues) {
+      if (selected) {
+        this.selectedRows = this.selectedRows.filter((r) => r.url !== alertRow.url);
+      }
+      return;
+    }
+    if ((force || !this.prevAlertHasIssues && this.alertHasIssues) && !selected) {
+      this.selectedRows = [...this.selectedRows, alertRow];
+      this.alertSelectAll = true;
+    }
   }
   severityChip(severity) {
     const s = (severity || "").toLowerCase();
@@ -32998,4 +33006,4 @@ ${base}`;
 export {
   PageAssistantCompareComponent
 };
-//# sourceMappingURL=chunk-UZCAB2KI.js.map
+//# sourceMappingURL=chunk-VSUTPUSK.js.map
