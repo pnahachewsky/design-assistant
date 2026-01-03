@@ -5,6 +5,7 @@
   styleClass="p-datatable-sm"
   [(selection)]="selectedRows"
   selectionMode="multiple"
+  (selectionChange)="onSelectionChange($event)"
   [customSort]="true"
   (sortFunction)="onCustomSort($event)"
   [resizableColumns]="true"

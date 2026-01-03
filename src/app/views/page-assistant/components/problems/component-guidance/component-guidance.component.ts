@@ -457,6 +457,19 @@ export class ComponentGuidanceComponent implements OnInit {
     this.expandedRows = {};
   }
 
+  onSelectionChange(selection: GuidanceRow[]): void {
+    this.selectedRows = selection;
+    const alertRow = this.rows.find((r) => r.__nameKey === this.alertsNameKey);
+    if (!alertRow) return;
+    const selectedUrls = new Set(this.selectedRows.map((r) => r.url));
+    const alertSelected = selectedUrls.has(alertRow.url);
+    this.setAlertIncludes(alertSelected);
+  }
+
+  private setAlertIncludes(flag: boolean): void {
+    this.alertIssues = this.alertIssues.map((issue) => ({ ...issue, include: flag }));
+  }
+
   private sortAlertIssues(): void {
     const rank = this.ALERT_SEVERITY_RANK;
     this.alertIssues.sort((a, b) => (rank[b.severity.toLowerCase()] ?? 0) - (rank[a.severity.toLowerCase()] ?? 0));
