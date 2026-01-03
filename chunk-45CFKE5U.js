@@ -24658,6 +24658,7 @@ var AlertsGuidanceComponent = class _AlertsGuidanceComponent {
   categoriesChange = new EventEmitter();
   issues = DEFAULT_ALERT_ISSUES.map((i) => __spreadValues({}, i));
   ngOnInit() {
+    this.sortIssues();
     this.applySelectAll(this.selectAll);
     this.emitDerived();
   }
@@ -24668,10 +24669,21 @@ var AlertsGuidanceComponent = class _AlertsGuidanceComponent {
     }
   }
   onIncludeToggle() {
+    this.sortIssues();
     this.emitDerived();
   }
   applySelectAll(flag) {
     this.issues = this.issues.map((issue) => __spreadProps(__spreadValues({}, issue), { include: flag }));
+    this.sortIssues();
+  }
+  sortIssues() {
+    this.issues = [...this.issues].sort((a, b) => {
+      const ra = ALERT_SEVERITY_RANK[a.severity.toLowerCase()] ?? -1;
+      const rb = ALERT_SEVERITY_RANK[b.severity.toLowerCase()] ?? -1;
+      if (ra !== rb)
+        return rb - ra;
+      return a.category.localeCompare(b.category, void 0, { sensitivity: "base" });
+    });
   }
   emitDerived() {
     this.maxSeverityChange.emit(computeAlertMaxSeverity(this.issues));
@@ -33020,4 +33032,4 @@ ${base}`;
 export {
   PageAssistantCompareComponent
 };
-//# sourceMappingURL=chunk-OGAJFAVA.js.map
+//# sourceMappingURL=chunk-45CFKE5U.js.map
