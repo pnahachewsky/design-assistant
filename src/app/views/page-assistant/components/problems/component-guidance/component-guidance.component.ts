@@ -471,6 +471,26 @@ export class ComponentGuidanceComponent implements OnInit {
     return [...unique];
   }
 
+  get alertCategoryChips(): { label: string; severity: string }[] {
+    const rank = this.ALERT_SEVERITY_RANK;
+    const bestSeverity = new Map<string, string>();
+    for (const issue of this.alertIssues) {
+      const cat = issue.category;
+      if (!cat) continue;
+      const current = bestSeverity.get(cat);
+      const next = issue.severity ?? '';
+      const currentRank = current ? rank[current.toLowerCase()] ?? 0 : -1;
+      const nextRank = rank[next.toLowerCase()] ?? 0;
+      if (nextRank >= currentRank) {
+        bestSeverity.set(cat, next);
+      }
+    }
+    return Array.from(bestSeverity.entries()).map(([label, severity]) => ({
+      label,
+      severity,
+    }));
+  }
+
   severityChip(severity: string | undefined | null): string {
     const s = (severity || '').toLowerCase();
     if (s === 'low') return 'chip-minor';

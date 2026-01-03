@@ -118,8 +118,12 @@
       <td>
         @if (row.__nameKey === alertsNameKey) {
           <div class="chip-list">
-            <span class="chip chip-hghlght" *ngFor="let cat of alertPainPointCategories">
-              {{ cat }}
+            <span
+              class="chip"
+              *ngFor="let chip of alertCategoryChips"
+              [ngClass]="severityChip(chip.severity)"
+            >
+              {{ chip.label }}
             </span>
           </div>
         } @else {
