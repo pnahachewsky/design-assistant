@@ -89,29 +89,41 @@
 
       <!-- Health -->
       <td class="health-cell health-col">
-        <span
-          class="chip"
-          [ngClass]="{
-            'chip-severe': row.health === 'severe',
-            'chip-minor': row.health === 'minor',
-            'chip-ok': row.health === 'ok',
-            'chip-unk': !row.health || row.health === 'unknown',
-          }"
-        >
-          <i
-            class="pi"
+        @if (row.__nameKey === alertsNameKey) {
+          @if (alertMaxSeverity) {
+            <span class="chip" [ngClass]="severityChip(alertMaxSeverity)">
+              {{ alertMaxSeverity | titlecase }}
+            </span>
+          } @else {
+            <span class="chip chip-ok">
+              OK
+            </span>
+          }
+        } @else {
+          <span
+            class="chip"
             [ngClass]="{
-              'pi-exclamation-triangle': row.health === 'severe',
-              'pi-times-circle': row.health === 'minor',
-              'pi-check-circle': row.health === 'ok',
-              'pi-question-circle': !row.health || row.health === 'unknown',
+              'chip-severe': row.health === 'severe',
+              'chip-minor': row.health === 'minor',
+              'chip-ok': row.health === 'ok',
+              'chip-unk': !row.health || row.health === 'unknown',
             }"
-            aria-hidden="true"
-          ></i>
-          <span class="chip-label">
-            {{ healthLabel(row.health) }}
+          >
+            <i
+              class="pi"
+              [ngClass]="{
+                'pi-exclamation-triangle': row.health === 'severe',
+                'pi-times-circle': row.health === 'minor',
+                'pi-check-circle': row.health === 'ok',
+                'pi-question-circle': !row.health || row.health === 'unknown',
+              }"
+              aria-hidden="true"
+            ></i>
+            <span class="chip-label">
+              {{ healthLabel(row.health) }}
+            </span>
           </span>
-        </span>
+        }
       </td>
 
       <!-- Pain points -->

@@ -119,12 +119,6 @@ interface AlertIssue {
         border-color: #cbd5e1;
         color: #334155;
       }
-      /* Highlight variant (currently same as unknown) */
-      .chip-hghlght {
-        background: #e5e7eb;
-        border-color: #cbd5e1;
-        color: #334155;
-      }
       .chip-list {
         display: flex;
         flex-wrap: wrap;
@@ -494,6 +488,22 @@ export class ComponentGuidanceComponent implements OnInit {
       label,
       severity,
     }));
+  }
+
+  get alertMaxSeverity(): string | null {
+    if (!this.alertIssues.length) return null;
+    const rank = this.ALERT_SEVERITY_RANK;
+    let max: string | null = null;
+    let maxRank = -1;
+    for (const issue of this.alertIssues) {
+      const sev = (issue.severity || '').toLowerCase();
+      const r = rank[sev] ?? -1;
+      if (r > maxRank) {
+        maxRank = r;
+        max = issue.severity;
+      }
+    }
+    return max;
   }
 
   severityChip(severity: string | undefined | null): string {
