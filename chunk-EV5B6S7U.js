@@ -24578,48 +24578,34 @@ var ALERT_SEVERITY_RANK = {
   low: 1
 };
 var DEFAULT_ALERT_ISSUES = [
-  {
-    category: "Too wordy",
-    severity: "Medium",
-    description: "Alert contains 4 sentences; guidance recommends 1-2",
+  /*{
+    category: 'Too wordy',
+    severity: 'Medium',
+    description: 'Alert contains 4 sentences; guidance recommends 1-2',
     recommendation: "Rewrite to: 'Processing for the Disability tax credit...'.",
-    include: true
+    include: true,
   },
   {
-    category: "Too many links",
-    severity: "Low",
-    description: "Alert contains references to multiple tools/links (Process...)",
-    recommendation: "Limit to one primary link",
-    include: true
+    category: 'Too many links',
+    severity: 'Low',
+    description: 'Alert contains references to multiple tools/links (Process...)',
+    recommendation: 'Limit to one primary link',
+    include: true,
   },
   {
-    category: "Missing heading",
-    severity: "High",
-    description: "Alert lacs a descriptive heading, reducing accessibility...",
+    category: 'Missing heading',
+    severity: 'High',
+    description: 'Alert lacs a descriptive heading, reducing accessibility...',
     recommendation: "Add a heading like 'Processing update'.",
-    include: true
+    include: true,
   },
   {
-    category: "Accessibility - Focus order",
-    severity: "High",
-    description: "Lack of heading prevents efficient screen reader navigation...",
-    recommendation: "Implement semantic heading tag within the alert component...",
-    include: true
-  },
-  {
-    category: "testing 123 testing 123testing 123",
-    severity: "Low",
-    description: "Lack of heading prevents efficient screen reader navigation...",
-    recommendation: "Implement semantic heading tag within the alert component...",
-    include: true
-  },
-  {
-    category: "testing 456 testing 456testing 456",
-    severity: "Medium",
-    description: "Lack of heading prevents efficient screen reader navigation...",
-    recommendation: "Implement semantic heading tag within the alert component...",
-    include: true
-  }
+    category: 'Accessibility - Focus order',
+    severity: 'High',
+    description: 'Lack of heading prevents efficient screen reader navigation...',
+    recommendation: 'Implement semantic heading tag within the alert component...',
+    include: true,
+  },*/
 ];
 function computeAlertCategories(issues, rank = ALERT_SEVERITY_RANK) {
   const bestSeverity = /* @__PURE__ */ new Map();
@@ -24726,7 +24712,7 @@ var AlertsGuidanceComponent = class _AlertsGuidanceComponent {
   }] });
 })();
 (() => {
-  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(AlertsGuidanceComponent, { className: "AlertsGuidanceComponent", filePath: "src/app/views/page-assistant/components/problems/component-guidance/alerts-guidance/alerts-guidance.component.ts", lineNumber: 110 });
+  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(AlertsGuidanceComponent, { className: "AlertsGuidanceComponent", filePath: "src/app/views/page-assistant/components/problems/component-guidance/alerts-guidance/alerts-guidance.component.ts", lineNumber: 96 });
 })();
 
 // src/app/views/page-assistant/data/css-list.config.ts
@@ -33032,4 +33018,4 @@ ${base}`;
 export {
   PageAssistantCompareComponent
 };
-//# sourceMappingURL=chunk-ZAUM4RVS.js.map
+//# sourceMappingURL=chunk-EV5B6S7U.js.map
