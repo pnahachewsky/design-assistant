@@ -25786,6 +25786,18 @@ var ComponentGuidanceComponent = class _ComponentGuidanceComponent {
   collapseAll() {
     this.expandedRows = {};
   }
+  onSelectionChange(selection) {
+    this.selectedRows = selection;
+    const alertRow = this.rows.find((r) => r.__nameKey === this.alertsNameKey);
+    if (!alertRow)
+      return;
+    const selectedUrls = new Set(this.selectedRows.map((r) => r.url));
+    const alertSelected = selectedUrls.has(alertRow.url);
+    this.setAlertIncludes(alertSelected);
+  }
+  setAlertIncludes(flag) {
+    this.alertIssues = this.alertIssues.map((issue) => __spreadProps(__spreadValues({}, issue), { include: flag }));
+  }
   sortAlertIssues() {
     const rank = this.ALERT_SEVERITY_RANK;
     this.alertIssues.sort((a, b) => (rank[b.severity.toLowerCase()] ?? 0) - (rank[a.severity.toLowerCase()] ?? 0));
@@ -25856,7 +25868,10 @@ var ComponentGuidanceComponent = class _ComponentGuidanceComponent {
         \u0275\u0275twoWayBindingSet(ctx.selectedRows, $event) || (ctx.selectedRows = $event);
         return \u0275\u0275resetView($event);
       });
-      \u0275\u0275listener("sortFunction", function ComponentGuidanceComponent_Template_p_table_sortFunction_0_listener($event) {
+      \u0275\u0275listener("selectionChange", function ComponentGuidanceComponent_Template_p_table_selectionChange_0_listener($event) {
+        \u0275\u0275restoreView(_r1);
+        return \u0275\u0275resetView(ctx.onSelectionChange($event));
+      })("sortFunction", function ComponentGuidanceComponent_Template_p_table_sortFunction_0_listener($event) {
         \u0275\u0275restoreView(_r1);
         return \u0275\u0275resetView(ctx.onCustomSort($event));
       })("onRowExpand", function ComponentGuidanceComponent_Template_p_table_onRowExpand_0_listener($event) {
@@ -25904,6 +25919,7 @@ var ComponentGuidanceComponent = class _ComponentGuidanceComponent {
   styleClass="p-datatable-sm"
   [(selection)]="selectedRows"
   selectionMode="multiple"
+  (selectionChange)="onSelectionChange($event)"
   [customSort]="true"
   (sortFunction)="onCustomSort($event)"
   [resizableColumns]="true"
@@ -32893,4 +32909,4 @@ ${base}`;
 export {
   PageAssistantCompareComponent
 };
-//# sourceMappingURL=chunk-ALDWG43K.js.map
+//# sourceMappingURL=chunk-TR3TE7NM.js.map
