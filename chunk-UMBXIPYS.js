@@ -25421,11 +25421,11 @@ function ComponentGuidanceComponent_ng_template_5_Conditional_3_ng_template_2_Te
     \u0275\u0275elementStart(5, "td", 34);
     \u0275\u0275text(6);
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(7, "td", 35);
-    \u0275\u0275text(8);
-    \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(9, "td", 36)(10, "p-checkbox", 37);
-    \u0275\u0275twoWayListener("ngModelChange", function ComponentGuidanceComponent_ng_template_5_Conditional_3_ng_template_2_Template_p_checkbox_ngModelChange_10_listener($event) {
+    \u0275\u0275elementStart(7, "td", 35)(8, "span", 24);
+    \u0275\u0275text(9);
+    \u0275\u0275elementEnd()();
+    \u0275\u0275elementStart(10, "td", 36)(11, "p-checkbox", 37);
+    \u0275\u0275twoWayListener("ngModelChange", function ComponentGuidanceComponent_ng_template_5_Conditional_3_ng_template_2_Template_p_checkbox_ngModelChange_11_listener($event) {
       const issue_r9 = \u0275\u0275restoreView(_r8).$implicit;
       \u0275\u0275twoWayBindingSet(issue_r9.include, $event) || (issue_r9.include = $event);
       return \u0275\u0275resetView($event);
@@ -25434,6 +25434,7 @@ function ComponentGuidanceComponent_ng_template_5_Conditional_3_ng_template_2_Te
   }
   if (rf & 2) {
     const issue_r9 = ctx.$implicit;
+    const ctx_r2 = \u0275\u0275nextContext(3);
     \u0275\u0275advance(2);
     \u0275\u0275textInterpolate(issue_r9.category);
     \u0275\u0275advance(2);
@@ -25441,7 +25442,9 @@ function ComponentGuidanceComponent_ng_template_5_Conditional_3_ng_template_2_Te
     \u0275\u0275advance(2);
     \u0275\u0275textInterpolate(issue_r9.recommendation);
     \u0275\u0275advance(2);
-    \u0275\u0275textInterpolate(issue_r9.severity);
+    \u0275\u0275property("ngClass", ctx_r2.severityChip(issue_r9.severity));
+    \u0275\u0275advance();
+    \u0275\u0275textInterpolate1(" ", issue_r9.severity, " ");
     \u0275\u0275advance(2);
     \u0275\u0275property("binary", true);
     \u0275\u0275twoWayProperty("ngModel", issue_r9.include);
@@ -25450,7 +25453,7 @@ function ComponentGuidanceComponent_ng_template_5_Conditional_3_ng_template_2_Te
 function ComponentGuidanceComponent_ng_template_5_Conditional_3_Template(rf, ctx) {
   if (rf & 1) {
     \u0275\u0275elementStart(0, "p-table", 32);
-    \u0275\u0275template(1, ComponentGuidanceComponent_ng_template_5_Conditional_3_ng_template_1_Template, 11, 0, "ng-template", 3)(2, ComponentGuidanceComponent_ng_template_5_Conditional_3_ng_template_2_Template, 11, 6, "ng-template", 4);
+    \u0275\u0275template(1, ComponentGuidanceComponent_ng_template_5_Conditional_3_ng_template_1_Template, 11, 0, "ng-template", 3)(2, ComponentGuidanceComponent_ng_template_5_Conditional_3_ng_template_2_Template, 12, 7, "ng-template", 4);
     \u0275\u0275elementEnd();
   }
   if (rf & 2) {
@@ -25750,6 +25753,14 @@ var ComponentGuidanceComponent = class _ComponentGuidanceComponent {
     }
     return [...unique];
   }
+  severityChip(severity) {
+    const s = (severity || "").toLowerCase();
+    if (s === "low")
+      return "chip-minor";
+    if (s === "medium" || s === "high")
+      return "chip-severe";
+    return "chip-unk";
+  }
   static \u0275fac = function ComponentGuidanceComponent_Factory(__ngFactoryType__) {
     return new (__ngFactoryType__ || _ComponentGuidanceComponent)();
   };
@@ -25965,7 +25976,11 @@ var ComponentGuidanceComponent = class _ComponentGuidanceComponent {
                   <td>{{ issue.category }}</td>
                   <td class="wrap-col">{{ issue.description }}</td>
                   <td class="wrap-col">{{ issue.recommendation }}</td>
-                  <td class="severity-col">{{ issue.severity }}</td>
+                  <td class="severity-col">
+                    <span class="chip" [ngClass]="severityChip(issue.severity)">
+                      {{ issue.severity }}
+                    </span>
+                  </td>
                   <td class="include-col">
                     <p-checkbox [binary]="true" [(ngModel)]="issue.include"></p-checkbox>
                   </td>
@@ -32779,4 +32794,4 @@ ${base}`;
 export {
   PageAssistantCompareComponent
 };
-//# sourceMappingURL=chunk-W65FF5L3.js.map
+//# sourceMappingURL=chunk-UMBXIPYS.js.map
