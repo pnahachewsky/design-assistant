@@ -1,3 +1,29 @@
-.alerts-guidance {
-  padding: 1rem;
+.alert-table .p-datatable-tbody > tr > td,
+.alert-table .p-datatable-thead > tr > th {
+  white-space: normal !important;
+  word-break: normal;
+  overflow-wrap: normal;
+  vertical-align: top;
+}
+
+.alert-table .wrap-col {
+  min-width: 180px;
+}
+
+.alert-table .severity-col {
+  white-space: nowrap !important;
+}
+
+.alert-table .include-col {
+  width: 140px;
+  text-align: center;
+}
+
+.alert-table .include-col .p-checkbox {
+  display: inline-flex;
+}
+
+.alert-table .p-datatable-table {
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
 }

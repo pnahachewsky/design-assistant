@@ -8,6 +8,12 @@ import { CheckboxModule } from 'primeng/checkbox';
 import { TooltipModule } from 'primeng/tooltip';
 import { TranslateService, TranslateModule } from '@ngx-translate/core';
 import { SortEvent } from 'primeng/api';
+import { AlertsGuidanceComponent } from './alerts-guidance/alerts-guidance.component';
+import {
+  DEFAULT_ALERT_ISSUES,
+  computeAlertCategories,
+  computeAlertMaxSeverity,
+} from './alerts-guidance/alerts-guidance.component';
 
 import { UploadStateService } from '../../../services/upload-state.service';
 import { ValidatorService } from '../../../services/validator.service';
@@ -38,14 +44,6 @@ interface GuidanceRow {
   __urlKey?: string;
 }
 
-interface AlertIssue {
-  category: string;
-  severity: string;
-  description: string;
-  recommendation: string;
-  include: boolean;
-}
-
 @Component({
   selector: 'ca-component-guidance',
   standalone: true,
@@ -57,8 +55,10 @@ interface AlertIssue {
     CheckboxModule,
     TooltipModule,
     TranslateModule,
+    AlertsGuidanceComponent,
   ],
   templateUrl: './component-guidance.component.html',
+  styleUrls: ['./chip-styles.css'],
   styles: [
     `
       .muted {
@@ -74,50 +74,6 @@ interface AlertIssue {
         gap: 0.4rem;
         align-items: center;
         flex-wrap: wrap;
-      }
-
-      /* Base chip */
-      .chip {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.4rem;
-        padding: 0.15rem 0.55rem;
-        border-radius: 9999px;
-        border: 1px solid transparent;
-        font-weight: 500;
-        line-height: 1.1;
-      }
-
-      /* Make the PrimeIcons inherit the chip color (wins over theme) */
-      .chip .pi {
-        color: inherit !important;
-      }
-
-      /* Variants */
-      .chip-severe {
-        background: #fee2e2;
-        border-color: #fecaca;
-        color: #b91c1c; /* text + icon */
-      }
-      .chip-minor {
-        background: #fef3c7;
-        border-color: #fde68a;
-        color: #92400e;
-      }
-      .chip-med {
-        background: #fde7c3;
-        border-color: #f9d29b;
-        color: #9a4a00;
-      }
-      .chip-ok {
-        background: #dcfce7;
-        border-color: #86efac;
-        color: #166534;
-      }
-      .chip-unk {
-        background: #e5e7eb;
-        border-color: #cbd5e1;
-        color: #334155;
       }
       .chip-list {
         display: flex;
@@ -161,29 +117,6 @@ interface AlertIssue {
         gap: 0.5rem;
       }
     `,
-    `
-      /* Alerts sub-table tweaks */
-      :host ::ng-deep .alert-table .p-datatable-tbody > tr > td,
-      :host ::ng-deep .alert-table .p-datatable-thead > tr > th {
-        white-space: normal !important;
-        word-break: normal;
-        overflow-wrap: normal;
-        vertical-align: top;
-      }
-      :host ::ng-deep .alert-table .wrap-col {
-        min-width: 180px;
-      }
-      :host ::ng-deep .alert-table .severity-col {
-        white-space: nowrap !important;
-      }
-      :host ::ng-deep .alert-table .include-col {
-        width: 140px;
-        text-align: center;
-      }
-      :host ::ng-deep .alert-table .include-col .p-checkbox {
-        display: inline-flex;
-      }
-    `,
   ],
 })
 export class ComponentGuidanceComponent implements OnInit {
@@ -197,42 +130,11 @@ export class ComponentGuidanceComponent implements OnInit {
 
   guidanceList: { name: string; url: string }[] = [];
   rows: GuidanceRow[] = [];
-  alertIssues: AlertIssue[] = [
-    {
-      category: 'Too wordy',
-      severity: 'Medium',
-      description: 'Alert contains 4 sentences; guidance recommends 1-2',
-      recommendation: "Rewrite to: 'Processing for the Disability tax credit...'.",
-      include: true,
-    },
-    {
-      category: 'Too many links',
-      severity: 'Low',
-      description: 'Alert contains references to multiple tools/links (Process...)',
-      recommendation: 'Limit to one primary link',
-      include: true,
-    },
-    {
-      category: 'Missing heading',
-      severity: 'High',
-      description: 'Alert lacs a descriptive heading, reducing accessibility...',
-      recommendation: "Add a heading like 'Processing update'.",
-      include: true,
-    },
-    {
-      category: 'Accessibility - Focus order',
-      severity: 'High',
-      description: 'Lack of heading prevents efficient screen reader navigation...',
-      recommendation: 'Implement semantic heading tag within the alert component...',
-      include: true,
-    },
-  ];
-
-  private readonly ALERT_SEVERITY_RANK: Record<string, number> = {
-    high: 3,
-    medium: 2,
-    low: 1,
-  };
+  alertCategories: { label: string; severity: string }[] =
+    computeAlertCategories(DEFAULT_ALERT_ISSUES);
+  alertMaxSeverity: string | null = computeAlertMaxSeverity(DEFAULT_ALERT_ISSUES);
+  alertSelectAll = true;
+  alertHasIssues = DEFAULT_ALERT_ISSUES.length > 0;
 
   // multi-select
   selectedRows: GuidanceRow[] = [];
@@ -258,7 +160,6 @@ export class ComponentGuidanceComponent implements OnInit {
   };
 
   ngOnInit() {
-    this.sortAlertIssues();
     const data = this.uploadState.getUploadData();
     if (data?.originalHtml) {
       this.guidanceList = this.validator.collectGuidanceUrls(data.originalHtml);
@@ -464,73 +365,30 @@ export class ComponentGuidanceComponent implements OnInit {
     if (!alertRow) return;
     const selectedUrls = new Set(this.selectedRows.map((r) => r.url));
     const alertSelected = selectedUrls.has(alertRow.url);
-    this.setAlertIncludes(alertSelected);
-  }
-
-  private setAlertIncludes(flag: boolean): void {
-    this.alertIssues = this.alertIssues.map((issue) => ({ ...issue, include: flag }));
+    this.alertSelectAll = alertSelected;
   }
 
   private ensureAlertRowSelection(): void {
     const alertRow = this.rows.find((r) => r.__nameKey === this.alertsNameKey);
     if (!alertRow) return;
-    const hasIssues = this.alertIssues.length > 0;
+    const hasIssues = this.alertHasIssues;
     const selected = this.selectedRows.some((r) => r.url === alertRow.url);
     if (hasIssues && !selected) {
       this.selectedRows = [...this.selectedRows, alertRow];
-      this.setAlertIncludes(true);
+      this.alertSelectAll = true;
     } else if (!hasIssues && selected) {
       this.selectedRows = this.selectedRows.filter((r) => r.url !== alertRow.url);
     }
   }
 
-  private sortAlertIssues(): void {
-    const rank = this.ALERT_SEVERITY_RANK;
-    this.alertIssues.sort((a, b) => (rank[b.severity.toLowerCase()] ?? 0) - (rank[a.severity.toLowerCase()] ?? 0));
+  onAlertCategoriesChange(cats: { label: string; severity: string }[]): void {
+    this.alertCategories = cats ?? [];
+    this.alertHasIssues = this.alertCategories.length > 0;
+    this.ensureAlertRowSelection();
   }
 
-  get alertPainPointCategories(): string[] {
-    const unique = new Set<string>();
-    for (const issue of this.alertIssues) {
-      if (issue.category) unique.add(issue.category);
-    }
-    return [...unique];
-  }
-
-  get alertCategoryChips(): { label: string; severity: string }[] {
-    const rank = this.ALERT_SEVERITY_RANK;
-    const bestSeverity = new Map<string, string>();
-    for (const issue of this.alertIssues) {
-      const cat = issue.category;
-      if (!cat) continue;
-      const current = bestSeverity.get(cat);
-      const next = issue.severity ?? '';
-      const currentRank = current ? rank[current.toLowerCase()] ?? 0 : -1;
-      const nextRank = rank[next.toLowerCase()] ?? 0;
-      if (nextRank >= currentRank) {
-        bestSeverity.set(cat, next);
-      }
-    }
-    return Array.from(bestSeverity.entries()).map(([label, severity]) => ({
-      label,
-      severity,
-    }));
-  }
-
-  get alertMaxSeverity(): string | null {
-    if (!this.alertIssues.length) return null;
-    const rank = this.ALERT_SEVERITY_RANK;
-    let max: string | null = null;
-    let maxRank = -1;
-    for (const issue of this.alertIssues) {
-      const sev = (issue.severity || '').toLowerCase();
-      const r = rank[sev] ?? -1;
-      if (r > maxRank) {
-        maxRank = r;
-        max = issue.severity;
-      }
-    }
-    return max;
+  onAlertMaxSeverityChange(sev: string | null): void {
+    this.alertMaxSeverity = sev;
   }
 
   severityChip(severity: string | undefined | null): string {

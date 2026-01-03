@@ -133,7 +133,7 @@
           <div class="chip-list">
             <span
               class="chip"
-              *ngFor="let chip of alertCategoryChips"
+              *ngFor="let chip of alertCategories"
               [ngClass]="severityChip(chip.severity)"
             >
               {{ chip.label }}
@@ -162,32 +162,12 @@
       <td colspan="6">
         <div class="p-3">
           @if (row.__nameKey === 'page.tools.guidance.craVariant.alerts.title') {
-            <p-table [value]="alertIssues" styleClass="p-datatable-sm alert-table expansion-table">
-              <ng-template pTemplate="header">
-                <tr>
-                  <th class="include-col">Include in fix</th>
-                  <th class="severity-col">Severity</th>
-                  <th>Pain point category</th>
-                  <th class="wrap-col">Description</th>
-                  <th class="wrap-col">Recommendation</th>
-                </tr>
-              </ng-template>
-              <ng-template pTemplate="body" let-issue>
-                <tr>
-                  <td class="include-col">
-                    <p-checkbox [binary]="true" [(ngModel)]="issue.include"></p-checkbox>
-                  </td>
-                  <td class="severity-col">
-                    <span class="chip" [ngClass]="severityChip(issue.severity)">
-                      {{ issue.severity }}
-                    </span>
-                  </td>
-                  <td>{{ issue.category }}</td>
-                  <td class="wrap-col">{{ issue.description }}</td>
-                  <td class="wrap-col">{{ issue.recommendation }}</td>
-                </tr>
-              </ng-template>
-            </p-table>
+            <ca-alerts-guidance
+              class="expansion-table"
+              [selectAll]="alertSelectAll"
+              (maxSeverityChange)="onAlertMaxSeverityChange($event)"
+              (categoriesChange)="onAlertCategoriesChange($event)"
+            ></ca-alerts-guidance>
           } @else {
             <p-table styleClass="p-datatable-sm expansion-table">
               <ng-template pTemplate="header">

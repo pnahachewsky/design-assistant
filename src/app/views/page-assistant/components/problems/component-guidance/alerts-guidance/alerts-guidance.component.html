@@ -1,4 +1,26 @@
-<div class="alerts-guidance">
-  <h4>Alerts Guidance</h4>
-  <p>Alerts guidance content goes here.</p>
-</div>
+<p-table [value]="issues" styleClass="p-datatable-sm alert-table">
+  <ng-template pTemplate="header">
+    <tr>
+      <th class="include-col">Include in fix</th>
+      <th class="severity-col">Severity</th>
+      <th>Pain point category</th>
+      <th class="wrap-col">Description</th>
+      <th class="wrap-col">Recommendation</th>
+    </tr>
+  </ng-template>
+  <ng-template pTemplate="body" let-issue>
+    <tr>
+      <td class="include-col">
+        <p-checkbox [binary]="true" [(ngModel)]="issue.include" (onChange)="onIncludeToggle()"></p-checkbox>
+      </td>
+      <td class="severity-col">
+        <span class="chip" [ngClass]="severityClass(issue.severity)">
+          {{ issue.severity }}
+        </span>
+      </td>
+      <td>{{ issue.category }}</td>
+      <td class="wrap-col">{{ issue.description }}</td>
+      <td class="wrap-col">{{ issue.recommendation }}</td>
+    </tr>
+  </ng-template>
+</p-table>
