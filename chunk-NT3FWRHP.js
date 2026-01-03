@@ -25443,7 +25443,7 @@ function ComponentGuidanceComponent_ng_template_3_Template(rf, ctx) {
     \u0275\u0275element(7, "p-sortIcon", 14);
     \u0275\u0275elementEnd();
     \u0275\u0275elementStart(8, "th")(9, "span");
-    \u0275\u0275text(10, "UCDG guidance for component");
+    \u0275\u0275text(10, "UCDG guidance");
     \u0275\u0275elementEnd()();
     \u0275\u0275elementStart(11, "th", 15)(12, "span");
     \u0275\u0275text(13, "Health");
@@ -26074,7 +26074,7 @@ var ComponentGuidanceComponent = class _ComponentGuidanceComponent {
       </th>-->
       <!-- UCDG guidance URL -->
       <th>
-        <span>UCDG guidance for component</span>
+        <span>UCDG guidance</span>
       </th>
 
       <!-- Health (custom sort) -->
@@ -33006,4 +33006,4 @@ ${base}`;
 export {
   PageAssistantCompareComponent
 };
-//# sourceMappingURL=chunk-VSUTPUSK.js.map
+//# sourceMappingURL=chunk-NT3FWRHP.js.map
