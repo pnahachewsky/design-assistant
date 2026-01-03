@@ -470,4 +470,11 @@ export class ComponentGuidanceComponent implements OnInit {
     }
     return [...unique];
   }
+
+  severityChip(severity: string | undefined | null): string {
+    const s = (severity || '').toLowerCase();
+    if (s === 'low') return 'chip-minor';
+    if (s === 'medium' || s === 'high') return 'chip-severe';
+    return 'chip-unk';
+  }
 }

@@ -160,7 +160,11 @@
                   <td>{{ issue.category }}</td>
                   <td class="wrap-col">{{ issue.description }}</td>
                   <td class="wrap-col">{{ issue.recommendation }}</td>
-                  <td class="severity-col">{{ issue.severity }}</td>
+                  <td class="severity-col">
+                    <span class="chip" [ngClass]="severityChip(issue.severity)">
+                      {{ issue.severity }}
+                    </span>
+                  </td>
                   <td class="include-col">
                     <p-checkbox [binary]="true" [(ngModel)]="issue.include"></p-checkbox>
                   </td>
