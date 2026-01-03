@@ -135,6 +135,7 @@ export class ComponentGuidanceComponent implements OnInit {
   alertMaxSeverity: string | null = computeAlertMaxSeverity(DEFAULT_ALERT_ISSUES);
   alertSelectAll = true;
   alertHasIssues = DEFAULT_ALERT_ISSUES.length > 0;
+  private prevAlertHasIssues = false;
 
   // multi-select
   selectedRows: GuidanceRow[] = [];
@@ -164,7 +165,7 @@ export class ComponentGuidanceComponent implements OnInit {
     if (data?.originalHtml) {
       this.guidanceList = this.validator.collectGuidanceUrls(data.originalHtml);
       this.rows = this.buildRows(this.guidanceList);
-      this.ensureAlertRowSelection();
+      this.syncAlertRowSelection(true);
     }
   }
 
@@ -369,26 +370,39 @@ export class ComponentGuidanceComponent implements OnInit {
   }
 
   private ensureAlertRowSelection(): void {
-    const alertRow = this.rows.find((r) => r.__nameKey === this.alertsNameKey);
-    if (!alertRow) return;
-    const hasIssues = this.alertHasIssues;
-    const selected = this.selectedRows.some((r) => r.url === alertRow.url);
-    if (hasIssues && !selected) {
-      this.selectedRows = [...this.selectedRows, alertRow];
-      this.alertSelectAll = true;
-    } else if (!hasIssues && selected) {
-      this.selectedRows = this.selectedRows.filter((r) => r.url !== alertRow.url);
-    }
+    this.syncAlertRowSelection();
   }
 
   onAlertCategoriesChange(cats: { label: string; severity: string }[]): void {
     this.alertCategories = cats ?? [];
     this.alertHasIssues = this.alertCategories.length > 0;
-    this.ensureAlertRowSelection();
+    this.syncAlertRowSelection();
+    this.prevAlertHasIssues = this.alertHasIssues;
   }
 
   onAlertMaxSeverityChange(sev: string | null): void {
     this.alertMaxSeverity = sev;
+  }
+
+  private syncAlertRowSelection(force = false): void {
+    const alertRow = this.rows.find((r) => r.__nameKey === this.alertsNameKey);
+    if (!alertRow) return;
+
+    const selected = this.selectedRows.some((r) => r.url === alertRow.url);
+
+    // If no issues, make sure row is not selected
+    if (!this.alertHasIssues) {
+      if (selected) {
+        this.selectedRows = this.selectedRows.filter((r) => r.url !== alertRow.url);
+      }
+      return;
+    }
+
+    // Auto-select only on first availability or when forced
+    if ((force || (!this.prevAlertHasIssues && this.alertHasIssues)) && !selected) {
+      this.selectedRows = [...this.selectedRows, alertRow];
+      this.alertSelectAll = true;
+    }
   }
 
   severityChip(severity: string | undefined | null): string {
