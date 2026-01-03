@@ -98457,6 +98457,7 @@ export {
   NgStyle,
   NgTemplateOutlet,
   AsyncPipe,
+  TitleCasePipe,
   CommonModule,
   isPlatformBrowser,
   DomRendererFactory2,
@@ -98675,4 +98676,4 @@ export {
    * License: MIT
    *)
 */
-//# sourceMappingURL=chunk-7JXZSRMW.js.map
+//# sourceMappingURL=chunk-JFL5EMUP.js.map
