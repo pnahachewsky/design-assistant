@@ -24608,7 +24608,7 @@ var DEFAULT_ALERT_ISSUES = [
   },
   {
     category: "Too wordy",
-    severity: "Medium",
+    severity: "low",
     description: "Alert contains 4 sentences; guidance recommends 1-2",
     recommendation: "Rewrite to: 'Processing for the Disability tax credit...'.",
     include: true
@@ -24629,7 +24629,7 @@ var DEFAULT_ALERT_ISSUES = [
   },
   {
     category: "Accessibility - Focus order",
-    severity: "High",
+    severity: "low",
     description: "Lack of heading prevents efficient screen reader navigation...",
     recommendation: "Implement semantic heading tag within the alert component...",
     include: true
@@ -33034,4 +33034,4 @@ ${base}`;
 export {
   PageAssistantCompareComponent
 };
-//# sourceMappingURL=chunk-RCKK44OO.js.map
+//# sourceMappingURL=chunk-674UKKXH.js.map
