@@ -19,7 +19,7 @@ export const ALERT_SEVERITY_RANK: Record<string, number> = {
 };
 
 export const DEFAULT_ALERT_ISSUES: AlertIssue[] = [
-  /*{
+  {
     category: 'Too wordy',
     severity: 'Medium',
     description: 'Alert contains 4 sentences; guidance recommends 1-2',
@@ -46,7 +46,7 @@ export const DEFAULT_ALERT_ISSUES: AlertIssue[] = [
     description: 'Lack of heading prevents efficient screen reader navigation...',
     recommendation: 'Implement semantic heading tag within the alert component...',
     include: true,
-  },*/
+  }
 ];
 
 export function computeAlertCategories(
