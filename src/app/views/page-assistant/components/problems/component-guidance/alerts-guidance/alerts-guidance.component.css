@@ -15,6 +15,9 @@
   word-break: normal;
   overflow-wrap: normal;
 }
+.alert-table .severity-col .chip {
+  white-space: nowrap !important;
+}
 
 .alert-table .include-col {
   width: 140px;
