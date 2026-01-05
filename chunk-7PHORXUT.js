@@ -24571,6 +24571,157 @@ var HeadingStructureComponent = class _HeadingStructureComponent {
   (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(HeadingStructureComponent, { className: "HeadingStructureComponent", filePath: "src/app/views/page-assistant/components/problems/heading-structure.component.ts", lineNumber: 37 });
 })();
 
+// src/app/views/page-assistant/services/alert-ai.service.ts
+var AlertAiService = class _AlertAiService {
+  http = inject(HttpClient);
+  apiKeyService = inject(ApiKeyService);
+  openRouterApiUrl = "https://openrouter.ai/api/v1/chat/completions";
+  models = [
+    "meta-llama/llama-3.3-70b-instruct:free",
+    "google/gemini-2.0-flash-exp:free",
+    "google/gemini-exp-1206:free",
+    "cognitivecomputations/dolphin3.0-mistral-24b:free",
+    "cognitivecomputations/dolphin3.0-r1-mistral-24b:free",
+    "nvidia/llama-3.1-nemotron-70b-instruct:free",
+    "deepseek/deepseek-r1:free"
+  ];
+  /** Call OpenRouter with the AlertsGuidance prompt and return normalized issues. */
+  analyze(alertHtml, pageContext) {
+    return __async(this, null, function* () {
+      const systemPrompt = PromptTemplates[PromptKey.AlertsGuidance];
+      const userPayload = {
+        alertHtml: this.trimText(alertHtml),
+        pageContext: this.trimText(pageContext)
+      };
+      const messages = [
+        { role: "system", content: systemPrompt },
+        { role: "user", content: JSON.stringify(userPayload) }
+      ];
+      for (const model of this.models) {
+        const resp = yield this.callOpenRouter(model, messages);
+        const text = resp?.choices?.[0]?.message?.content;
+        if (!text)
+          continue;
+        const issues = this.parseIssues(text);
+        if (issues.length)
+          return issues;
+      }
+      return [];
+    });
+  }
+  // ---------- OpenRouter plumbing ----------
+  callOpenRouter(model, messages, temperature = 0) {
+    return __async(this, null, function* () {
+      const apiKey = this.apiKeyService.getCurrentKey();
+      if (!apiKey)
+        throw new Error("API key is required.");
+      const headers = new HttpHeaders({
+        Authorization: `Bearer ${apiKey}`,
+        "Content-Type": "application/json",
+        Accept: "application/json",
+        "X-Title": "Content Assistant - Alert Guidance"
+      });
+      const payload = { model, messages, temperature };
+      try {
+        const resp = yield this.http.post(this.openRouterApiUrl, payload, {
+          headers,
+          responseType: "text",
+          observe: "response"
+        }).toPromise();
+        const ct = resp?.headers.get("content-type") || "";
+        if (ct.includes("application/json") && typeof resp?.body === "string") {
+          return JSON.parse(resp.body);
+        } else {
+          console.error(`OpenRouter non-JSON (status ${resp?.status}, ${ct}):
+`, (resp?.body || "").slice(0, 500));
+          return void 0;
+        }
+      } catch (err) {
+        const httpErr = err;
+        const status = httpErr?.status;
+        const bodySnippet = typeof httpErr?.error === "string" ? httpErr.error.slice(0, 500) : JSON.stringify(httpErr?.error);
+        console.error(`OpenRouter HTTP error (model: ${model}) status=${status}: ${bodySnippet}`);
+        return void 0;
+      }
+    });
+  }
+  // ---------- Output parsing ----------
+  parseIssues(text) {
+    const cleaned = this.stripCodeFences(text);
+    const parsed = this.looseJsonParse(cleaned);
+    const root = parsed && typeof parsed === "object" ? parsed : null;
+    const issuesArray = Array.isArray(root?.["issues"]) ? root?.["issues"] : Array.isArray(root) ? root : [];
+    const mapped = issuesArray.map((raw) => {
+      if (!raw || typeof raw !== "object")
+        return null;
+      const obj = raw;
+      const category = this.cleanString(obj["issue_category"] ?? obj["category"]);
+      const description = this.cleanString(obj["description"]);
+      const recommendation = this.cleanString(obj["recommendation"]);
+      const severity = this.normalizeSeverity(obj["severity"]);
+      const include = typeof obj["include"] === "boolean" ? obj["include"] : true;
+      if (!category || !description || !recommendation)
+        return null;
+      const issue = {
+        category,
+        description,
+        recommendation,
+        severity,
+        include
+      };
+      return issue;
+    }).filter((x) => !!x);
+    return mapped;
+  }
+  stripCodeFences(s) {
+    return s.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/i, "").trim();
+  }
+  looseJsonParse(s) {
+    try {
+      return JSON.parse(s);
+    } catch {
+    }
+    const m = s.match(/\{[\s\S]*\}/);
+    if (m) {
+      try {
+        return JSON.parse(m[0]);
+      } catch {
+        return null;
+      }
+    }
+    return null;
+  }
+  trimText(s, max = 12e3) {
+    const t = (s || "").trim();
+    return t.length > max ? t.slice(0, max) : t;
+  }
+  cleanString(v) {
+    return typeof v === "string" ? v.trim() : "";
+  }
+  normalizeSeverity(v) {
+    const raw = this.cleanString(v).toLowerCase();
+    if (!raw)
+      return "Medium";
+    if (raw === "high" || raw === "critical")
+      return "High";
+    if (raw === "medium" || raw === "med" || raw === "moderate")
+      return "Medium";
+    if (raw === "low" || raw === "minor")
+      return "Low";
+    return raw.charAt(0).toUpperCase() + raw.slice(1);
+  }
+  static \u0275fac = function AlertAiService_Factory(__ngFactoryType__) {
+    return new (__ngFactoryType__ || _AlertAiService)();
+  };
+  static \u0275prov = /* @__PURE__ */ \u0275\u0275defineInjectable({ token: _AlertAiService, factory: _AlertAiService.\u0275fac, providedIn: "root" });
+};
+(() => {
+  (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(AlertAiService, [{
+    type: Injectable,
+    args: [{ providedIn: "root" }]
+  }], null, null);
+})();
+
 // src/app/views/page-assistant/components/problems/component-guidance/alerts-guidance/alerts-guidance.component.ts
 function AlertsGuidanceComponent_ng_template_1_Template(rf, ctx) {
   if (rf & 1) {
@@ -24646,28 +24797,28 @@ var DEFAULT_ALERT_ISSUES = [
   {
     category: "Too wordy",
     severity: "Medium",
-    description: "Alert contains 4 sentences; guidance recommends 1-2",
+    description: "Sample: Alert contains 4 sentences; guidance recommends 1-2",
     recommendation: "Rewrite to: 'Processing for the Disability tax credit...'.",
     include: true
   },
   {
     category: "Too many links",
     severity: "Low",
-    description: "Alert contains references to multiple tools/links (Process...)",
+    description: "Sample: Alert contains references to multiple tools/links (Process...)",
     recommendation: "Limit to one primary link",
     include: true
   },
   {
     category: "Missing heading",
     severity: "High",
-    description: "Alert lacs a descriptive heading, reducing accessibility...",
+    description: "Sample: Alert lacs a descriptive heading, reducing accessibility...",
     recommendation: "Add a heading like 'Processing update'.",
     include: true
   },
   {
     category: "Accessibility - Focus order",
     severity: "High",
-    description: "Lack of heading prevents efficient screen reader navigation...",
+    description: "Sample: Lack of heading prevents efficient screen reader navigation...",
     recommendation: "Implement semantic heading tag within the alert component...",
     include: true
   }
@@ -24704,14 +24855,18 @@ function computeAlertMaxSeverity(issues, rank = ALERT_SEVERITY_RANK) {
   return max;
 }
 var AlertsGuidanceComponent = class _AlertsGuidanceComponent {
+  uploadState = inject(UploadStateService);
+  alertAi = inject(AlertAiService);
   selectAll = true;
   maxSeverityChange = new EventEmitter();
   categoriesChange = new EventEmitter();
   issues = DEFAULT_ALERT_ISSUES.map((i) => __spreadValues({}, i));
+  isLoading = false;
   ngOnInit() {
     this.sortIssues();
     this.applySelectAll(this.selectAll);
     this.emitDerived();
+    void this.loadFromAi();
   }
   ngOnChanges(changes) {
     if (changes["selectAll"] && !changes["selectAll"].firstChange) {
@@ -24750,6 +24905,30 @@ var AlertsGuidanceComponent = class _AlertsGuidanceComponent {
       return "chip-severe";
     return "chip-unk";
   }
+  loadFromAi() {
+    return __async(this, null, function* () {
+      const html = this.uploadState.getUploadData()?.originalHtml || "";
+      if (!html || this.isLoading)
+        return;
+      this.isLoading = true;
+      try {
+        const aiIssues = yield this.alertAi.analyze(html);
+        if (aiIssues?.length) {
+          this.issues = aiIssues.map((issue) => __spreadProps(__spreadValues({}, issue), {
+            severity: issue.severity || "Medium",
+            include: issue.include ?? true
+          }));
+          this.sortIssues();
+          this.applySelectAll(this.selectAll);
+          this.emitDerived();
+        }
+      } catch (err) {
+        console.error("Alert AI call failed", err);
+      } finally {
+        this.isLoading = false;
+      }
+    });
+  }
   static \u0275fac = function AlertsGuidanceComponent_Factory(__ngFactoryType__) {
     return new (__ngFactoryType__ || _AlertsGuidanceComponent)();
   };
@@ -24777,7 +24956,7 @@ var AlertsGuidanceComponent = class _AlertsGuidanceComponent {
   }] });
 })();
 (() => {
-  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(AlertsGuidanceComponent, { className: "AlertsGuidanceComponent", filePath: "src/app/views/page-assistant/components/problems/component-guidance/alerts-guidance/alerts-guidance.component.ts", lineNumber: 96 });
+  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(AlertsGuidanceComponent, { className: "AlertsGuidanceComponent", filePath: "src/app/views/page-assistant/components/problems/component-guidance/alerts-guidance/alerts-guidance.component.ts", lineNumber: 98 });
 })();
 
 // src/app/views/page-assistant/data/css-list.config.ts
@@ -33092,4 +33271,4 @@ ${base}`;
 export {
   PageAssistantCompareComponent
 };
-//# sourceMappingURL=chunk-U5DQL4D5.js.map
+//# sourceMappingURL=chunk-7PHORXUT.js.map
