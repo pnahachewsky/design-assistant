@@ -95,9 +95,20 @@ interface GuidanceRow {
       }
       /* Expansion tables */
       :host ::ng-deep .expansion-table .p-datatable-table {
+        table-layout: fixed;
         width: 100%;
         border: 1px solid #d1d5db;
         border-radius: 6px;
+      }
+      :host ::ng-deep .expansion-table .p-datatable-wrapper {
+        width: 100%;
+        overflow-x: auto;
+      }
+      :host ::ng-deep .expansion-table .p-datatable-tbody > tr > td,
+      :host ::ng-deep .expansion-table .p-datatable-thead > tr > th {
+        word-wrap: break-word;
+        word-break: break-word;
+        white-space: normal;
       }
 
       .tag {

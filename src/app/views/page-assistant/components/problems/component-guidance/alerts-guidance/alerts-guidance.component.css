@@ -24,7 +24,20 @@
 }
 
 .alert-table .p-datatable-table {
+  table-layout: fixed;
   width: 100%;
   border: 1px solid #d1d5db;
   border-radius: 6px;
+}
+
+.alert-table .p-datatable-wrapper {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.alert-table .p-datatable-tbody > tr > td,
+.alert-table .p-datatable-thead > tr > th {
+  word-wrap: break-word;
+  word-break: break-word;
+  white-space: normal;
 }
