@@ -10,6 +10,7 @@ import { TranslateService, TranslateModule } from '@ngx-translate/core';
 import { SortEvent } from 'primeng/api';
 import { AlertsGuidanceComponent } from './alerts-guidance/alerts-guidance.component';
 import {
+  ALERT_SEVERITY_RANK,
   DEFAULT_ALERT_ISSUES,
   computeAlertCategories,
   computeAlertMaxSeverity,
@@ -135,8 +136,9 @@ export class ComponentGuidanceComponent implements OnInit {
 
   guidanceList: { name: string; url: string }[] = [];
   rows: GuidanceRow[] = [];
-  alertCategories: { label: string; severity: string }[] =
-    computeAlertCategories(DEFAULT_ALERT_ISSUES);
+  alertCategories: { label: string; severity: string }[] = this.sortCategories(
+    computeAlertCategories(DEFAULT_ALERT_ISSUES),
+  );
   alertMaxSeverity: string | null = computeAlertMaxSeverity(DEFAULT_ALERT_ISSUES);
   alertSelectAll = true;
   alertHasIssues = DEFAULT_ALERT_ISSUES.length > 0;
@@ -379,7 +381,7 @@ export class ComponentGuidanceComponent implements OnInit {
   }
 
   onAlertCategoriesChange(cats: { label: string; severity: string }[]): void {
-    this.alertCategories = cats ?? [];
+    this.alertCategories = this.sortCategories(cats ?? []);
     this.alertHasIssues = this.alertCategories.length > 0;
     this.syncAlertRowSelection();
     this.prevAlertHasIssues = this.alertHasIssues;
@@ -408,6 +410,18 @@ export class ComponentGuidanceComponent implements OnInit {
       this.selectedRows = [...this.selectedRows, alertRow];
       this.alertSelectAll = true;
     }
+  }
+
+  private sortCategories(cats: { label: string; severity: string }[]): {
+    label: string;
+    severity: string;
+  }[] {
+    return [...cats].sort((a, b) => {
+      const ra = ALERT_SEVERITY_RANK[a.severity.toLowerCase()] ?? -1;
+      const rb = ALERT_SEVERITY_RANK[b.severity.toLowerCase()] ?? -1;
+      if (ra !== rb) return rb - ra;
+      return a.label.localeCompare(b.label, undefined, { sensitivity: 'base' });
+    });
   }
 
   severityChip(severity: string | undefined | null): string {
