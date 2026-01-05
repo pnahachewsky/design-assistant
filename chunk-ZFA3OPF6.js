@@ -48358,6 +48358,7 @@ var PromptKey;
   PromptKey2["Headings"] = "headings";
   PromptKey2["Doormats"] = "doormats";
   PromptKey2["PlainLanguage"] = "plainLanguage";
+  PromptKey2["AlertsGuidance"] = "alertsGuidance";
 })(PromptKey || (PromptKey = {}));
 var AiModel;
 (function(AiModel2) {
@@ -98676,4 +98677,4 @@ export {
    * License: MIT
    *)
 */
-//# sourceMappingURL=chunk-JFL5EMUP.js.map
+//# sourceMappingURL=chunk-ZFA3OPF6.js.map
