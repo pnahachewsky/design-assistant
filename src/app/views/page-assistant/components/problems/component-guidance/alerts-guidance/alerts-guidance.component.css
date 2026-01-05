@@ -11,7 +11,7 @@
 }
 
 .alert-table .severity-col .chip {
-  white-space: nowrap;
+  white-space: nowrap !important;
   display: inline-flex;
 }
 
