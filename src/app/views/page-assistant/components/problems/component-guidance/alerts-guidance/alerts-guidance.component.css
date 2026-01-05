@@ -9,11 +9,18 @@
 .alert-table .wrap-col {
   min-width: 140px;
 }
-/*.severity-col .chip {
-  white-space: nowrap !important;
-}*/
 
-.include-col {
+.alert-table .severity-col {
+  white-space: normal !important;
+  word-break: normal;
+  overflow-wrap: normal;
+}
+
+.alert-table .severity-col .chip {
+  white-space: nowrap;
+}
+
+.alert-table .include-col {
   width: 140px;
   text-align: center;
 }
