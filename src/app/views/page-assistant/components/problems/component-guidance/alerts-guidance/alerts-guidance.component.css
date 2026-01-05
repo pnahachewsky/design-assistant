@@ -11,7 +11,9 @@
 }
 
 .alert-table .severity-col {
-  white-space: nowrap !important;
+  white-space: normal !important;
+  word-break: normal;
+  overflow-wrap: normal;
 }
 
 .alert-table .include-col {
