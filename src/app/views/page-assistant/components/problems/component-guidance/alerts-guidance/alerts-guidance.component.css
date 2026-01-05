@@ -10,14 +10,9 @@
   min-width: 140px;
 }
 
-.alert-table .severity-col {
-  white-space: normal !important;
-  word-break: normal;
-  overflow-wrap: normal;
-}
-
 .alert-table .severity-col .chip {
   white-space: nowrap;
+  display: inline-flex;
 }
 
 .alert-table .include-col {
