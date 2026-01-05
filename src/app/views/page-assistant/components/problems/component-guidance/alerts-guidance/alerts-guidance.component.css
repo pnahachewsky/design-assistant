@@ -34,3 +34,9 @@
   width: 100%;
   overflow-x: auto;
 }
+
+/* Prevent severity badge text from breaking mid-word */
+.alert-table .severity-col .chip {
+  display: inline-flex;
+  white-space: nowrap;
+}

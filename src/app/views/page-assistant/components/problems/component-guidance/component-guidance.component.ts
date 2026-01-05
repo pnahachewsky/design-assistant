@@ -105,9 +105,9 @@ interface GuidanceRow {
       }
       :host ::ng-deep .expansion-table .p-datatable-tbody > tr > td,
       :host ::ng-deep .expansion-table .p-datatable-thead > tr > th {
-        word-wrap: break-word;
-        word-break: break-word;
         white-space: normal;
+        word-break: normal;
+        overflow-wrap: normal;
       }
 
       .tag {
