@@ -91,7 +91,7 @@ export function computeAlertMaxSeverity(
   standalone: true,
   imports: [CommonModule, FormsModule, TableModule, CheckboxModule],
   templateUrl: './alerts-guidance.component.html',
-  styleUrls: ['./alerts-guidance.component.css', '../chip-styles.css'],
+  styleUrls: ['./alerts-guidance.component.css', '../component-guidance.component.css'],
 })
 export class AlertsGuidanceComponent implements OnInit, OnChanges {
   @Input() selectAll = true;

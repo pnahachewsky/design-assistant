@@ -58,7 +58,7 @@ interface GuidanceRow {
     AlertsGuidanceComponent,
   ],
   templateUrl: './component-guidance.component.html',
-  styleUrls: ['./chip-styles.css'],
+  styleUrls: ['./component-guidance.component.css'],
   styles: [
     `
       .muted {
