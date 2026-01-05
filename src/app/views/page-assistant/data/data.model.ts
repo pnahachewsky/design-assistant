@@ -83,7 +83,8 @@ export enum CompareTask {
 export enum PromptKey {
   Headings = 'headings',
   Doormats = 'doormats',
-  PlainLanguage = 'plainLanguage'
+  PlainLanguage = 'plainLanguage',
+  AlertsGuidance = 'alertsGuidance'
 }
 
 export enum AiModel {
