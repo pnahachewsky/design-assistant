@@ -1,7 +1,7 @@
 {
   "version": 3,
-  "sources": ["angular:styles/component:css;5c3a53843de4532a27b918fe7e333a6960eea73b66088ec078ac37f14456832f;C:/my-working-files/GitHub/design-assistant/src/app/views/page-assistant/components/problems/component-guidance/component-guidance.component.ts"],
-  "sourcesContent": ["\n      .caption-actions {\n        display: flex;\n        justify-content: flex-end;\n        gap: 0.5rem;\n      }\n    "],
-  "mappings": ";AACM,CAAC;AACC,WAAS;AACT,mBAAiB;AACjB,OAAK;AACP;",
+  "sources": ["src/app/views/page-assistant/components/problems/component-guidance/component-guidance.component.css"],
+  "sourcesContent": ["/* Base chip */\n.chip {\n  display: inline-flex;\n  align-items: center;\n  gap: 0.4rem;\n  padding: 0.15rem 0.55rem;\n  border-radius: 9999px;\n  border: 1px solid transparent;\n  font-weight: 500;\n  line-height: 1.1;\n}\n\n/* Make the PrimeIcons inherit the chip color (wins over theme) */\n.chip .pi {\n  color: inherit !important;\n}\n\n/* Variants */\n.chip-severe {\n  background: #fee2e2;\n  border-color: #fecaca;\n  color: #b91c1c; /* text + icon */\n}\n.chip-minor {\n  background: #fef3c7;\n  border-color: #fde68a;\n  color: #92400e;\n}\n.chip-med {\n  background: #fde7c3;\n  border-color: #f9d29b;\n  color: #9a4a00;\n}\n.chip-ok {\n  background: #dcfce7;\n  border-color: #86efac;\n  color: #166534;\n}\n.chip-unk {\n  background: #e5e7eb;\n  border-color: #cbd5e1;\n  color: #334155;\n}\n"],
+  "mappings": ";AACA,CAAC;AACC,WAAS;AACT,eAAa;AACb,OAAK;AACL,WAAS,QAAQ;AACjB,iBAAe;AACf,UAAQ,IAAI,MAAM;AAClB,eAAa;AACb,eAAa;AACf;AAGA,CAZC,KAYK,CAAC;AACL,SAAO;AACT;AAGA,CAAC;AACC,cAAY;AACZ,gBAAc;AACd,SAAO;AACT;AACA,CAAC;AACC,cAAY;AACZ,gBAAc;AACd,SAAO;AACT;AACA,CAAC;AACC,cAAY;AACZ,gBAAc;AACd,SAAO;AACT;AACA,CAAC;AACC,cAAY;AACZ,gBAAc;AACd,SAAO;AACT;AACA,CAAC;AACC,cAAY;AACZ,gBAAc;AACd,SAAO;AACT;",
   "names": []
 }
