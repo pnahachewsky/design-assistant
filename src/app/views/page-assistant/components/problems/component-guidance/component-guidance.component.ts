@@ -88,8 +88,14 @@ interface GuidanceRow {
         word-break: break-word;
         max-width: 100%;
       }
+      .expansion-table {
+        width: 100%;
+        max-width: 100%;
+        overflow: hidden;
+      }
       /* Expansion tables */
       :host ::ng-deep .expansion-table .p-datatable-table {
+        width: 100%;
         border: 1px solid #d1d5db;
         border-radius: 6px;
       }
