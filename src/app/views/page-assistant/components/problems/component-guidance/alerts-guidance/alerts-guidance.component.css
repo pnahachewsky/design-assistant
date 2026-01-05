@@ -9,17 +9,11 @@
 .alert-table .wrap-col {
   min-width: 180px;
 }
-
-.alert-table .severity-col {
-  white-space: normal !important;
-  word-break: normal;
-  overflow-wrap: normal;
-}
-.alert-table .severity-col .chip {
+/*.severity-col .chip {
   white-space: nowrap !important;
-}
+}*/
 
-.alert-table .include-col {
+.include-col {
   width: 140px;
   text-align: center;
 }
@@ -37,11 +31,4 @@
 .alert-table .p-datatable-wrapper {
   width: 100%;
   overflow-x: auto;
-}
-
-.alert-table .p-datatable-tbody > tr > td,
-.alert-table .p-datatable-thead > tr > th {
-  word-wrap: break-word;
-  word-break: break-word;
-  white-space: normal;
 }
