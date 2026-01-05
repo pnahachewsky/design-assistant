@@ -44702,7 +44702,7 @@ var routes = [
       }
       return true;
     }],
-    loadComponent: () => import("./chunk-CUFJBLJY.js").then((m) => m.PageAssistantCompareComponent)
+    loadComponent: () => import("./chunk-JW66HNJ3.js").then((m) => m.PageAssistantCompareComponent)
   },
   {
     path: "page-assistant/share",
