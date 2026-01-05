@@ -95,7 +95,6 @@ interface GuidanceRow {
       }
       /* Expansion tables */
       :host ::ng-deep .expansion-table .p-datatable-table {
-        table-layout: fixed;
         width: 100%;
         border: 1px solid #d1d5db;
         border-radius: 6px;
