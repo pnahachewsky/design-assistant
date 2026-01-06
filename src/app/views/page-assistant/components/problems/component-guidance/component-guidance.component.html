@@ -48,7 +48,7 @@
 
       <!-- Health (custom sort) -->
       <th pSortableColumn="health" class="health-col">
-        <span>Health</span>
+        <span>Health issues</span>
         <p-sortIcon field="health"></p-sortIcon>
       </th>
 
@@ -91,7 +91,14 @@
       <!-- Health -->
       <td class="health-cell health-col">
         @if (row.__nameKey === alertsNameKey) {
-          @if (!alertDataLoaded) {
+          @if (!alertLoadAttempted) {
+            <span class="chip chip-unk">
+              <i class="pi pi-question-circle" aria-hidden="true"></i>
+              <span class="chip-label">
+                {{ alertHealthLabel(null) }}
+              </span>
+            </span>
+          } @else if (!alertDataLoaded) {
             <span class="chip chip-unk">
               <i class="pi pi-question-circle" aria-hidden="true"></i>
               <span class="chip-label">
@@ -99,7 +106,7 @@
               </span>
             </span>
           } @else {
-            @if (alertMaxSeverity) {
+            @if (alertMaxSeverity && !alertError) {
               <span class="chip" [ngClass]="severityChip(alertMaxSeverity)">
                 <i
                   class="pi"
@@ -110,17 +117,31 @@
                   {{ alertHealthLabel(alertMaxSeverity) }}
                 </span>
               </span>
-            } @else if (alertHasIssues) {
+            } @else if (alertError) {
               <span class="chip chip-unk">
                 <i class="pi pi-question-circle" aria-hidden="true"></i>
                 <span class="chip-label">
                   {{ alertHealthLabel(null) }}
                 </span>
               </span>
-            } @else {
+            } @else if (alertHasIssues && !alertError) {
+              <span class="chip chip-unk">
+                <i class="pi pi-question-circle" aria-hidden="true"></i>
+                <span class="chip-label">
+                  {{ alertHealthLabel(null) }}
+                </span>
+              </span>
+            } @else if (!alertError && alertDataLoaded && alertLoadAttempted && !alertLoading) {
               <span class="chip chip-ok">
                 <i class="pi pi-check-circle" aria-hidden="true"></i>
-              <span class="chip-label">OK</span>
+                <span class="chip-label">OK</span>
+              </span>
+            } @else {
+              <span class="chip chip-unk">
+                <i class="pi pi-question-circle" aria-hidden="true"></i>
+                <span class="chip-label">
+                  {{ alertHealthLabel(null) }}
+                </span>
               </span>
             }
           }
@@ -159,6 +180,8 @@
               <i class="pi pi-spinner pi-spin" aria-hidden="true"></i>
               <span class="sr-only">Loading alerts</span>
             </div>
+          } @else if (alertError) {
+            <span class="text-danger">AI error</span>
           } @else if (alertDataLoaded && alertCategories.length) {
             <div class="chip-list">
               <span
@@ -203,6 +226,7 @@
               (maxSeverityChange)="onAlertMaxSeverityChange($event)"
               (categoriesChange)="onAlertCategoriesChange($event)"
               (loadingChange)="onAlertLoadingChange($event)"
+              (errorChange)="onAlertErrorChange($event)"
             ></ca-alerts-guidance>
           } @else {
             <p-table styleClass="p-datatable-sm expansion-table">

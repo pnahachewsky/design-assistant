@@ -4,6 +4,7 @@ import { ApiKeyService } from '../../../services/api-key.service';
 import { PromptTemplates } from '../data/ai-prompts.constants';
 import { PromptKey } from '../data/data.model';
 import type { AlertIssue } from '../components/problems/component-guidance/alerts-guidance/alerts-guidance.component';
+import fallbackSeverityJson from '../components/problems/component-guidance/alerts-guidance/alert-severity-fallback.json';
 
 type ChatRole = 'system' | 'user' | 'assistant';
 interface ChatMessage {
@@ -21,6 +22,12 @@ interface OpenRouterResponse {
 export class AlertAiService {
   private readonly http = inject(HttpClient);
   private readonly apiKeyService = inject(ApiKeyService);
+  private readonly fallbackSeverities: Record<string, string> = Object.fromEntries(
+    Object.entries(fallbackSeverityJson as Record<string, string>).map(([k, v]) => [
+      k.toLowerCase(),
+      String(v),
+    ]),
+  );
 
   private readonly openRouterApiUrl = 'https://openrouter.ai/api/v1/chat/completions';
   private readonly models: string[] = [
@@ -129,7 +136,7 @@ export class AlertAiService {
         const category = this.cleanString(obj['issue_category'] ?? obj['category']);
         const description = this.cleanString(obj['description']);
         const recommendation = this.cleanString(obj['recommendation']);
-        const severity = this.normalizeSeverity(obj['severity']);
+        const severity = this.normalizeSeverity(obj['severity'], category);
         const include =
           typeof obj['include'] === 'boolean' ? obj['include'] : true;
 
@@ -181,12 +188,28 @@ export class AlertAiService {
     return typeof v === 'string' ? v.trim() : '';
   }
 
-  private normalizeSeverity(v: unknown): string {
-    const raw = this.cleanString(v).toLowerCase();
-    if (!raw) return 'Unknown';
-    if (raw === 'high' || raw === 'critical') return 'High';
-    if (raw === 'medium' || raw === 'med' || raw === 'moderate') return 'Medium';
-    if (raw === 'low' || raw === 'minor') return 'Low';
-    return raw.charAt(0).toUpperCase() + raw.slice(1);
+  private normalizeSeverity(v: unknown, category?: string): string {
+    const rawLower = this.cleanString(v).toLowerCase();
+    if (!rawLower) {
+      const fallback = this.lookupFallbackSeverity(category);
+      return fallback ?? 'Unknown';
+    }
+    return this.normalizeSeverityValue(rawLower);
+  }
+
+  private normalizeSeverityValue(rawLower: string): string {
+    if (rawLower === 'high' || rawLower === 'critical') return 'High';
+    if (rawLower === 'medium' || rawLower === 'med' || rawLower === 'moderate')
+      return 'Medium';
+    if (rawLower === 'low' || rawLower === 'minor') return 'Low';
+    return rawLower.charAt(0).toUpperCase() + rawLower.slice(1);
+  }
+
+  private lookupFallbackSeverity(category: unknown): string | null {
+    const key = this.cleanString(category).toLowerCase();
+    if (!key) return null;
+    const mapped = this.fallbackSeverities[key];
+    if (!mapped) return null;
+    return this.normalizeSeverityValue(this.cleanString(mapped).toLowerCase());
   }
 }

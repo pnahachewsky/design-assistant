@@ -103,6 +103,7 @@ export class AlertsGuidanceComponent implements OnInit, OnChanges {
   @Output() maxSeverityChange = new EventEmitter<string | null>();
   @Output() categoriesChange = new EventEmitter<{ label: string; severity: string }[]>();
   @Output() loadingChange = new EventEmitter<boolean>();
+  @Output() errorChange = new EventEmitter<boolean>();
 
   issues: AlertIssue[] = [];
   isLoading = false;
@@ -158,20 +159,24 @@ export class AlertsGuidanceComponent implements OnInit, OnChanges {
     if (!html || this.isLoading) return;
 
     this.setLoading(true);
+    this.setError(false);
     try {
       const aiIssues = await this.alertAi.analyze(html);
-      if (aiIssues?.length) {
-        this.issues = aiIssues.map((issue) => ({
-          ...issue,
-          severity: issue.severity || 'Unknown',
-          include: issue.include ?? true,
-        }));
-        this.sortIssues();
-        this.applySelectAll(this.selectAll);
-        this.emitDerived();
+      if (!aiIssues?.length) {
+        this.setError(true);
+        return;
       }
+      this.issues = aiIssues.map((issue) => ({
+        ...issue,
+        severity: issue.severity || 'Unknown',
+        include: issue.include ?? true,
+      }));
+      this.sortIssues();
+      this.applySelectAll(this.selectAll);
+      this.emitDerived();
     } catch (err) {
       console.error('Alert AI call failed', err);
+      this.setError(true);
     } finally {
       this.setLoading(false);
     }
@@ -180,5 +185,9 @@ export class AlertsGuidanceComponent implements OnInit, OnChanges {
   private setLoading(flag: boolean): void {
     this.isLoading = flag;
     this.loadingChange.emit(flag);
+  }
+
+  private setError(flag: boolean): void {
+    this.errorChange.emit(flag);
   }
 }

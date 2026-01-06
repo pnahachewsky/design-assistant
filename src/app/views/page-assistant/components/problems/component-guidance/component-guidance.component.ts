@@ -157,6 +157,7 @@ export class ComponentGuidanceComponent implements OnInit {
   alertHasIssues = false;
   alertDataLoaded = false;
   alertLoadAttempted = false;
+  alertError = false;
   private prevAlertHasIssues = false;
 
   // multi-select
@@ -400,6 +401,9 @@ export class ComponentGuidanceComponent implements OnInit {
     this.alertHasIssues = this.alertCategories.length > 0;
     this.syncAlertRowSelection();
     this.prevAlertHasIssues = this.alertHasIssues;
+    if (this.alertHasIssues) {
+      this.alertError = false;
+    }
   }
 
   onAlertMaxSeverityChange(sev: string | null): void {
@@ -412,8 +416,22 @@ export class ComponentGuidanceComponent implements OnInit {
       if (flag) {
         this.alertLoadAttempted = true;
         this.alertDataLoaded = false;
+        this.alertError = false;
       } else if (this.alertLoadAttempted) {
         this.alertDataLoaded = true;
+      }
+      this.cdr.markForCheck();
+    });
+  }
+
+  onAlertErrorChange(flag: boolean): void {
+    Promise.resolve().then(() => {
+      this.alertError = flag;
+      this.alertDataLoaded = true;
+      if (flag) {
+        this.alertCategories = [];
+        this.alertHasIssues = false;
+        this.alertMaxSeverity = null;
       }
       this.cdr.markForCheck();
     });

@@ -1,0 +1,22 @@
+{
+  "Misuse": "Medium",
+  "Too Wordy": "Medium",
+  "Generic Titles": "High",
+  "Unclear Impact": "Low",
+  "Outdated": "Medium",
+  "Missing Heading": "High",
+  "Wrong Type": "Medium",
+  "Hidden Content": "Medium",
+  "Wrong Component": "Medium",
+  "Accessibility/Code": "High",
+  "Too Many Links": "Medium",
+  "Wrong Placement": "Medium",
+  "Alert Overload": "High",
+  "Low Relevance": "High",
+  "Incorrect Hierarchy": "High",
+  "Nothing Actionable": "Low",
+  "Focus Order": "High",
+  "Sensory/Color Reliance": "Medium",
+  "Content Clarity": "Medium",
+  "Non-Text Content": "High"
+}
