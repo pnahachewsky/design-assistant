@@ -9,12 +9,7 @@ import { TooltipModule } from 'primeng/tooltip';
 import { TranslateService, TranslateModule } from '@ngx-translate/core';
 import { SortEvent } from 'primeng/api';
 import { AlertsGuidanceComponent } from './alerts-guidance/alerts-guidance.component';
-import {
-  ALERT_SEVERITY_RANK,
-  DEFAULT_ALERT_ISSUES,
-  computeAlertCategories,
-  computeAlertMaxSeverity,
-} from './alerts-guidance/alerts-guidance.component';
+import { ALERT_SEVERITY_RANK } from './alerts-guidance/alerts-guidance.component';
 
 import { UploadStateService } from '../../../services/upload-state.service';
 import { ValidatorService } from '../../../services/validator.service';
@@ -27,6 +22,7 @@ import {
 import { HttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
 import { environment } from '../../../../../../environments/environment';
+import { ChangeDetectorRef } from '@angular/core';
 
 // UI shows these:
 type UiHealth = 'severe' | 'minor' | 'ok' | 'unknown';
@@ -135,6 +131,7 @@ interface GuidanceRow {
     `
       .caption-actions {
         display: flex;
+        align-items: center;
         justify-content: flex-end;
         gap: 0.5rem;
       }
@@ -147,17 +144,19 @@ export class ComponentGuidanceComponent implements OnInit {
   private validator = inject(ValidatorService);
   private http = inject(HttpClient);
   private ai = inject(ComponentAiService);
+  private cdr = inject(ChangeDetectorRef);
 
   production: boolean = environment.production;
 
   guidanceList: { name: string; url: string }[] = [];
   rows: GuidanceRow[] = [];
-  alertCategories: { label: string; severity: string }[] = this.sortCategories(
-    computeAlertCategories(DEFAULT_ALERT_ISSUES),
-  );
-  alertMaxSeverity: string | null = computeAlertMaxSeverity(DEFAULT_ALERT_ISSUES);
+  alertCategories: { label: string; severity: string }[] = [];
+  alertMaxSeverity: string | null = null;
   alertSelectAll = true;
-  alertHasIssues = DEFAULT_ALERT_ISSUES.length > 0;
+  alertLoading = false;
+  alertHasIssues = false;
+  alertDataLoaded = false;
+  alertLoadAttempted = false;
   private prevAlertHasIssues = false;
 
   // multi-select
@@ -407,6 +406,19 @@ export class ComponentGuidanceComponent implements OnInit {
     this.alertMaxSeverity = sev;
   }
 
+  onAlertLoadingChange(flag: boolean): void {
+    Promise.resolve().then(() => {
+      this.alertLoading = flag;
+      if (flag) {
+        this.alertLoadAttempted = true;
+        this.alertDataLoaded = false;
+      } else if (this.alertLoadAttempted) {
+        this.alertDataLoaded = true;
+      }
+      this.cdr.markForCheck();
+    });
+  }
+
   private syncAlertRowSelection(force = false): void {
     const alertRow = this.rows.find((r) => r.__nameKey === this.alertsNameKey);
     if (!alertRow) return;
@@ -446,5 +458,22 @@ export class ComponentGuidanceComponent implements OnInit {
     if (s === 'medium') return 'chip-med';
     if (s === 'high') return 'chip-severe';
     return 'chip-unk';
+  }
+
+  alertHealthLabel(severity: string | null): string {
+    const s = (severity || '').toLowerCase();
+    if (s === 'high') return 'Severe';
+    if (s === 'medium') return 'Moderate';
+    if (s === 'low') return 'Minor';
+    if (!severity || s === 'unknown') return 'Unknown';
+    return severity;
+  }
+
+  alertHealthIcon(severity: string | null): string {
+    const s = (severity || '').toLowerCase();
+    if (s === 'high') return 'pi pi-exclamation-triangle';
+    if (s === 'medium') return 'pi pi-exclamation-circle';
+    if (s === 'low') return 'pi pi-times-circle';
+    return 'pi pi-question-circle';
   }
 }

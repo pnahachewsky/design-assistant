@@ -91,14 +91,38 @@
       <!-- Health -->
       <td class="health-cell health-col">
         @if (row.__nameKey === alertsNameKey) {
-          @if (alertMaxSeverity) {
-            <span class="chip" [ngClass]="severityChip(alertMaxSeverity)">
-              {{ alertMaxSeverity | titlecase }}
+          @if (!alertDataLoaded) {
+            <span class="chip chip-unk">
+              <i class="pi pi-question-circle" aria-hidden="true"></i>
+              <span class="chip-label">
+                {{ alertHealthLabel(null) }}
+              </span>
             </span>
           } @else {
-            <span class="chip chip-ok">
-              OK
-            </span>
+            @if (alertMaxSeverity) {
+              <span class="chip" [ngClass]="severityChip(alertMaxSeverity)">
+                <i
+                  class="pi"
+                  [ngClass]="alertHealthIcon(alertMaxSeverity)"
+                  aria-hidden="true"
+                ></i>
+                <span class="chip-label">
+                  {{ alertHealthLabel(alertMaxSeverity) }}
+                </span>
+              </span>
+            } @else if (alertHasIssues) {
+              <span class="chip chip-unk">
+                <i class="pi pi-question-circle" aria-hidden="true"></i>
+                <span class="chip-label">
+                  {{ alertHealthLabel(null) }}
+                </span>
+              </span>
+            } @else {
+              <span class="chip chip-ok">
+                <i class="pi pi-check-circle" aria-hidden="true"></i>
+              <span class="chip-label">OK</span>
+              </span>
+            }
           }
         } @else {
           <span
@@ -130,15 +154,26 @@
       <!-- Pain points -->
       <td>
         @if (row.__nameKey === alertsNameKey) {
-          <div class="chip-list">
-            <span
-              class="chip"
-              *ngFor="let chip of alertCategories"
-              [ngClass]="severityChip(chip.severity)"
-            >
-              {{ chip.label }}
-            </span>
-          </div>
+          @if (expanded && alertLoading) {
+            <div class="alert-loading">
+              <i class="pi pi-spinner pi-spin" aria-hidden="true"></i>
+              <span class="sr-only">Loading alerts</span>
+            </div>
+          } @else if (alertDataLoaded && alertCategories.length) {
+            <div class="chip-list">
+              <span
+                class="chip"
+                *ngFor="let chip of alertCategories"
+                [ngClass]="severityChip(chip.severity)"
+              >
+                {{ chip.label }}
+              </span>
+            </div>
+          } @else if (alertDataLoaded) {
+            <span class="muted">No pain points found</span>
+          } @else {
+            <span class="muted">Expand this row to explore alert pain points</span>
+          }
         } @else {
           @if ((row.issues?.length || 0) > 0) {
             <div class="chip-list">
@@ -167,6 +202,7 @@
               [selectAll]="alertSelectAll"
               (maxSeverityChange)="onAlertMaxSeverityChange($event)"
               (categoriesChange)="onAlertCategoriesChange($event)"
+              (loadingChange)="onAlertLoadingChange($event)"
             ></ca-alerts-guidance>
           } @else {
             <p-table styleClass="p-datatable-sm expansion-table">

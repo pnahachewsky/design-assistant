@@ -102,8 +102,9 @@ export class AlertsGuidanceComponent implements OnInit, OnChanges {
   @Input() selectAll = true;
   @Output() maxSeverityChange = new EventEmitter<string | null>();
   @Output() categoriesChange = new EventEmitter<{ label: string; severity: string }[]>();
+  @Output() loadingChange = new EventEmitter<boolean>();
 
-  issues: AlertIssue[] = DEFAULT_ALERT_ISSUES.map((i) => ({ ...i }));
+  issues: AlertIssue[] = [];
   isLoading = false;
 
   ngOnInit(): void {
@@ -156,13 +157,13 @@ export class AlertsGuidanceComponent implements OnInit, OnChanges {
     const html = this.uploadState.getUploadData()?.originalHtml || '';
     if (!html || this.isLoading) return;
 
-    this.isLoading = true;
+    this.setLoading(true);
     try {
       const aiIssues = await this.alertAi.analyze(html);
       if (aiIssues?.length) {
         this.issues = aiIssues.map((issue) => ({
           ...issue,
-          severity: issue.severity || 'Medium',
+          severity: issue.severity || 'Unknown',
           include: issue.include ?? true,
         }));
         this.sortIssues();
@@ -172,7 +173,12 @@ export class AlertsGuidanceComponent implements OnInit, OnChanges {
     } catch (err) {
       console.error('Alert AI call failed', err);
     } finally {
-      this.isLoading = false;
+      this.setLoading(false);
     }
+  }
+
+  private setLoading(flag: boolean): void {
+    this.isLoading = flag;
+    this.loadingChange.emit(flag);
   }
 }

@@ -183,7 +183,7 @@ export class AlertAiService {
 
   private normalizeSeverity(v: unknown): string {
     const raw = this.cleanString(v).toLowerCase();
-    if (!raw) return 'Medium';
+    if (!raw) return 'Unknown';
     if (raw === 'high' || raw === 'critical') return 'High';
     if (raw === 'medium' || raw === 'med' || raw === 'moderate') return 'Medium';
     if (raw === 'low' || raw === 'minor') return 'Low';
