@@ -603,7 +603,7 @@ export class LinkReportComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    void this.extractLinks();
+    //void this.extractLinks();
   }
 
   /** Build a stable key for the "destination" (dedupe by this). */
