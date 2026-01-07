@@ -20815,6 +20815,60 @@ var WebDiffService = class _WebDiffService {
         display: block;
       }
 
+      .alert-pain-points {
+        border: 1px solid #f3d6a6;
+        background: #fff7e6;
+        padding: 0.5rem 0.75rem;
+        margin: 0 0 0.5rem 0;
+        font-size: 0.9rem;
+      }
+
+      .alert-pain-points__title {
+        font-weight: 600;
+        margin-bottom: 0.25rem;
+      }
+
+      .chip-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.25rem;
+      }
+
+      .chip {
+        display: inline-flex;
+        align-items: center;
+        border-radius: 9999px;
+        padding: 0.1rem 0.6rem;
+        background: #f1f5f9;
+        color: #0f172a;
+        border: 1px solid #e2e8f0;
+        font-size: 0.8rem;
+        line-height: 1.2;
+      }
+
+      .alert-pain-points__output {
+        margin-top: 0.5rem;
+      }
+
+      .alert-pain-points__output-title {
+        font-weight: 600;
+        margin-bottom: 0.25rem;
+      }
+
+      .alert-pain-points__output-box {
+        margin: 0;
+        padding: 0.5rem;
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 6px;
+        white-space: pre-wrap;
+        word-break: break-word;
+        font-size: 0.8rem;
+        line-height: 1.2;
+        max-height: 14rem;
+        overflow: auto;
+      }
+
       /* Optional connection type styling */
       .cnjnctn-type-or > [class*=cnjnctn-col]:not(:first-child):before {
         content: "or";
@@ -20852,8 +20906,8 @@ var ShadowDomService = class _ShadowDomService {
     }
   }
   //Generate shadow DOM content based on view type
-  generateShadowDOMContent(shadowRoot, viewType, originalHtml, modifiedHtml) {
-    return __async(this, null, function* () {
+  generateShadowDOMContent(_0, _1, _2, _3) {
+    return __async(this, arguments, function* (shadowRoot, viewType, originalHtml, modifiedHtml, alertPainPoints = [], alertOutput = "") {
       if (!shadowRoot) {
         console.error("Shadow DOM not available");
         return;
@@ -20879,13 +20933,15 @@ var ShadowDomService = class _ShadowDomService {
       renderedContent.classList.add("rendered-content");
       switch (viewType) {
         case "original":
-          this.renderHtml(renderedContent, originalHtml, "original-html");
+          this.renderHtml(renderedContent, originalHtml, "original-html", alertPainPoints, alertOutput);
           break;
         case "modified":
-          this.renderHtml(renderedContent, modifiedHtml, "modified-html");
+          const modifiedWithAlerts = this.applyAlertVisualChanges(modifiedHtml, alertOutput);
+          this.renderHtml(renderedContent, modifiedWithAlerts, "modified-html", alertPainPoints, alertOutput);
           break;
         case "diff":
-          yield this.renderDiffHtml(renderedContent, originalHtml, modifiedHtml, "diff-content");
+          const diffModifiedHtml = this.applyAlertVisualChanges(modifiedHtml, alertOutput);
+          yield this.renderDiffHtml(renderedContent, originalHtml, diffModifiedHtml, "diff-content", alertPainPoints, alertOutput);
           break;
       }
       diffContainer.appendChild(renderedContent);
@@ -20893,18 +20949,101 @@ var ShadowDomService = class _ShadowDomService {
     });
   }
   //Render HTML
-  renderHtml(container, html, className) {
+  renderHtml(container, html, className, alertPainPoints, alertOutput) {
     container.classList.add(className);
-    container.innerHTML = `<div id="editable" contenteditable="false">${html}</div>`;
+    const wrapper = document.createElement("div");
+    wrapper.id = "editable";
+    wrapper.setAttribute("contenteditable", "false");
+    wrapper.innerHTML = html;
+    this.insertAlertPainPoints(wrapper, alertPainPoints, alertOutput);
+    container.innerHTML = "";
+    container.appendChild(wrapper);
   }
   //Render Diff
-  renderDiffHtml(container, originalHtml, modifiedHtml, className) {
+  renderDiffHtml(container, originalHtml, modifiedHtml, className, alertPainPoints, alertOutput) {
     return __async(this, null, function* () {
       const diffResult = yield this.webDiffService.generateHtmlDiff(originalHtml, modifiedHtml);
       const adjustedDiff = yield this.adjustDOM(originalHtml, diffResult);
       container.classList.add(className);
-      container.innerHTML = adjustedDiff;
+      const parser = new DOMParser();
+      const diffDoc = parser.parseFromString(adjustedDiff, "text/html");
+      this.insertAlertPainPoints(diffDoc.body, alertPainPoints, alertOutput);
+      container.innerHTML = diffDoc.body.innerHTML;
     });
+  }
+  insertAlertPainPoints(root, alertPainPoints, alertOutput) {
+    if (!alertPainPoints.length)
+      return;
+    const alerts = root.querySelectorAll(".alert");
+    if (!alerts.length)
+      return;
+    alerts.forEach((alertEl) => {
+      const doc = alertEl.ownerDocument;
+      const wrapper = doc.createElement("div");
+      wrapper.className = "alert-pain-points";
+      const title = doc.createElement("div");
+      title.className = "alert-pain-points__title";
+      title.textContent = "Pain points";
+      const list = doc.createElement("div");
+      list.className = "chip-list";
+      alertPainPoints.forEach((point) => {
+        const chip = doc.createElement("span");
+        chip.className = "chip";
+        chip.textContent = point.label;
+        list.appendChild(chip);
+      });
+      const output = doc.createElement("div");
+      output.className = "alert-pain-points__output";
+      const outputTitle = doc.createElement("div");
+      outputTitle.className = "alert-pain-points__output-title";
+      outputTitle.textContent = "AI output";
+      const outputBox = doc.createElement("pre");
+      outputBox.className = "alert-pain-points__output-box";
+      outputBox.textContent = alertOutput || "AI output not available.";
+      output.appendChild(outputTitle);
+      output.appendChild(outputBox);
+      wrapper.appendChild(title);
+      wrapper.appendChild(list);
+      wrapper.appendChild(output);
+      alertEl.parentNode?.insertBefore(wrapper, alertEl);
+    });
+  }
+  applyAlertVisualChanges(html, alertOutput) {
+    const finalHtml = this.parseAlertFinalHtml(alertOutput);
+    if (!finalHtml)
+      return html;
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(html, "text/html");
+    const alerts = doc.querySelectorAll(".alert");
+    if (!alerts.length)
+      return html;
+    const template = doc.createElement("template");
+    template.innerHTML = finalHtml.trim();
+    if (!template.content.childNodes.length)
+      return html;
+    const finalAlert = template.content.querySelector(".alert") || template.content.querySelector("*");
+    if (!finalAlert)
+      return html;
+    alerts.forEach((alertEl) => {
+      if (finalAlert.classList.contains("alert")) {
+        alertEl.replaceWith(finalAlert.cloneNode(true));
+      } else {
+        alertEl.innerHTML = finalHtml.trim();
+      }
+    });
+    return doc.body.innerHTML;
+  }
+  parseAlertFinalHtml(alertOutput) {
+    if (!alertOutput)
+      return null;
+    const sectionMatch = alertOutput.match(/(?:^|\n)\s*(?:#{1,6}\s*)?Final HTML\s*:?\s*([\s\S]*?)(?:\n#{1,6}\s|\s*$)/i);
+    const section = sectionMatch?.[1]?.trim();
+    if (!section)
+      return null;
+    const fenced = section.match(/```(?:html)?\s*([\s\S]*?)\s*```/i);
+    const raw = (fenced?.[1] || section).trim();
+    return raw.replace(/^\s*HTML\s*\n/i, "").trim();
+    return null;
   }
   //Adjust diff result (mark changed links, images, remove nested diff tags)
   adjustDOM(originalHtml, diffResult) {
@@ -21226,6 +21365,34 @@ var ShadowDomService = class _ShadowDomService {
   }], null, null);
 })();
 
+// src/app/views/page-assistant/services/alert-pain-points.service.ts
+var AlertPainPointsService = class _AlertPainPointsService {
+  painPoints = signal([]);
+  rawOutput = signal("");
+  painPointsSignal = computed(() => this.painPoints());
+  rawOutputSignal = computed(() => this.rawOutput());
+  setPainPoints(points) {
+    this.painPoints.set(points);
+  }
+  setRawOutput(output) {
+    this.rawOutput.set(output);
+  }
+  clear() {
+    this.painPoints.set([]);
+    this.rawOutput.set("");
+  }
+  static \u0275fac = function AlertPainPointsService_Factory(__ngFactoryType__) {
+    return new (__ngFactoryType__ || _AlertPainPointsService)();
+  };
+  static \u0275prov = /* @__PURE__ */ \u0275\u0275defineInjectable({ token: _AlertPainPointsService, factory: _AlertPainPointsService.\u0275fac, providedIn: "root" });
+};
+(() => {
+  (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(AlertPainPointsService, [{
+    type: Injectable,
+    args: [{ providedIn: "root" }]
+  }], null, null);
+})();
+
 // src/app/views/page-assistant/data/ai-prompts.constants.ts
 var PromptTemplates = {
   [PromptKey.Headings]: `
@@ -21317,26 +21484,26 @@ ________________________________________
 Analyze the inputs using the following two steps. You must distinguish between "Simple Issues" (structural/pattern-based) and "Complex Issues" (requiring AI analysis/context).
 Step 1: Analyze for "Simple" Alert Issues (Rule-Based Checks)
 \xB7 Misuse: Do not use alerts for standard process steps, low-risk warnings, or emphasis.
-\xB7 Too Wordy: Alerts must be short (1-2 sentences). If longer, recommend a summary with a link.
-\xB7 Generic Titles: Flag headers like "Note," "Info," or "Important." Titles must be descriptive.
-\xB7 Unclear Impact: The alert must explain the consequence to the user, not just state a fact.
+\xB7 Too wordy: Alerts must be short (1-2 sentences). If longer, recommend a summary with a link.
+\xB7 Generic titles: Flag headers like "Note," "Info," or "Important." Titles must be descriptive.
+\xB7 Unclear impact: The alert must explain the consequence to the user, not just state a fact.
 \xB7 Outdated: Flag past dates or resolved events. Alerts are temporary.
-\xB7 Missing Heading: Alerts must contain a heading element.
-\xB7 Wrong Type: Ensure color matches severity (e.g., Blue=Info, Red=Danger).
-\xB7 Hidden Content: Do not use expand/collapse (accordions) in alerts; content must be visible.
-\xB7 Wrong Component: Do not use alerts just to flag "New" items (use Labels instead).
-\xB7 Accessibility/Code: Icons must have text alternatives; hierarchy must be correct.
-\xB7 Too Many Links: Limit to one primary link per alert.
-\xB7 Wrong Placement: Alerts must be adjacent to the relevant section, not at the top of a general page if specific.
-\xB7 Alert Overload: Flag pages with multiple stacked alerts (alert fatigue).
-\xB7 Low Relevance: On Home/Landing pages, alerts must apply to >50% of the audience.
-\xB7 Incorrect Hierarchy: Alert headings must fit the page outline (e.g., don't put an H4 after an H2).
-\xB7 Nothing Actionable: If no action/consequence is listed, convert to plain text.
+\xB7 Missing heading: Alerts must contain a heading element.
+\xB7 Wrong type: Ensure color matches severity (e.g., Blue=Info, Red=Danger).
+\xB7 Hidden content: Do not use expand/collapse (accordions) in alerts; content must be visible.
+\xB7 Wrong component: Do not use alerts just to flag "New" items (use Labels instead).
+\xB7 Accessibility/code: Icons must have text alternatives; hierarchy must be correct.
+\xB7 Too many links: Limit to one primary link per alert.
+\xB7 Wrong placement: Alerts must be adjacent to the relevant section, not at the top of a general page if specific.
+\xB7 Alert overload: Flag pages with multiple stacked alerts (alert fatigue).
+\xB7 Low relevance: On Home/Landing pages, alerts must apply to >50% of the audience.
+\xB7 Incorrect hierarchy: Alert headings must fit the page outline (e.g., don't put an H4 after an H2).
+\xB7 Nothing actionable: If no action/consequence is listed, convert to plain text.
 Step 2: Analyze for "Complex" Issues (AI/LLM Analysis)
-\xB7 Focus Order: Ensure the alert logical reading order is preserved and not skipped by screen readers.
-\xB7 Sensory/Color Reliance: Ensure importance is not conveyed by color alone (add text prefixes like "Warning:").
-\xB7 Content Clarity: Ensure reading level is Grade 6-8 and plain language is used.
-\xB7 Non-Text Content: Ensure images/icons have descriptive Alt text.
+\xB7 Focus order: Ensure the alert logical reading order is preserved and not skipped by screen readers.
+\xB7 Sensory/color reliance: Ensure importance is not conveyed by color alone (add text prefixes like "Warning:").
+\xB7 Content clarity: Ensure reading level is Grade 6-8 and plain language is used.
+\xB7 Non-text content: Ensure images/icons have descriptive Alt text.
 ___________________________________
 3. Output Format
 You must output your findings in two specific categories.
@@ -24092,7 +24259,8 @@ var AiOptionsComponent = class _AiOptionsComponent {
   promptOptions = [
     { id: PromptKey.Headings, label: "page.ai-options.prompt.Headings", disabled: false },
     { id: PromptKey.Doormats, label: "page.ai-options.prompt.Doormats", disabled: false },
-    { id: PromptKey.PlainLanguage, label: "page.ai-options.prompt.PlainLanguage", disabled: false }
+    { id: PromptKey.PlainLanguage, label: "page.ai-options.prompt.PlainLanguage", disabled: false },
+    { id: PromptKey.AlertsGuidance, label: "page.ai-options.prompt.Alerts", disabled: false }
   ];
   isPromptCheckboxDisabled(id) {
     return !this.selectedPrompts.includes(id) && this.selectedPrompts.length >= 2;
@@ -24571,38 +24739,45 @@ var HeadingStructureComponent = class _HeadingStructureComponent {
   (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(HeadingStructureComponent, { className: "HeadingStructureComponent", filePath: "src/app/views/page-assistant/components/problems/heading-structure.component.ts", lineNumber: 37 });
 })();
 
-// src/app/views/page-assistant/components/problems/component-guidance/alerts-guidance/alert-severity-fallback.json
-var alert_severity_fallback_default = {
-  Misuse: "Medium",
-  "Too Wordy": "Medium",
-  "Generic Titles": "High",
-  "Unclear Impact": "Low",
-  Outdated: "Medium",
-  "Missing Heading": "High",
-  "Wrong Type": "Medium",
-  "Hidden Content": "Medium",
-  "Wrong Component": "Medium",
-  "Accessibility/Code": "High",
-  "Too Many Links": "Medium",
-  "Wrong Placement": "Medium",
-  "Alert Overload": "High",
-  "Low Relevance": "High",
-  "Incorrect Hierarchy": "High",
-  "Nothing Actionable": "Low",
-  "Focus Order": "High",
-  "Sensory/Color Reliance": "Medium",
-  "Content Clarity": "Medium",
-  "Non-Text Content": "High"
+// src/app/views/page-assistant/components/problems/component-guidance/alerts-guidance/severity-include-fallback.json
+var severity_include_fallback_default = {
+  Misuse: { severity: "Medium", include: true },
+  "Too wordy": { severity: "Medium", include: true },
+  "Generic titles": { severity: "High", include: true },
+  "Generic title": { severity: "High", include: true },
+  "Unclear impact": { severity: "Low", include: true },
+  Outdated: { severity: "Medium", include: true },
+  "Missing heading": { severity: "High", include: true },
+  "Wrong type": { severity: "Medium", include: true },
+  "Hidden content": { severity: "Medium", include: true },
+  "Wrong component": { severity: "Medium", include: true },
+  "Accessibility/code": { severity: "High", include: false },
+  "Too many links": { severity: "Medium", include: true },
+  "Wrong placement": { severity: "Medium", include: true },
+  "Alert overload": { severity: "High", include: true },
+  "Low relevance": { severity: "High", include: true },
+  "Incorrect hierarchy": { severity: "High", include: true },
+  "Nothing actionable": { severity: "Low", include: true },
+  "Focus order": { severity: "High", include: true },
+  "Sensory/color reliance": { severity: "Medium", include: true },
+  "Content clarity": { severity: "Medium", include: true },
+  "Non-text content": { severity: "High", include: true }
 };
 
 // src/app/views/page-assistant/services/alert-ai.service.ts
 var AlertAiService = class _AlertAiService {
   http = inject(HttpClient);
   apiKeyService = inject(ApiKeyService);
-  fallbackSeverities = Object.fromEntries(Object.entries(alert_severity_fallback_default).map(([k, v]) => [
-    k.toLowerCase(),
-    String(v)
-  ]));
+  cachedAlertIssues = null;
+  cachedAlertOutput = null;
+  fallbackSeverities = Object.fromEntries(Object.entries(severity_include_fallback_default).map(([k, v]) => {
+    if (typeof v === "string") {
+      return [k.toLowerCase(), { severity: String(v) }];
+    }
+    const severity = typeof v?.severity === "string" ? v.severity : "";
+    const include = typeof v?.include === "boolean" ? v.include : void 0;
+    return [k.toLowerCase(), { severity, include }];
+  }));
   openRouterApiUrl = "https://openrouter.ai/api/v1/chat/completions";
   models = [
     "meta-llama/llama-3.3-70b-instruct:free",
@@ -24631,11 +24806,43 @@ var AlertAiService = class _AlertAiService {
         if (!text)
           continue;
         const issues = this.parseIssues(text);
-        if (issues.length)
+        if (issues.length) {
+          this.cacheOutput(alertHtml, text);
           return issues;
+        }
       }
       return [];
     });
+  }
+  getCachedIssues(alertHtml) {
+    const normalized = this.trimText(alertHtml);
+    if (!this.cachedAlertIssues)
+      return null;
+    if (this.cachedAlertIssues.html !== normalized)
+      return null;
+    return this.cachedAlertIssues.issues;
+  }
+  getCachedOutput(alertHtml) {
+    const normalized = this.trimText(alertHtml);
+    if (!this.cachedAlertOutput)
+      return null;
+    if (this.cachedAlertOutput.html !== normalized)
+      return null;
+    return this.cachedAlertOutput.output;
+  }
+  cacheIssues(alertHtml, issues) {
+    const normalized = this.trimText(alertHtml);
+    this.cachedAlertIssues = {
+      html: normalized,
+      issues: issues.map((issue) => __spreadValues({}, issue))
+    };
+  }
+  cacheOutput(alertHtml, output) {
+    const normalized = this.trimText(alertHtml);
+    this.cachedAlertOutput = {
+      html: normalized,
+      output
+    };
   }
   // ---------- OpenRouter plumbing ----------
   callOpenRouter(model, messages, temperature = 0) {
@@ -24687,7 +24894,7 @@ var AlertAiService = class _AlertAiService {
       const description = this.cleanString(obj["description"]);
       const recommendation = this.cleanString(obj["recommendation"]);
       const severity = this.normalizeSeverity(obj["severity"], category);
-      const include = typeof obj["include"] === "boolean" ? obj["include"] : true;
+      const include = typeof obj["include"] === "boolean" ? obj["include"] : this.lookupFallbackInclude(category) ?? true;
       if (!category || !description || !recommendation)
         return null;
       const issue = {
@@ -24748,9 +24955,16 @@ var AlertAiService = class _AlertAiService {
     if (!key2)
       return null;
     const mapped = this.fallbackSeverities[key2];
-    if (!mapped)
+    if (!mapped?.severity)
       return null;
-    return this.normalizeSeverityValue(this.cleanString(mapped).toLowerCase());
+    return this.normalizeSeverityValue(this.cleanString(mapped.severity).toLowerCase());
+  }
+  lookupFallbackInclude(category) {
+    const key2 = this.cleanString(category).toLowerCase();
+    if (!key2)
+      return null;
+    const mapped = this.fallbackSeverities[key2];
+    return typeof mapped?.include === "boolean" ? mapped.include : null;
   }
   static \u0275fac = function AlertAiService_Factory(__ngFactoryType__) {
     return new (__ngFactoryType__ || _AlertAiService)();
@@ -24869,6 +25083,7 @@ function computeAlertMaxSeverity(issues, rank = ALERT_SEVERITY_RANK) {
 var AlertsGuidanceComponent = class _AlertsGuidanceComponent {
   uploadState = inject(UploadStateService);
   alertAi = inject(AlertAiService);
+  alertPainPoints = inject(AlertPainPointsService);
   selectAll = true;
   maxSeverityChange = new EventEmitter();
   categoriesChange = new EventEmitter();
@@ -24893,8 +25108,10 @@ var AlertsGuidanceComponent = class _AlertsGuidanceComponent {
     this.emitDerived();
   }
   applySelectAll(flag) {
-    this.issues = this.issues.map((issue) => __spreadProps(__spreadValues({}, issue), { include: flag }));
-    this.sortIssues();
+    if (!flag) {
+      this.issues = this.issues.map((issue) => __spreadProps(__spreadValues({}, issue), { include: false }));
+      this.sortIssues();
+    }
   }
   sortIssues() {
     this.issues = [...this.issues].sort((a, b) => {
@@ -24908,6 +25125,14 @@ var AlertsGuidanceComponent = class _AlertsGuidanceComponent {
   emitDerived() {
     this.maxSeverityChange.emit(computeAlertMaxSeverity(this.issues));
     this.categoriesChange.emit(computeAlertCategories(this.issues));
+    this.alertPainPoints.setPainPoints(this.selectedPainPoints);
+  }
+  normalizeCategoryLabel(label) {
+    const trimmed = (label || "").trim();
+    if (!trimmed)
+      return trimmed;
+    const lower = trimmed.toLowerCase();
+    return lower.charAt(0).toUpperCase() + lower.slice(1);
   }
   severityClass(severity) {
     const s = (severity || "").toLowerCase();
@@ -24919,11 +25144,27 @@ var AlertsGuidanceComponent = class _AlertsGuidanceComponent {
       return "chip-severe";
     return "chip-unk";
   }
+  get selectedPainPoints() {
+    const included = this.issues.filter((issue) => issue.include);
+    return computeAlertCategories(included);
+  }
   loadFromAi() {
     return __async(this, null, function* () {
       const html = this.uploadState.getUploadData()?.originalHtml || "";
       if (!html || this.isLoading)
         return;
+      const cached = this.alertAi.getCachedIssues(html);
+      if (cached?.length) {
+        this.issues = cached.map((issue) => __spreadProps(__spreadValues({}, issue), {
+          category: this.normalizeCategoryLabel(issue.category)
+        }));
+        this.sortIssues();
+        this.applySelectAll(this.selectAll);
+        this.emitDerived();
+        const cachedOutput = this.alertAi.getCachedOutput(html) || "";
+        this.alertPainPoints.setRawOutput(cachedOutput);
+        return;
+      }
       this.setLoading(true);
       this.setError(false);
       try {
@@ -24932,10 +25173,15 @@ var AlertsGuidanceComponent = class _AlertsGuidanceComponent {
           this.setError(true);
           return;
         }
-        this.issues = aiIssues.map((issue) => __spreadProps(__spreadValues({}, issue), {
+        const normalizedIssues = aiIssues.map((issue) => __spreadProps(__spreadValues({}, issue), {
+          category: this.normalizeCategoryLabel(issue.category),
           severity: issue.severity || "Unknown",
           include: issue.include ?? true
         }));
+        this.alertAi.cacheIssues(html, normalizedIssues);
+        const cachedOutput = this.alertAi.getCachedOutput(html) || "";
+        this.alertPainPoints.setRawOutput(cachedOutput);
+        this.issues = normalizedIssues;
         this.sortIssues();
         this.applySelectAll(this.selectAll);
         this.emitDerived();
@@ -24985,7 +25231,7 @@ var AlertsGuidanceComponent = class _AlertsGuidanceComponent {
   }] });
 })();
 (() => {
-  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(AlertsGuidanceComponent, { className: "AlertsGuidanceComponent", filePath: "src/app/views/page-assistant/components/problems/component-guidance/alerts-guidance/alerts-guidance.component.ts", lineNumber: 98 });
+  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(AlertsGuidanceComponent, { className: "AlertsGuidanceComponent", filePath: "src/app/views/page-assistant/components/problems/component-guidance/alerts-guidance/alerts-guidance.component.ts", lineNumber: 99 });
 })();
 
 // src/app/views/page-assistant/data/css-list.config.ts
@@ -32335,6 +32581,7 @@ var PageAssistantCompareComponent = class _PageAssistantCompareComponent {
   uploadState = inject(UploadStateService);
   sourceDiffService = inject(SourceDiffService);
   shadowDomService = inject(ShadowDomService);
+  alertPainPointsService = inject(AlertPainPointsService);
   urlDataService = inject(UrlDataService);
   router = inject(Router);
   locationStrategy = inject(LocationStrategy);
@@ -32343,8 +32590,10 @@ var PageAssistantCompareComponent = class _PageAssistantCompareComponent {
       const data = this.uploadState.getUploadData();
       const viewType = this.webSelectedView();
       const shadowRoot = this.shadowDOM();
+      const painPoints = this.getAlertPainPointsForRender();
+      const alertOutput = this.getAlertOutputForRender();
       if (data?.originalHtml && data?.modifiedHtml && shadowRoot) {
-        yield this.shadowDomService.generateShadowDOMContent(shadowRoot, viewType, data.originalHtml, data.modifiedHtml);
+        yield this.shadowDomService.generateShadowDOMContent(shadowRoot, viewType, data.originalHtml, data.modifiedHtml, painPoints, alertOutput);
         if (this.shadowClickHandler) {
           this.shadowClickHandler();
           console.log("Reset shadow click handler");
@@ -32379,6 +32628,13 @@ var PageAssistantCompareComponent = class _PageAssistantCompareComponent {
       const canShareModified = this.urlDataService.isValidUrl(data?.modifiedUrl);
       this.canShare = canShareOriginal || canShareModified;
     }));
+    effect(() => {
+      this.alertPainPointsService.painPointsSignal();
+      this.alertPainPointsService.rawOutputSignal();
+      if (this.selectedPromptKey !== PromptKey.AlertsGuidance)
+        return;
+      void this.refreshWebView();
+    });
     effect(() => {
       const data = this.uploadState.getUploadData();
       const viewType = this.sourceSelectedView();
@@ -32661,6 +32917,7 @@ var PageAssistantCompareComponent = class _PageAssistantCompareComponent {
   selectedPromptKey = PromptKey.PlainLanguage;
   onPromptChange(key2) {
     this.selectedPromptKey = key2;
+    this.refreshWebView();
   }
   customPromptText = "";
   onAppendCustom(prompt) {
@@ -32680,6 +32937,26 @@ ${base}
 ${custom}` : `${this.customEditText}
 
 ${base}`;
+  }
+  getAlertPainPointsForRender() {
+    if (this.selectedPromptKey !== PromptKey.AlertsGuidance)
+      return [];
+    return this.alertPainPointsService.painPointsSignal();
+  }
+  getAlertOutputForRender() {
+    if (this.selectedPromptKey !== PromptKey.AlertsGuidance)
+      return "";
+    return this.alertPainPointsService.rawOutputSignal();
+  }
+  refreshWebView() {
+    return __async(this, null, function* () {
+      const data = this.uploadState.getUploadData();
+      const viewType = this.webSelectedView();
+      const shadowRoot = this.shadowDOM();
+      if (!data?.originalHtml || !data?.modifiedHtml || !shadowRoot)
+        return;
+      yield this.shadowDomService.generateShadowDOMContent(shadowRoot, viewType, data.originalHtml, data.modifiedHtml, this.getAlertPainPointsForRender(), this.getAlertOutputForRender());
+    });
   }
   //AI Model
   selectedAiModel = AiModel.Gemini;
@@ -33540,9 +33817,9 @@ ${base}`;
   }] });
 })();
 (() => {
-  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(PageAssistantCompareComponent, { className: "PageAssistantCompareComponent", filePath: "src/app/views/page-assistant/page-assistant.component.ts", lineNumber: 84 });
+  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(PageAssistantCompareComponent, { className: "PageAssistantCompareComponent", filePath: "src/app/views/page-assistant/page-assistant.component.ts", lineNumber: 85 });
 })();
 export {
   PageAssistantCompareComponent
 };
-//# sourceMappingURL=chunk-GPSZQ4M5.js.map
+//# sourceMappingURL=chunk-5RUBSX7X.js.map
