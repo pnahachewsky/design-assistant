@@ -128,8 +128,10 @@ export class AlertsGuidanceComponent implements OnInit, OnChanges {
   }
 
   private applySelectAll(flag: boolean): void {
-    this.issues = this.issues.map((issue) => ({ ...issue, include: flag }));
-    this.sortIssues();
+    if (!flag) {
+      this.issues = this.issues.map((issue) => ({ ...issue, include: false }));
+      this.sortIssues();
+    }
   }
 
   private sortIssues(): void {
@@ -146,6 +148,13 @@ export class AlertsGuidanceComponent implements OnInit, OnChanges {
     this.categoriesChange.emit(computeAlertCategories(this.issues));
   }
 
+  private normalizeCategoryLabel(label: string): string {
+    const trimmed = (label || '').trim();
+    if (!trimmed) return trimmed;
+    const lower = trimmed.toLowerCase();
+    return lower.charAt(0).toUpperCase() + lower.slice(1);
+  }
+
   severityClass(severity: string | undefined | null): string {
     const s = (severity || '').toLowerCase();
     if (s === 'low') return 'chip-minor';
@@ -158,6 +167,18 @@ export class AlertsGuidanceComponent implements OnInit, OnChanges {
     const html = this.uploadState.getUploadData()?.originalHtml || '';
     if (!html || this.isLoading) return;
 
+    const cached = this.alertAi.getCachedIssues(html);
+    if (cached?.length) {
+      this.issues = cached.map((issue) => ({
+        ...issue,
+        category: this.normalizeCategoryLabel(issue.category),
+      }));
+      this.sortIssues();
+      this.applySelectAll(this.selectAll);
+      this.emitDerived();
+      return;
+    }
+
     this.setLoading(true);
     this.setError(false);
     try {
@@ -166,11 +187,14 @@ export class AlertsGuidanceComponent implements OnInit, OnChanges {
         this.setError(true);
         return;
       }
-      this.issues = aiIssues.map((issue) => ({
+      const normalizedIssues = aiIssues.map((issue) => ({
         ...issue,
+        category: this.normalizeCategoryLabel(issue.category),
         severity: issue.severity || 'Unknown',
         include: issue.include ?? true,
       }));
+      this.alertAi.cacheIssues(html, normalizedIssues);
+      this.issues = normalizedIssues;
       this.sortIssues();
       this.applySelectAll(this.selectAll);
       this.emitDerived();

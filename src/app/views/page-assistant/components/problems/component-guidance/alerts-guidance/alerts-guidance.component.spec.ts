@@ -13,6 +13,8 @@ class UploadStateServiceStub {
 
 class AlertAiServiceStub {
   analyze = jasmine.createSpy('analyze').and.resolveTo(DEFAULT_ALERT_ISSUES);
+  getCachedIssues = jasmine.createSpy('getCachedIssues').and.returnValue(null);
+  cacheIssues = jasmine.createSpy('cacheIssues');
 }
 
 describe('AlertsGuidanceComponent', () => {

@@ -89,26 +89,26 @@ ________________________________________
 Analyze the inputs using the following two steps. You must distinguish between "Simple Issues" (structural/pattern-based) and "Complex Issues" (requiring AI analysis/context).
 Step 1: Analyze for "Simple" Alert Issues (Rule-Based Checks)
 · Misuse: Do not use alerts for standard process steps, low-risk warnings, or emphasis.
-· Too Wordy: Alerts must be short (1-2 sentences). If longer, recommend a summary with a link.
-· Generic Titles: Flag headers like "Note," "Info," or "Important." Titles must be descriptive.
-· Unclear Impact: The alert must explain the consequence to the user, not just state a fact.
+· Too wordy: Alerts must be short (1-2 sentences). If longer, recommend a summary with a link.
+· Generic titles: Flag headers like "Note," "Info," or "Important." Titles must be descriptive.
+· Unclear impact: The alert must explain the consequence to the user, not just state a fact.
 · Outdated: Flag past dates or resolved events. Alerts are temporary.
-· Missing Heading: Alerts must contain a heading element.
-· Wrong Type: Ensure color matches severity (e.g., Blue=Info, Red=Danger).
-· Hidden Content: Do not use expand/collapse (accordions) in alerts; content must be visible.
-· Wrong Component: Do not use alerts just to flag "New" items (use Labels instead).
-· Accessibility/Code: Icons must have text alternatives; hierarchy must be correct.
-· Too Many Links: Limit to one primary link per alert.
-· Wrong Placement: Alerts must be adjacent to the relevant section, not at the top of a general page if specific.
-· Alert Overload: Flag pages with multiple stacked alerts (alert fatigue).
-· Low Relevance: On Home/Landing pages, alerts must apply to >50% of the audience.
-· Incorrect Hierarchy: Alert headings must fit the page outline (e.g., don't put an H4 after an H2).
-· Nothing Actionable: If no action/consequence is listed, convert to plain text.
+· Missing heading: Alerts must contain a heading element.
+· Wrong type: Ensure color matches severity (e.g., Blue=Info, Red=Danger).
+· Hidden content: Do not use expand/collapse (accordions) in alerts; content must be visible.
+· Wrong component: Do not use alerts just to flag "New" items (use Labels instead).
+· Accessibility/code: Icons must have text alternatives; hierarchy must be correct.
+· Too many links: Limit to one primary link per alert.
+· Wrong placement: Alerts must be adjacent to the relevant section, not at the top of a general page if specific.
+· Alert overload: Flag pages with multiple stacked alerts (alert fatigue).
+· Low relevance: On Home/Landing pages, alerts must apply to >50% of the audience.
+· Incorrect hierarchy: Alert headings must fit the page outline (e.g., don't put an H4 after an H2).
+· Nothing actionable: If no action/consequence is listed, convert to plain text.
 Step 2: Analyze for "Complex" Issues (AI/LLM Analysis)
-· Focus Order: Ensure the alert logical reading order is preserved and not skipped by screen readers.
-· Sensory/Color Reliance: Ensure importance is not conveyed by color alone (add text prefixes like "Warning:").
-· Content Clarity: Ensure reading level is Grade 6-8 and plain language is used.
-· Non-Text Content: Ensure images/icons have descriptive Alt text.
+· Focus order: Ensure the alert logical reading order is preserved and not skipped by screen readers.
+· Sensory/color reliance: Ensure importance is not conveyed by color alone (add text prefixes like "Warning:").
+· Content clarity: Ensure reading level is Grade 6-8 and plain language is used.
+· Non-text content: Ensure images/icons have descriptive Alt text.
 ___________________________________
 3. Output Format
 You must output your findings in two specific categories.

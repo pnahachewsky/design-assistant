@@ -4,7 +4,7 @@ import { ApiKeyService } from '../../../services/api-key.service';
 import { PromptTemplates } from '../data/ai-prompts.constants';
 import { PromptKey } from '../data/data.model';
 import type { AlertIssue } from '../components/problems/component-guidance/alerts-guidance/alerts-guidance.component';
-import fallbackSeverityJson from '../components/problems/component-guidance/alerts-guidance/alert-severity-fallback.json';
+import fallbackSeverityJson from '../components/problems/component-guidance/alerts-guidance/severity-include-fallback.json';
 
 type ChatRole = 'system' | 'user' | 'assistant';
 interface ChatMessage {
@@ -22,12 +22,23 @@ interface OpenRouterResponse {
 export class AlertAiService {
   private readonly http = inject(HttpClient);
   private readonly apiKeyService = inject(ApiKeyService);
-  private readonly fallbackSeverities: Record<string, string> = Object.fromEntries(
-    Object.entries(fallbackSeverityJson as Record<string, string>).map(([k, v]) => [
-      k.toLowerCase(),
-      String(v),
-    ]),
-  );
+  private cachedAlertIssues: { html: string; issues: AlertIssue[] } | null = null;
+  private readonly fallbackSeverities: Record<string, { severity: string; include?: boolean }> =
+    Object.fromEntries(
+      Object.entries(
+        fallbackSeverityJson as Record<
+          string,
+          string | { severity?: string; include?: boolean }
+        >,
+      ).map(([k, v]) => {
+        if (typeof v === 'string') {
+          return [k.toLowerCase(), { severity: String(v) }];
+        }
+        const severity = typeof v?.severity === 'string' ? v.severity : '';
+        const include = typeof v?.include === 'boolean' ? v.include : undefined;
+        return [k.toLowerCase(), { severity, include }];
+      }),
+    );
 
   private readonly openRouterApiUrl = 'https://openrouter.ai/api/v1/chat/completions';
   private readonly models: string[] = [
@@ -63,6 +74,21 @@ export class AlertAiService {
     }
 
     return [];
+  }
+
+  getCachedIssues(alertHtml: string): AlertIssue[] | null {
+    const normalized = this.trimText(alertHtml);
+    if (!this.cachedAlertIssues) return null;
+    if (this.cachedAlertIssues.html !== normalized) return null;
+    return this.cachedAlertIssues.issues;
+  }
+
+  cacheIssues(alertHtml: string, issues: AlertIssue[]): void {
+    const normalized = this.trimText(alertHtml);
+    this.cachedAlertIssues = {
+      html: normalized,
+      issues: issues.map((issue) => ({ ...issue })),
+    };
   }
 
   // ---------- OpenRouter plumbing ----------
@@ -138,7 +164,9 @@ export class AlertAiService {
         const recommendation = this.cleanString(obj['recommendation']);
         const severity = this.normalizeSeverity(obj['severity'], category);
         const include =
-          typeof obj['include'] === 'boolean' ? obj['include'] : true;
+          typeof obj['include'] === 'boolean'
+            ? obj['include']
+            : this.lookupFallbackInclude(category) ?? true;
 
         if (!category || !description || !recommendation) return null;
         const issue: AlertIssue = {
@@ -209,7 +237,14 @@ export class AlertAiService {
     const key = this.cleanString(category).toLowerCase();
     if (!key) return null;
     const mapped = this.fallbackSeverities[key];
-    if (!mapped) return null;
-    return this.normalizeSeverityValue(this.cleanString(mapped).toLowerCase());
+    if (!mapped?.severity) return null;
+    return this.normalizeSeverityValue(this.cleanString(mapped.severity).toLowerCase());
+  }
+
+  private lookupFallbackInclude(category: unknown): boolean | null {
+    const key = this.cleanString(category).toLowerCase();
+    if (!key) return null;
+    const mapped = this.fallbackSeverities[key];
+    return typeof mapped?.include === 'boolean' ? mapped.include : null;
   }
 }
