@@ -36,6 +36,7 @@ import { UploadStateService } from './services/upload-state.service';
 import { UrlDataService } from './services/url-data.service';
 import { SourceDiffService } from './services/source-diff.service';
 import { ShadowDomService } from './services/shadowdom.service';
+import { AlertPainPointsService } from './services/alert-pain-points.service';
 
 //Data
 import {
@@ -95,6 +96,7 @@ export class PageAssistantCompareComponent
   private uploadState = inject(UploadStateService);
   private sourceDiffService = inject(SourceDiffService);
   private shadowDomService = inject(ShadowDomService);
+  private alertPainPointsService = inject(AlertPainPointsService);
   private urlDataService = inject(UrlDataService);
   private router = inject(Router);
   private locationStrategy = inject(LocationStrategy);
@@ -104,6 +106,8 @@ export class PageAssistantCompareComponent
       const data = this.uploadState.getUploadData();
       const viewType = this.webSelectedView();
       const shadowRoot = this.shadowDOM();
+      const painPoints = this.getAlertPainPointsForRender();
+      const alertOutput = this.getAlertOutputForRender();
       //console.log("[Web tab] received new data");
       if (data?.originalHtml && data?.modifiedHtml && shadowRoot) {
         //console.log("[Web tab] generating diff");
@@ -112,6 +116,8 @@ export class PageAssistantCompareComponent
           viewType,
           data.originalHtml,
           data.modifiedHtml,
+          painPoints,
+          alertOutput,
         );
         //Click listener for ShadowDom
         if (this.shadowClickHandler) {
@@ -160,6 +166,12 @@ export class PageAssistantCompareComponent
         data?.modifiedUrl,
       );
       this.canShare = canShareOriginal || canShareModified;
+    });
+    effect(() => {
+      this.alertPainPointsService.painPointsSignal();
+      this.alertPainPointsService.rawOutputSignal();
+      if (this.selectedPromptKey !== PromptKey.AlertsGuidance) return;
+      void this.refreshWebView();
     });
     effect(() => {
       const data = this.uploadState.getUploadData();
@@ -506,6 +518,7 @@ export class PageAssistantCompareComponent
   selectedPromptKey: PromptKey = PromptKey.PlainLanguage;
   onPromptChange(key: PromptKey) {
     this.selectedPromptKey = key;
+    this.refreshWebView();
   }
 
   customPromptText = '';
@@ -525,6 +538,32 @@ export class PageAssistantCompareComponent
     return custom
       ? `${this.customEditText}\n\n${base}\n\n${custom}`
       : `${this.customEditText}\n\n${base}`; //Note: a heading can be added to the custom instructions here, something like ${base}\n\nPrioritize the following:\n${custom}
+  }
+
+  private getAlertPainPointsForRender(): { label: string; severity?: string }[] {
+    if (this.selectedPromptKey !== PromptKey.AlertsGuidance) return [];
+    return this.alertPainPointsService.painPointsSignal();
+  }
+
+  private getAlertOutputForRender(): string {
+    if (this.selectedPromptKey !== PromptKey.AlertsGuidance) return '';
+    return this.alertPainPointsService.rawOutputSignal();
+  }
+
+  private async refreshWebView(): Promise<void> {
+    const data = this.uploadState.getUploadData();
+    const viewType = this.webSelectedView();
+    const shadowRoot = this.shadowDOM();
+    if (!data?.originalHtml || !data?.modifiedHtml || !shadowRoot) return;
+
+    await this.shadowDomService.generateShadowDOMContent(
+      shadowRoot,
+      viewType,
+      data.originalHtml,
+      data.modifiedHtml,
+      this.getAlertPainPointsForRender(),
+      this.getAlertOutputForRender(),
+    );
   }
 
   //AI Model

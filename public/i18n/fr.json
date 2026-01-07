@@ -110,6 +110,7 @@
 	"page.ai-options.prompt.Headings": "Titres",
 	"page.ai-options.prompt.Doormats": "Chapeaux de page",
 	"page.ai-options.prompt.PlainLanguage": "Langage clair",
+	"page.ai-options.prompt.Alerts": "Alertes",
 	"page.ai-options.prompt.Banana": "Banane?!?",
 	"page.ai-options.model.header": "Modèle IA",
 	"page.ai-options.model.legend": "Sélectionnez un modèle d'IA :",

@@ -1,4 +1,4 @@
-import { Component, Output, EventEmitter, inject } from '@angular/core';
+﻿import { Component, Output, EventEmitter, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
@@ -78,7 +78,8 @@ export class AiOptionsComponent {
   promptOptions = [
     { id: PromptKey.Headings, label: 'page.ai-options.prompt.Headings', disabled: false },
     { id: PromptKey.Doormats, label: 'page.ai-options.prompt.Doormats', disabled: false },
-    { id: PromptKey.PlainLanguage, label: 'page.ai-options.prompt.PlainLanguage', disabled: false }
+    { id: PromptKey.PlainLanguage, label: 'page.ai-options.prompt.PlainLanguage', disabled: false },
+    { id: PromptKey.AlertsGuidance, label: 'page.ai-options.prompt.Alerts', disabled: false }
   ];
 
   isPromptCheckboxDisabled(id: PromptKey): boolean {
