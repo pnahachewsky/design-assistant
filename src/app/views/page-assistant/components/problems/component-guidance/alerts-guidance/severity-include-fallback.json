@@ -2,6 +2,7 @@
   "Misuse": { "severity": "Medium", "include": true },
   "Too wordy": { "severity": "Medium", "include": true },
   "Generic titles": { "severity": "High", "include": true },
+  "Generic title": { "severity": "High", "include": true },
   "Unclear impact": { "severity": "Low", "include": true },
   "Outdated": { "severity": "Medium", "include": true },
   "Missing heading": { "severity": "High", "include": true },
