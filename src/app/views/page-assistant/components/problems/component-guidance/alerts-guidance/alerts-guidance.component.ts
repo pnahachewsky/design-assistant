@@ -127,7 +127,6 @@ export class AlertsGuidanceComponent implements OnInit, OnChanges {
   onIncludeToggle(): void {
     this.sortIssues();
     this.emitDerived();
-    void this.refreshRecommendations();
   }
 
   private applySelectAll(flag: boolean): void {
@@ -185,14 +184,15 @@ export class AlertsGuidanceComponent implements OnInit, OnChanges {
       this.sortIssues();
       this.applySelectAll(this.selectAll);
       this.emitDerived();
-      await this.refreshRecommendations();
+      const cachedOutput = this.alertAi.getCachedOutput(html) || '';
+      this.alertPainPoints.setRawOutput(cachedOutput);
       return;
     }
 
     this.setLoading(true);
     this.setError(false);
     try {
-      const aiIssues = await this.alertAi.analyzeIssues(html);
+      const aiIssues = await this.alertAi.analyze(html);
       if (!aiIssues?.length) {
         this.setError(true);
         return;
@@ -204,11 +204,12 @@ export class AlertsGuidanceComponent implements OnInit, OnChanges {
         include: issue.include ?? true,
       }));
       this.alertAi.cacheIssues(html, normalizedIssues);
+      const cachedOutput = this.alertAi.getCachedOutput(html) || '';
+      this.alertPainPoints.setRawOutput(cachedOutput);
       this.issues = normalizedIssues;
       this.sortIssues();
       this.applySelectAll(this.selectAll);
       this.emitDerived();
-      await this.refreshRecommendations();
     } catch (err) {
       console.error('Alert AI call failed', err);
       this.setError(true);
@@ -224,40 +225,5 @@ export class AlertsGuidanceComponent implements OnInit, OnChanges {
 
   private setError(flag: boolean): void {
     this.errorChange.emit(flag);
-  }
-
-  private async refreshRecommendations(): Promise<void> {
-    const html = this.uploadState.getUploadData()?.originalHtml || '';
-    if (!html) return;
-
-    const criteria = this.issues
-      .filter((issue) => issue.include)
-      .map((issue) => ({
-        category: issue.category,
-        description: issue.description,
-        recommendation: issue.recommendation,
-      }));
-    if (!criteria.length) {
-      this.alertPainPoints.setRawOutput('');
-      return;
-    }
-
-    const cached = this.alertAi.getCachedRecommendations(html, criteria);
-    if (cached?.output) {
-      this.alertPainPoints.setRawOutput(cached.output);
-      return;
-    }
-
-    this.setLoading(true);
-    this.setError(false);
-    try {
-      const recs = await this.alertAi.recommend(html, undefined, criteria);
-      this.alertPainPoints.setRawOutput(recs.output || '');
-    } catch (err) {
-      console.error('Alert AI recommendations failed', err);
-      this.setError(true);
-    } finally {
-      this.setLoading(false);
-    }
   }
 }

@@ -4,12 +4,6 @@ import { ApiKeyService } from '../../../services/api-key.service';
 import { PromptTemplates } from '../data/ai-prompts.constants';
 import { PromptKey } from '../data/data.model';
 import type { AlertIssue } from '../components/problems/component-guidance/alerts-guidance/alerts-guidance.component';
-
-export interface AlertCriteria {
-  category: string;
-  description: string;
-  recommendation: string;
-}
 import fallbackSeverityJson from '../components/problems/component-guidance/alerts-guidance/severity-include-fallback.json';
 
 type ChatRole = 'system' | 'user' | 'assistant';
@@ -29,9 +23,7 @@ export class AlertAiService {
   private readonly http = inject(HttpClient);
   private readonly apiKeyService = inject(ApiKeyService);
   private cachedAlertIssues: { html: string; issues: AlertIssue[] } | null = null;
-  private cachedAlertRecommendations:
-    | { key: string; output: string; htmls: string[] }
-    | null = null;
+  private cachedAlertOutput: { html: string; output: string } | null = null;
   private readonly fallbackSeverities: Record<string, { severity: string; include?: boolean }> =
     Object.fromEntries(
       Object.entries(
@@ -60,13 +52,12 @@ export class AlertAiService {
     'deepseek/deepseek-r1:free',
   ];
 
-  /** Call OpenRouter with the AlertsIssues prompt and return normalized issues. */
-  async analyzeIssues(alertHtml: string, pageContext?: string): Promise<AlertIssue[]> {
-    const systemPrompt = PromptTemplates[PromptKey.AlertsIssues];
-    const extractedAlerts = this.extractAlerts(alertHtml);
+  /** Call OpenRouter with the AlertsGuidance prompt and return normalized issues. */
+  async analyze(alertHtml: string, pageContext?: string): Promise<AlertIssue[]> {
+    const systemPrompt = PromptTemplates[PromptKey.AlertsGuidance];
     const userPayload = {
-      alertHtml: this.trimText(extractedAlerts),
-      pageContext: this.trimText(pageContext ?? alertHtml),
+      alertHtml: this.trimText(alertHtml),
+      pageContext: this.trimText(pageContext),
     };
 
     const messages: ChatMessage[] = [
@@ -80,48 +71,13 @@ export class AlertAiService {
       if (!text) continue;
 
       const issues = this.parseIssues(text);
-      if (issues.length) return issues;
-    }
-
-    return [];
-  }
-
-  async recommend(
-    alertHtml: string,
-    pageContext: string | undefined,
-    criteria: AlertCriteria[],
-  ): Promise<{ output: string; htmls: string[] }> {
-    const systemPrompt = PromptTemplates[PromptKey.AlertsRecommendations];
-    const extractedAlerts = this.extractAlerts(alertHtml);
-    const userPayload = {
-      alertHtml: this.trimText(extractedAlerts),
-      pageContext: this.trimText(pageContext ?? alertHtml),
-      criteria,
-    };
-
-    const messages: ChatMessage[] = [
-      { role: 'system', content: systemPrompt },
-      { role: 'user', content: JSON.stringify(userPayload) },
-    ];
-
-    for (const model of this.models) {
-      const resp = await this.callOpenRouter(model, messages);
-      const text = resp?.choices?.[0]?.message?.content;
-      if (!text) continue;
-
-      const htmls = this.parseRecommendations(text);
-      if (htmls.length) {
-        this.cacheRecommendations(alertHtml, criteria, text, htmls);
-        return { output: text, htmls };
+      if (issues.length) {
+        this.cacheOutput(alertHtml, text);
+        return issues;
       }
     }
 
-    return { output: '', htmls: [] };
-  }
-
-  /** Backwards-compatible wrapper. */
-  async analyze(alertHtml: string, pageContext?: string): Promise<AlertIssue[]> {
-    return this.analyzeIssues(alertHtml, pageContext);
+    return [];
   }
 
   getCachedIssues(alertHtml: string): AlertIssue[] | null {
@@ -131,17 +87,11 @@ export class AlertAiService {
     return this.cachedAlertIssues.issues;
   }
 
-  getCachedRecommendations(
-    alertHtml: string,
-    criteria: AlertCriteria[],
-  ): { output: string; htmls: string[] } | null {
-    const key = this.buildRecommendationsCacheKey(alertHtml, criteria);
-    if (!this.cachedAlertRecommendations) return null;
-    if (this.cachedAlertRecommendations.key !== key) return null;
-    return {
-      output: this.cachedAlertRecommendations.output,
-      htmls: [...this.cachedAlertRecommendations.htmls],
-    };
+  getCachedOutput(alertHtml: string): string | null {
+    const normalized = this.trimText(alertHtml);
+    if (!this.cachedAlertOutput) return null;
+    if (this.cachedAlertOutput.html !== normalized) return null;
+    return this.cachedAlertOutput.output;
   }
 
   cacheIssues(alertHtml: string, issues: AlertIssue[]): void {
@@ -152,16 +102,11 @@ export class AlertAiService {
     };
   }
 
-  cacheRecommendations(
-    alertHtml: string,
-    criteria: AlertCriteria[],
-    output: string,
-    htmls: string[],
-  ): void {
-    this.cachedAlertRecommendations = {
-      key: this.buildRecommendationsCacheKey(alertHtml, criteria),
+  cacheOutput(alertHtml: string, output: string): void {
+    const normalized = this.trimText(alertHtml);
+    this.cachedAlertOutput = {
+      html: normalized,
       output,
-      htmls: htmls.map((h) => String(h)),
     };
   }
 
@@ -257,40 +202,6 @@ export class AlertAiService {
     return mapped;
   }
 
-  private parseRecommendations(text: string): string[] {
-    const cleaned = this.stripCodeFences(text);
-    const parsed = this.looseJsonParse(cleaned);
-    const root: Record<string, unknown> | null =
-      parsed && typeof parsed === 'object' ? (parsed as Record<string, unknown>) : null;
-
-    const alertsArray = Array.isArray(root?.['alerts'])
-      ? (root?.['alerts'] as unknown[])
-      : Array.isArray(parsed)
-        ? (parsed as unknown[])
-        : [];
-
-      const htmls = alertsArray
-        .map((item) => {
-          if (typeof item === 'string') return this.sanitizeHtmlSnippet(item.trim());
-          if (!item || typeof item !== 'object') return '';
-          const obj = item as Record<string, unknown>;
-          const html =
-            this.cleanString(obj['final_html'] ?? obj['finalHtml'] ?? obj['html']);
-          return this.sanitizeHtmlSnippet(html);
-        })
-        .filter((x) => x);
-
-      return htmls;
-    }
-
-    private sanitizeHtmlSnippet(html: string): string {
-      if (!html) return html;
-      let out = html.replace(/&quot;/g, '"').replace(/\\"/g, '"');
-      out = out.replace(/class="\\?\"/g, 'class="');
-      out = out.replace(/class="([^"]*)"\s+([a-zA-Z0-9_-]+)=""/g, 'class="$1 $2"');
-      return out;
-    }
-
   private stripCodeFences(s: string): string {
     return s
       .replace(/^```(?:json)?\s*/i, '')
@@ -318,15 +229,6 @@ export class AlertAiService {
   private trimText(s: string | undefined, max = 12000): string {
     const t = (s || '').trim();
     return t.length > max ? t.slice(0, max) : t;
-  }
-
-  private extractAlerts(html: string): string {
-    const trimmed = this.trimText(html, 20000);
-    if (!trimmed) return '';
-    const doc = new DOMParser().parseFromString(trimmed, 'text/html');
-    const alerts = Array.from(doc.querySelectorAll('.alert'));
-    if (!alerts.length) return trimmed;
-    return alerts.map((el) => el.outerHTML).join('\n');
   }
 
   private cleanString(v: unknown): string {
@@ -363,20 +265,5 @@ export class AlertAiService {
     if (!key) return null;
     const mapped = this.fallbackSeverities[key];
     return typeof mapped?.include === 'boolean' ? mapped.include : null;
-  }
-
-  private buildRecommendationsCacheKey(
-    alertHtml: string,
-    criteria: AlertCriteria[],
-  ): string {
-    const normalized = this.trimText(alertHtml);
-    const normalizedCriteria = criteria
-      .map((item) => ({
-        category: item.category.trim(),
-        description: item.description.trim(),
-        recommendation: item.recommendation.trim(),
-      }))
-      .sort((a, b) => a.category.localeCompare(b.category, undefined, { sensitivity: 'base' }));
-    return JSON.stringify({ html: normalized, criteria: normalizedCriteria });
   }
 }

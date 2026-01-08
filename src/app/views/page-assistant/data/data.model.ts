@@ -84,9 +84,7 @@ export enum PromptKey {
   Headings = 'headings',
   Doormats = 'doormats',
   PlainLanguage = 'plainLanguage',
-  AlertsGuidance = 'alertsGuidance',
-  AlertsIssues = 'alertsIssues',
-  AlertsRecommendations = 'alertsRecommendations'
+  AlertsGuidance = 'alertsGuidance'
 }
 
 export enum AiModel {

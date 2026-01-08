@@ -115,12 +115,6 @@ export class UrlDataService {
       html = match[1]; // Capture only the inner content
     }
 
-    const extracted = this.extractAiHtmlFromJson(html);
-    if (extracted) {
-      html = extracted;
-    }
-    html = this.sanitizeAiHtml(html);
-
     // Trim leading and trailing <p> and </p> tags
     html = html.replace(/^<p>/, '').replace(/<\/p>$/, '').trim();
     const doc = new DOMParser().parseFromString(html, 'text/html');
@@ -142,30 +136,6 @@ export class UrlDataService {
 
     // Return the cleaned-up HTML as a string
     return doc.body.outerHTML;
-  }
-
-  private extractAiHtmlFromJson(html: string): string | null {
-    const match = html.match(/\{[\s\S]*\}/);
-    if (!match?.[0]) return null;
-    const candidate = match[0].replace(/&quot;/g, '"');
-    try {
-      const parsed = JSON.parse(candidate) as Record<string, unknown>;
-      if (Array.isArray(parsed['alerts'])) {
-        const first = parsed['alerts'][0] as Record<string, unknown> | undefined;
-        const finalHtml = typeof first?.['final_html'] === 'string' ? first['final_html'] : '';
-        return finalHtml || null;
-      }
-    } catch {
-      return null;
-    }
-    return null;
-  }
-
-  private sanitizeAiHtml(html: string): string {
-    let out = html.replace(/&quot;/g, '"').replace(/\\"/g, '"');
-    out = out.replace(/class="\\?\"/g, 'class="');
-    out = out.replace(/class="([^"]*)"\s+([a-zA-Z0-9_-]+)=""/g, 'class="$1 $2"');
-    return out;
   }
 
   //Get text or json content for AJAX or JSON calls

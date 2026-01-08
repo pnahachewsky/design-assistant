@@ -494,5 +494,4 @@ export class ComponentGuidanceComponent implements OnInit {
     if (s === 'low') return 'pi pi-times-circle';
     return 'pi pi-question-circle';
   }
-
 }

@@ -37,7 +37,6 @@ import { UrlDataService } from './services/url-data.service';
 import { SourceDiffService } from './services/source-diff.service';
 import { ShadowDomService } from './services/shadowdom.service';
 import { AlertPainPointsService } from './services/alert-pain-points.service';
-import { AlertAiService } from './services/alert-ai.service';
 
 //Data
 import {
@@ -49,7 +48,6 @@ import {
   AiModel,
 } from './data/data.model';
 import { PromptTemplates } from './data/ai-prompts.constants';
-import { computeAlertCategories } from './components/problems/component-guidance/alerts-guidance/alerts-guidance.component';
 
 //Components
 import { AiOptionsComponent } from './components/ai-options.component';
@@ -99,7 +97,6 @@ export class PageAssistantCompareComponent
   private sourceDiffService = inject(SourceDiffService);
   private shadowDomService = inject(ShadowDomService);
   private alertPainPointsService = inject(AlertPainPointsService);
-  private alertAiService = inject(AlertAiService);
   private urlDataService = inject(UrlDataService);
   private router = inject(Router);
   private locationStrategy = inject(LocationStrategy);
@@ -521,7 +518,6 @@ export class PageAssistantCompareComponent
   selectedPromptKey: PromptKey = PromptKey.PlainLanguage;
   onPromptChange(key: PromptKey) {
     this.selectedPromptKey = key;
-    void this.ensureAlertPromptAnalysis();
     this.refreshWebView();
   }
 
@@ -568,51 +564,6 @@ export class PageAssistantCompareComponent
       this.getAlertPainPointsForRender(),
       this.getAlertOutputForRender(),
     );
-  }
-
-  private alertPromptAnalysisInFlight = false;
-  private async ensureAlertPromptAnalysis(): Promise<void> {
-    if (this.selectedPromptKey !== PromptKey.AlertsGuidance) return;
-    if (this.alertPromptAnalysisInFlight) return;
-
-    const existingPainPoints = this.alertPainPointsService.painPointsSignal();
-    const existingOutput = this.alertPainPointsService.rawOutputSignal();
-    if (existingPainPoints.length || existingOutput) return;
-
-    const html = this.uploadState.getUploadData()?.originalHtml || '';
-    if (!html) return;
-
-    this.alertPromptAnalysisInFlight = true;
-    try {
-      const cachedIssues = this.alertAiService.getCachedIssues(html);
-      const issues =
-        cachedIssues?.length ? cachedIssues : await this.alertAiService.analyzeIssues(html);
-
-      if (!issues?.length) {
-        this.alertPainPointsService.clear();
-        return;
-      }
-
-      const categories = computeAlertCategories(issues);
-      this.alertPainPointsService.setPainPoints(categories);
-
-      const criteria = issues.map((issue) => ({
-        category: issue.category,
-        description: issue.description,
-        recommendation: issue.recommendation,
-      }));
-      const cachedRecs = this.alertAiService.getCachedRecommendations(html, criteria);
-      if (cachedRecs?.output) {
-        this.alertPainPointsService.setRawOutput(cachedRecs.output);
-      } else {
-        const recs = await this.alertAiService.recommend(html, undefined, criteria);
-        this.alertPainPointsService.setRawOutput(recs.output || '');
-      }
-    } catch (err) {
-      console.error('Alert prompt analysis failed', err);
-    } finally {
-      this.alertPromptAnalysisInFlight = false;
-    }
   }
 
   //AI Model
