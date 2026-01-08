@@ -207,9 +207,17 @@ export class ShadowDomService {
     const template = doc.createElement('template');
     template.innerHTML = finalHtml.trim();
     if (!template.content.childNodes.length) return html;
+    const finalAlert =
+      template.content.querySelector<HTMLElement>('.alert') ||
+      template.content.querySelector<HTMLElement>('*');
+    if (!finalAlert) return html;
 
     alerts.forEach((alertEl) => {
-      alertEl.replaceWith(template.content.cloneNode(true));
+      if (finalAlert.classList.contains('alert')) {
+        alertEl.replaceWith(finalAlert.cloneNode(true));
+      } else {
+        alertEl.innerHTML = finalHtml.trim();
+      }
     });
 
     return doc.body.innerHTML;
@@ -218,12 +226,14 @@ export class ShadowDomService {
   private parseAlertFinalHtml(alertOutput: string): string | null {
     if (!alertOutput) return null;
     const sectionMatch = alertOutput.match(
-      /Final HTML:\s*[\r\n]+```(?:html)?\s*([\s\S]*?)\s*```/i,
+      /(?:^|\n)\s*(?:#{1,6}\s*)?Final HTML\s*:?\s*([\s\S]*?)(?:\n#{1,6}\s|\s*$)/i,
     );
-    if (sectionMatch?.[1]) return sectionMatch[1].trim();
+    const section = sectionMatch?.[1]?.trim();
+    if (!section) return null;
 
-    const looseMatch = alertOutput.match(/Final HTML:\s*([\s\S]*?)$/i);
-    if (looseMatch?.[1]) return looseMatch[1].trim();
+    const fenced = section.match(/```(?:html)?\s*([\s\S]*?)\s*```/i);
+    const raw = (fenced?.[1] || section).trim();
+    return raw.replace(/^\s*HTML\s*\n/i, '').trim();
 
     return null;
   }
