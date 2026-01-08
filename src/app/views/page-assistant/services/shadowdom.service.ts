@@ -196,36 +196,86 @@ export class ShadowDomService {
   }
 
   private applyAlertVisualChanges(html: string, alertOutput: string): string {
-    const finalHtml = this.parseAlertFinalHtml(alertOutput);
-    if (!finalHtml) return html;
+    const finalHtmls = this.parseAlertFinalHtmls(alertOutput);
+    if (!finalHtmls.length) return html;
 
     const parser = new DOMParser();
     const doc = parser.parseFromString(html, 'text/html');
     const alerts = doc.querySelectorAll<HTMLElement>('.alert');
     if (!alerts.length) return html;
 
-    const template = doc.createElement('template');
-    template.innerHTML = finalHtml.trim();
-    if (!template.content.childNodes.length) return html;
-
-    alerts.forEach((alertEl) => {
+    alerts.forEach((alertEl, index) => {
+      const finalHtml = finalHtmls[index] || finalHtmls[0];
+      if (!finalHtml) return;
+      const template = doc.createElement('template');
+      template.innerHTML = finalHtml.trim();
+      if (!template.content.childNodes.length) return;
       alertEl.replaceWith(template.content.cloneNode(true));
     });
 
     return doc.body.innerHTML;
   }
 
-  private parseAlertFinalHtml(alertOutput: string): string | null {
-    if (!alertOutput) return null;
+  private parseAlertFinalHtmls(alertOutput: string): string[] {
+    if (!alertOutput) return [];
+    const json = this.parseJsonOutput(alertOutput);
+    if (json) {
+      const alerts = Array.isArray(json)
+        ? json
+        : this.isRecord(json) && Array.isArray(json['alerts'])
+          ? (json['alerts'] as unknown[])
+          : [];
+      const htmls = alerts
+        .map((item) => {
+          if (typeof item === 'string') return item.trim();
+          if (!item || typeof item !== 'object') return '';
+          const obj = item as Record<string, unknown>;
+          const html = this.cleanString(
+            obj['final_html'] ?? obj['finalHtml'] ?? obj['html'],
+          );
+          return html;
+        })
+        .filter((x) => x);
+      if (htmls.length) return htmls;
+    }
+
     const sectionMatch = alertOutput.match(
       /Final HTML:\s*[\r\n]+```(?:html)?\s*([\s\S]*?)\s*```/i,
     );
-    if (sectionMatch?.[1]) return sectionMatch[1].trim();
+    if (sectionMatch?.[1]) return [sectionMatch[1].trim()];
 
     const looseMatch = alertOutput.match(/Final HTML:\s*([\s\S]*?)$/i);
-    if (looseMatch?.[1]) return looseMatch[1].trim();
+    if (looseMatch?.[1]) return [looseMatch[1].trim()];
 
+    return [];
+  }
+
+  private parseJsonOutput(text: string): Record<string, unknown> | unknown[] | null {
+    const fenced = text.match(/```(?:json)?\s*([\s\S]*?)\s*```/i);
+    const candidate = (fenced?.[1] || text).trim();
+    try {
+      const parsed = JSON.parse(candidate);
+      return parsed as Record<string, unknown> | unknown[];
+    } catch {
+      // fall through
+    }
+    const match = candidate.match(/\{[\s\S]*\}/);
+    if (match) {
+      try {
+        return JSON.parse(match[0]) as Record<string, unknown>;
+      } catch {
+        return null;
+      }
+    }
     return null;
+  }
+
+  private cleanString(value: unknown): string {
+    return typeof value === 'string' ? value.trim() : '';
+  }
+
+  private isRecord(value: unknown): value is Record<string, unknown> {
+    return typeof value === 'object' && value !== null && !Array.isArray(value);
   }
 
   //Adjust diff result (mark changed links, images, remove nested diff tags)
