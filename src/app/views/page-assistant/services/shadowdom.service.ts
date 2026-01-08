@@ -29,9 +29,7 @@ export class ShadowDomService {
     shadowRoot: ShadowRoot,
     viewType: 'original' | 'modified' | 'diff',
     originalHtml: string,
-    modifiedHtml: string,
-    alertPainPoints: { label: string; severity?: string }[] = [],
-    alertOutput: string = ''
+    modifiedHtml: string
   ): Promise<void> {
     if (!shadowRoot) {
       console.error('Shadow DOM not available');
@@ -69,40 +67,13 @@ export class ShadowDomService {
     //Switch views
     switch (viewType) {
       case 'original':
-        this.renderHtml(
-          renderedContent,
-          originalHtml,
-          'original-html',
-          alertPainPoints,
-          alertOutput,
-        );
+        this.renderHtml(renderedContent, originalHtml, 'original-html');
         break;
       case 'modified':
-        const modifiedWithAlerts = this.applyAlertVisualChanges(
-          modifiedHtml,
-          alertOutput,
-        );
-        this.renderHtml(
-          renderedContent,
-          modifiedWithAlerts,
-          'modified-html',
-          alertPainPoints,
-          alertOutput,
-        );
+        this.renderHtml(renderedContent, modifiedHtml, 'modified-html');
         break;
       case 'diff':
-        const diffModifiedHtml = this.applyAlertVisualChanges(
-          modifiedHtml,
-          alertOutput,
-        );
-        await this.renderDiffHtml(
-          renderedContent,
-          originalHtml,
-          diffModifiedHtml,
-          'diff-content',
-          alertPainPoints,
-          alertOutput,
-        );
+        await this.renderDiffHtml(renderedContent, originalHtml, modifiedHtml, 'diff-content');
         break;
     }
 
@@ -111,131 +82,17 @@ export class ShadowDomService {
   }
 
   //Render HTML
-  private renderHtml(
-    container: HTMLElement,
-    html: string,
-    className: string,
-    alertPainPoints: { label: string; severity?: string }[],
-    alertOutput: string,
-  ): void {
+  private renderHtml(container: HTMLElement, html: string, className: string): void {
     container.classList.add(className);
-    const wrapper = document.createElement('div');
-    wrapper.id = 'editable';
-    wrapper.setAttribute('contenteditable', 'false');
-    wrapper.innerHTML = html;
-    this.insertAlertPainPoints(wrapper, alertPainPoints, alertOutput);
-    container.innerHTML = '';
-    container.appendChild(wrapper);
+    container.innerHTML = `<div id="editable" contenteditable="false">${html}</div>`;
   }
 
   //Render Diff
-  private async renderDiffHtml(
-    container: HTMLElement,
-    originalHtml: string,
-    modifiedHtml: string,
-    className: string,
-    alertPainPoints: { label: string; severity?: string }[],
-    alertOutput: string,
-  ): Promise<void> {
+  private async renderDiffHtml(container: HTMLElement, originalHtml: string, modifiedHtml: string, className: string): Promise<void> {
     const diffResult = await this.webDiffService.generateHtmlDiff(originalHtml, modifiedHtml);
     const adjustedDiff = await this.adjustDOM(originalHtml, diffResult);
     container.classList.add(className);
-    const parser = new DOMParser();
-    const diffDoc = parser.parseFromString(adjustedDiff, 'text/html');
-    this.insertAlertPainPoints(diffDoc.body, alertPainPoints, alertOutput);
-    container.innerHTML = diffDoc.body.innerHTML;
-  }
-
-  private insertAlertPainPoints(
-    root: ParentNode,
-    alertPainPoints: { label: string; severity?: string }[],
-    alertOutput: string,
-  ): void {
-    if (!alertPainPoints.length) return;
-
-    const alerts = root.querySelectorAll<HTMLElement>('.alert');
-    if (!alerts.length) return;
-
-    alerts.forEach((alertEl) => {
-      const doc = alertEl.ownerDocument;
-      const wrapper = doc.createElement('div');
-      wrapper.className = 'alert-pain-points';
-
-      const title = doc.createElement('div');
-      title.className = 'alert-pain-points__title';
-      title.textContent = 'Pain points';
-
-      const list = doc.createElement('div');
-      list.className = 'chip-list';
-      alertPainPoints.forEach((point) => {
-        const chip = doc.createElement('span');
-        chip.className = 'chip';
-        chip.textContent = point.label;
-        list.appendChild(chip);
-      });
-
-      const output = doc.createElement('div');
-      output.className = 'alert-pain-points__output';
-
-      const outputTitle = doc.createElement('div');
-      outputTitle.className = 'alert-pain-points__output-title';
-      outputTitle.textContent = 'AI output';
-
-      const outputBox = doc.createElement('pre');
-      outputBox.className = 'alert-pain-points__output-box';
-      outputBox.textContent = alertOutput || 'AI output not available.';
-
-      output.appendChild(outputTitle);
-      output.appendChild(outputBox);
-
-      wrapper.appendChild(title);
-      wrapper.appendChild(list);
-      wrapper.appendChild(output);
-      alertEl.parentNode?.insertBefore(wrapper, alertEl);
-    });
-  }
-
-  private applyAlertVisualChanges(html: string, alertOutput: string): string {
-    const finalHtml = this.parseAlertFinalHtml(alertOutput);
-    if (!finalHtml) return html;
-
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(html, 'text/html');
-    const alerts = doc.querySelectorAll<HTMLElement>('.alert');
-    if (!alerts.length) return html;
-
-    const template = doc.createElement('template');
-    template.innerHTML = finalHtml.trim();
-    if (!template.content.childNodes.length) return html;
-    const finalAlert =
-      template.content.querySelector<HTMLElement>('.alert') ||
-      template.content.querySelector<HTMLElement>('*');
-    if (!finalAlert) return html;
-
-    alerts.forEach((alertEl) => {
-      if (finalAlert.classList.contains('alert')) {
-        alertEl.replaceWith(finalAlert.cloneNode(true));
-      } else {
-        alertEl.innerHTML = finalHtml.trim();
-      }
-    });
-
-    return doc.body.innerHTML;
-  }
-
-  private parseAlertFinalHtml(alertOutput: string): string | null {
-    if (!alertOutput) return null;
-    const sectionMatch = alertOutput.match(
-      /(?:^|\n)\s*(?:#{1,6}\s*)?Final HTML\s*:?\s*([\s\S]*?)(?:\n#{1,6}\s|\s*$)/i,
-    );
-    const section = sectionMatch?.[1]?.trim();
-    if (!section) return null;
-
-    const fenced = section.match(/```(?:html)?\s*([\s\S]*?)\s*```/i);
-    const raw = (fenced?.[1] || section).trim();
-    return raw.replace(/^\s*HTML\s*\n/i, '').trim();
-
-    return null;
+    container.innerHTML = adjustedDiff;
   }
 
   //Adjust diff result (mark changed links, images, remove nested diff tags)

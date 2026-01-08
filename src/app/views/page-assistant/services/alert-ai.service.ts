@@ -23,7 +23,6 @@ export class AlertAiService {
   private readonly http = inject(HttpClient);
   private readonly apiKeyService = inject(ApiKeyService);
   private cachedAlertIssues: { html: string; issues: AlertIssue[] } | null = null;
-  private cachedAlertOutput: { html: string; output: string } | null = null;
   private readonly fallbackSeverities: Record<string, { severity: string; include?: boolean }> =
     Object.fromEntries(
       Object.entries(
@@ -71,10 +70,7 @@ export class AlertAiService {
       if (!text) continue;
 
       const issues = this.parseIssues(text);
-      if (issues.length) {
-        this.cacheOutput(alertHtml, text);
-        return issues;
-      }
+      if (issues.length) return issues;
     }
 
     return [];
@@ -87,26 +83,11 @@ export class AlertAiService {
     return this.cachedAlertIssues.issues;
   }
 
-  getCachedOutput(alertHtml: string): string | null {
-    const normalized = this.trimText(alertHtml);
-    if (!this.cachedAlertOutput) return null;
-    if (this.cachedAlertOutput.html !== normalized) return null;
-    return this.cachedAlertOutput.output;
-  }
-
   cacheIssues(alertHtml: string, issues: AlertIssue[]): void {
     const normalized = this.trimText(alertHtml);
     this.cachedAlertIssues = {
       html: normalized,
       issues: issues.map((issue) => ({ ...issue })),
-    };
-  }
-
-  cacheOutput(alertHtml: string, output: string): void {
-    const normalized = this.trimText(alertHtml);
-    this.cachedAlertOutput = {
-      html: normalized,
-      output,
     };
   }
 

@@ -5,7 +5,6 @@ import { TableModule } from 'primeng/table';
 import { CheckboxModule } from 'primeng/checkbox';
 import { UploadStateService } from '../../../../services/upload-state.service';
 import { AlertAiService } from '../../../../services/alert-ai.service';
-import { AlertPainPointsService } from '../../../../services/alert-pain-points.service';
 
 export interface AlertIssue {
   category: string;
@@ -99,7 +98,6 @@ export function computeAlertMaxSeverity(
 export class AlertsGuidanceComponent implements OnInit, OnChanges {
   private readonly uploadState = inject(UploadStateService);
   private readonly alertAi = inject(AlertAiService);
-  private readonly alertPainPoints = inject(AlertPainPointsService);
 
   @Input() selectAll = true;
   @Output() maxSeverityChange = new EventEmitter<string | null>();
@@ -148,7 +146,6 @@ export class AlertsGuidanceComponent implements OnInit, OnChanges {
   private emitDerived(): void {
     this.maxSeverityChange.emit(computeAlertMaxSeverity(this.issues));
     this.categoriesChange.emit(computeAlertCategories(this.issues));
-    this.alertPainPoints.setPainPoints(this.selectedPainPoints);
   }
 
   private normalizeCategoryLabel(label: string): string {
@@ -166,11 +163,6 @@ export class AlertsGuidanceComponent implements OnInit, OnChanges {
     return 'chip-unk';
   }
 
-  get selectedPainPoints(): { label: string; severity: string }[] {
-    const included = this.issues.filter((issue) => issue.include);
-    return computeAlertCategories(included);
-  }
-
   private async loadFromAi(): Promise<void> {
     const html = this.uploadState.getUploadData()?.originalHtml || '';
     if (!html || this.isLoading) return;
@@ -184,8 +176,6 @@ export class AlertsGuidanceComponent implements OnInit, OnChanges {
       this.sortIssues();
       this.applySelectAll(this.selectAll);
       this.emitDerived();
-      const cachedOutput = this.alertAi.getCachedOutput(html) || '';
-      this.alertPainPoints.setRawOutput(cachedOutput);
       return;
     }
 
@@ -204,8 +194,6 @@ export class AlertsGuidanceComponent implements OnInit, OnChanges {
         include: issue.include ?? true,
       }));
       this.alertAi.cacheIssues(html, normalizedIssues);
-      const cachedOutput = this.alertAi.getCachedOutput(html) || '';
-      this.alertPainPoints.setRawOutput(cachedOutput);
       this.issues = normalizedIssues;
       this.sortIssues();
       this.applySelectAll(this.selectAll);

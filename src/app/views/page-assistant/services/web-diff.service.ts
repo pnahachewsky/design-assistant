@@ -172,60 +172,6 @@ export class WebDiffService {
         display: block;
       }
 
-      .alert-pain-points {
-        border: 1px solid #f3d6a6;
-        background: #fff7e6;
-        padding: 0.5rem 0.75rem;
-        margin: 0 0 0.5rem 0;
-        font-size: 0.9rem;
-      }
-
-      .alert-pain-points__title {
-        font-weight: 600;
-        margin-bottom: 0.25rem;
-      }
-
-      .chip-list {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 0.25rem;
-      }
-
-      .chip {
-        display: inline-flex;
-        align-items: center;
-        border-radius: 9999px;
-        padding: 0.1rem 0.6rem;
-        background: #f1f5f9;
-        color: #0f172a;
-        border: 1px solid #e2e8f0;
-        font-size: 0.8rem;
-        line-height: 1.2;
-      }
-
-      .alert-pain-points__output {
-        margin-top: 0.5rem;
-      }
-
-      .alert-pain-points__output-title {
-        font-weight: 600;
-        margin-bottom: 0.25rem;
-      }
-
-      .alert-pain-points__output-box {
-        margin: 0;
-        padding: 0.5rem;
-        background: #ffffff;
-        border: 1px solid #e2e8f0;
-        border-radius: 6px;
-        white-space: pre-wrap;
-        word-break: break-word;
-        font-size: 0.8rem;
-        line-height: 1.2;
-        max-height: 14rem;
-        overflow: auto;
-      }
-
       /* Optional connection type styling */
       .cnjnctn-type-or > [class*=cnjnctn-col]:not(:first-child):before {
         content: "or";
