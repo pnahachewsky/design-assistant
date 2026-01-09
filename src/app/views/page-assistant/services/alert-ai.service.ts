@@ -51,9 +51,9 @@ export class AlertAiService {
     'deepseek/deepseek-r1:free',
   ];
 
-  /** Call OpenRouter with the AlertsGuidance prompt and return normalized issues. */
+  /** Call OpenRouter with the AlertsIssues prompt and return normalized issues. */
   async analyze(alertHtml: string, pageContext?: string): Promise<AlertIssue[]> {
-    const systemPrompt = PromptTemplates[PromptKey.AlertsGuidance];
+    const systemPrompt = PromptTemplates[PromptKey.AlertsIssues];
     const userPayload = {
       alertHtml: this.trimText(alertHtml),
       pageContext: this.trimText(pageContext),

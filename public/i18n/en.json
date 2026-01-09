@@ -107,6 +107,7 @@
   "page.ai-options.prompt.Headings": "Headings",
   "page.ai-options.prompt.Doormats": "Doormats",
   "page.ai-options.prompt.PlainLanguage": "Plain language",
+  "page.ai-options.prompt.Alerts": "Alerts",
   "page.ai-options.prompt.checkbox": "Append custom prompt",
   "page.ai-options.prompt.textarea": "Custom prompt",
   "page.ai-options.model.header": "AI Model",
