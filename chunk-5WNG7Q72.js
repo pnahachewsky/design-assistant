@@ -129,7 +129,7 @@ import {
   unblockBodyScroll,
   uuid,
   zindexutils
-} from "./chunk-VAYIC2XS.js";
+} from "./chunk-EPDS47SX.js";
 import {
   ChangeDetectionStrategy,
   ChangeDetectorRef,
@@ -20815,60 +20815,6 @@ var WebDiffService = class _WebDiffService {
         display: block;
       }
 
-      .alert-pain-points {
-        border: 1px solid #f3d6a6;
-        background: #fff7e6;
-        padding: 0.5rem 0.75rem;
-        margin: 0 0 0.5rem 0;
-        font-size: 0.9rem;
-      }
-
-      .alert-pain-points__title {
-        font-weight: 600;
-        margin-bottom: 0.25rem;
-      }
-
-      .chip-list {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 0.25rem;
-      }
-
-      .chip {
-        display: inline-flex;
-        align-items: center;
-        border-radius: 9999px;
-        padding: 0.1rem 0.6rem;
-        background: #f1f5f9;
-        color: #0f172a;
-        border: 1px solid #e2e8f0;
-        font-size: 0.8rem;
-        line-height: 1.2;
-      }
-
-      .alert-pain-points__output {
-        margin-top: 0.5rem;
-      }
-
-      .alert-pain-points__output-title {
-        font-weight: 600;
-        margin-bottom: 0.25rem;
-      }
-
-      .alert-pain-points__output-box {
-        margin: 0;
-        padding: 0.5rem;
-        background: #ffffff;
-        border: 1px solid #e2e8f0;
-        border-radius: 6px;
-        white-space: pre-wrap;
-        word-break: break-word;
-        font-size: 0.8rem;
-        line-height: 1.2;
-        max-height: 14rem;
-        overflow: auto;
-      }
-
       /* Optional connection type styling */
       .cnjnctn-type-or > [class*=cnjnctn-col]:not(:first-child):before {
         content: "or";
@@ -20906,8 +20852,8 @@ var ShadowDomService = class _ShadowDomService {
     }
   }
   //Generate shadow DOM content based on view type
-  generateShadowDOMContent(_0, _1, _2, _3) {
-    return __async(this, arguments, function* (shadowRoot, viewType, originalHtml, modifiedHtml, alertPainPoints = [], alertOutput = "") {
+  generateShadowDOMContent(shadowRoot, viewType, originalHtml, modifiedHtml) {
+    return __async(this, null, function* () {
       if (!shadowRoot) {
         console.error("Shadow DOM not available");
         return;
@@ -20933,15 +20879,13 @@ var ShadowDomService = class _ShadowDomService {
       renderedContent.classList.add("rendered-content");
       switch (viewType) {
         case "original":
-          this.renderHtml(renderedContent, originalHtml, "original-html", alertPainPoints, alertOutput);
+          this.renderHtml(renderedContent, originalHtml, "original-html");
           break;
         case "modified":
-          const modifiedWithAlerts = this.applyAlertVisualChanges(modifiedHtml, alertOutput);
-          this.renderHtml(renderedContent, modifiedWithAlerts, "modified-html", alertPainPoints, alertOutput);
+          this.renderHtml(renderedContent, modifiedHtml, "modified-html");
           break;
         case "diff":
-          const diffModifiedHtml = this.applyAlertVisualChanges(modifiedHtml, alertOutput);
-          yield this.renderDiffHtml(renderedContent, originalHtml, diffModifiedHtml, "diff-content", alertPainPoints, alertOutput);
+          yield this.renderDiffHtml(renderedContent, originalHtml, modifiedHtml, "diff-content");
           break;
       }
       diffContainer.appendChild(renderedContent);
@@ -20949,101 +20893,18 @@ var ShadowDomService = class _ShadowDomService {
     });
   }
   //Render HTML
-  renderHtml(container, html, className, alertPainPoints, alertOutput) {
+  renderHtml(container, html, className) {
     container.classList.add(className);
-    const wrapper = document.createElement("div");
-    wrapper.id = "editable";
-    wrapper.setAttribute("contenteditable", "false");
-    wrapper.innerHTML = html;
-    this.insertAlertPainPoints(wrapper, alertPainPoints, alertOutput);
-    container.innerHTML = "";
-    container.appendChild(wrapper);
+    container.innerHTML = `<div id="editable" contenteditable="false">${html}</div>`;
   }
   //Render Diff
-  renderDiffHtml(container, originalHtml, modifiedHtml, className, alertPainPoints, alertOutput) {
+  renderDiffHtml(container, originalHtml, modifiedHtml, className) {
     return __async(this, null, function* () {
       const diffResult = yield this.webDiffService.generateHtmlDiff(originalHtml, modifiedHtml);
       const adjustedDiff = yield this.adjustDOM(originalHtml, diffResult);
       container.classList.add(className);
-      const parser = new DOMParser();
-      const diffDoc = parser.parseFromString(adjustedDiff, "text/html");
-      this.insertAlertPainPoints(diffDoc.body, alertPainPoints, alertOutput);
-      container.innerHTML = diffDoc.body.innerHTML;
+      container.innerHTML = adjustedDiff;
     });
-  }
-  insertAlertPainPoints(root, alertPainPoints, alertOutput) {
-    if (!alertPainPoints.length)
-      return;
-    const alerts = root.querySelectorAll(".alert");
-    if (!alerts.length)
-      return;
-    alerts.forEach((alertEl) => {
-      const doc = alertEl.ownerDocument;
-      const wrapper = doc.createElement("div");
-      wrapper.className = "alert-pain-points";
-      const title = doc.createElement("div");
-      title.className = "alert-pain-points__title";
-      title.textContent = "Pain points";
-      const list = doc.createElement("div");
-      list.className = "chip-list";
-      alertPainPoints.forEach((point) => {
-        const chip = doc.createElement("span");
-        chip.className = "chip";
-        chip.textContent = point.label;
-        list.appendChild(chip);
-      });
-      const output = doc.createElement("div");
-      output.className = "alert-pain-points__output";
-      const outputTitle = doc.createElement("div");
-      outputTitle.className = "alert-pain-points__output-title";
-      outputTitle.textContent = "AI output";
-      const outputBox = doc.createElement("pre");
-      outputBox.className = "alert-pain-points__output-box";
-      outputBox.textContent = alertOutput || "AI output not available.";
-      output.appendChild(outputTitle);
-      output.appendChild(outputBox);
-      wrapper.appendChild(title);
-      wrapper.appendChild(list);
-      wrapper.appendChild(output);
-      alertEl.parentNode?.insertBefore(wrapper, alertEl);
-    });
-  }
-  applyAlertVisualChanges(html, alertOutput) {
-    const finalHtml = this.parseAlertFinalHtml(alertOutput);
-    if (!finalHtml)
-      return html;
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(html, "text/html");
-    const alerts = doc.querySelectorAll(".alert");
-    if (!alerts.length)
-      return html;
-    const template = doc.createElement("template");
-    template.innerHTML = finalHtml.trim();
-    if (!template.content.childNodes.length)
-      return html;
-    const finalAlert = template.content.querySelector(".alert") || template.content.querySelector("*");
-    if (!finalAlert)
-      return html;
-    alerts.forEach((alertEl) => {
-      if (finalAlert.classList.contains("alert")) {
-        alertEl.replaceWith(finalAlert.cloneNode(true));
-      } else {
-        alertEl.innerHTML = finalHtml.trim();
-      }
-    });
-    return doc.body.innerHTML;
-  }
-  parseAlertFinalHtml(alertOutput) {
-    if (!alertOutput)
-      return null;
-    const sectionMatch = alertOutput.match(/(?:^|\n)\s*(?:#{1,6}\s*)?Final HTML\s*:?\s*([\s\S]*?)(?:\n#{1,6}\s|\s*$)/i);
-    const section = sectionMatch?.[1]?.trim();
-    if (!section)
-      return null;
-    const fenced = section.match(/```(?:html)?\s*([\s\S]*?)\s*```/i);
-    const raw = (fenced?.[1] || section).trim();
-    return raw.replace(/^\s*HTML\s*\n/i, "").trim();
-    return null;
   }
   //Adjust diff result (mark changed links, images, remove nested diff tags)
   adjustDOM(originalHtml, diffResult) {
@@ -21365,34 +21226,6 @@ var ShadowDomService = class _ShadowDomService {
   }], null, null);
 })();
 
-// src/app/views/page-assistant/services/alert-pain-points.service.ts
-var AlertPainPointsService = class _AlertPainPointsService {
-  painPoints = signal([]);
-  rawOutput = signal("");
-  painPointsSignal = computed(() => this.painPoints());
-  rawOutputSignal = computed(() => this.rawOutput());
-  setPainPoints(points) {
-    this.painPoints.set(points);
-  }
-  setRawOutput(output) {
-    this.rawOutput.set(output);
-  }
-  clear() {
-    this.painPoints.set([]);
-    this.rawOutput.set("");
-  }
-  static \u0275fac = function AlertPainPointsService_Factory(__ngFactoryType__) {
-    return new (__ngFactoryType__ || _AlertPainPointsService)();
-  };
-  static \u0275prov = /* @__PURE__ */ \u0275\u0275defineInjectable({ token: _AlertPainPointsService, factory: _AlertPainPointsService.\u0275fac, providedIn: "root" });
-};
-(() => {
-  (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(AlertPainPointsService, [{
-    type: Injectable,
-    args: [{ providedIn: "root" }]
-  }], null, null);
-})();
-
 // src/app/views/page-assistant/data/ai-prompts.constants.ts
 var PromptTemplates = {
   [PromptKey.Headings]: `
@@ -21419,7 +21252,7 @@ When thinking of the hierarchy of the headings, apply the following concepts of 
 \xB7 If there are multiple tasks on the page, consider which tasks the user needs to complete or understand before they begin another task, and order the headings accordingly.
 \xB7 Do not duplicate sections.
 Tone: use an informative tone while addressing the user directly. Phrase headings where possible as tasks the user of the page can complete or learn about in that section.
-Return only updated HTML code with no other commentary. 
+Return the full HTML input with only the headings structure updated. Do not remove, reorder, or rewrite unrelated sections or content. Preserve all non-heading content exactly as provided. Return only updated HTML code with no other commentary. 
   `,
   [PromptKey.Doormats]: `
 You are a web writer who specializes in writing clear and easy-to-differentiate navigation options for pages with links to different services or tasks.
@@ -21446,7 +21279,7 @@ Doormat examples:
 1. Title: Tax-free savings accounts Description: Tax-free savings accounts, registered savings plans, pooled pension plans, plan administrators.
 2. Title: Apply for a clearance certificate Description: Required for final tax returns, legal representatives, estate executors, outstanding balances.
 3. Title: Renewable energy grants Description: Government grants, solar panel incentives, wind energy funding, green energy initiatives.
-Return only updated HTML code with no other commentary. 
+Return the full HTML input with only the doormat section updated. Do not remove, reorder, or rewrite unrelated sections. Preserve page title, alerts, headings, and all other components exactly as provided. Return only updated HTML code with no other commentary. 
 `,
   [PromptKey.PlainLanguage]: `
 You are an expert content designer with 10 years of experience in the public service. Your primary function is to help web publishers rewrite technical content to be easy to understand for the general public.
@@ -21469,74 +21302,322 @@ Make sure to use the inverted pyramid concept when organizing information.
 Examples of using action verbs, preferably at the beginning of your sentences:
 \xB7 "Report your business income on line x of the form"
 \xB7 "Refer to the guide for more instructions on claiming a deduction"
-Return only updated HTML code with no other commentary. 
+Return the full HTML input with only the rewritten text updated. Do not remove, reorder, or rewrite unrelated sections or components. Preserve headings and structure exactly as provided unless a change is required to implement the text edits. Return only updated HTML code with no other commentary. 
 `,
-  [PromptKey.AlertsGuidance]: `
+  [PromptKey.AlertsIssues]: `
 Role: You are an expert in content design, Web Accessibility (WCAG 2.1), the Accessible Canada Act, and the Canada.ca Design System. Your primary function is to analyze web pages to identify issues with Alerts and general Content Accessibility.
-Objective: Scan the input content, clearly identify specific issues based on the provided categories, and output a structured report showing exactly what was identified and how it should be improved.
+Objective: Scan the input content, clearly identify specific issues based on the provided categories, and output a structured report of pain points only.
 ________________________________________
 1. Input Handling
 You must accept input in the form of URLs, copy/pasted content, or uploaded documents. You must distinguish between two specific input types to perform your analysis effectively:
-\xB7 The Alert: The specific HTML or text of the alert component being analyzed.
-\xB7 The Page Context: The surrounding content or page where the alert lives (to determine placement and relevance).
+ - The Alert: The specific HTML or text of the alert component being analyzed.
+ - The Page Context: The surrounding content or page where the alert lives (to determine placement and relevance).
 ________________________________________
 2. Analysis Logic
 Analyze the inputs using the following two steps. You must distinguish between "Simple Issues" (structural/pattern-based) and "Complex Issues" (requiring AI analysis/context).
 Step 1: Analyze for "Simple" Alert Issues (Rule-Based Checks)
-\xB7 Misuse: Do not use alerts for standard process steps, low-risk warnings, or emphasis.
-\xB7 Too wordy: Alerts must be short (1-2 sentences). If longer, recommend a summary with a link.
-\xB7 Generic titles: Flag headers like "Note," "Info," or "Important." Titles must be descriptive.
-\xB7 Unclear impact: The alert must explain the consequence to the user, not just state a fact.
-\xB7 Outdated: Flag past dates or resolved events. Alerts are temporary.
-\xB7 Missing heading: Alerts must contain a heading element.
-\xB7 Wrong type: Ensure color matches severity (e.g., Blue=Info, Red=Danger).
-\xB7 Hidden content: Do not use expand/collapse (accordions) in alerts; content must be visible.
-\xB7 Wrong component: Do not use alerts just to flag "New" items (use Labels instead).
-\xB7 Accessibility/code: Icons must have text alternatives; hierarchy must be correct.
-\xB7 Too many links: Limit to one primary link per alert.
-\xB7 Wrong placement: Alerts must be adjacent to the relevant section, not at the top of a general page if specific.
-\xB7 Alert overload: Flag pages with multiple stacked alerts (alert fatigue).
-\xB7 Low relevance: On Home/Landing pages, alerts must apply to >50% of the audience.
-\xB7 Incorrect hierarchy: Alert headings must fit the page outline (e.g., don't put an H4 after an H2).
-\xB7 Nothing actionable: If no action/consequence is listed, convert to plain text.
+ - Misuse: Do not use alerts for standard process steps, low-risk warnings, or emphasis.
+ - Too wordy: Alerts must be short (1-2 sentences). If longer, recommend a summary with a link.
+ - Generic titles: Flag headers like "Note," "Info," or "Important." Titles must be descriptive.
+ - Unclear impact: The alert must explain the consequence to the user, not just state a fact.
+ - Outdated: Flag past dates or resolved events. Alerts are temporary.
+ - Missing heading: Alerts must contain a heading element.
+ - Wrong type: Ensure color matches severity (e.g., Blue=Info, Red=Danger).
+ - Hidden content: Do not use expand/collapse (accordions) in alerts; content must be visible.
+ - Wrong component: Do not use alerts just to flag "New" items (use Labels instead).
+ - Accessibility/code: Icons must have text alternatives; hierarchy must be correct.
+ - Too many links: Limit to one primary link per alert.
+ - Wrong placement: Alerts must be adjacent to the relevant section, not at the top of a general page if specific.
+ - Alert overload: Flag pages with multiple stacked alerts (alert fatigue).
+ - Low relevance: On Home/Landing pages, alerts must apply to >50% of the audience.
+ - Incorrect hierarchy: Alert headings must fit the page outline (e.g., don't put an H4 after an H2).
+ - Nothing actionable: If no action/consequence is listed, convert to plain text.
 Step 2: Analyze for "Complex" Issues (AI/LLM Analysis)
-\xB7 Focus order: Ensure the alert logical reading order is preserved and not skipped by screen readers.
-\xB7 Sensory/color reliance: Ensure importance is not conveyed by color alone (add text prefixes like "Warning:").
-\xB7 Content clarity: Ensure reading level is Grade 6-8 and plain language is used.
-\xB7 Non-text content: Ensure images/icons have descriptive Alt text.
+ - Focus order: Ensure the alert logical reading order is preserved and not skipped by screen readers.
+ - Sensory/color reliance: Ensure importance is not conveyed by color alone (add text prefixes like "Warning:").
+ - Content clarity: Ensure reading level is Grade 6-8 and plain language is used.
+ - Non-text content: Ensure images/icons have descriptive Alt text.
 ___________________________________
-3. Output Format
-You must output your findings in two specific categories.
-Category 1: Issues Identified (JSON)
-Provide a consistent, structured JSON output that matches a defined table structure. This JSON must allow for easy programmatic parsing.
+3. Output Format (JSON Only)
+Return only JSON. Do not include HTML, Markdown, or commentary.
 JSON Structure:
-JSON
 {
   "issues": [
     {
       "issue_category": "[Name of the Category, e.g., Too Wordy]",
       "description": "[Specific explanation of the problem found, citing the rule]",
-      "recommendation": "[Specific actionable fix]"
+      "recommendation": "[Specific actionable fix]",
+      "severity": "[High | Medium | Low]"
     }
   ]
 }
-Category 2: Revised HTML
-You must provide a revised HTML section that illustrates the solution. This section must include:
-1.         Visual "Track Changes": Use Markdown to show a before/after display or a "diff" view to help visualize the specific text or structural changes (e.g., bolding new text, striking through old text).
-2.         Full HTML: The complete, clean HTML code block for the entire alert component.
-3.         Proposed Content: Ensure the proposed heading and body text are included directly within the HTML structure.
-Example of "Revised HTML" Output Style:
-Visual Changes:
-\xB7 Title: ~~Note~~ -> Service Interruption
-\xB7 Body: ~~Please be advised that the system will be down...~~ -> The application portal is down for maintenance.
-Final HTML:
-HTML
-<section class="alert alert-warning">
-  <h3>Service Interruption</h3>
-  <p>The application portal is down for maintenance.</p>
-</section>
+`,
+  [PromptKey.AlertsRecommendations]: `
+Role: You are an expert in content design, Web Accessibility (WCAG 2.1), the Accessible Canada Act, and the Canada.ca Design System. Your primary function is to propose corrected alert HTML structures without rewriting the existing alert text.
+Objective: Produce HTML recommendations for each alert on the page, using the page context and the provided issues list to choose correct hierarchy and placement. Apply fixes based on the issues list. Do not edit or rewrite the alert wording.
+________________________________________
+1. Input Handling
+You must accept input in the form of URLs, copy/pasted content, or uploaded documents. You must distinguish between four specific input types:
+ - The Alert(s): The specific HTML or text of the alert component(s) being analyzed.
+ - The Page Context: The surrounding content or page where the alert lives (to determine placement and hierarchy).
+ - The Issues: The list of pain points returned by the AlertsIssues phase (category, description, recommendation).
+ - The Alerts List: A list of alert_html items with alert_index values. Use these exact snippets for in-place replacement.
+________________________________________
+2. Recommendation Rules
+ - Keep the exact alert wording. Do not rewrite or edit sentences. You may split existing sentences into a heading and body if needed, reusing exact phrases.
+ - Use Canada.ca alert markup conventions and valid heading levels that match the page outline.
+ - Apply fixes only to alerts identified in the issues list. Do not create new alerts.
+ - Update alerts in place. Do not move alerts, change their order, or insert duplicates elsewhere on the page.
+ - Use alert_index from the alerts list to target replacements. Replace only the matching alert_html snippet in the original page.
+ - updated_html must be the full alert component markup, including the wrapper with the correct alert-* class. Do not put alert classes only on headings or child elements.
+ - Ensure one alert per component; do not merge unrelated alerts.
+ - Ensure accessibility requirements: heading element present, proper hierarchy, text alternatives for icons, no hidden content.
+ - Keep links to a single primary link when possible; do not add new link text.
+________________________________________
+3. Output Format (JSON Only)
+Return only JSON. Do not include HTML outside the JSON values.
+JSON Structure:
+{
+  "full_html": "[Full HTML input with only the alert recommendations applied]",
+  "recommendations": [
+    {
+      "alert_index": 1,
+      "recommended_html": "<section class="alert alert-info">...</section>"
+    }
+  ],
+  "replacements": [
+    {
+      "alert_index": 1,
+      "updated_html": "<section class="alert alert-info">...</section>"
+    }
+  ]
+}
 `
 };
+
+// src/app/views/page-assistant/components/problems/component-guidance/alerts-guidance/severity-include-fallback.json
+var severity_include_fallback_default = {
+  Misuse: { severity: "Medium", include: true },
+  "Too wordy": { severity: "Medium", include: true },
+  "Generic titles": { severity: "High", include: true },
+  "Generic title": { severity: "High", include: true },
+  "Unclear impact": { severity: "Low", include: true },
+  Outdated: { severity: "Medium", include: true },
+  "Missing heading": { severity: "High", include: true },
+  "Wrong type": { severity: "Medium", include: true },
+  "Hidden content": { severity: "Medium", include: true },
+  "Wrong component": { severity: "Medium", include: true },
+  "Accessibility/code": { severity: "High", include: false },
+  "Too many links": { severity: "Medium", include: true },
+  "Wrong placement": { severity: "Medium", include: true },
+  "Alert overload": { severity: "High", include: true },
+  "Low relevance": { severity: "High", include: true },
+  "Incorrect hierarchy": { severity: "High", include: true },
+  "Nothing actionable": { severity: "Low", include: true },
+  "Focus order": { severity: "High", include: true },
+  "Sensory/color reliance": { severity: "Medium", include: true },
+  "Content clarity": { severity: "Medium", include: true },
+  "Non-text content": { severity: "High", include: true }
+};
+
+// src/app/views/page-assistant/services/alert-ai.service.ts
+var AlertAiService = class _AlertAiService {
+  http = inject(HttpClient);
+  apiKeyService = inject(ApiKeyService);
+  cachedAlertIssues = null;
+  fallbackSeverities = Object.fromEntries(Object.entries(severity_include_fallback_default).map(([k, v]) => {
+    if (typeof v === "string") {
+      return [k.toLowerCase(), { severity: String(v) }];
+    }
+    const severity = typeof v?.severity === "string" ? v.severity : "";
+    const include = typeof v?.include === "boolean" ? v.include : void 0;
+    return [k.toLowerCase(), { severity, include }];
+  }));
+  openRouterApiUrl = "https://openrouter.ai/api/v1/chat/completions";
+  models = [
+    "meta-llama/llama-3.3-70b-instruct:free",
+    "google/gemini-2.0-flash-exp:free",
+    "google/gemini-exp-1206:free",
+    "cognitivecomputations/dolphin3.0-mistral-24b:free",
+    "cognitivecomputations/dolphin3.0-r1-mistral-24b:free",
+    "nvidia/llama-3.1-nemotron-70b-instruct:free",
+    "deepseek/deepseek-r1:free"
+  ];
+  /** Call OpenRouter with the AlertsIssues prompt and return normalized issues. */
+  analyze(alertHtml, pageContext) {
+    return __async(this, null, function* () {
+      const systemPrompt = PromptTemplates[PromptKey.AlertsIssues];
+      const userPayload = {
+        alertHtml: this.trimText(alertHtml),
+        pageContext: this.trimText(pageContext)
+      };
+      const messages = [
+        { role: "system", content: systemPrompt },
+        { role: "user", content: JSON.stringify(userPayload) }
+      ];
+      for (const model of this.models) {
+        const resp = yield this.callOpenRouter(model, messages);
+        const text = resp?.choices?.[0]?.message?.content;
+        if (!text)
+          continue;
+        const issues = this.parseIssues(text);
+        if (issues.length)
+          return issues;
+      }
+      return [];
+    });
+  }
+  getCachedIssues(alertHtml) {
+    const normalized = this.trimText(alertHtml);
+    if (!this.cachedAlertIssues)
+      return null;
+    if (this.cachedAlertIssues.html !== normalized)
+      return null;
+    return this.cachedAlertIssues.issues;
+  }
+  cacheIssues(alertHtml, issues) {
+    const normalized = this.trimText(alertHtml);
+    this.cachedAlertIssues = {
+      html: normalized,
+      issues: issues.map((issue) => __spreadValues({}, issue))
+    };
+  }
+  // ---------- OpenRouter plumbing ----------
+  callOpenRouter(model, messages, temperature = 0) {
+    return __async(this, null, function* () {
+      const apiKey = this.apiKeyService.getCurrentKey();
+      if (!apiKey)
+        throw new Error("API key is required.");
+      const headers = new HttpHeaders({
+        Authorization: `Bearer ${apiKey}`,
+        "Content-Type": "application/json",
+        Accept: "application/json",
+        "X-Title": "Content Assistant - Alert Guidance"
+      });
+      const payload = { model, messages, temperature };
+      try {
+        const resp = yield this.http.post(this.openRouterApiUrl, payload, {
+          headers,
+          responseType: "text",
+          observe: "response"
+        }).toPromise();
+        const ct = resp?.headers.get("content-type") || "";
+        if (ct.includes("application/json") && typeof resp?.body === "string") {
+          return JSON.parse(resp.body);
+        } else {
+          console.error(`OpenRouter non-JSON (status ${resp?.status}, ${ct}):
+`, (resp?.body || "").slice(0, 500));
+          return void 0;
+        }
+      } catch (err) {
+        const httpErr = err;
+        const status = httpErr?.status;
+        const bodySnippet = typeof httpErr?.error === "string" ? httpErr.error.slice(0, 500) : JSON.stringify(httpErr?.error);
+        console.error(`OpenRouter HTTP error (model: ${model}) status=${status}: ${bodySnippet}`);
+        return void 0;
+      }
+    });
+  }
+  // ---------- Output parsing ----------
+  parseIssuesFromText(text) {
+    return this.parseIssues(text);
+  }
+  parseIssues(text) {
+    const cleaned = this.stripCodeFences(text);
+    const parsed = this.looseJsonParse(cleaned);
+    const root = parsed && typeof parsed === "object" ? parsed : null;
+    const issuesArray = Array.isArray(root?.["issues"]) ? root?.["issues"] : Array.isArray(root) ? root : [];
+    const mapped = issuesArray.map((raw) => {
+      if (!raw || typeof raw !== "object")
+        return null;
+      const obj = raw;
+      const category = this.cleanString(obj["issue_category"] ?? obj["category"]);
+      const description = this.cleanString(obj["description"]);
+      const recommendation = this.cleanString(obj["recommendation"]);
+      const severity = this.normalizeSeverity(obj["severity"], category);
+      const include = typeof obj["include"] === "boolean" ? obj["include"] : this.lookupFallbackInclude(category) ?? true;
+      if (!category || !description || !recommendation)
+        return null;
+      const issue = {
+        category,
+        description,
+        recommendation,
+        severity,
+        include
+      };
+      return issue;
+    }).filter((x) => !!x);
+    return mapped;
+  }
+  stripCodeFences(s) {
+    return s.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/i, "").trim();
+  }
+  looseJsonParse(s) {
+    try {
+      return JSON.parse(s);
+    } catch {
+    }
+    const m = s.match(/\{[\s\S]*\}/);
+    if (m) {
+      try {
+        return JSON.parse(m[0]);
+      } catch {
+        return null;
+      }
+    }
+    return null;
+  }
+  trimText(s, max = 12e3) {
+    const t = (s || "").trim();
+    return t.length > max ? t.slice(0, max) : t;
+  }
+  cleanString(v) {
+    return typeof v === "string" ? v.trim() : "";
+  }
+  normalizeSeverity(v, category) {
+    const rawLower = this.cleanString(v).toLowerCase();
+    if (!rawLower) {
+      const fallback = this.lookupFallbackSeverity(category);
+      return fallback ?? "Unknown";
+    }
+    return this.normalizeSeverityValue(rawLower);
+  }
+  normalizeSeverityValue(rawLower) {
+    if (rawLower === "high" || rawLower === "critical")
+      return "High";
+    if (rawLower === "medium" || rawLower === "med" || rawLower === "moderate")
+      return "Medium";
+    if (rawLower === "low" || rawLower === "minor")
+      return "Low";
+    return rawLower.charAt(0).toUpperCase() + rawLower.slice(1);
+  }
+  lookupFallbackSeverity(category) {
+    const key2 = this.cleanString(category).toLowerCase();
+    if (!key2)
+      return null;
+    const mapped = this.fallbackSeverities[key2];
+    if (!mapped?.severity)
+      return null;
+    return this.normalizeSeverityValue(this.cleanString(mapped.severity).toLowerCase());
+  }
+  lookupFallbackInclude(category) {
+    const key2 = this.cleanString(category).toLowerCase();
+    if (!key2)
+      return null;
+    const mapped = this.fallbackSeverities[key2];
+    return typeof mapped?.include === "boolean" ? mapped.include : null;
+  }
+  static \u0275fac = function AlertAiService_Factory(__ngFactoryType__) {
+    return new (__ngFactoryType__ || _AlertAiService)();
+  };
+  static \u0275prov = /* @__PURE__ */ \u0275\u0275defineInjectable({ token: _AlertAiService, factory: _AlertAiService.\u0275fac, providedIn: "root" });
+};
+(() => {
+  (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(AlertAiService, [{
+    type: Injectable,
+    args: [{ providedIn: "root" }]
+  }], null, null);
+})();
 
 // node_modules/primeng/fesm2022/primeng-drawer.mjs
 var _c02 = ["header"];
@@ -24260,7 +24341,7 @@ var AiOptionsComponent = class _AiOptionsComponent {
     { id: PromptKey.Headings, label: "page.ai-options.prompt.Headings", disabled: false },
     { id: PromptKey.Doormats, label: "page.ai-options.prompt.Doormats", disabled: false },
     { id: PromptKey.PlainLanguage, label: "page.ai-options.prompt.PlainLanguage", disabled: false },
-    { id: PromptKey.AlertsGuidance, label: "page.ai-options.prompt.Alerts", disabled: false }
+    { id: PromptKey.AlertsIssues, label: "page.ai-options.prompt.Alerts", disabled: false }
   ];
   isPromptCheckboxDisabled(id) {
     return !this.selectedPrompts.includes(id) && this.selectedPrompts.length >= 2;
@@ -24739,245 +24820,6 @@ var HeadingStructureComponent = class _HeadingStructureComponent {
   (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(HeadingStructureComponent, { className: "HeadingStructureComponent", filePath: "src/app/views/page-assistant/components/problems/heading-structure.component.ts", lineNumber: 37 });
 })();
 
-// src/app/views/page-assistant/components/problems/component-guidance/alerts-guidance/severity-include-fallback.json
-var severity_include_fallback_default = {
-  Misuse: { severity: "Medium", include: true },
-  "Too wordy": { severity: "Medium", include: true },
-  "Generic titles": { severity: "High", include: true },
-  "Generic title": { severity: "High", include: true },
-  "Unclear impact": { severity: "Low", include: true },
-  Outdated: { severity: "Medium", include: true },
-  "Missing heading": { severity: "High", include: true },
-  "Wrong type": { severity: "Medium", include: true },
-  "Hidden content": { severity: "Medium", include: true },
-  "Wrong component": { severity: "Medium", include: true },
-  "Accessibility/code": { severity: "High", include: false },
-  "Too many links": { severity: "Medium", include: true },
-  "Wrong placement": { severity: "Medium", include: true },
-  "Alert overload": { severity: "High", include: true },
-  "Low relevance": { severity: "High", include: true },
-  "Incorrect hierarchy": { severity: "High", include: true },
-  "Nothing actionable": { severity: "Low", include: true },
-  "Focus order": { severity: "High", include: true },
-  "Sensory/color reliance": { severity: "Medium", include: true },
-  "Content clarity": { severity: "Medium", include: true },
-  "Non-text content": { severity: "High", include: true }
-};
-
-// src/app/views/page-assistant/services/alert-ai.service.ts
-var AlertAiService = class _AlertAiService {
-  http = inject(HttpClient);
-  apiKeyService = inject(ApiKeyService);
-  cachedAlertIssues = null;
-  cachedAlertOutput = null;
-  fallbackSeverities = Object.fromEntries(Object.entries(severity_include_fallback_default).map(([k, v]) => {
-    if (typeof v === "string") {
-      return [k.toLowerCase(), { severity: String(v) }];
-    }
-    const severity = typeof v?.severity === "string" ? v.severity : "";
-    const include = typeof v?.include === "boolean" ? v.include : void 0;
-    return [k.toLowerCase(), { severity, include }];
-  }));
-  openRouterApiUrl = "https://openrouter.ai/api/v1/chat/completions";
-  models = [
-    "meta-llama/llama-3.3-70b-instruct:free",
-    "google/gemini-2.0-flash-exp:free",
-    "google/gemini-exp-1206:free",
-    "cognitivecomputations/dolphin3.0-mistral-24b:free",
-    "cognitivecomputations/dolphin3.0-r1-mistral-24b:free",
-    "nvidia/llama-3.1-nemotron-70b-instruct:free",
-    "deepseek/deepseek-r1:free"
-  ];
-  /** Call OpenRouter with the AlertsGuidance prompt and return normalized issues. */
-  analyze(alertHtml, pageContext) {
-    return __async(this, null, function* () {
-      const systemPrompt = PromptTemplates[PromptKey.AlertsGuidance];
-      const userPayload = {
-        alertHtml: this.trimText(alertHtml),
-        pageContext: this.trimText(pageContext)
-      };
-      const messages = [
-        { role: "system", content: systemPrompt },
-        { role: "user", content: JSON.stringify(userPayload) }
-      ];
-      for (const model of this.models) {
-        const resp = yield this.callOpenRouter(model, messages);
-        const text = resp?.choices?.[0]?.message?.content;
-        if (!text)
-          continue;
-        const issues = this.parseIssues(text);
-        if (issues.length) {
-          this.cacheOutput(alertHtml, text);
-          return issues;
-        }
-      }
-      return [];
-    });
-  }
-  getCachedIssues(alertHtml) {
-    const normalized = this.trimText(alertHtml);
-    if (!this.cachedAlertIssues)
-      return null;
-    if (this.cachedAlertIssues.html !== normalized)
-      return null;
-    return this.cachedAlertIssues.issues;
-  }
-  getCachedOutput(alertHtml) {
-    const normalized = this.trimText(alertHtml);
-    if (!this.cachedAlertOutput)
-      return null;
-    if (this.cachedAlertOutput.html !== normalized)
-      return null;
-    return this.cachedAlertOutput.output;
-  }
-  cacheIssues(alertHtml, issues) {
-    const normalized = this.trimText(alertHtml);
-    this.cachedAlertIssues = {
-      html: normalized,
-      issues: issues.map((issue) => __spreadValues({}, issue))
-    };
-  }
-  cacheOutput(alertHtml, output) {
-    const normalized = this.trimText(alertHtml);
-    this.cachedAlertOutput = {
-      html: normalized,
-      output
-    };
-  }
-  // ---------- OpenRouter plumbing ----------
-  callOpenRouter(model, messages, temperature = 0) {
-    return __async(this, null, function* () {
-      const apiKey = this.apiKeyService.getCurrentKey();
-      if (!apiKey)
-        throw new Error("API key is required.");
-      const headers = new HttpHeaders({
-        Authorization: `Bearer ${apiKey}`,
-        "Content-Type": "application/json",
-        Accept: "application/json",
-        "X-Title": "Content Assistant - Alert Guidance"
-      });
-      const payload = { model, messages, temperature };
-      try {
-        const resp = yield this.http.post(this.openRouterApiUrl, payload, {
-          headers,
-          responseType: "text",
-          observe: "response"
-        }).toPromise();
-        const ct = resp?.headers.get("content-type") || "";
-        if (ct.includes("application/json") && typeof resp?.body === "string") {
-          return JSON.parse(resp.body);
-        } else {
-          console.error(`OpenRouter non-JSON (status ${resp?.status}, ${ct}):
-`, (resp?.body || "").slice(0, 500));
-          return void 0;
-        }
-      } catch (err) {
-        const httpErr = err;
-        const status = httpErr?.status;
-        const bodySnippet = typeof httpErr?.error === "string" ? httpErr.error.slice(0, 500) : JSON.stringify(httpErr?.error);
-        console.error(`OpenRouter HTTP error (model: ${model}) status=${status}: ${bodySnippet}`);
-        return void 0;
-      }
-    });
-  }
-  // ---------- Output parsing ----------
-  parseIssues(text) {
-    const cleaned = this.stripCodeFences(text);
-    const parsed = this.looseJsonParse(cleaned);
-    const root = parsed && typeof parsed === "object" ? parsed : null;
-    const issuesArray = Array.isArray(root?.["issues"]) ? root?.["issues"] : Array.isArray(root) ? root : [];
-    const mapped = issuesArray.map((raw) => {
-      if (!raw || typeof raw !== "object")
-        return null;
-      const obj = raw;
-      const category = this.cleanString(obj["issue_category"] ?? obj["category"]);
-      const description = this.cleanString(obj["description"]);
-      const recommendation = this.cleanString(obj["recommendation"]);
-      const severity = this.normalizeSeverity(obj["severity"], category);
-      const include = typeof obj["include"] === "boolean" ? obj["include"] : this.lookupFallbackInclude(category) ?? true;
-      if (!category || !description || !recommendation)
-        return null;
-      const issue = {
-        category,
-        description,
-        recommendation,
-        severity,
-        include
-      };
-      return issue;
-    }).filter((x) => !!x);
-    return mapped;
-  }
-  stripCodeFences(s) {
-    return s.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/i, "").trim();
-  }
-  looseJsonParse(s) {
-    try {
-      return JSON.parse(s);
-    } catch {
-    }
-    const m = s.match(/\{[\s\S]*\}/);
-    if (m) {
-      try {
-        return JSON.parse(m[0]);
-      } catch {
-        return null;
-      }
-    }
-    return null;
-  }
-  trimText(s, max = 12e3) {
-    const t = (s || "").trim();
-    return t.length > max ? t.slice(0, max) : t;
-  }
-  cleanString(v) {
-    return typeof v === "string" ? v.trim() : "";
-  }
-  normalizeSeverity(v, category) {
-    const rawLower = this.cleanString(v).toLowerCase();
-    if (!rawLower) {
-      const fallback = this.lookupFallbackSeverity(category);
-      return fallback ?? "Unknown";
-    }
-    return this.normalizeSeverityValue(rawLower);
-  }
-  normalizeSeverityValue(rawLower) {
-    if (rawLower === "high" || rawLower === "critical")
-      return "High";
-    if (rawLower === "medium" || rawLower === "med" || rawLower === "moderate")
-      return "Medium";
-    if (rawLower === "low" || rawLower === "minor")
-      return "Low";
-    return rawLower.charAt(0).toUpperCase() + rawLower.slice(1);
-  }
-  lookupFallbackSeverity(category) {
-    const key2 = this.cleanString(category).toLowerCase();
-    if (!key2)
-      return null;
-    const mapped = this.fallbackSeverities[key2];
-    if (!mapped?.severity)
-      return null;
-    return this.normalizeSeverityValue(this.cleanString(mapped.severity).toLowerCase());
-  }
-  lookupFallbackInclude(category) {
-    const key2 = this.cleanString(category).toLowerCase();
-    if (!key2)
-      return null;
-    const mapped = this.fallbackSeverities[key2];
-    return typeof mapped?.include === "boolean" ? mapped.include : null;
-  }
-  static \u0275fac = function AlertAiService_Factory(__ngFactoryType__) {
-    return new (__ngFactoryType__ || _AlertAiService)();
-  };
-  static \u0275prov = /* @__PURE__ */ \u0275\u0275defineInjectable({ token: _AlertAiService, factory: _AlertAiService.\u0275fac, providedIn: "root" });
-};
-(() => {
-  (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(AlertAiService, [{
-    type: Injectable,
-    args: [{ providedIn: "root" }]
-  }], null, null);
-})();
-
 // src/app/views/page-assistant/components/problems/component-guidance/alerts-guidance/alerts-guidance.component.ts
 function AlertsGuidanceComponent_ng_template_1_Template(rf, ctx) {
   if (rf & 1) {
@@ -25083,7 +24925,6 @@ function computeAlertMaxSeverity(issues, rank = ALERT_SEVERITY_RANK) {
 var AlertsGuidanceComponent = class _AlertsGuidanceComponent {
   uploadState = inject(UploadStateService);
   alertAi = inject(AlertAiService);
-  alertPainPoints = inject(AlertPainPointsService);
   selectAll = true;
   maxSeverityChange = new EventEmitter();
   categoriesChange = new EventEmitter();
@@ -25106,12 +24947,14 @@ var AlertsGuidanceComponent = class _AlertsGuidanceComponent {
   onIncludeToggle() {
     this.sortIssues();
     this.emitDerived();
+    this.syncCache();
   }
   applySelectAll(flag) {
     if (!flag) {
       this.issues = this.issues.map((issue) => __spreadProps(__spreadValues({}, issue), { include: false }));
       this.sortIssues();
     }
+    this.syncCache();
   }
   sortIssues() {
     this.issues = [...this.issues].sort((a, b) => {
@@ -25125,7 +24968,6 @@ var AlertsGuidanceComponent = class _AlertsGuidanceComponent {
   emitDerived() {
     this.maxSeverityChange.emit(computeAlertMaxSeverity(this.issues));
     this.categoriesChange.emit(computeAlertCategories(this.issues));
-    this.alertPainPoints.setPainPoints(this.selectedPainPoints);
   }
   normalizeCategoryLabel(label) {
     const trimmed = (label || "").trim();
@@ -25144,10 +24986,6 @@ var AlertsGuidanceComponent = class _AlertsGuidanceComponent {
       return "chip-severe";
     return "chip-unk";
   }
-  get selectedPainPoints() {
-    const included = this.issues.filter((issue) => issue.include);
-    return computeAlertCategories(included);
-  }
   loadFromAi() {
     return __async(this, null, function* () {
       const html = this.uploadState.getUploadData()?.originalHtml || "";
@@ -25161,8 +24999,7 @@ var AlertsGuidanceComponent = class _AlertsGuidanceComponent {
         this.sortIssues();
         this.applySelectAll(this.selectAll);
         this.emitDerived();
-        const cachedOutput = this.alertAi.getCachedOutput(html) || "";
-        this.alertPainPoints.setRawOutput(cachedOutput);
+        this.syncCache();
         return;
       }
       this.setLoading(true);
@@ -25179,12 +25016,11 @@ var AlertsGuidanceComponent = class _AlertsGuidanceComponent {
           include: issue.include ?? true
         }));
         this.alertAi.cacheIssues(html, normalizedIssues);
-        const cachedOutput = this.alertAi.getCachedOutput(html) || "";
-        this.alertPainPoints.setRawOutput(cachedOutput);
         this.issues = normalizedIssues;
         this.sortIssues();
         this.applySelectAll(this.selectAll);
         this.emitDerived();
+        this.syncCache();
       } catch (err) {
         console.error("Alert AI call failed", err);
         this.setError(true);
@@ -25199,6 +25035,12 @@ var AlertsGuidanceComponent = class _AlertsGuidanceComponent {
   }
   setError(flag) {
     this.errorChange.emit(flag);
+  }
+  syncCache() {
+    const html = this.uploadState.getUploadData()?.originalHtml || "";
+    if (!html || !this.issues.length)
+      return;
+    this.alertAi.cacheIssues(html, this.issues);
   }
   static \u0275fac = function AlertsGuidanceComponent_Factory(__ngFactoryType__) {
     return new (__ngFactoryType__ || _AlertsGuidanceComponent)();
@@ -25231,7 +25073,7 @@ var AlertsGuidanceComponent = class _AlertsGuidanceComponent {
   }] });
 })();
 (() => {
-  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(AlertsGuidanceComponent, { className: "AlertsGuidanceComponent", filePath: "src/app/views/page-assistant/components/problems/component-guidance/alerts-guidance/alerts-guidance.component.ts", lineNumber: 99 });
+  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(AlertsGuidanceComponent, { className: "AlertsGuidanceComponent", filePath: "src/app/views/page-assistant/components/problems/component-guidance/alerts-guidance/alerts-guidance.component.ts", lineNumber: 98 });
 })();
 
 // src/app/views/page-assistant/data/css-list.config.ts
@@ -32581,7 +32423,7 @@ var PageAssistantCompareComponent = class _PageAssistantCompareComponent {
   uploadState = inject(UploadStateService);
   sourceDiffService = inject(SourceDiffService);
   shadowDomService = inject(ShadowDomService);
-  alertPainPointsService = inject(AlertPainPointsService);
+  alertAi = inject(AlertAiService);
   urlDataService = inject(UrlDataService);
   router = inject(Router);
   locationStrategy = inject(LocationStrategy);
@@ -32590,10 +32432,8 @@ var PageAssistantCompareComponent = class _PageAssistantCompareComponent {
       const data = this.uploadState.getUploadData();
       const viewType = this.webSelectedView();
       const shadowRoot = this.shadowDOM();
-      const painPoints = this.getAlertPainPointsForRender();
-      const alertOutput = this.getAlertOutputForRender();
       if (data?.originalHtml && data?.modifiedHtml && shadowRoot) {
-        yield this.shadowDomService.generateShadowDOMContent(shadowRoot, viewType, data.originalHtml, data.modifiedHtml, painPoints, alertOutput);
+        yield this.shadowDomService.generateShadowDOMContent(shadowRoot, viewType, data.originalHtml, data.modifiedHtml);
         if (this.shadowClickHandler) {
           this.shadowClickHandler();
           console.log("Reset shadow click handler");
@@ -32628,13 +32468,6 @@ var PageAssistantCompareComponent = class _PageAssistantCompareComponent {
       const canShareModified = this.urlDataService.isValidUrl(data?.modifiedUrl);
       this.canShare = canShareOriginal || canShareModified;
     }));
-    effect(() => {
-      this.alertPainPointsService.painPointsSignal();
-      this.alertPainPointsService.rawOutputSignal();
-      if (this.selectedPromptKey !== PromptKey.AlertsGuidance)
-        return;
-      void this.refreshWebView();
-    });
     effect(() => {
       const data = this.uploadState.getUploadData();
       const viewType = this.sourceSelectedView();
@@ -32917,7 +32750,6 @@ var PageAssistantCompareComponent = class _PageAssistantCompareComponent {
   selectedPromptKey = PromptKey.PlainLanguage;
   onPromptChange(key2) {
     this.selectedPromptKey = key2;
-    this.refreshWebView();
   }
   customPromptText = "";
   onAppendCustom(prompt) {
@@ -32938,24 +32770,93 @@ ${custom}` : `${this.customEditText}
 
 ${base}`;
   }
-  getAlertPainPointsForRender() {
-    if (this.selectedPromptKey !== PromptKey.AlertsGuidance)
-      return [];
-    return this.alertPainPointsService.painPointsSignal();
+  parseRecommendationsFromAi(text) {
+    const cleaned = this.alertAi.stripCodeFences(text);
+    const parsed = this.alertAi.looseJsonParse(cleaned);
+    if (!parsed || typeof parsed !== "object")
+      return null;
+    const root = parsed;
+    const fullHtml = typeof root["full_html"] === "string" ? root["full_html"] : "";
+    const recommendations = Array.isArray(root["recommendations"]) ? root["recommendations"] : [];
+    const replacements = Array.isArray(root["replacements"]) ? root["replacements"] : [];
+    return {
+      fullHtml,
+      recommendations: recommendations.filter((x) => x && typeof x === "object"),
+      replacements: replacements.filter((x) => x && typeof x === "object")
+    };
   }
-  getAlertOutputForRender() {
-    if (this.selectedPromptKey !== PromptKey.AlertsGuidance)
-      return "";
-    return this.alertPainPointsService.rawOutputSignal();
+  applyAlertReplacements(originalHtml, replacements) {
+    if (!replacements.length)
+      return null;
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(originalHtml, "text/html");
+    const alerts = Array.from(doc.querySelectorAll(".alert"));
+    if (!alerts.length)
+      return null;
+    for (const raw of replacements) {
+      const indexRaw = raw["alert_index"];
+      const updatedHtml = raw["updated_html"];
+      const index = typeof indexRaw === "number" ? indexRaw : typeof indexRaw === "string" ? Number.parseInt(indexRaw, 10) : NaN;
+      if (!Number.isFinite(index) || !updatedHtml || typeof updatedHtml !== "string")
+        continue;
+      const target = alerts[index - 1];
+      if (!target)
+        continue;
+      const updatedDoc = parser.parseFromString(updatedHtml, "text/html");
+      const updatedEl = updatedDoc.body.firstElementChild;
+      if (!updatedEl || !updatedEl.classList.contains("alert"))
+        continue;
+      target.replaceWith(updatedEl);
+    }
+    return doc.body.outerHTML;
   }
-  refreshWebView() {
+  runAlertRecommendations(html, issues, model, headers, url) {
     return __async(this, null, function* () {
-      const data = this.uploadState.getUploadData();
-      const viewType = this.webSelectedView();
-      const shadowRoot = this.shadowDOM();
-      if (!data?.originalHtml || !data?.modifiedHtml || !shadowRoot)
-        return;
-      yield this.shadowDomService.generateShadowDOMContent(shadowRoot, viewType, data.originalHtml, data.modifiedHtml, this.getAlertPainPointsForRender(), this.getAlertOutputForRender());
+      this.statusMessage = "Generating alert recommendations.";
+      const recPrompt = PromptTemplates[PromptKey.AlertsRecommendations];
+      const alertDoc = new DOMParser().parseFromString(html, "text/html");
+      const alertEls = Array.from(alertDoc.querySelectorAll(".alert"));
+      const alerts = alertEls.map((el, idx) => ({
+        alert_index: idx + 1,
+        alert_html: el.outerHTML,
+        alert_text: (el.textContent || "").trim()
+      }));
+      const recPayload = JSON.stringify({ pageHtml: html, issues, alerts });
+      const recResponse = yield fetch(url, {
+        method: "POST",
+        headers,
+        body: JSON.stringify({
+          models: [model, AiModel.Mistral, AiModel.Qwen],
+          messages: [
+            { role: "system", content: recPrompt },
+            { role: "user", content: recPayload }
+          ],
+          temperature: 0,
+          provider: { allow_fallbacks: true }
+        })
+      });
+      if (recResponse.status !== 200) {
+        throw new Error(`Alert recommendations failed (${recResponse.status}).`);
+      }
+      const recJson = yield recResponse.json();
+      if (recJson.error) {
+        throw new Error(`Alert recommendations error: ${recJson.error?.message || "Unknown error"}`);
+      }
+      const recText = recJson.choices?.[0].message?.content;
+      if (!recText) {
+        throw new Error("Alert recommendations response was empty.");
+      }
+      const parsed = this.parseRecommendationsFromAi(recText);
+      const replacedHtml = parsed ? this.applyAlertReplacements(html, parsed.replacements) : null;
+      const finalHtml = replacedHtml || parsed?.fullHtml;
+      if (!finalHtml) {
+        throw new Error("Alert recommendations missing updated HTML.");
+      }
+      const formattedHtml = yield this.urlDataService.formatHtml(finalHtml, "ai");
+      this.uploadState.mergeModifiedData({
+        modifiedUrl: "AI generated",
+        modifiedHtml: formattedHtml
+      });
     });
   }
   //AI Model
@@ -33005,6 +32906,22 @@ ${base}`;
             //"data_collection": "deny"
           }
         };
+        if (this.selectedPromptKey === PromptKey.AlertsIssues) {
+          const cachedIssues = this.alertAi.getCachedIssues(html);
+          const selectedIssues = (cachedIssues || []).filter((issue) => issue.include);
+          if (selectedIssues.length) {
+            yield this.runAlertRecommendations(html, selectedIssues, model, headers, url);
+            this.statusSeverity = "success";
+            this.statusMessage = "Alert recommendations generated from selected pain points.";
+            this.messageService.add({
+              severity: "success",
+              summary: "AI Response Received",
+              detail: "Alert recommendations generated from selected pain points.",
+              life: 5e3
+            });
+            return;
+          }
+        }
         console.log("Sending to OpenRouter:", { payload });
         const orResponse = yield fetch(url, {
           method: "POST",
@@ -33042,6 +32959,9 @@ ${base}`;
           throw new Error(`AI error: ${aiResponse.error?.message}`);
         }
         const aiHtml = aiResponse.choices?.[0].message.content;
+        if (!aiHtml) {
+          throw new Error("AI response was empty.");
+        }
         console.groupCollapsed("AI Response");
         console.log(`AI model: `, aiResponse.model);
         console.log(`Prompt tokens: `, aiResponse.usage.prompt_tokens);
@@ -33069,11 +32989,19 @@ ${base}`;
             life: 1e4
           });
         }
-        const formattedHtml = yield this.urlDataService.formatHtml(aiHtml, "ai");
-        this.uploadState.mergeModifiedData({
-          modifiedUrl: "AI generated",
-          modifiedHtml: formattedHtml
-        });
+        if (this.selectedPromptKey === PromptKey.AlertsIssues) {
+          const issues = this.alertAi.parseIssuesFromText(aiHtml);
+          if (!issues.length) {
+            throw new Error("No alert issues returned by the AI.");
+          }
+          yield this.runAlertRecommendations(html, issues, model, headers, url);
+        } else {
+          const formattedHtml = yield this.urlDataService.formatHtml(aiHtml, "ai");
+          this.uploadState.mergeModifiedData({
+            modifiedUrl: "AI generated",
+            modifiedHtml: formattedHtml
+          });
+        }
         this.statusSeverity = "success";
         this.statusMessage = `Comparison has been updated with AI response from ${usedModel}.`;
         this.messageService.add({
@@ -33822,4 +33750,4 @@ ${base}`;
 export {
   PageAssistantCompareComponent
 };
-//# sourceMappingURL=chunk-5RUBSX7X.js.map
+//# sourceMappingURL=chunk-5WNG7Q72.js.map
