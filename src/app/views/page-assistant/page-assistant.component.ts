@@ -36,6 +36,7 @@ import { UploadStateService } from './services/upload-state.service';
 import { UrlDataService } from './services/url-data.service';
 import { SourceDiffService } from './services/source-diff.service';
 import { ShadowDomService } from './services/shadowdom.service';
+import { AlertAiService } from './services/alert-ai.service';
 
 //Data
 import {
@@ -95,6 +96,7 @@ export class PageAssistantCompareComponent
   private uploadState = inject(UploadStateService);
   private sourceDiffService = inject(SourceDiffService);
   private shadowDomService = inject(ShadowDomService);
+  private alertAi = inject(AlertAiService);
   private urlDataService = inject(UrlDataService);
   private router = inject(Router);
   private locationStrategy = inject(LocationStrategy);
@@ -527,6 +529,65 @@ export class PageAssistantCompareComponent
       : `${this.customEditText}\n\n${base}`; //Note: a heading can be added to the custom instructions here, something like ${base}\n\nPrioritize the following:\n${custom}
   }
 
+  private parseRecommendationsFromAi(text: string): {
+    fullHtml: string;
+    recommendations: Record<string, unknown>[];
+    replacements: Record<string, unknown>[];
+  } | null {
+    const cleaned = this.alertAi.stripCodeFences(text);
+    const parsed = this.alertAi.looseJsonParse(cleaned);
+    if (!parsed || typeof parsed !== 'object') return null;
+    const root = parsed as Record<string, unknown>;
+    const fullHtml = typeof root['full_html'] === 'string' ? root['full_html'] : '';
+    const recommendations = Array.isArray(root['recommendations'])
+      ? (root['recommendations'] as unknown[])
+      : [];
+    const replacements = Array.isArray(root['replacements'])
+      ? (root['replacements'] as unknown[])
+      : [];
+    return {
+      fullHtml,
+      recommendations: recommendations.filter(
+        (x) => x && typeof x === 'object',
+      ) as Record<string, unknown>[],
+      replacements: replacements.filter(
+        (x) => x && typeof x === 'object',
+      ) as Record<string, unknown>[],
+    };
+  }
+
+  private applyAlertReplacements(
+    originalHtml: string,
+    replacements: Record<string, unknown>[],
+  ): string | null {
+    if (!replacements.length) return null;
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(originalHtml, 'text/html');
+    const alerts = Array.from(doc.querySelectorAll('.alert'));
+    if (!alerts.length) return null;
+
+    for (const raw of replacements) {
+      const indexRaw = raw['alert_index'];
+      const updatedHtml = raw['updated_html'];
+      const index =
+        typeof indexRaw === 'number'
+          ? indexRaw
+          : typeof indexRaw === 'string'
+            ? Number.parseInt(indexRaw, 10)
+            : NaN;
+      if (!Number.isFinite(index) || !updatedHtml || typeof updatedHtml !== 'string')
+        continue;
+      const target = alerts[index - 1];
+      if (!target) continue;
+      const updatedDoc = parser.parseFromString(updatedHtml, 'text/html');
+      const updatedEl = updatedDoc.body.firstElementChild;
+      if (!updatedEl || !updatedEl.classList.contains('alert')) continue;
+      target.replaceWith(updatedEl);
+    }
+
+    return doc.body.outerHTML;
+  }
+
   //AI Model
   selectedAiModel: AiModel = AiModel.Gemini;
 
@@ -621,6 +682,9 @@ export class PageAssistantCompareComponent
       }
 
       const aiHtml = aiResponse.choices?.[0].message.content;
+      if (!aiHtml) {
+        throw new Error('AI response was empty.');
+      }
 
       console.groupCollapsed('AI Response');
       console.log(`AI model: `, aiResponse.model);
@@ -659,12 +723,79 @@ export class PageAssistantCompareComponent
         });
       }
 
-      const formattedHtml = await this.urlDataService.formatHtml(aiHtml, 'ai');
+      if (this.selectedPromptKey === PromptKey.AlertsIssues) {
+        // Step 1: parse issues from AlertsIssues (JSON-only).
+        const issues = this.alertAi.parseIssuesFromText(aiHtml);
+        if (!issues.length) {
+          throw new Error('No alert issues returned by the AI.');
+        }
 
-      this.uploadState.mergeModifiedData({
-        modifiedUrl: 'AI generated',
-        modifiedHtml: formattedHtml,
-      });
+        // Step 2: call AlertsRecommendations with issues + page HTML + extracted alert snippets.
+        this.statusMessage = 'Generating alert recommendations.';
+        const recPrompt = PromptTemplates[PromptKey.AlertsRecommendations];
+        const alertDoc = new DOMParser().parseFromString(html, 'text/html');
+        const alertEls = Array.from(alertDoc.querySelectorAll('.alert'));
+        const alerts = alertEls.map((el, idx) => ({
+          alert_index: idx + 1,
+          alert_html: el.outerHTML,
+          alert_text: (el.textContent || '').trim(),
+        }));
+        const recPayload = JSON.stringify({ pageHtml: html, issues, alerts });
+
+        const recResponse = await fetch(url, {
+          method: 'POST',
+          headers,
+          body: JSON.stringify({
+            models: [model, AiModel.Mistral, AiModel.Qwen],
+            messages: [
+              { role: 'system', content: recPrompt },
+              { role: 'user', content: recPayload },
+            ],
+            temperature: 0,
+            provider: { allow_fallbacks: true },
+          }),
+        });
+
+        if (recResponse.status !== 200) {
+          throw new Error(`Alert recommendations failed (${recResponse.status}).`);
+        }
+
+        const recJson = await recResponse.json();
+        if (recJson.error) {
+          throw new Error(
+            `Alert recommendations error: ${recJson.error?.message || 'Unknown error'}`,
+          );
+        }
+
+        const recText = recJson.choices?.[0].message?.content;
+        if (!recText) {
+          throw new Error('Alert recommendations response was empty.');
+        }
+
+        // Prefer in-place replacements by alert_index; fall back to full_html.
+        const parsed = this.parseRecommendationsFromAi(recText);
+        const replacedHtml = parsed
+          ? this.applyAlertReplacements(html, parsed.replacements)
+          : null;
+        const finalHtml = replacedHtml || parsed?.fullHtml;
+        if (!finalHtml) {
+          throw new Error('Alert recommendations missing updated HTML.');
+        }
+
+        const formattedHtml = await this.urlDataService.formatHtml(finalHtml, 'ai');
+
+        this.uploadState.mergeModifiedData({
+          modifiedUrl: 'AI generated',
+          modifiedHtml: formattedHtml,
+        });
+      } else {
+        const formattedHtml = await this.urlDataService.formatHtml(aiHtml, 'ai');
+
+        this.uploadState.mergeModifiedData({
+          modifiedUrl: 'AI generated',
+          modifiedHtml: formattedHtml,
+        });
+      }
 
       this.statusSeverity = 'success';
       this.statusMessage = `Comparison has been updated with AI response from ${usedModel}.`;

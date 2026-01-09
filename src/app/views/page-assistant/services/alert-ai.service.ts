@@ -143,6 +143,10 @@ export class AlertAiService {
   }
 
   // ---------- Output parsing ----------
+  parseIssuesFromText(text: string): AlertIssue[] {
+    return this.parseIssues(text);
+  }
+  
   private parseIssues(text: string): AlertIssue[] {
     const cleaned = this.stripCodeFences(text);
     const parsed = this.looseJsonParse(cleaned);
@@ -183,14 +187,14 @@ export class AlertAiService {
     return mapped;
   }
 
-  private stripCodeFences(s: string): string {
+  stripCodeFences(s: string): string {
     return s
       .replace(/^```(?:json)?\s*/i, '')
       .replace(/\s*```$/i, '')
       .trim();
   }
 
-  private looseJsonParse(s: string): unknown | null {
+  looseJsonParse(s: string): unknown | null {
     try {
       return JSON.parse(s);
     } catch {

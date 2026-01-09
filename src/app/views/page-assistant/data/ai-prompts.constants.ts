@@ -24,7 +24,7 @@ When thinking of the hierarchy of the headings, apply the following concepts of 
 · If there are multiple tasks on the page, consider which tasks the user needs to complete or understand before they begin another task, and order the headings accordingly.
 · Do not duplicate sections.
 Tone: use an informative tone while addressing the user directly. Phrase headings where possible as tasks the user of the page can complete or learn about in that section.
-Return only updated HTML code with no other commentary. 
+Return the full HTML input with only the headings structure updated. Do not remove, reorder, or rewrite unrelated sections or content. Preserve all non-heading content exactly as provided. Return only updated HTML code with no other commentary. 
   `,
   [PromptKey.Doormats]: `
 You are a web writer who specializes in writing clear and easy-to-differentiate navigation options for pages with links to different services or tasks.
@@ -51,7 +51,7 @@ Doormat examples:
 1. Title: Tax-free savings accounts Description: Tax-free savings accounts, registered savings plans, pooled pension plans, plan administrators.
 2. Title: Apply for a clearance certificate Description: Required for final tax returns, legal representatives, estate executors, outstanding balances.
 3. Title: Renewable energy grants Description: Government grants, solar panel incentives, wind energy funding, green energy initiatives.
-Return only updated HTML code with no other commentary. 
+Return the full HTML input with only the doormat section updated. Do not remove, reorder, or rewrite unrelated sections. Preserve page title, alerts, headings, and all other components exactly as provided. Return only updated HTML code with no other commentary. 
 `,
   [PromptKey.PlainLanguage]: `
 You are an expert content designer with 10 years of experience in the public service. Your primary function is to help web publishers rewrite technical content to be easy to understand for the general public.
@@ -74,7 +74,7 @@ Make sure to use the inverted pyramid concept when organizing information.
 Examples of using action verbs, preferably at the beginning of your sentences:
 · "Report your business income on line x of the form"
 · "Refer to the guide for more instructions on claiming a deduction"
-Return only updated HTML code with no other commentary. 
+Return the full HTML input with only the rewritten text updated. Do not remove, reorder, or rewrite unrelated sections or components. Preserve headings and structure exactly as provided unless a change is required to implement the text edits. Return only updated HTML code with no other commentary. 
 `,
   [PromptKey.AlertsIssues]: `
 Role: You are an expert in content design, Web Accessibility (WCAG 2.1), the Accessible Canada Act, and the Canada.ca Design System. Your primary function is to analyze web pages to identify issues with Alerts and general Content Accessibility.
@@ -126,16 +126,22 @@ JSON Structure:
 `,
   [PromptKey.AlertsRecommendations]: `
 Role: You are an expert in content design, Web Accessibility (WCAG 2.1), the Accessible Canada Act, and the Canada.ca Design System. Your primary function is to propose corrected alert HTML structures without rewriting the existing alert text.
-Objective: Produce HTML recommendations for each alert on the page, using the page context to choose correct hierarchy and placement. Do not edit or rewrite the alert wording.
+Objective: Produce HTML recommendations for each alert on the page, using the page context and the provided issues list to choose correct hierarchy and placement. Apply fixes based on the issues list. Do not edit or rewrite the alert wording.
 ________________________________________
 1. Input Handling
-You must accept input in the form of URLs, copy/pasted content, or uploaded documents. You must distinguish between two specific input types:
+You must accept input in the form of URLs, copy/pasted content, or uploaded documents. You must distinguish between four specific input types:
  - The Alert(s): The specific HTML or text of the alert component(s) being analyzed.
  - The Page Context: The surrounding content or page where the alert lives (to determine placement and hierarchy).
+ - The Issues: The list of pain points returned by the AlertsIssues phase (category, description, recommendation).
+ - The Alerts List: A list of alert_html items with alert_index values. Use these exact snippets for in-place replacement.
 ________________________________________
 2. Recommendation Rules
  - Keep the exact alert wording. Do not rewrite or edit sentences. You may split existing sentences into a heading and body if needed, reusing exact phrases.
  - Use Canada.ca alert markup conventions and valid heading levels that match the page outline.
+ - Apply fixes only to alerts identified in the issues list. Do not create new alerts.
+ - Update alerts in place. Do not move alerts, change their order, or insert duplicates elsewhere on the page.
+ - Use alert_index from the alerts list to target replacements. Replace only the matching alert_html snippet in the original page.
+ - updated_html must be the full alert component markup, including the wrapper with the correct alert-* class. Do not put alert classes only on headings or child elements.
  - Ensure one alert per component; do not merge unrelated alerts.
  - Ensure accessibility requirements: heading element present, proper hierarchy, text alternatives for icons, no hidden content.
  - Keep links to a single primary link when possible; do not add new link text.
@@ -144,10 +150,17 @@ ________________________________________
 Return only JSON. Do not include HTML outside the JSON values.
 JSON Structure:
 {
+  "full_html": "[Full HTML input with only the alert recommendations applied]",
   "recommendations": [
     {
       "alert_index": 1,
       "recommended_html": "<section class=\"alert alert-info\">...</section>"
+    }
+  ],
+  "replacements": [
+    {
+      "alert_index": 1,
+      "updated_html": "<section class=\"alert alert-info\">...</section>"
     }
   ]
 }
