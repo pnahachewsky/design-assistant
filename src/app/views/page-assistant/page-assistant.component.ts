@@ -588,6 +588,72 @@ export class PageAssistantCompareComponent
     return doc.body.outerHTML;
   }
 
+  private async runAlertRecommendations(
+    html: string,
+    issues: Record<string, unknown>[],
+    model: AiModel,
+    headers: Record<string, string>,
+    url: string,
+  ): Promise<void> {
+    this.statusMessage = 'Generating alert recommendations.';
+    const recPrompt = PromptTemplates[PromptKey.AlertsRecommendations];
+    const alertDoc = new DOMParser().parseFromString(html, 'text/html');
+    const alertEls = Array.from(alertDoc.querySelectorAll('.alert'));
+    const alerts = alertEls.map((el, idx) => ({
+      alert_index: idx + 1,
+      alert_html: el.outerHTML,
+      alert_text: (el.textContent || '').trim(),
+    }));
+    const recPayload = JSON.stringify({ pageHtml: html, issues, alerts });
+
+    const recResponse = await fetch(url, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({
+        models: [model, AiModel.Mistral, AiModel.Qwen],
+        messages: [
+          { role: 'system', content: recPrompt },
+          { role: 'user', content: recPayload },
+        ],
+        temperature: 0,
+        provider: { allow_fallbacks: true },
+      }),
+    });
+
+    if (recResponse.status !== 200) {
+      throw new Error(`Alert recommendations failed (${recResponse.status}).`);
+    }
+
+    const recJson = await recResponse.json();
+    if (recJson.error) {
+      throw new Error(
+        `Alert recommendations error: ${recJson.error?.message || 'Unknown error'}`,
+      );
+    }
+
+    const recText = recJson.choices?.[0].message?.content;
+    if (!recText) {
+      throw new Error('Alert recommendations response was empty.');
+    }
+
+    // Prefer in-place replacements by alert_index; fall back to full_html.
+    const parsed = this.parseRecommendationsFromAi(recText);
+    const replacedHtml = parsed
+      ? this.applyAlertReplacements(html, parsed.replacements)
+      : null;
+    const finalHtml = replacedHtml || parsed?.fullHtml;
+    if (!finalHtml) {
+      throw new Error('Alert recommendations missing updated HTML.');
+    }
+
+    const formattedHtml = await this.urlDataService.formatHtml(finalHtml, 'ai');
+
+    this.uploadState.mergeModifiedData({
+      modifiedUrl: 'AI generated',
+      modifiedHtml: formattedHtml,
+    });
+  }
+
   //AI Model
   selectedAiModel: AiModel = AiModel.Gemini;
 
@@ -645,6 +711,29 @@ export class PageAssistantCompareComponent
           //"data_collection": "deny"
         },
       };
+
+      if (this.selectedPromptKey === PromptKey.AlertsIssues) {
+        const cachedIssues = this.alertAi.getCachedIssues(html);
+        const selectedIssues = (cachedIssues || []).filter((issue) => issue.include);
+        if (selectedIssues.length) {
+          await this.runAlertRecommendations(
+            html,
+            selectedIssues as unknown as Record<string, unknown>[],
+            model,
+            headers,
+            url,
+          );
+          this.statusSeverity = 'success';
+          this.statusMessage = 'Alert recommendations generated from selected pain points.';
+          this.messageService.add({
+            severity: 'success',
+            summary: 'AI Response Received',
+            detail: 'Alert recommendations generated from selected pain points.',
+            life: 5000,
+          });
+          return;
+        }
+      }
 
       console.log('Sending to OpenRouter:', { payload });
 
@@ -731,63 +820,13 @@ export class PageAssistantCompareComponent
         }
 
         // Step 2: call AlertsRecommendations with issues + page HTML + extracted alert snippets.
-        this.statusMessage = 'Generating alert recommendations.';
-        const recPrompt = PromptTemplates[PromptKey.AlertsRecommendations];
-        const alertDoc = new DOMParser().parseFromString(html, 'text/html');
-        const alertEls = Array.from(alertDoc.querySelectorAll('.alert'));
-        const alerts = alertEls.map((el, idx) => ({
-          alert_index: idx + 1,
-          alert_html: el.outerHTML,
-          alert_text: (el.textContent || '').trim(),
-        }));
-        const recPayload = JSON.stringify({ pageHtml: html, issues, alerts });
-
-        const recResponse = await fetch(url, {
-          method: 'POST',
+        await this.runAlertRecommendations(
+          html,
+          issues as unknown as Record<string, unknown>[],
+          model,
           headers,
-          body: JSON.stringify({
-            models: [model, AiModel.Mistral, AiModel.Qwen],
-            messages: [
-              { role: 'system', content: recPrompt },
-              { role: 'user', content: recPayload },
-            ],
-            temperature: 0,
-            provider: { allow_fallbacks: true },
-          }),
-        });
-
-        if (recResponse.status !== 200) {
-          throw new Error(`Alert recommendations failed (${recResponse.status}).`);
-        }
-
-        const recJson = await recResponse.json();
-        if (recJson.error) {
-          throw new Error(
-            `Alert recommendations error: ${recJson.error?.message || 'Unknown error'}`,
-          );
-        }
-
-        const recText = recJson.choices?.[0].message?.content;
-        if (!recText) {
-          throw new Error('Alert recommendations response was empty.');
-        }
-
-        // Prefer in-place replacements by alert_index; fall back to full_html.
-        const parsed = this.parseRecommendationsFromAi(recText);
-        const replacedHtml = parsed
-          ? this.applyAlertReplacements(html, parsed.replacements)
-          : null;
-        const finalHtml = replacedHtml || parsed?.fullHtml;
-        if (!finalHtml) {
-          throw new Error('Alert recommendations missing updated HTML.');
-        }
-
-        const formattedHtml = await this.urlDataService.formatHtml(finalHtml, 'ai');
-
-        this.uploadState.mergeModifiedData({
-          modifiedUrl: 'AI generated',
-          modifiedHtml: formattedHtml,
-        });
+          url,
+        );
       } else {
         const formattedHtml = await this.urlDataService.formatHtml(aiHtml, 'ai');
 

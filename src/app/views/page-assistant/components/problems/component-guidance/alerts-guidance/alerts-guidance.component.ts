@@ -125,6 +125,7 @@ export class AlertsGuidanceComponent implements OnInit, OnChanges {
   onIncludeToggle(): void {
     this.sortIssues();
     this.emitDerived();
+    this.syncCache();
   }
 
   private applySelectAll(flag: boolean): void {
@@ -132,6 +133,7 @@ export class AlertsGuidanceComponent implements OnInit, OnChanges {
       this.issues = this.issues.map((issue) => ({ ...issue, include: false }));
       this.sortIssues();
     }
+    this.syncCache();
   }
 
   private sortIssues(): void {
@@ -176,6 +178,7 @@ export class AlertsGuidanceComponent implements OnInit, OnChanges {
       this.sortIssues();
       this.applySelectAll(this.selectAll);
       this.emitDerived();
+      this.syncCache();
       return;
     }
 
@@ -198,6 +201,7 @@ export class AlertsGuidanceComponent implements OnInit, OnChanges {
       this.sortIssues();
       this.applySelectAll(this.selectAll);
       this.emitDerived();
+      this.syncCache();
     } catch (err) {
       console.error('Alert AI call failed', err);
       this.setError(true);
@@ -213,5 +217,13 @@ export class AlertsGuidanceComponent implements OnInit, OnChanges {
 
   private setError(flag: boolean): void {
     this.errorChange.emit(flag);
+  }
+
+  private syncCache(): void {
+    // Keep AlertAiService cache in sync with current checkbox selections so
+    // other flows can reuse the user's chosen pain points without re-calling AI.
+    const html = this.uploadState.getUploadData()?.originalHtml || '';
+    if (!html || !this.issues.length) return;
+    this.alertAi.cacheIssues(html, this.issues);
   }
 }
