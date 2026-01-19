@@ -129,7 +129,7 @@ import {
   unblockBodyScroll,
   uuid,
   zindexutils
-} from "./chunk-R3CBZH7E.js";
+} from "./chunk-2TLDKFAL.js";
 import {
   ChangeDetectionStrategy,
   ChangeDetectorRef,
@@ -32830,6 +32830,7 @@ var PageAssistantCompareComponent = class _PageAssistantCompareComponent {
   urlDataService = inject(UrlDataService);
   router = inject(Router);
   locationStrategy = inject(LocationStrategy);
+  apiKeyService = inject(ApiKeyService);
   constructor() {
     effect(() => __async(this, null, function* () {
       const data = this.uploadState.getUploadData();
@@ -33283,7 +33284,7 @@ ${base}`;
       this.statusSeverity = "info";
       this.statusMessage = this.translate.instant("common.ai.sending");
       try {
-        const apiKey = localStorage.getItem("apiKey");
+        const apiKey = this.apiKeyService.getCurrentKey();
         if (!apiKey)
           throw new Error("Missing API key");
         const uploadData = this.uploadState.getUploadData();
@@ -34155,9 +34156,9 @@ ${base}`;
   }] });
 })();
 (() => {
-  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(PageAssistantCompareComponent, { className: "PageAssistantCompareComponent", filePath: "src/app/views/page-assistant/page-assistant.component.ts", lineNumber: 85 });
+  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(PageAssistantCompareComponent, { className: "PageAssistantCompareComponent", filePath: "src/app/views/page-assistant/page-assistant.component.ts", lineNumber: 86 });
 })();
 export {
   PageAssistantCompareComponent
 };
-//# sourceMappingURL=chunk-GKYP6E5K.js.map
+//# sourceMappingURL=chunk-5UXLJW64.js.map
