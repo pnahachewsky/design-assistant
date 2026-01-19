@@ -95,20 +95,19 @@ export class AiOptionsComponent {
 
   //AI model
 
-  selectedAi: AiModel = AiModel.Gemini;
+  selectedAi: AiModel = AiModel.Devstral;
   selectedAis: AiModel[] = [];
 
   aiOptions = [
-    { id: AiModel.Gemini, label: 'page.ai-options.model.Gemini', disabled: false },
-    { id: AiModel.Mistral, label: 'page.ai-options.model.Mistral', disabled: false },
+    { id: AiModel.Devstral, label: 'page.ai-options.model.Devstral', disabled: false },
+    { id: AiModel.Xiaomi, label: 'page.ai-options.model.Xiaomi', disabled: false },
     { id: AiModel.Qwen, label: 'page.ai-options.model.Qwen', disabled: false },
-
+    { id: AiModel.Nemotron, label: 'page.ai-options.model.Nemotron', disabled: false },
+    { id: AiModel.DeepSeek, label: 'page.ai-options.model.DeepSeek', disabled: false },
+    { id: AiModel.Gemma, label: 'page.ai-options.model.Gemma', disabled: false },
+    { id: AiModel.Mistral, label: 'page.ai-options.model.Mistral', disabled: false },
     { id: AiModel.Llama32, label: 'page.ai-options.model.Llama32', disabled: false },
-    { id: AiModel.Llama33, label: 'page.ai-options.model.Llama33', disabled: false },
     { id: AiModel.Llama31, label: 'page.ai-options.model.Llama31', disabled: false },
-
-    { id: AiModel.Kimi, label: 'page.ai-options.model.Kimi', disabled: false },
-    { id: AiModel.DeepSeekChatV3, label: 'page.ai-options.model.DeepSeekChatV3', disabled: false },
   ];
 
   isAiCheckboxDisabled(id: AiModel): boolean {

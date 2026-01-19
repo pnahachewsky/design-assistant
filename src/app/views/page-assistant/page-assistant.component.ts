@@ -610,7 +610,7 @@ export class PageAssistantCompareComponent
       method: 'POST',
       headers,
       body: JSON.stringify({
-        models: [model, AiModel.Mistral, AiModel.Qwen],
+        models: [model, AiModel.Devstral, AiModel.Qwen],
         messages: [
           { role: 'system', content: recPrompt },
           { role: 'user', content: recPayload },
@@ -655,7 +655,7 @@ export class PageAssistantCompareComponent
   }
 
   //AI Model
-  selectedAiModel: AiModel = AiModel.Gemini;
+  selectedAiModel: AiModel = AiModel.Devstral;
 
   onAiChange(key: AiModel) {
     this.selectedAiModel = key;
@@ -700,7 +700,7 @@ export class PageAssistantCompareComponent
       };
 
       const payload = {
-        models: [model, AiModel.Mistral, AiModel.Qwen],
+        models: [model, AiModel.Devstral, AiModel.Qwen],
         messages: [
           { role: 'system', content: prompt },
           { role: 'user', content: html },

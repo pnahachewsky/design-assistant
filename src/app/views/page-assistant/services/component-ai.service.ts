@@ -41,13 +41,13 @@ export class ComponentAiService {
 
   // Same rotation style as Link Report
   private models: string[] = [
-    'meta-llama/llama-3.3-70b-instruct:free',
-    'google/gemini-2.0-flash-exp:free',
-    'google/gemini-exp-1206:free',
-    'cognitivecomputations/dolphin3.0-mistral-24b:free',
-    'cognitivecomputations/dolphin3.0-r1-mistral-24b:free',
-    'nvidia/llama-3.1-nemotron-70b-instruct:free',
-    'deepseek/deepseek-r1:free',
+    'meta-llama/llama-3.3-70b-instruct:free', //Still good
+    'google/gemini-2.0-flash-exp:free', //Deprecated
+    'google/gemini-exp-1206:free', // gone
+    'cognitivecomputations/dolphin3.0-mistral-24b:free', // gone
+    'cognitivecomputations/dolphin3.0-r1-mistral-24b:free', // gone
+    'nvidia/llama-3.1-nemotron-70b-instruct:free', // gone
+    'deepseek/deepseek-r1:free', // gone
   ];
 
   /** Batch assess selected components; returns a result per input (same order). */

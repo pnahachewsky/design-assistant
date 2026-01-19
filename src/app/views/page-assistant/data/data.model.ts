@@ -89,13 +89,14 @@ export enum PromptKey {
 }
 
 export enum AiModel {
-  Gemini = 'google/gemini-2.0-flash-exp:free', //1.05M context (saves prompt data)
-  DeepSeekChatV3 = 'deepseek/deepseek-chat-v3-0324:free', //164k context (saves prompt data)
-  Qwen = 'qwen/qwen3-235b-a22b:free', //131k context
-  Llama32 = 'meta-llama/llama-3.2-3b-instruct:free', //131k context = wonky results for some reason
+  Devstral = 'mistralai/devstral-2512:free', //262.1K context
+  Xiaomi = 'xiaomi/mimo-v2-flash:free', //262.1K context
+  Qwen = 'qwen/qwen3-next-80b-a3b-instruct:free', //262k context
+  Nemotron = 'nvidia/nemotron-3-nano-30b-a3b:free', //256k context
+  DeepSeek = 'deepseek/deepseek-r1-0528:free', //164k context
+  Gemma = 'google/gemma-3-27b-it:free', //131k context
   Mistral = 'mistralai/mistral-small-3.1-24b-instruct:free', //128k context
-  Kimi = 'moonshotai/kimi-k2:free', //66k context
-  Llama33 = 'meta-llama/llama-3.3-70b-instruct:free', //66k context = too small
+  Llama32 = 'meta-llama/llama-3.2-3b-instruct:free', //131k context = wonky results for some reason
   Llama31 = 'meta-llama/llama-3.1-405b-instruct:free' //66k context = fine???
 }
 
