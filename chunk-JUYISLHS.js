@@ -33216,6 +33216,7 @@ ${base}`;
   }
   runAlertRecommendations(html, issues, model, headers, url) {
     return __async(this, null, function* () {
+      const shortModel = this.getShortModelName(model);
       this.statusMessage = "Generating alert recommendations.";
       const recPrompt = PromptTemplates[PromptKey.AlertsRecommendations];
       const alertDoc = new DOMParser().parseFromString(html, "text/html");
@@ -33240,21 +33241,21 @@ ${base}`;
         })
       });
       if (recResponse.status !== 200) {
-        throw new Error(`Alert recommendations failed (${recResponse.status}).`);
+        throw new Error(`Alert recommendations failed (${recResponse.status}) for ${shortModel}.`);
       }
       const recJson = yield recResponse.json();
       if (recJson.error) {
-        throw new Error(`Alert recommendations error: ${recJson.error?.message || "Unknown error"}`);
+        throw new Error(`Alert recommendations error (${shortModel}): ${recJson.error?.message || "Unknown error"}`);
       }
       const recText = recJson.choices?.[0].message?.content;
       if (!recText) {
-        throw new Error("Alert recommendations response was empty.");
+        throw new Error(`Alert recommendations response was empty (${shortModel}).`);
       }
       const parsed = this.parseRecommendationsFromAi(recText);
       const replacedHtml = parsed ? this.applyAlertReplacements(html, parsed.replacements) : null;
       const finalHtml = replacedHtml || parsed?.fullHtml;
       if (!finalHtml) {
-        throw new Error("Alert recommendations missing updated HTML.");
+        throw new Error(`Alert recommendations missing updated HTML (${shortModel}).`);
       }
       const formattedHtml = yield this.urlDataService.formatHtml(finalHtml, "ai");
       this.uploadState.mergeModifiedData({
@@ -33270,6 +33271,10 @@ ${base}`;
   }
   getEnumKeyByValue(enumObj, value) {
     return Object.keys(enumObj).find((k) => enumObj[k] === value);
+  }
+  getShortModelName(model) {
+    const key2 = this.getEnumKeyByValue(AiModel, model);
+    return key2 ? this.translate.instant(`page.ai-options.model.short.${key2}`) : model;
   }
   //AI interaction
   isLoading = false;
@@ -33293,6 +33298,7 @@ ${base}`;
           throw new Error("No HTML to send");
         const prompt = this.combinedPrompt;
         const model = this.selectedAiModel;
+        const requestedModelShort = this.getShortModelName(model);
         const url = "https://openrouter.ai/api/v1/chat/completions";
         const headers = {
           Authorization: `Bearer ${apiKey}`,
@@ -33360,11 +33366,11 @@ ${base}`;
           console.groupEnd();
           this.statusSeverity = "error";
           this.statusMessage = this.translate.instant("common.ai.errorCommunicatingAi");
-          throw new Error(`AI error: ${aiResponse.error?.message}`);
+          throw new Error(`AI error (${requestedModelShort}): ${aiResponse.error?.message || "Unknown error"}`);
         }
         const aiHtml = aiResponse.choices?.[0].message.content;
         if (!aiHtml) {
-          throw new Error("AI response was empty.");
+          throw new Error(`AI response was empty (${requestedModelShort}).`);
         }
         console.groupCollapsed("AI Response");
         console.log(`AI model: `, aiResponse.model);
@@ -33401,7 +33407,7 @@ ${base}`;
         if (this.selectedPromptKey === PromptKey.AlertsIssues) {
           const issues = this.alertAi.parseIssuesFromText(aiHtml);
           if (!issues.length) {
-            throw new Error("No alert issues returned by the AI.");
+            throw new Error(`No alert issues returned by the AI (${usedModel}).`);
           }
           yield this.runAlertRecommendations(html, issues, model, headers, url);
         } else {
@@ -34161,4 +34167,4 @@ ${base}`;
 export {
   PageAssistantCompareComponent
 };
-//# sourceMappingURL=chunk-5UXLJW64.js.map
+//# sourceMappingURL=chunk-JUYISLHS.js.map
