@@ -129,7 +129,7 @@ import {
   unblockBodyScroll,
   uuid,
   zindexutils
-} from "./chunk-EPDS47SX.js";
+} from "./chunk-R3CBZH7E.js";
 import {
   ChangeDetectionStrategy,
   ChangeDetectorRef,
@@ -21424,6 +21424,8 @@ var severity_include_fallback_default = {
 var AlertAiService = class _AlertAiService {
   http = inject(HttpClient);
   apiKeyService = inject(ApiKeyService);
+  messageService = inject(MessageService);
+  translate = inject(TranslateService);
   cachedAlertIssues = null;
   fallbackSeverities = Object.fromEntries(Object.entries(severity_include_fallback_default).map(([k, v]) => {
     if (typeof v === "string") {
@@ -21434,18 +21436,16 @@ var AlertAiService = class _AlertAiService {
     return [k.toLowerCase(), { severity, include }];
   }));
   openRouterApiUrl = "https://openrouter.ai/api/v1/chat/completions";
-  models = [
-    "meta-llama/llama-3.3-70b-instruct:free",
-    "google/gemini-2.0-flash-exp:free",
-    "google/gemini-exp-1206:free",
-    "cognitivecomputations/dolphin3.0-mistral-24b:free",
-    "cognitivecomputations/dolphin3.0-r1-mistral-24b:free",
-    "nvidia/llama-3.1-nemotron-70b-instruct:free",
-    "deepseek/deepseek-r1:free"
-  ];
+  models = Object.values(AiModel);
   /** Call OpenRouter with the AlertsIssues prompt and return normalized issues. */
   analyze(alertHtml, pageContext) {
     return __async(this, null, function* () {
+      const startTime = performance.now();
+      this.messageService.add({
+        severity: "info",
+        summary: this.translate.instant("common.ai.sending"),
+        life: 2e3
+      });
       const systemPrompt = PromptTemplates[PromptKey.AlertsIssues];
       const userPayload = {
         alertHtml: this.trimText(alertHtml),
@@ -21455,16 +21455,75 @@ var AlertAiService = class _AlertAiService {
         { role: "system", content: systemPrompt },
         { role: "user", content: JSON.stringify(userPayload) }
       ];
-      for (const model of this.models) {
-        const resp = yield this.callOpenRouter(model, messages);
-        const text = resp?.choices?.[0]?.message?.content;
-        if (!text)
-          continue;
-        const issues = this.parseIssues(text);
-        if (issues.length)
-          return issues;
+      let sawResponse = false;
+      let generatingNotified = false;
+      let errorNotified = false;
+      let lastError;
+      let resolvedIssues = [];
+      const primaryModel = this.models[0];
+      try {
+        for (let i = 0; i < this.models.length; i += 1) {
+          const model = this.models[i];
+          try {
+            const resp = yield this.callOpenRouter(model, messages);
+            const text = resp?.choices?.[0]?.message?.content;
+            if (!text)
+              continue;
+            sawResponse = true;
+            if (!generatingNotified) {
+              this.messageService.add({
+                severity: "info",
+                summary: this.translate.instant("common.ai.generating"),
+                life: 2e3
+              });
+              generatingNotified = true;
+            }
+            const issues = this.parseIssues(text);
+            if (issues.length) {
+              resolvedIssues = issues;
+              if (i > 0 && primaryModel) {
+                this.messageService.add({
+                  severity: "warn",
+                  summary: this.translate.instant("common.ai.fallback.summary"),
+                  detail: this.translate.instant("common.ai.fallback.detail", {
+                    requested: primaryModel,
+                    used: model
+                  }),
+                  life: 1e4
+                });
+              }
+              this.messageService.add({
+                severity: "success",
+                summary: this.translate.instant("common.ai.responseReceived.summary"),
+                detail: this.translate.instant("common.ai.responseReceived.detail"),
+                life: 5e3
+              });
+              break;
+            }
+          } catch (err) {
+            lastError = err;
+            if (err instanceof Error && /api key/i.test(err.message)) {
+              this.notifyError(err);
+              errorNotified = true;
+              break;
+            }
+          }
+        }
+        if (!resolvedIssues.length && !errorNotified && !sawResponse) {
+          this.notifyError(lastError ?? new Error(this.translate.instant("common.ai.errorCommunicatingOpenRouter")));
+        }
+        return resolvedIssues;
+      } finally {
+        const durationInSeconds = ((performance.now() - startTime) / 1e3).toFixed(2);
+        this.messageService.add({
+          severity: "info",
+          summary: this.translate.instant("common.requestComplete"),
+          detail: this.translate.instant("common.totalTime", {
+            time: durationInSeconds
+          }),
+          life: 1e4
+        });
       }
-      return [];
     });
   }
   getCachedIssues(alertHtml) {
@@ -21504,18 +21563,28 @@ var AlertAiService = class _AlertAiService {
         const ct = resp?.headers.get("content-type") || "";
         if (ct.includes("application/json") && typeof resp?.body === "string") {
           return JSON.parse(resp.body);
-        } else {
-          console.error(`OpenRouter non-JSON (status ${resp?.status}, ${ct}):
-`, (resp?.body || "").slice(0, 500));
-          return void 0;
         }
+        const nonJsonMessage = `OpenRouter non-JSON (status ${resp?.status}, ${ct})`;
+        console.error(`${nonJsonMessage}:
+`, (resp?.body || "").slice(0, 500));
+        throw new Error(nonJsonMessage);
       } catch (err) {
         const httpErr = err;
         const status = httpErr?.status;
         const bodySnippet = typeof httpErr?.error === "string" ? httpErr.error.slice(0, 500) : JSON.stringify(httpErr?.error);
-        console.error(`OpenRouter HTTP error (model: ${model}) status=${status}: ${bodySnippet}`);
-        return void 0;
+        const message = `OpenRouter HTTP error (model: ${model}) status=${status}: ${bodySnippet}`;
+        console.error(message);
+        throw new Error(message);
       }
+    });
+  }
+  notifyError(err) {
+    const message = err instanceof Error ? err.message : this.translate.instant("common.ai.requestFailed.detailUnknown");
+    this.messageService.add({
+      severity: "error",
+      summary: this.translate.instant("common.ai.requestFailed.summary"),
+      detail: message,
+      sticky: true
     });
   }
   // ---------- Output parsing ----------
@@ -24350,17 +24419,18 @@ var AiOptionsComponent = class _AiOptionsComponent {
     this.promptChange.emit(key2);
   }
   //AI model
-  selectedAi = AiModel.Gemini;
+  selectedAi = AiModel.Devstral;
   selectedAis = [];
   aiOptions = [
-    { id: AiModel.Gemini, label: "page.ai-options.model.Gemini", disabled: false },
-    { id: AiModel.Mistral, label: "page.ai-options.model.Mistral", disabled: false },
+    { id: AiModel.Devstral, label: "page.ai-options.model.Devstral", disabled: false },
+    { id: AiModel.Xiaomi, label: "page.ai-options.model.Xiaomi", disabled: false },
     { id: AiModel.Qwen, label: "page.ai-options.model.Qwen", disabled: false },
+    { id: AiModel.Nemotron, label: "page.ai-options.model.Nemotron", disabled: false },
+    { id: AiModel.DeepSeek, label: "page.ai-options.model.DeepSeek", disabled: false },
+    { id: AiModel.Gemma, label: "page.ai-options.model.Gemma", disabled: false },
+    { id: AiModel.Mistral, label: "page.ai-options.model.Mistral", disabled: false },
     { id: AiModel.Llama32, label: "page.ai-options.model.Llama32", disabled: false },
-    { id: AiModel.Llama33, label: "page.ai-options.model.Llama33", disabled: false },
-    { id: AiModel.Llama31, label: "page.ai-options.model.Llama31", disabled: false },
-    { id: AiModel.Kimi, label: "page.ai-options.model.Kimi", disabled: false },
-    { id: AiModel.DeepSeekChatV3, label: "page.ai-options.model.DeepSeekChatV3", disabled: false }
+    { id: AiModel.Llama31, label: "page.ai-options.model.Llama31", disabled: false }
   ];
   isAiCheckboxDisabled(id) {
     return !this.selectedAis.includes(id) && this.selectedAis.length >= 2;
@@ -25621,12 +25691,19 @@ var ComponentAiService = class _ComponentAiService {
   // Same rotation style as Link Report
   models = [
     "meta-llama/llama-3.3-70b-instruct:free",
+    //Still good
     "google/gemini-2.0-flash-exp:free",
+    //Deprecated
     "google/gemini-exp-1206:free",
+    // gone
     "cognitivecomputations/dolphin3.0-mistral-24b:free",
+    // gone
     "cognitivecomputations/dolphin3.0-r1-mistral-24b:free",
+    // gone
     "nvidia/llama-3.1-nemotron-70b-instruct:free",
+    // gone
     "deepseek/deepseek-r1:free"
+    // gone
   ];
   /** Batch assess selected components; returns a result per input (same order). */
   assess(components) {
@@ -27196,12 +27273,19 @@ var LinkAiService = class _LinkAiService {
   // Reuse your model rotation style
   models = [
     "meta-llama/llama-3.3-70b-instruct:free",
+    //Still good
     "google/gemini-2.0-flash-exp:free",
+    //Deprecated
     "google/gemini-exp-1206:free",
+    // gone
     "cognitivecomputations/dolphin3.0-mistral-24b:free",
+    // gone
     "cognitivecomputations/dolphin3.0-r1-mistral-24b:free",
+    // gone
     "nvidia/llama-3.1-nemotron-70b-instruct:free",
+    // gone
     "deepseek/deepseek-r1:free"
+    // gone
   ];
   // prefer-inject over constructor DI
   http = inject(HttpClient);
@@ -31454,6 +31538,263 @@ var IaStructureComponent = class _IaStructureComponent {
   (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(IaStructureComponent, { className: "IaStructureComponent", filePath: "src/app/views/page-assistant/components/problems/ia-structure.component.ts", lineNumber: 104 });
 })();
 
+// src/app/views/page-assistant/components/problems/component-guidance/topic-page/topic-page.component.ts
+var _c010 = (a0, a1) => ({ "pi-chevron-down": a0, "pi-chevron-right": a1 });
+function TopicPageComponent_ng_template_1_Template(rf, ctx) {
+  if (rf & 1) {
+    \u0275\u0275elementStart(0, "tr");
+    \u0275\u0275element(1, "th", 4);
+    \u0275\u0275elementStart(2, "th", 5);
+    \u0275\u0275text(3, "Include in fix");
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(4, "th", 6);
+    \u0275\u0275text(5, "Severity");
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(6, "th");
+    \u0275\u0275text(7, "Pain point category");
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(8, "th", 7);
+    \u0275\u0275text(9, "Description");
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(10, "th", 7);
+    \u0275\u0275text(11, "Recommendation");
+    \u0275\u0275elementEnd()();
+  }
+}
+function TopicPageComponent_ng_template_2_Template(rf, ctx) {
+  if (rf & 1) {
+    const _r1 = \u0275\u0275getCurrentView();
+    \u0275\u0275elementStart(0, "tr", 8)(1, "td", 9)(2, "button", 10);
+    \u0275\u0275element(3, "i", 11);
+    \u0275\u0275elementEnd()();
+    \u0275\u0275elementStart(4, "td", 5)(5, "p-checkbox", 12);
+    \u0275\u0275twoWayListener("ngModelChange", function TopicPageComponent_ng_template_2_Template_p_checkbox_ngModelChange_5_listener($event) {
+      const issue_r2 = \u0275\u0275restoreView(_r1).$implicit;
+      \u0275\u0275twoWayBindingSet(issue_r2.include, $event) || (issue_r2.include = $event);
+      return \u0275\u0275resetView($event);
+    });
+    \u0275\u0275elementEnd()();
+    \u0275\u0275elementStart(6, "td", 6)(7, "span", 13);
+    \u0275\u0275text(8);
+    \u0275\u0275elementEnd()();
+    \u0275\u0275elementStart(9, "td");
+    \u0275\u0275text(10);
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(11, "td", 7);
+    \u0275\u0275text(12);
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(13, "td", 7);
+    \u0275\u0275text(14);
+    \u0275\u0275elementEnd()();
+  }
+  if (rf & 2) {
+    const issue_r2 = ctx.$implicit;
+    const expanded_r3 = ctx.expanded;
+    const ctx_r3 = \u0275\u0275nextContext();
+    \u0275\u0275property("pSelectableRow", issue_r2);
+    \u0275\u0275advance(2);
+    \u0275\u0275property("pRowToggler", issue_r2);
+    \u0275\u0275advance();
+    \u0275\u0275property("ngClass", \u0275\u0275pureFunction2(10, _c010, expanded_r3, !expanded_r3));
+    \u0275\u0275advance(2);
+    \u0275\u0275property("binary", true);
+    \u0275\u0275twoWayProperty("ngModel", issue_r2.include);
+    \u0275\u0275advance(2);
+    \u0275\u0275property("ngClass", ctx_r3.severityClass(issue_r2.severity));
+    \u0275\u0275advance();
+    \u0275\u0275textInterpolate1(" ", issue_r2.severity || "Unknown", " ");
+    \u0275\u0275advance(2);
+    \u0275\u0275textInterpolate(issue_r2.category);
+    \u0275\u0275advance(2);
+    \u0275\u0275textInterpolate(issue_r2.description);
+    \u0275\u0275advance(2);
+    \u0275\u0275textInterpolate(issue_r2.recommendation);
+  }
+}
+function TopicPageComponent_ng_template_3_ng_template_4_Template(rf, ctx) {
+  if (rf & 1) {
+    \u0275\u0275elementStart(0, "tr")(1, "th");
+    \u0275\u0275text(2, "Detail");
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(3, "th");
+    \u0275\u0275text(4, "Value");
+    \u0275\u0275elementEnd()();
+  }
+}
+function TopicPageComponent_ng_template_3_ng_template_5_Template(rf, ctx) {
+  if (rf & 1) {
+    \u0275\u0275elementStart(0, "tr")(1, "td");
+    \u0275\u0275text(2, "Impact");
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(3, "td");
+    \u0275\u0275text(4);
+    \u0275\u0275elementEnd()();
+  }
+  if (rf & 2) {
+    const issue_r5 = \u0275\u0275nextContext().$implicit;
+    \u0275\u0275advance(4);
+    \u0275\u0275textInterpolate(issue_r5.detail || "Details pending");
+  }
+}
+function TopicPageComponent_ng_template_3_Template(rf, ctx) {
+  if (rf & 1) {
+    \u0275\u0275elementStart(0, "tr")(1, "td", 14)(2, "div", 15)(3, "p-table", 16);
+    \u0275\u0275template(4, TopicPageComponent_ng_template_3_ng_template_4_Template, 5, 0, "ng-template", 1)(5, TopicPageComponent_ng_template_3_ng_template_5_Template, 5, 1, "ng-template", 2);
+    \u0275\u0275elementEnd()()()();
+  }
+}
+var TopicPageComponent = class _TopicPageComponent {
+  expandedRows = {};
+  topicIssues = [
+    {
+      id: "nav-clarity",
+      category: "Navigation clarity",
+      severity: "High",
+      description: "Primary topic links are not grouped, making the page hard to scan.",
+      recommendation: "Group links under clear headings and add brief summaries.",
+      detail: "Users must scan long lists without visual grouping.",
+      include: true
+    },
+    {
+      id: "content-hierarchy",
+      category: "Content hierarchy",
+      severity: "Medium",
+      description: "Headings skip levels (H2 to H4), which impacts accessibility.",
+      recommendation: "Use consecutive heading levels and add section summaries.",
+      detail: "Screen reader navigation becomes inconsistent.",
+      include: true
+    },
+    {
+      id: "search-discoverability",
+      category: "Search discoverability",
+      severity: "Low",
+      description: "No in-page search or jump links for long topic lists.",
+      recommendation: "Add a sticky jump list or search/filter for topics.",
+      detail: "Long pages increase time to find content.",
+      include: false
+    }
+  ];
+  severityClass(severity) {
+    const s = (severity || "").toLowerCase();
+    if (s === "low")
+      return "chip-minor";
+    if (s === "medium")
+      return "chip-med";
+    if (s === "high")
+      return "chip-severe";
+    return "chip-unk";
+  }
+  onRowExpand(event) {
+    const key2 = event?.data?.id;
+    if (!key2)
+      return;
+    this.expandedRows = __spreadProps(__spreadValues({}, this.expandedRows), { [key2]: true });
+  }
+  onRowCollapse(event) {
+    const key2 = event?.data?.id;
+    if (!key2)
+      return;
+    const copy = __spreadValues({}, this.expandedRows);
+    delete copy[key2];
+    this.expandedRows = copy;
+  }
+  static \u0275fac = function TopicPageComponent_Factory(__ngFactoryType__) {
+    return new (__ngFactoryType__ || _TopicPageComponent)();
+  };
+  static \u0275cmp = /* @__PURE__ */ \u0275\u0275defineComponent({ type: _TopicPageComponent, selectors: [["ca-topic-page"]], decls: 4, vars: 2, consts: [["dataKey", "id", "styleClass", "p-datatable-sm alert-table", "expandableRows", "", 3, "onRowExpand", "onRowCollapse", "value", "expandedRowKeys"], ["pTemplate", "header"], ["pTemplate", "body"], ["pTemplate", "expandedrow"], [2, "width", "3rem", "text-align", "center"], [1, "include-col"], [1, "severity-col"], [1, "wrap-col"], [3, "pSelectableRow"], [2, "text-align", "center"], ["pButton", "", "type", "button", "aria-label", "Toggle row", 1, "p-button-text", "p-button-rounded", "p-button-plain", 3, "pRowToggler"], ["aria-hidden", "true", 1, "pi", 3, "ngClass"], [3, "ngModelChange", "binary", "ngModel"], [1, "chip", 3, "ngClass"], ["colspan", "6"], [1, "p-3"], ["styleClass", "p-datatable-sm expansion-table"]], template: function TopicPageComponent_Template(rf, ctx) {
+    if (rf & 1) {
+      \u0275\u0275elementStart(0, "p-table", 0);
+      \u0275\u0275listener("onRowExpand", function TopicPageComponent_Template_p_table_onRowExpand_0_listener($event) {
+        return ctx.onRowExpand($event);
+      })("onRowCollapse", function TopicPageComponent_Template_p_table_onRowCollapse_0_listener($event) {
+        return ctx.onRowCollapse($event);
+      });
+      \u0275\u0275template(1, TopicPageComponent_ng_template_1_Template, 12, 0, "ng-template", 1)(2, TopicPageComponent_ng_template_2_Template, 15, 13, "ng-template", 2)(3, TopicPageComponent_ng_template_3_Template, 6, 0, "ng-template", 3);
+      \u0275\u0275elementEnd();
+    }
+    if (rf & 2) {
+      \u0275\u0275property("value", ctx.topicIssues)("expandedRowKeys", ctx.expandedRows);
+    }
+  }, dependencies: [CommonModule, NgClass, FormsModule, NgControlStatus, NgModel, TableModule, Table, PrimeTemplate, SelectableRow, RowToggler, CheckboxModule, Checkbox], styles: ["\n\n.alert-table[_ngcontent-%COMP%]   .p-datatable-tbody[_ngcontent-%COMP%]    > tr[_ngcontent-%COMP%]    > td[_ngcontent-%COMP%], \n.alert-table[_ngcontent-%COMP%]   .p-datatable-thead[_ngcontent-%COMP%]    > tr[_ngcontent-%COMP%]    > th[_ngcontent-%COMP%] {\n  white-space: normal !important;\n  word-break: normal;\n  overflow-wrap: normal;\n  vertical-align: top;\n}\n.alert-table[_ngcontent-%COMP%]   .wrap-col[_ngcontent-%COMP%] {\n  min-width: 140px;\n}\n.alert-table[_ngcontent-%COMP%]   .severity-col[_ngcontent-%COMP%]   .chip[_ngcontent-%COMP%] {\n  white-space: nowrap !important;\n  display: inline-flex;\n}\n.alert-table[_ngcontent-%COMP%]   .include-col[_ngcontent-%COMP%] {\n  width: 140px;\n  text-align: center;\n}\n.alert-table[_ngcontent-%COMP%]   .include-col[_ngcontent-%COMP%]   .p-checkbox[_ngcontent-%COMP%] {\n  display: inline-flex;\n}\n.alert-table[_ngcontent-%COMP%]   .p-datatable-table[_ngcontent-%COMP%] {\n  width: 100%;\n  border: 1px solid #d1d5db;\n  border-radius: 6px;\n}\n.alert-table[_ngcontent-%COMP%]   .p-datatable-wrapper[_ngcontent-%COMP%] {\n  width: 100%;\n  overflow-x: auto;\n}\n/*# sourceMappingURL=alerts-guidance.component.css.map */", "\n\n.chip[_ngcontent-%COMP%] {\n  display: inline-flex;\n  align-items: center;\n  gap: 0.4rem;\n  padding: 0.15rem 0.55rem;\n  border-radius: 9999px;\n  border: 1px solid transparent;\n  font-weight: 500;\n  line-height: 1.1;\n}\n.chip[_ngcontent-%COMP%]   .pi[_ngcontent-%COMP%] {\n  color: inherit !important;\n}\n.chip-severe[_ngcontent-%COMP%] {\n  background: #fee2e2;\n  border-color: #fecaca;\n  color: #b91c1c;\n}\n.chip-minor[_ngcontent-%COMP%] {\n  background: #fef3c7;\n  border-color: #fde68a;\n  color: #92400e;\n}\n.chip-med[_ngcontent-%COMP%] {\n  background: #fde7c3;\n  border-color: #f9d29b;\n  color: #9a4a00;\n}\n.chip-ok[_ngcontent-%COMP%] {\n  background: #dcfce7;\n  border-color: #86efac;\n  color: #166534;\n}\n.chip-unk[_ngcontent-%COMP%] {\n  background: #e5e7eb;\n  border-color: #cbd5e1;\n  color: #334155;\n}\n.text-danger[_ngcontent-%COMP%] {\n  color: #b91c1c;\n  font-weight: 600;\n}\n/*# sourceMappingURL=component-guidance.component.css.map */"] });
+};
+(() => {
+  (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(TopicPageComponent, [{
+    type: Component,
+    args: [{ selector: "ca-topic-page", standalone: true, imports: [CommonModule, FormsModule, TableModule, CheckboxModule], template: `<p-table
+  [value]="topicIssues"
+  dataKey="id"
+  styleClass="p-datatable-sm alert-table"
+  expandableRows
+  [expandedRowKeys]="expandedRows"
+  (onRowExpand)="onRowExpand($event)"
+  (onRowCollapse)="onRowCollapse($event)"
+>
+  <ng-template pTemplate="header">
+    <tr>
+      <th style="width: 3rem; text-align: center"></th>
+      <th class="include-col">Include in fix</th>
+      <th class="severity-col">Severity</th>
+      <th>Pain point category</th>
+      <th class="wrap-col">Description</th>
+      <th class="wrap-col">Recommendation</th>
+    </tr>
+  </ng-template>
+  <ng-template pTemplate="body" let-issue let-expanded="expanded">
+    <tr [pSelectableRow]="issue">
+      <td style="text-align: center">
+        <button
+          pButton
+          type="button"
+          [pRowToggler]="issue"
+          class="p-button-text p-button-rounded p-button-plain"
+          aria-label="Toggle row"
+        >
+          <i class="pi" [ngClass]="{ 'pi-chevron-down': expanded, 'pi-chevron-right': !expanded }" aria-hidden="true"></i>
+        </button>
+      </td>
+      <td class="include-col">
+        <p-checkbox [binary]="true" [(ngModel)]="issue.include"></p-checkbox>
+      </td>
+      <td class="severity-col">
+        <span class="chip" [ngClass]="severityClass(issue.severity)">
+          {{ issue.severity || 'Unknown' }}
+        </span>
+      </td>
+      <td>{{ issue.category }}</td>
+      <td class="wrap-col">{{ issue.description }}</td>
+      <td class="wrap-col">{{ issue.recommendation }}</td>
+    </tr>
+  </ng-template>
+  <ng-template pTemplate="expandedrow" let-issue>
+    <tr>
+      <td colspan="6">
+        <div class="p-3">
+          <p-table styleClass="p-datatable-sm expansion-table">
+            <ng-template pTemplate="header">
+              <tr>
+                <th>Detail</th>
+                <th>Value</th>
+              </tr>
+            </ng-template>
+            <ng-template pTemplate="body">
+              <tr>
+                <td>Impact</td>
+                <td>{{ issue.detail || 'Details pending' }}</td>
+              </tr>
+            </ng-template>
+          </p-table>
+        </div>
+      </td>
+    </tr>
+  </ng-template>
+</p-table>
+`, styles: ["/* src/app/views/page-assistant/components/problems/component-guidance/alerts-guidance/alerts-guidance.component.css */\n.alert-table .p-datatable-tbody > tr > td,\n.alert-table .p-datatable-thead > tr > th {\n  white-space: normal !important;\n  word-break: normal;\n  overflow-wrap: normal;\n  vertical-align: top;\n}\n.alert-table .wrap-col {\n  min-width: 140px;\n}\n.alert-table .severity-col .chip {\n  white-space: nowrap !important;\n  display: inline-flex;\n}\n.alert-table .include-col {\n  width: 140px;\n  text-align: center;\n}\n.alert-table .include-col .p-checkbox {\n  display: inline-flex;\n}\n.alert-table .p-datatable-table {\n  width: 100%;\n  border: 1px solid #d1d5db;\n  border-radius: 6px;\n}\n.alert-table .p-datatable-wrapper {\n  width: 100%;\n  overflow-x: auto;\n}\n/*# sourceMappingURL=alerts-guidance.component.css.map */\n", "/* src/app/views/page-assistant/components/problems/component-guidance/component-guidance.component.css */\n.chip {\n  display: inline-flex;\n  align-items: center;\n  gap: 0.4rem;\n  padding: 0.15rem 0.55rem;\n  border-radius: 9999px;\n  border: 1px solid transparent;\n  font-weight: 500;\n  line-height: 1.1;\n}\n.chip .pi {\n  color: inherit !important;\n}\n.chip-severe {\n  background: #fee2e2;\n  border-color: #fecaca;\n  color: #b91c1c;\n}\n.chip-minor {\n  background: #fef3c7;\n  border-color: #fde68a;\n  color: #92400e;\n}\n.chip-med {\n  background: #fde7c3;\n  border-color: #f9d29b;\n  color: #9a4a00;\n}\n.chip-ok {\n  background: #dcfce7;\n  border-color: #86efac;\n  color: #166534;\n}\n.chip-unk {\n  background: #e5e7eb;\n  border-color: #cbd5e1;\n  color: #334155;\n}\n.text-danger {\n  color: #b91c1c;\n  font-weight: 600;\n}\n/*# sourceMappingURL=component-guidance.component.css.map */\n"] }]
+  }], null, null);
+})();
+(() => {
+  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(TopicPageComponent, { className: "TopicPageComponent", filePath: "src/app/views/page-assistant/components/problems/component-guidance/topic-page/topic-page.component.ts", lineNumber: 27 });
+})();
+
 // src/app/views/page-assistant/components/problems.component.ts
 function PageProblemsComponent_p_accordion_panel_3_span_4_Template(rf, ctx) {
   if (rf & 1) {
@@ -31632,9 +31973,42 @@ function PageProblemsComponent_p_accordion_panel_15_Template(rf, ctx) {
     const ctx_r0 = \u0275\u0275nextContext();
     \u0275\u0275property("value", 5);
     \u0275\u0275advance(4);
-    \u0275\u0275property("ngIf", ctx_r0.flags.userInsights);
+    \u0275\u0275property("ngIf", ctx_r0.flags.iaStructure);
     \u0275\u0275advance();
     \u0275\u0275property("ngIf", !ctx_r0.isPanelOpen(5));
+  }
+}
+function PageProblemsComponent_p_accordion_panel_16_span_4_Template(rf, ctx) {
+  if (rf & 1) {
+    \u0275\u0275element(0, "span", 8);
+  }
+}
+function PageProblemsComponent_p_accordion_panel_16_p_5_Template(rf, ctx) {
+  if (rf & 1) {
+    \u0275\u0275elementStart(0, "p", 9);
+    \u0275\u0275text(1, " Determine issues in an existing or assemble informaiton to create a new one ");
+    \u0275\u0275elementEnd();
+  }
+}
+function PageProblemsComponent_p_accordion_panel_16_Template(rf, ctx) {
+  if (rf & 1) {
+    \u0275\u0275elementStart(0, "p-accordion-panel", 2)(1, "p-accordion-header");
+    \u0275\u0275text(2, "Topic/navigation page analysis ");
+    \u0275\u0275element(3, "span", 3);
+    \u0275\u0275template(4, PageProblemsComponent_p_accordion_panel_16_span_4_Template, 1, 0, "span", 4);
+    \u0275\u0275elementEnd();
+    \u0275\u0275template(5, PageProblemsComponent_p_accordion_panel_16_p_5_Template, 2, 0, "p", 5);
+    \u0275\u0275elementStart(6, "p-accordion-content");
+    \u0275\u0275element(7, "ca-topic-page");
+    \u0275\u0275elementEnd()();
+  }
+  if (rf & 2) {
+    const ctx_r0 = \u0275\u0275nextContext();
+    \u0275\u0275property("value", 6);
+    \u0275\u0275advance(4);
+    \u0275\u0275property("ngIf", ctx_r0.flags.topicPage);
+    \u0275\u0275advance();
+    \u0275\u0275property("ngIf", !ctx_r0.isPanelOpen(6));
   }
 }
 var PageProblemsComponent = class _PageProblemsComponent {
@@ -31651,7 +32025,9 @@ var PageProblemsComponent = class _PageProblemsComponent {
     componentGuidance: false,
     seo: false,
     userInsights: false,
-    linkReport: false
+    linkReport: false,
+    iaStructure: false,
+    topicPage: false
   };
   /** Call this from each feature panel when its status changes */
   onFeatureProblem(feature, hasProblem) {
@@ -31661,7 +32037,7 @@ var PageProblemsComponent = class _PageProblemsComponent {
   static \u0275fac = function PageProblemsComponent_Factory(__ngFactoryType__) {
     return new (__ngFactoryType__ || _PageProblemsComponent)();
   };
-  static \u0275cmp = /* @__PURE__ */ \u0275\u0275defineComponent({ type: _PageProblemsComponent, selectors: [["ca-page-problems"]], outputs: { summary: "summary" }, decls: 16, vars: 10, consts: [[1, "flex", "flex-column", "gap-3", 3, "valueChange", "value", "multiple"], ["class", "border-1 border-round-md border-surface", 3, "value", 4, "ngIf"], [1, "border-1", "border-round-sm", "border-surface", 3, "value"], [1, "flex-spacer"], ["class", "feature-badge", "aria-label", "Issues found", 4, "ngIf"], ["class", "mt-0 ml-4 text-color-secondary", 4, "ngIf"], ["class", "border-1 border-round-sm border-surface", 3, "value", 4, "ngIf"], [1, "border-1", "border-round-md", "border-surface", 3, "value"], ["aria-label", "Issues found", 1, "feature-badge"], [1, "mt-0", "ml-4", "text-color-secondary"], [3, "hasProblemsChange"]], template: function PageProblemsComponent_Template(rf, ctx) {
+  static \u0275cmp = /* @__PURE__ */ \u0275\u0275defineComponent({ type: _PageProblemsComponent, selectors: [["ca-page-problems"]], outputs: { summary: "summary" }, decls: 17, vars: 11, consts: [[1, "flex", "flex-column", "gap-3", 3, "valueChange", "value", "multiple"], ["class", "border-1 border-round-md border-surface", 3, "value", 4, "ngIf"], [1, "border-1", "border-round-sm", "border-surface", 3, "value"], [1, "flex-spacer"], ["class", "feature-badge", "aria-label", "Issues found", 4, "ngIf"], ["class", "mt-0 ml-4 text-color-secondary", 4, "ngIf"], ["class", "border-1 border-round-sm border-surface", 3, "value", 4, "ngIf"], [1, "border-1", "border-round-md", "border-surface", 3, "value"], ["aria-label", "Issues found", 1, "feature-badge"], [1, "mt-0", "ml-4", "text-color-secondary"], [3, "hasProblemsChange"]], template: function PageProblemsComponent_Template(rf, ctx) {
     if (rf & 1) {
       \u0275\u0275elementStart(0, "p");
       \u0275\u0275text(1, " Use these tools to analyze and improve your web page. You can restructure headings, generate an IA diagram, find guidance on the components used in your page, integrate SEO and user insights into your updates, check your link quality, or convert your page to a different template.\n");
@@ -31681,7 +32057,7 @@ var PageProblemsComponent = class _PageProblemsComponent {
       \u0275\u0275elementStart(10, "p-accordion-content");
       \u0275\u0275element(11, "ca-component-guidance");
       \u0275\u0275elementEnd()();
-      \u0275\u0275template(12, PageProblemsComponent_p_accordion_panel_12_Template, 8, 3, "p-accordion-panel", 6)(13, PageProblemsComponent_p_accordion_panel_13_Template, 8, 3, "p-accordion-panel", 6)(14, PageProblemsComponent_p_accordion_panel_14_Template, 8, 3, "p-accordion-panel", 6)(15, PageProblemsComponent_p_accordion_panel_15_Template, 8, 3, "p-accordion-panel", 6);
+      \u0275\u0275template(12, PageProblemsComponent_p_accordion_panel_12_Template, 8, 3, "p-accordion-panel", 6)(13, PageProblemsComponent_p_accordion_panel_13_Template, 8, 3, "p-accordion-panel", 6)(14, PageProblemsComponent_p_accordion_panel_14_Template, 8, 3, "p-accordion-panel", 6)(15, PageProblemsComponent_p_accordion_panel_15_Template, 8, 3, "p-accordion-panel", 6)(16, PageProblemsComponent_p_accordion_panel_16_Template, 8, 3, "p-accordion-panel", 6);
       \u0275\u0275elementEnd();
     }
     if (rf & 2) {
@@ -31704,6 +32080,8 @@ var PageProblemsComponent = class _PageProblemsComponent {
       \u0275\u0275property("ngIf", !ctx.production);
       \u0275\u0275advance();
       \u0275\u0275property("ngIf", !ctx.production);
+      \u0275\u0275advance();
+      \u0275\u0275property("ngIf", !ctx.production);
     }
   }, dependencies: [
     CommonModule,
@@ -31719,7 +32097,8 @@ var PageProblemsComponent = class _PageProblemsComponent {
     LinkReportComponent,
     ComponentGuidanceComponent,
     HeadingStructureComponent,
-    IaStructureComponent
+    IaStructureComponent,
+    TopicPageComponent
   ], styles: ["\n\n[_nghost-%COMP%]     .p-accordion-header-content {\n  display: flex;\n  align-items: center;\n}\n.flex-spacer[_ngcontent-%COMP%] {\n  flex: 1 1 auto;\n}\n.feature-badge[_ngcontent-%COMP%] {\n  width: 1rem;\n  height: 1rem;\n  border-radius: 9999px;\n  background: #ef4444;\n  margin-right: 0.25rem;\n  display: inline-block;\n  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.06) inset;\n}\n/*# sourceMappingURL=problems.component.css.map */"] });
 };
 (() => {
@@ -31734,7 +32113,8 @@ var PageProblemsComponent = class _PageProblemsComponent {
       LinkReportComponent,
       ComponentGuidanceComponent,
       HeadingStructureComponent,
-      IaStructureComponent
+      IaStructureComponent,
+      TopicPageComponent
     ], template: `<p>\r
   Use these tools to analyze and improve your web page. You can restructure\r
   headings, generate an IA diagram, find guidance on the components used in your\r
@@ -31873,7 +32253,7 @@ var PageProblemsComponent = class _PageProblemsComponent {
       <span class="flex-spacer"></span>\r
       <span\r
         class="feature-badge"\r
-        *ngIf="flags.userInsights"\r
+        *ngIf="flags.iaStructure"\r
         aria-label="Issues found"\r
       ></span>\r
     </p-accordion-header>\r
@@ -31884,6 +32264,29 @@ var PageProblemsComponent = class _PageProblemsComponent {
       <ca-ia-structure></ca-ia-structure>\r
     </p-accordion-content>\r
   </p-accordion-panel>\r
+\r
+  <p-accordion-panel\r
+    [value]="6"\r
+    class="border-1 border-round-sm border-surface"\r
+    *ngIf="!production"\r
+  >\r
+    <p-accordion-header\r
+      >Topic/navigation page analysis\r
+      <span class="flex-spacer"></span>\r
+      <span\r
+        class="feature-badge"\r
+        *ngIf="flags.topicPage"\r
+        aria-label="Issues found"\r
+      ></span>\r
+    </p-accordion-header>\r
+    <p class="mt-0 ml-4 text-color-secondary" *ngIf="!isPanelOpen(6)">\r
+      Determine issues in an existing or assemble informaiton to create a new one\r
+    </p>\r
+    <p-accordion-content>\r
+      <ca-topic-page></ca-topic-page>\r
+    </p-accordion-content>\r
+  </p-accordion-panel>\r
+\r
 </p-accordion>\r
 `, styles: ["/* angular:styles/component:css;6b9035aeccebb8e4c84e29a4b5f612916f33954446739eb3118b52eabe00dd4a;C:/my-working-files/GitHub/design-assistant/src/app/views/page-assistant/components/problems.component.ts */\n:host ::ng-deep .p-accordion-header-content {\n  display: flex;\n  align-items: center;\n}\n.flex-spacer {\n  flex: 1 1 auto;\n}\n.feature-badge {\n  width: 1rem;\n  height: 1rem;\n  border-radius: 9999px;\n  background: #ef4444;\n  margin-right: 0.25rem;\n  display: inline-block;\n  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.06) inset;\n}\n/*# sourceMappingURL=problems.component.css.map */\n"] }]
   }], null, { summary: [{
@@ -31891,7 +32294,7 @@ var PageProblemsComponent = class _PageProblemsComponent {
   }] });
 })();
 (() => {
-  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(PageProblemsComponent, { className: "PageProblemsComponent", filePath: "src/app/views/page-assistant/components/problems.component.ts", lineNumber: 66 });
+  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(PageProblemsComponent, { className: "PageProblemsComponent", filePath: "src/app/views/page-assistant/components/problems.component.ts", lineNumber: 70 });
 })();
 
 // src/app/views/page-assistant/components/data/search.component.ts
@@ -32214,7 +32617,7 @@ var PageToolsComponent = class _PageToolsComponent {
 })();
 
 // src/app/views/page-assistant/page-assistant.component.ts
-var _c010 = ["liveContainer"];
+var _c011 = ["liveContainer"];
 var _c18 = ["sourceContainer"];
 var _c28 = () => ({ ariaLabel: "Accept selected changes" });
 var _c37 = () => ({ ariaLabel: "More accept options" });
@@ -32826,7 +33229,7 @@ ${base}`;
         method: "POST",
         headers,
         body: JSON.stringify({
-          models: [model, AiModel.Mistral, AiModel.Qwen],
+          models: [model, AiModel.Devstral, AiModel.Qwen],
           messages: [
             { role: "system", content: recPrompt },
             { role: "user", content: recPayload }
@@ -32860,7 +33263,7 @@ ${base}`;
     });
   }
   //AI Model
-  selectedAiModel = AiModel.Gemini;
+  selectedAiModel = AiModel.Devstral;
   onAiChange(key2) {
     this.selectedAiModel = key2;
   }
@@ -32878,7 +33281,7 @@ ${base}`;
       this.isLoading = true;
       this.aiDisabled = "Wait for response from AI";
       this.statusSeverity = "info";
-      this.statusMessage = "Sending content to Open Router.";
+      this.statusMessage = this.translate.instant("common.ai.sending");
       try {
         const apiKey = localStorage.getItem("apiKey");
         if (!apiKey)
@@ -32895,7 +33298,7 @@ ${base}`;
           "Content-Type": "application/json"
         };
         const payload = {
-          models: [model, AiModel.Mistral, AiModel.Qwen],
+          models: [model, AiModel.Devstral, AiModel.Qwen],
           messages: [
             { role: "system", content: prompt },
             { role: "user", content: html }
@@ -32912,11 +33315,11 @@ ${base}`;
           if (selectedIssues.length) {
             yield this.runAlertRecommendations(html, selectedIssues, model, headers, url);
             this.statusSeverity = "success";
-            this.statusMessage = "Alert recommendations generated from selected pain points.";
+            this.statusMessage = this.translate.instant("common.ai.alertRecommendationsGenerated");
             this.messageService.add({
               severity: "success",
-              summary: "AI Response Received",
-              detail: "Alert recommendations generated from selected pain points.",
+              summary: this.translate.instant("common.ai.responseReceived.summary"),
+              detail: this.translate.instant("common.ai.alertRecommendationsGenerated"),
               life: 5e3
             });
             return;
@@ -32931,7 +33334,7 @@ ${base}`;
         console.log(`OpenRouter response status: `, orResponse.status);
         if (orResponse.status === 200) {
           console.log("Waiting for AI response");
-          this.statusMessage = "AI is generating a response.";
+          this.statusMessage = this.translate.instant("common.ai.generating");
         }
         const aiResponse = yield orResponse.json();
         if (aiResponse.error) {
@@ -32955,7 +33358,7 @@ ${base}`;
           console.error(aiResponse.error?.message);
           console.groupEnd();
           this.statusSeverity = "error";
-          this.statusMessage = "An error occurred while communicating with the AI.";
+          this.statusMessage = this.translate.instant("common.ai.errorCommunicatingAi");
           throw new Error(`AI error: ${aiResponse.error?.message}`);
         }
         const aiHtml = aiResponse.choices?.[0].message.content;
@@ -32981,11 +33384,16 @@ ${base}`;
           console.log(`Your requested model may be down or you have exceeded the rate limit`);
           console.groupEnd();
           this.statusSeverity = "warn";
-          this.statusMessage = `Your selected AI model was unavailable. Used "${usedModel}" instead.`;
+          this.statusMessage = this.translate.instant("common.ai.fallbackStatus", {
+            model: usedModel
+          });
           this.messageService.add({
             severity: "warn",
-            summary: "Fallback Model Used",
-            detail: `"${requestedModel}" was unavailable. Used "${usedModel}" instead.`,
+            summary: this.translate.instant("common.ai.fallback.summary"),
+            detail: this.translate.instant("common.ai.fallback.detail", {
+              requested: requestedModel,
+              used: usedModel
+            }),
             life: 1e4
           });
         }
@@ -33003,21 +33411,21 @@ ${base}`;
           });
         }
         this.statusSeverity = "success";
-        this.statusMessage = `Comparison has been updated with AI response from ${usedModel}.`;
+        this.statusMessage = this.translate.instant("common.ai.comparisonUpdatedWithModel", { model: usedModel });
         this.messageService.add({
           severity: "success",
-          summary: "AI Response Received",
-          detail: "Comparison has been updated with AI response.",
+          summary: this.translate.instant("common.ai.responseReceived.summary"),
+          detail: this.translate.instant("common.ai.responseReceived.detail"),
           life: 5e3
         });
       } catch (err) {
         console.error(`sendToAI function failed:`, err);
         this.statusSeverity = "error";
-        this.statusMessage = "An error occurred while communicating with Open Router or the seleced AI model.";
+        this.statusMessage = this.translate.instant("common.ai.errorCommunicatingOpenRouter");
         this.messageService.add({
           severity: "error",
-          summary: "AI Request Failed",
-          detail: err instanceof Error ? err.message : "Unknown error occurred.",
+          summary: this.translate.instant("common.ai.requestFailed.summary"),
+          detail: err instanceof Error ? err.message : this.translate.instant("common.ai.requestFailed.detailUnknown"),
           sticky: true
         });
       } finally {
@@ -33028,8 +33436,10 @@ ${base}`;
         const durationInSeconds = ((endTime - startTime) / 1e3).toFixed(2);
         this.messageService.add({
           severity: "info",
-          summary: "Request Complete",
-          detail: `Total time: ${durationInSeconds} seconds.`,
+          summary: this.translate.instant("common.requestComplete"),
+          detail: this.translate.instant("common.totalTime", {
+            time: durationInSeconds
+          }),
           life: 1e4
         });
       }
@@ -33279,7 +33689,7 @@ ${base}`;
   };
   static \u0275cmp = /* @__PURE__ */ \u0275\u0275defineComponent({ type: _PageAssistantCompareComponent, selectors: [["ca-page-assistant-compare"]], viewQuery: function PageAssistantCompareComponent_Query(rf, ctx) {
     if (rf & 1) {
-      \u0275\u0275viewQuery(_c010, 5);
+      \u0275\u0275viewQuery(_c011, 5);
       \u0275\u0275viewQuery(_c18, 5);
     }
     if (rf & 2) {
@@ -33750,4 +34160,4 @@ ${base}`;
 export {
   PageAssistantCompareComponent
 };
-//# sourceMappingURL=chunk-5WNG7Q72.js.map
+//# sourceMappingURL=chunk-UOVM7CDO.js.map
