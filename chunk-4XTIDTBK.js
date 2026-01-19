@@ -142,6 +142,7 @@ import {
   NgModule,
   NgZone,
   Output,
+  Subject,
   ViewChild,
   ViewEncapsulation,
   animate,
@@ -21426,6 +21427,8 @@ var AlertAiService = class _AlertAiService {
   apiKeyService = inject(ApiKeyService);
   messageService = inject(MessageService);
   translate = inject(TranslateService);
+  issuesUpdatedSubject = new Subject();
+  issuesUpdated$ = this.issuesUpdatedSubject.asObservable();
   cachedAlertIssues = null;
   fallbackSeverities = Object.fromEntries(Object.entries(severity_include_fallback_default).map(([k, v]) => {
     if (typeof v === "string") {
@@ -21440,6 +21443,10 @@ var AlertAiService = class _AlertAiService {
   /** Call OpenRouter with the AlertsIssues prompt and return normalized issues. */
   analyze(alertHtml, pageContext) {
     return __async(this, null, function* () {
+      const cached = this.getCachedIssues(alertHtml);
+      if (cached?.length) {
+        return cached;
+      }
       const startTime = performance.now();
       this.messageService.add({
         severity: "info",
@@ -21481,6 +21488,13 @@ var AlertAiService = class _AlertAiService {
             const issues = this.parseIssues(text);
             if (issues.length) {
               resolvedIssues = issues;
+              this.messageService.add({
+                severity: "info",
+                summary: this.translate.instant("common.ai.alertIssuesReceived", {
+                  model: this.getShortModelName(model)
+                }),
+                life: 3e3
+              });
               if (i > 0 && primaryModel) {
                 this.messageService.add({
                   severity: "warn",
@@ -21511,6 +21525,12 @@ var AlertAiService = class _AlertAiService {
         }
         if (!resolvedIssues.length && !errorNotified && !sawResponse) {
           this.notifyError(lastError ?? new Error(this.translate.instant("common.ai.errorCommunicatingOpenRouter")));
+        } else if (!resolvedIssues.length && !errorNotified && sawResponse) {
+          this.messageService.add({
+            severity: "warn",
+            summary: this.translate.instant("common.ai.alertIssuesNotIdentified"),
+            life: 5e3
+          });
         }
         return resolvedIssues;
       } finally {
@@ -21536,10 +21556,15 @@ var AlertAiService = class _AlertAiService {
   }
   cacheIssues(alertHtml, issues) {
     const normalized = this.trimText(alertHtml);
+    const copied = issues.map((issue) => __spreadValues({}, issue));
     this.cachedAlertIssues = {
       html: normalized,
-      issues: issues.map((issue) => __spreadValues({}, issue))
+      issues: copied
     };
+    this.issuesUpdatedSubject.next({
+      html: normalized,
+      issues: copied.map((issue) => __spreadValues({}, issue))
+    });
   }
   // ---------- OpenRouter plumbing ----------
   callOpenRouter(model, messages, temperature = 0) {
@@ -21590,6 +21615,27 @@ var AlertAiService = class _AlertAiService {
   // ---------- Output parsing ----------
   parseIssuesFromText(text) {
     return this.parseIssues(text);
+  }
+  normalizeAlertIssues(issues, options) {
+    const useIncludeFallback = options?.useIncludeFallback !== false;
+    return issues.map((issue) => {
+      const category = this.cleanString(issue.category);
+      const description = this.cleanString(issue.description);
+      const recommendation = this.cleanString(issue.recommendation);
+      const severity = this.normalizeSeverity(issue.severity, category);
+      const include = typeof issue.include === "boolean" ? issue.include : useIncludeFallback ? this.lookupFallbackInclude(category) ?? true : true;
+      return __spreadProps(__spreadValues({}, issue), {
+        category,
+        description,
+        recommendation,
+        severity,
+        include
+      });
+    });
+  }
+  getShortModelName(model) {
+    const modelKey = Object.keys(AiModel).find((key2) => AiModel[key2] === model);
+    return modelKey ? this.translate.instant(`page.ai-options.model.short.${modelKey}`) : model;
   }
   parseIssues(text) {
     const cleaned = this.stripCodeFences(text);
@@ -24995,6 +25041,7 @@ function computeAlertMaxSeverity(issues, rank = ALERT_SEVERITY_RANK) {
 var AlertsGuidanceComponent = class _AlertsGuidanceComponent {
   uploadState = inject(UploadStateService);
   alertAi = inject(AlertAiService);
+  issuesUpdatedSub;
   selectAll = true;
   maxSeverityChange = new EventEmitter();
   categoriesChange = new EventEmitter();
@@ -25006,6 +25053,20 @@ var AlertsGuidanceComponent = class _AlertsGuidanceComponent {
     this.sortIssues();
     this.applySelectAll(this.selectAll);
     this.emitDerived();
+    this.issuesUpdatedSub = this.alertAi.issuesUpdated$.subscribe(() => {
+      const html = this.uploadState.getUploadData()?.originalHtml || "";
+      if (!html)
+        return;
+      const cached = this.alertAi.getCachedIssues(html);
+      if (!cached?.length)
+        return;
+      this.issues = this.alertAi.normalizeAlertIssues(cached).map((issue) => __spreadProps(__spreadValues({}, issue), {
+        category: this.normalizeCategoryLabel(issue.category)
+      }));
+      this.sortIssues();
+      this.applySelectAll(this.selectAll, false);
+      this.emitDerived();
+    });
     void this.loadFromAi();
   }
   ngOnChanges(changes) {
@@ -25014,17 +25075,22 @@ var AlertsGuidanceComponent = class _AlertsGuidanceComponent {
       this.emitDerived();
     }
   }
+  ngOnDestroy() {
+    this.issuesUpdatedSub?.unsubscribe();
+  }
   onIncludeToggle() {
     this.sortIssues();
     this.emitDerived();
     this.syncCache();
   }
-  applySelectAll(flag) {
+  applySelectAll(flag, sync = true) {
     if (!flag) {
       this.issues = this.issues.map((issue) => __spreadProps(__spreadValues({}, issue), { include: false }));
       this.sortIssues();
     }
-    this.syncCache();
+    if (sync) {
+      this.syncCache();
+    }
   }
   sortIssues() {
     this.issues = [...this.issues].sort((a, b) => {
@@ -25063,7 +25129,7 @@ var AlertsGuidanceComponent = class _AlertsGuidanceComponent {
         return;
       const cached = this.alertAi.getCachedIssues(html);
       if (cached?.length) {
-        this.issues = cached.map((issue) => __spreadProps(__spreadValues({}, issue), {
+        this.issues = this.alertAi.normalizeAlertIssues(cached).map((issue) => __spreadProps(__spreadValues({}, issue), {
           category: this.normalizeCategoryLabel(issue.category)
         }));
         this.sortIssues();
@@ -25143,7 +25209,7 @@ var AlertsGuidanceComponent = class _AlertsGuidanceComponent {
   }] });
 })();
 (() => {
-  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(AlertsGuidanceComponent, { className: "AlertsGuidanceComponent", filePath: "src/app/views/page-assistant/components/problems/component-guidance/alerts-guidance/alerts-guidance.component.ts", lineNumber: 98 });
+  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(AlertsGuidanceComponent, { className: "AlertsGuidanceComponent", filePath: "src/app/views/page-assistant/components/problems/component-guidance/alerts-guidance/alerts-guidance.component.ts", lineNumber: 99 });
 })();
 
 // src/app/views/page-assistant/data/css-list.config.ts
@@ -26292,7 +26358,9 @@ var ComponentGuidanceComponent = class _ComponentGuidanceComponent {
   validator = inject(ValidatorService);
   http = inject(HttpClient);
   ai = inject(ComponentAiService);
+  alertAi = inject(AlertAiService);
   cdr = inject(ChangeDetectorRef);
+  alertIssuesSub;
   production = environment.production;
   guidanceList = [];
   rows = [];
@@ -26332,6 +26400,13 @@ var ComponentGuidanceComponent = class _ComponentGuidanceComponent {
       this.rows = this.buildRows(this.guidanceList);
       this.syncAlertRowSelection(true);
     }
+    this.applyCachedAlertIssues();
+    this.alertIssuesSub = this.alertAi.issuesUpdated$.subscribe(() => {
+      this.applyCachedAlertIssues();
+    });
+  }
+  ngOnDestroy() {
+    this.alertIssuesSub?.unsubscribe();
   }
   /** Build sorted, de-duped table rows from validator findings. */
   buildRows(list) {
@@ -26450,6 +26525,34 @@ var ComponentGuidanceComponent = class _ComponentGuidanceComponent {
       default:
         return "Unknown";
     }
+  }
+  normalizeCategoryLabel(label) {
+    const trimmed = (label || "").trim();
+    if (!trimmed)
+      return trimmed;
+    const lower = trimmed.toLowerCase();
+    return lower.charAt(0).toUpperCase() + lower.slice(1);
+  }
+  applyCachedAlertIssues() {
+    const html = this.uploadState.getUploadData()?.originalHtml || "";
+    if (!html)
+      return;
+    const cached = this.alertAi.getCachedIssues(html);
+    if (!cached?.length)
+      return;
+    const normalizedIssues = this.alertAi.normalizeAlertIssues(cached).map((issue) => __spreadProps(__spreadValues({}, issue), {
+      category: this.normalizeCategoryLabel(issue.category)
+    }));
+    this.alertCategories = this.sortCategories(computeAlertCategories(normalizedIssues));
+    this.alertMaxSeverity = computeAlertMaxSeverity(normalizedIssues);
+    this.alertHasIssues = normalizedIssues.length > 0;
+    this.alertLoading = false;
+    this.alertError = false;
+    this.alertLoadAttempted = true;
+    this.alertDataLoaded = true;
+    this.prevAlertHasIssues = this.alertHasIssues;
+    this.syncAlertRowSelection(true);
+    this.cdr.markForCheck();
   }
   // (leftover dev helper if you still need it)
   // TEMP FXN FOR BUILDING WHITELIST
@@ -26952,7 +27055,7 @@ var ComponentGuidanceComponent = class _ComponentGuidanceComponent {
   }], null, null);
 })();
 (() => {
-  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(ComponentGuidanceComponent, { className: "ComponentGuidanceComponent", filePath: "src/app/views/page-assistant/components/problems/component-guidance/component-guidance.component.ts", lineNumber: 141 });
+  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(ComponentGuidanceComponent, { className: "ComponentGuidanceComponent", filePath: "src/app/views/page-assistant/components/problems/component-guidance/component-guidance.component.ts", lineNumber: 146 });
 })();
 
 // src/app/views/page-assistant/components/problems/seo.component.ts
@@ -33329,6 +33432,15 @@ ${base}`;
               life: 5e3
             });
             return;
+          } else if (cachedIssues?.length) {
+            this.statusSeverity = "warn";
+            this.statusMessage = this.translate.instant("common.ai.alertRecommendationsSkipped");
+            this.messageService.add({
+              severity: "warn",
+              summary: this.translate.instant("common.ai.alertRecommendationsSkipped"),
+              life: 4e3
+            });
+            return;
           }
         }
         console.log("Sending to OpenRouter:", { payload });
@@ -33408,7 +33520,33 @@ ${base}`;
           if (!issues.length) {
             throw new Error(`No alert issues returned by the AI (${usedModel}).`);
           }
-          yield this.runAlertRecommendations(html, issues, model, headers, url);
+          const cachedIssues = this.alertAi.getCachedIssues(html);
+          let selectedIssues = [];
+          if (cachedIssues?.length) {
+            selectedIssues = cachedIssues.filter((issue) => issue.include);
+          } else {
+            const normalizedIssues = this.alertAi.normalizeAlertIssues(issues, {
+              useIncludeFallback: false
+            });
+            this.alertAi.cacheIssues(html, normalizedIssues);
+            selectedIssues = normalizedIssues.filter((issue) => issue.include);
+          }
+          if (selectedIssues.length) {
+            this.messageService.add({
+              severity: "info",
+              summary: this.translate.instant("common.ai.alertIssuesReceived", {
+                model: usedModel
+              }),
+              life: 3e3
+            });
+            yield this.runAlertRecommendations(html, selectedIssues, model, headers, url);
+          } else {
+            this.messageService.add({
+              severity: "warn",
+              summary: this.translate.instant("common.ai.alertRecommendationsSkipped"),
+              life: 4e3
+            });
+          }
         } else {
           const formattedHtml = yield this.urlDataService.formatHtml(aiHtml, "ai");
           this.uploadState.mergeModifiedData({
@@ -34166,4 +34304,4 @@ ${base}`;
 export {
   PageAssistantCompareComponent
 };
-//# sourceMappingURL=chunk-HBK7NQFF.js.map
+//# sourceMappingURL=chunk-4XTIDTBK.js.map
