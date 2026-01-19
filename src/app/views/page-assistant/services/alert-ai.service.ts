@@ -1,8 +1,10 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpHeaders, HttpResponse } from '@angular/common/http';
+import { MessageService } from 'primeng/api';
+import { TranslateService } from '@ngx-translate/core';
 import { ApiKeyService } from '../../../services/api-key.service';
 import { PromptTemplates } from '../data/ai-prompts.constants';
-import { PromptKey } from '../data/data.model';
+import { PromptKey, AiModel } from '../data/data.model';
 import type { AlertIssue } from '../components/problems/component-guidance/alerts-guidance/alerts-guidance.component';
 import fallbackSeverityJson from '../components/problems/component-guidance/alerts-guidance/severity-include-fallback.json';
 
@@ -22,6 +24,8 @@ interface OpenRouterResponse {
 export class AlertAiService {
   private readonly http = inject(HttpClient);
   private readonly apiKeyService = inject(ApiKeyService);
+  private readonly messageService = inject(MessageService);
+  private readonly translate = inject(TranslateService);
   private cachedAlertIssues: { html: string; issues: AlertIssue[] } | null = null;
   private readonly fallbackSeverities: Record<string, { severity: string; include?: boolean }> =
     Object.fromEntries(
@@ -41,18 +45,16 @@ export class AlertAiService {
     );
 
   private readonly openRouterApiUrl = 'https://openrouter.ai/api/v1/chat/completions';
-  private readonly models: string[] = [
-    'meta-llama/llama-3.3-70b-instruct:free', //Still good
-    'google/gemini-2.0-flash-exp:free', //Deprecated
-    'google/gemini-exp-1206:free', // gone
-    'cognitivecomputations/dolphin3.0-mistral-24b:free', // gone
-    'cognitivecomputations/dolphin3.0-r1-mistral-24b:free', // gone
-    'nvidia/llama-3.1-nemotron-70b-instruct:free', // gone
-    'deepseek/deepseek-r1:free', // gone
-  ];
+  private readonly models: string[] = Object.values(AiModel);
 
   /** Call OpenRouter with the AlertsIssues prompt and return normalized issues. */
   async analyze(alertHtml: string, pageContext?: string): Promise<AlertIssue[]> {
+    const startTime = performance.now();
+    this.messageService.add({
+      severity: 'info',
+      summary: this.translate.instant('common.ai.sending'),
+      life: 2000,
+    });
     const systemPrompt = PromptTemplates[PromptKey.AlertsIssues];
     const userPayload = {
       alertHtml: this.trimText(alertHtml),
@@ -64,16 +66,84 @@ export class AlertAiService {
       { role: 'user', content: JSON.stringify(userPayload) },
     ];
 
-    for (const model of this.models) {
-      const resp = await this.callOpenRouter(model, messages);
-      const text = resp?.choices?.[0]?.message?.content;
-      if (!text) continue;
+    let sawResponse = false;
+    let generatingNotified = false;
+    let errorNotified = false;
+    let lastError: unknown | undefined;
+    let resolvedIssues: AlertIssue[] = [];
+    const primaryModel = this.models[0];
 
-      const issues = this.parseIssues(text);
-      if (issues.length) return issues;
+    try {
+      for (let i = 0; i < this.models.length; i += 1) {
+        const model = this.models[i];
+        try {
+          const resp = await this.callOpenRouter(model, messages);
+          const text = resp?.choices?.[0]?.message?.content;
+          if (!text) continue;
+          sawResponse = true;
+          if (!generatingNotified) {
+            this.messageService.add({
+              severity: 'info',
+              summary: this.translate.instant('common.ai.generating'),
+              life: 2000,
+            });
+            generatingNotified = true;
+          }
+
+          const issues = this.parseIssues(text);
+          if (issues.length) {
+            resolvedIssues = issues;
+            if (i > 0 && primaryModel) {
+              this.messageService.add({
+                severity: 'warn',
+                summary: this.translate.instant('common.ai.fallback.summary'),
+                detail: this.translate.instant('common.ai.fallback.detail', {
+                  requested: primaryModel,
+                  used: model,
+                }),
+                life: 10000,
+              });
+            }
+            this.messageService.add({
+              severity: 'success',
+              summary: this.translate.instant('common.ai.responseReceived.summary'),
+              detail: this.translate.instant('common.ai.responseReceived.detail'),
+              life: 5000,
+            });
+            break;
+          }
+        } catch (err) {
+          lastError = err;
+          if (err instanceof Error && /api key/i.test(err.message)) {
+            this.notifyError(err);
+            errorNotified = true;
+            break;
+          }
+        }
+      }
+
+      if (!resolvedIssues.length && !errorNotified && !sawResponse) {
+        this.notifyError(
+          lastError ??
+            new Error(
+              this.translate.instant('common.ai.errorCommunicatingOpenRouter'),
+            ),
+        );
+      }
+      return resolvedIssues;
+    } finally {
+      const durationInSeconds = ((performance.now() - startTime) / 1000).toFixed(
+        2,
+      );
+      this.messageService.add({
+        severity: 'info',
+        summary: this.translate.instant('common.requestComplete'),
+        detail: this.translate.instant('common.totalTime', {
+          time: durationInSeconds,
+        }),
+        life: 10000,
+      });
     }
-
-    return [];
   }
 
   getCachedIssues(alertHtml: string): AlertIssue[] | null {
@@ -121,13 +191,13 @@ export class AlertAiService {
       const ct = resp?.headers.get('content-type') || '';
       if (ct.includes('application/json') && typeof resp?.body === 'string') {
         return JSON.parse(resp.body) as OpenRouterResponse;
-      } else {
-        console.error(
-          `OpenRouter non-JSON (status ${resp?.status}, ${ct}):\n`,
-          (resp?.body || '').slice(0, 500),
-        );
-        return undefined;
       }
+      const nonJsonMessage = `OpenRouter non-JSON (status ${resp?.status}, ${ct})`;
+      console.error(
+        `${nonJsonMessage}:\n`,
+        (resp?.body || '').slice(0, 500),
+      );
+      throw new Error(nonJsonMessage);
     } catch (err: unknown) {
       const httpErr = err as { status?: number; error?: unknown };
       const status = httpErr?.status;
@@ -135,11 +205,23 @@ export class AlertAiService {
         typeof httpErr?.error === 'string'
           ? httpErr.error.slice(0, 500)
           : JSON.stringify(httpErr?.error);
-      console.error(
-        `OpenRouter HTTP error (model: ${model}) status=${status}: ${bodySnippet}`,
-      );
-      return undefined;
+      const message = `OpenRouter HTTP error (model: ${model}) status=${status}: ${bodySnippet}`;
+      console.error(message);
+      throw new Error(message);
     }
+  }
+
+  private notifyError(err: unknown): void {
+    const message =
+      err instanceof Error
+        ? err.message
+        : this.translate.instant('common.ai.requestFailed.detailUnknown');
+    this.messageService.add({
+      severity: 'error',
+      summary: this.translate.instant('common.ai.requestFailed.summary'),
+      detail: message,
+      sticky: true,
+    });
   }
 
   // ---------- Output parsing ----------

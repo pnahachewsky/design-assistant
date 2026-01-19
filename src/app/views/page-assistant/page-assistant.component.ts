@@ -680,7 +680,7 @@ export class PageAssistantCompareComponent
     this.isLoading = true;
     this.aiDisabled = 'Wait for response from AI';
     this.statusSeverity = 'info';
-    this.statusMessage = 'Sending content to Open Router.';
+    this.statusMessage = this.translate.instant('common.ai.sending');
 
     try {
       const apiKey = localStorage.getItem('apiKey');
@@ -724,11 +724,15 @@ export class PageAssistantCompareComponent
             url,
           );
           this.statusSeverity = 'success';
-          this.statusMessage = 'Alert recommendations generated from selected pain points.';
+          this.statusMessage = this.translate.instant(
+            'common.ai.alertRecommendationsGenerated',
+          );
           this.messageService.add({
             severity: 'success',
-            summary: 'AI Response Received',
-            detail: 'Alert recommendations generated from selected pain points.',
+            summary: this.translate.instant('common.ai.responseReceived.summary'),
+            detail: this.translate.instant(
+              'common.ai.alertRecommendationsGenerated',
+            ),
             life: 5000,
           });
           return;
@@ -746,7 +750,7 @@ export class PageAssistantCompareComponent
       console.log(`OpenRouter response status: `, orResponse.status);
       if (orResponse.status === 200) {
         console.log('Waiting for AI response');
-        this.statusMessage = 'AI is generating a response.';
+        this.statusMessage = this.translate.instant('common.ai.generating');
       }
 
       const aiResponse = await orResponse.json();
@@ -765,8 +769,9 @@ export class PageAssistantCompareComponent
         console.error(aiResponse.error?.message);
         console.groupEnd();
         this.statusSeverity = 'error';
-        this.statusMessage =
-          'An error occurred while communicating with the AI.';
+        this.statusMessage = this.translate.instant(
+          'common.ai.errorCommunicatingAi',
+        );
         throw new Error(`AI error: ${aiResponse.error?.message}`);
       }
 
@@ -803,11 +808,16 @@ export class PageAssistantCompareComponent
         );
         console.groupEnd();
         this.statusSeverity = 'warn';
-        this.statusMessage = `Your selected AI model was unavailable. Used "${usedModel}" instead.`;
+        this.statusMessage = this.translate.instant('common.ai.fallbackStatus', {
+          model: usedModel,
+        });
         this.messageService.add({
           severity: 'warn',
-          summary: 'Fallback Model Used',
-          detail: `"${requestedModel}" was unavailable. Used "${usedModel}" instead.`,
+          summary: this.translate.instant('common.ai.fallback.summary'),
+          detail: this.translate.instant('common.ai.fallback.detail', {
+            requested: requestedModel,
+            used: usedModel,
+          }),
           life: 10000,
         });
       }
@@ -837,23 +847,30 @@ export class PageAssistantCompareComponent
       }
 
       this.statusSeverity = 'success';
-      this.statusMessage = `Comparison has been updated with AI response from ${usedModel}.`;
+      this.statusMessage = this.translate.instant(
+        'common.ai.comparisonUpdatedWithModel',
+        { model: usedModel },
+      );
 
       this.messageService.add({
         severity: 'success',
-        summary: 'AI Response Received',
-        detail: 'Comparison has been updated with AI response.',
+        summary: this.translate.instant('common.ai.responseReceived.summary'),
+        detail: this.translate.instant('common.ai.responseReceived.detail'),
         life: 5000,
       });
     } catch (err) {
       console.error(`sendToAI function failed:`, err);
       this.statusSeverity = 'error';
-      this.statusMessage =
-        'An error occurred while communicating with Open Router or the seleced AI model.';
+      this.statusMessage = this.translate.instant(
+        'common.ai.errorCommunicatingOpenRouter',
+      );
       this.messageService.add({
         severity: 'error',
-        summary: 'AI Request Failed',
-        detail: err instanceof Error ? err.message : 'Unknown error occurred.',
+        summary: this.translate.instant('common.ai.requestFailed.summary'),
+        detail:
+          err instanceof Error
+            ? err.message
+            : this.translate.instant('common.ai.requestFailed.detailUnknown'),
         sticky: true,
       });
     } finally {
@@ -864,8 +881,10 @@ export class PageAssistantCompareComponent
       const durationInSeconds = ((endTime - startTime) / 1000).toFixed(2);
       this.messageService.add({
         severity: 'info',
-        summary: 'Request Complete',
-        detail: `Total time: ${durationInSeconds} seconds.`,
+        summary: this.translate.instant('common.requestComplete'),
+        detail: this.translate.instant('common.totalTime', {
+          time: durationInSeconds,
+        }),
         life: 10000,
       });
     }
