@@ -67,7 +67,7 @@ interface GuidanceRow {
         padding-left: 1rem;
       }
       .health-cell {
-        //display: flex;
+        /* display: flex; */
         gap: 0.4rem;
         align-items: center;
         flex-wrap: wrap;
