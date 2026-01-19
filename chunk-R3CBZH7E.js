@@ -43139,82 +43139,6 @@ var ToastModule = class _ToastModule {
   }], null, null);
 })();
 
-// src/app/services/local-storage.service.ts
-var LocalStorageService = class _LocalStorageService {
-  saveData(key, value) {
-    localStorage.setItem(key, value);
-    console.log(`Saved ` + key + `: ` + value);
-  }
-  getData(key) {
-    return localStorage.getItem(key);
-  }
-  removeData(key) {
-    localStorage.removeItem(key);
-    console.log(`Removed ` + key);
-  }
-  clearData() {
-    localStorage.clear();
-    console.log(`Removed all stored values`);
-  }
-  static \u0275fac = function LocalStorageService_Factory(__ngFactoryType__) {
-    return new (__ngFactoryType__ || _LocalStorageService)();
-  };
-  static \u0275prov = /* @__PURE__ */ \u0275\u0275defineInjectable({ token: _LocalStorageService, factory: _LocalStorageService.\u0275fac, providedIn: "root" });
-};
-(() => {
-  (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(LocalStorageService, [{
-    type: Injectable,
-    args: [{
-      providedIn: "root"
-    }]
-  }], null, null);
-})();
-
-// src/app/services/api-key.service.ts
-var ApiKeyService = class _ApiKeyService {
-  localStorageService;
-  STORAGE_KEY = "apiKey";
-  // Using same key as the rest of the app
-  apiKeySubject;
-  apiKey$;
-  hasApiKey$;
-  constructor(localStorageService) {
-    this.localStorageService = localStorageService;
-    const storedKey = this.getStoredKey();
-    this.apiKeySubject = new BehaviorSubject(storedKey);
-    this.apiKey$ = this.apiKeySubject.asObservable();
-    this.hasApiKey$ = new BehaviorSubject(!!storedKey);
-  }
-  getStoredKey() {
-    return this.localStorageService.getData(this.STORAGE_KEY);
-  }
-  setKey(key) {
-    this.localStorageService.saveData(this.STORAGE_KEY, key);
-    this.apiKeySubject.next(key);
-    this.hasApiKey$.next(true);
-  }
-  getCurrentKey() {
-    return this.apiKeySubject.value;
-  }
-  clearKey() {
-    this.localStorageService.removeData(this.STORAGE_KEY);
-    this.apiKeySubject.next(null);
-    this.hasApiKey$.next(false);
-  }
-  static \u0275fac = function ApiKeyService_Factory(__ngFactoryType__) {
-    return new (__ngFactoryType__ || _ApiKeyService)(\u0275\u0275inject(LocalStorageService));
-  };
-  static \u0275prov = /* @__PURE__ */ \u0275\u0275defineInjectable({ token: _ApiKeyService, factory: _ApiKeyService.\u0275fac, providedIn: "root" });
-};
-(() => {
-  (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(ApiKeyService, [{
-    type: Injectable,
-    args: [{
-      providedIn: "root"
-    }]
-  }], () => [{ type: LocalStorageService }], null);
-})();
-
 // node_modules/primeng/fesm2022/primeng-card.mjs
 var _c07 = ["header"];
 var _c15 = ["title"];
@@ -53418,6 +53342,82 @@ var IftaLabelModule = class _IftaLabelModule {
       exports: [IftaLabel, SharedModule]
     }]
   }], null, null);
+})();
+
+// src/app/services/local-storage.service.ts
+var LocalStorageService = class _LocalStorageService {
+  saveData(key, value) {
+    localStorage.setItem(key, value);
+    console.log(`Saved ` + key + `: ` + value);
+  }
+  getData(key) {
+    return localStorage.getItem(key);
+  }
+  removeData(key) {
+    localStorage.removeItem(key);
+    console.log(`Removed ` + key);
+  }
+  clearData() {
+    localStorage.clear();
+    console.log(`Removed all stored values`);
+  }
+  static \u0275fac = function LocalStorageService_Factory(__ngFactoryType__) {
+    return new (__ngFactoryType__ || _LocalStorageService)();
+  };
+  static \u0275prov = /* @__PURE__ */ \u0275\u0275defineInjectable({ token: _LocalStorageService, factory: _LocalStorageService.\u0275fac, providedIn: "root" });
+};
+(() => {
+  (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(LocalStorageService, [{
+    type: Injectable,
+    args: [{
+      providedIn: "root"
+    }]
+  }], null, null);
+})();
+
+// src/app/services/api-key.service.ts
+var ApiKeyService = class _ApiKeyService {
+  localStorageService;
+  STORAGE_KEY = "apiKey";
+  // Using same key as the rest of the app
+  apiKeySubject;
+  apiKey$;
+  hasApiKey$;
+  constructor(localStorageService) {
+    this.localStorageService = localStorageService;
+    const storedKey = this.getStoredKey();
+    this.apiKeySubject = new BehaviorSubject(storedKey);
+    this.apiKey$ = this.apiKeySubject.asObservable();
+    this.hasApiKey$ = new BehaviorSubject(!!storedKey);
+  }
+  getStoredKey() {
+    return this.localStorageService.getData(this.STORAGE_KEY);
+  }
+  setKey(key) {
+    this.localStorageService.saveData(this.STORAGE_KEY, key);
+    this.apiKeySubject.next(key);
+    this.hasApiKey$.next(true);
+  }
+  getCurrentKey() {
+    return this.apiKeySubject.value;
+  }
+  clearKey() {
+    this.localStorageService.removeData(this.STORAGE_KEY);
+    this.apiKeySubject.next(null);
+    this.hasApiKey$.next(false);
+  }
+  static \u0275fac = function ApiKeyService_Factory(__ngFactoryType__) {
+    return new (__ngFactoryType__ || _ApiKeyService)(\u0275\u0275inject(LocalStorageService));
+  };
+  static \u0275prov = /* @__PURE__ */ \u0275\u0275defineInjectable({ token: _ApiKeyService, factory: _ApiKeyService.\u0275fac, providedIn: "root" });
+};
+(() => {
+  (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(ApiKeyService, [{
+    type: Injectable,
+    args: [{
+      providedIn: "root"
+    }]
+  }], () => [{ type: LocalStorageService }], null);
 })();
 
 // node_modules/primeng/fesm2022/primeng-checkbox.mjs
@@ -98678,4 +98678,4 @@ export {
    * License: MIT
    *)
 */
-//# sourceMappingURL=chunk-2TLDKFAL.js.map
+//# sourceMappingURL=chunk-R3CBZH7E.js.map
