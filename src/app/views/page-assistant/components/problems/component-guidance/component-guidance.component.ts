@@ -1,5 +1,5 @@
 // src/app/views/page-assistant/components/tools/component-guidance.component.ts
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnDestroy, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TableModule } from 'primeng/table';
@@ -8,11 +8,16 @@ import { CheckboxModule } from 'primeng/checkbox';
 import { TooltipModule } from 'primeng/tooltip';
 import { TranslateService, TranslateModule } from '@ngx-translate/core';
 import { SortEvent } from 'primeng/api';
-import { AlertsGuidanceComponent } from './alerts-guidance/alerts-guidance.component';
-import { ALERT_SEVERITY_RANK } from './alerts-guidance/alerts-guidance.component';
+import {
+  AlertsGuidanceComponent,
+  ALERT_SEVERITY_RANK,
+  computeAlertCategories,
+  computeAlertMaxSeverity,
+} from './alerts-guidance/alerts-guidance.component';
 
 import { UploadStateService } from '../../../services/upload-state.service';
 import { ValidatorService } from '../../../services/validator.service';
+import { AlertAiService } from '../../../services/alert-ai.service';
 import {
   ComponentAiService,
   ComponentAiInput,
@@ -20,7 +25,7 @@ import {
 } from '../../../services/component-ai.service';
 
 import { HttpClient } from '@angular/common/http';
-import { firstValueFrom } from 'rxjs';
+import { Subscription, firstValueFrom } from 'rxjs';
 import { environment } from '../../../../../../environments/environment';
 import { ChangeDetectorRef } from '@angular/core';
 
@@ -138,13 +143,15 @@ interface GuidanceRow {
     `,
   ],
 })
-export class ComponentGuidanceComponent implements OnInit {
+export class ComponentGuidanceComponent implements OnInit, OnDestroy {
   private uploadState = inject(UploadStateService);
   private translate = inject(TranslateService);
   private validator = inject(ValidatorService);
   private http = inject(HttpClient);
   private ai = inject(ComponentAiService);
+  private alertAi = inject(AlertAiService);
   private cdr = inject(ChangeDetectorRef);
+  private alertIssuesSub?: Subscription;
 
   production: boolean = environment.production;
 
@@ -190,6 +197,14 @@ export class ComponentGuidanceComponent implements OnInit {
       this.rows = this.buildRows(this.guidanceList);
       this.syncAlertRowSelection(true);
     }
+    this.applyCachedAlertIssues();
+    this.alertIssuesSub = this.alertAi.issuesUpdated$.subscribe(() => {
+      this.applyCachedAlertIssues();
+    });
+  }
+
+  ngOnDestroy(): void {
+    this.alertIssuesSub?.unsubscribe();
   }
 
   /** Build sorted, de-duped table rows from validator findings. */
@@ -339,6 +354,39 @@ export class ComponentGuidanceComponent implements OnInit {
       default:
         return 'Unknown';
     }
+  }
+
+  private normalizeCategoryLabel(label: string): string {
+    const trimmed = (label || '').trim();
+    if (!trimmed) return trimmed;
+    const lower = trimmed.toLowerCase();
+    return lower.charAt(0).toUpperCase() + lower.slice(1);
+  }
+
+  private applyCachedAlertIssues(): void {
+    const html = this.uploadState.getUploadData()?.originalHtml || '';
+    if (!html) return;
+    const cached = this.alertAi.getCachedIssues(html);
+    if (!cached?.length) return;
+
+      const normalizedIssues = this.alertAi.normalizeAlertIssues(cached).map(
+        (issue) => ({
+          ...issue,
+          category: this.normalizeCategoryLabel(issue.category),
+        }),
+      );
+    this.alertCategories = this.sortCategories(
+      computeAlertCategories(normalizedIssues),
+    );
+    this.alertMaxSeverity = computeAlertMaxSeverity(normalizedIssues);
+    this.alertHasIssues = normalizedIssues.length > 0;
+    this.alertLoading = false;
+    this.alertError = false;
+    this.alertLoadAttempted = true;
+    this.alertDataLoaded = true;
+    this.prevAlertHasIssues = this.alertHasIssues;
+    this.syncAlertRowSelection(true);
+    this.cdr.markForCheck();
   }
 
   // (leftover dev helper if you still need it)

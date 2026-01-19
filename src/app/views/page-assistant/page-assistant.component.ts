@@ -749,6 +749,17 @@ export class PageAssistantCompareComponent
             life: 5000,
           });
           return;
+        } else if (cachedIssues?.length) {
+          this.statusSeverity = 'warn';
+          this.statusMessage = this.translate.instant(
+            'common.ai.alertRecommendationsSkipped',
+          );
+          this.messageService.add({
+            severity: 'warn',
+            summary: this.translate.instant('common.ai.alertRecommendationsSkipped'),
+            life: 4000,
+          });
+          return;
         }
       }
 
@@ -845,15 +856,40 @@ export class PageAssistantCompareComponent
         if (!issues.length) {
           throw new Error(`No alert issues returned by the AI (${usedModel}).`);
         }
-
-        // Step 2: call AlertsRecommendations with issues + page HTML + extracted alert snippets.
-        await this.runAlertRecommendations(
-          html,
-          issues as unknown as Record<string, unknown>[],
-          model,
-          headers,
-          url,
-        );
+        const cachedIssues = this.alertAi.getCachedIssues(html);
+        let selectedIssues: Record<string, unknown>[] = [];
+        if (cachedIssues?.length) {
+          selectedIssues = cachedIssues.filter((issue) => issue.include) as unknown as Record<string, unknown>[];
+        } else {
+          const normalizedIssues = this.alertAi.normalizeAlertIssues(issues, {
+            useIncludeFallback: false,
+          });
+          this.alertAi.cacheIssues(html, normalizedIssues);
+          selectedIssues = normalizedIssues.filter((issue) => issue.include) as unknown as Record<string, unknown>[];
+        }
+        if (selectedIssues.length) {
+          this.messageService.add({
+            severity: 'info',
+            summary: this.translate.instant('common.ai.alertIssuesReceived', {
+              model: usedModel,
+            }),
+            life: 3000,
+          });
+          // Step 2: call AlertsRecommendations with issues + page HTML + extracted alert snippets.
+          await this.runAlertRecommendations(
+            html,
+            selectedIssues as unknown as Record<string, unknown>[],
+            model,
+            headers,
+            url,
+          );
+        } else {
+          this.messageService.add({
+            severity: 'warn',
+            summary: this.translate.instant('common.ai.alertRecommendationsSkipped'),
+            life: 4000,
+          });
+        }
       } else {
         const formattedHtml = await this.urlDataService.formatHtml(aiHtml, 'ai');
 

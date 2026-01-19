@@ -1,4 +1,5 @@
 import { Injectable, inject } from '@angular/core';
+import { Subject } from 'rxjs';
 import { HttpClient, HttpHeaders, HttpResponse } from '@angular/common/http';
 import { MessageService } from 'primeng/api';
 import { TranslateService } from '@ngx-translate/core';
@@ -26,6 +27,11 @@ export class AlertAiService {
   private readonly apiKeyService = inject(ApiKeyService);
   private readonly messageService = inject(MessageService);
   private readonly translate = inject(TranslateService);
+  private readonly issuesUpdatedSubject = new Subject<{
+    html: string;
+    issues: AlertIssue[];
+  }>();
+  readonly issuesUpdated$ = this.issuesUpdatedSubject.asObservable();
   private cachedAlertIssues: { html: string; issues: AlertIssue[] } | null = null;
   private readonly fallbackSeverities: Record<string, { severity: string; include?: boolean }> =
     Object.fromEntries(
@@ -49,6 +55,10 @@ export class AlertAiService {
 
   /** Call OpenRouter with the AlertsIssues prompt and return normalized issues. */
   async analyze(alertHtml: string, pageContext?: string): Promise<AlertIssue[]> {
+    const cached = this.getCachedIssues(alertHtml);
+    if (cached?.length) {
+      return cached;
+    }
     const startTime = performance.now();
     this.messageService.add({
       severity: 'info',
@@ -93,6 +103,13 @@ export class AlertAiService {
           const issues = this.parseIssues(text);
           if (issues.length) {
             resolvedIssues = issues;
+            this.messageService.add({
+              severity: 'info',
+              summary: this.translate.instant('common.ai.alertIssuesReceived', {
+                model: this.getShortModelName(model),
+              }),
+              life: 3000,
+            });
             if (i > 0 && primaryModel) {
               this.messageService.add({
                 severity: 'warn',
@@ -129,6 +146,12 @@ export class AlertAiService {
               this.translate.instant('common.ai.errorCommunicatingOpenRouter'),
             ),
         );
+      } else if (!resolvedIssues.length && !errorNotified && sawResponse) {
+        this.messageService.add({
+          severity: 'warn',
+          summary: this.translate.instant('common.ai.alertIssuesNotIdentified'),
+          life: 5000,
+        });
       }
       return resolvedIssues;
     } finally {
@@ -155,10 +178,15 @@ export class AlertAiService {
 
   cacheIssues(alertHtml: string, issues: AlertIssue[]): void {
     const normalized = this.trimText(alertHtml);
+    const copied = issues.map((issue) => ({ ...issue }));
     this.cachedAlertIssues = {
       html: normalized,
-      issues: issues.map((issue) => ({ ...issue })),
+      issues: copied,
     };
+    this.issuesUpdatedSubject.next({
+      html: normalized,
+      issues: copied.map((issue) => ({ ...issue })),
+    });
   }
 
   // ---------- OpenRouter plumbing ----------
@@ -227,6 +255,42 @@ export class AlertAiService {
   // ---------- Output parsing ----------
   parseIssuesFromText(text: string): AlertIssue[] {
     return this.parseIssues(text);
+  }
+
+  normalizeAlertIssues(
+    issues: AlertIssue[],
+    options?: { useIncludeFallback?: boolean },
+  ): AlertIssue[] {
+    const useIncludeFallback = options?.useIncludeFallback !== false;
+    return issues.map((issue) => {
+      const category = this.cleanString(issue.category);
+      const description = this.cleanString(issue.description);
+      const recommendation = this.cleanString(issue.recommendation);
+      const severity = this.normalizeSeverity(issue.severity, category);
+      const include =
+        typeof issue.include === 'boolean'
+          ? issue.include
+          : useIncludeFallback
+            ? this.lookupFallbackInclude(category) ?? true
+            : true;
+      return {
+        ...issue,
+        category,
+        description,
+        recommendation,
+        severity,
+        include,
+      };
+    });
+  }
+
+  private getShortModelName(model: string): string {
+    const modelKey = (Object.keys(AiModel) as Array<keyof typeof AiModel>).find(
+      (key) => AiModel[key] === model,
+    );
+    return modelKey
+      ? this.translate.instant(`page.ai-options.model.short.${modelKey}`)
+      : model;
   }
   
   private parseIssues(text: string): AlertIssue[] {

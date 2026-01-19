@@ -1,8 +1,9 @@
-import { Component, EventEmitter, Input, OnChanges, OnInit, Output, SimpleChanges, inject } from '@angular/core';
+import { Component, EventEmitter, Input, OnChanges, OnDestroy, OnInit, Output, SimpleChanges, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TableModule } from 'primeng/table';
 import { CheckboxModule } from 'primeng/checkbox';
+import { Subscription } from 'rxjs';
 import { UploadStateService } from '../../../../services/upload-state.service';
 import { AlertAiService } from '../../../../services/alert-ai.service';
 
@@ -95,9 +96,10 @@ export function computeAlertMaxSeverity(
   templateUrl: './alerts-guidance.component.html',
   styleUrls: ['./alerts-guidance.component.css', '../component-guidance.component.css'],
 })
-export class AlertsGuidanceComponent implements OnInit, OnChanges {
+export class AlertsGuidanceComponent implements OnInit, OnChanges, OnDestroy {
   private readonly uploadState = inject(UploadStateService);
   private readonly alertAi = inject(AlertAiService);
+  private issuesUpdatedSub?: Subscription;
 
   @Input() selectAll = true;
   @Output() maxSeverityChange = new EventEmitter<string | null>();
@@ -112,6 +114,19 @@ export class AlertsGuidanceComponent implements OnInit, OnChanges {
     this.sortIssues();
     this.applySelectAll(this.selectAll);
     this.emitDerived();
+    this.issuesUpdatedSub = this.alertAi.issuesUpdated$.subscribe(() => {
+      const html = this.uploadState.getUploadData()?.originalHtml || '';
+      if (!html) return;
+      const cached = this.alertAi.getCachedIssues(html);
+      if (!cached?.length) return;
+      this.issues = this.alertAi.normalizeAlertIssues(cached).map((issue) => ({
+        ...issue,
+        category: this.normalizeCategoryLabel(issue.category),
+      }));
+      this.sortIssues();
+      this.applySelectAll(this.selectAll, false);
+      this.emitDerived();
+    });
     void this.loadFromAi();
   }
 
@@ -122,18 +137,24 @@ export class AlertsGuidanceComponent implements OnInit, OnChanges {
     }
   }
 
+  ngOnDestroy(): void {
+    this.issuesUpdatedSub?.unsubscribe();
+  }
+
   onIncludeToggle(): void {
     this.sortIssues();
     this.emitDerived();
     this.syncCache();
   }
 
-  private applySelectAll(flag: boolean): void {
+  private applySelectAll(flag: boolean, sync = true): void {
     if (!flag) {
       this.issues = this.issues.map((issue) => ({ ...issue, include: false }));
       this.sortIssues();
     }
-    this.syncCache();
+    if (sync) {
+      this.syncCache();
+    }
   }
 
   private sortIssues(): void {
@@ -171,7 +192,7 @@ export class AlertsGuidanceComponent implements OnInit, OnChanges {
 
     const cached = this.alertAi.getCachedIssues(html);
     if (cached?.length) {
-      this.issues = cached.map((issue) => ({
+      this.issues = this.alertAi.normalizeAlertIssues(cached).map((issue) => ({
         ...issue,
         category: this.normalizeCategoryLabel(issue.category),
       }));

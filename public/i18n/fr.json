@@ -52,9 +52,13 @@
 	"common.ai.fallback.detail": "\"{{requested}}\" n'était pas disponible. Utilisation de \"{{used}}\" à la place.",
 	"common.ai.alertRecommendationsGenerated": "Recommandations d’alertes générées à partir des points de douleur sélectionnés.",
 	"common.ai.fallbackStatus": "Le modèle d’IA sélectionné était indisponible. Utilisation de \"{{model}}\" à la place.",
+	"common.ai.alertIssuesReceived": "Problemes d'alertes recus du modele d'IA {{model}}.",
+	"common.ai.alertRecommendationsSkipped": "Aucun probleme d'alerte selectionne. Les recommandations n'ont pas ete generees.",
 	"common.ai.comparisonUpdatedWithModel": "La comparaison a été mise à jour avec la réponse de l’IA provenant de {{model}}.",
 	"common.ai.errorCommunicatingAi": "Une erreur est survenue lors de la communication avec l’IA.",
 	"common.ai.errorCommunicatingOpenRouter": "Une erreur est survenue lors de la communication avec Open Router ou le modèle d’IA sélectionné.",
+	"common.ai.alertIssuesIdentified": "Problemes d'alertes identifies.",
+	"common.ai.alertIssuesNotIdentified": "Aucun probleme d'alerte identifie.",
 	"common.ai.requestFailed.summary": "Échec de la requête IA",
 	"common.ai.requestFailed.detailUnknown": "Une erreur inconnue s'est produite.",
 	"common.language.english": "Anglais",
@@ -418,3 +422,4 @@
 	"llmEvaluation.content": "Cette page est un espace réservé pour les outils et les métriques d'évaluation des LLM.",
 	"--------NEW--------------------------": "--------------------------------NEW--------------------------------------------------"
 }
+
