@@ -597,6 +597,7 @@ export class PageAssistantCompareComponent
     headers: Record<string, string>,
     url: string,
   ): Promise<void> {
+    const shortModel = this.getShortModelName(model);
     this.statusMessage = 'Generating alert recommendations.';
     const recPrompt = PromptTemplates[PromptKey.AlertsRecommendations];
     const alertDoc = new DOMParser().parseFromString(html, 'text/html');
@@ -623,19 +624,23 @@ export class PageAssistantCompareComponent
     });
 
     if (recResponse.status !== 200) {
-      throw new Error(`Alert recommendations failed (${recResponse.status}).`);
+      throw new Error(
+        `Alert recommendations failed (${recResponse.status}) for ${shortModel}.`,
+      );
     }
 
     const recJson = await recResponse.json();
     if (recJson.error) {
       throw new Error(
-        `Alert recommendations error: ${recJson.error?.message || 'Unknown error'}`,
+        `Alert recommendations error (${shortModel}): ${
+          recJson.error?.message || 'Unknown error'
+        }`,
       );
     }
 
     const recText = recJson.choices?.[0].message?.content;
     if (!recText) {
-      throw new Error('Alert recommendations response was empty.');
+      throw new Error(`Alert recommendations response was empty (${shortModel}).`);
     }
 
     // Prefer in-place replacements by alert_index; fall back to full_html.
@@ -645,7 +650,9 @@ export class PageAssistantCompareComponent
       : null;
     const finalHtml = replacedHtml || parsed?.fullHtml;
     if (!finalHtml) {
-      throw new Error('Alert recommendations missing updated HTML.');
+      throw new Error(
+        `Alert recommendations missing updated HTML (${shortModel}).`,
+      );
     }
 
     const formattedHtml = await this.urlDataService.formatHtml(finalHtml, 'ai');
@@ -671,6 +678,11 @@ export class PageAssistantCompareComponent
       | keyof T
       | undefined;
   }
+
+  private getShortModelName(model: string): string {
+    const key = this.getEnumKeyByValue(AiModel, model);
+    return key ? this.translate.instant(`page.ai-options.model.short.${key}`) : model;
+  }
   //AI interaction
   isLoading = false;
   statusMessage = '';
@@ -694,6 +706,7 @@ export class PageAssistantCompareComponent
 
       const prompt = this.combinedPrompt;
       const model = this.selectedAiModel;
+      const requestedModelShort = this.getShortModelName(model);
       const url = 'https://openrouter.ai/api/v1/chat/completions';
 
       const headers = {
@@ -774,12 +787,16 @@ export class PageAssistantCompareComponent
         this.statusMessage = this.translate.instant(
           'common.ai.errorCommunicatingAi',
         );
-        throw new Error(`AI error: ${aiResponse.error?.message}`);
+        throw new Error(
+          `AI error (${requestedModelShort}): ${
+            aiResponse.error?.message || 'Unknown error'
+          }`,
+        );
       }
 
       const aiHtml = aiResponse.choices?.[0].message.content;
       if (!aiHtml) {
-        throw new Error('AI response was empty.');
+        throw new Error(`AI response was empty (${requestedModelShort}).`);
       }
 
       console.groupCollapsed('AI Response');
@@ -828,7 +845,7 @@ export class PageAssistantCompareComponent
         // Step 1: parse issues from AlertsIssues (JSON-only).
         const issues = this.alertAi.parseIssuesFromText(aiHtml);
         if (!issues.length) {
-          throw new Error('No alert issues returned by the AI.');
+          throw new Error(`No alert issues returned by the AI (${usedModel}).`);
         }
 
         // Step 2: call AlertsRecommendations with issues + page HTML + extracted alert snippets.
