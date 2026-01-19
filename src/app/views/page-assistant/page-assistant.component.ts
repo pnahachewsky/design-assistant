@@ -37,6 +37,7 @@ import { UrlDataService } from './services/url-data.service';
 import { SourceDiffService } from './services/source-diff.service';
 import { ShadowDomService } from './services/shadowdom.service';
 import { AlertAiService } from './services/alert-ai.service';
+import { ApiKeyService } from '../../services/api-key.service';
 
 //Data
 import {
@@ -100,6 +101,7 @@ export class PageAssistantCompareComponent
   private urlDataService = inject(UrlDataService);
   private router = inject(Router);
   private locationStrategy = inject(LocationStrategy);
+  private apiKeyService = inject(ApiKeyService);
 
   constructor() {
     effect(async () => {
@@ -683,7 +685,7 @@ export class PageAssistantCompareComponent
     this.statusMessage = this.translate.instant('common.ai.sending');
 
     try {
-      const apiKey = localStorage.getItem('apiKey');
+      const apiKey = this.apiKeyService.getCurrentKey();
       if (!apiKey) throw new Error('Missing API key');
 
       const uploadData = this.uploadState.getUploadData();
