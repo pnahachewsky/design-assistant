@@ -14,6 +14,7 @@ import { SeoComponent } from './problems/seo.component';
 import { UserInsightsComponent } from './problems/user-insights.component';
 import { LinkReportComponent } from './problems/link-report.component';
 import { IaStructureComponent } from './problems/ia-structure.component';
+import { TopicPageComponent } from './problems/component-guidance/topic-page/topic-page.component';
 import { environment } from '../../../../environments/environment';
 
 export interface ProblemsFlags {
@@ -22,6 +23,8 @@ export interface ProblemsFlags {
   seo: boolean;
   userInsights: boolean;
   linkReport: boolean;
+  iaStructure: boolean;
+  topicPage: boolean;
 }
 
 @Component({
@@ -36,6 +39,7 @@ export interface ProblemsFlags {
     ComponentGuidanceComponent,
     HeadingStructureComponent,
     IaStructureComponent,
+    TopicPageComponent,
   ],
   templateUrl: './problems.component.html',
   styles: [
@@ -80,6 +84,8 @@ export class PageProblemsComponent {
     seo: false,
     userInsights: false,
     linkReport: false,
+    iaStructure: false,
+    topicPage: false,
   };
 
   /** Call this from each feature panel when its status changes */

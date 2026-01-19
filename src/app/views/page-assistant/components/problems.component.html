@@ -136,7 +136,7 @@
       <span class="flex-spacer"></span>
       <span
         class="feature-badge"
-        *ngIf="flags.userInsights"
+        *ngIf="flags.iaStructure"
         aria-label="Issues found"
       ></span>
     </p-accordion-header>
@@ -147,4 +147,27 @@
       <ca-ia-structure></ca-ia-structure>
     </p-accordion-content>
   </p-accordion-panel>
+
+  <p-accordion-panel
+    [value]="6"
+    class="border-1 border-round-sm border-surface"
+    *ngIf="!production"
+  >
+    <p-accordion-header
+      >Topic/navigation page analysis
+      <span class="flex-spacer"></span>
+      <span
+        class="feature-badge"
+        *ngIf="flags.topicPage"
+        aria-label="Issues found"
+      ></span>
+    </p-accordion-header>
+    <p class="mt-0 ml-4 text-color-secondary" *ngIf="!isPanelOpen(6)">
+      Determine issues in an existing or assemble informaiton to create a new one
+    </p>
+    <p-accordion-content>
+      <ca-topic-page></ca-topic-page>
+    </p-accordion-content>
+  </p-accordion-panel>
+
 </p-accordion>
