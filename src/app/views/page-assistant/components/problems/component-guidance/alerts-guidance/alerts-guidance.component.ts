@@ -100,6 +100,7 @@ export class AlertsGuidanceComponent implements OnInit, OnChanges, OnDestroy {
   private readonly uploadState = inject(UploadStateService);
   private readonly alertAi = inject(AlertAiService);
   private issuesUpdatedSub?: Subscription;
+  private suppressIncludeToggle = false;
 
   @Input() selectAll = true;
   @Output() maxSeverityChange = new EventEmitter<string | null>();
@@ -142,19 +143,22 @@ export class AlertsGuidanceComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   onIncludeToggle(): void {
+    if (this.suppressIncludeToggle) return;
     this.sortIssues();
     this.emitDerived();
     this.syncCache();
   }
 
   private applySelectAll(flag: boolean, sync = true): void {
-    if (!flag) {
-      this.issues = this.issues.map((issue) => ({ ...issue, include: false }));
+    if (!sync) return;
+    this.suppressIncludeToggle = true;
+    try {
+      this.issues = this.issues.map((issue) => ({ ...issue, include: flag }));
       this.sortIssues();
+    } finally {
+      this.suppressIncludeToggle = false;
     }
-    if (sync) {
-      this.syncCache();
-    }
+    this.syncCache();
   }
 
   private sortIssues(): void {

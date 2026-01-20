@@ -195,7 +195,7 @@ export class ComponentGuidanceComponent implements OnInit, OnDestroy {
     if (data?.originalHtml) {
       this.guidanceList = this.validator.collectGuidanceUrls(data.originalHtml);
       this.rows = this.buildRows(this.guidanceList);
-      this.syncAlertRowSelection(true);
+      this.syncAlertRowSelection();
     }
     this.applyCachedAlertIssues();
     this.alertIssuesSub = this.alertAi.issuesUpdated$.subscribe(() => {
@@ -384,8 +384,8 @@ export class ComponentGuidanceComponent implements OnInit, OnDestroy {
     this.alertError = false;
     this.alertLoadAttempted = true;
     this.alertDataLoaded = true;
+    this.syncAlertRowSelection();
     this.prevAlertHasIssues = this.alertHasIssues;
-    this.syncAlertRowSelection(true);
     this.cdr.markForCheck();
   }
 
@@ -485,7 +485,7 @@ export class ComponentGuidanceComponent implements OnInit, OnDestroy {
     });
   }
 
-  private syncAlertRowSelection(force = false): void {
+  private syncAlertRowSelection(): void {
     const alertRow = this.rows.find((r) => r.__nameKey === this.alertsNameKey);
     if (!alertRow) return;
 
@@ -500,7 +500,7 @@ export class ComponentGuidanceComponent implements OnInit, OnDestroy {
     }
 
     // Auto-select only on first availability or when forced
-    if ((force || (!this.prevAlertHasIssues && this.alertHasIssues)) && !selected) {
+    if (!this.prevAlertHasIssues && this.alertHasIssues && !selected) {
       this.selectedRows = [...this.selectedRows, alertRow];
       this.alertSelectAll = true;
     }
