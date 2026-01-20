@@ -237,3 +237,66 @@ html.dark-mode .secondary-outline {
 .p-chip.text-black .p-chip-icon {
   color: black;
 }
+
+/* Base chip */
+.chip,
+.p-chip.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.15rem 0.55rem;
+  border-radius: 9999px;
+  border: 1px solid transparent;
+  font-weight: 500;
+  line-height: 1.1;
+  vertical-align: middle;
+}
+
+/* Make the PrimeIcons inherit the chip color (wins over theme) */
+.chip .pi,
+.p-chip.chip .pi {
+  color: inherit !important;
+}
+
+/* Variants */
+.chip-severe,
+.p-chip.chip-severe {
+  background: #fee2e2;
+  border-color: #fecaca;
+  color: #b91c1c; /* text + icon */
+}
+.chip-minor,
+.p-chip.chip-minor {
+  background: #fef3c7;
+  border-color: #fde68a;
+  color: #92400e;
+}
+.chip-med,
+.p-chip.chip-med {
+  background: #fde7c3;
+  border-color: #f9d29b;
+  color: #9a4a00;
+}
+.chip-ok,
+.p-chip.chip-ok {
+  background: #dcfce7;
+  border-color: #86efac;
+  color: #166534;
+}
+.chip-unk,
+.p-chip.chip-unk {
+  background: #e5e7eb;
+  border-color: #cbd5e1;
+  color: #334155;
+}
+
+/* Keep inline chip aligned within form labels */
+.p-field-radiobutton label,
+.p-field-checkbox label {
+  display: inline-flex;
+  align-items: center;
+}
+.text-danger {
+  color: #b91c1c;
+  font-weight: 600;
+}

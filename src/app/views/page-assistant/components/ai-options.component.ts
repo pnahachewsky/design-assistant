@@ -7,6 +7,7 @@ import { DrawerModule } from 'primeng/drawer';
 import { RadioButtonModule } from 'primeng/radiobutton';
 import { CheckboxModule } from 'primeng/checkbox';
 import { AccordionModule } from 'primeng/accordion';
+import { ChipModule } from 'primeng/chip';
 import { TextareaModule } from 'primeng/textarea';
 import { IftaLabelModule } from 'primeng/iftalabel';
 import { SliderModule } from 'primeng/slider';
@@ -23,7 +24,7 @@ import { UploadWordComponent } from './upload/upload-word.component';
 @Component({
   selector: 'ca-ai-options',
   imports: [TranslateModule, CommonModule, FormsModule,
-    ButtonModule, DrawerModule, RadioButtonModule, CheckboxModule, AccordionModule, TextareaModule, IftaLabelModule, SliderModule,
+    ButtonModule, DrawerModule, RadioButtonModule, CheckboxModule, AccordionModule, ChipModule, TextareaModule, IftaLabelModule, SliderModule,
     UploadUrlComponent, UploadPasteComponent, UploadWordComponent],
   templateUrl: './ai-options.component.html',
   styles: ``,
@@ -98,7 +99,7 @@ export class AiOptionsComponent {
   selectedAi: AiModel = AiModel.Devstral;
   selectedAis: AiModel[] = [];
 
-  aiOptions = [
+  freeAiOptions = [
     { id: AiModel.Devstral, label: 'page.ai-options.model.Devstral', disabled: false },
     { id: AiModel.Xiaomi, label: 'page.ai-options.model.Xiaomi', disabled: false },
     { id: AiModel.Qwen, label: 'page.ai-options.model.Qwen', disabled: false },
@@ -108,6 +109,9 @@ export class AiOptionsComponent {
     { id: AiModel.Mistral, label: 'page.ai-options.model.Mistral', disabled: false },
     { id: AiModel.Llama32, label: 'page.ai-options.model.Llama32', disabled: false },
     { id: AiModel.Llama31, label: 'page.ai-options.model.Llama31', disabled: false },
+  ];
+  paidAiOptions = [
+    { id: AiModel.Gpt5Mini, label: 'page.ai-options.model.Gpt5Mini', disabled: false },
   ];
 
   isAiCheckboxDisabled(id: AiModel): boolean {

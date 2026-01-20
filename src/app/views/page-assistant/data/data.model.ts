@@ -97,7 +97,8 @@ export enum AiModel {
   Gemma = 'google/gemma-3-27b-it:free', //131k context
   Mistral = 'mistralai/mistral-small-3.1-24b-instruct:free', //128k context
   Llama32 = 'meta-llama/llama-3.2-3b-instruct:free', //131k context = wonky results for some reason
-  Llama31 = 'meta-llama/llama-3.1-405b-instruct:free' //66k context = fine???
+  Llama31 = 'meta-llama/llama-3.1-405b-instruct:free', //66k context = fine???
+  Gpt5Mini = 'openai/gpt-5-mini' // 400k context paid
 }
 
 export interface LinkData {
