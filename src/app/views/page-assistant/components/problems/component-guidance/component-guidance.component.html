@@ -92,83 +92,73 @@
       <td class="health-cell health-col">
         @if (row.__nameKey === alertsNameKey) {
           @if (!alertLoadAttempted) {
-            <span class="chip chip-unk">
-              <i class="pi pi-question-circle" aria-hidden="true"></i>
-              <span class="chip-label">
-                {{ alertHealthLabel(null) }}
-              </span>
-            </span>
+            <p-chip
+              [label]="alertHealthLabel(null)"
+              icon="pi pi-question-circle"
+              styleClass="chip chip-unk">
+            </p-chip>
           } @else if (!alertDataLoaded) {
-            <span class="chip chip-unk">
-              <i class="pi pi-question-circle" aria-hidden="true"></i>
-              <span class="chip-label">
-                {{ alertHealthLabel(null) }}
-              </span>
-            </span>
+            <p-chip
+              [label]="alertHealthLabel(null)"
+              icon="pi pi-question-circle"
+              styleClass="chip chip-unk">
+            </p-chip>
           } @else {
             @if (alertMaxSeverity && !alertError) {
-              <span class="chip" [ngClass]="severityChip(alertMaxSeverity)">
-                <i
-                  class="pi"
-                  [ngClass]="alertHealthIcon(alertMaxSeverity)"
-                  aria-hidden="true"
-                ></i>
-                <span class="chip-label">
-                  {{ alertHealthLabel(alertMaxSeverity) }}
-                </span>
-              </span>
+              <p-chip
+                [label]="alertHealthLabel(alertMaxSeverity)"
+                [icon]="alertHealthIcon(alertMaxSeverity)"
+                [styleClass]="'chip ' + severityChip(alertMaxSeverity)">
+              </p-chip>
             } @else if (alertError) {
-              <span class="chip chip-unk">
-                <i class="pi pi-question-circle" aria-hidden="true"></i>
-                <span class="chip-label">
-                  {{ alertHealthLabel(null) }}
-                </span>
-              </span>
+              <p-chip
+                [label]="alertHealthLabel(null)"
+                icon="pi pi-question-circle"
+                styleClass="chip chip-unk">
+              </p-chip>
             } @else if (alertHasIssues && !alertError) {
-              <span class="chip chip-unk">
-                <i class="pi pi-question-circle" aria-hidden="true"></i>
-                <span class="chip-label">
-                  {{ alertHealthLabel(null) }}
-                </span>
-              </span>
+              <p-chip
+                [label]="alertHealthLabel(null)"
+                icon="pi pi-question-circle"
+                styleClass="chip chip-unk">
+              </p-chip>
             } @else if (!alertError && alertDataLoaded && alertLoadAttempted && !alertLoading) {
-              <span class="chip chip-ok">
-                <i class="pi pi-check-circle" aria-hidden="true"></i>
-                <span class="chip-label">OK</span>
-              </span>
+              <p-chip
+                label="OK"
+                icon="pi pi-check-circle"
+                styleClass="chip chip-ok">
+              </p-chip>
             } @else {
-              <span class="chip chip-unk">
-                <i class="pi pi-question-circle" aria-hidden="true"></i>
-                <span class="chip-label">
-                  {{ alertHealthLabel(null) }}
-                </span>
-              </span>
+              <p-chip
+                [label]="alertHealthLabel(null)"
+                icon="pi pi-question-circle"
+                styleClass="chip chip-unk">
+              </p-chip>
             }
           }
         } @else {
-          <span
-            class="chip"
-            [ngClass]="{
-              'chip-severe': row.health === 'severe',
-              'chip-minor': row.health === 'minor',
-              'chip-ok': row.health === 'ok',
-              'chip-unk': !row.health || row.health === 'unknown',
-            }"
-          >
-            <i
-              class="pi"
-              [ngClass]="{
-                'pi-exclamation-triangle': row.health === 'severe',
-                'pi-times-circle': row.health === 'minor',
-                'pi-check-circle': row.health === 'ok',
-                'pi-question-circle': !row.health || row.health === 'unknown',
-              }"
-              aria-hidden="true"
-            ></i>
-            <span class="chip-label">
-              {{ healthLabel(row.health) }}
-            </span>
-          </span>
+          <p-chip
+            [label]="healthLabel(row.health)"
+            [icon]="
+              row.health === 'severe'
+                ? 'pi pi-exclamation-triangle'
+                : row.health === 'minor'
+                  ? 'pi pi-times-circle'
+                  : row.health === 'ok'
+                    ? 'pi pi-check-circle'
+                    : 'pi pi-question-circle'
+            "
+            [styleClass]="
+              'chip ' +
+              (row.health === 'severe'
+                ? 'chip-severe'
+                : row.health === 'minor'
+                  ? 'chip-minor'
+                  : row.health === 'ok'
+                    ? 'chip-ok'
+                    : 'chip-unk')
+            ">
+          </p-chip>
         }
       </td>
 
@@ -184,13 +174,11 @@
             <span class="text-danger">AI error</span>
           } @else if (alertDataLoaded && alertCategories.length) {
             <div class="chip-list">
-              <span
-                class="chip"
+              <p-chip
                 *ngFor="let chip of alertCategories"
-                [ngClass]="severityChip(chip.severity)"
-              >
-                {{ chip.label }}
-              </span>
+                [label]="chip.label"
+                [styleClass]="'chip ' + severityChip(chip.severity)">
+              </p-chip>
             </div>
           } @else if (alertDataLoaded) {
             <span class="muted">No pain points found</span>
@@ -200,9 +188,11 @@
         } @else {
           @if ((row.issues?.length || 0) > 0) {
             <div class="chip-list">
-              <span class="chip chip-hghlght" *ngFor="let it of row.issues">
-                {{ it }}
-              </span>
+              <p-chip
+                *ngFor="let it of row.issues"
+                [label]="it"
+                styleClass="chip chip-hghlght">
+              </p-chip>
             </div>
             @if (row.rationale) {
               <div class="muted">{{ row.rationale }}</div>

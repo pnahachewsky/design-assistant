@@ -5,6 +5,7 @@ import { FormsModule } from '@angular/forms';
 import { TableModule } from 'primeng/table';
 import { ButtonModule } from 'primeng/button';
 import { CheckboxModule } from 'primeng/checkbox';
+import { ChipModule } from 'primeng/chip';
 import { TooltipModule } from 'primeng/tooltip';
 import { TranslateService, TranslateModule } from '@ngx-translate/core';
 import { SortEvent } from 'primeng/api';
@@ -55,6 +56,7 @@ interface GuidanceRow {
     TableModule,
     ButtonModule,
     CheckboxModule,
+    ChipModule,
     TooltipModule,
     TranslateModule,
     AlertsGuidanceComponent,
@@ -84,7 +86,8 @@ interface GuidanceRow {
         padding: 0;
         margin: 0;
       }
-      .chip-list .chip {
+      .chip-list .chip,
+      .chip-list .p-chip {
         white-space: normal;
         word-break: break-word;
         max-width: 100%;

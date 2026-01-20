@@ -101,8 +101,8 @@ export class AiOptionsComponent {
 
   freeAiOptions = [
     { id: AiModel.Devstral, label: 'page.ai-options.model.Devstral', disabled: false },
-    { id: AiModel.Xiaomi, label: 'page.ai-options.model.Xiaomi', disabled: false },
     { id: AiModel.Qwen, label: 'page.ai-options.model.Qwen', disabled: false },
+    { id: AiModel.Xiaomi, label: 'page.ai-options.model.Xiaomi', disabled: false },
     { id: AiModel.Nemotron, label: 'page.ai-options.model.Nemotron', disabled: false },
     { id: AiModel.DeepSeek, label: 'page.ai-options.model.DeepSeek', disabled: false },
     { id: AiModel.Gemma, label: 'page.ai-options.model.Gemma', disabled: false },
