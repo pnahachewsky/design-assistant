@@ -134,7 +134,7 @@
   "page.ai-options.model.paidBadge": "Paid",
   "page.ai-options.model.Devstral": "Mistral: Devstral 2 2512 (free) *",
   "page.ai-options.model.Xiaomi": "Xiaomi: MiMo-V2-Flash (free)",
-  "page.ai-options.model.Qwen": "Qwen: Qwen3 Next 80B A3B Instruct (free)",
+  "page.ai-options.model.Qwen": "Qwen3: Next 80B A3B Instruct (free)",
   "page.ai-options.model.Nemotron": "Nvidia: Nemotron 3 Nano 30B A3B (free)",
   "page.ai-options.model.DeepSeek": "DeepSeek: R1 0528 (free)",
   "page.ai-options.model.Gemma": "Google: Gemma 3 27B (free)",
