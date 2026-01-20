@@ -267,6 +267,12 @@ export class AlertAiService {
       const description = this.cleanString(issue.description);
       const recommendation = this.cleanString(issue.recommendation);
       const severity = this.normalizeSeverity(issue.severity, category);
+      const alertIndex =
+        typeof issue.alertIndex === 'number'
+          ? issue.alertIndex
+          : typeof issue.alertIndex === 'string'
+            ? Number.parseInt(issue.alertIndex, 10)
+            : undefined;
       const include =
         typeof issue.include === 'boolean'
           ? issue.include
@@ -275,6 +281,7 @@ export class AlertAiService {
             : true;
       return {
         ...issue,
+        alertIndex: Number.isFinite(alertIndex) ? alertIndex : undefined,
         category,
         description,
         recommendation,
@@ -309,6 +316,13 @@ export class AlertAiService {
       .map((raw) => {
         if (!raw || typeof raw !== 'object') return null;
         const obj = raw as Record<string, unknown>;
+        const alertIndexRaw = obj['alert_index'];
+        const alertIndex =
+          typeof alertIndexRaw === 'number'
+            ? alertIndexRaw
+            : typeof alertIndexRaw === 'string'
+              ? Number.parseInt(alertIndexRaw, 10)
+              : undefined;
         const category = this.cleanString(obj['issue_category'] ?? obj['category']);
         const description = this.cleanString(obj['description']);
         const recommendation = this.cleanString(obj['recommendation']);
@@ -320,6 +334,7 @@ export class AlertAiService {
 
         if (!category || !description || !recommendation) return null;
         const issue: AlertIssue = {
+          alertIndex: Number.isFinite(alertIndex) ? alertIndex : undefined,
           category,
           description,
           recommendation,

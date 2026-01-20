@@ -8,6 +8,7 @@ import { UploadStateService } from '../../../../services/upload-state.service';
 import { AlertAiService } from '../../../../services/alert-ai.service';
 
 export interface AlertIssue {
+  alertIndex?: number;
   category: string;
   severity: string;
   description: string;

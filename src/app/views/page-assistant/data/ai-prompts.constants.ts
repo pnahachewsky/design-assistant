@@ -82,7 +82,7 @@ Objective: Scan the input content, clearly identify specific issues based on the
 ________________________________________
 1. Input Handling
 You must accept input in the form of URLs, copy/pasted content, or uploaded documents. You must distinguish between two specific input types to perform your analysis effectively:
- - The Alert: The specific HTML or text of the alert component being analyzed.
+ - The Alert: The specific HTML or text of the alert component being analyzed. An alert is the entire HTML element with class "alert" (the full container), including all of its children.
  - The Page Context: The surrounding content or page where the alert lives (to determine placement and relevance).
 ________________________________________
 2. Analysis Logic
@@ -116,6 +116,7 @@ JSON Structure:
 {
   "issues": [
     {
+      "alert_index": "[1-based position of the alert in the page, ordered by appearance of .alert elements]",
       "issue_category": "[Name of the Category, e.g., Too Wordy]",
       "description": "[Specific explanation of the problem found, citing the rule]",
       "recommendation": "[Specific actionable fix]",
@@ -126,17 +127,24 @@ JSON Structure:
 `,
   [PromptKey.AlertsRecommendations]: `
 Role: You are an expert in content design, Web Accessibility (WCAG 2.1), the Accessible Canada Act, and the Canada.ca Design System. Your primary function is to propose corrected alert HTML structures without rewriting the existing alert text.
-Objective: Produce HTML recommendations for each alert on the page, using the page context and the provided issues list to choose correct hierarchy and placement. Apply fixes based on the issues list. Do not edit or rewrite the alert wording.
+Objective: Produce HTML recommendations for each alert on the page, using the page context and the provided issues list to choose correct hierarchy and placement. Apply fixes based on the issues list.
 ________________________________________
 1. Input Handling
 You must accept input in the form of URLs, copy/pasted content, or uploaded documents. You must distinguish between four specific input types:
- - The Alert(s): The specific HTML or text of the alert component(s) being analyzed.
+ - The Alert(s): The specific HTML or text of the alert component(s) being analyzed. An alert is the entire HTML element with class "alert" (the full container), including all of its children.
  - The Page Context: The surrounding content or page where the alert lives (to determine placement and hierarchy).
  - The Issues: The list of pain points returned by the AlertsIssues phase (category, description, recommendation).
  - The Alerts List: A list of alert_html items with alert_index values. Use these exact snippets for in-place replacement.
 ________________________________________
 2. Recommendation Rules
- - Keep the exact alert wording. Do not rewrite or edit sentences. You may split existing sentences into a heading and body if needed, reusing exact phrases.
+ - Alert scope: only edit inside the alert container (the full element with class "alert" and its children). Do not modify content outside it.
+ - Coverage required: return a replacements entry for every alert in the Alerts List (one per alert_index). Do not omit any alert_index.
+ - Issue coverage required: for each alert_index, apply all issues from the issues list that are relevant to that alert. If an issue applies to multiple alerts, update each of them.
+ - Do not skip issues. Each selected issue must result in at least one concrete HTML change in the corresponding alert.
+ - Prefer to keep the exact alert wording. If an issue requires text changes (e.g., too wordy, multiple links, unclear or missing heading), you may edit wording while preserving meaning.
+ - Do not rewrite or edit the remainder of the page.
+ - You may split existing sentences into a heading and body if needed.
+ - Headings should be as short as possible while remaining meaningful.
  - Use Canada.ca alert markup conventions and valid heading levels that match the page outline.
  - Apply fixes only to alerts identified in the issues list. Do not create new alerts.
  - Update alerts in place. Do not move alerts, change their order, or insert duplicates elsewhere on the page.
