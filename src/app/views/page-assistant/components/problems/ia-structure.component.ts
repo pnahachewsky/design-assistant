@@ -30,6 +30,7 @@ import { InputGroupAddonModule } from 'primeng/inputgroupaddon';
 
 //Services
 import { UploadStateService } from '../../services/upload-state.service';
+import { IaStructureService } from '../../services/ia-structure.service';
 import { TranslateService, TranslateModule } from '@ngx-translate/core';
 import { ThemeService } from '../../../../services/theme.service';
 
@@ -106,6 +107,7 @@ export class IaStructureComponent implements OnInit {
   private translate = inject(TranslateService);
   private locationStrategy = inject(LocationStrategy);
   private theme = inject(ThemeService);
+  private iaStructure = inject(IaStructureService);
 
   production: boolean = environment.production;
 
@@ -140,14 +142,6 @@ export class IaStructureComponent implements OnInit {
   totalUrls = 0;
   processedUrls = 0;
 
-  //Pages to skip children when building IA chart
-  private readonly skipFormsAndPubs = new Set<string>([
-    'https://www.canada.ca/en/revenue-agency/services/forms-publications/forms.html',
-    'https://www.canada.ca/fr/agence-revenu/services/formulaires-publications/formulaires.html',
-    'https://www.canada.ca/en/revenue-agency/services/forms-publications/publications.html',
-    'https://www.canada.ca/fr/agence-revenu/services/formulaires-publications/publications.html',
-  ]);
-
   //Button fxn
   async checkIA() {
     //IA orphan status
@@ -157,7 +151,35 @@ export class IaStructureComponent implements OnInit {
     );
 
     //IA tree
-    this.iaChart = await this.buildIaTree([this.originalUrl], this.depth); // depth defaults to 4 but user can select 2 to 6
+    this.isChartLoading = true;
+    this.iaProgress = 5;
+    this.processedUrls = 0;
+    this.totalUrls = 0;
+    const result = await this.iaStructure.buildIaTree(
+      [this.originalUrl],
+      this.depth,
+      {
+        onStart: (total) => {
+          this.totalUrls = total;
+        },
+        onProgress: (processed, total) => {
+          this.processedUrls = processed;
+          this.totalUrls = total;
+          this.iaProgress =
+            total > 0 ? Math.round((processed / total) * 100) : 0;
+        },
+        onDone: () => {
+          this.iaProgress = 100;
+          setTimeout(() => {
+            this.isChartLoading = false;
+            this.iaProgress = 0;
+          }, 1000);
+        },
+      },
+    );
+    this.iaChart = result.tree;
+    this.brokenLinks = result.brokenLinks;
+    this.updateNodeStyles(this.iaChart, 0);
 
     //Set focus to first element in chart
     setTimeout(() => {
@@ -267,176 +289,6 @@ export class IaStructureComponent implements OnInit {
     template: 'surface-200 hover:surface-300 text-white',
   };
 
-  //Step 2a: Get single page IA data
-  async getPageMetaAndLinks(url: string): Promise<{
-    h1?: string;
-    breadcrumb?: string[];
-    links?: string[];
-    status: number;
-  } | null> {
-    try {
-      //Get HTML content
-      const res = await fetch(url);
-      const status = res.status;
-      if (!res.ok) return { status };
-      const html = await res.text();
-
-      //Parse HTML
-      const parser = new DOMParser();
-      const doc = parser.parseFromString(html, 'text/html');
-
-      //Get H1 (or double H1)
-      const h1Elements = Array.from(doc.querySelectorAll('h1'));
-      const h1: string = h1Elements
-        .map((e) => e.textContent?.trim())
-        .filter(Boolean)
-        .join('<br>');
-
-      //Get breadcrumb
-      const breadcrumb = Array.from(
-        doc.querySelectorAll('.breadcrumb li a'),
-      ).map(
-        (a) =>
-          new URL((a as HTMLAnchorElement).getAttribute('href') || '', url)
-            .href,
-      );
-
-      //Get unique links
-      const anchors = Array.from(
-        doc.querySelectorAll('main a[href]'),
-      ) as HTMLAnchorElement[];
-      const baseUrl = new URL(url).origin;
-      const links = Array.from(
-        new Set( //unique set
-          anchors //from my array of anchors
-            .map((a) => {
-              const u = new URL(a.getAttribute('href') || '', url); // map absolute link
-              u.hash = ''; // without #id's
-              return u.href;
-            })
-            .filter((u) => u.startsWith(baseUrl) && u !== url), // on same domain but not self
-        ),
-      );
-
-      return { h1, breadcrumb, links, status };
-    } catch (err) {
-      console.error(`Failed to fetch ${url}`, err);
-      return { status: 0 };
-    }
-  }
-  //Step 2b: Crawl all child pages for IA data
-  async buildIaTree(
-    urls: string[],
-    depth: number,
-    parentUrl?: string,
-    level = 0,
-  ): Promise<TreeNode[]> {
-    if (depth <= 0) return [];
-
-    //reset progress tracker
-    if (!parentUrl && level === 0) {
-      this.isChartLoading = true;
-      this.iaProgress = 5;
-      this.processedUrls = 0;
-      this.totalUrls = urls.length;
-    }
-
-    const nodes: TreeNode[] = [];
-
-    const bgClass = this.bgColors[level % this.bgColors.length];
-
-    for (const url of urls) {
-      const meta = await this.getPageMetaAndLinks(url);
-
-      this.processedUrls++; //Increase processed URLs
-      this.iaProgress = Math.round((this.processedUrls / this.totalUrls) * 100); //Update progress
-
-      if (!meta || meta.status !== 200) {
-        this.brokenLinks.push({
-          parentUrl,
-          url,
-          status: meta?.status || 0,
-        });
-        continue;
-      }
-      if (!meta.breadcrumb || !meta.links) continue;
-
-      // Check if child via breadcrumb parent
-      if (parentUrl && meta.breadcrumb.at(-1) !== parentUrl) {
-        continue;
-      }
-
-      const node: TreeNode = {
-        label: meta.h1,
-        data: {
-          h1: meta.h1,
-          url: url,
-          originalParent: parentUrl,
-          editing: null,
-          customStyle: false,
-          customStyleKey: null,
-          borderStyle: 'border-2 border-primary border-round shadow-2',
-        },
-        expanded: true,
-        styleClass: `border-2 border-primary border-round shadow-2 ${bgClass}`,
-        children: [],
-      };
-
-      // Recurse into children
-      if (meta.links?.length && depth > 1) {
-        this.totalUrls += meta.links.length; // Increase total URLs by # of child links for progress tracker
-
-        const total = meta.links.length; //total links (used for limiting displayed child pages)
-
-        let limit = total; // default: no limit
-        if (this.skipFormsAndPubs.has(url)) {
-          limit = 5;
-        } // limit forms & pubs pages
-
-        const links = meta.links.slice(0, limit); //trim excess links
-
-        node.children = await this.buildIaTree(
-          links,
-          depth - 1,
-          url,
-          level + 1,
-        ); //get child nodes
-
-        if (total > limit) {
-          //add dummy node if we limited the child nodes
-          node.children?.push({
-            label: `+ ${total - limit} more...`,
-            data: {
-              h1: `+ ${total - limit} more...`,
-              url: null,
-              originalParent: parentUrl,
-              editing: null,
-              customStyle: true,
-              customStyleKey: 'template',
-              borderStyle:
-                'border-2 border-primary border-round shadow-2 border-dashed',
-            },
-            expanded: true,
-            styleClass: `border-2 border-primary border-round shadow-2 border-dashed surface-100 hover:surface-200`,
-            children: [],
-          });
-        }
-      }
-
-      nodes.push(node);
-    }
-
-    // Finalize progress tracker
-    if (!parentUrl && level === 0) {
-      this.iaProgress = 100;
-      setTimeout(() => {
-        this.isChartLoading = false;
-        this.iaProgress = 0;
-      }, 1000);
-    }
-
-    return nodes;
-  }
 
   //Prevent default click on org chart links <-- Do we want this??
   onNodeClick(event: MouseEvent) {
