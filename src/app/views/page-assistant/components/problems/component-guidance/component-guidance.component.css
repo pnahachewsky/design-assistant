@@ -45,3 +45,27 @@
   color: #b91c1c;
   font-weight: 600;
 }
+
+:host ::ng-deep .alert-table .p-datatable-table {
+  table-layout: auto !important;
+}
+
+:host ::ng-deep .alert-table.p-datatable .p-datatable-thead > tr > th.toggle-col,
+:host ::ng-deep .alert-table.p-datatable .p-datatable-tbody > tr > td.toggle-col {
+  width: 70px !important;
+  min-width: 70px;
+  max-width: 70px;
+  white-space: nowrap !important;
+  text-align: center;
+  padding: 0 0.25rem;
+}
+
+:host ::ng-deep .alert-table.p-datatable .p-datatable-thead > tr > th.checkbox-col,
+:host ::ng-deep .alert-table.p-datatable .p-datatable-tbody > tr > td.checkbox-col {
+  width: 70px !important;
+  min-width: 70px;
+  max-width: 70px;
+  white-space: nowrap !important;
+  text-align: center;
+  padding: 0 0.25rem;
+}

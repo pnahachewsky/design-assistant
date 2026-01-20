@@ -4,14 +4,10 @@ import { FormsModule } from '@angular/forms';
 import { TableModule } from 'primeng/table';
 import { CheckboxModule } from 'primeng/checkbox';
 
-interface TopicIssue {
+interface TopicSection {
   id: string;
-  category: string;
-  severity: string;
-  description: string;
-  recommendation: string;
-  detail?: string;
-  include: boolean;
+  heading: string;
+  selectAll: boolean;
 }
 
 @Component({
@@ -26,42 +22,31 @@ interface TopicIssue {
 })
 export class TopicPageComponent {
   expandedRows: Record<string, boolean> = {};
-  topicIssues: TopicIssue[] = [
+  selectAllSections = false;
+  topicSections: TopicSection[] = [
     {
-      id: 'nav-clarity',
-      category: 'Navigation clarity',
-      severity: 'High',
-      description: 'Primary topic links are not grouped, making the page hard to scan.',
-      recommendation: 'Group links under clear headings and add brief summaries.',
-      detail: 'Users must scan long lists without visual grouping.',
-      include: true,
+      id: 'most-requested-links',
+      heading: 'Most requested links',
+      selectAll: false,
     },
     {
-      id: 'content-hierarchy',
-      category: 'Content hierarchy',
-      severity: 'Medium',
-      description: 'Headings skip levels (H2 to H4), which impacts accessibility.',
-      recommendation: 'Use consecutive heading levels and add section summaries.',
-      detail: 'Screen reader navigation becomes inconsistent.',
-      include: true,
+      id: 'doormats',
+      heading: 'Doormats',
+      selectAll: false,
     },
     {
-      id: 'search-discoverability',
-      category: 'Search discoverability',
-      severity: 'Low',
-      description: 'No in-page search or jump links for long topic lists.',
-      recommendation: 'Add a sticky jump list or search/filter for topics.',
-      detail: 'Long pages increase time to find content.',
-      include: false,
+      id: 'features',
+      heading: 'Features',
+      selectAll: false,
     },
   ];
 
-  severityClass(severity: string | undefined | null): string {
-    const s = (severity || '').toLowerCase();
-    if (s === 'low') return 'chip-minor';
-    if (s === 'medium') return 'chip-med';
-    if (s === 'high') return 'chip-severe';
-    return 'chip-unk';
+  toggleAllSelections(): void {
+    const next = this.selectAllSections;
+    this.topicSections = this.topicSections.map((section) => ({
+      ...section,
+      selectAll: next,
+    }));
   }
 
   onRowExpand(event: any): void {

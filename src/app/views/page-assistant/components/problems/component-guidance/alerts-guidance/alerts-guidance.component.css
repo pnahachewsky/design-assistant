@@ -34,3 +34,25 @@
   width: 100%;
   overflow-x: auto;
 }
+
+.alert-table .p-datatable-table {
+  table-layout: auto !important;
+}
+
+.alert-table .toggle-col,
+.alert-table .checkbox-col {
+  width: 1%;
+  white-space: nowrap;
+  text-align: center;
+  padding: 0;
+}
+
+.alert-table.p-datatable .p-datatable-thead > tr > th.toggle-col,
+.alert-table.p-datatable .p-datatable-tbody > tr > td.toggle-col,
+.alert-table.p-datatable .p-datatable-thead > tr > th.checkbox-col,
+.alert-table.p-datatable .p-datatable-tbody > tr > td.checkbox-col {
+  width: 1% !important;
+  white-space: nowrap !important;
+  text-align: center;
+  padding: 0 0.25rem;
+}
