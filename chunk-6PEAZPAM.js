@@ -21311,7 +21311,7 @@ Objective: Scan the input content, clearly identify specific issues based on the
 ________________________________________
 1. Input Handling
 You must accept input in the form of URLs, copy/pasted content, or uploaded documents. You must distinguish between two specific input types to perform your analysis effectively:
- - The Alert: The specific HTML or text of the alert component being analyzed.
+ - The Alert: The specific HTML or text of the alert component being analyzed. An alert is the entire HTML element with class "alert" (the full container), including all of its children.
  - The Page Context: The surrounding content or page where the alert lives (to determine placement and relevance).
 ________________________________________
 2. Analysis Logic
@@ -21345,6 +21345,7 @@ JSON Structure:
 {
   "issues": [
     {
+      "alert_index": "[1-based position of the alert in the page, ordered by appearance of .alert elements]",
       "issue_category": "[Name of the Category, e.g., Too Wordy]",
       "description": "[Specific explanation of the problem found, citing the rule]",
       "recommendation": "[Specific actionable fix]",
@@ -21355,17 +21356,24 @@ JSON Structure:
 `,
   [PromptKey.AlertsRecommendations]: `
 Role: You are an expert in content design, Web Accessibility (WCAG 2.1), the Accessible Canada Act, and the Canada.ca Design System. Your primary function is to propose corrected alert HTML structures without rewriting the existing alert text.
-Objective: Produce HTML recommendations for each alert on the page, using the page context and the provided issues list to choose correct hierarchy and placement. Apply fixes based on the issues list. Do not edit or rewrite the alert wording.
+Objective: Produce HTML recommendations for each alert on the page, using the page context and the provided issues list to choose correct hierarchy and placement. Apply fixes based on the issues list.
 ________________________________________
 1. Input Handling
 You must accept input in the form of URLs, copy/pasted content, or uploaded documents. You must distinguish between four specific input types:
- - The Alert(s): The specific HTML or text of the alert component(s) being analyzed.
+ - The Alert(s): The specific HTML or text of the alert component(s) being analyzed. An alert is the entire HTML element with class "alert" (the full container), including all of its children.
  - The Page Context: The surrounding content or page where the alert lives (to determine placement and hierarchy).
  - The Issues: The list of pain points returned by the AlertsIssues phase (category, description, recommendation).
  - The Alerts List: A list of alert_html items with alert_index values. Use these exact snippets for in-place replacement.
 ________________________________________
 2. Recommendation Rules
- - Keep the exact alert wording. Do not rewrite or edit sentences. You may split existing sentences into a heading and body if needed, reusing exact phrases.
+ - Alert scope: only edit inside the alert container (the full element with class "alert" and its children). Do not modify content outside it.
+ - Coverage required: return a replacements entry for every alert in the Alerts List (one per alert_index). Do not omit any alert_index.
+ - Issue coverage required: for each alert_index, apply all issues from the issues list that are relevant to that alert. If an issue applies to multiple alerts, update each of them.
+ - Do not skip issues. Each selected issue must result in at least one concrete HTML change in the corresponding alert.
+ - Prefer to keep the exact alert wording. If an issue requires text changes (e.g., too wordy, multiple links, unclear or missing heading), you may edit wording while preserving meaning.
+ - Do not rewrite or edit the remainder of the page.
+ - You may split existing sentences into a heading and body if needed.
+ - Headings should be as short as possible while remaining meaningful.
  - Use Canada.ca alert markup conventions and valid heading levels that match the page outline.
  - Apply fixes only to alerts identified in the issues list. Do not create new alerts.
  - Update alerts in place. Do not move alerts, change their order, or insert duplicates elsewhere on the page.
@@ -21623,8 +21631,10 @@ var AlertAiService = class _AlertAiService {
       const description = this.cleanString(issue.description);
       const recommendation = this.cleanString(issue.recommendation);
       const severity = this.normalizeSeverity(issue.severity, category);
+      const alertIndex = typeof issue.alertIndex === "number" ? issue.alertIndex : typeof issue.alertIndex === "string" ? Number.parseInt(issue.alertIndex, 10) : void 0;
       const include = typeof issue.include === "boolean" ? issue.include : useIncludeFallback ? this.lookupFallbackInclude(category) ?? true : true;
       return __spreadProps(__spreadValues({}, issue), {
+        alertIndex: Number.isFinite(alertIndex) ? alertIndex : void 0,
         category,
         description,
         recommendation,
@@ -21646,6 +21656,8 @@ var AlertAiService = class _AlertAiService {
       if (!raw || typeof raw !== "object")
         return null;
       const obj = raw;
+      const alertIndexRaw = obj["alert_index"];
+      const alertIndex = typeof alertIndexRaw === "number" ? alertIndexRaw : typeof alertIndexRaw === "string" ? Number.parseInt(alertIndexRaw, 10) : void 0;
       const category = this.cleanString(obj["issue_category"] ?? obj["category"]);
       const description = this.cleanString(obj["description"]);
       const recommendation = this.cleanString(obj["recommendation"]);
@@ -21654,6 +21666,7 @@ var AlertAiService = class _AlertAiService {
       if (!category || !description || !recommendation)
         return null;
       const issue = {
+        alertIndex: Number.isFinite(alertIndex) ? alertIndex : void 0,
         category,
         description,
         recommendation,
@@ -25042,6 +25055,7 @@ var AlertsGuidanceComponent = class _AlertsGuidanceComponent {
   uploadState = inject(UploadStateService);
   alertAi = inject(AlertAiService);
   issuesUpdatedSub;
+  suppressIncludeToggle = false;
   selectAll = true;
   maxSeverityChange = new EventEmitter();
   categoriesChange = new EventEmitter();
@@ -25079,18 +25093,23 @@ var AlertsGuidanceComponent = class _AlertsGuidanceComponent {
     this.issuesUpdatedSub?.unsubscribe();
   }
   onIncludeToggle() {
+    if (this.suppressIncludeToggle)
+      return;
     this.sortIssues();
     this.emitDerived();
     this.syncCache();
   }
   applySelectAll(flag, sync = true) {
-    if (!flag) {
-      this.issues = this.issues.map((issue) => __spreadProps(__spreadValues({}, issue), { include: false }));
+    if (!sync)
+      return;
+    this.suppressIncludeToggle = true;
+    try {
+      this.issues = this.issues.map((issue) => __spreadProps(__spreadValues({}, issue), { include: flag }));
       this.sortIssues();
+    } finally {
+      this.suppressIncludeToggle = false;
     }
-    if (sync) {
-      this.syncCache();
-    }
+    this.syncCache();
   }
   sortIssues() {
     this.issues = [...this.issues].sort((a, b) => {
@@ -25209,7 +25228,7 @@ var AlertsGuidanceComponent = class _AlertsGuidanceComponent {
   }] });
 })();
 (() => {
-  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(AlertsGuidanceComponent, { className: "AlertsGuidanceComponent", filePath: "src/app/views/page-assistant/components/problems/component-guidance/alerts-guidance/alerts-guidance.component.ts", lineNumber: 99 });
+  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(AlertsGuidanceComponent, { className: "AlertsGuidanceComponent", filePath: "src/app/views/page-assistant/components/problems/component-guidance/alerts-guidance/alerts-guidance.component.ts", lineNumber: 100 });
 })();
 
 // src/app/views/page-assistant/data/css-list.config.ts
@@ -26398,7 +26417,7 @@ var ComponentGuidanceComponent = class _ComponentGuidanceComponent {
     if (data?.originalHtml) {
       this.guidanceList = this.validator.collectGuidanceUrls(data.originalHtml);
       this.rows = this.buildRows(this.guidanceList);
-      this.syncAlertRowSelection(true);
+      this.syncAlertRowSelection();
     }
     this.applyCachedAlertIssues();
     this.alertIssuesSub = this.alertAi.issuesUpdated$.subscribe(() => {
@@ -26550,8 +26569,8 @@ var ComponentGuidanceComponent = class _ComponentGuidanceComponent {
     this.alertError = false;
     this.alertLoadAttempted = true;
     this.alertDataLoaded = true;
+    this.syncAlertRowSelection();
     this.prevAlertHasIssues = this.alertHasIssues;
-    this.syncAlertRowSelection(true);
     this.cdr.markForCheck();
   }
   // (leftover dev helper if you still need it)
@@ -26642,7 +26661,7 @@ var ComponentGuidanceComponent = class _ComponentGuidanceComponent {
       this.cdr.markForCheck();
     });
   }
-  syncAlertRowSelection(force = false) {
+  syncAlertRowSelection() {
     const alertRow = this.rows.find((r) => r.__nameKey === this.alertsNameKey);
     if (!alertRow)
       return;
@@ -26653,7 +26672,7 @@ var ComponentGuidanceComponent = class _ComponentGuidanceComponent {
       }
       return;
     }
-    if ((force || !this.prevAlertHasIssues && this.alertHasIssues) && !selected) {
+    if (!this.prevAlertHasIssues && this.alertHasIssues && !selected) {
       this.selectedRows = [...this.selectedRows, alertRow];
       this.alertSelectAll = true;
     }
@@ -34304,4 +34323,4 @@ ${base}`;
 export {
   PageAssistantCompareComponent
 };
-//# sourceMappingURL=chunk-4XTIDTBK.js.map
+//# sourceMappingURL=chunk-6PEAZPAM.js.map
