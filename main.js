@@ -22,6 +22,8 @@ import {
   Checkbox,
   CheckboxModule,
   ChevronDownIcon,
+  Chip,
+  ChipModule,
   CommonModule,
   ConfirmationService,
   ConnectedOverlayScrollHandler,
@@ -178,7 +180,7 @@ import {
   unblockBodyScroll,
   uuid,
   zindexutils
-} from "./chunk-R3CBZH7E.js";
+} from "./chunk-PXZ4WSZL.js";
 import {
   ANIMATION_MODULE_TYPE,
   BehaviorSubject,
@@ -10390,7 +10392,7 @@ var Dropdown = class _Dropdown extends BaseComponent {
   lastHiddenFocusableElementOnOverlay;
   // @todo to be refactored
   get hostClass() {
-    const classes16 = this._componentStyle.classes.root({
+    const classes15 = this._componentStyle.classes.root({
       instance: this
     }).map((cls) => {
       if (typeof cls === "string") {
@@ -10399,7 +10401,7 @@ var Dropdown = class _Dropdown extends BaseComponent {
         return Object.keys(cls).filter((key) => cls[key]).join(" ");
       }
     }).join(" ");
-    return classes16 + " " + this.styleClass;
+    return classes15 + " " + this.styleClass;
   }
   get hostStyle() {
     return this.style;
@@ -16671,7 +16673,7 @@ var render = function(iconDefinition) {
     maskId = null,
     title = null,
     titleId = null,
-    classes: classes16 = [],
+    classes: classes15 = [],
     attributes = {},
     styles: styles2 = {}
   } = params;
@@ -16716,7 +16718,7 @@ var render = function(iconDefinition) {
       extra: {
         attributes,
         styles: styles2,
-        classes: classes16
+        classes: classes15
       }
     });
   });
@@ -16818,7 +16820,7 @@ var Layers = {
       layer(assembler) {
         let params = arguments.length > 1 && arguments[1] !== void 0 ? arguments[1] : {};
         const {
-          classes: classes16 = []
+          classes: classes15 = []
         } = params;
         return domVariants({
           type: "layer"
@@ -16836,7 +16838,7 @@ var Layers = {
           return [{
             tag: "span",
             attributes: {
-              class: ["".concat(config.cssPrefix, "-layers"), ...classes16].join(" ")
+              class: ["".concat(config.cssPrefix, "-layers"), ...classes15].join(" ")
             },
             children
           }];
@@ -16852,7 +16854,7 @@ var LayersCounter = {
         let params = arguments.length > 1 && arguments[1] !== void 0 ? arguments[1] : {};
         const {
           title = null,
-          classes: classes16 = [],
+          classes: classes15 = [],
           attributes = {},
           styles: styles2 = {}
         } = params;
@@ -16870,7 +16872,7 @@ var LayersCounter = {
             extra: {
               attributes,
               styles: styles2,
-              classes: ["".concat(config.cssPrefix, "-layers-counter"), ...classes16]
+              classes: ["".concat(config.cssPrefix, "-layers-counter"), ...classes15]
             }
           });
         });
@@ -16886,7 +16888,7 @@ var LayersText = {
         const {
           transform = meaninglessTransform,
           title = null,
-          classes: classes16 = [],
+          classes: classes15 = [],
           attributes = {},
           styles: styles2 = {}
         } = params;
@@ -16905,7 +16907,7 @@ var LayersText = {
             extra: {
               attributes,
               styles: styles2,
-              classes: ["".concat(config.cssPrefix, "-layers-text"), ...classes16]
+              classes: ["".concat(config.cssPrefix, "-layers-text"), ...classes15]
             }
           });
         });
@@ -17480,7 +17482,7 @@ var faWarnIfIconSpecMissing = () => {
 var isKnownRotateValue = (rotate) => rotate != null && (rotate === 90 || rotate === 180 || rotate === 270 || rotate === "90" || rotate === "180" || rotate === "270");
 var faClassList = (props) => {
   const knownRotateValue = isKnownRotateValue(props.rotate);
-  const classes16 = {
+  const classes15 = {
     [`fa-${props.animation}`]: props.animation != null && !props.animation.startsWith("spin"),
     "fa-spin": props.animation === "spin" || props.animation === "spin-reverse",
     "fa-spin-pulse": props.animation === "spin-pulse" || props.animation === "spin-pulse-reverse",
@@ -17501,7 +17503,7 @@ var faClassList = (props) => {
     [`fa-pull-${props.pull}`]: props.pull !== null,
     [`fa-stack-${props.stackItemSize}`]: props.stackItemSize != null
   };
-  return Object.keys(classes16).map((key) => classes16[key] ? key : null).filter((key) => key);
+  return Object.keys(classes15).map((key) => classes15[key] ? key : null).filter((key) => key);
 };
 var cssInserted = /* @__PURE__ */ new WeakSet();
 var autoCssId = "fa-auto-css";
@@ -20549,574 +20551,9 @@ var IaStateService = class _IaStateService {
   }], null, null);
 })();
 
-// node_modules/primeng/fesm2022/primeng-chip.mjs
-var _c09 = ["removeicon"];
-var _c110 = ["*"];
-function Chip_img_1_Template(rf, ctx) {
-  if (rf & 1) {
-    const _r1 = \u0275\u0275getCurrentView();
-    \u0275\u0275elementStart(0, "img", 4);
-    \u0275\u0275listener("error", function Chip_img_1_Template_img_error_0_listener($event) {
-      \u0275\u0275restoreView(_r1);
-      const ctx_r1 = \u0275\u0275nextContext();
-      return \u0275\u0275resetView(ctx_r1.imageError($event));
-    });
-    \u0275\u0275elementEnd();
-  }
-  if (rf & 2) {
-    const ctx_r1 = \u0275\u0275nextContext();
-    \u0275\u0275property("src", ctx_r1.image, \u0275\u0275sanitizeUrl)("alt", ctx_r1.alt);
-  }
-}
-function Chip_ng_template_2_span_0_Template(rf, ctx) {
-  if (rf & 1) {
-    \u0275\u0275element(0, "span", 6);
-  }
-  if (rf & 2) {
-    const ctx_r1 = \u0275\u0275nextContext(2);
-    \u0275\u0275classMap(ctx_r1.icon);
-    \u0275\u0275property("ngClass", "p-chip-icon");
-    \u0275\u0275attribute("data-pc-section", "icon");
-  }
-}
-function Chip_ng_template_2_Template(rf, ctx) {
-  if (rf & 1) {
-    \u0275\u0275template(0, Chip_ng_template_2_span_0_Template, 1, 4, "span", 5);
-  }
-  if (rf & 2) {
-    const ctx_r1 = \u0275\u0275nextContext();
-    \u0275\u0275property("ngIf", ctx_r1.icon);
-  }
-}
-function Chip_div_4_Template(rf, ctx) {
-  if (rf & 1) {
-    \u0275\u0275elementStart(0, "div", 7);
-    \u0275\u0275text(1);
-    \u0275\u0275elementEnd();
-  }
-  if (rf & 2) {
-    const ctx_r1 = \u0275\u0275nextContext();
-    \u0275\u0275attribute("data-pc-section", "label");
-    \u0275\u0275advance();
-    \u0275\u0275textInterpolate(ctx_r1.label);
-  }
-}
-function Chip_ng_container_5_ng_container_1_span_1_Template(rf, ctx) {
-  if (rf & 1) {
-    const _r3 = \u0275\u0275getCurrentView();
-    \u0275\u0275elementStart(0, "span", 11);
-    \u0275\u0275listener("click", function Chip_ng_container_5_ng_container_1_span_1_Template_span_click_0_listener($event) {
-      \u0275\u0275restoreView(_r3);
-      const ctx_r1 = \u0275\u0275nextContext(3);
-      return \u0275\u0275resetView(ctx_r1.close($event));
-    })("keydown", function Chip_ng_container_5_ng_container_1_span_1_Template_span_keydown_0_listener($event) {
-      \u0275\u0275restoreView(_r3);
-      const ctx_r1 = \u0275\u0275nextContext(3);
-      return \u0275\u0275resetView(ctx_r1.onKeydown($event));
-    });
-    \u0275\u0275elementEnd();
-  }
-  if (rf & 2) {
-    const ctx_r1 = \u0275\u0275nextContext(3);
-    \u0275\u0275classMap(ctx_r1.removeIcon);
-    \u0275\u0275property("ngClass", "p-chip-remove-icon");
-    \u0275\u0275attribute("data-pc-section", "removeicon")("aria-label", ctx_r1.removeAriaLabel);
-  }
-}
-function Chip_ng_container_5_ng_container_1_TimesCircleIcon_2_Template(rf, ctx) {
-  if (rf & 1) {
-    const _r4 = \u0275\u0275getCurrentView();
-    \u0275\u0275elementStart(0, "TimesCircleIcon", 12);
-    \u0275\u0275listener("click", function Chip_ng_container_5_ng_container_1_TimesCircleIcon_2_Template_TimesCircleIcon_click_0_listener($event) {
-      \u0275\u0275restoreView(_r4);
-      const ctx_r1 = \u0275\u0275nextContext(3);
-      return \u0275\u0275resetView(ctx_r1.close($event));
-    })("keydown", function Chip_ng_container_5_ng_container_1_TimesCircleIcon_2_Template_TimesCircleIcon_keydown_0_listener($event) {
-      \u0275\u0275restoreView(_r4);
-      const ctx_r1 = \u0275\u0275nextContext(3);
-      return \u0275\u0275resetView(ctx_r1.onKeydown($event));
-    });
-    \u0275\u0275elementEnd();
-  }
-  if (rf & 2) {
-    const ctx_r1 = \u0275\u0275nextContext(3);
-    \u0275\u0275classMap("p-chip-remove-icon");
-    \u0275\u0275attribute("data-pc-section", "removeicon")("aria-label", ctx_r1.removeAriaLabel);
-  }
-}
-function Chip_ng_container_5_ng_container_1_Template(rf, ctx) {
-  if (rf & 1) {
-    \u0275\u0275elementContainerStart(0);
-    \u0275\u0275template(1, Chip_ng_container_5_ng_container_1_span_1_Template, 1, 5, "span", 9)(2, Chip_ng_container_5_ng_container_1_TimesCircleIcon_2_Template, 1, 4, "TimesCircleIcon", 10);
-    \u0275\u0275elementContainerEnd();
-  }
-  if (rf & 2) {
-    const ctx_r1 = \u0275\u0275nextContext(2);
-    \u0275\u0275advance();
-    \u0275\u0275property("ngIf", ctx_r1.removeIcon);
-    \u0275\u0275advance();
-    \u0275\u0275property("ngIf", !ctx_r1.removeIcon);
-  }
-}
-function Chip_ng_container_5_span_2_1_ng_template_0_Template(rf, ctx) {
-}
-function Chip_ng_container_5_span_2_1_Template(rf, ctx) {
-  if (rf & 1) {
-    \u0275\u0275template(0, Chip_ng_container_5_span_2_1_ng_template_0_Template, 0, 0, "ng-template");
-  }
-}
-function Chip_ng_container_5_span_2_Template(rf, ctx) {
-  if (rf & 1) {
-    const _r5 = \u0275\u0275getCurrentView();
-    \u0275\u0275elementStart(0, "span", 13);
-    \u0275\u0275listener("click", function Chip_ng_container_5_span_2_Template_span_click_0_listener($event) {
-      \u0275\u0275restoreView(_r5);
-      const ctx_r1 = \u0275\u0275nextContext(2);
-      return \u0275\u0275resetView(ctx_r1.close($event));
-    })("keydown", function Chip_ng_container_5_span_2_Template_span_keydown_0_listener($event) {
-      \u0275\u0275restoreView(_r5);
-      const ctx_r1 = \u0275\u0275nextContext(2);
-      return \u0275\u0275resetView(ctx_r1.onKeydown($event));
-    });
-    \u0275\u0275template(1, Chip_ng_container_5_span_2_1_Template, 1, 0, null, 14);
-    \u0275\u0275elementEnd();
-  }
-  if (rf & 2) {
-    const ctx_r1 = \u0275\u0275nextContext(2);
-    \u0275\u0275attribute("data-pc-section", "removeicon")("aria-label", ctx_r1.removeAriaLabel);
-    \u0275\u0275advance();
-    \u0275\u0275property("ngTemplateOutlet", ctx_r1.removeIconTemplate || ctx_r1._removeIconTemplate);
-  }
-}
-function Chip_ng_container_5_Template(rf, ctx) {
-  if (rf & 1) {
-    \u0275\u0275elementContainerStart(0);
-    \u0275\u0275template(1, Chip_ng_container_5_ng_container_1_Template, 3, 2, "ng-container", 3)(2, Chip_ng_container_5_span_2_Template, 2, 3, "span", 8);
-    \u0275\u0275elementContainerEnd();
-  }
-  if (rf & 2) {
-    const ctx_r1 = \u0275\u0275nextContext();
-    \u0275\u0275advance();
-    \u0275\u0275property("ngIf", !ctx_r1.removeIconTemplate && !ctx_r1._removeIconTemplate);
-    \u0275\u0275advance();
-    \u0275\u0275property("ngIf", ctx_r1.removeIconTemplate || ctx_r1._removeIconTemplate);
-  }
-}
-var theme6 = ({
-  dt
-}) => `
-.p-chip {
-    display: inline-flex;
-    align-items: center;
-    background: ${dt("chip.background")};
-    color: ${dt("chip.color")};
-    border-radius: ${dt("chip.border.radius")};
-    padding: ${dt("chip.padding.y")} ${dt("chip.padding.x")};
-    gap: ${dt("chip.gap")};
-}
-
-.p-chip-icon {
-    color: ${dt("chip.icon.color")};
-    font-size: ${dt("chip.icon.font.size")};
-    width: ${dt("chip.icon.size")};
-    height: ${dt("chip.icon.size")};
-}
-
-.p-chip-image {
-    border-radius: 50%;
-    width: ${dt("chip.image.width")};
-    height: ${dt("chip.image.height")};
-    margin-left: calc(-1 * ${dt("chip.padding.y")});
-}
-
-.p-chip:has(.p-chip-remove-icon) {
-    padding-inline-end: ${dt("chip.padding.y")};
-}
-
-.p-chip:has(.p-chip-image) {
-    padding-top: calc(${dt("chip.padding.y")} / 2);
-    padding-bottom: calc(${dt("chip.padding.y")} / 2);
-}
-
-.p-chip-remove-icon {
-    cursor: pointer;
-    font-size: ${dt("chip.remove.icon.font.size")};
-    width: ${dt("chip.remove.icon.size")};
-    height: ${dt("chip.remove.icon.size")};
-    color: ${dt("chip.remove.icon.color")};
-    border-radius: 50%;
-    transition: outline-color ${dt("chip.transition.duration")}, box-shadow ${dt("chip.transition.duration")};
-    outline-color: transparent;
-}
-
-.p-chip-remove-icon:focus-visible {
-    box-shadow: ${dt("chip.remove.icon.focus.ring.shadow")};
-    outline: ${dt("chip.remove.icon.focus.ring.width")} ${dt("chip.remove.icon.focus.ring.style")} ${dt("chip.remove.icon.focus.ring.color")};
-    outline-offset: ${dt("chip.remove.icon.focus.ring.offset")};
-}
-`;
-var classes6 = {
-  root: "p-chip p-component",
-  image: "p-chip-image",
-  icon: "p-chip-icon",
-  label: "p-chip-label",
-  removeIcon: "p-chip-remove-icon"
-};
-var ChipStyle = class _ChipStyle extends BaseStyle {
-  name = "chip";
-  theme = theme6;
-  classes = classes6;
-  static \u0275fac = /* @__PURE__ */ (() => {
-    let \u0275ChipStyle_BaseFactory;
-    return function ChipStyle_Factory(__ngFactoryType__) {
-      return (\u0275ChipStyle_BaseFactory || (\u0275ChipStyle_BaseFactory = \u0275\u0275getInheritedFactory(_ChipStyle)))(__ngFactoryType__ || _ChipStyle);
-    };
-  })();
-  static \u0275prov = /* @__PURE__ */ \u0275\u0275defineInjectable({
-    token: _ChipStyle,
-    factory: _ChipStyle.\u0275fac
-  });
-};
-(() => {
-  (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(ChipStyle, [{
-    type: Injectable
-  }], null, null);
-})();
-var ChipClasses;
-(function(ChipClasses2) {
-  ChipClasses2["root"] = "p-chip";
-  ChipClasses2["image"] = "p-chip-image";
-  ChipClasses2["icon"] = "p-chip-icon";
-  ChipClasses2["label"] = "p-chip-label";
-  ChipClasses2["removeIcon"] = "p-chip-remove-icon";
-})(ChipClasses || (ChipClasses = {}));
-var Chip = class _Chip extends BaseComponent {
-  /**
-   * Defines the text to display.
-   * @group Props
-   */
-  label;
-  /**
-   * Defines the icon to display.
-   * @group Props
-   */
-  icon;
-  /**
-   * Defines the image to display.
-   * @group Props
-   */
-  image;
-  /**
-   * Alt attribute of the image.
-   * @group Props
-   */
-  alt;
-  /**
-   * Inline style of the element.
-   * @group Props
-   */
-  style;
-  /**
-   * Class of the element.
-   * @group Props
-   */
-  styleClass;
-  /**
-   * Whether to display a remove icon.
-   * @group Props
-   */
-  removable = false;
-  /**
-   * Icon of the remove element.
-   * @group Props
-   */
-  removeIcon;
-  /**
-   * Callback to invoke when a chip is removed.
-   * @param {MouseEvent} event - Mouse event.
-   * @group Emits
-   */
-  onRemove = new EventEmitter();
-  /**
-   * This event is triggered if an error occurs while loading an image file.
-   * @param {Event} event - Browser event.
-   * @group Emits
-   */
-  onImageError = new EventEmitter();
-  visible = true;
-  get removeAriaLabel() {
-    return this.config.getTranslation(TranslationKeys.ARIA)["removeLabel"];
-  }
-  /**
-   * Used to pass all properties of the chipProps to the Chip component.
-   * @group Props
-   */
-  get chipProps() {
-    return this._chipProps;
-  }
-  set chipProps(val) {
-    this._chipProps = val;
-    if (val && typeof val === "object") {
-      Object.entries(val).forEach(([k, v]) => this[`_${k}`] !== v && (this[`_${k}`] = v));
-    }
-  }
-  _chipProps;
-  _componentStyle = inject(ChipStyle);
-  removeIconTemplate;
-  templates;
-  _removeIconTemplate;
-  ngAfterContentInit() {
-    this.templates.forEach((item) => {
-      switch (item.getType()) {
-        case "removeicon":
-          this._removeIconTemplate = item.template;
-          break;
-        default:
-          this._removeIconTemplate = item.template;
-          break;
-      }
-    });
-  }
-  ngOnChanges(simpleChanges) {
-    super.ngOnChanges(simpleChanges);
-    if (simpleChanges.chipProps && simpleChanges.chipProps.currentValue) {
-      const {
-        currentValue
-      } = simpleChanges.chipProps;
-      if (currentValue.label !== void 0) {
-        this.label = currentValue.label;
-      }
-      if (currentValue.icon !== void 0) {
-        this.icon = currentValue.icon;
-      }
-      if (currentValue.image !== void 0) {
-        this.image = currentValue.image;
-      }
-      if (currentValue.alt !== void 0) {
-        this.alt = currentValue.alt;
-      }
-      if (currentValue.style !== void 0) {
-        this.style = currentValue.style;
-      }
-      if (currentValue.styleClass !== void 0) {
-        this.styleClass = currentValue.styleClass;
-      }
-      if (currentValue.removable !== void 0) {
-        this.removable = currentValue.removable;
-      }
-      if (currentValue.removeIcon !== void 0) {
-        this.removeIcon = currentValue.removeIcon;
-      }
-    }
-  }
-  containerClass() {
-    let classes16 = "p-chip p-component";
-    if (this.styleClass) {
-      classes16 += ` ${this.styleClass}`;
-    }
-    return classes16;
-  }
-  close(event) {
-    this.visible = false;
-    this.onRemove.emit(event);
-  }
-  onKeydown(event) {
-    if (event.key === "Enter" || event.key === "Backspace") {
-      this.close(event);
-    }
-  }
-  imageError(event) {
-    this.onImageError.emit(event);
-  }
-  static \u0275fac = /* @__PURE__ */ (() => {
-    let \u0275Chip_BaseFactory;
-    return function Chip_Factory(__ngFactoryType__) {
-      return (\u0275Chip_BaseFactory || (\u0275Chip_BaseFactory = \u0275\u0275getInheritedFactory(_Chip)))(__ngFactoryType__ || _Chip);
-    };
-  })();
-  static \u0275cmp = /* @__PURE__ */ \u0275\u0275defineComponent({
-    type: _Chip,
-    selectors: [["p-chip"]],
-    contentQueries: function Chip_ContentQueries(rf, ctx, dirIndex) {
-      if (rf & 1) {
-        \u0275\u0275contentQuery(dirIndex, _c09, 4);
-        \u0275\u0275contentQuery(dirIndex, PrimeTemplate, 4);
-      }
-      if (rf & 2) {
-        let _t;
-        \u0275\u0275queryRefresh(_t = \u0275\u0275loadQuery()) && (ctx.removeIconTemplate = _t.first);
-        \u0275\u0275queryRefresh(_t = \u0275\u0275loadQuery()) && (ctx.templates = _t);
-      }
-    },
-    hostVars: 9,
-    hostBindings: function Chip_HostBindings(rf, ctx) {
-      if (rf & 2) {
-        \u0275\u0275attribute("data-pc-name", "chip")("aria-label", ctx.label)("data-pc-section", "root");
-        \u0275\u0275styleMap(ctx.style);
-        \u0275\u0275classMap(ctx.containerClass());
-        \u0275\u0275styleProp("display", !ctx.visible && "none");
-      }
-    },
-    inputs: {
-      label: "label",
-      icon: "icon",
-      image: "image",
-      alt: "alt",
-      style: "style",
-      styleClass: "styleClass",
-      removable: [2, "removable", "removable", booleanAttribute],
-      removeIcon: "removeIcon",
-      chipProps: "chipProps"
-    },
-    outputs: {
-      onRemove: "onRemove",
-      onImageError: "onImageError"
-    },
-    features: [\u0275\u0275ProvidersFeature([ChipStyle]), \u0275\u0275InheritDefinitionFeature, \u0275\u0275NgOnChangesFeature],
-    ngContentSelectors: _c110,
-    decls: 6,
-    vars: 4,
-    consts: [["iconTemplate", ""], ["class", "p-chip-image", 3, "src", "alt", "error", 4, "ngIf", "ngIfElse"], ["class", "p-chip-label", 4, "ngIf"], [4, "ngIf"], [1, "p-chip-image", 3, "error", "src", "alt"], [3, "class", "ngClass", 4, "ngIf"], [3, "ngClass"], [1, "p-chip-label"], ["tabindex", "0", "class", "p-chip-remove-icon", "role", "button", 3, "click", "keydown", 4, "ngIf"], ["tabindex", "0", "role", "button", 3, "class", "ngClass", "click", "keydown", 4, "ngIf"], ["tabindex", "0", "role", "button", 3, "class", "click", "keydown", 4, "ngIf"], ["tabindex", "0", "role", "button", 3, "click", "keydown", "ngClass"], ["tabindex", "0", "role", "button", 3, "click", "keydown"], ["tabindex", "0", "role", "button", 1, "p-chip-remove-icon", 3, "click", "keydown"], [4, "ngTemplateOutlet"]],
-    template: function Chip_Template(rf, ctx) {
-      if (rf & 1) {
-        \u0275\u0275projectionDef();
-        \u0275\u0275projection(0);
-        \u0275\u0275template(1, Chip_img_1_Template, 1, 2, "img", 1)(2, Chip_ng_template_2_Template, 1, 1, "ng-template", null, 0, \u0275\u0275templateRefExtractor)(4, Chip_div_4_Template, 2, 2, "div", 2)(5, Chip_ng_container_5_Template, 3, 2, "ng-container", 3);
-      }
-      if (rf & 2) {
-        const iconTemplate_r6 = \u0275\u0275reference(3);
-        \u0275\u0275advance();
-        \u0275\u0275property("ngIf", ctx.image)("ngIfElse", iconTemplate_r6);
-        \u0275\u0275advance(3);
-        \u0275\u0275property("ngIf", ctx.label);
-        \u0275\u0275advance();
-        \u0275\u0275property("ngIf", ctx.removable);
-      }
-    },
-    dependencies: [CommonModule, NgClass, NgIf, NgTemplateOutlet, TimesCircleIcon, SharedModule],
-    encapsulation: 2,
-    changeDetection: 0
-  });
-};
-(() => {
-  (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(Chip, [{
-    type: Component,
-    args: [{
-      selector: "p-chip",
-      standalone: true,
-      imports: [CommonModule, TimesCircleIcon, SharedModule],
-      template: `
-        <ng-content></ng-content>
-        <img class="p-chip-image" [src]="image" *ngIf="image; else iconTemplate" (error)="imageError($event)" [alt]="alt" />
-        <ng-template #iconTemplate><span *ngIf="icon" [class]="icon" [ngClass]="'p-chip-icon'" [attr.data-pc-section]="'icon'"></span></ng-template>
-        <div class="p-chip-label" *ngIf="label" [attr.data-pc-section]="'label'">{{ label }}</div>
-        <ng-container *ngIf="removable">
-            <ng-container *ngIf="!removeIconTemplate && !_removeIconTemplate">
-                <span
-                    tabindex="0"
-                    *ngIf="removeIcon"
-                    [class]="removeIcon"
-                    [ngClass]="'p-chip-remove-icon'"
-                    [attr.data-pc-section]="'removeicon'"
-                    (click)="close($event)"
-                    (keydown)="onKeydown($event)"
-                    [attr.aria-label]="removeAriaLabel"
-                    role="button"
-                ></span>
-                <TimesCircleIcon tabindex="0" *ngIf="!removeIcon" [class]="'p-chip-remove-icon'" [attr.data-pc-section]="'removeicon'" (click)="close($event)" (keydown)="onKeydown($event)" [attr.aria-label]="removeAriaLabel" role="button" />
-            </ng-container>
-            <span *ngIf="removeIconTemplate || _removeIconTemplate" tabindex="0" [attr.data-pc-section]="'removeicon'" class="p-chip-remove-icon" (click)="close($event)" (keydown)="onKeydown($event)" [attr.aria-label]="removeAriaLabel" role="button">
-                <ng-template *ngTemplateOutlet="removeIconTemplate || _removeIconTemplate"></ng-template>
-            </span>
-        </ng-container>
-    `,
-      changeDetection: ChangeDetectionStrategy.OnPush,
-      encapsulation: ViewEncapsulation.None,
-      providers: [ChipStyle],
-      host: {
-        "[class]": "containerClass()",
-        "[style]": "style",
-        "[style.display]": '!visible && "none"',
-        "[attr.data-pc-name]": "'chip'",
-        "[attr.aria-label]": "label",
-        "[attr.data-pc-section]": "'root'"
-      }
-    }]
-  }], null, {
-    label: [{
-      type: Input
-    }],
-    icon: [{
-      type: Input
-    }],
-    image: [{
-      type: Input
-    }],
-    alt: [{
-      type: Input
-    }],
-    style: [{
-      type: Input
-    }],
-    styleClass: [{
-      type: Input
-    }],
-    removable: [{
-      type: Input,
-      args: [{
-        transform: booleanAttribute
-      }]
-    }],
-    removeIcon: [{
-      type: Input
-    }],
-    onRemove: [{
-      type: Output
-    }],
-    onImageError: [{
-      type: Output
-    }],
-    chipProps: [{
-      type: Input
-    }],
-    removeIconTemplate: [{
-      type: ContentChild,
-      args: ["removeicon", {
-        descendants: false
-      }]
-    }],
-    templates: [{
-      type: ContentChildren,
-      args: [PrimeTemplate]
-    }]
-  });
-})();
-var ChipModule = class _ChipModule {
-  static \u0275fac = function ChipModule_Factory(__ngFactoryType__) {
-    return new (__ngFactoryType__ || _ChipModule)();
-  };
-  static \u0275mod = /* @__PURE__ */ \u0275\u0275defineNgModule({
-    type: _ChipModule,
-    imports: [Chip, SharedModule],
-    exports: [Chip, SharedModule]
-  });
-  static \u0275inj = /* @__PURE__ */ \u0275\u0275defineInjector({
-    imports: [Chip, SharedModule, SharedModule]
-  });
-};
-(() => {
-  (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(ChipModule, [{
-    type: NgModule,
-    args: [{
-      imports: [Chip, SharedModule],
-      exports: [Chip, SharedModule]
-    }]
-  }], null, null);
-})();
-
 // node_modules/primeng/fesm2022/primeng-autocomplete.mjs
-var _c010 = ["item"];
-var _c111 = ["empty"];
+var _c09 = ["item"];
+var _c110 = ["empty"];
 var _c24 = ["header"];
 var _c34 = ["footer"];
 var _c44 = ["selecteditem"];
@@ -21794,7 +21231,7 @@ function AutoComplete_ng_template_9_Template(rf, ctx) {
     \u0275\u0275textInterpolate1(" ", ctx_r2.selectedMessageText, " ");
   }
 }
-var theme7 = ({
+var theme6 = ({
   dt
 }) => `
 .p-autocomplete {
@@ -22098,7 +21535,7 @@ var inlineStyles2 = {
     position: "relative"
   }
 };
-var classes7 = {
+var classes6 = {
   root: ({
     instance
   }) => ({
@@ -22148,8 +21585,8 @@ var classes7 = {
 };
 var AutoCompleteStyle = class _AutoCompleteStyle extends BaseStyle {
   name = "autocomplete";
-  theme = theme7;
-  classes = classes7;
+  theme = theme6;
+  classes = classes6;
   inlineStyles = inlineStyles2;
   static \u0275fac = /* @__PURE__ */ (() => {
     let \u0275AutoCompleteStyle_BaseFactory;
@@ -23458,8 +22895,8 @@ var AutoComplete = class _AutoComplete extends BaseComponent {
     selectors: [["p-autoComplete"], ["p-autocomplete"], ["p-auto-complete"]],
     contentQueries: function AutoComplete_ContentQueries(rf, ctx, dirIndex) {
       if (rf & 1) {
-        \u0275\u0275contentQuery(dirIndex, _c010, 5);
-        \u0275\u0275contentQuery(dirIndex, _c111, 5);
+        \u0275\u0275contentQuery(dirIndex, _c09, 5);
+        \u0275\u0275contentQuery(dirIndex, _c110, 5);
         \u0275\u0275contentQuery(dirIndex, _c24, 5);
         \u0275\u0275contentQuery(dirIndex, _c34, 5);
         \u0275\u0275contentQuery(dirIndex, _c44, 5);
@@ -24307,8 +23744,8 @@ var AutoCompleteModule = class _AutoCompleteModule {
 })();
 
 // node_modules/primeng/fesm2022/primeng-password.mjs
-var _c011 = ["content"];
-var _c114 = ["footer"];
+var _c010 = ["content"];
+var _c111 = ["footer"];
 var _c27 = ["header"];
 var _c35 = ["clearicon"];
 var _c45 = ["hideicon"];
@@ -24580,7 +24017,7 @@ function Password_div_7_Template(rf, ctx) {
     \u0275\u0275property("ngTemplateOutlet", ctx_r3.footerTemplate || ctx_r3._footerTemplate);
   }
 }
-var theme8 = ({
+var theme7 = ({
   dt
 }) => `
 .p-password {
@@ -24694,7 +24131,7 @@ var inlineStyles3 = {
     position: instance.appendTo === "self" ? "relative" : void 0
   })
 };
-var classes8 = {
+var classes7 = {
   root: ({
     instance
   }) => ({
@@ -24717,8 +24154,8 @@ var classes8 = {
 };
 var PasswordStyle = class _PasswordStyle extends BaseStyle {
   name = "password";
-  theme = theme8;
-  classes = classes8;
+  theme = theme7;
+  classes = classes7;
   inlineStyles = inlineStyles3;
   static \u0275fac = /* @__PURE__ */ (() => {
     let \u0275PasswordStyle_BaseFactory;
@@ -25608,8 +25045,8 @@ var Password = class _Password extends BaseComponent {
     selectors: [["p-password"]],
     contentQueries: function Password_ContentQueries(rf, ctx, dirIndex) {
       if (rf & 1) {
-        \u0275\u0275contentQuery(dirIndex, _c011, 4);
-        \u0275\u0275contentQuery(dirIndex, _c114, 4);
+        \u0275\u0275contentQuery(dirIndex, _c010, 4);
+        \u0275\u0275contentQuery(dirIndex, _c111, 4);
         \u0275\u0275contentQuery(dirIndex, _c27, 4);
         \u0275\u0275contentQuery(dirIndex, _c35, 4);
         \u0275\u0275contentQuery(dirIndex, _c45, 4);
@@ -26826,7 +26263,7 @@ Add information on how to manage the repo here.
 })();
 
 // src/app/views/ia-assistant/components/export-github.component.ts
-var _c012 = (a0) => ({ "ng-invalid ng-dirty": a0 });
+var _c011 = (a0) => ({ "ng-invalid ng-dirty": a0 });
 function ExportGithubComponent_ng_container_0_div_12_Template(rf, ctx) {
   if (rf & 1) {
     \u0275\u0275elementStart(0, "div", 13)(1, "p");
@@ -27396,7 +26833,7 @@ var ExportGithubComponent = class _ExportGithubComponent {
       \u0275\u0275property("ngIf", ctx.mode === "export");
       \u0275\u0275advance(5);
       \u0275\u0275twoWayProperty("ngModel", ctx.gitHubData().owner);
-      \u0275\u0275property("pKeyFilter", ctx.ownerFilter)("ngClass", \u0275\u0275pureFunction1(13, _c012, ctx.ownerError));
+      \u0275\u0275property("pKeyFilter", ctx.ownerFilter)("ngClass", \u0275\u0275pureFunction1(13, _c011, ctx.ownerError));
       \u0275\u0275advance(3);
       \u0275\u0275property("ngIf", ctx.ownerError);
       \u0275\u0275advance(2);
@@ -30068,7 +29505,7 @@ var MetadataAssistantStateService = class _MetadataAssistantStateService {
 })();
 
 // node_modules/primeng/fesm2022/primeng-inputtextarea.mjs
-var theme9 = ({
+var theme8 = ({
   dt
 }) => `
 .p-textarea {
@@ -30135,7 +29572,7 @@ var theme9 = ({
 .p-textarea.ng-invalid.ng-dirty::placeholder {
     color: ${dt("textarea.invalid.placeholder.color")};
 }`;
-var classes9 = {
+var classes8 = {
   root: ({
     instance,
     props
@@ -30149,8 +29586,8 @@ var classes9 = {
 };
 var TextareaStyle = class _TextareaStyle extends BaseStyle {
   name = "textarea";
-  theme = theme9;
-  classes = classes9;
+  theme = theme8;
+  classes = classes8;
   static \u0275fac = /* @__PURE__ */ (() => {
     let \u0275TextareaStyle_BaseFactory;
     return function TextareaStyle_Factory(__ngFactoryType__) {
@@ -30714,8 +30151,8 @@ var UrlInputComponent = class _UrlInputComponent {
 })();
 
 // node_modules/primeng/fesm2022/primeng-tag.mjs
-var _c013 = ["icon"];
-var _c115 = ["*"];
+var _c012 = ["icon"];
+var _c114 = ["*"];
 function Tag_ng_container_1_span_1_Template(rf, ctx) {
   if (rf & 1) {
     \u0275\u0275element(0, "span", 4);
@@ -30756,7 +30193,7 @@ function Tag_span_2_Template(rf, ctx) {
     \u0275\u0275property("ngTemplateOutlet", ctx_r0.iconTemplate || ctx_r0._iconTemplate);
   }
 }
-var theme10 = ({
+var theme9 = ({
   dt
 }) => `
 .p-tag {
@@ -30812,7 +30249,7 @@ var theme10 = ({
     color: ${dt("tag.contrast.color")};
 }
 `;
-var classes10 = {
+var classes9 = {
   root: ({
     props
   }) => ["p-tag p-component", {
@@ -30829,8 +30266,8 @@ var classes10 = {
 };
 var TagStyle = class _TagStyle extends BaseStyle {
   name = "tag";
-  theme = theme10;
-  classes = classes10;
+  theme = theme9;
+  classes = classes9;
   static \u0275fac = /* @__PURE__ */ (() => {
     let \u0275TagStyle_BaseFactory;
     return function TagStyle_Factory(__ngFactoryType__) {
@@ -30905,17 +30342,17 @@ var Tag = class _Tag extends BaseComponent {
     });
   }
   containerClass() {
-    let classes16 = "p-tag p-component";
+    let classes15 = "p-tag p-component";
     if (this.severity) {
-      classes16 += ` p-tag-${this.severity}`;
+      classes15 += ` p-tag-${this.severity}`;
     }
     if (this.rounded) {
-      classes16 += " p-tag-rounded";
+      classes15 += " p-tag-rounded";
     }
     if (this.styleClass) {
-      classes16 += ` ${this.styleClass}`;
+      classes15 += ` ${this.styleClass}`;
     }
-    return classes16;
+    return classes15;
   }
   static \u0275fac = /* @__PURE__ */ (() => {
     let \u0275Tag_BaseFactory;
@@ -30928,7 +30365,7 @@ var Tag = class _Tag extends BaseComponent {
     selectors: [["p-tag"]],
     contentQueries: function Tag_ContentQueries(rf, ctx, dirIndex) {
       if (rf & 1) {
-        \u0275\u0275contentQuery(dirIndex, _c013, 4);
+        \u0275\u0275contentQuery(dirIndex, _c012, 4);
         \u0275\u0275contentQuery(dirIndex, PrimeTemplate, 4);
       }
       if (rf & 2) {
@@ -30953,7 +30390,7 @@ var Tag = class _Tag extends BaseComponent {
       rounded: [2, "rounded", "rounded", booleanAttribute]
     },
     features: [\u0275\u0275ProvidersFeature([TagStyle]), \u0275\u0275InheritDefinitionFeature],
-    ngContentSelectors: _c115,
+    ngContentSelectors: _c114,
     decls: 5,
     vars: 3,
     consts: [[4, "ngIf"], ["class", "p-tag-icon", 4, "ngIf"], [1, "p-tag-label"], ["class", "p-tag-icon", 3, "ngClass", 4, "ngIf"], [1, "p-tag-icon", 3, "ngClass"], [1, "p-tag-icon"], [4, "ngTemplateOutlet"]],
@@ -31773,7 +31210,7 @@ var DocumentUploadComponent = class _DocumentUploadComponent {
 })();
 
 // src/app/views/metadata-assistant/components/metadata-result/metadata-result.component.ts
-var _c014 = () => ({ "font-size": "0.75rem" });
+var _c013 = () => ({ "font-size": "0.75rem" });
 function MetadataResultComponent_div_0_ng_template_2_Template(rf, ctx) {
   if (rf & 1) {
     \u0275\u0275elementStart(0, "div", 6)(1, "div", 7);
@@ -31810,7 +31247,7 @@ function MetadataResultComponent_div_0_p_accordionTab_5_ng_template_1_Template(r
     \u0275\u0275advance(3);
     \u0275\u0275textInterpolate(ctx_r0.getDomainFromUrl(result_r3.url));
     \u0275\u0275advance();
-    \u0275\u0275styleMap(\u0275\u0275pureFunction0(9, _c014));
+    \u0275\u0275styleMap(\u0275\u0275pureFunction0(9, _c013));
     \u0275\u0275property("value", result_r3.language === "en" ? \u0275\u0275pipeBind1(5, 5, "common.language.english") : \u0275\u0275pipeBind1(6, 7, "common.language.french"))("severity", result_r3.language === "en" ? "success" : "info");
   }
 }
@@ -35450,8 +34887,8 @@ var TestComponent = class _TestComponent {
 })();
 
 // node_modules/primeng/fesm2022/primeng-stepper.mjs
-var _c015 = ["*"];
-var _c116 = ["content"];
+var _c014 = ["*"];
+var _c115 = ["content"];
 var _c28 = (a0, a1, a2) => ({
   activateCallback: a0,
   value: a1,
@@ -35540,7 +34977,7 @@ function StepPanel_Conditional_2_Template(rf, ctx) {
     \u0275\u0275property("ngTemplateOutlet", ctx_r0.contentTemplate || ctx_r0._contentTemplate)("ngTemplateOutletContext", \u0275\u0275pureFunction3(2, _c28, ctx_r0.updateValue.bind(ctx_r0), ctx_r0.value(), ctx_r0.active()));
   }
 }
-var theme11 = ({
+var theme10 = ({
   dt
 }) => `
 .p-steplist {
@@ -35727,7 +35164,7 @@ var theme11 = ({
     overflow: inherit;
 }
 `;
-var classes11 = {
+var classes10 = {
   root: ({
     props
   }) => ["p-stepper p-component", {
@@ -35737,8 +35174,8 @@ var classes11 = {
 };
 var StepperStyle = class _StepperStyle extends BaseStyle {
   name = "stepper";
-  theme = theme11;
-  classes = classes11;
+  theme = theme10;
+  classes = classes10;
   static \u0275fac = /* @__PURE__ */ (() => {
     let \u0275StepperStyle_BaseFactory;
     return function StepperStyle_Factory(__ngFactoryType__) {
@@ -35786,7 +35223,7 @@ var StepList = class _StepList extends BaseComponent {
       }
     },
     features: [\u0275\u0275InheritDefinitionFeature],
-    ngContentSelectors: _c015,
+    ngContentSelectors: _c014,
     decls: 1,
     vars: 0,
     template: function StepList_Template(rf, ctx) {
@@ -35834,7 +35271,7 @@ var StepperSeparator = class _StepperSeparator extends BaseComponent {
       }
     },
     features: [\u0275\u0275InheritDefinitionFeature],
-    ngContentSelectors: _c015,
+    ngContentSelectors: _c014,
     decls: 1,
     vars: 0,
     template: function StepperSeparator_Template(rf, ctx) {
@@ -35915,7 +35352,7 @@ var StepItem = class _StepItem extends BaseComponent {
       value: "valueChange"
     },
     features: [\u0275\u0275InheritDefinitionFeature],
-    ngContentSelectors: _c015,
+    ngContentSelectors: _c014,
     decls: 1,
     vars: 0,
     template: function StepItem_Template(rf, ctx) {
@@ -36010,7 +35447,7 @@ var Step = class _Step extends BaseComponent {
     selectors: [["p-step"]],
     contentQueries: function Step_ContentQueries(rf, ctx, dirIndex) {
       if (rf & 1) {
-        \u0275\u0275contentQuery(dirIndex, _c116, 4);
+        \u0275\u0275contentQuery(dirIndex, _c115, 4);
         \u0275\u0275contentQuery(dirIndex, PrimeTemplate, 4);
       }
       if (rf & 2) {
@@ -36034,7 +35471,7 @@ var Step = class _Step extends BaseComponent {
       value: "valueChange"
     },
     features: [\u0275\u0275InheritDefinitionFeature],
-    ngContentSelectors: _c015,
+    ngContentSelectors: _c014,
     decls: 2,
     vars: 1,
     consts: [["type", "button", 1, "p-step-header", 3, "click", "tabindex", "disabled"], [1, "p-step-number"], [1, "p-step-title"], [4, "ngTemplateOutlet", "ngTemplateOutletContext"]],
@@ -36158,7 +35595,7 @@ var StepPanel = class _StepPanel extends BaseComponent {
     selectors: [["p-step-panel"]],
     contentQueries: function StepPanel_ContentQueries(rf, ctx, dirIndex) {
       if (rf & 1) {
-        \u0275\u0275contentQuery(dirIndex, _c116, 5);
+        \u0275\u0275contentQuery(dirIndex, _c115, 5);
         \u0275\u0275contentQuery(dirIndex, PrimeTemplate, 4);
       }
       if (rf & 2) {
@@ -36278,7 +35715,7 @@ var StepPanels = class _StepPanels extends BaseComponent {
       }
     },
     features: [\u0275\u0275InheritDefinitionFeature],
-    ngContentSelectors: _c015,
+    ngContentSelectors: _c014,
     decls: 1,
     vars: 0,
     template: function StepPanels_Template(rf, ctx) {
@@ -36379,7 +35816,7 @@ var Stepper = class _Stepper extends BaseComponent {
       value: "valueChange"
     },
     features: [\u0275\u0275ProvidersFeature([StepperStyle]), \u0275\u0275InheritDefinitionFeature],
-    ngContentSelectors: _c015,
+    ngContentSelectors: _c014,
     decls: 1,
     vars: 0,
     template: function Stepper_Template(rf, ctx) {
@@ -36437,8 +35874,8 @@ var StepperModule = class _StepperModule {
 })();
 
 // node_modules/primeng/fesm2022/primeng-confirmpopup.mjs
-var _c016 = ["content"];
-var _c117 = ["accepticon"];
+var _c015 = ["content"];
+var _c116 = ["accepticon"];
 var _c29 = ["rejecticon"];
 var _c37 = ["headless"];
 var _c47 = (a0, a1) => ({
@@ -36635,7 +36072,7 @@ function ConfirmPopup_div_0_Template(rf, ctx) {
     \u0275\u0275property("ngIf", ctx_r1.headlessTemplate || ctx_r1._headlessTemplate)("ngIfElse", notHeadless_r6);
   }
 }
-var theme12 = ({
+var theme11 = ({
   dt
 }) => `
 .p-confirmpopup {
@@ -36744,7 +36181,7 @@ var theme12 = ({
     border-top-color: ${dt("confirmpopup.border.color")};
 }
 `;
-var classes12 = {
+var classes11 = {
   root: "p-confirmpopup p-component",
   content: "p-confirmpopup-content",
   icon: "p-confirmpopup-icon",
@@ -36755,8 +36192,8 @@ var classes12 = {
 };
 var ConfirmPopupStyle = class _ConfirmPopupStyle extends BaseStyle {
   name = "confirmpopup";
-  theme = theme12;
-  classes = classes12;
+  theme = theme11;
+  classes = classes11;
   static \u0275fac = /* @__PURE__ */ (() => {
     let \u0275ConfirmPopupStyle_BaseFactory;
     return function ConfirmPopupStyle_Factory(__ngFactoryType__) {
@@ -37107,8 +36544,8 @@ var ConfirmPopup = class _ConfirmPopup extends BaseComponent {
     selectors: [["p-confirmPopup"], ["p-confirmpopup"], ["p-confirm-popup"]],
     contentQueries: function ConfirmPopup_ContentQueries(rf, ctx, dirIndex) {
       if (rf & 1) {
-        \u0275\u0275contentQuery(dirIndex, _c016, 4);
-        \u0275\u0275contentQuery(dirIndex, _c117, 4);
+        \u0275\u0275contentQuery(dirIndex, _c015, 4);
+        \u0275\u0275contentQuery(dirIndex, _c116, 4);
         \u0275\u0275contentQuery(dirIndex, _c29, 4);
         \u0275\u0275contentQuery(dirIndex, _c37, 4);
         \u0275\u0275contentQuery(dirIndex, PrimeTemplate, 4);
@@ -39086,8 +38523,8 @@ var SearchCriteriaComponent = class _SearchCriteriaComponent {
 })();
 
 // node_modules/primeng/fesm2022/primeng-toggleswitch.mjs
-var _c017 = ["handle"];
-var _c118 = ["input"];
+var _c016 = ["handle"];
+var _c117 = ["input"];
 var _c210 = (a0) => ({
   checked: a0
 });
@@ -39105,7 +38542,7 @@ function ToggleSwitch_Conditional_5_Template(rf, ctx) {
     \u0275\u0275property("ngTemplateOutlet", ctx_r1.handleTemplate || ctx_r1._handleTemplate)("ngTemplateOutletContext", \u0275\u0275pureFunction1(2, _c210, ctx_r1.checked()));
   }
 }
-var theme13 = ({
+var theme12 = ({
   dt
 }) => `
 .p-toggleswitch {
@@ -39226,7 +38663,7 @@ var inlineStyles4 = {
     position: "relative"
   }
 };
-var classes13 = {
+var classes12 = {
   root: ({
     instance
   }) => ({
@@ -39241,8 +38678,8 @@ var classes13 = {
 };
 var ToggleSwitchStyle = class _ToggleSwitchStyle extends BaseStyle {
   name = "toggleswitch";
-  theme = theme13;
-  classes = classes13;
+  theme = theme12;
+  classes = classes12;
   inlineStyles = inlineStyles4;
   static \u0275fac = /* @__PURE__ */ (() => {
     let \u0275ToggleSwitchStyle_BaseFactory;
@@ -39417,7 +38854,7 @@ var ToggleSwitch = class _ToggleSwitch extends BaseComponent {
     selectors: [["p-toggleswitch"], ["p-toggleSwitch"], ["p-toggle-switch"]],
     contentQueries: function ToggleSwitch_ContentQueries(rf, ctx, dirIndex) {
       if (rf & 1) {
-        \u0275\u0275contentQuery(dirIndex, _c017, 4);
+        \u0275\u0275contentQuery(dirIndex, _c016, 4);
         \u0275\u0275contentQuery(dirIndex, PrimeTemplate, 4);
       }
       if (rf & 2) {
@@ -39428,7 +38865,7 @@ var ToggleSwitch = class _ToggleSwitch extends BaseComponent {
     },
     viewQuery: function ToggleSwitch_Query(rf, ctx) {
       if (rf & 1) {
-        \u0275\u0275viewQuery(_c118, 5);
+        \u0275\u0275viewQuery(_c117, 5);
       }
       if (rf & 2) {
         let _t;
@@ -39985,8 +39422,8 @@ var IaTreeService = class _IaTreeService {
 })();
 
 // src/app/views/ia-assistant/components/ia-tree.component.ts
-var _c018 = ["chartContainer"];
-var _c119 = ["cm"];
+var _c017 = ["chartContainer"];
+var _c118 = ["cm"];
 var _c211 = () => ({ "min-width": "50rem" });
 function IaTreeComponent_ng_container_2_p_3_Template(rf, ctx) {
   if (rf & 1) {
@@ -40990,8 +40427,8 @@ var IaTreeComponent = class _IaTreeComponent {
   };
   static \u0275cmp = /* @__PURE__ */ \u0275\u0275defineComponent({ type: _IaTreeComponent, selectors: [["ca-ia-tree"]], viewQuery: function IaTreeComponent_Query(rf, ctx) {
     if (rf & 1) {
-      \u0275\u0275viewQuery(_c018, 5);
-      \u0275\u0275viewQuery(_c119, 5);
+      \u0275\u0275viewQuery(_c017, 5);
+      \u0275\u0275viewQuery(_c118, 5);
     }
     if (rf & 2) {
       let _t;
@@ -41653,7 +41090,7 @@ var IaAssistantComponent = class _IaAssistantComponent {
 })();
 
 // node_modules/primeng/fesm2022/primeng-avatar.mjs
-var _c019 = ["*"];
+var _c018 = ["*"];
 function Avatar_span_1_Template(rf, ctx) {
   if (rf & 1) {
     \u0275\u0275elementStart(0, "span", 3);
@@ -41712,7 +41149,7 @@ function Avatar_ng_template_4_Template(rf, ctx) {
     \u0275\u0275property("ngIf", ctx_r0.image);
   }
 }
-var theme14 = ({
+var theme13 = ({
   dt
 }) => `
 .p-avatar {
@@ -41795,7 +41232,7 @@ var theme14 = ({
     margin-inline-start: ${dt("avatar.xl.group.offset")};
 }
 `;
-var classes14 = {
+var classes13 = {
   root: ({
     props
   }) => ["p-avatar p-component", {
@@ -41809,8 +41246,8 @@ var classes14 = {
 };
 var AvatarStyle = class _AvatarStyle extends BaseStyle {
   name = "avatar";
-  theme = theme14;
-  classes = classes14;
+  theme = theme13;
+  classes = classes13;
   static \u0275fac = /* @__PURE__ */ (() => {
     let \u0275AvatarStyle_BaseFactory;
     return function AvatarStyle_Factory(__ngFactoryType__) {
@@ -41925,7 +41362,7 @@ var Avatar = class _Avatar extends BaseComponent {
       onImageError: "onImageError"
     },
     features: [\u0275\u0275ProvidersFeature([AvatarStyle]), \u0275\u0275InheritDefinitionFeature],
-    ngContentSelectors: _c019,
+    ngContentSelectors: _c018,
     decls: 6,
     vars: 2,
     consts: [["iconTemplate", ""], ["imageTemplate", ""], ["class", "p-avatar-text", 4, "ngIf", "ngIfElse"], [1, "p-avatar-text"], [3, "class", "ngClass", 4, "ngIf", "ngIfElse"], [3, "ngClass"], [3, "src", "error", 4, "ngIf"], [3, "error", "src"]],
@@ -42036,8 +41473,8 @@ var AvatarModule = class _AvatarModule {
 })();
 
 // node_modules/primeng/fesm2022/primeng-sidebar.mjs
-var _c020 = ["maskRef"];
-var _c120 = ["container"];
+var _c019 = ["maskRef"];
+var _c119 = ["container"];
 var _c212 = ["closeButton"];
 var _c38 = ["*"];
 var _c48 = (a0, a1) => ({
@@ -42215,7 +41652,7 @@ function Sidebar_div_0_Template(rf, ctx) {
     \u0275\u0275conditional(ctx_r1.headlessTemplate || ctx_r1._headlessTemplate ? 3 : 4);
   }
 }
-var theme15 = ({
+var theme14 = ({
   dt
 }) => `
 
@@ -42360,7 +41797,7 @@ var inlineStyles5 = {
     alignItems: instance.position === "top" ? "flex-start" : instance.position === "bottom" ? "flex-end" : "center"
   })
 };
-var classes15 = {
+var classes14 = {
   mask: ({
     instance
   }) => ({
@@ -42384,8 +41821,8 @@ var classes15 = {
 };
 var DrawerStyle = class _DrawerStyle extends BaseStyle {
   name = "drawer";
-  theme = theme15;
-  classes = classes15;
+  theme = theme14;
+  classes = classes14;
   inlineStyles = inlineStyles5;
   static \u0275fac = /* @__PURE__ */ (() => {
     let \u0275DrawerStyle_BaseFactory;
@@ -42725,8 +42162,8 @@ var Sidebar = class _Sidebar extends BaseComponent {
     },
     viewQuery: function Sidebar_Query(rf, ctx) {
       if (rf & 1) {
-        \u0275\u0275viewQuery(_c020, 5);
-        \u0275\u0275viewQuery(_c120, 5);
+        \u0275\u0275viewQuery(_c019, 5);
+        \u0275\u0275viewQuery(_c119, 5);
         \u0275\u0275viewQuery(_c212, 5);
       }
       if (rf & 2) {
@@ -42989,8 +42426,8 @@ var SidebarModule = class _SidebarModule {
 })();
 
 // src/app/views/journey-map/journey-map.component.ts
-var _c021 = () => ({ width: "450px" });
-var _c121 = () => ({ width: "400px" });
+var _c020 = () => ({ width: "450px" });
+var _c120 = () => ({ width: "400px" });
 var _c213 = (a0, a1) => ({ "border-indigo-500 bg-indigo-50 text-indigo-700": a0, "border-gray-200 hover:surface-100": a1 });
 var _c39 = (a0, a1) => ({ "border-green-500 bg-green-50 text-green-700": a0, "border-gray-200 hover:surface-100": a1 });
 var _c49 = () => ({ width: "500px" });
@@ -44164,7 +43601,7 @@ var JourneyMapComponent = class _JourneyMapComponent {
       \u0275\u0275advance();
       \u0275\u0275property("ngIf", ctx.feedbackData.length > 0 && ctx.showRecentInputs);
       \u0275\u0275advance();
-      \u0275\u0275styleMap(\u0275\u0275pureFunction0(54, _c021));
+      \u0275\u0275styleMap(\u0275\u0275pureFunction0(54, _c020));
       \u0275\u0275twoWayProperty("visible", ctx.showFeedbackModal);
       \u0275\u0275property("modal", true)("draggable", false)("resizable", false);
       \u0275\u0275advance(5);
@@ -44184,7 +43621,7 @@ var JourneyMapComponent = class _JourneyMapComponent {
       \u0275\u0275advance(5);
       \u0275\u0275twoWayProperty("ngModel", ctx.newFeedback.comment);
       \u0275\u0275advance(2);
-      \u0275\u0275styleMap(\u0275\u0275pureFunction0(55, _c121));
+      \u0275\u0275styleMap(\u0275\u0275pureFunction0(55, _c120));
       \u0275\u0275twoWayProperty("visible", ctx.showSettingsModal);
       \u0275\u0275property("modal", true)("draggable", false)("resizable", false);
       \u0275\u0275advance(7);
@@ -44702,7 +44139,7 @@ var routes = [
       }
       return true;
     }],
-    loadComponent: () => import("./chunk-6PEAZPAM.js").then((m) => m.PageAssistantCompareComponent)
+    loadComponent: () => import("./chunk-QYP3DUQ2.js").then((m) => m.PageAssistantCompareComponent)
   },
   {
     path: "page-assistant/share",
@@ -44967,8 +44404,8 @@ var HeaderComponent = class _HeaderComponent {
 })();
 
 // src/app/template/sidebar.component.ts
-var _c022 = () => ["/"];
-var _c124 = () => ["/page-assistant"];
+var _c021 = () => ["/"];
+var _c121 = () => ["/page-assistant"];
 var _c214 = () => ["/image-assistant"];
 var _c310 = () => ["/translation-assistant"];
 var _c410 = () => ["/ia-assistant"];
@@ -45111,7 +44548,7 @@ var SidebarComponent = class _SidebarComponent {
     }
     if (rf & 2) {
       \u0275\u0275advance(5);
-      \u0275\u0275property("routerLink", \u0275\u0275pureFunction0(65, _c022));
+      \u0275\u0275property("routerLink", \u0275\u0275pureFunction0(65, _c021));
       \u0275\u0275advance(4);
       \u0275\u0275textInterpolate(\u0275\u0275pipeBind1(10, 37, "title.landing"));
       \u0275\u0275advance(3);
@@ -45123,7 +44560,7 @@ var SidebarComponent = class _SidebarComponent {
       \u0275\u0275advance();
       \u0275\u0275classProp("hidden", !ctx.isExpanded.main);
       \u0275\u0275advance();
-      \u0275\u0275property("routerLink", \u0275\u0275pureFunction0(66, _c124));
+      \u0275\u0275property("routerLink", \u0275\u0275pureFunction0(66, _c121));
       \u0275\u0275advance(4);
       \u0275\u0275textInterpolate(\u0275\u0275pipeBind1(24, 41, "menu.page"));
       \u0275\u0275advance(2);

@@ -17,6 +17,8 @@ import {
   Checkbox,
   CheckboxModule,
   ChevronRightIcon,
+  Chip,
+  ChipModule,
   CommonModule,
   CompareTask,
   ConfirmEventType,
@@ -129,7 +131,7 @@ import {
   unblockBodyScroll,
   uuid,
   zindexutils
-} from "./chunk-R3CBZH7E.js";
+} from "./chunk-PXZ4WSZL.js";
 import {
   ChangeDetectionStrategy,
   ChangeDetectorRef,
@@ -24253,18 +24255,18 @@ function AiOptionsComponent_p_accordion_panel_16_Template(rf, ctx) {
     \u0275\u0275property("step", 25);
   }
 }
-function AiOptionsComponent_p_accordion_panel_17_ng_container_10_ng_container_1_Template(rf, ctx) {
+function AiOptionsComponent_p_accordion_panel_17_ng_container_10_ng_container_4_Template(rf, ctx) {
   if (rf & 1) {
     const _r10 = \u0275\u0275getCurrentView();
     \u0275\u0275elementContainerStart(0);
-    \u0275\u0275elementStart(1, "div", 13)(2, "p-radioButton", 30);
-    \u0275\u0275twoWayListener("ngModelChange", function AiOptionsComponent_p_accordion_panel_17_ng_container_10_ng_container_1_Template_p_radioButton_ngModelChange_2_listener($event) {
+    \u0275\u0275elementStart(1, "div", 13)(2, "p-radioButton", 32);
+    \u0275\u0275twoWayListener("ngModelChange", function AiOptionsComponent_p_accordion_panel_17_ng_container_10_ng_container_4_Template_p_radioButton_ngModelChange_2_listener($event) {
       \u0275\u0275restoreView(_r10);
       const ctx_r1 = \u0275\u0275nextContext(3);
       \u0275\u0275twoWayBindingSet(ctx_r1.selectedAi, $event) || (ctx_r1.selectedAi = $event);
       return \u0275\u0275resetView($event);
     });
-    \u0275\u0275listener("onClick", function AiOptionsComponent_p_accordion_panel_17_ng_container_10_ng_container_1_Template_p_radioButton_onClick_2_listener() {
+    \u0275\u0275listener("onClick", function AiOptionsComponent_p_accordion_panel_17_ng_container_10_ng_container_4_Template_p_radioButton_onClick_2_listener() {
       \u0275\u0275restoreView(_r10);
       const ctx_r1 = \u0275\u0275nextContext(3);
       return \u0275\u0275resetView(ctx_r1.onAiSelect(ctx_r1.selectedAi));
@@ -24289,25 +24291,80 @@ function AiOptionsComponent_p_accordion_panel_17_ng_container_10_ng_container_1_
     \u0275\u0275textInterpolate(\u0275\u0275pipeBind1(5, 6, option_r11.label));
   }
 }
+function AiOptionsComponent_p_accordion_panel_17_ng_container_10_ng_container_8_Template(rf, ctx) {
+  if (rf & 1) {
+    const _r12 = \u0275\u0275getCurrentView();
+    \u0275\u0275elementContainerStart(0);
+    \u0275\u0275elementStart(1, "div", 13)(2, "p-radioButton", 32);
+    \u0275\u0275twoWayListener("ngModelChange", function AiOptionsComponent_p_accordion_panel_17_ng_container_10_ng_container_8_Template_p_radioButton_ngModelChange_2_listener($event) {
+      \u0275\u0275restoreView(_r12);
+      const ctx_r1 = \u0275\u0275nextContext(3);
+      \u0275\u0275twoWayBindingSet(ctx_r1.selectedAi, $event) || (ctx_r1.selectedAi = $event);
+      return \u0275\u0275resetView($event);
+    });
+    \u0275\u0275listener("onClick", function AiOptionsComponent_p_accordion_panel_17_ng_container_10_ng_container_8_Template_p_radioButton_onClick_2_listener() {
+      \u0275\u0275restoreView(_r12);
+      const ctx_r1 = \u0275\u0275nextContext(3);
+      return \u0275\u0275resetView(ctx_r1.onAiSelect(ctx_r1.selectedAi));
+    });
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(3, "label", 15);
+    \u0275\u0275text(4);
+    \u0275\u0275pipe(5, "translate");
+    \u0275\u0275element(6, "p-chip", 33);
+    \u0275\u0275pipe(7, "translate");
+    \u0275\u0275elementEnd()();
+    \u0275\u0275elementContainerEnd();
+  }
+  if (rf & 2) {
+    const option_r13 = ctx.$implicit;
+    const ctx_r1 = \u0275\u0275nextContext(3);
+    \u0275\u0275advance(2);
+    \u0275\u0275property("value", option_r13.id);
+    \u0275\u0275twoWayProperty("ngModel", ctx_r1.selectedAi);
+    \u0275\u0275property("inputId", option_r13.id)("disabled", option_r13.disabled);
+    \u0275\u0275advance();
+    \u0275\u0275property("for", option_r13.id);
+    \u0275\u0275advance();
+    \u0275\u0275textInterpolate1(" ", \u0275\u0275pipeBind1(5, 7, option_r13.label), " ");
+    \u0275\u0275advance(2);
+    \u0275\u0275property("label", \u0275\u0275pipeBind1(7, 9, "page.ai-options.model.paidBadge"));
+  }
+}
 function AiOptionsComponent_p_accordion_panel_17_ng_container_10_Template(rf, ctx) {
   if (rf & 1) {
     \u0275\u0275elementContainerStart(0);
-    \u0275\u0275template(1, AiOptionsComponent_p_accordion_panel_17_ng_container_10_ng_container_1_Template, 6, 8, "ng-container", 8);
+    \u0275\u0275elementStart(1, "p", 30);
+    \u0275\u0275text(2);
+    \u0275\u0275pipe(3, "translate");
+    \u0275\u0275elementEnd();
+    \u0275\u0275template(4, AiOptionsComponent_p_accordion_panel_17_ng_container_10_ng_container_4_Template, 6, 8, "ng-container", 8);
+    \u0275\u0275elementStart(5, "p", 31);
+    \u0275\u0275text(6);
+    \u0275\u0275pipe(7, "translate");
+    \u0275\u0275elementEnd();
+    \u0275\u0275template(8, AiOptionsComponent_p_accordion_panel_17_ng_container_10_ng_container_8_Template, 8, 11, "ng-container", 8);
     \u0275\u0275elementContainerEnd();
   }
   if (rf & 2) {
     const ctx_r1 = \u0275\u0275nextContext(2);
-    \u0275\u0275advance();
-    \u0275\u0275property("ngForOf", ctx_r1.aiOptions)("ngForTrackBy", ctx_r1.trackById);
+    \u0275\u0275advance(2);
+    \u0275\u0275textInterpolate(\u0275\u0275pipeBind1(3, 6, "page.ai-options.model.free"));
+    \u0275\u0275advance(2);
+    \u0275\u0275property("ngForOf", ctx_r1.freeAiOptions)("ngForTrackBy", ctx_r1.trackById);
+    \u0275\u0275advance(2);
+    \u0275\u0275textInterpolate(\u0275\u0275pipeBind1(7, 8, "page.ai-options.model.paid"));
+    \u0275\u0275advance(2);
+    \u0275\u0275property("ngForOf", ctx_r1.paidAiOptions)("ngForTrackBy", ctx_r1.trackById);
   }
 }
-function AiOptionsComponent_p_accordion_panel_17_ng_container_11_ng_container_1_Template(rf, ctx) {
+function AiOptionsComponent_p_accordion_panel_17_ng_container_11_ng_container_4_Template(rf, ctx) {
   if (rf & 1) {
-    const _r12 = \u0275\u0275getCurrentView();
+    const _r14 = \u0275\u0275getCurrentView();
     \u0275\u0275elementContainerStart(0);
     \u0275\u0275elementStart(1, "div", 25)(2, "p-checkbox", 26);
-    \u0275\u0275twoWayListener("ngModelChange", function AiOptionsComponent_p_accordion_panel_17_ng_container_11_ng_container_1_Template_p_checkbox_ngModelChange_2_listener($event) {
-      \u0275\u0275restoreView(_r12);
+    \u0275\u0275twoWayListener("ngModelChange", function AiOptionsComponent_p_accordion_panel_17_ng_container_11_ng_container_4_Template_p_checkbox_ngModelChange_2_listener($event) {
+      \u0275\u0275restoreView(_r14);
       const ctx_r1 = \u0275\u0275nextContext(3);
       \u0275\u0275twoWayBindingSet(ctx_r1.selectedAis, $event) || (ctx_r1.selectedAis = $event);
       return \u0275\u0275resetView($event);
@@ -24320,28 +24377,78 @@ function AiOptionsComponent_p_accordion_panel_17_ng_container_11_ng_container_1_
     \u0275\u0275elementContainerEnd();
   }
   if (rf & 2) {
-    const option_r13 = ctx.$implicit;
+    const option_r15 = ctx.$implicit;
     const ctx_r1 = \u0275\u0275nextContext(3);
     \u0275\u0275advance(2);
-    \u0275\u0275property("value", option_r13.id);
+    \u0275\u0275property("value", option_r15.id);
     \u0275\u0275twoWayProperty("ngModel", ctx_r1.selectedAis);
-    \u0275\u0275property("inputId", option_r13.id)("disabled", option_r13.disabled || ctx_r1.isAiCheckboxDisabled(option_r13.id));
+    \u0275\u0275property("inputId", option_r15.id)("disabled", option_r15.disabled || ctx_r1.isAiCheckboxDisabled(option_r15.id));
     \u0275\u0275advance();
-    \u0275\u0275property("for", option_r13.id);
+    \u0275\u0275property("for", option_r15.id);
     \u0275\u0275advance();
-    \u0275\u0275textInterpolate(\u0275\u0275pipeBind1(5, 6, option_r13.label));
+    \u0275\u0275textInterpolate(\u0275\u0275pipeBind1(5, 6, option_r15.label));
+  }
+}
+function AiOptionsComponent_p_accordion_panel_17_ng_container_11_ng_container_8_Template(rf, ctx) {
+  if (rf & 1) {
+    const _r16 = \u0275\u0275getCurrentView();
+    \u0275\u0275elementContainerStart(0);
+    \u0275\u0275elementStart(1, "div", 25)(2, "p-checkbox", 26);
+    \u0275\u0275twoWayListener("ngModelChange", function AiOptionsComponent_p_accordion_panel_17_ng_container_11_ng_container_8_Template_p_checkbox_ngModelChange_2_listener($event) {
+      \u0275\u0275restoreView(_r16);
+      const ctx_r1 = \u0275\u0275nextContext(3);
+      \u0275\u0275twoWayBindingSet(ctx_r1.selectedAis, $event) || (ctx_r1.selectedAis = $event);
+      return \u0275\u0275resetView($event);
+    });
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(3, "label", 15);
+    \u0275\u0275text(4);
+    \u0275\u0275pipe(5, "translate");
+    \u0275\u0275element(6, "p-chip", 33);
+    \u0275\u0275pipe(7, "translate");
+    \u0275\u0275elementEnd()();
+    \u0275\u0275elementContainerEnd();
+  }
+  if (rf & 2) {
+    const option_r17 = ctx.$implicit;
+    const ctx_r1 = \u0275\u0275nextContext(3);
+    \u0275\u0275advance(2);
+    \u0275\u0275property("value", option_r17.id);
+    \u0275\u0275twoWayProperty("ngModel", ctx_r1.selectedAis);
+    \u0275\u0275property("inputId", option_r17.id)("disabled", option_r17.disabled || ctx_r1.isAiCheckboxDisabled(option_r17.id));
+    \u0275\u0275advance();
+    \u0275\u0275property("for", option_r17.id);
+    \u0275\u0275advance();
+    \u0275\u0275textInterpolate1(" ", \u0275\u0275pipeBind1(5, 7, option_r17.label), " ");
+    \u0275\u0275advance(2);
+    \u0275\u0275property("label", \u0275\u0275pipeBind1(7, 9, "page.ai-options.model.paidBadge"));
   }
 }
 function AiOptionsComponent_p_accordion_panel_17_ng_container_11_Template(rf, ctx) {
   if (rf & 1) {
     \u0275\u0275elementContainerStart(0);
-    \u0275\u0275template(1, AiOptionsComponent_p_accordion_panel_17_ng_container_11_ng_container_1_Template, 6, 8, "ng-container", 8);
+    \u0275\u0275elementStart(1, "p", 30);
+    \u0275\u0275text(2);
+    \u0275\u0275pipe(3, "translate");
+    \u0275\u0275elementEnd();
+    \u0275\u0275template(4, AiOptionsComponent_p_accordion_panel_17_ng_container_11_ng_container_4_Template, 6, 8, "ng-container", 8);
+    \u0275\u0275elementStart(5, "p", 31);
+    \u0275\u0275text(6);
+    \u0275\u0275pipe(7, "translate");
+    \u0275\u0275elementEnd();
+    \u0275\u0275template(8, AiOptionsComponent_p_accordion_panel_17_ng_container_11_ng_container_8_Template, 8, 11, "ng-container", 8);
     \u0275\u0275elementContainerEnd();
   }
   if (rf & 2) {
     const ctx_r1 = \u0275\u0275nextContext(2);
-    \u0275\u0275advance();
-    \u0275\u0275property("ngForOf", ctx_r1.aiOptions)("ngForTrackBy", ctx_r1.trackById);
+    \u0275\u0275advance(2);
+    \u0275\u0275textInterpolate(\u0275\u0275pipeBind1(3, 6, "page.ai-options.model.free"));
+    \u0275\u0275advance(2);
+    \u0275\u0275property("ngForOf", ctx_r1.freeAiOptions)("ngForTrackBy", ctx_r1.trackById);
+    \u0275\u0275advance(2);
+    \u0275\u0275textInterpolate(\u0275\u0275pipeBind1(7, 8, "page.ai-options.model.paid"));
+    \u0275\u0275advance(2);
+    \u0275\u0275property("ngForOf", ctx_r1.paidAiOptions)("ngForTrackBy", ctx_r1.trackById);
   }
 }
 function AiOptionsComponent_p_accordion_panel_17_Template(rf, ctx) {
@@ -24355,7 +24462,7 @@ function AiOptionsComponent_p_accordion_panel_17_Template(rf, ctx) {
     \u0275\u0275pipe(8, "translate");
     \u0275\u0275elementEnd();
     \u0275\u0275elementStart(9, "div", 7);
-    \u0275\u0275template(10, AiOptionsComponent_p_accordion_panel_17_ng_container_10_Template, 2, 2, "ng-container", 17)(11, AiOptionsComponent_p_accordion_panel_17_ng_container_11_Template, 2, 2, "ng-container", 17);
+    \u0275\u0275template(10, AiOptionsComponent_p_accordion_panel_17_ng_container_10_Template, 9, 10, "ng-container", 17)(11, AiOptionsComponent_p_accordion_panel_17_ng_container_11_Template, 9, 10, "ng-container", 17);
     \u0275\u0275elementEnd()()()();
   }
   if (rf & 2) {
@@ -24372,11 +24479,11 @@ function AiOptionsComponent_p_accordion_panel_17_Template(rf, ctx) {
 }
 function AiOptionsComponent_p_button_18_Template(rf, ctx) {
   if (rf & 1) {
-    const _r14 = \u0275\u0275getCurrentView();
-    \u0275\u0275elementStart(0, "p-button", 31);
+    const _r18 = \u0275\u0275getCurrentView();
+    \u0275\u0275elementStart(0, "p-button", 34);
     \u0275\u0275pipe(1, "translate");
     \u0275\u0275listener("click", function AiOptionsComponent_p_button_18_Template_p_button_click_0_listener() {
-      \u0275\u0275restoreView(_r14);
+      \u0275\u0275restoreView(_r18);
       const ctx_r1 = \u0275\u0275nextContext();
       return \u0275\u0275resetView(ctx_r1.onSubmit());
     });
@@ -24388,7 +24495,7 @@ function AiOptionsComponent_p_button_18_Template(rf, ctx) {
 }
 function AiOptionsComponent_ng_container_19_ca_upload_url_1_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275element(0, "ca-upload-url", 34);
+    \u0275\u0275element(0, "ca-upload-url", 37);
   }
   if (rf & 2) {
     \u0275\u0275property("showSampleDataButton", false);
@@ -24396,7 +24503,7 @@ function AiOptionsComponent_ng_container_19_ca_upload_url_1_Template(rf, ctx) {
 }
 function AiOptionsComponent_ng_container_19_ca_upload_paste_2_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275element(0, "ca-upload-paste", 34);
+    \u0275\u0275element(0, "ca-upload-paste", 37);
   }
   if (rf & 2) {
     \u0275\u0275property("showSampleDataButton", false);
@@ -24404,7 +24511,7 @@ function AiOptionsComponent_ng_container_19_ca_upload_paste_2_Template(rf, ctx) 
 }
 function AiOptionsComponent_ng_container_19_ca_upload_word_3_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275element(0, "ca-upload-word", 34);
+    \u0275\u0275element(0, "ca-upload-word", 37);
   }
   if (rf & 2) {
     \u0275\u0275property("showSampleDataButton", false);
@@ -24412,8 +24519,8 @@ function AiOptionsComponent_ng_container_19_ca_upload_word_3_Template(rf, ctx) {
 }
 function AiOptionsComponent_ng_container_19_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275elementContainerStart(0, 32);
-    \u0275\u0275template(1, AiOptionsComponent_ng_container_19_ca_upload_url_1_Template, 1, 1, "ca-upload-url", 33)(2, AiOptionsComponent_ng_container_19_ca_upload_paste_2_Template, 1, 1, "ca-upload-paste", 33)(3, AiOptionsComponent_ng_container_19_ca_upload_word_3_Template, 1, 1, "ca-upload-word", 33);
+    \u0275\u0275elementContainerStart(0, 35);
+    \u0275\u0275template(1, AiOptionsComponent_ng_container_19_ca_upload_url_1_Template, 1, 1, "ca-upload-url", 36)(2, AiOptionsComponent_ng_container_19_ca_upload_paste_2_Template, 1, 1, "ca-upload-paste", 36)(3, AiOptionsComponent_ng_container_19_ca_upload_word_3_Template, 1, 1, "ca-upload-word", 36);
     \u0275\u0275elementContainerEnd();
   }
   if (rf & 2) {
@@ -24480,7 +24587,7 @@ var AiOptionsComponent = class _AiOptionsComponent {
   //AI model
   selectedAi = AiModel.Devstral;
   selectedAis = [];
-  aiOptions = [
+  freeAiOptions = [
     { id: AiModel.Devstral, label: "page.ai-options.model.Devstral", disabled: false },
     { id: AiModel.Xiaomi, label: "page.ai-options.model.Xiaomi", disabled: false },
     { id: AiModel.Qwen, label: "page.ai-options.model.Qwen", disabled: false },
@@ -24490,6 +24597,9 @@ var AiOptionsComponent = class _AiOptionsComponent {
     { id: AiModel.Mistral, label: "page.ai-options.model.Mistral", disabled: false },
     { id: AiModel.Llama32, label: "page.ai-options.model.Llama32", disabled: false },
     { id: AiModel.Llama31, label: "page.ai-options.model.Llama31", disabled: false }
+  ];
+  paidAiOptions = [
+    { id: AiModel.Gpt5Mini, label: "page.ai-options.model.Gpt5Mini", disabled: false }
   ];
   isAiCheckboxDisabled(id) {
     return !this.selectedAis.includes(id) && this.selectedAis.length >= 2;
@@ -24532,7 +24642,7 @@ var AiOptionsComponent = class _AiOptionsComponent {
   static \u0275fac = function AiOptionsComponent_Factory(__ngFactoryType__) {
     return new (__ngFactoryType__ || _AiOptionsComponent)();
   };
-  static \u0275cmp = /* @__PURE__ */ \u0275\u0275defineComponent({ type: _AiOptionsComponent, selectors: [["ca-ai-options"]], outputs: { promptChange: "promptChange", customPrompt: "customPrompt", editPrompt: "editPrompt", aiChange: "aiChange", aiSubmit: "aiSubmit" }, decls: 20, vars: 19, consts: [["label", "Options", "icon", "pi pi-bars", "severity", "info", 3, "click"], ["position", "right", 3, "visibleChange", "visible", "header"], [1, "flex", "flex-column", "gap-3"], ["value", "1", 1, "flex", "flex-column", "gap-3"], ["value", "0", 1, "border-1", "border-round-md", "border-surface"], [1, "border-none"], [1, "font-bold", "mb-2"], [1, "flex", "flex-column", "gap-2"], [4, "ngFor", "ngForOf", "ngForTrackBy"], ["value", "1", "class", "border-1 border-round-md border-surface", 4, "ngIf"], ["value", "2", "class", "border-1 border-round-md border-surface", 4, "ngIf"], ["icon", "pi pi-comments", "severity", "primary", 3, "label", "click", 4, "ngIf"], [3, "ngSwitch", 4, "ngIf"], [1, "p-field-radiobutton"], ["name", "taskOptions", 3, "ngModelChange", "value", "ngModel", "inputId", "disabled"], [1, "pl-2", 3, "for"], ["value", "1", 1, "border-1", "border-round-md", "border-surface"], [4, "ngIf"], [1, "p-field-checkbox", "mt-3"], ["inputId", "appendCustom", 3, "ngModelChange", "onChange", "ngModel", "binary"], ["for", "appendCustom", 1, "pl-2"], [1, "flex", "flex-column", "gap-3", "mt-3"], ["id", "ai-changes"], ["ariaLabelledBy", "ai-changes", "fluid", "", 3, "ngModelChange", "onChange", "ngModel", "step"], ["name", "promptOptions", 3, "ngModelChange", "onClick", "value", "ngModel", "inputId", "disabled"], [1, "p-field-checkbox"], [3, "ngModelChange", "value", "ngModel", "inputId", "disabled"], ["pTextarea", "", "id", "customPrompt", "fluid", "", 3, "ngModelChange", "blur", "ngModel", "autoResize"], ["for", "customPrompt"], ["value", "2", 1, "border-1", "border-round-md", "border-surface"], ["name", "aiOptions", 3, "ngModelChange", "onClick", "value", "ngModel", "inputId", "disabled"], ["icon", "pi pi-comments", "severity", "primary", 3, "click", "label"], [3, "ngSwitch"], ["mode", "prototype", 3, "showSampleDataButton", 4, "ngSwitchCase"], ["mode", "prototype", 3, "showSampleDataButton"]], template: function AiOptionsComponent_Template(rf, ctx) {
+  static \u0275cmp = /* @__PURE__ */ \u0275\u0275defineComponent({ type: _AiOptionsComponent, selectors: [["ca-ai-options"]], outputs: { promptChange: "promptChange", customPrompt: "customPrompt", editPrompt: "editPrompt", aiChange: "aiChange", aiSubmit: "aiSubmit" }, decls: 20, vars: 19, consts: [["label", "Options", "icon", "pi pi-bars", "severity", "info", 3, "click"], ["position", "right", 3, "visibleChange", "visible", "header"], [1, "flex", "flex-column", "gap-3"], ["value", "1", 1, "flex", "flex-column", "gap-3"], ["value", "0", 1, "border-1", "border-round-md", "border-surface"], [1, "border-none"], [1, "font-bold", "mb-2"], [1, "flex", "flex-column", "gap-2"], [4, "ngFor", "ngForOf", "ngForTrackBy"], ["value", "1", "class", "border-1 border-round-md border-surface", 4, "ngIf"], ["value", "2", "class", "border-1 border-round-md border-surface", 4, "ngIf"], ["icon", "pi pi-comments", "severity", "primary", 3, "label", "click", 4, "ngIf"], [3, "ngSwitch", 4, "ngIf"], [1, "p-field-radiobutton"], ["name", "taskOptions", 3, "ngModelChange", "value", "ngModel", "inputId", "disabled"], [1, "pl-2", 3, "for"], ["value", "1", 1, "border-1", "border-round-md", "border-surface"], [4, "ngIf"], [1, "p-field-checkbox", "mt-3"], ["inputId", "appendCustom", 3, "ngModelChange", "onChange", "ngModel", "binary"], ["for", "appendCustom", 1, "pl-2"], [1, "flex", "flex-column", "gap-3", "mt-3"], ["id", "ai-changes"], ["ariaLabelledBy", "ai-changes", "fluid", "", 3, "ngModelChange", "onChange", "ngModel", "step"], ["name", "promptOptions", 3, "ngModelChange", "onClick", "value", "ngModel", "inputId", "disabled"], [1, "p-field-checkbox"], [3, "ngModelChange", "value", "ngModel", "inputId", "disabled"], ["pTextarea", "", "id", "customPrompt", "fluid", "", 3, "ngModelChange", "blur", "ngModel", "autoResize"], ["for", "customPrompt"], ["value", "2", 1, "border-1", "border-round-md", "border-surface"], [1, "text-xs", "text-500"], [1, "text-xs", "text-500", "mt-3"], ["name", "aiOptions", 3, "ngModelChange", "onClick", "value", "ngModel", "inputId", "disabled"], ["styleClass", "chip chip-severe ml-2", 3, "label"], ["icon", "pi pi-comments", "severity", "primary", 3, "click", "label"], [3, "ngSwitch"], ["mode", "prototype", 3, "showSampleDataButton", 4, "ngSwitchCase"], ["mode", "prototype", 3, "showSampleDataButton"]], template: function AiOptionsComponent_Template(rf, ctx) {
     if (rf & 1) {
       \u0275\u0275elementStart(0, "p-button", 0);
       \u0275\u0275listener("click", function AiOptionsComponent_Template_p_button_click_0_listener() {
@@ -24581,7 +24691,7 @@ var AiOptionsComponent = class _AiOptionsComponent {
       \u0275\u0275advance();
       \u0275\u0275property("ngIf", ctx.isPrototype);
     }
-  }, dependencies: [TranslateModule, TranslatePipe, CommonModule, NgForOf, NgIf, NgSwitch, NgSwitchCase, FormsModule, DefaultValueAccessor, NgControlStatus, NgModel, ButtonModule, Button, DrawerModule, Drawer, RadioButtonModule, RadioButton, CheckboxModule, Checkbox, AccordionModule, Accordion, AccordionPanel, AccordionHeader, AccordionContent, TextareaModule, Textarea, IftaLabelModule, IftaLabel, SliderModule, Slider, UploadUrlComponent, UploadPasteComponent, UploadWordComponent], encapsulation: 2 });
+  }, dependencies: [TranslateModule, TranslatePipe, CommonModule, NgForOf, NgIf, NgSwitch, NgSwitchCase, FormsModule, DefaultValueAccessor, NgControlStatus, NgModel, ButtonModule, Button, DrawerModule, Drawer, RadioButtonModule, RadioButton, CheckboxModule, Checkbox, AccordionModule, Accordion, AccordionPanel, AccordionHeader, AccordionContent, ChipModule, Chip, TextareaModule, Textarea, IftaLabelModule, IftaLabel, SliderModule, Slider, UploadUrlComponent, UploadPasteComponent, UploadWordComponent], encapsulation: 2 });
 };
 (() => {
   (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(AiOptionsComponent, [{
@@ -24595,6 +24705,7 @@ var AiOptionsComponent = class _AiOptionsComponent {
       RadioButtonModule,
       CheckboxModule,
       AccordionModule,
+      ChipModule,
       TextareaModule,
       IftaLabelModule,
       SliderModule,
@@ -24679,25 +24790,56 @@ var AiOptionsComponent = class _AiOptionsComponent {
 \r
           <fieldset class="border-none">\r
             <legend class="font-bold mb-2">{{ 'page.ai-options.model.legend' | translate }}</legend>\r
-            <div class="flex flex-column gap-2">\r
-              <ng-container *ngIf="!isTwoAis">\r
-                <ng-container *ngFor="let option of aiOptions; trackBy: trackById">\r
-                  <div class="p-field-radiobutton">\r
-                    <p-radioButton name="aiOptions" [value]="option.id" [(ngModel)]="selectedAi" [inputId]="option.id"\r
-                                   [disabled]="option.disabled" (onClick)="onAiSelect(selectedAi)" />\r
-                    <label [for]="option.id" class="pl-2">{{ option.label | translate }}</label>\r
-                  </div>\r
-                </ng-container></ng-container>\r
-              <ng-container *ngIf="isTwoAis">\r
-                <ng-container *ngFor="let option of aiOptions; trackBy: trackById">\r
-                  <div class="p-field-checkbox">\r
-                    <p-checkbox [value]="option.id" [(ngModel)]="selectedAis" [inputId]="option.id"\r
-                                [disabled]="option.disabled || isAiCheckboxDisabled(option.id)" />\r
-                    <label [for]="option.id" class="pl-2">{{ option.label | translate }}</label>\r
-                  </div>\r
-                </ng-container>\r
-              </ng-container>\r
-            </div>\r
+            <div class="flex flex-column gap-2">
+              <ng-container *ngIf="!isTwoAis">
+                <p class="text-xs text-500">{{ 'page.ai-options.model.free' | translate }}</p>
+                <ng-container *ngFor="let option of freeAiOptions; trackBy: trackById">
+                  <div class="p-field-radiobutton">
+                    <p-radioButton name="aiOptions" [value]="option.id" [(ngModel)]="selectedAi" [inputId]="option.id"
+                                   [disabled]="option.disabled" (onClick)="onAiSelect(selectedAi)" />
+                    <label [for]="option.id" class="pl-2">{{ option.label | translate }}</label>
+                  </div>
+                </ng-container>
+                <p class="text-xs text-500 mt-3">{{ 'page.ai-options.model.paid' | translate }}</p>
+                <ng-container *ngFor="let option of paidAiOptions; trackBy: trackById">
+                  <div class="p-field-radiobutton">
+                    <p-radioButton name="aiOptions" [value]="option.id" [(ngModel)]="selectedAi" [inputId]="option.id"
+                                   [disabled]="option.disabled" (onClick)="onAiSelect(selectedAi)" />
+                    <label [for]="option.id" class="pl-2">
+                      {{ option.label | translate }}
+                      <p-chip
+                        [label]="'page.ai-options.model.paidBadge' | translate"
+                        styleClass="chip chip-severe ml-2">
+                      </p-chip>
+                    </label>
+                  </div>
+                </ng-container>
+              </ng-container>
+              <ng-container *ngIf="isTwoAis">
+                <p class="text-xs text-500">{{ 'page.ai-options.model.free' | translate }}</p>
+                <ng-container *ngFor="let option of freeAiOptions; trackBy: trackById">
+                  <div class="p-field-checkbox">
+                    <p-checkbox [value]="option.id" [(ngModel)]="selectedAis" [inputId]="option.id"
+                                [disabled]="option.disabled || isAiCheckboxDisabled(option.id)" />
+                    <label [for]="option.id" class="pl-2">{{ option.label | translate }}</label>
+                  </div>
+                </ng-container>
+                <p class="text-xs text-500 mt-3">{{ 'page.ai-options.model.paid' | translate }}</p>
+                <ng-container *ngFor="let option of paidAiOptions; trackBy: trackById">
+                  <div class="p-field-checkbox">
+                    <p-checkbox [value]="option.id" [(ngModel)]="selectedAis" [inputId]="option.id"
+                                [disabled]="option.disabled || isAiCheckboxDisabled(option.id)" />
+                    <label [for]="option.id" class="pl-2">
+                      {{ option.label | translate }}
+                      <p-chip
+                        [label]="'page.ai-options.model.paidBadge' | translate"
+                        styleClass="chip chip-severe ml-2">
+                      </p-chip>
+                    </label>
+                  </div>
+                </ng-container>
+              </ng-container>
+            </div>
           </fieldset>\r
 \r
         </p-accordion-content>\r
@@ -24715,7 +24857,8 @@ var AiOptionsComponent = class _AiOptionsComponent {
       <ca-upload-word *ngSwitchCase="'word'" mode="prototype" [showSampleDataButton]="false" />\r
     </ng-container>\r
   </div>\r
-</p-drawer>` }]
+</p-drawer>
+` }]
   }], null, { promptChange: [{
     type: Output
   }], customPrompt: [{
@@ -24729,7 +24872,7 @@ var AiOptionsComponent = class _AiOptionsComponent {
   }] });
 })();
 (() => {
-  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(AiOptionsComponent, { className: "AiOptionsComponent", filePath: "src/app/views/page-assistant/components/ai-options.component.ts", lineNumber: 31 });
+  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(AiOptionsComponent, { className: "AiOptionsComponent", filePath: "src/app/views/page-assistant/components/ai-options.component.ts", lineNumber: 32 });
 })();
 
 // src/app/views/page-assistant/components/problems/heading-structure.component.ts
@@ -25209,12 +25352,12 @@ var AlertsGuidanceComponent = class _AlertsGuidanceComponent {
     if (rf & 2) {
       \u0275\u0275property("value", ctx.issues);
     }
-  }, dependencies: [CommonModule, NgClass, FormsModule, NgControlStatus, NgModel, TableModule, Table, PrimeTemplate, CheckboxModule, Checkbox], styles: ["\n\n.alert-table[_ngcontent-%COMP%]   .p-datatable-tbody[_ngcontent-%COMP%]    > tr[_ngcontent-%COMP%]    > td[_ngcontent-%COMP%], \n.alert-table[_ngcontent-%COMP%]   .p-datatable-thead[_ngcontent-%COMP%]    > tr[_ngcontent-%COMP%]    > th[_ngcontent-%COMP%] {\n  white-space: normal !important;\n  word-break: normal;\n  overflow-wrap: normal;\n  vertical-align: top;\n}\n.alert-table[_ngcontent-%COMP%]   .wrap-col[_ngcontent-%COMP%] {\n  min-width: 140px;\n}\n.alert-table[_ngcontent-%COMP%]   .severity-col[_ngcontent-%COMP%]   .chip[_ngcontent-%COMP%] {\n  white-space: nowrap !important;\n  display: inline-flex;\n}\n.alert-table[_ngcontent-%COMP%]   .include-col[_ngcontent-%COMP%] {\n  width: 140px;\n  text-align: center;\n}\n.alert-table[_ngcontent-%COMP%]   .include-col[_ngcontent-%COMP%]   .p-checkbox[_ngcontent-%COMP%] {\n  display: inline-flex;\n}\n.alert-table[_ngcontent-%COMP%]   .p-datatable-table[_ngcontent-%COMP%] {\n  width: 100%;\n  border: 1px solid #d1d5db;\n  border-radius: 6px;\n}\n.alert-table[_ngcontent-%COMP%]   .p-datatable-wrapper[_ngcontent-%COMP%] {\n  width: 100%;\n  overflow-x: auto;\n}\n/*# sourceMappingURL=alerts-guidance.component.css.map */", "\n\n.chip[_ngcontent-%COMP%] {\n  display: inline-flex;\n  align-items: center;\n  gap: 0.4rem;\n  padding: 0.15rem 0.55rem;\n  border-radius: 9999px;\n  border: 1px solid transparent;\n  font-weight: 500;\n  line-height: 1.1;\n}\n.chip[_ngcontent-%COMP%]   .pi[_ngcontent-%COMP%] {\n  color: inherit !important;\n}\n.chip-severe[_ngcontent-%COMP%] {\n  background: #fee2e2;\n  border-color: #fecaca;\n  color: #b91c1c;\n}\n.chip-minor[_ngcontent-%COMP%] {\n  background: #fef3c7;\n  border-color: #fde68a;\n  color: #92400e;\n}\n.chip-med[_ngcontent-%COMP%] {\n  background: #fde7c3;\n  border-color: #f9d29b;\n  color: #9a4a00;\n}\n.chip-ok[_ngcontent-%COMP%] {\n  background: #dcfce7;\n  border-color: #86efac;\n  color: #166534;\n}\n.chip-unk[_ngcontent-%COMP%] {\n  background: #e5e7eb;\n  border-color: #cbd5e1;\n  color: #334155;\n}\n.text-danger[_ngcontent-%COMP%] {\n  color: #b91c1c;\n  font-weight: 600;\n}\n/*# sourceMappingURL=component-guidance.component.css.map */"] });
+  }, dependencies: [CommonModule, NgClass, FormsModule, NgControlStatus, NgModel, TableModule, Table, PrimeTemplate, CheckboxModule, Checkbox], styles: ["\n\n.alert-table[_ngcontent-%COMP%]   .p-datatable-tbody[_ngcontent-%COMP%]    > tr[_ngcontent-%COMP%]    > td[_ngcontent-%COMP%], \n.alert-table[_ngcontent-%COMP%]   .p-datatable-thead[_ngcontent-%COMP%]    > tr[_ngcontent-%COMP%]    > th[_ngcontent-%COMP%] {\n  white-space: normal !important;\n  word-break: normal;\n  overflow-wrap: normal;\n  vertical-align: top;\n}\n.alert-table[_ngcontent-%COMP%]   .wrap-col[_ngcontent-%COMP%] {\n  min-width: 140px;\n}\n.alert-table[_ngcontent-%COMP%]   .severity-col[_ngcontent-%COMP%]   .chip[_ngcontent-%COMP%] {\n  white-space: nowrap !important;\n  display: inline-flex;\n}\n.alert-table[_ngcontent-%COMP%]   .include-col[_ngcontent-%COMP%] {\n  width: 140px;\n  text-align: center;\n}\n.alert-table[_ngcontent-%COMP%]   .include-col[_ngcontent-%COMP%]   .p-checkbox[_ngcontent-%COMP%] {\n  display: inline-flex;\n}\n.alert-table[_ngcontent-%COMP%]   .p-datatable-table[_ngcontent-%COMP%] {\n  width: 100%;\n  border: 1px solid #d1d5db;\n  border-radius: 6px;\n}\n.alert-table[_ngcontent-%COMP%]   .p-datatable-wrapper[_ngcontent-%COMP%] {\n  width: 100%;\n  overflow-x: auto;\n}\n.alert-table[_ngcontent-%COMP%]   .p-datatable-table[_ngcontent-%COMP%] {\n  table-layout: auto !important;\n}\n.alert-table[_ngcontent-%COMP%]   .toggle-col[_ngcontent-%COMP%], \n.alert-table[_ngcontent-%COMP%]   .checkbox-col[_ngcontent-%COMP%] {\n  width: 1%;\n  white-space: nowrap;\n  text-align: center;\n  padding: 0;\n}\n.alert-table.p-datatable[_ngcontent-%COMP%]   .p-datatable-thead[_ngcontent-%COMP%]    > tr[_ngcontent-%COMP%]    > th.toggle-col[_ngcontent-%COMP%], \n.alert-table.p-datatable[_ngcontent-%COMP%]   .p-datatable-tbody[_ngcontent-%COMP%]    > tr[_ngcontent-%COMP%]    > td.toggle-col[_ngcontent-%COMP%], \n.alert-table.p-datatable[_ngcontent-%COMP%]   .p-datatable-thead[_ngcontent-%COMP%]    > tr[_ngcontent-%COMP%]    > th.checkbox-col[_ngcontent-%COMP%], \n.alert-table.p-datatable[_ngcontent-%COMP%]   .p-datatable-tbody[_ngcontent-%COMP%]    > tr[_ngcontent-%COMP%]    > td.checkbox-col[_ngcontent-%COMP%] {\n  width: 1% !important;\n  white-space: nowrap !important;\n  text-align: center;\n  padding: 0 0.25rem;\n}\n/*# sourceMappingURL=alerts-guidance.component.css.map */", "\n\n[_nghost-%COMP%]     .alert-table .p-datatable-table {\n  table-layout: auto !important;\n}\n[_nghost-%COMP%]     .alert-table.p-datatable .p-datatable-thead > tr > th.toggle-col, \n[_nghost-%COMP%]     .alert-table.p-datatable .p-datatable-tbody > tr > td.toggle-col {\n  width: 70px !important;\n  min-width: 70px;\n  max-width: 70px;\n  white-space: nowrap !important;\n  text-align: center;\n  padding: 0 0.25rem;\n}\n[_nghost-%COMP%]     .alert-table.p-datatable .p-datatable-thead > tr > th.checkbox-col, \n[_nghost-%COMP%]     .alert-table.p-datatable .p-datatable-tbody > tr > td.checkbox-col {\n  width: 70px !important;\n  min-width: 70px;\n  max-width: 70px;\n  white-space: nowrap !important;\n  text-align: center;\n  padding: 0 0.25rem;\n}\n/*# sourceMappingURL=component-guidance.component.css.map */"] });
 };
 (() => {
   (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(AlertsGuidanceComponent, [{
     type: Component,
-    args: [{ selector: "ca-alerts-guidance", standalone: true, imports: [CommonModule, FormsModule, TableModule, CheckboxModule], template: '<p-table [value]="issues" styleClass="p-datatable-sm alert-table">\n  <ng-template pTemplate="header">\n    <tr>\n      <th class="include-col">Include in fix</th>\n      <th class="severity-col">Severity</th>\n      <th>Pain point category</th>\n      <th class="wrap-col">Description</th>\n      <th class="wrap-col">Recommendation</th>\n    </tr>\n  </ng-template>\n  <ng-template pTemplate="body" let-issue>\n    <tr>\n      <td class="include-col">\n        <p-checkbox [binary]="true" [(ngModel)]="issue.include" (onChange)="onIncludeToggle()"></p-checkbox>\n      </td>\n      <td class="severity-col">\n        <span class="chip" [ngClass]="severityClass(issue.severity)">\n          {{ issue.severity }}\n        </span>\n      </td>\n      <td>{{ issue.category }}</td>\n      <td class="wrap-col">{{ issue.description }}</td>\n      <td class="wrap-col">{{ issue.recommendation }}</td>\n    </tr>\n  </ng-template>\n</p-table>\n', styles: ["/* src/app/views/page-assistant/components/problems/component-guidance/alerts-guidance/alerts-guidance.component.css */\n.alert-table .p-datatable-tbody > tr > td,\n.alert-table .p-datatable-thead > tr > th {\n  white-space: normal !important;\n  word-break: normal;\n  overflow-wrap: normal;\n  vertical-align: top;\n}\n.alert-table .wrap-col {\n  min-width: 140px;\n}\n.alert-table .severity-col .chip {\n  white-space: nowrap !important;\n  display: inline-flex;\n}\n.alert-table .include-col {\n  width: 140px;\n  text-align: center;\n}\n.alert-table .include-col .p-checkbox {\n  display: inline-flex;\n}\n.alert-table .p-datatable-table {\n  width: 100%;\n  border: 1px solid #d1d5db;\n  border-radius: 6px;\n}\n.alert-table .p-datatable-wrapper {\n  width: 100%;\n  overflow-x: auto;\n}\n/*# sourceMappingURL=alerts-guidance.component.css.map */\n", "/* src/app/views/page-assistant/components/problems/component-guidance/component-guidance.component.css */\n.chip {\n  display: inline-flex;\n  align-items: center;\n  gap: 0.4rem;\n  padding: 0.15rem 0.55rem;\n  border-radius: 9999px;\n  border: 1px solid transparent;\n  font-weight: 500;\n  line-height: 1.1;\n}\n.chip .pi {\n  color: inherit !important;\n}\n.chip-severe {\n  background: #fee2e2;\n  border-color: #fecaca;\n  color: #b91c1c;\n}\n.chip-minor {\n  background: #fef3c7;\n  border-color: #fde68a;\n  color: #92400e;\n}\n.chip-med {\n  background: #fde7c3;\n  border-color: #f9d29b;\n  color: #9a4a00;\n}\n.chip-ok {\n  background: #dcfce7;\n  border-color: #86efac;\n  color: #166534;\n}\n.chip-unk {\n  background: #e5e7eb;\n  border-color: #cbd5e1;\n  color: #334155;\n}\n.text-danger {\n  color: #b91c1c;\n  font-weight: 600;\n}\n/*# sourceMappingURL=component-guidance.component.css.map */\n"] }]
+    args: [{ selector: "ca-alerts-guidance", standalone: true, imports: [CommonModule, FormsModule, TableModule, CheckboxModule], template: '<p-table [value]="issues" styleClass="p-datatable-sm alert-table">\n  <ng-template pTemplate="header">\n    <tr>\n      <th class="include-col">Include in fix</th>\n      <th class="severity-col">Severity</th>\n      <th>Pain point category</th>\n      <th class="wrap-col">Description</th>\n      <th class="wrap-col">Recommendation</th>\n    </tr>\n  </ng-template>\n  <ng-template pTemplate="body" let-issue>\n    <tr>\n      <td class="include-col">\n        <p-checkbox [binary]="true" [(ngModel)]="issue.include" (onChange)="onIncludeToggle()"></p-checkbox>\n      </td>\n      <td class="severity-col">\n        <span class="chip" [ngClass]="severityClass(issue.severity)">\n          {{ issue.severity }}\n        </span>\n      </td>\n      <td>{{ issue.category }}</td>\n      <td class="wrap-col">{{ issue.description }}</td>\n      <td class="wrap-col">{{ issue.recommendation }}</td>\n    </tr>\n  </ng-template>\n</p-table>\n', styles: ["/* src/app/views/page-assistant/components/problems/component-guidance/alerts-guidance/alerts-guidance.component.css */\n.alert-table .p-datatable-tbody > tr > td,\n.alert-table .p-datatable-thead > tr > th {\n  white-space: normal !important;\n  word-break: normal;\n  overflow-wrap: normal;\n  vertical-align: top;\n}\n.alert-table .wrap-col {\n  min-width: 140px;\n}\n.alert-table .severity-col .chip {\n  white-space: nowrap !important;\n  display: inline-flex;\n}\n.alert-table .include-col {\n  width: 140px;\n  text-align: center;\n}\n.alert-table .include-col .p-checkbox {\n  display: inline-flex;\n}\n.alert-table .p-datatable-table {\n  width: 100%;\n  border: 1px solid #d1d5db;\n  border-radius: 6px;\n}\n.alert-table .p-datatable-wrapper {\n  width: 100%;\n  overflow-x: auto;\n}\n.alert-table .p-datatable-table {\n  table-layout: auto !important;\n}\n.alert-table .toggle-col,\n.alert-table .checkbox-col {\n  width: 1%;\n  white-space: nowrap;\n  text-align: center;\n  padding: 0;\n}\n.alert-table.p-datatable .p-datatable-thead > tr > th.toggle-col,\n.alert-table.p-datatable .p-datatable-tbody > tr > td.toggle-col,\n.alert-table.p-datatable .p-datatable-thead > tr > th.checkbox-col,\n.alert-table.p-datatable .p-datatable-tbody > tr > td.checkbox-col {\n  width: 1% !important;\n  white-space: nowrap !important;\n  text-align: center;\n  padding: 0 0.25rem;\n}\n/*# sourceMappingURL=alerts-guidance.component.css.map */\n", "/* src/app/views/page-assistant/components/problems/component-guidance/component-guidance.component.css */\n:host ::ng-deep .alert-table .p-datatable-table {\n  table-layout: auto !important;\n}\n:host ::ng-deep .alert-table.p-datatable .p-datatable-thead > tr > th.toggle-col,\n:host ::ng-deep .alert-table.p-datatable .p-datatable-tbody > tr > td.toggle-col {\n  width: 70px !important;\n  min-width: 70px;\n  max-width: 70px;\n  white-space: nowrap !important;\n  text-align: center;\n  padding: 0 0.25rem;\n}\n:host ::ng-deep .alert-table.p-datatable .p-datatable-thead > tr > th.checkbox-col,\n:host ::ng-deep .alert-table.p-datatable .p-datatable-tbody > tr > td.checkbox-col {\n  width: 70px !important;\n  min-width: 70px;\n  max-width: 70px;\n  white-space: nowrap !important;\n  text-align: center;\n  padding: 0 0.25rem;\n}\n/*# sourceMappingURL=component-guidance.component.css.map */\n"] }]
   }], null, { selectAll: [{
     type: Input
   }], maxSeverityChange: [{
@@ -26782,7 +26925,7 @@ var ComponentGuidanceComponent = class _ComponentGuidanceComponent {
     Tooltip,
     TranslateModule,
     AlertsGuidanceComponent
-  ], styles: ["\n\n.chip[_ngcontent-%COMP%] {\n  display: inline-flex;\n  align-items: center;\n  gap: 0.4rem;\n  padding: 0.15rem 0.55rem;\n  border-radius: 9999px;\n  border: 1px solid transparent;\n  font-weight: 500;\n  line-height: 1.1;\n}\n.chip[_ngcontent-%COMP%]   .pi[_ngcontent-%COMP%] {\n  color: inherit !important;\n}\n.chip-severe[_ngcontent-%COMP%] {\n  background: #fee2e2;\n  border-color: #fecaca;\n  color: #b91c1c;\n}\n.chip-minor[_ngcontent-%COMP%] {\n  background: #fef3c7;\n  border-color: #fde68a;\n  color: #92400e;\n}\n.chip-med[_ngcontent-%COMP%] {\n  background: #fde7c3;\n  border-color: #f9d29b;\n  color: #9a4a00;\n}\n.chip-ok[_ngcontent-%COMP%] {\n  background: #dcfce7;\n  border-color: #86efac;\n  color: #166534;\n}\n.chip-unk[_ngcontent-%COMP%] {\n  background: #e5e7eb;\n  border-color: #cbd5e1;\n  color: #334155;\n}\n.text-danger[_ngcontent-%COMP%] {\n  color: #b91c1c;\n  font-weight: 600;\n}\n/*# sourceMappingURL=component-guidance.component.css.map */", "\n\n.muted[_ngcontent-%COMP%] {\n  color: #6b7280;\n  font-size: 12px;\n}\n.issues[_ngcontent-%COMP%] {\n  margin: 0;\n  padding-left: 1rem;\n}\n.health-cell[_ngcontent-%COMP%] {\n  gap: 0.4rem;\n  align-items: center;\n  flex-wrap: wrap;\n}\n.chip-list[_ngcontent-%COMP%] {\n  display: flex;\n  flex-wrap: wrap;\n  gap: 0.25rem;\n  padding: 0;\n  margin: 0;\n}\n.chip-list[_ngcontent-%COMP%]   .chip[_ngcontent-%COMP%] {\n  white-space: normal;\n  word-break: break-word;\n  max-width: 100%;\n}\n.expansion-table[_ngcontent-%COMP%] {\n  width: 100%;\n  max-width: 100%;\n  overflow: hidden;\n}\n[_nghost-%COMP%]     .expansion-table .p-datatable-table {\n  width: 100%;\n  border: 1px solid #d1d5db;\n  border-radius: 6px;\n}\n[_nghost-%COMP%]     .expansion-table .p-datatable-wrapper {\n  width: 100%;\n  overflow-x: auto;\n}\n[_nghost-%COMP%]     .expansion-table .p-datatable-tbody > tr > td, \n[_nghost-%COMP%]     .expansion-table .p-datatable-thead > tr > th {\n  white-space: normal;\n  word-break: normal;\n  overflow-wrap: normal;\n}\n.tag[_ngcontent-%COMP%] {\n  font-size: 11px;\n  padding: 0.05rem 0.4rem;\n  border-radius: 6px;\n  border: 1px solid transparent;\n}\n.ai-btn[_ngcontent-%COMP%] {\n  font-weight: 600;\n}\n.sr-only[_ngcontent-%COMP%] {\n  position: absolute;\n  width: 1px;\n  height: 1px;\n  padding: 0;\n  margin: -1px;\n  overflow: hidden;\n  clip: rect(0, 0, 0, 0);\n  white-space: nowrap;\n  border: 0;\n}\n/*# sourceMappingURL=component-guidance.component.css.map */", "\n\n.caption-actions[_ngcontent-%COMP%] {\n  display: flex;\n  align-items: center;\n  justify-content: flex-end;\n  gap: 0.5rem;\n}\n/*# sourceMappingURL=component-guidance.component.css.map */"] });
+  ], styles: ["\n\n[_nghost-%COMP%]     .alert-table .p-datatable-table {\n  table-layout: auto !important;\n}\n[_nghost-%COMP%]     .alert-table.p-datatable .p-datatable-thead > tr > th.toggle-col, \n[_nghost-%COMP%]     .alert-table.p-datatable .p-datatable-tbody > tr > td.toggle-col {\n  width: 70px !important;\n  min-width: 70px;\n  max-width: 70px;\n  white-space: nowrap !important;\n  text-align: center;\n  padding: 0 0.25rem;\n}\n[_nghost-%COMP%]     .alert-table.p-datatable .p-datatable-thead > tr > th.checkbox-col, \n[_nghost-%COMP%]     .alert-table.p-datatable .p-datatable-tbody > tr > td.checkbox-col {\n  width: 70px !important;\n  min-width: 70px;\n  max-width: 70px;\n  white-space: nowrap !important;\n  text-align: center;\n  padding: 0 0.25rem;\n}\n/*# sourceMappingURL=component-guidance.component.css.map */", "\n\n.muted[_ngcontent-%COMP%] {\n  color: #6b7280;\n  font-size: 12px;\n}\n.issues[_ngcontent-%COMP%] {\n  margin: 0;\n  padding-left: 1rem;\n}\n.health-cell[_ngcontent-%COMP%] {\n  gap: 0.4rem;\n  align-items: center;\n  flex-wrap: wrap;\n}\n.chip-list[_ngcontent-%COMP%] {\n  display: flex;\n  flex-wrap: wrap;\n  gap: 0.25rem;\n  padding: 0;\n  margin: 0;\n}\n.chip-list[_ngcontent-%COMP%]   .chip[_ngcontent-%COMP%] {\n  white-space: normal;\n  word-break: break-word;\n  max-width: 100%;\n}\n.expansion-table[_ngcontent-%COMP%] {\n  width: 100%;\n  max-width: 100%;\n  overflow: hidden;\n}\n[_nghost-%COMP%]     .expansion-table .p-datatable-table {\n  width: 100%;\n  border: 1px solid #d1d5db;\n  border-radius: 6px;\n}\n[_nghost-%COMP%]     .expansion-table .p-datatable-wrapper {\n  width: 100%;\n  overflow-x: auto;\n}\n[_nghost-%COMP%]     .expansion-table .p-datatable-tbody > tr > td, \n[_nghost-%COMP%]     .expansion-table .p-datatable-thead > tr > th {\n  white-space: normal;\n  word-break: normal;\n  overflow-wrap: normal;\n}\n.tag[_ngcontent-%COMP%] {\n  font-size: 11px;\n  padding: 0.05rem 0.4rem;\n  border-radius: 6px;\n  border: 1px solid transparent;\n}\n.ai-btn[_ngcontent-%COMP%] {\n  font-weight: 600;\n}\n.sr-only[_ngcontent-%COMP%] {\n  position: absolute;\n  width: 1px;\n  height: 1px;\n  padding: 0;\n  margin: -1px;\n  overflow: hidden;\n  clip: rect(0, 0, 0, 0);\n  white-space: nowrap;\n  border: 0;\n}\n/*# sourceMappingURL=component-guidance.component.css.map */", "\n\n.caption-actions[_ngcontent-%COMP%] {\n  display: flex;\n  align-items: center;\n  justify-content: flex-end;\n  gap: 0.5rem;\n}\n/*# sourceMappingURL=component-guidance.component.css.map */"] });
 };
 (() => {
   (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(ComponentGuidanceComponent, [{
@@ -27070,7 +27213,7 @@ var ComponentGuidanceComponent = class _ComponentGuidanceComponent {
     <span class="sr-only">Get GenAI recommendations based on user data</span>
   </button>
 </div>
-`, styles: ["/* src/app/views/page-assistant/components/problems/component-guidance/component-guidance.component.css */\n.chip {\n  display: inline-flex;\n  align-items: center;\n  gap: 0.4rem;\n  padding: 0.15rem 0.55rem;\n  border-radius: 9999px;\n  border: 1px solid transparent;\n  font-weight: 500;\n  line-height: 1.1;\n}\n.chip .pi {\n  color: inherit !important;\n}\n.chip-severe {\n  background: #fee2e2;\n  border-color: #fecaca;\n  color: #b91c1c;\n}\n.chip-minor {\n  background: #fef3c7;\n  border-color: #fde68a;\n  color: #92400e;\n}\n.chip-med {\n  background: #fde7c3;\n  border-color: #f9d29b;\n  color: #9a4a00;\n}\n.chip-ok {\n  background: #dcfce7;\n  border-color: #86efac;\n  color: #166534;\n}\n.chip-unk {\n  background: #e5e7eb;\n  border-color: #cbd5e1;\n  color: #334155;\n}\n.text-danger {\n  color: #b91c1c;\n  font-weight: 600;\n}\n/*# sourceMappingURL=component-guidance.component.css.map */\n", "/* angular:styles/component:css;014caead1fce9a6ca172b44ec075ff7677d7923faa6ee26b55ae7095de26623c;C:/my-working-files/GitHub/design-assistant/src/app/views/page-assistant/components/problems/component-guidance/component-guidance.component.ts */\n.muted {\n  color: #6b7280;\n  font-size: 12px;\n}\n.issues {\n  margin: 0;\n  padding-left: 1rem;\n}\n.health-cell {\n  gap: 0.4rem;\n  align-items: center;\n  flex-wrap: wrap;\n}\n.chip-list {\n  display: flex;\n  flex-wrap: wrap;\n  gap: 0.25rem;\n  padding: 0;\n  margin: 0;\n}\n.chip-list .chip {\n  white-space: normal;\n  word-break: break-word;\n  max-width: 100%;\n}\n.expansion-table {\n  width: 100%;\n  max-width: 100%;\n  overflow: hidden;\n}\n:host ::ng-deep .expansion-table .p-datatable-table {\n  width: 100%;\n  border: 1px solid #d1d5db;\n  border-radius: 6px;\n}\n:host ::ng-deep .expansion-table .p-datatable-wrapper {\n  width: 100%;\n  overflow-x: auto;\n}\n:host ::ng-deep .expansion-table .p-datatable-tbody > tr > td,\n:host ::ng-deep .expansion-table .p-datatable-thead > tr > th {\n  white-space: normal;\n  word-break: normal;\n  overflow-wrap: normal;\n}\n.tag {\n  font-size: 11px;\n  padding: 0.05rem 0.4rem;\n  border-radius: 6px;\n  border: 1px solid transparent;\n}\n.ai-btn {\n  font-weight: 600;\n}\n.sr-only {\n  position: absolute;\n  width: 1px;\n  height: 1px;\n  padding: 0;\n  margin: -1px;\n  overflow: hidden;\n  clip: rect(0, 0, 0, 0);\n  white-space: nowrap;\n  border: 0;\n}\n/*# sourceMappingURL=component-guidance.component.css.map */\n", "/* angular:styles/component:css;c0806e59c14ba3c53784f6243c5c92cc29bf483de8f80121dc534aca8504d932;C:/my-working-files/GitHub/design-assistant/src/app/views/page-assistant/components/problems/component-guidance/component-guidance.component.ts */\n.caption-actions {\n  display: flex;\n  align-items: center;\n  justify-content: flex-end;\n  gap: 0.5rem;\n}\n/*# sourceMappingURL=component-guidance.component.css.map */\n"] }]
+`, styles: ["/* src/app/views/page-assistant/components/problems/component-guidance/component-guidance.component.css */\n:host ::ng-deep .alert-table .p-datatable-table {\n  table-layout: auto !important;\n}\n:host ::ng-deep .alert-table.p-datatable .p-datatable-thead > tr > th.toggle-col,\n:host ::ng-deep .alert-table.p-datatable .p-datatable-tbody > tr > td.toggle-col {\n  width: 70px !important;\n  min-width: 70px;\n  max-width: 70px;\n  white-space: nowrap !important;\n  text-align: center;\n  padding: 0 0.25rem;\n}\n:host ::ng-deep .alert-table.p-datatable .p-datatable-thead > tr > th.checkbox-col,\n:host ::ng-deep .alert-table.p-datatable .p-datatable-tbody > tr > td.checkbox-col {\n  width: 70px !important;\n  min-width: 70px;\n  max-width: 70px;\n  white-space: nowrap !important;\n  text-align: center;\n  padding: 0 0.25rem;\n}\n/*# sourceMappingURL=component-guidance.component.css.map */\n", "/* angular:styles/component:css;014caead1fce9a6ca172b44ec075ff7677d7923faa6ee26b55ae7095de26623c;C:/my-working-files/GitHub/design-assistant/src/app/views/page-assistant/components/problems/component-guidance/component-guidance.component.ts */\n.muted {\n  color: #6b7280;\n  font-size: 12px;\n}\n.issues {\n  margin: 0;\n  padding-left: 1rem;\n}\n.health-cell {\n  gap: 0.4rem;\n  align-items: center;\n  flex-wrap: wrap;\n}\n.chip-list {\n  display: flex;\n  flex-wrap: wrap;\n  gap: 0.25rem;\n  padding: 0;\n  margin: 0;\n}\n.chip-list .chip {\n  white-space: normal;\n  word-break: break-word;\n  max-width: 100%;\n}\n.expansion-table {\n  width: 100%;\n  max-width: 100%;\n  overflow: hidden;\n}\n:host ::ng-deep .expansion-table .p-datatable-table {\n  width: 100%;\n  border: 1px solid #d1d5db;\n  border-radius: 6px;\n}\n:host ::ng-deep .expansion-table .p-datatable-wrapper {\n  width: 100%;\n  overflow-x: auto;\n}\n:host ::ng-deep .expansion-table .p-datatable-tbody > tr > td,\n:host ::ng-deep .expansion-table .p-datatable-thead > tr > th {\n  white-space: normal;\n  word-break: normal;\n  overflow-wrap: normal;\n}\n.tag {\n  font-size: 11px;\n  padding: 0.05rem 0.4rem;\n  border-radius: 6px;\n  border: 1px solid transparent;\n}\n.ai-btn {\n  font-weight: 600;\n}\n.sr-only {\n  position: absolute;\n  width: 1px;\n  height: 1px;\n  padding: 0;\n  margin: -1px;\n  overflow: hidden;\n  clip: rect(0, 0, 0, 0);\n  white-space: nowrap;\n  border: 0;\n}\n/*# sourceMappingURL=component-guidance.component.css.map */\n", "/* angular:styles/component:css;c0806e59c14ba3c53784f6243c5c92cc29bf483de8f80121dc534aca8504d932;C:/my-working-files/GitHub/design-assistant/src/app/views/page-assistant/components/problems/component-guidance/component-guidance.component.ts */\n.caption-actions {\n  display: flex;\n  align-items: center;\n  justify-content: flex-end;\n  gap: 0.5rem;\n}\n/*# sourceMappingURL=component-guidance.component.css.map */\n"] }]
   }], null, null);
 })();
 (() => {
@@ -31664,73 +31807,68 @@ var IaStructureComponent = class _IaStructureComponent {
 var _c010 = (a0, a1) => ({ "pi-chevron-down": a0, "pi-chevron-right": a1 });
 function TopicPageComponent_ng_template_1_Template(rf, ctx) {
   if (rf & 1) {
+    const _r1 = \u0275\u0275getCurrentView();
     \u0275\u0275elementStart(0, "tr");
     \u0275\u0275element(1, "th", 4);
-    \u0275\u0275elementStart(2, "th", 5);
-    \u0275\u0275text(3, "Include in fix");
+    \u0275\u0275elementStart(2, "th", 5)(3, "div", 6)(4, "p-checkbox", 7);
+    \u0275\u0275twoWayListener("ngModelChange", function TopicPageComponent_ng_template_1_Template_p_checkbox_ngModelChange_4_listener($event) {
+      \u0275\u0275restoreView(_r1);
+      const ctx_r1 = \u0275\u0275nextContext();
+      \u0275\u0275twoWayBindingSet(ctx_r1.selectAllSections, $event) || (ctx_r1.selectAllSections = $event);
+      return \u0275\u0275resetView($event);
+    });
+    \u0275\u0275listener("onChange", function TopicPageComponent_ng_template_1_Template_p_checkbox_onChange_4_listener() {
+      \u0275\u0275restoreView(_r1);
+      const ctx_r1 = \u0275\u0275nextContext();
+      return \u0275\u0275resetView(ctx_r1.toggleAllSelections());
+    });
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(4, "th", 6);
-    \u0275\u0275text(5, "Severity");
-    \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(6, "th");
-    \u0275\u0275text(7, "Pain point category");
-    \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(8, "th", 7);
-    \u0275\u0275text(9, "Description");
-    \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(10, "th", 7);
-    \u0275\u0275text(11, "Recommendation");
+    \u0275\u0275element(5, "label", 8);
     \u0275\u0275elementEnd()();
+    \u0275\u0275elementStart(6, "th");
+    \u0275\u0275text(7, "Topic page section");
+    \u0275\u0275elementEnd()();
+  }
+  if (rf & 2) {
+    const ctx_r1 = \u0275\u0275nextContext();
+    \u0275\u0275advance(4);
+    \u0275\u0275property("binary", true);
+    \u0275\u0275twoWayProperty("ngModel", ctx_r1.selectAllSections);
   }
 }
 function TopicPageComponent_ng_template_2_Template(rf, ctx) {
   if (rf & 1) {
-    const _r1 = \u0275\u0275getCurrentView();
-    \u0275\u0275elementStart(0, "tr", 8)(1, "td", 9)(2, "button", 10);
+    const _r3 = \u0275\u0275getCurrentView();
+    \u0275\u0275elementStart(0, "tr", 9)(1, "td", 4)(2, "button", 10);
     \u0275\u0275element(3, "i", 11);
     \u0275\u0275elementEnd()();
     \u0275\u0275elementStart(4, "td", 5)(5, "p-checkbox", 12);
     \u0275\u0275twoWayListener("ngModelChange", function TopicPageComponent_ng_template_2_Template_p_checkbox_ngModelChange_5_listener($event) {
-      const issue_r2 = \u0275\u0275restoreView(_r1).$implicit;
-      \u0275\u0275twoWayBindingSet(issue_r2.include, $event) || (issue_r2.include = $event);
+      const section_r4 = \u0275\u0275restoreView(_r3).$implicit;
+      \u0275\u0275twoWayBindingSet(section_r4.selectAll, $event) || (section_r4.selectAll = $event);
       return \u0275\u0275resetView($event);
     });
     \u0275\u0275elementEnd()();
-    \u0275\u0275elementStart(6, "td", 6)(7, "span", 13);
+    \u0275\u0275elementStart(6, "td")(7, "label", 13);
     \u0275\u0275text(8);
-    \u0275\u0275elementEnd()();
-    \u0275\u0275elementStart(9, "td");
-    \u0275\u0275text(10);
-    \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(11, "td", 7);
-    \u0275\u0275text(12);
-    \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(13, "td", 7);
-    \u0275\u0275text(14);
-    \u0275\u0275elementEnd()();
+    \u0275\u0275elementEnd()()();
   }
   if (rf & 2) {
-    const issue_r2 = ctx.$implicit;
-    const expanded_r3 = ctx.expanded;
-    const ctx_r3 = \u0275\u0275nextContext();
-    \u0275\u0275property("pSelectableRow", issue_r2);
+    const section_r4 = ctx.$implicit;
+    const expanded_r5 = ctx.expanded;
+    \u0275\u0275property("pSelectableRow", section_r4);
     \u0275\u0275advance(2);
-    \u0275\u0275property("pRowToggler", issue_r2);
+    \u0275\u0275property("pRowToggler", section_r4);
     \u0275\u0275advance();
-    \u0275\u0275property("ngClass", \u0275\u0275pureFunction2(10, _c010, expanded_r3, !expanded_r3));
+    \u0275\u0275property("ngClass", \u0275\u0275pureFunction2(8, _c010, expanded_r5, !expanded_r5));
     \u0275\u0275advance(2);
     \u0275\u0275property("binary", true);
-    \u0275\u0275twoWayProperty("ngModel", issue_r2.include);
+    \u0275\u0275twoWayProperty("ngModel", section_r4.selectAll);
+    \u0275\u0275property("inputId", section_r4.id + "-select-all");
     \u0275\u0275advance(2);
-    \u0275\u0275property("ngClass", ctx_r3.severityClass(issue_r2.severity));
+    \u0275\u0275property("for", section_r4.id + "-select-all");
     \u0275\u0275advance();
-    \u0275\u0275textInterpolate1(" ", issue_r2.severity || "Unknown", " ");
-    \u0275\u0275advance(2);
-    \u0275\u0275textInterpolate(issue_r2.category);
-    \u0275\u0275advance(2);
-    \u0275\u0275textInterpolate(issue_r2.description);
-    \u0275\u0275advance(2);
-    \u0275\u0275textInterpolate(issue_r2.recommendation);
+    \u0275\u0275textInterpolate(section_r4.heading);
   }
 }
 function TopicPageComponent_ng_template_3_ng_template_4_Template(rf, ctx) {
@@ -31753,9 +31891,9 @@ function TopicPageComponent_ng_template_3_ng_template_5_Template(rf, ctx) {
     \u0275\u0275elementEnd()();
   }
   if (rf & 2) {
-    const issue_r5 = \u0275\u0275nextContext().$implicit;
+    const section_r6 = \u0275\u0275nextContext().$implicit;
     \u0275\u0275advance(4);
-    \u0275\u0275textInterpolate(issue_r5.detail || "Details pending");
+    \u0275\u0275textInterpolate1("", section_r6.heading, " details pending");
   }
 }
 function TopicPageComponent_ng_template_3_Template(rf, ctx) {
@@ -31767,44 +31905,29 @@ function TopicPageComponent_ng_template_3_Template(rf, ctx) {
 }
 var TopicPageComponent = class _TopicPageComponent {
   expandedRows = {};
-  topicIssues = [
+  selectAllSections = false;
+  topicSections = [
     {
-      id: "nav-clarity",
-      category: "Navigation clarity",
-      severity: "High",
-      description: "Primary topic links are not grouped, making the page hard to scan.",
-      recommendation: "Group links under clear headings and add brief summaries.",
-      detail: "Users must scan long lists without visual grouping.",
-      include: true
+      id: "most-requested-links",
+      heading: "Most requested links",
+      selectAll: false
     },
     {
-      id: "content-hierarchy",
-      category: "Content hierarchy",
-      severity: "Medium",
-      description: "Headings skip levels (H2 to H4), which impacts accessibility.",
-      recommendation: "Use consecutive heading levels and add section summaries.",
-      detail: "Screen reader navigation becomes inconsistent.",
-      include: true
+      id: "doormats",
+      heading: "Doormats",
+      selectAll: false
     },
     {
-      id: "search-discoverability",
-      category: "Search discoverability",
-      severity: "Low",
-      description: "No in-page search or jump links for long topic lists.",
-      recommendation: "Add a sticky jump list or search/filter for topics.",
-      detail: "Long pages increase time to find content.",
-      include: false
+      id: "features",
+      heading: "Features",
+      selectAll: false
     }
   ];
-  severityClass(severity) {
-    const s = (severity || "").toLowerCase();
-    if (s === "low")
-      return "chip-minor";
-    if (s === "medium")
-      return "chip-med";
-    if (s === "high")
-      return "chip-severe";
-    return "chip-unk";
+  toggleAllSelections() {
+    const next = this.selectAllSections;
+    this.topicSections = this.topicSections.map((section) => __spreadProps(__spreadValues({}, section), {
+      selectAll: next
+    }));
   }
   onRowExpand(event) {
     const key2 = event?.data?.id;
@@ -31823,7 +31946,7 @@ var TopicPageComponent = class _TopicPageComponent {
   static \u0275fac = function TopicPageComponent_Factory(__ngFactoryType__) {
     return new (__ngFactoryType__ || _TopicPageComponent)();
   };
-  static \u0275cmp = /* @__PURE__ */ \u0275\u0275defineComponent({ type: _TopicPageComponent, selectors: [["ca-topic-page"]], decls: 4, vars: 2, consts: [["dataKey", "id", "styleClass", "p-datatable-sm alert-table", "expandableRows", "", 3, "onRowExpand", "onRowCollapse", "value", "expandedRowKeys"], ["pTemplate", "header"], ["pTemplate", "body"], ["pTemplate", "expandedrow"], [2, "width", "3rem", "text-align", "center"], [1, "include-col"], [1, "severity-col"], [1, "wrap-col"], [3, "pSelectableRow"], [2, "text-align", "center"], ["pButton", "", "type", "button", "aria-label", "Toggle row", 1, "p-button-text", "p-button-rounded", "p-button-plain", 3, "pRowToggler"], ["aria-hidden", "true", 1, "pi", 3, "ngClass"], [3, "ngModelChange", "binary", "ngModel"], [1, "chip", 3, "ngClass"], ["colspan", "6"], [1, "p-3"], ["styleClass", "p-datatable-sm expansion-table"]], template: function TopicPageComponent_Template(rf, ctx) {
+  static \u0275cmp = /* @__PURE__ */ \u0275\u0275defineComponent({ type: _TopicPageComponent, selectors: [["ca-topic-page"]], decls: 4, vars: 2, consts: [["dataKey", "id", "styleClass", "p-datatable-sm alert-table", "expandableRows", "", 3, "onRowExpand", "onRowCollapse", "value", "expandedRowKeys"], ["pTemplate", "header"], ["pTemplate", "body"], ["pTemplate", "expandedrow"], [1, "toggle-col"], [1, "checkbox-col"], [1, "header-select"], ["inputId", "topic-select-all", 3, "ngModelChange", "onChange", "binary", "ngModel"], ["for", "topic-select-all"], [3, "pSelectableRow"], ["pButton", "", "type", "button", "aria-label", "Toggle row", 1, "p-button-text", "p-button-rounded", "p-button-plain", 3, "pRowToggler"], ["aria-hidden", "true", 1, "pi", 3, "ngClass"], [3, "ngModelChange", "binary", "ngModel", "inputId"], [3, "for"], ["colspan", "3"], [1, "p-3"], ["styleClass", "p-datatable-sm expansion-table"]], template: function TopicPageComponent_Template(rf, ctx) {
     if (rf & 1) {
       \u0275\u0275elementStart(0, "p-table", 0);
       \u0275\u0275listener("onRowExpand", function TopicPageComponent_Template_p_table_onRowExpand_0_listener($event) {
@@ -31831,19 +31954,19 @@ var TopicPageComponent = class _TopicPageComponent {
       })("onRowCollapse", function TopicPageComponent_Template_p_table_onRowCollapse_0_listener($event) {
         return ctx.onRowCollapse($event);
       });
-      \u0275\u0275template(1, TopicPageComponent_ng_template_1_Template, 12, 0, "ng-template", 1)(2, TopicPageComponent_ng_template_2_Template, 15, 13, "ng-template", 2)(3, TopicPageComponent_ng_template_3_Template, 6, 0, "ng-template", 3);
+      \u0275\u0275template(1, TopicPageComponent_ng_template_1_Template, 8, 2, "ng-template", 1)(2, TopicPageComponent_ng_template_2_Template, 9, 11, "ng-template", 2)(3, TopicPageComponent_ng_template_3_Template, 6, 0, "ng-template", 3);
       \u0275\u0275elementEnd();
     }
     if (rf & 2) {
-      \u0275\u0275property("value", ctx.topicIssues)("expandedRowKeys", ctx.expandedRows);
+      \u0275\u0275property("value", ctx.topicSections)("expandedRowKeys", ctx.expandedRows);
     }
-  }, dependencies: [CommonModule, NgClass, FormsModule, NgControlStatus, NgModel, TableModule, Table, PrimeTemplate, SelectableRow, RowToggler, CheckboxModule, Checkbox], styles: ["\n\n.alert-table[_ngcontent-%COMP%]   .p-datatable-tbody[_ngcontent-%COMP%]    > tr[_ngcontent-%COMP%]    > td[_ngcontent-%COMP%], \n.alert-table[_ngcontent-%COMP%]   .p-datatable-thead[_ngcontent-%COMP%]    > tr[_ngcontent-%COMP%]    > th[_ngcontent-%COMP%] {\n  white-space: normal !important;\n  word-break: normal;\n  overflow-wrap: normal;\n  vertical-align: top;\n}\n.alert-table[_ngcontent-%COMP%]   .wrap-col[_ngcontent-%COMP%] {\n  min-width: 140px;\n}\n.alert-table[_ngcontent-%COMP%]   .severity-col[_ngcontent-%COMP%]   .chip[_ngcontent-%COMP%] {\n  white-space: nowrap !important;\n  display: inline-flex;\n}\n.alert-table[_ngcontent-%COMP%]   .include-col[_ngcontent-%COMP%] {\n  width: 140px;\n  text-align: center;\n}\n.alert-table[_ngcontent-%COMP%]   .include-col[_ngcontent-%COMP%]   .p-checkbox[_ngcontent-%COMP%] {\n  display: inline-flex;\n}\n.alert-table[_ngcontent-%COMP%]   .p-datatable-table[_ngcontent-%COMP%] {\n  width: 100%;\n  border: 1px solid #d1d5db;\n  border-radius: 6px;\n}\n.alert-table[_ngcontent-%COMP%]   .p-datatable-wrapper[_ngcontent-%COMP%] {\n  width: 100%;\n  overflow-x: auto;\n}\n/*# sourceMappingURL=alerts-guidance.component.css.map */", "\n\n.chip[_ngcontent-%COMP%] {\n  display: inline-flex;\n  align-items: center;\n  gap: 0.4rem;\n  padding: 0.15rem 0.55rem;\n  border-radius: 9999px;\n  border: 1px solid transparent;\n  font-weight: 500;\n  line-height: 1.1;\n}\n.chip[_ngcontent-%COMP%]   .pi[_ngcontent-%COMP%] {\n  color: inherit !important;\n}\n.chip-severe[_ngcontent-%COMP%] {\n  background: #fee2e2;\n  border-color: #fecaca;\n  color: #b91c1c;\n}\n.chip-minor[_ngcontent-%COMP%] {\n  background: #fef3c7;\n  border-color: #fde68a;\n  color: #92400e;\n}\n.chip-med[_ngcontent-%COMP%] {\n  background: #fde7c3;\n  border-color: #f9d29b;\n  color: #9a4a00;\n}\n.chip-ok[_ngcontent-%COMP%] {\n  background: #dcfce7;\n  border-color: #86efac;\n  color: #166534;\n}\n.chip-unk[_ngcontent-%COMP%] {\n  background: #e5e7eb;\n  border-color: #cbd5e1;\n  color: #334155;\n}\n.text-danger[_ngcontent-%COMP%] {\n  color: #b91c1c;\n  font-weight: 600;\n}\n/*# sourceMappingURL=component-guidance.component.css.map */"] });
+  }, dependencies: [CommonModule, NgClass, FormsModule, NgControlStatus, NgModel, TableModule, Table, PrimeTemplate, SelectableRow, RowToggler, CheckboxModule, Checkbox], styles: ["\n\n.alert-table[_ngcontent-%COMP%]   .p-datatable-tbody[_ngcontent-%COMP%]    > tr[_ngcontent-%COMP%]    > td[_ngcontent-%COMP%], \n.alert-table[_ngcontent-%COMP%]   .p-datatable-thead[_ngcontent-%COMP%]    > tr[_ngcontent-%COMP%]    > th[_ngcontent-%COMP%] {\n  white-space: normal !important;\n  word-break: normal;\n  overflow-wrap: normal;\n  vertical-align: top;\n}\n.alert-table[_ngcontent-%COMP%]   .wrap-col[_ngcontent-%COMP%] {\n  min-width: 140px;\n}\n.alert-table[_ngcontent-%COMP%]   .severity-col[_ngcontent-%COMP%]   .chip[_ngcontent-%COMP%] {\n  white-space: nowrap !important;\n  display: inline-flex;\n}\n.alert-table[_ngcontent-%COMP%]   .include-col[_ngcontent-%COMP%] {\n  width: 140px;\n  text-align: center;\n}\n.alert-table[_ngcontent-%COMP%]   .include-col[_ngcontent-%COMP%]   .p-checkbox[_ngcontent-%COMP%] {\n  display: inline-flex;\n}\n.alert-table[_ngcontent-%COMP%]   .p-datatable-table[_ngcontent-%COMP%] {\n  width: 100%;\n  border: 1px solid #d1d5db;\n  border-radius: 6px;\n}\n.alert-table[_ngcontent-%COMP%]   .p-datatable-wrapper[_ngcontent-%COMP%] {\n  width: 100%;\n  overflow-x: auto;\n}\n.alert-table[_ngcontent-%COMP%]   .p-datatable-table[_ngcontent-%COMP%] {\n  table-layout: auto !important;\n}\n.alert-table[_ngcontent-%COMP%]   .toggle-col[_ngcontent-%COMP%], \n.alert-table[_ngcontent-%COMP%]   .checkbox-col[_ngcontent-%COMP%] {\n  width: 1%;\n  white-space: nowrap;\n  text-align: center;\n  padding: 0;\n}\n.alert-table.p-datatable[_ngcontent-%COMP%]   .p-datatable-thead[_ngcontent-%COMP%]    > tr[_ngcontent-%COMP%]    > th.toggle-col[_ngcontent-%COMP%], \n.alert-table.p-datatable[_ngcontent-%COMP%]   .p-datatable-tbody[_ngcontent-%COMP%]    > tr[_ngcontent-%COMP%]    > td.toggle-col[_ngcontent-%COMP%], \n.alert-table.p-datatable[_ngcontent-%COMP%]   .p-datatable-thead[_ngcontent-%COMP%]    > tr[_ngcontent-%COMP%]    > th.checkbox-col[_ngcontent-%COMP%], \n.alert-table.p-datatable[_ngcontent-%COMP%]   .p-datatable-tbody[_ngcontent-%COMP%]    > tr[_ngcontent-%COMP%]    > td.checkbox-col[_ngcontent-%COMP%] {\n  width: 1% !important;\n  white-space: nowrap !important;\n  text-align: center;\n  padding: 0 0.25rem;\n}\n/*# sourceMappingURL=alerts-guidance.component.css.map */", "\n\n[_nghost-%COMP%]     .alert-table .p-datatable-table {\n  table-layout: auto !important;\n}\n[_nghost-%COMP%]     .alert-table.p-datatable .p-datatable-thead > tr > th.toggle-col, \n[_nghost-%COMP%]     .alert-table.p-datatable .p-datatable-tbody > tr > td.toggle-col {\n  width: 70px !important;\n  min-width: 70px;\n  max-width: 70px;\n  white-space: nowrap !important;\n  text-align: center;\n  padding: 0 0.25rem;\n}\n[_nghost-%COMP%]     .alert-table.p-datatable .p-datatable-thead > tr > th.checkbox-col, \n[_nghost-%COMP%]     .alert-table.p-datatable .p-datatable-tbody > tr > td.checkbox-col {\n  width: 70px !important;\n  min-width: 70px;\n  max-width: 70px;\n  white-space: nowrap !important;\n  text-align: center;\n  padding: 0 0.25rem;\n}\n/*# sourceMappingURL=component-guidance.component.css.map */"] });
 };
 (() => {
   (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(TopicPageComponent, [{
     type: Component,
     args: [{ selector: "ca-topic-page", standalone: true, imports: [CommonModule, FormsModule, TableModule, CheckboxModule], template: `<p-table
-  [value]="topicIssues"
+  [value]="topicSections"
   dataKey="id"
   styleClass="p-datatable-sm alert-table"
   expandableRows
@@ -31853,43 +31976,49 @@ var TopicPageComponent = class _TopicPageComponent {
 >
   <ng-template pTemplate="header">
     <tr>
-      <th style="width: 3rem; text-align: center"></th>
-      <th class="include-col">Include in fix</th>
-      <th class="severity-col">Severity</th>
-      <th>Pain point category</th>
-      <th class="wrap-col">Description</th>
-      <th class="wrap-col">Recommendation</th>
+      <th class="toggle-col"></th>
+      <th class="checkbox-col">
+        <div class="header-select">
+          <p-checkbox
+            [binary]="true"
+            [(ngModel)]="selectAllSections"
+            (onChange)="toggleAllSelections()"
+            inputId="topic-select-all"
+          ></p-checkbox>
+          <label for="topic-select-all"></label>
+        </div>
+      </th>
+      <th>Topic page section</th>
     </tr>
   </ng-template>
-  <ng-template pTemplate="body" let-issue let-expanded="expanded">
-    <tr [pSelectableRow]="issue">
-      <td style="text-align: center">
+  <ng-template pTemplate="body" let-section let-expanded="expanded">
+    <tr [pSelectableRow]="section">
+      <td class="toggle-col">
         <button
           pButton
           type="button"
-          [pRowToggler]="issue"
+          [pRowToggler]="section"
           class="p-button-text p-button-rounded p-button-plain"
           aria-label="Toggle row"
         >
           <i class="pi" [ngClass]="{ 'pi-chevron-down': expanded, 'pi-chevron-right': !expanded }" aria-hidden="true"></i>
         </button>
       </td>
-      <td class="include-col">
-        <p-checkbox [binary]="true" [(ngModel)]="issue.include"></p-checkbox>
+      <td class="checkbox-col">
+        <p-checkbox
+          [binary]="true"
+          [(ngModel)]="section.selectAll"
+          [inputId]="section.id + '-select-all'"
+        ></p-checkbox>
       </td>
-      <td class="severity-col">
-        <span class="chip" [ngClass]="severityClass(issue.severity)">
-          {{ issue.severity || 'Unknown' }}
-        </span>
+      <td>
+        <label [for]="section.id + '-select-all'">{{ section.heading }}</label>
       </td>
-      <td>{{ issue.category }}</td>
-      <td class="wrap-col">{{ issue.description }}</td>
-      <td class="wrap-col">{{ issue.recommendation }}</td>
     </tr>
   </ng-template>
-  <ng-template pTemplate="expandedrow" let-issue>
+  <ng-template pTemplate="expandedrow" let-section>
     <tr>
-      <td colspan="6">
+      <td colspan="3">
         <div class="p-3">
           <p-table styleClass="p-datatable-sm expansion-table">
             <ng-template pTemplate="header">
@@ -31901,7 +32030,7 @@ var TopicPageComponent = class _TopicPageComponent {
             <ng-template pTemplate="body">
               <tr>
                 <td>Impact</td>
-                <td>{{ issue.detail || 'Details pending' }}</td>
+                <td>{{ section.heading }} details pending</td>
               </tr>
             </ng-template>
           </p-table>
@@ -31910,11 +32039,11 @@ var TopicPageComponent = class _TopicPageComponent {
     </tr>
   </ng-template>
 </p-table>
-`, styles: ["/* src/app/views/page-assistant/components/problems/component-guidance/alerts-guidance/alerts-guidance.component.css */\n.alert-table .p-datatable-tbody > tr > td,\n.alert-table .p-datatable-thead > tr > th {\n  white-space: normal !important;\n  word-break: normal;\n  overflow-wrap: normal;\n  vertical-align: top;\n}\n.alert-table .wrap-col {\n  min-width: 140px;\n}\n.alert-table .severity-col .chip {\n  white-space: nowrap !important;\n  display: inline-flex;\n}\n.alert-table .include-col {\n  width: 140px;\n  text-align: center;\n}\n.alert-table .include-col .p-checkbox {\n  display: inline-flex;\n}\n.alert-table .p-datatable-table {\n  width: 100%;\n  border: 1px solid #d1d5db;\n  border-radius: 6px;\n}\n.alert-table .p-datatable-wrapper {\n  width: 100%;\n  overflow-x: auto;\n}\n/*# sourceMappingURL=alerts-guidance.component.css.map */\n", "/* src/app/views/page-assistant/components/problems/component-guidance/component-guidance.component.css */\n.chip {\n  display: inline-flex;\n  align-items: center;\n  gap: 0.4rem;\n  padding: 0.15rem 0.55rem;\n  border-radius: 9999px;\n  border: 1px solid transparent;\n  font-weight: 500;\n  line-height: 1.1;\n}\n.chip .pi {\n  color: inherit !important;\n}\n.chip-severe {\n  background: #fee2e2;\n  border-color: #fecaca;\n  color: #b91c1c;\n}\n.chip-minor {\n  background: #fef3c7;\n  border-color: #fde68a;\n  color: #92400e;\n}\n.chip-med {\n  background: #fde7c3;\n  border-color: #f9d29b;\n  color: #9a4a00;\n}\n.chip-ok {\n  background: #dcfce7;\n  border-color: #86efac;\n  color: #166534;\n}\n.chip-unk {\n  background: #e5e7eb;\n  border-color: #cbd5e1;\n  color: #334155;\n}\n.text-danger {\n  color: #b91c1c;\n  font-weight: 600;\n}\n/*# sourceMappingURL=component-guidance.component.css.map */\n"] }]
+`, styles: ["/* src/app/views/page-assistant/components/problems/component-guidance/alerts-guidance/alerts-guidance.component.css */\n.alert-table .p-datatable-tbody > tr > td,\n.alert-table .p-datatable-thead > tr > th {\n  white-space: normal !important;\n  word-break: normal;\n  overflow-wrap: normal;\n  vertical-align: top;\n}\n.alert-table .wrap-col {\n  min-width: 140px;\n}\n.alert-table .severity-col .chip {\n  white-space: nowrap !important;\n  display: inline-flex;\n}\n.alert-table .include-col {\n  width: 140px;\n  text-align: center;\n}\n.alert-table .include-col .p-checkbox {\n  display: inline-flex;\n}\n.alert-table .p-datatable-table {\n  width: 100%;\n  border: 1px solid #d1d5db;\n  border-radius: 6px;\n}\n.alert-table .p-datatable-wrapper {\n  width: 100%;\n  overflow-x: auto;\n}\n.alert-table .p-datatable-table {\n  table-layout: auto !important;\n}\n.alert-table .toggle-col,\n.alert-table .checkbox-col {\n  width: 1%;\n  white-space: nowrap;\n  text-align: center;\n  padding: 0;\n}\n.alert-table.p-datatable .p-datatable-thead > tr > th.toggle-col,\n.alert-table.p-datatable .p-datatable-tbody > tr > td.toggle-col,\n.alert-table.p-datatable .p-datatable-thead > tr > th.checkbox-col,\n.alert-table.p-datatable .p-datatable-tbody > tr > td.checkbox-col {\n  width: 1% !important;\n  white-space: nowrap !important;\n  text-align: center;\n  padding: 0 0.25rem;\n}\n/*# sourceMappingURL=alerts-guidance.component.css.map */\n", "/* src/app/views/page-assistant/components/problems/component-guidance/component-guidance.component.css */\n:host ::ng-deep .alert-table .p-datatable-table {\n  table-layout: auto !important;\n}\n:host ::ng-deep .alert-table.p-datatable .p-datatable-thead > tr > th.toggle-col,\n:host ::ng-deep .alert-table.p-datatable .p-datatable-tbody > tr > td.toggle-col {\n  width: 70px !important;\n  min-width: 70px;\n  max-width: 70px;\n  white-space: nowrap !important;\n  text-align: center;\n  padding: 0 0.25rem;\n}\n:host ::ng-deep .alert-table.p-datatable .p-datatable-thead > tr > th.checkbox-col,\n:host ::ng-deep .alert-table.p-datatable .p-datatable-tbody > tr > td.checkbox-col {\n  width: 70px !important;\n  min-width: 70px;\n  max-width: 70px;\n  white-space: nowrap !important;\n  text-align: center;\n  padding: 0 0.25rem;\n}\n/*# sourceMappingURL=component-guidance.component.css.map */\n"] }]
   }], null, null);
 })();
 (() => {
-  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(TopicPageComponent, { className: "TopicPageComponent", filePath: "src/app/views/page-assistant/components/problems/component-guidance/topic-page/topic-page.component.ts", lineNumber: 27 });
+  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(TopicPageComponent, { className: "TopicPageComponent", filePath: "src/app/views/page-assistant/components/problems/component-guidance/topic-page/topic-page.component.ts", lineNumber: 23 });
 })();
 
 // src/app/views/page-assistant/components/problems.component.ts
@@ -34323,4 +34452,4 @@ ${base}`;
 export {
   PageAssistantCompareComponent
 };
-//# sourceMappingURL=chunk-6PEAZPAM.js.map
+//# sourceMappingURL=chunk-QYP3DUQ2.js.map

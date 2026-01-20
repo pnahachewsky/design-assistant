@@ -21022,8 +21022,8 @@ var RouterLinkActive = class _RouterLinkActive {
     });
   }
   set routerLinkActive(data) {
-    const classes37 = Array.isArray(data) ? data : data.split(" ");
-    this.classes = classes37.filter((c) => !!c);
+    const classes38 = Array.isArray(data) ? data : data.split(" ");
+    this.classes = classes38.filter((c) => !!c);
   }
   /** @docs-private */
   ngOnChanges(changes) {
@@ -29754,10 +29754,10 @@ function getRule(selector, properties) {
 }
 var $dt = (tokenPath) => {
   var _a;
-  const theme38 = config_default.getTheme();
-  const variable = dtwt(theme38, tokenPath, void 0, "variable");
+  const theme39 = config_default.getTheme();
+  const variable = dtwt(theme39, tokenPath, void 0, "variable");
   const name = (_a = variable == null ? void 0 : variable.match(/--[\w-]+/g)) == null ? void 0 : _a[0];
-  const value = dtwt(theme38, tokenPath, void 0, "value");
+  const value = dtwt(theme39, tokenPath, void 0, "value");
   return {
     name,
     variable,
@@ -29767,7 +29767,7 @@ var $dt = (tokenPath) => {
 var dt = (...args) => {
   return dtwt(config_default.getTheme(), ...args);
 };
-var dtwt = (theme38 = {}, tokenPath, fallback, type) => {
+var dtwt = (theme39 = {}, tokenPath, fallback, type) => {
   if (tokenPath) {
     const {
       variable: VARIABLE,
@@ -29776,7 +29776,7 @@ var dtwt = (theme38 = {}, tokenPath, fallback, type) => {
     const {
       prefix,
       transform
-    } = (theme38 == null ? void 0 : theme38.options) || OPTIONS || {};
+    } = (theme39 == null ? void 0 : theme39.options) || OPTIONS || {};
     const regex = /{([^}]*)}/g;
     const token = matchRegex(tokenPath, regex) ? tokenPath : `{${tokenPath}}`;
     const isStrictTransform = type === "value" || isEmpty(type) && transform === "strict";
@@ -29784,7 +29784,7 @@ var dtwt = (theme38 = {}, tokenPath, fallback, type) => {
   }
   return "";
 };
-function toVariables_default(theme38, options = {}) {
+function toVariables_default(theme39, options = {}) {
   const VARIABLE = config_default.defaults.variable;
   const {
     prefix = VARIABLE.prefix,
@@ -29815,7 +29815,7 @@ function toVariables_default(theme38, options = {}) {
   const {
     variables,
     tokens
-  } = _toVariables(theme38, prefix);
+  } = _toVariables(theme39, prefix);
   return {
     value: variables,
     tokens,
@@ -29884,14 +29884,14 @@ var themeUtils_default = {
       });
     }
   },
-  _toVariables(theme38, options) {
-    return toVariables_default(theme38, {
+  _toVariables(theme39, options) {
+    return toVariables_default(theme39, {
       prefix: options == null ? void 0 : options.prefix
     });
   },
   getCommon({
     name = "",
-    theme: theme38 = {},
+    theme: theme39 = {},
     params,
     set,
     defaults
@@ -29900,7 +29900,7 @@ var themeUtils_default = {
     const {
       preset,
       options
-    } = theme38;
+    } = theme39;
     let primitive_css, primitive_tokens, semantic_css, semantic_tokens, global_css, global_tokens, style2;
     if (isNotEmpty(preset) && options.transform !== "strict") {
       const {
@@ -30033,7 +30033,7 @@ var themeUtils_default = {
   },
   getPresetC({
     name = "",
-    theme: theme38 = {},
+    theme: theme39 = {},
     params,
     set,
     defaults
@@ -30042,7 +30042,7 @@ var themeUtils_default = {
     const {
       preset,
       options
-    } = theme38;
+    } = theme39;
     const cPreset = (_a = preset == null ? void 0 : preset.components) == null ? void 0 : _a[name];
     return this.getPreset({
       name,
@@ -30055,7 +30055,7 @@ var themeUtils_default = {
   },
   getPresetD({
     name = "",
-    theme: theme38 = {},
+    theme: theme39 = {},
     params,
     set,
     defaults
@@ -30065,7 +30065,7 @@ var themeUtils_default = {
     const {
       preset,
       options
-    } = theme38;
+    } = theme39;
     const dPreset = (_a = preset == null ? void 0 : preset.directives) == null ? void 0 : _a[dName];
     return this.getPreset({
       name: dName,
@@ -30095,7 +30095,7 @@ var themeUtils_default = {
   },
   getCommonStyleSheet({
     name = "",
-    theme: theme38 = {},
+    theme: theme39 = {},
     params,
     props = {},
     set,
@@ -30103,7 +30103,7 @@ var themeUtils_default = {
   }) {
     const common = this.getCommon({
       name,
-      theme: theme38,
+      theme: theme39,
       params,
       set,
       defaults
@@ -30120,7 +30120,7 @@ var themeUtils_default = {
   },
   getStyleSheet({
     name = "",
-    theme: theme38 = {},
+    theme: theme39 = {},
     params,
     props = {},
     set,
@@ -30129,7 +30129,7 @@ var themeUtils_default = {
     var _a;
     const options = {
       name,
-      theme: theme38,
+      theme: theme39,
       params,
       set,
       defaults
@@ -30267,11 +30267,11 @@ var config_default = {
   _tokens: {},
   update(newValues = {}) {
     const {
-      theme: theme38
+      theme: theme39
     } = newValues;
-    if (theme38) {
-      this._theme = __spreadProps2(__spreadValues3({}, theme38), {
-        options: __spreadValues3(__spreadValues3({}, this.defaults.options), theme38.options)
+    if (theme39) {
+      this._theme = __spreadProps2(__spreadValues3({}, theme39), {
+        options: __spreadValues3(__spreadValues3({}, this.defaults.options), theme39.options)
       });
       this._tokens = themeUtils_default.createTokens(this.preset, this.defaults);
       this.clearLoadedStyleNames();
@@ -30872,10 +30872,10 @@ var ThemeProvider = class _ThemeProvider {
   }
   setThemeConfig(config) {
     const {
-      theme: theme38,
+      theme: theme39,
       csp
     } = config || {};
-    if (theme38) this.theme.set(theme38);
+    if (theme39) this.theme.set(theme39);
     if (csp) this.csp.set(csp);
   }
   static \u0275fac = function ThemeProvider_Factory(__ngFactoryType__) {
@@ -31058,7 +31058,7 @@ var PrimeNG = class _PrimeNG extends ThemeProvider {
       ripple,
       inputStyle,
       inputVariant,
-      theme: theme38,
+      theme: theme39,
       overlayOptions,
       translation,
       filterMatchModeOptions
@@ -31070,8 +31070,8 @@ var PrimeNG = class _PrimeNG extends ThemeProvider {
     if (overlayOptions) this.overlayOptions = overlayOptions;
     if (translation) this.setTranslation(translation);
     if (filterMatchModeOptions) this.filterMatchModeOptions = filterMatchModeOptions;
-    if (theme38) this.setThemeConfig({
-      theme: theme38,
+    if (theme39) this.setThemeConfig({
+      theme: theme39,
       csp
     });
   }
@@ -31278,13 +31278,13 @@ var BaseComponent = class _BaseComponent {
     this.themeChangeListeners.push(callback);
   }
   cx(arg, rest) {
-    const classes37 = this.parent ? this.parent.componentStyle?.classes?.[arg] : this.componentStyle?.classes?.[arg];
-    if (typeof classes37 === "function") {
-      return classes37({
+    const classes38 = this.parent ? this.parent.componentStyle?.classes?.[arg] : this.componentStyle?.classes?.[arg];
+    if (typeof classes38 === "function") {
+      return classes38({
         instance: this
       });
     }
-    return typeof classes37 === "string" ? classes37 : arg;
+    return typeof classes38 === "string" ? classes38 : arg;
   }
   sx(arg) {
     const styles = this.componentStyle?.inlineStyles?.[arg];
@@ -33190,27 +33190,27 @@ var Badge = class _Badge extends BaseComponent {
    * @returns An object representing the CSS classes to be applied to the badge container.
    */
   containerClass = computed(() => {
-    let classes37 = "p-badge p-component";
+    let classes38 = "p-badge p-component";
     if (isNotEmpty(this.value()) && String(this.value()).length === 1) {
-      classes37 += " p-badge-circle";
+      classes38 += " p-badge-circle";
     }
     if (this.badgeSize() === "large") {
-      classes37 += " p-badge-lg";
+      classes38 += " p-badge-lg";
     } else if (this.badgeSize() === "xlarge") {
-      classes37 += " p-badge-xl";
+      classes38 += " p-badge-xl";
     } else if (this.badgeSize() === "small") {
-      classes37 += " p-badge-sm";
+      classes38 += " p-badge-sm";
     }
     if (isEmpty(this.value())) {
-      classes37 += " p-badge-dot";
+      classes38 += " p-badge-dot";
     }
     if (this.styleClass()) {
-      classes37 += ` ${this.styleClass()}`;
+      classes38 += ` ${this.styleClass()}`;
     }
     if (this.severity()) {
-      classes37 += ` p-badge-${this.severity()}`;
+      classes38 += ` p-badge-${this.severity()}`;
     }
-    return classes37;
+    return classes38;
   });
   static \u0275fac = /* @__PURE__ */ (() => {
     let \u0275Badge_BaseFactory;
@@ -48372,6 +48372,7 @@ var AiModel;
   AiModel2["Mistral"] = "mistralai/mistral-small-3.1-24b-instruct:free";
   AiModel2["Llama32"] = "meta-llama/llama-3.2-3b-instruct:free";
   AiModel2["Llama31"] = "meta-llama/llama-3.1-405b-instruct:free";
+  AiModel2["Gpt5Mini"] = "openai/gpt-5-mini";
 })(AiModel || (AiModel = {}));
 
 // node_modules/primeng/fesm2022/primeng-toolbar.mjs
@@ -56343,9 +56344,574 @@ var DialogModule = class _DialogModule {
   }], null, null);
 })();
 
+// node_modules/primeng/fesm2022/primeng-chip.mjs
+var _c021 = ["removeicon"];
+var _c117 = ["*"];
+function Chip_img_1_Template(rf, ctx) {
+  if (rf & 1) {
+    const _r1 = \u0275\u0275getCurrentView();
+    \u0275\u0275elementStart(0, "img", 4);
+    \u0275\u0275listener("error", function Chip_img_1_Template_img_error_0_listener($event) {
+      \u0275\u0275restoreView(_r1);
+      const ctx_r1 = \u0275\u0275nextContext();
+      return \u0275\u0275resetView(ctx_r1.imageError($event));
+    });
+    \u0275\u0275elementEnd();
+  }
+  if (rf & 2) {
+    const ctx_r1 = \u0275\u0275nextContext();
+    \u0275\u0275property("src", ctx_r1.image, \u0275\u0275sanitizeUrl)("alt", ctx_r1.alt);
+  }
+}
+function Chip_ng_template_2_span_0_Template(rf, ctx) {
+  if (rf & 1) {
+    \u0275\u0275element(0, "span", 6);
+  }
+  if (rf & 2) {
+    const ctx_r1 = \u0275\u0275nextContext(2);
+    \u0275\u0275classMap(ctx_r1.icon);
+    \u0275\u0275property("ngClass", "p-chip-icon");
+    \u0275\u0275attribute("data-pc-section", "icon");
+  }
+}
+function Chip_ng_template_2_Template(rf, ctx) {
+  if (rf & 1) {
+    \u0275\u0275template(0, Chip_ng_template_2_span_0_Template, 1, 4, "span", 5);
+  }
+  if (rf & 2) {
+    const ctx_r1 = \u0275\u0275nextContext();
+    \u0275\u0275property("ngIf", ctx_r1.icon);
+  }
+}
+function Chip_div_4_Template(rf, ctx) {
+  if (rf & 1) {
+    \u0275\u0275elementStart(0, "div", 7);
+    \u0275\u0275text(1);
+    \u0275\u0275elementEnd();
+  }
+  if (rf & 2) {
+    const ctx_r1 = \u0275\u0275nextContext();
+    \u0275\u0275attribute("data-pc-section", "label");
+    \u0275\u0275advance();
+    \u0275\u0275textInterpolate(ctx_r1.label);
+  }
+}
+function Chip_ng_container_5_ng_container_1_span_1_Template(rf, ctx) {
+  if (rf & 1) {
+    const _r3 = \u0275\u0275getCurrentView();
+    \u0275\u0275elementStart(0, "span", 11);
+    \u0275\u0275listener("click", function Chip_ng_container_5_ng_container_1_span_1_Template_span_click_0_listener($event) {
+      \u0275\u0275restoreView(_r3);
+      const ctx_r1 = \u0275\u0275nextContext(3);
+      return \u0275\u0275resetView(ctx_r1.close($event));
+    })("keydown", function Chip_ng_container_5_ng_container_1_span_1_Template_span_keydown_0_listener($event) {
+      \u0275\u0275restoreView(_r3);
+      const ctx_r1 = \u0275\u0275nextContext(3);
+      return \u0275\u0275resetView(ctx_r1.onKeydown($event));
+    });
+    \u0275\u0275elementEnd();
+  }
+  if (rf & 2) {
+    const ctx_r1 = \u0275\u0275nextContext(3);
+    \u0275\u0275classMap(ctx_r1.removeIcon);
+    \u0275\u0275property("ngClass", "p-chip-remove-icon");
+    \u0275\u0275attribute("data-pc-section", "removeicon")("aria-label", ctx_r1.removeAriaLabel);
+  }
+}
+function Chip_ng_container_5_ng_container_1_TimesCircleIcon_2_Template(rf, ctx) {
+  if (rf & 1) {
+    const _r4 = \u0275\u0275getCurrentView();
+    \u0275\u0275elementStart(0, "TimesCircleIcon", 12);
+    \u0275\u0275listener("click", function Chip_ng_container_5_ng_container_1_TimesCircleIcon_2_Template_TimesCircleIcon_click_0_listener($event) {
+      \u0275\u0275restoreView(_r4);
+      const ctx_r1 = \u0275\u0275nextContext(3);
+      return \u0275\u0275resetView(ctx_r1.close($event));
+    })("keydown", function Chip_ng_container_5_ng_container_1_TimesCircleIcon_2_Template_TimesCircleIcon_keydown_0_listener($event) {
+      \u0275\u0275restoreView(_r4);
+      const ctx_r1 = \u0275\u0275nextContext(3);
+      return \u0275\u0275resetView(ctx_r1.onKeydown($event));
+    });
+    \u0275\u0275elementEnd();
+  }
+  if (rf & 2) {
+    const ctx_r1 = \u0275\u0275nextContext(3);
+    \u0275\u0275classMap("p-chip-remove-icon");
+    \u0275\u0275attribute("data-pc-section", "removeicon")("aria-label", ctx_r1.removeAriaLabel);
+  }
+}
+function Chip_ng_container_5_ng_container_1_Template(rf, ctx) {
+  if (rf & 1) {
+    \u0275\u0275elementContainerStart(0);
+    \u0275\u0275template(1, Chip_ng_container_5_ng_container_1_span_1_Template, 1, 5, "span", 9)(2, Chip_ng_container_5_ng_container_1_TimesCircleIcon_2_Template, 1, 4, "TimesCircleIcon", 10);
+    \u0275\u0275elementContainerEnd();
+  }
+  if (rf & 2) {
+    const ctx_r1 = \u0275\u0275nextContext(2);
+    \u0275\u0275advance();
+    \u0275\u0275property("ngIf", ctx_r1.removeIcon);
+    \u0275\u0275advance();
+    \u0275\u0275property("ngIf", !ctx_r1.removeIcon);
+  }
+}
+function Chip_ng_container_5_span_2_1_ng_template_0_Template(rf, ctx) {
+}
+function Chip_ng_container_5_span_2_1_Template(rf, ctx) {
+  if (rf & 1) {
+    \u0275\u0275template(0, Chip_ng_container_5_span_2_1_ng_template_0_Template, 0, 0, "ng-template");
+  }
+}
+function Chip_ng_container_5_span_2_Template(rf, ctx) {
+  if (rf & 1) {
+    const _r5 = \u0275\u0275getCurrentView();
+    \u0275\u0275elementStart(0, "span", 13);
+    \u0275\u0275listener("click", function Chip_ng_container_5_span_2_Template_span_click_0_listener($event) {
+      \u0275\u0275restoreView(_r5);
+      const ctx_r1 = \u0275\u0275nextContext(2);
+      return \u0275\u0275resetView(ctx_r1.close($event));
+    })("keydown", function Chip_ng_container_5_span_2_Template_span_keydown_0_listener($event) {
+      \u0275\u0275restoreView(_r5);
+      const ctx_r1 = \u0275\u0275nextContext(2);
+      return \u0275\u0275resetView(ctx_r1.onKeydown($event));
+    });
+    \u0275\u0275template(1, Chip_ng_container_5_span_2_1_Template, 1, 0, null, 14);
+    \u0275\u0275elementEnd();
+  }
+  if (rf & 2) {
+    const ctx_r1 = \u0275\u0275nextContext(2);
+    \u0275\u0275attribute("data-pc-section", "removeicon")("aria-label", ctx_r1.removeAriaLabel);
+    \u0275\u0275advance();
+    \u0275\u0275property("ngTemplateOutlet", ctx_r1.removeIconTemplate || ctx_r1._removeIconTemplate);
+  }
+}
+function Chip_ng_container_5_Template(rf, ctx) {
+  if (rf & 1) {
+    \u0275\u0275elementContainerStart(0);
+    \u0275\u0275template(1, Chip_ng_container_5_ng_container_1_Template, 3, 2, "ng-container", 3)(2, Chip_ng_container_5_span_2_Template, 2, 3, "span", 8);
+    \u0275\u0275elementContainerEnd();
+  }
+  if (rf & 2) {
+    const ctx_r1 = \u0275\u0275nextContext();
+    \u0275\u0275advance();
+    \u0275\u0275property("ngIf", !ctx_r1.removeIconTemplate && !ctx_r1._removeIconTemplate);
+    \u0275\u0275advance();
+    \u0275\u0275property("ngIf", ctx_r1.removeIconTemplate || ctx_r1._removeIconTemplate);
+  }
+}
+var theme23 = ({
+  dt: dt2
+}) => `
+.p-chip {
+    display: inline-flex;
+    align-items: center;
+    background: ${dt2("chip.background")};
+    color: ${dt2("chip.color")};
+    border-radius: ${dt2("chip.border.radius")};
+    padding: ${dt2("chip.padding.y")} ${dt2("chip.padding.x")};
+    gap: ${dt2("chip.gap")};
+}
+
+.p-chip-icon {
+    color: ${dt2("chip.icon.color")};
+    font-size: ${dt2("chip.icon.font.size")};
+    width: ${dt2("chip.icon.size")};
+    height: ${dt2("chip.icon.size")};
+}
+
+.p-chip-image {
+    border-radius: 50%;
+    width: ${dt2("chip.image.width")};
+    height: ${dt2("chip.image.height")};
+    margin-left: calc(-1 * ${dt2("chip.padding.y")});
+}
+
+.p-chip:has(.p-chip-remove-icon) {
+    padding-inline-end: ${dt2("chip.padding.y")};
+}
+
+.p-chip:has(.p-chip-image) {
+    padding-top: calc(${dt2("chip.padding.y")} / 2);
+    padding-bottom: calc(${dt2("chip.padding.y")} / 2);
+}
+
+.p-chip-remove-icon {
+    cursor: pointer;
+    font-size: ${dt2("chip.remove.icon.font.size")};
+    width: ${dt2("chip.remove.icon.size")};
+    height: ${dt2("chip.remove.icon.size")};
+    color: ${dt2("chip.remove.icon.color")};
+    border-radius: 50%;
+    transition: outline-color ${dt2("chip.transition.duration")}, box-shadow ${dt2("chip.transition.duration")};
+    outline-color: transparent;
+}
+
+.p-chip-remove-icon:focus-visible {
+    box-shadow: ${dt2("chip.remove.icon.focus.ring.shadow")};
+    outline: ${dt2("chip.remove.icon.focus.ring.width")} ${dt2("chip.remove.icon.focus.ring.style")} ${dt2("chip.remove.icon.focus.ring.color")};
+    outline-offset: ${dt2("chip.remove.icon.focus.ring.offset")};
+}
+`;
+var classes23 = {
+  root: "p-chip p-component",
+  image: "p-chip-image",
+  icon: "p-chip-icon",
+  label: "p-chip-label",
+  removeIcon: "p-chip-remove-icon"
+};
+var ChipStyle = class _ChipStyle extends BaseStyle {
+  name = "chip";
+  theme = theme23;
+  classes = classes23;
+  static \u0275fac = /* @__PURE__ */ (() => {
+    let \u0275ChipStyle_BaseFactory;
+    return function ChipStyle_Factory(__ngFactoryType__) {
+      return (\u0275ChipStyle_BaseFactory || (\u0275ChipStyle_BaseFactory = \u0275\u0275getInheritedFactory(_ChipStyle)))(__ngFactoryType__ || _ChipStyle);
+    };
+  })();
+  static \u0275prov = /* @__PURE__ */ \u0275\u0275defineInjectable({
+    token: _ChipStyle,
+    factory: _ChipStyle.\u0275fac
+  });
+};
+(() => {
+  (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(ChipStyle, [{
+    type: Injectable
+  }], null, null);
+})();
+var ChipClasses;
+(function(ChipClasses2) {
+  ChipClasses2["root"] = "p-chip";
+  ChipClasses2["image"] = "p-chip-image";
+  ChipClasses2["icon"] = "p-chip-icon";
+  ChipClasses2["label"] = "p-chip-label";
+  ChipClasses2["removeIcon"] = "p-chip-remove-icon";
+})(ChipClasses || (ChipClasses = {}));
+var Chip = class _Chip extends BaseComponent {
+  /**
+   * Defines the text to display.
+   * @group Props
+   */
+  label;
+  /**
+   * Defines the icon to display.
+   * @group Props
+   */
+  icon;
+  /**
+   * Defines the image to display.
+   * @group Props
+   */
+  image;
+  /**
+   * Alt attribute of the image.
+   * @group Props
+   */
+  alt;
+  /**
+   * Inline style of the element.
+   * @group Props
+   */
+  style;
+  /**
+   * Class of the element.
+   * @group Props
+   */
+  styleClass;
+  /**
+   * Whether to display a remove icon.
+   * @group Props
+   */
+  removable = false;
+  /**
+   * Icon of the remove element.
+   * @group Props
+   */
+  removeIcon;
+  /**
+   * Callback to invoke when a chip is removed.
+   * @param {MouseEvent} event - Mouse event.
+   * @group Emits
+   */
+  onRemove = new EventEmitter();
+  /**
+   * This event is triggered if an error occurs while loading an image file.
+   * @param {Event} event - Browser event.
+   * @group Emits
+   */
+  onImageError = new EventEmitter();
+  visible = true;
+  get removeAriaLabel() {
+    return this.config.getTranslation(TranslationKeys.ARIA)["removeLabel"];
+  }
+  /**
+   * Used to pass all properties of the chipProps to the Chip component.
+   * @group Props
+   */
+  get chipProps() {
+    return this._chipProps;
+  }
+  set chipProps(val) {
+    this._chipProps = val;
+    if (val && typeof val === "object") {
+      Object.entries(val).forEach(([k, v]) => this[`_${k}`] !== v && (this[`_${k}`] = v));
+    }
+  }
+  _chipProps;
+  _componentStyle = inject(ChipStyle);
+  removeIconTemplate;
+  templates;
+  _removeIconTemplate;
+  ngAfterContentInit() {
+    this.templates.forEach((item) => {
+      switch (item.getType()) {
+        case "removeicon":
+          this._removeIconTemplate = item.template;
+          break;
+        default:
+          this._removeIconTemplate = item.template;
+          break;
+      }
+    });
+  }
+  ngOnChanges(simpleChanges) {
+    super.ngOnChanges(simpleChanges);
+    if (simpleChanges.chipProps && simpleChanges.chipProps.currentValue) {
+      const {
+        currentValue
+      } = simpleChanges.chipProps;
+      if (currentValue.label !== void 0) {
+        this.label = currentValue.label;
+      }
+      if (currentValue.icon !== void 0) {
+        this.icon = currentValue.icon;
+      }
+      if (currentValue.image !== void 0) {
+        this.image = currentValue.image;
+      }
+      if (currentValue.alt !== void 0) {
+        this.alt = currentValue.alt;
+      }
+      if (currentValue.style !== void 0) {
+        this.style = currentValue.style;
+      }
+      if (currentValue.styleClass !== void 0) {
+        this.styleClass = currentValue.styleClass;
+      }
+      if (currentValue.removable !== void 0) {
+        this.removable = currentValue.removable;
+      }
+      if (currentValue.removeIcon !== void 0) {
+        this.removeIcon = currentValue.removeIcon;
+      }
+    }
+  }
+  containerClass() {
+    let classes38 = "p-chip p-component";
+    if (this.styleClass) {
+      classes38 += ` ${this.styleClass}`;
+    }
+    return classes38;
+  }
+  close(event2) {
+    this.visible = false;
+    this.onRemove.emit(event2);
+  }
+  onKeydown(event2) {
+    if (event2.key === "Enter" || event2.key === "Backspace") {
+      this.close(event2);
+    }
+  }
+  imageError(event2) {
+    this.onImageError.emit(event2);
+  }
+  static \u0275fac = /* @__PURE__ */ (() => {
+    let \u0275Chip_BaseFactory;
+    return function Chip_Factory(__ngFactoryType__) {
+      return (\u0275Chip_BaseFactory || (\u0275Chip_BaseFactory = \u0275\u0275getInheritedFactory(_Chip)))(__ngFactoryType__ || _Chip);
+    };
+  })();
+  static \u0275cmp = /* @__PURE__ */ \u0275\u0275defineComponent({
+    type: _Chip,
+    selectors: [["p-chip"]],
+    contentQueries: function Chip_ContentQueries(rf, ctx, dirIndex) {
+      if (rf & 1) {
+        \u0275\u0275contentQuery(dirIndex, _c021, 4);
+        \u0275\u0275contentQuery(dirIndex, PrimeTemplate, 4);
+      }
+      if (rf & 2) {
+        let _t;
+        \u0275\u0275queryRefresh(_t = \u0275\u0275loadQuery()) && (ctx.removeIconTemplate = _t.first);
+        \u0275\u0275queryRefresh(_t = \u0275\u0275loadQuery()) && (ctx.templates = _t);
+      }
+    },
+    hostVars: 9,
+    hostBindings: function Chip_HostBindings(rf, ctx) {
+      if (rf & 2) {
+        \u0275\u0275attribute("data-pc-name", "chip")("aria-label", ctx.label)("data-pc-section", "root");
+        \u0275\u0275styleMap(ctx.style);
+        \u0275\u0275classMap(ctx.containerClass());
+        \u0275\u0275styleProp("display", !ctx.visible && "none");
+      }
+    },
+    inputs: {
+      label: "label",
+      icon: "icon",
+      image: "image",
+      alt: "alt",
+      style: "style",
+      styleClass: "styleClass",
+      removable: [2, "removable", "removable", booleanAttribute],
+      removeIcon: "removeIcon",
+      chipProps: "chipProps"
+    },
+    outputs: {
+      onRemove: "onRemove",
+      onImageError: "onImageError"
+    },
+    features: [\u0275\u0275ProvidersFeature([ChipStyle]), \u0275\u0275InheritDefinitionFeature, \u0275\u0275NgOnChangesFeature],
+    ngContentSelectors: _c117,
+    decls: 6,
+    vars: 4,
+    consts: [["iconTemplate", ""], ["class", "p-chip-image", 3, "src", "alt", "error", 4, "ngIf", "ngIfElse"], ["class", "p-chip-label", 4, "ngIf"], [4, "ngIf"], [1, "p-chip-image", 3, "error", "src", "alt"], [3, "class", "ngClass", 4, "ngIf"], [3, "ngClass"], [1, "p-chip-label"], ["tabindex", "0", "class", "p-chip-remove-icon", "role", "button", 3, "click", "keydown", 4, "ngIf"], ["tabindex", "0", "role", "button", 3, "class", "ngClass", "click", "keydown", 4, "ngIf"], ["tabindex", "0", "role", "button", 3, "class", "click", "keydown", 4, "ngIf"], ["tabindex", "0", "role", "button", 3, "click", "keydown", "ngClass"], ["tabindex", "0", "role", "button", 3, "click", "keydown"], ["tabindex", "0", "role", "button", 1, "p-chip-remove-icon", 3, "click", "keydown"], [4, "ngTemplateOutlet"]],
+    template: function Chip_Template(rf, ctx) {
+      if (rf & 1) {
+        \u0275\u0275projectionDef();
+        \u0275\u0275projection(0);
+        \u0275\u0275template(1, Chip_img_1_Template, 1, 2, "img", 1)(2, Chip_ng_template_2_Template, 1, 1, "ng-template", null, 0, \u0275\u0275templateRefExtractor)(4, Chip_div_4_Template, 2, 2, "div", 2)(5, Chip_ng_container_5_Template, 3, 2, "ng-container", 3);
+      }
+      if (rf & 2) {
+        const iconTemplate_r6 = \u0275\u0275reference(3);
+        \u0275\u0275advance();
+        \u0275\u0275property("ngIf", ctx.image)("ngIfElse", iconTemplate_r6);
+        \u0275\u0275advance(3);
+        \u0275\u0275property("ngIf", ctx.label);
+        \u0275\u0275advance();
+        \u0275\u0275property("ngIf", ctx.removable);
+      }
+    },
+    dependencies: [CommonModule, NgClass, NgIf, NgTemplateOutlet, TimesCircleIcon, SharedModule],
+    encapsulation: 2,
+    changeDetection: 0
+  });
+};
+(() => {
+  (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(Chip, [{
+    type: Component,
+    args: [{
+      selector: "p-chip",
+      standalone: true,
+      imports: [CommonModule, TimesCircleIcon, SharedModule],
+      template: `
+        <ng-content></ng-content>
+        <img class="p-chip-image" [src]="image" *ngIf="image; else iconTemplate" (error)="imageError($event)" [alt]="alt" />
+        <ng-template #iconTemplate><span *ngIf="icon" [class]="icon" [ngClass]="'p-chip-icon'" [attr.data-pc-section]="'icon'"></span></ng-template>
+        <div class="p-chip-label" *ngIf="label" [attr.data-pc-section]="'label'">{{ label }}</div>
+        <ng-container *ngIf="removable">
+            <ng-container *ngIf="!removeIconTemplate && !_removeIconTemplate">
+                <span
+                    tabindex="0"
+                    *ngIf="removeIcon"
+                    [class]="removeIcon"
+                    [ngClass]="'p-chip-remove-icon'"
+                    [attr.data-pc-section]="'removeicon'"
+                    (click)="close($event)"
+                    (keydown)="onKeydown($event)"
+                    [attr.aria-label]="removeAriaLabel"
+                    role="button"
+                ></span>
+                <TimesCircleIcon tabindex="0" *ngIf="!removeIcon" [class]="'p-chip-remove-icon'" [attr.data-pc-section]="'removeicon'" (click)="close($event)" (keydown)="onKeydown($event)" [attr.aria-label]="removeAriaLabel" role="button" />
+            </ng-container>
+            <span *ngIf="removeIconTemplate || _removeIconTemplate" tabindex="0" [attr.data-pc-section]="'removeicon'" class="p-chip-remove-icon" (click)="close($event)" (keydown)="onKeydown($event)" [attr.aria-label]="removeAriaLabel" role="button">
+                <ng-template *ngTemplateOutlet="removeIconTemplate || _removeIconTemplate"></ng-template>
+            </span>
+        </ng-container>
+    `,
+      changeDetection: ChangeDetectionStrategy.OnPush,
+      encapsulation: ViewEncapsulation.None,
+      providers: [ChipStyle],
+      host: {
+        "[class]": "containerClass()",
+        "[style]": "style",
+        "[style.display]": '!visible && "none"',
+        "[attr.data-pc-name]": "'chip'",
+        "[attr.aria-label]": "label",
+        "[attr.data-pc-section]": "'root'"
+      }
+    }]
+  }], null, {
+    label: [{
+      type: Input
+    }],
+    icon: [{
+      type: Input
+    }],
+    image: [{
+      type: Input
+    }],
+    alt: [{
+      type: Input
+    }],
+    style: [{
+      type: Input
+    }],
+    styleClass: [{
+      type: Input
+    }],
+    removable: [{
+      type: Input,
+      args: [{
+        transform: booleanAttribute
+      }]
+    }],
+    removeIcon: [{
+      type: Input
+    }],
+    onRemove: [{
+      type: Output
+    }],
+    onImageError: [{
+      type: Output
+    }],
+    chipProps: [{
+      type: Input
+    }],
+    removeIconTemplate: [{
+      type: ContentChild,
+      args: ["removeicon", {
+        descendants: false
+      }]
+    }],
+    templates: [{
+      type: ContentChildren,
+      args: [PrimeTemplate]
+    }]
+  });
+})();
+var ChipModule = class _ChipModule {
+  static \u0275fac = function ChipModule_Factory(__ngFactoryType__) {
+    return new (__ngFactoryType__ || _ChipModule)();
+  };
+  static \u0275mod = /* @__PURE__ */ \u0275\u0275defineNgModule({
+    type: _ChipModule,
+    imports: [Chip, SharedModule],
+    exports: [Chip, SharedModule]
+  });
+  static \u0275inj = /* @__PURE__ */ \u0275\u0275defineInjector({
+    imports: [Chip, SharedModule, SharedModule]
+  });
+};
+(() => {
+  (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(ChipModule, [{
+    type: NgModule,
+    args: [{
+      imports: [Chip, SharedModule],
+      exports: [Chip, SharedModule]
+    }]
+  }], null, null);
+})();
+
 // node_modules/primeng/fesm2022/primeng-accordion.mjs
-var _c021 = ["*"];
-var _c117 = ["toggleicon"];
+var _c022 = ["*"];
+var _c118 = ["toggleicon"];
 var _c214 = (a0) => ({
   active: a0
 });
@@ -56462,7 +57028,7 @@ var _c75 = ["icon"];
 var _c85 = ["content"];
 var _c94 = ["*", [["p-header"]]];
 var _c104 = ["*", "p-header"];
-var _c118 = (a0) => ({
+var _c119 = (a0) => ({
   $implicit: a0
 });
 function AccordionTab_Conditional_1_Template(rf, ctx) {
@@ -56517,7 +57083,7 @@ function AccordionTab_Conditional_3_Template(rf, ctx) {
   }
   if (rf & 2) {
     const ctx_r0 = \u0275\u0275nextContext();
-    \u0275\u0275property("ngTemplateOutlet", ctx_r0.iconTemplate || ctx_r0._iconTemplate)("ngTemplateOutletContext", \u0275\u0275pureFunction1(2, _c118, ctx_r0.selected));
+    \u0275\u0275property("ngTemplateOutlet", ctx_r0.iconTemplate || ctx_r0._iconTemplate)("ngTemplateOutletContext", \u0275\u0275pureFunction1(2, _c119, ctx_r0.selected));
   }
 }
 function AccordionTab_Conditional_4_ng_container_0_span_1_Template(rf, ctx) {
@@ -56618,7 +57184,7 @@ function AccordionTab_ng_container_8_Template(rf, ctx) {
     \u0275\u0275property("ngTemplateOutlet", ctx_r0.contentTemplate || ctx_r0._contentTemplate);
   }
 }
-var theme23 = ({
+var theme24 = ({
   dt: dt2
 }) => `
 .p-accordionpanel {
@@ -56730,13 +57296,13 @@ var theme23 = ({
     gap: ${dt2("accordion.header.padding")};
 }
 `;
-var classes23 = {
+var classes24 = {
   root: "p-accordion p-component"
 };
 var AccordionStyle = class _AccordionStyle extends BaseStyle {
   name = "accordion";
-  theme = theme23;
-  classes = classes23;
+  theme = theme24;
+  classes = classes24;
   static \u0275fac = /* @__PURE__ */ (() => {
     let \u0275AccordionStyle_BaseFactory;
     return function AccordionStyle_Factory(__ngFactoryType__) {
@@ -56809,7 +57375,7 @@ var AccordionPanel = class _AccordionPanel extends BaseComponent {
       value: "valueChange"
     },
     features: [\u0275\u0275InheritDefinitionFeature],
-    ngContentSelectors: _c021,
+    ngContentSelectors: _c022,
     decls: 1,
     vars: 0,
     template: function AccordionPanel_Template(rf, ctx) {
@@ -56966,7 +57532,7 @@ var AccordionHeader = class _AccordionHeader extends BaseComponent {
     selectors: [["p-accordion-header"], ["p-accordionheader"]],
     contentQueries: function AccordionHeader_ContentQueries(rf, ctx, dirIndex) {
       if (rf & 1) {
-        \u0275\u0275contentQuery(dirIndex, _c117, 5);
+        \u0275\u0275contentQuery(dirIndex, _c118, 5);
       }
       if (rf & 2) {
         let _t;
@@ -56991,7 +57557,7 @@ var AccordionHeader = class _AccordionHeader extends BaseComponent {
       }
     },
     features: [\u0275\u0275HostDirectivesFeature([Ripple]), \u0275\u0275InheritDefinitionFeature],
-    ngContentSelectors: _c021,
+    ngContentSelectors: _c022,
     decls: 3,
     vars: 1,
     consts: [[4, "ngTemplateOutlet", "ngTemplateOutletContext"], [4, "ngIf"], [3, "class", "ngClass", 4, "ngIf"], [3, "ngClass", 4, "ngIf"], [3, "ngClass"]],
@@ -57092,7 +57658,7 @@ var AccordionContent = class _AccordionContent extends BaseComponent {
       }
     },
     features: [\u0275\u0275InheritDefinitionFeature],
-    ngContentSelectors: _c021,
+    ngContentSelectors: _c022,
     decls: 2,
     vars: 9,
     consts: [[1, "p-accordioncontent-content"]],
@@ -57972,7 +58538,7 @@ var Accordion = class _Accordion extends BaseComponent {
       onOpen: "onOpen"
     },
     features: [\u0275\u0275ProvidersFeature([AccordionStyle]), \u0275\u0275InheritDefinitionFeature],
-    ngContentSelectors: _c021,
+    ngContentSelectors: _c022,
     decls: 1,
     vars: 0,
     template: function Accordion_Template(rf, ctx) {
@@ -58076,8 +58642,8 @@ var AccordionModule = class _AccordionModule {
 })();
 
 // node_modules/primeng/fesm2022/primeng-inputnumber.mjs
-var _c022 = ["clearicon"];
-var _c119 = ["incrementbuttonicon"];
+var _c023 = ["clearicon"];
+var _c120 = ["incrementbuttonicon"];
 var _c215 = ["decrementbuttonicon"];
 var _c314 = ["input"];
 function InputNumber_ng_container_2_TimesIcon_1_Template(rf, ctx) {
@@ -58443,7 +59009,7 @@ function InputNumber_button_5_Template(rf, ctx) {
     \u0275\u0275property("ngIf", !ctx_r2.decrementButtonIcon);
   }
 }
-var theme24 = ({
+var theme25 = ({
   dt: dt2
 }) => `
 .p-inputnumber {
@@ -58633,7 +59199,7 @@ p-inputnumber.ng-invalid.ng-dirty > .p-inputtext::placeholder {
     color: ${dt2("inputtext.invalid.placeholder.color")};
 }
 `;
-var classes24 = {
+var classes25 = {
   root: ({
     instance
   }) => ({
@@ -58662,8 +59228,8 @@ var classes24 = {
 };
 var InputNumberStyle = class _InputNumberStyle extends BaseStyle {
   name = "inputnumber";
-  theme = theme24;
-  classes = classes24;
+  theme = theme25;
+  classes = classes25;
   static \u0275fac = /* @__PURE__ */ (() => {
     let \u0275InputNumberStyle_BaseFactory;
     return function InputNumberStyle_Factory(__ngFactoryType__) {
@@ -59868,8 +60434,8 @@ var InputNumber = class _InputNumber extends BaseComponent {
     selectors: [["p-inputNumber"], ["p-inputnumber"], ["p-input-number"]],
     contentQueries: function InputNumber_ContentQueries(rf, ctx, dirIndex) {
       if (rf & 1) {
-        \u0275\u0275contentQuery(dirIndex, _c022, 4);
-        \u0275\u0275contentQuery(dirIndex, _c119, 4);
+        \u0275\u0275contentQuery(dirIndex, _c023, 4);
+        \u0275\u0275contentQuery(dirIndex, _c120, 4);
         \u0275\u0275contentQuery(dirIndex, _c215, 4);
         \u0275\u0275contentQuery(dirIndex, PrimeTemplate, 4);
       }
@@ -60410,8 +60976,8 @@ var InputNumberModule = class _InputNumberModule {
 })();
 
 // node_modules/primeng/fesm2022/primeng-datepicker.mjs
-var _c023 = ["date"];
-var _c120 = ["header"];
+var _c024 = ["date"];
+var _c121 = ["header"];
 var _c216 = ["footer"];
 var _c315 = ["disabledDate"];
 var _c411 = ["decade"];
@@ -61750,7 +62316,7 @@ function DatePicker_div_3_Template(rf, ctx) {
     \u0275\u0275property("ngTemplateOutlet", ctx_r1.footerTemplate || ctx_r1._footerTemplate);
   }
 }
-var theme25 = ({
+var theme26 = ({
   dt: dt2
 }) => `
 .p-datepicker {
@@ -62177,7 +62743,7 @@ var inlineStyles3 = {
     position: props.appendTo === "self" ? "relative" : void 0
   })
 };
-var classes25 = {
+var classes26 = {
   root: ({
     instance
   }) => ({
@@ -62273,8 +62839,8 @@ var classes25 = {
 };
 var DatePickerStyle = class _DatePickerStyle extends BaseStyle {
   name = "datepicker";
-  theme = theme25;
-  classes = classes25;
+  theme = theme26;
+  classes = classes26;
   inlineStyles = inlineStyles3;
   static \u0275fac = /* @__PURE__ */ (() => {
     let \u0275DatePickerStyle_BaseFactory;
@@ -65317,8 +65883,8 @@ var DatePicker = class _DatePicker extends BaseComponent {
     selectors: [["p-datePicker"], ["p-datepicker"], ["p-date-picker"]],
     contentQueries: function DatePicker_ContentQueries(rf, ctx, dirIndex) {
       if (rf & 1) {
-        \u0275\u0275contentQuery(dirIndex, _c023, 4);
-        \u0275\u0275contentQuery(dirIndex, _c120, 4);
+        \u0275\u0275contentQuery(dirIndex, _c024, 4);
+        \u0275\u0275contentQuery(dirIndex, _c121, 4);
         \u0275\u0275contentQuery(dirIndex, _c216, 4);
         \u0275\u0275contentQuery(dirIndex, _c315, 4);
         \u0275\u0275contentQuery(dirIndex, _c411, 4);
@@ -66405,8 +66971,8 @@ var DatePickerModule = class _DatePickerModule {
 })();
 
 // node_modules/primeng/fesm2022/primeng-iconfield.mjs
-var _c024 = ["*"];
-var theme26 = ({
+var _c025 = ["*"];
+var theme27 = ({
   dt: dt2
 }) => `
 .p-iconfield {
@@ -66452,13 +67018,13 @@ var theme26 = ({
     margin-top: calc(-1 * (${dt2("form.field.lg.font.size")} / 2));
 }
 `;
-var classes26 = {
+var classes27 = {
   root: "p-iconfield"
 };
 var IconFieldStyle = class _IconFieldStyle extends BaseStyle {
   name = "iconfield";
-  theme = theme26;
-  classes = classes26;
+  theme = theme27;
+  classes = classes27;
   static \u0275fac = /* @__PURE__ */ (() => {
     let \u0275IconFieldStyle_BaseFactory;
     return function IconFieldStyle_Factory(__ngFactoryType__) {
@@ -66516,7 +67082,7 @@ var IconField = class _IconField extends BaseComponent {
       styleClass: "styleClass"
     },
     features: [\u0275\u0275ProvidersFeature([IconFieldStyle]), \u0275\u0275InheritDefinitionFeature],
-    ngContentSelectors: _c024,
+    ngContentSelectors: _c025,
     decls: 1,
     vars: 0,
     template: function IconField_Template(rf, ctx) {
@@ -66584,13 +67150,13 @@ var IconFieldModule = class _IconFieldModule {
 })();
 
 // node_modules/primeng/fesm2022/primeng-inputicon.mjs
-var _c025 = ["*"];
-var classes27 = {
+var _c026 = ["*"];
+var classes28 = {
   root: "p-inputicon"
 };
 var InputIconStyle = class _InputIconStyle extends BaseStyle {
   name = "inputicon";
-  classes = classes27;
+  classes = classes28;
   static \u0275fac = /* @__PURE__ */ (() => {
     let \u0275InputIconStyle_BaseFactory;
     return function InputIconStyle_Factory(__ngFactoryType__) {
@@ -66637,7 +67203,7 @@ var InputIcon = class _InputIcon extends BaseComponent {
       styleClass: "styleClass"
     },
     features: [\u0275\u0275ProvidersFeature([InputIconStyle]), \u0275\u0275InheritDefinitionFeature],
-    ngContentSelectors: _c025,
+    ngContentSelectors: _c026,
     decls: 1,
     vars: 0,
     template: function InputIcon_Template(rf, ctx) {
@@ -66701,8 +67267,8 @@ var InputIconModule = class _InputIconModule {
 })();
 
 // node_modules/primeng/fesm2022/primeng-overlay.mjs
-var _c026 = ["content"];
-var _c121 = ["overlay"];
+var _c027 = ["content"];
+var _c126 = ["overlay"];
 var _c217 = ["*"];
 var _c316 = (a0, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13) => ({
   "p-overlay p-component": true,
@@ -66790,7 +67356,7 @@ function Overlay_div_0_Template(rf, ctx) {
     \u0275\u0275property("ngIf", ctx_r1.visible);
   }
 }
-var theme27 = ({
+var theme28 = ({
   dt: dt2
 }) => `
 .p-overlay {
@@ -66873,7 +67439,7 @@ var theme27 = ({
 `;
 var OverlayStyle = class _OverlayStyle extends BaseStyle {
   name = "overlay";
-  theme = theme27;
+  theme = theme28;
   static \u0275fac = /* @__PURE__ */ (() => {
     let \u0275OverlayStyle_BaseFactory;
     return function OverlayStyle_Factory(__ngFactoryType__) {
@@ -67420,7 +67986,7 @@ var Overlay = class _Overlay extends BaseComponent {
     selectors: [["p-overlay"]],
     contentQueries: function Overlay_ContentQueries(rf, ctx, dirIndex) {
       if (rf & 1) {
-        \u0275\u0275contentQuery(dirIndex, _c026, 4);
+        \u0275\u0275contentQuery(dirIndex, _c027, 4);
         \u0275\u0275contentQuery(dirIndex, PrimeTemplate, 4);
       }
       if (rf & 2) {
@@ -67431,8 +67997,8 @@ var Overlay = class _Overlay extends BaseComponent {
     },
     viewQuery: function Overlay_Query(rf, ctx) {
       if (rf & 1) {
-        \u0275\u0275viewQuery(_c121, 5);
-        \u0275\u0275viewQuery(_c026, 5);
+        \u0275\u0275viewQuery(_c126, 5);
+        \u0275\u0275viewQuery(_c027, 5);
       }
       if (rf & 2) {
         let _t;
@@ -67663,8 +68229,8 @@ var OverlayModule = class _OverlayModule {
 })();
 
 // node_modules/primeng/fesm2022/primeng-scroller.mjs
-var _c027 = ["content"];
-var _c126 = ["item"];
+var _c028 = ["content"];
+var _c127 = ["item"];
 var _c218 = ["loader"];
 var _c317 = ["loadericon"];
 var _c413 = ["element"];
@@ -67692,7 +68258,7 @@ var _c106 = (a0) => ({
 var _c1111 = (a0) => ({
   options: a0
 });
-var _c127 = () => ({
+var _c128 = () => ({
   styleClass: "p-virtualscroller-loading-icon"
 });
 var _c135 = (a0, a1) => ({
@@ -67805,7 +68371,7 @@ function Scroller_ng_container_0_div_7_ng_template_2_ng_container_0_Template(rf,
   if (rf & 2) {
     const ctx_r1 = \u0275\u0275nextContext(4);
     \u0275\u0275advance();
-    \u0275\u0275property("ngTemplateOutlet", ctx_r1.loaderIconTemplate || ctx_r1._loaderIconTemplate)("ngTemplateOutletContext", \u0275\u0275pureFunction1(3, _c1111, \u0275\u0275pureFunction0(2, _c127)));
+    \u0275\u0275property("ngTemplateOutlet", ctx_r1.loaderIconTemplate || ctx_r1._loaderIconTemplate)("ngTemplateOutletContext", \u0275\u0275pureFunction1(3, _c1111, \u0275\u0275pureFunction0(2, _c128)));
   }
 }
 function Scroller_ng_container_0_div_7_ng_template_2_ng_template_1_Template(rf, ctx) {
@@ -67899,7 +68465,7 @@ function Scroller_ng_template_1_Template(rf, ctx) {
     \u0275\u0275property("ngIf", ctx_r1.contentTemplate || ctx_r1._contentTemplate);
   }
 }
-var theme28 = ({
+var theme29 = ({
   dt: dt2
 }) => `
 .p-virtualscroller {
@@ -67962,7 +68528,7 @@ var theme28 = ({
 `;
 var ScrollerStyle = class _ScrollerStyle extends BaseStyle {
   name = "virtualscroller";
-  theme = theme28;
+  theme = theme29;
   static \u0275fac = /* @__PURE__ */ (() => {
     let \u0275ScrollerStyle_BaseFactory;
     return function ScrollerStyle_Factory(__ngFactoryType__) {
@@ -69008,8 +69574,8 @@ var Scroller = class _Scroller extends BaseComponent {
     selectors: [["p-scroller"], ["p-virtualscroller"], ["p-virtual-scroller"], ["p-virtualScroller"]],
     contentQueries: function Scroller_ContentQueries(rf, ctx, dirIndex) {
       if (rf & 1) {
-        \u0275\u0275contentQuery(dirIndex, _c027, 4);
-        \u0275\u0275contentQuery(dirIndex, _c126, 4);
+        \u0275\u0275contentQuery(dirIndex, _c028, 4);
+        \u0275\u0275contentQuery(dirIndex, _c127, 4);
         \u0275\u0275contentQuery(dirIndex, _c218, 4);
         \u0275\u0275contentQuery(dirIndex, _c317, 4);
         \u0275\u0275contentQuery(dirIndex, PrimeTemplate, 4);
@@ -69026,7 +69592,7 @@ var Scroller = class _Scroller extends BaseComponent {
     viewQuery: function Scroller_Query(rf, ctx) {
       if (rf & 1) {
         \u0275\u0275viewQuery(_c413, 5);
-        \u0275\u0275viewQuery(_c027, 5);
+        \u0275\u0275viewQuery(_c028, 5);
       }
       if (rf & 2) {
         let _t;
@@ -69315,10 +69881,10 @@ var ScrollerModule = class _ScrollerModule {
 })();
 
 // node_modules/primeng/fesm2022/primeng-select.mjs
-var _c028 = (a0) => ({
+var _c029 = (a0) => ({
   height: a0
 });
-var _c128 = (a0, a1, a2) => ({
+var _c129 = (a0, a1, a2) => ({
   "p-select-option": true,
   "p-select-option-selected": a0,
   "p-disabled": a1,
@@ -69378,7 +69944,7 @@ var _c88 = ["filter"];
 var _c97 = ["footer"];
 var _c107 = ["emptyfilter"];
 var _c1112 = ["empty"];
-var _c129 = ["dropdownicon"];
+var _c1210 = ["dropdownicon"];
 var _c136 = ["loadingicon"];
 var _c144 = ["clearicon"];
 var _c153 = ["filtericon"];
@@ -69837,7 +70403,7 @@ function Select_ng_template_9_p_scroller_6_Template(rf, ctx) {
   }
   if (rf & 2) {
     const ctx_r2 = \u0275\u0275nextContext(2);
-    \u0275\u0275styleMap(\u0275\u0275pureFunction1(8, _c028, ctx_r2.scrollHeight));
+    \u0275\u0275styleMap(\u0275\u0275pureFunction1(8, _c029, ctx_r2.scrollHeight));
     \u0275\u0275property("items", ctx_r2.visibleOptions())("itemSize", ctx_r2.virtualScrollItemSize || ctx_r2._itemSize)("autoSize", true)("lazy", ctx_r2.lazy)("options", ctx_r2.virtualScrollOptions);
     \u0275\u0275advance(4);
     \u0275\u0275property("ngIf", ctx_r2.loaderTemplate || ctx_r2._loaderTemplate);
@@ -69895,7 +70461,7 @@ function Select_ng_template_9_ng_template_8_ng_template_2_ng_container_0_Templat
     const scrollerOptions_r20 = \u0275\u0275nextContext().options;
     const ctx_r2 = \u0275\u0275nextContext(2);
     \u0275\u0275advance();
-    \u0275\u0275property("ngStyle", \u0275\u0275pureFunction1(5, _c028, scrollerOptions_r20.itemSize + "px"));
+    \u0275\u0275property("ngStyle", \u0275\u0275pureFunction1(5, _c029, scrollerOptions_r20.itemSize + "px"));
     \u0275\u0275attribute("id", ctx_r2.id + "_" + ctx_r2.getOptionIndex(i_r19, scrollerOptions_r20));
     \u0275\u0275advance();
     \u0275\u0275property("ngIf", !ctx_r2.groupTemplate && !ctx_r2._groupTemplate);
@@ -69977,7 +70543,7 @@ function Select_ng_template_9_ng_template_8_li_3_Template(rf, ctx) {
   if (rf & 2) {
     const scrollerOptions_r20 = \u0275\u0275nextContext().options;
     const ctx_r2 = \u0275\u0275nextContext(2);
-    \u0275\u0275property("ngStyle", \u0275\u0275pureFunction1(2, _c028, scrollerOptions_r20.itemSize + "px"));
+    \u0275\u0275property("ngStyle", \u0275\u0275pureFunction1(2, _c029, scrollerOptions_r20.itemSize + "px"));
     \u0275\u0275advance();
     \u0275\u0275conditional(!ctx_r2.emptyFilterTemplate && !ctx_r2._emptyFilterTemplate && !ctx_r2.emptyTemplate ? 1 : 2);
   }
@@ -70014,7 +70580,7 @@ function Select_ng_template_9_ng_template_8_li_4_Template(rf, ctx) {
   if (rf & 2) {
     const scrollerOptions_r20 = \u0275\u0275nextContext().options;
     const ctx_r2 = \u0275\u0275nextContext(2);
-    \u0275\u0275property("ngStyle", \u0275\u0275pureFunction1(2, _c028, scrollerOptions_r20.itemSize + "px"));
+    \u0275\u0275property("ngStyle", \u0275\u0275pureFunction1(2, _c029, scrollerOptions_r20.itemSize + "px"));
     \u0275\u0275advance();
     \u0275\u0275conditional(!ctx_r2.emptyTemplate && !ctx_r2._emptyTemplate ? 1 : 2);
   }
@@ -70090,7 +70656,7 @@ function Select_ng_template_9_Template(rf, ctx) {
     \u0275\u0275attribute("tabindex", 0)("data-p-hidden-accessible", true)("data-p-hidden-focusable", true);
   }
 }
-var theme29 = ({
+var theme30 = ({
   dt: dt2
 }) => `
 .p-select {
@@ -70314,7 +70880,7 @@ input.p-select-label {
     height: ${dt2("select.lg.font.size")};
 }
 `;
-var classes28 = {
+var classes29 = {
   root: ({
     instance
   }) => ["p-select p-component p-inputwrapper", {
@@ -70364,8 +70930,8 @@ var classes28 = {
 };
 var SelectStyle = class _SelectStyle extends BaseStyle {
   name = "select";
-  theme = theme29;
-  classes = classes28;
+  theme = theme30;
+  classes = classes29;
   static \u0275fac = /* @__PURE__ */ (() => {
     let \u0275SelectStyle_BaseFactory;
     return function SelectStyle_Factory(__ngFactoryType__) {
@@ -70472,7 +71038,7 @@ var SelectItem = class _SelectItem extends BaseComponent {
         \u0275\u0275elementEnd();
       }
       if (rf & 2) {
-        \u0275\u0275property("id", ctx.id)("ngStyle", \u0275\u0275pureFunction1(14, _c028, ctx.itemSize + "px"))("ngClass", \u0275\u0275pureFunction3(16, _c128, ctx.selected && !ctx.checkmark, ctx.disabled, ctx.focused));
+        \u0275\u0275property("id", ctx.id)("ngStyle", \u0275\u0275pureFunction1(14, _c029, ctx.itemSize + "px"))("ngClass", \u0275\u0275pureFunction3(16, _c129, ctx.selected && !ctx.checkmark, ctx.disabled, ctx.focused));
         \u0275\u0275attribute("aria-label", ctx.label)("aria-setsize", ctx.ariaSetSize)("aria-posinset", ctx.ariaPosInset)("aria-selected", ctx.selected)("data-p-focused", ctx.focused)("data-p-highlight", ctx.selected)("data-p-disabled", ctx.disabled);
         \u0275\u0275advance();
         \u0275\u0275property("ngIf", ctx.checkmark);
@@ -71058,7 +71624,7 @@ var Select = class _Select extends BaseComponent {
   }
   // @todo to be refactored
   get hostClass() {
-    const classes37 = this._componentStyle.classes.root({
+    const classes38 = this._componentStyle.classes.root({
       instance: this
     }).map((cls) => {
       if (typeof cls === "string") {
@@ -71067,7 +71633,7 @@ var Select = class _Select extends BaseComponent {
         return Object.keys(cls).filter((key) => cls[key]).join(" ");
       }
     }).join(" ");
-    return classes37 + " " + this.styleClass;
+    return classes38 + " " + this.styleClass;
   }
   get hostStyle() {
     return this.style;
@@ -72036,7 +72602,7 @@ var Select = class _Select extends BaseComponent {
         \u0275\u0275contentQuery(dirIndex, _c97, 4);
         \u0275\u0275contentQuery(dirIndex, _c107, 4);
         \u0275\u0275contentQuery(dirIndex, _c1112, 4);
-        \u0275\u0275contentQuery(dirIndex, _c129, 4);
+        \u0275\u0275contentQuery(dirIndex, _c1210, 4);
         \u0275\u0275contentQuery(dirIndex, _c136, 4);
         \u0275\u0275contentQuery(dirIndex, _c144, 4);
         \u0275\u0275contentQuery(dirIndex, _c153, 4);
@@ -72920,7 +73486,7 @@ var SelectModule = class _SelectModule {
 })();
 
 // node_modules/primeng/fesm2022/primeng-paginator.mjs
-var _c029 = ["dropdownicon"];
+var _c030 = ["dropdownicon"];
 var _c130 = ["firstpagelinkicon"];
 var _c220 = ["previouspagelinkicon"];
 var _c319 = ["lastpagelinkicon"];
@@ -73389,7 +73955,7 @@ function Paginator_div_0_Template(rf, ctx) {
     \u0275\u0275property("ngIf", ctx_r1.templateRight);
   }
 }
-var theme30 = ({
+var theme31 = ({
   dt: dt2
 }) => `
 .p-paginator {
@@ -73489,7 +74055,7 @@ var theme30 = ({
     max-width: ${dt2("paginator.jump.to.page.input.max.width")};
 }
 `;
-var classes29 = {
+var classes30 = {
   paginator: ({
     instance,
     key
@@ -73538,8 +74104,8 @@ var classes29 = {
 };
 var PaginatorStyle = class _PaginatorStyle extends BaseStyle {
   name = "paginator";
-  theme = theme30;
-  classes = classes29;
+  theme = theme31;
+  classes = classes30;
   static \u0275fac = /* @__PURE__ */ (() => {
     let \u0275PaginatorStyle_BaseFactory;
     return function PaginatorStyle_Factory(__ngFactoryType__) {
@@ -73944,7 +74510,7 @@ var Paginator = class _Paginator extends BaseComponent {
     selectors: [["p-paginator"]],
     contentQueries: function Paginator_ContentQueries(rf, ctx, dirIndex) {
       if (rf & 1) {
-        \u0275\u0275contentQuery(dirIndex, _c029, 4);
+        \u0275\u0275contentQuery(dirIndex, _c030, 4);
         \u0275\u0275contentQuery(dirIndex, _c130, 4);
         \u0275\u0275contentQuery(dirIndex, _c220, 4);
         \u0275\u0275contentQuery(dirIndex, _c319, 4);
@@ -74282,7 +74848,7 @@ var PaginatorModule = class _PaginatorModule {
 })();
 
 // node_modules/primeng/fesm2022/primeng-selectbutton.mjs
-var _c030 = ["item"];
+var _c031 = ["item"];
 var _c131 = (a0, a1) => ({
   $implicit: a0,
   index: a1
@@ -74334,7 +74900,7 @@ function SelectButton_For_1_Template(rf, ctx) {
     \u0275\u0275conditional(ctx_r4.itemTemplate || ctx_r4._itemTemplate ? 1 : -1);
   }
 }
-var theme31 = ({
+var theme32 = ({
   dt: dt2
 }) => `
 .p-selectbutton {
@@ -74371,7 +74937,7 @@ var theme31 = ({
     outline-offset: 0;
 }
 `;
-var classes30 = {
+var classes31 = {
   root: ({
     props
   }) => ["p-selectbutton p-component", {
@@ -74380,8 +74946,8 @@ var classes30 = {
 };
 var SelectButtonStyle = class _SelectButtonStyle extends BaseStyle {
   name = "selectbutton";
-  theme = theme31;
-  classes = classes30;
+  theme = theme32;
+  classes = classes31;
   static \u0275fac = /* @__PURE__ */ (() => {
     let \u0275SelectButtonStyle_BaseFactory;
     return function SelectButtonStyle_Factory(__ngFactoryType__) {
@@ -74644,7 +75210,7 @@ var SelectButton = class _SelectButton extends BaseComponent {
     selectors: [["p-selectButton"], ["p-selectbutton"], ["p-select-button"]],
     contentQueries: function SelectButton_ContentQueries(rf, ctx, dirIndex) {
       if (rf & 1) {
-        \u0275\u0275contentQuery(dirIndex, _c030, 4);
+        \u0275\u0275contentQuery(dirIndex, _c031, 4);
         \u0275\u0275contentQuery(dirIndex, PrimeTemplate, 4);
       }
       if (rf & 2) {
@@ -74846,7 +75412,7 @@ var SelectButtonModule = class _SelectButtonModule {
 })();
 
 // node_modules/primeng/fesm2022/primeng-table.mjs
-var _c031 = ["header"];
+var _c032 = ["header"];
 var _c137 = ["headergrouped"];
 var _c221 = ["body"];
 var _c320 = ["loadingbody"];
@@ -74858,7 +75424,7 @@ var _c89 = ["colgroup"];
 var _c98 = ["expandedrow"];
 var _c108 = ["groupheader"];
 var _c1113 = ["groupfooter"];
-var _c1210 = ["frozenexpandedrow"];
+var _c1211 = ["frozenexpandedrow"];
 var _c138 = ["frozenheader"];
 var _c145 = ["frozenbody"];
 var _c154 = ["frozenfooter"];
@@ -76483,7 +77049,7 @@ function ColumnFilterFormElement_ng_template_1_Template(rf, ctx) {
     \u0275\u0275property("ngSwitchCase", "date");
   }
 }
-var theme32 = ({
+var theme33 = ({
   dt: dt2
 }) => `
 .p-datatable {
@@ -77096,7 +77662,7 @@ p-datatable-gridlines .p-datatable-tbody > tr:last-child > td {
     outline-offset: ${dt2("datatable.row.toggle.button.focus.ring.offset")};
 }
 `;
-var classes31 = {
+var classes32 = {
   root: ({
     instance
   }) => ({
@@ -77212,8 +77778,8 @@ var inlineStyles4 = {
 };
 var TableStyle = class _TableStyle extends BaseStyle {
   name = "datatable";
-  theme = theme32;
-  classes = classes31;
+  theme = theme33;
+  classes = classes32;
   inlineStyles = inlineStyles4;
   static \u0275fac = /* @__PURE__ */ (() => {
     let \u0275TableStyle_BaseFactory;
@@ -79778,7 +80344,7 @@ var Table = class _Table extends BaseComponent {
     selectors: [["p-table"]],
     contentQueries: function Table_ContentQueries(rf, ctx, dirIndex) {
       if (rf & 1) {
-        \u0275\u0275contentQuery(dirIndex, _c031, 4);
+        \u0275\u0275contentQuery(dirIndex, _c032, 4);
         \u0275\u0275contentQuery(dirIndex, _c137, 4);
         \u0275\u0275contentQuery(dirIndex, _c221, 4);
         \u0275\u0275contentQuery(dirIndex, _c320, 4);
@@ -79790,7 +80356,7 @@ var Table = class _Table extends BaseComponent {
         \u0275\u0275contentQuery(dirIndex, _c98, 4);
         \u0275\u0275contentQuery(dirIndex, _c108, 4);
         \u0275\u0275contentQuery(dirIndex, _c1113, 4);
-        \u0275\u0275contentQuery(dirIndex, _c1210, 4);
+        \u0275\u0275contentQuery(dirIndex, _c1211, 4);
         \u0275\u0275contentQuery(dirIndex, _c138, 4);
         \u0275\u0275contentQuery(dirIndex, _c145, 4);
         \u0275\u0275contentQuery(dirIndex, _c154, 4);
@@ -84380,7 +84946,7 @@ var ColumnFilter = class _ColumnFilter extends BaseComponent {
     selectors: [["p-columnFilter"]],
     contentQueries: function ColumnFilter_ContentQueries(rf, ctx, dirIndex) {
       if (rf & 1) {
-        \u0275\u0275contentQuery(dirIndex, _c031, 4);
+        \u0275\u0275contentQuery(dirIndex, _c032, 4);
         \u0275\u0275contentQuery(dirIndex, _c542, 4);
         \u0275\u0275contentQuery(dirIndex, _c514, 4);
         \u0275\u0275contentQuery(dirIndex, _c552, 4);
@@ -85072,7 +85638,7 @@ var TableModule = class _TableModule {
 })();
 
 // node_modules/primeng/fesm2022/primeng-popover.mjs
-var _c032 = ["content"];
+var _c033 = ["content"];
 var _c139 = ["*"];
 var _c225 = (a0, a1) => ({
   showTransitionParams: a0,
@@ -85132,7 +85698,7 @@ function Popover_div_0_Template(rf, ctx) {
     \u0275\u0275property("ngTemplateOutlet", ctx_r1.contentTemplate || ctx_r1._contentTemplate)("ngTemplateOutletContext", \u0275\u0275pureFunction1(16, _c417, ctx_r1.onCloseClick.bind(ctx_r1)));
   }
 }
-var theme33 = ({
+var theme34 = ({
   dt: dt2
 }) => `
 .p-popover {
@@ -85215,14 +85781,14 @@ var theme33 = ({
 }
 
 `;
-var classes32 = {
+var classes33 = {
   root: "p-popover p-component",
   content: "p-popover-content"
 };
 var PopoverStyle = class _PopoverStyle extends BaseStyle {
   name = "popover";
-  theme = theme33;
-  classes = classes32;
+  theme = theme34;
+  classes = classes33;
   static \u0275fac = /* @__PURE__ */ (() => {
     let \u0275PopoverStyle_BaseFactory;
     return function PopoverStyle_Factory(__ngFactoryType__) {
@@ -85593,7 +86159,7 @@ var Popover = class _Popover extends BaseComponent {
     selectors: [["p-popover"]],
     contentQueries: function Popover_ContentQueries(rf, ctx, dirIndex) {
       if (rf & 1) {
-        \u0275\u0275contentQuery(dirIndex, _c032, 4);
+        \u0275\u0275contentQuery(dirIndex, _c033, 4);
         \u0275\u0275contentQuery(dirIndex, PrimeTemplate, 4);
       }
       if (rf & 2) {
@@ -85796,7 +86362,7 @@ var PopoverModule = class _PopoverModule {
 })();
 
 // node_modules/primeng/fesm2022/primeng-organizationchart.mjs
-var _c033 = ["pOrganizationChartNode", ""];
+var _c034 = ["pOrganizationChartNode", ""];
 var _c140 = (a0, a1) => ({
   "p-organizationchart-node": true,
   "p-organizationchart-node-selectable": a0,
@@ -86064,7 +86630,7 @@ function OrganizationChart_table_1_Template(rf, ctx) {
     \u0275\u0275property("collapsible", ctx_r0.collapsible)("node", ctx_r0.root);
   }
 }
-var theme34 = ({
+var theme35 = ({
   dt: dt2
 }) => `
 .p-organizationchart-table {
@@ -86179,7 +86745,7 @@ var theme34 = ({
     border-start-start-radius: ${dt2("organizationchart.connector.border.radius")};
 }
 `;
-var classes33 = {
+var classes34 = {
   root: "p-organizationchart p-component",
   table: "p-organizationchart-table",
   node: ({
@@ -86207,8 +86773,8 @@ var classes33 = {
 };
 var OrganizationChartStyle = class _OrganizationChartStyle extends BaseStyle {
   name = "organizationchart";
-  theme = theme34;
-  classes = classes33;
+  theme = theme35;
+  classes = classes34;
   static \u0275fac = /* @__PURE__ */ (() => {
     let \u0275OrganizationChartStyle_BaseFactory;
     return function OrganizationChartStyle_Factory(__ngFactoryType__) {
@@ -86303,7 +86869,7 @@ var OrganizationChartNode = class _OrganizationChartNode {
       last: [2, "last", "last", booleanAttribute],
       collapsible: [2, "collapsible", "collapsible", booleanAttribute]
     },
-    attrs: _c033,
+    attrs: _c034,
     decls: 1,
     vars: 1,
     consts: [[4, "ngIf"], [3, "click", "ngClass"], [1, "p-organizationchart-connectors", 3, "ngStyle"], [1, "p-organizationchart-connector-down"], [1, "p-organizationchart-node-children", 3, "ngStyle"], ["colspan", "2", 4, "ngFor", "ngForOf"], [4, "ngTemplateOutlet", "ngTemplateOutletContext"], ["tabindex", "0", "class", "p-organizationchart-node-toggle-button", 3, "click", "keydown.enter", "keydown.space", 4, "ngIf"], ["tabindex", "0", 1, "p-organizationchart-node-toggle-button", 3, "click", "keydown.enter", "keydown.space"], ["class", "p-organizationchart-node-toggle-button-icon", 4, "ngIf"], [3, "styleClass", 4, "ngIf"], [3, "styleClass"], [1, "p-organizationchart-node-toggle-button-icon"], ["ngFor", "", 3, "ngForOf"], [1, "p-organizationchart-connector-left", 3, "ngClass"], [1, "p-organizationchart-connector-right", 3, "ngClass"], ["colspan", "2"], ["pOrganizationChartNode", "", 1, "p-organizationchart-table", 3, "node", "collapsible"]],
@@ -86771,7 +87337,7 @@ var OrganizationChartModule = class _OrganizationChartModule {
 })();
 
 // node_modules/primeng/fesm2022/primeng-treetable.mjs
-var _c034 = ["colgroup"];
+var _c035 = ["colgroup"];
 var _c141 = ["caption"];
 var _c227 = ["header"];
 var _c324 = ["body"];
@@ -86783,7 +87349,7 @@ var _c810 = ["paginatorright"];
 var _c99 = ["paginatordropdownitem"];
 var _c109 = ["frozenheader"];
 var _c1114 = ["frozenbody"];
-var _c1211 = ["frozenfooter"];
+var _c1212 = ["frozenfooter"];
 var _c1310 = ["frozencolgroup"];
 var _c146 = ["loadingicon"];
 var _c155 = ["reorderindicatorupicon"];
@@ -87664,7 +88230,7 @@ function TreeTableToggler_2_Template(rf, ctx) {
     \u0275\u0275template(0, TreeTableToggler_2_ng_template_0_Template, 0, 0, "ng-template");
   }
 }
-var theme35 = ({
+var theme36 = ({
   dt: dt2
 }) => `
 /* For PrimeNG */
@@ -88115,7 +88681,7 @@ p-tree-table-toggler + p-tree-table-checkbox + span {
     vertical-align: middle;
 }
 `;
-var classes34 = {
+var classes35 = {
   root: ({
     instance
   }) => ({
@@ -88205,8 +88771,8 @@ var inlineStyles5 = {
 };
 var TreeTableStyle = class _TreeTableStyle extends BaseStyle {
   name = "treetable";
-  theme = theme35;
-  classes = classes34;
+  theme = theme36;
+  classes = classes35;
   inlineStyles = inlineStyles5;
   static \u0275fac = /* @__PURE__ */ (() => {
     let \u0275TreeTableStyle_BaseFactory;
@@ -90116,7 +90682,7 @@ var TreeTable = class _TreeTable extends BaseComponent {
     selectors: [["p-treeTable"], ["p-treetable"], ["p-tree-table"]],
     contentQueries: function TreeTable_ContentQueries(rf, ctx, dirIndex) {
       if (rf & 1) {
-        \u0275\u0275contentQuery(dirIndex, _c034, 4);
+        \u0275\u0275contentQuery(dirIndex, _c035, 4);
         \u0275\u0275contentQuery(dirIndex, _c141, 4);
         \u0275\u0275contentQuery(dirIndex, _c227, 4);
         \u0275\u0275contentQuery(dirIndex, _c324, 4);
@@ -90128,7 +90694,7 @@ var TreeTable = class _TreeTable extends BaseComponent {
         \u0275\u0275contentQuery(dirIndex, _c99, 4);
         \u0275\u0275contentQuery(dirIndex, _c109, 4);
         \u0275\u0275contentQuery(dirIndex, _c1114, 4);
-        \u0275\u0275contentQuery(dirIndex, _c1211, 4);
+        \u0275\u0275contentQuery(dirIndex, _c1212, 4);
         \u0275\u0275contentQuery(dirIndex, _c1310, 4);
         \u0275\u0275contentQuery(dirIndex, _c146, 4);
         \u0275\u0275contentQuery(dirIndex, _c155, 4);
@@ -93188,7 +93754,7 @@ var TreeTableModule = class _TreeTableModule {
 })();
 
 // node_modules/primeng/fesm2022/primeng-tree.mjs
-var _c035 = (a0) => ({
+var _c036 = (a0) => ({
   height: a0
 });
 var _c147 = (a0) => ({
@@ -93518,7 +94084,7 @@ function UITreeNode_Conditional_0_Template(rf, ctx) {
     \u0275\u0275advance();
     \u0275\u0275styleMap(ctx_r2.node.style);
     \u0275\u0275classMap(ctx_r2.node.styleClass);
-    \u0275\u0275property("ngClass", ctx_r2.nodeClass)("ngStyle", \u0275\u0275pureFunction1(29, _c035, ctx_r2.itemSize + "px"));
+    \u0275\u0275property("ngClass", ctx_r2.nodeClass)("ngStyle", \u0275\u0275pureFunction1(29, _c036, ctx_r2.itemSize + "px"));
     \u0275\u0275attribute("aria-label", ctx_r2.node.label)("aria-checked", ctx_r2.checked)("aria-setsize", ctx_r2.node.children ? ctx_r2.node.children.length : 0)("aria-selected", ctx_r2.selected)("aria-expanded", ctx_r2.node.expanded)("aria-posinset", ctx_r2.index + 1)("aria-level", ctx_r2.level + 1)("tabindex", ctx_r2.index === 0 ? 0 : -1)("data-id", ctx_r2.node.key);
     \u0275\u0275advance();
     \u0275\u0275styleProp("padding-left", ctx_r2.level * ctx_r2.indentation + "rem");
@@ -93550,7 +94116,7 @@ var _c811 = ["footer"];
 var _c910 = ["loader"];
 var _c1010 = ["empty"];
 var _c1115 = ["togglericon"];
-var _c1212 = ["checkboxicon"];
+var _c1213 = ["checkboxicon"];
 var _c1311 = ["loadingicon"];
 var _c148 = ["filtericon"];
 var _c156 = ["scroller"];
@@ -93787,7 +94353,7 @@ function Tree_ng_container_5_p_scroller_1_Template(rf, ctx) {
   }
   if (rf & 2) {
     const ctx_r0 = \u0275\u0275nextContext(2);
-    \u0275\u0275styleMap(\u0275\u0275pureFunction1(9, _c035, ctx_r0.scrollHeight !== "flex" ? ctx_r0.scrollHeight : void 0));
+    \u0275\u0275styleMap(\u0275\u0275pureFunction1(9, _c036, ctx_r0.scrollHeight !== "flex" ? ctx_r0.scrollHeight : void 0));
     \u0275\u0275property("items", ctx_r0.serializedValue)("tabindex", -1)("scrollHeight", ctx_r0.scrollHeight !== "flex" ? void 0 : "100%")("itemSize", ctx_r0.virtualScrollItemSize || ctx_r0._virtualNodeHeight)("lazy", ctx_r0.lazy)("options", ctx_r0.virtualScrollOptions);
     \u0275\u0275advance(4);
     \u0275\u0275property("ngIf", ctx_r0.loaderTemplate || ctx_r0._loaderTemplate);
@@ -93887,7 +94453,7 @@ function Tree_ng_container_7_Template(rf, ctx) {
     \u0275\u0275elementContainer(0);
   }
 }
-var theme36 = ({
+var theme37 = ({
   dt: dt2
 }) => `
 .p-tree {
@@ -94112,7 +94678,7 @@ var theme36 = ({
     height: 0;
 }
 `;
-var classes35 = {
+var classes36 = {
   root: ({
     instance
   }) => ({
@@ -94152,8 +94718,8 @@ var classes35 = {
 };
 var TreeStyle = class _TreeStyle extends BaseStyle {
   name = "tree";
-  theme = theme36;
-  classes = classes35;
+  theme = theme37;
+  classes = classes36;
   static \u0275fac = /* @__PURE__ */ (() => {
     let \u0275TreeStyle_BaseFactory;
     return function TreeStyle_Factory(__ngFactoryType__) {
@@ -95787,7 +96353,7 @@ var Tree2 = class _Tree extends BaseComponent {
         \u0275\u0275contentQuery(dirIndex, _c910, 4);
         \u0275\u0275contentQuery(dirIndex, _c1010, 4);
         \u0275\u0275contentQuery(dirIndex, _c1115, 4);
-        \u0275\u0275contentQuery(dirIndex, _c1212, 4);
+        \u0275\u0275contentQuery(dirIndex, _c1213, 4);
         \u0275\u0275contentQuery(dirIndex, _c1311, 4);
         \u0275\u0275contentQuery(dirIndex, _c148, 4);
         \u0275\u0275contentQuery(dirIndex, PrimeTemplate, 4);
@@ -96332,7 +96898,7 @@ var TreeModule = class _TreeModule {
 })();
 
 // node_modules/primeng/fesm2022/primeng-contextmenu.mjs
-var _c036 = ["sublist"];
+var _c037 = ["sublist"];
 var _c149 = (a0, a1) => ({
   "p-contextmenu-submenu": a0,
   "p-contextmenu-root-list": a1
@@ -96717,7 +97283,7 @@ var _c1116 = (a0) => ({
   "p-contextmenu p-component": true,
   "p-contextmenu-mobile": a0
 });
-var _c1213 = () => ({
+var _c1214 = () => ({
   value: "visible"
 });
 function ContextMenu_div_0_Template(rf, ctx) {
@@ -96760,13 +97326,13 @@ function ContextMenu_div_0_Template(rf, ctx) {
   if (rf & 2) {
     const ctx_r1 = \u0275\u0275nextContext();
     \u0275\u0275classMap(ctx_r1.styleClass);
-    \u0275\u0275property("ngClass", \u0275\u0275pureFunction1(20, _c1116, ctx_r1.queryMatches))("ngStyle", ctx_r1.style)("@overlayAnimation", \u0275\u0275pureFunction0(22, _c1213));
+    \u0275\u0275property("ngClass", \u0275\u0275pureFunction1(20, _c1116, ctx_r1.queryMatches))("ngStyle", ctx_r1.style)("@overlayAnimation", \u0275\u0275pureFunction0(22, _c1214));
     \u0275\u0275attribute("data-pc-section", "root")("data-pc-name", "contextmenu")("id", ctx_r1.id);
     \u0275\u0275advance(2);
     \u0275\u0275property("root", true)("items", ctx_r1.processedItems)("itemTemplate", ctx_r1.itemTemplate || ctx_r1._itemTemplate)("menuId", ctx_r1.id)("tabindex", !ctx_r1.disabled ? ctx_r1.tabindex : -1)("ariaLabel", ctx_r1.ariaLabel)("ariaLabelledBy", ctx_r1.ariaLabelledBy)("baseZIndex", ctx_r1.baseZIndex)("autoZIndex", ctx_r1.autoZIndex)("visible", ctx_r1.submenuVisible())("focusedItemId", ctx_r1.focused ? ctx_r1.focusedItemId : void 0)("activeItemPath", ctx_r1.activeItemPath());
   }
 }
-var theme37 = ({
+var theme38 = ({
   dt: dt2
 }) => `
 .p-contextmenu {
@@ -96926,7 +97492,7 @@ var theme37 = ({
     margin-right: auto;
 }
 `;
-var classes36 = {
+var classes37 = {
   root: "p-contextmenu p-component",
   rootList: "p-contextmenu-root-list",
   item: ({
@@ -96947,8 +97513,8 @@ var classes36 = {
 };
 var ContextMenuStyle = class _ContextMenuStyle extends BaseStyle {
   name = "contextmenu";
-  theme = theme37;
-  classes = classes36;
+  theme = theme38;
+  classes = classes37;
   static \u0275fac = /* @__PURE__ */ (() => {
     let \u0275ContextMenuStyle_BaseFactory;
     return function ContextMenuStyle_Factory(__ngFactoryType__) {
@@ -97100,7 +97666,7 @@ var ContextMenuSub = class _ContextMenuSub extends BaseComponent {
     selectors: [["p-contextMenuSub"], ["p-contextmenu-sub"]],
     viewQuery: function ContextMenuSub_Query(rf, ctx) {
       if (rf & 1) {
-        \u0275\u0275viewQuery(_c036, 5);
+        \u0275\u0275viewQuery(_c037, 5);
       }
       if (rf & 2) {
         let _t;
@@ -98622,6 +99188,8 @@ export {
   ReorderableRowHandle,
   ReorderableRow,
   TableModule,
+  Chip,
+  ChipModule,
   TabList,
   Tab,
   TabPanel,
@@ -98678,4 +99246,4 @@ export {
    * License: MIT
    *)
 */
-//# sourceMappingURL=chunk-R3CBZH7E.js.map
+//# sourceMappingURL=chunk-PXZ4WSZL.js.map
