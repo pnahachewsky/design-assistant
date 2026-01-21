@@ -154,6 +154,28 @@
     *ngIf="!production"
   >
     <p-accordion-header
+      >Topic page IA
+      <span class="flex-spacer"></span>
+      <span
+        class="feature-badge"
+        *ngIf="flags.iaStructure"
+        aria-label="Issues found"
+      ></span>
+    </p-accordion-header>
+    <p class="mt-0 ml-4 text-color-secondary" *ngIf="!isPanelOpen(6)">
+      Add doormat text.
+    </p>
+    <p-accordion-content>
+      <ca-topic-page-ia></ca-topic-page-ia>
+    </p-accordion-content>
+  </p-accordion-panel>
+
+  <p-accordion-panel
+    [value]="7"
+    class="border-1 border-round-sm border-surface"
+    *ngIf="!production"
+  >
+    <p-accordion-header
       >Topic/navigation page analysis
       <span class="flex-spacer"></span>
       <span
@@ -162,7 +184,7 @@
         aria-label="Issues found"
       ></span>
     </p-accordion-header>
-    <p class="mt-0 ml-4 text-color-secondary" *ngIf="!isPanelOpen(6)">
+    <p class="mt-0 ml-4 text-color-secondary" *ngIf="!isPanelOpen(7)">
       Determine issues in an existing or assemble informaiton to create a new one
     </p>
     <p-accordion-content>
