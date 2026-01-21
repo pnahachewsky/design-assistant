@@ -62,6 +62,28 @@
     *ngIf="!production"
   >
     <p-accordion-header
+      >Topic page IA
+      <span class="flex-spacer"></span>
+      <span
+        class="feature-badge"
+        *ngIf="flags.iaStructure"
+        aria-label="Issues found"
+      ></span>
+    </p-accordion-header>
+    <p class="mt-0 ml-4 text-color-secondary" *ngIf="!isPanelOpen(2)">
+      Add doormat text.
+    </p>
+    <p-accordion-content>
+      <ca-topic-page-ia></ca-topic-page-ia>
+    </p-accordion-content>
+  </p-accordion-panel>
+
+  <p-accordion-panel
+    [value]="3"
+    class="border-1 border-round-sm border-surface"
+    *ngIf="!production"
+  >
+    <p-accordion-header
       >SEO
       <span class="flex-spacer"></span>
       <span
@@ -70,7 +92,7 @@
         aria-label="Issues found"
       ></span>
     </p-accordion-header>
-    <p class="mt-0 ml-4 text-color-secondary" *ngIf="!isPanelOpen(2)">
+    <p class="mt-0 ml-4 text-color-secondary" *ngIf="!isPanelOpen(3)">
       Add doormat text.
     </p>
     <p-accordion-content>
@@ -79,7 +101,7 @@
   </p-accordion-panel>
 
   <p-accordion-panel
-    [value]="3"
+    [value]="4"
     class="border-1 border-round-sm border-surface"
     *ngIf="!production"
   >
@@ -92,7 +114,7 @@
         aria-label="Issues found"
       ></span>
     </p-accordion-header>
-    <p class="mt-0 ml-4 text-color-secondary" *ngIf="!isPanelOpen(3)">
+    <p class="mt-0 ml-4 text-color-secondary" *ngIf="!isPanelOpen(4)">
       Add doormat text.
     </p>
     <p-accordion-content>
@@ -101,7 +123,7 @@
   </p-accordion-panel>
 
   <p-accordion-panel
-    [value]="4"
+    [value]="5"
     class="border-1 border-round-sm border-surface"
     *ngIf="!production"
   >
@@ -114,7 +136,7 @@
         aria-label="Issues found"
       ></span>
     </p-accordion-header>
-    <p class="mt-0 ml-4 text-color-secondary" *ngIf="!isPanelOpen(4)">
+    <p class="mt-0 ml-4 text-color-secondary" *ngIf="!isPanelOpen(5)">
       Check link text vs destination content, flag duplicate destinations and
       404 page.
     </p>
@@ -127,7 +149,7 @@
   </p-accordion-panel>
 
   <p-accordion-panel
-    [value]="5"
+    [value]="6"
     class="border-1 border-round-sm border-surface"
     *ngIf="!production"
   >
@@ -140,55 +162,11 @@
         aria-label="Issues found"
       ></span>
     </p-accordion-header>
-    <p class="mt-0 ml-4 text-color-secondary" *ngIf="!isPanelOpen(5)">
-      Add doormat text.
-    </p>
-    <p-accordion-content>
-      <ca-ia-structure></ca-ia-structure>
-    </p-accordion-content>
-  </p-accordion-panel>
-
-  <p-accordion-panel
-    [value]="6"
-    class="border-1 border-round-sm border-surface"
-    *ngIf="!production"
-  >
-    <p-accordion-header
-      >Topic page IA
-      <span class="flex-spacer"></span>
-      <span
-        class="feature-badge"
-        *ngIf="flags.iaStructure"
-        aria-label="Issues found"
-      ></span>
-    </p-accordion-header>
     <p class="mt-0 ml-4 text-color-secondary" *ngIf="!isPanelOpen(6)">
       Add doormat text.
     </p>
     <p-accordion-content>
-      <ca-topic-page-ia></ca-topic-page-ia>
-    </p-accordion-content>
-  </p-accordion-panel>
-
-  <p-accordion-panel
-    [value]="7"
-    class="border-1 border-round-sm border-surface"
-    *ngIf="!production"
-  >
-    <p-accordion-header
-      >Topic/navigation page analysis
-      <span class="flex-spacer"></span>
-      <span
-        class="feature-badge"
-        *ngIf="flags.topicPage"
-        aria-label="Issues found"
-      ></span>
-    </p-accordion-header>
-    <p class="mt-0 ml-4 text-color-secondary" *ngIf="!isPanelOpen(7)">
-      Determine issues in an existing or assemble informaiton to create a new one
-    </p>
-    <p-accordion-content>
-      <ca-topic-page></ca-topic-page>
+      <ca-ia-structure></ca-ia-structure>
     </p-accordion-content>
   </p-accordion-panel>
 

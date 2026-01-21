@@ -26,6 +26,10 @@ import {
 import { ContextMenuModule, ContextMenu } from 'primeng/contextmenu';
 import { InputGroup } from 'primeng/inputgroup';
 import { InputGroupAddonModule } from 'primeng/inputgroupaddon';
+import {
+  FileUploadModule,
+  FileUploadHandlerEvent,
+} from 'primeng/fileupload';
 
 //Services
 import { UploadStateService } from '../../../../services/upload-state.service';
@@ -33,7 +37,7 @@ import { IaStructureService } from '../../../../services/ia-structure.service';
 import { TranslateService, TranslateModule } from '@ngx-translate/core';
 import { ThemeService } from '../../../../../../services/theme.service';
 
-import { MenuItem, TreeNode, TreeDragDropService } from 'primeng/api';
+import { MenuItem, TreeNode, TreeDragDropService, MessageService } from 'primeng/api';
 import { FullscreenHTMLElement } from '../../../../../../views/ia-assistant/data/data.model';
 
 import { environment } from '../../../../../../../environments/environment';
@@ -56,6 +60,7 @@ import { environment } from '../../../../../../../environments/environment';
     ContextMenuModule,
     InputGroup,
     InputGroupAddonModule,
+    FileUploadModule,
   ],
   providers: [TreeDragDropService],
   templateUrl: './topic-page-ia.component.html',
@@ -98,6 +103,7 @@ import { environment } from '../../../../../../../environments/environment';
     ::ng-deep .ia-chart-container .p-organizationchart-node.text-black a {
       color: #000000 !important;
     }
+
   `,
 })
 export class TopicPageIaComponent implements OnInit {
@@ -106,6 +112,7 @@ export class TopicPageIaComponent implements OnInit {
   private locationStrategy = inject(LocationStrategy);
   private theme = inject(ThemeService);
   private iaStructure = inject(IaStructureService);
+  private messageService = inject(MessageService);
 
   production: boolean = environment.production;
 
@@ -113,6 +120,7 @@ export class TopicPageIaComponent implements OnInit {
     effect(() => {
       this.theme.darkMode(); // track dark mode changes
       this.updateNodeStyles(this.iaChart, 0);
+      this.updateTopicPageTreeStyles(this.topicPageTree, 0);
     });
   }
 
@@ -122,6 +130,8 @@ export class TopicPageIaComponent implements OnInit {
     this.originalUrl = data?.originalUrl || '';
     this.options = [...this.baseMenu];
     this.baseHref = this.locationStrategy.getBaseHref();
+    this.topicPageTree = this.buildTopicPageTree(this.getCurrentPageLabel());
+    this.updateTopicPageTreeStyles(this.topicPageTree, 0);
   }
 
   originalUrl = '';
@@ -132,13 +142,19 @@ export class TopicPageIaComponent implements OnInit {
   //IA chart
   iaChart: TreeNode[] | null = null;
   brokenLinks: { parentUrl?: string; url: string; status: number }[] = [];
-  depth = 4; //default value
+  depth = 3; //default value
 
   //For tracking progress while building IA chart
   isChartLoading = false;
   iaProgress = 0;
   totalUrls = 0;
   processedUrls = 0;
+  showCsvUpload = false;
+  csvFileName = '';
+  urlColumnIndex: number | null = null;
+  topicPageTree: TreeNode[] = [];
+  visitsByUrl = new Map<string, number>();
+  visitsColumnIndex: number | null = null;
 
   //Button fxn
   async checkIA() {
@@ -178,12 +194,10 @@ export class TopicPageIaComponent implements OnInit {
     this.iaChart = result.tree;
     this.brokenLinks = result.brokenLinks;
     this.updateNodeStyles(this.iaChart, 0);
+    this.applyVisitsToIaTree();
+    this.rebuildTopicPageTreeFromIa();
 
-    //Set focus to first element in chart
-    setTimeout(() => {
-      const firstNode = document.querySelector('.p-organizationchart-node a');
-      if (firstNode) (firstNode as HTMLElement).focus();
-    });
+    // Avoid shifting the view after crawl completion.
   }
 
   //Step 1: Check if breadcrumb orphan via parent page
@@ -311,7 +325,11 @@ export class TopicPageIaComponent implements OnInit {
   async copyUrlsToClipboard() {
     const urls = this.collectUrls(this.iaChart);
     if (!urls.length) {
-      window.alert('No URLs available to copy yet.');
+      this.messageService.add({
+        severity: 'warn',
+        summary: this.translate.instant('page.topicIa.copyUrls.empty'),
+        life: 3000,
+      });
       return;
     }
 
@@ -322,10 +340,386 @@ export class TopicPageIaComponent implements OnInit {
       } else {
         this.fallbackCopyText(text);
       }
-      window.alert('URLs copied to clipboard.');
+      this.messageService.add({
+        severity: 'success',
+        summary: this.translate.instant('page.topicIa.copyUrls.success'),
+        life: 3000,
+      });
+      this.showCsvUpload = true;
     } catch (err) {
       console.error('Failed to copy URLs:', err);
-      window.alert('Unable to copy URLs. Please try again.');
+      this.messageService.add({
+        severity: 'error',
+        summary: this.translate.instant('page.topicIa.copyUrls.error'),
+        life: 4000,
+      });
+    }
+  }
+
+  onCsvUpload(event: FileUploadHandlerEvent) {
+    const file = event.files?.[0];
+    if (!file) return;
+    this.csvFileName = file.name;
+    this.readCsvFile(file);
+  }
+
+  private readCsvFile(file: File) {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const text = typeof reader.result === 'string' ? reader.result : '';
+      const rows = this.parseCsv(text);
+      const headers = this.getHeadersFromRows(rows);
+      this.urlColumnIndex = this.getUrlColumnIndex(headers);
+      this.visitsColumnIndex = this.getVisitsColumnIndex(headers);
+      this.visitsByUrl = this.buildVisitsMap(
+        rows,
+        this.urlColumnIndex,
+        this.visitsColumnIndex,
+      );
+      this.applyVisitsToIaTree();
+      this.rebuildTopicPageTreeFromIa();
+      this.messageService.add({
+        severity: 'success',
+        summary: this.translate.instant('page.topicIa.csvUpload.toast.summary'),
+        detail: this.translate.instant('page.topicIa.csvUpload.toast.detail', {
+          fileName: file.name,
+        }),
+        life: 4000,
+      });
+      if (!rows.slice(1).length) {
+        this.messageService.add({
+          severity: 'warn',
+          summary: 'No rows found in the CSV.',
+          life: 3000,
+        });
+      }
+    };
+    reader.onerror = () => {
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Unable to read the CSV file.',
+        life: 4000,
+      });
+    };
+    reader.readAsText(file);
+  }
+
+  private getHeadersFromRows(rows: string[][]): string[] {
+    if (!rows.length) return [];
+    return rows[0].map((cell, index) =>
+      (index === 0 ? cell.replace(/^\uFEFF/, '') : cell).trim(),
+    );
+  }
+
+  private getUrlColumnIndex(headers: string[]): number | null {
+    if (!headers.length) return null;
+    const index = headers.findIndex((header) =>
+      header.toLowerCase().includes('url') || header.toLowerCase().includes('page'),
+    );
+    return index >= 0 ? index : null;
+  }
+
+  private getVisitsColumnIndex(headers: string[]): number | null {
+    if (!headers.length) return null;
+    const index = headers.findIndex((header) =>
+      header.toLowerCase().includes('visit'),
+    );
+    return index >= 0 ? index : null;
+  }
+
+  private buildTopicPageTree(rootLabel: string): TreeNode[] {
+    return [
+      {
+        label: rootLabel,
+        data: {
+          url: this.originalUrl,
+          isRoot: true,
+        },
+        expanded: true,
+        children: [
+          {
+            label: 'Most requested',
+            data: { url: '', isCategory: true },
+            expanded: true,
+            children: [],
+          },
+          {
+            label: 'Doormats',
+            data: { url: '', isCategory: true },
+            expanded: true,
+            children: [],
+          },
+          {
+            label: 'Feature',
+            data: { url: '', isCategory: true },
+            expanded: true,
+            children: [],
+          },
+          {
+            label: 'Not on topic page',
+            data: { url: '', isCategory: true },
+            expanded: true,
+            children: [],
+          },
+        ],
+      },
+    ];
+  }
+
+  private rebuildTopicPageTreeFromIa(): void {
+    const baseTree = this.buildTopicPageTree(this.getCurrentPageLabel());
+    if (!this.iaChart?.length) {
+      this.topicPageTree = baseTree;
+      this.updateTopicPageTreeStyles(this.topicPageTree, 0);
+      return;
+    }
+
+    const doormats: TreeNode[] = [];
+    const notOnTopics: TreeNode[] = [];
+    const mostRequestedCandidates: { node: TreeNode; visits: number }[] = [];
+
+    const walk = (nodes: TreeNode[], depth: number) => {
+      for (const node of nodes) {
+        if (depth > 0) {
+          const cloned = this.cloneFlatNode(node);
+          if (depth === 1) {
+            doormats.push(cloned);
+          } else {
+            notOnTopics.push(cloned);
+            const visits = this.getVisitsForNode(node);
+            if (visits !== null) {
+              mostRequestedCandidates.push({ node: cloned, visits });
+            }
+          }
+        }
+        if (node.children?.length) {
+          walk(node.children, depth + 1);
+        }
+      }
+    };
+
+    walk(this.iaChart, 0);
+
+    const root = baseTree[0];
+    const categories = root.children ?? [];
+    const mostRequested = categories[0];
+    const doormatsCategory = categories[1];
+    const feature = categories[2];
+    const notOnTopicsCategory = categories[3];
+
+    if (mostRequested) {
+      if (this.visitsByUrl.size > 0 && mostRequestedCandidates.length > 0) {
+        const top = [...mostRequestedCandidates]
+          .sort((a, b) => b.visits - a.visits)
+          .slice(0, 6);
+        const topUrls = new Set(
+          top.map((item) =>
+            this.normalizeUrl(item.node.data?.url ?? ''),
+          ),
+        );
+        mostRequested.children = top.map((item) => item.node);
+        const remaining = notOnTopics.filter(
+          (node) => !topUrls.has(this.normalizeUrl(node.data?.url ?? '')),
+        );
+        notOnTopicsCategory.children = this.sortByVisitsDesc(remaining);
+      } else {
+        mostRequested.children = [];
+      }
+    }
+    if (feature) feature.children = [];
+    if (doormatsCategory) doormatsCategory.children = doormats;
+    if (notOnTopicsCategory && !notOnTopicsCategory.children) {
+      notOnTopicsCategory.children =
+        this.visitsByUrl.size > 0
+          ? this.sortByVisitsDesc(notOnTopics)
+          : notOnTopics;
+    }
+
+    this.topicPageTree = [root];
+    this.updateTopicPageTreeStyles(this.topicPageTree, 0);
+  }
+
+  private getVisitsForNode(node: TreeNode): number | null {
+    const url = node.data?.url?.trim();
+    if (!url) return null;
+    const normalized = this.normalizeUrl(url);
+    const visits =
+      this.visitsByUrl.get(normalized) ??
+      this.visitsByUrl.get(this.normalizeUrl(this.decodeUrl(url)));
+    return visits ?? null;
+  }
+
+  private sortByVisitsDesc(nodes: TreeNode[]): TreeNode[] {
+    return [...nodes].sort((a, b) => {
+      const visitsA = this.getVisitsForNode(a) ?? -1;
+      const visitsB = this.getVisitsForNode(b) ?? -1;
+      return visitsB - visitsA;
+    });
+  }
+
+  private cloneFlatNode(node: TreeNode): TreeNode {
+    return {
+      label: node.label,
+      data: {
+        url: node.data?.url ?? '',
+        isCategory: false,
+      },
+    };
+  }
+
+  private getCurrentPageLabel(): string {
+    const label = this.iaChart?.[0]?.label;
+    if (typeof label === 'string' && label.trim().length) {
+      return label;
+    }
+    return this.originalUrl || 'Current page';
+  }
+
+  private parseCsv(text: string): string[][] {
+    const rows: string[][] = [];
+    let row: string[] = [];
+    let value = '';
+    let inQuotes = false;
+
+    for (let i = 0; i < text.length; i += 1) {
+      const char = text[i];
+      const nextChar = text[i + 1];
+
+      if (char === '"' && inQuotes && nextChar === '"') {
+        value += '"';
+        i += 1;
+        continue;
+      }
+
+      if (char === '"') {
+        inQuotes = !inQuotes;
+        continue;
+      }
+
+      if (char === ',' && !inQuotes) {
+        row.push(value.trim());
+        value = '';
+        continue;
+      }
+
+      if ((char === '\n' || char === '\r') && !inQuotes) {
+        if (char === '\r' && nextChar === '\n') {
+          i += 1;
+        }
+        row.push(value.trim());
+        if (row.some((cell) => cell.length)) {
+          rows.push(row);
+        }
+        row = [];
+        value = '';
+        continue;
+      }
+
+      value += char;
+    }
+
+    row.push(value.trim());
+    if (row.some((cell) => cell.length)) {
+      rows.push(row);
+    }
+
+    return rows;
+  }
+
+  private buildVisitsMap(
+    rows: string[][],
+    urlIndex: number | null,
+    visitsIndex: number | null,
+  ): Map<string, number> {
+    if (
+      !rows.length ||
+      urlIndex === null ||
+      visitsIndex === null ||
+      urlIndex < 0 ||
+      visitsIndex < 0
+    ) {
+      return new Map();
+    }
+
+    const map = new Map<string, number>();
+    const dataRows = rows.slice(1);
+    for (const row of dataRows) {
+      const urlRaw = row[urlIndex]?.trim();
+      const visitsRaw = row[visitsIndex]?.trim();
+      if (!urlRaw || !visitsRaw) continue;
+      const visits = this.parseVisits(visitsRaw);
+      if (visits === null) continue;
+      const normalized = this.normalizeUrl(urlRaw);
+      map.set(normalized, visits);
+      map.set(this.normalizeUrl(this.decodeUrl(urlRaw)), visits);
+    }
+    return map;
+  }
+
+  private applyVisitsToIaTree(): void {
+    if (!this.iaChart?.length || this.visitsByUrl.size === 0) return;
+
+    const walk = (nodes: TreeNode[]) => {
+      for (const node of nodes) {
+        const url = node?.data?.url?.trim();
+        if (url) {
+          const visits =
+            this.visitsByUrl.get(this.normalizeUrl(url)) ??
+            this.visitsByUrl.get(this.normalizeUrl(this.decodeUrl(url)));
+          if (visits !== undefined) {
+            const baseLabel =
+              node.data?.originalLabel ?? (node.label ?? '').toString();
+            if (!node.data.originalLabel) {
+              node.data.originalLabel = baseLabel;
+            }
+            node.label = `${baseLabel} (${this.formatVisits(visits)} visits)`;
+          }
+        }
+        if (node.children?.length) {
+          walk(node.children);
+        }
+      }
+    };
+
+    walk(this.iaChart);
+  }
+
+  private parseVisits(raw: string): number | null {
+    const cleaned = raw.replace(/[^\d.]/g, '');
+    if (!cleaned) return null;
+    const value = Number.parseFloat(cleaned);
+    if (!Number.isFinite(value)) return null;
+    return Math.round(value);
+  }
+
+  private formatVisits(value: number): string {
+    return new Intl.NumberFormat('en-CA').format(value);
+  }
+
+  private normalizeUrl(url: string): string {
+    try {
+      const parsed = new URL(this.ensureUrlScheme(url));
+      const normalized = `${parsed.origin.toLowerCase()}${parsed.pathname}`;
+      return normalized.replace(/\/+$/, '');
+    } catch {
+      const stripped = url.split('#')[0].split('?')[0];
+      return stripped.replace(/\/+$/, '');
+    }
+  }
+
+  private ensureUrlScheme(url: string): string {
+    const trimmed = url.trim();
+    if (/^https?:\/\//i.test(trimmed)) return trimmed;
+    if (/^www\./i.test(trimmed)) return `https://${trimmed}`;
+    if (/^canada\.ca\//i.test(trimmed)) return `https://${trimmed}`;
+    return trimmed;
+  }
+
+  private decodeUrl(url: string): string {
+    try {
+      return decodeURI(url);
+    } catch {
+      return url;
     }
   }
 
@@ -900,5 +1294,67 @@ export class TopicPageIaComponent implements OnInit {
         this.updateNodeStyles(node.children, nextLevel);
       }
     }
+  }
+
+  private updateTopicPageTreeStyles(nodes: TreeNode[] | null, level = 0): void {
+    if (!nodes) return;
+
+    const bgColors = this.theme.darkMode()
+      ? this.topicTreeBgColorsDark
+      : this.topicTreeBgColorsLight;
+
+    for (const node of nodes) {
+      const borderStyle =
+        node.data?.borderStyle ||
+        'border-2 border-round shadow-2 border-green-500';
+
+      const bgClass = bgColors[level % bgColors.length];
+      node.styleClass = `${borderStyle} ${bgClass}`;
+
+      if (node.children && node.children.length > 0) {
+        this.updateTopicPageTreeStyles(node.children, level + 1);
+      }
+    }
+  }
+
+  topicTreeBgColorsLight: string[] = [
+    'bg-green-50 hover:bg-green-100',
+    'bg-green-100 hover:bg-green-200',
+    'bg-green-200 hover:bg-green-300',
+    'bg-green-300 hover:bg-green-400',
+    'bg-green-400 hover:bg-green-500 text-white',
+    'bg-green-500 hover:bg-green-600 text-white',
+  ];
+
+  topicTreeBgColorsDark: string[] = [
+    'bg-green-900 hover:bg-green-800 text-white',
+    'bg-green-800 hover:bg-green-700 text-white',
+    'bg-green-700 hover:bg-green-600 text-white',
+    'bg-green-600 hover:bg-green-500 text-white',
+    'bg-green-500 hover:bg-green-400 text-black',
+    'bg-green-400 hover:bg-green-300 text-black',
+  ];
+
+  onTopicPageNodeDrop(event: TreeNodeDropEvent): void {
+    const dragNode = event.dragNode;
+    const dropNode = event.dropNode;
+    if (!dragNode || !dropNode) return;
+
+    if (dragNode.data?.isCategory || dragNode.data?.isRoot) {
+      return;
+    }
+
+    const dropOnCategory = dropNode.data?.isCategory === true;
+    const dropWithinCategory = dropNode.parent?.data?.isCategory === true;
+    if (!dropOnCategory && !dropWithinCategory) {
+      return;
+    }
+
+    event.accept?.();
+    dropNode.expanded = true;
+    if (dropNode.parent?.data?.isCategory) {
+      dropNode.parent.expanded = true;
+    }
+    this.updateTopicPageTreeStyles(this.topicPageTree, 0);
   }
 }
