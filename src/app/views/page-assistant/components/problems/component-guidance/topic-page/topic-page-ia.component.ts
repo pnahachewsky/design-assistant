@@ -42,6 +42,12 @@ import { FullscreenHTMLElement } from '../../../../../../views/ia-assistant/data
 
 import { environment } from '../../../../../../../environments/environment';
 
+type TopicSection = 'most' | 'doormats' | 'feature';
+type TopicPageLinkInfo = {
+  section: TopicSection;
+  label: string;
+};
+
 @Component({
   selector: 'ca-topic-page-ia',
   imports: [
@@ -87,6 +93,26 @@ import { environment } from '../../../../../../../environments/environment';
     ::ng-deep .p-tree .p-tree-node-content:hover {
       background-color: unset !important;
     }
+
+    ::ng-deep .topic-ia-badge {
+      display: inline-block;
+      margin-left: 0.5rem;
+      padding: 0.1rem 0.45rem;
+      border-radius: 9999px;
+      font-size: 0.875rem;
+      font-weight: 600;
+      border: 1px solid #d1d5db;
+      background: #e5e7eb;
+      color: #374151;
+      white-space: nowrap;
+    }
+
+    :host-context(.dark-mode) ::ng-deep .topic-ia-badge {
+      border-color: #4b5563;
+      background: #374151;
+      color: #f9fafb;
+    }
+
 
     /* remove link style from IA chart */
     ::ng-deep .ia-chart-container .p-organizationchart-node a {
@@ -155,6 +181,8 @@ export class TopicPageIaComponent implements OnInit {
   topicPageTree: TreeNode[] = [];
   visitsByUrl = new Map<string, number>();
   visitsColumnIndex: number | null = null;
+  isTopicPage = false;
+  topicPageSections = new Map<string, TopicPageLinkInfo>();
 
   //Button fxn
   async checkIA() {
@@ -450,7 +478,7 @@ export class TopicPageIaComponent implements OnInit {
             children: [],
           },
           {
-            label: 'Feature',
+            label: 'Features',
             data: { url: '', isCategory: true },
             expanded: true,
             children: [],
@@ -467,6 +495,7 @@ export class TopicPageIaComponent implements OnInit {
   }
 
   private rebuildTopicPageTreeFromIa(): void {
+    this.updateTopicPageSectionMap();
     const baseTree = this.buildTopicPageTree(this.getCurrentPageLabel());
     if (!this.iaChart?.length) {
       this.topicPageTree = baseTree;
@@ -481,7 +510,7 @@ export class TopicPageIaComponent implements OnInit {
     const walk = (nodes: TreeNode[], depth: number) => {
       for (const node of nodes) {
         if (depth > 0) {
-          const cloned = this.cloneFlatNode(node);
+          const cloned = this.cloneFlatNode(node, depth);
           if (depth === 1) {
             doormats.push(cloned);
           } else {
@@ -535,6 +564,22 @@ export class TopicPageIaComponent implements OnInit {
           : notOnTopics;
     }
 
+    this.addMissingIaNodes(baseTree);
+
+    if (mostRequested?.children?.length) {
+      this.applySectionDiffState(mostRequested.children, 'most');
+    }
+    if (doormatsCategory?.children?.length) {
+      this.applySectionDiffState(doormatsCategory.children, 'doormats');
+    }
+    if (feature?.children?.length) {
+      this.applySectionDiffState(feature.children, 'feature');
+    }
+    if (notOnTopicsCategory?.children?.length) {
+      this.applySectionDiffState(notOnTopicsCategory.children, 'notOnTopics');
+    }
+    this.reorderNotOnTopicsBadged(root);
+
     this.topicPageTree = [root];
     this.updateTopicPageTreeStyles(this.topicPageTree, 0);
   }
@@ -557,14 +602,308 @@ export class TopicPageIaComponent implements OnInit {
     });
   }
 
-  private cloneFlatNode(node: TreeNode): TreeNode {
+  private cloneFlatNode(node: TreeNode, depth: number): TreeNode {
+    const visits = this.getVisitsForNode(node);
+    const baseLabel =
+      typeof node.data?.originalLabel === 'string' &&
+      node.data.originalLabel.trim().length
+        ? node.data.originalLabel
+        : (node.label ?? '').toString();
+    const iaLevel = depth + 1;
+    const label =
+      visits !== null
+        ? `${baseLabel} (${this.formatVisits(visits)} visits, level ${iaLevel})`
+        : baseLabel;
     return {
-      label: node.label,
+      label,
       data: {
         url: node.data?.url ?? '',
         isCategory: false,
+        diffState: null,
+        iaLevel,
+        originalLabel: baseLabel,
       },
     };
+  }
+
+  private updateTopicPageSectionMap(): void {
+    const html = this.uploadState.getUploadData()?.originalHtml || '';
+    if (!html) {
+      this.isTopicPage = false;
+      this.topicPageSections = new Map();
+      return;
+    }
+
+    const doc = new DOMParser().parseFromString(html, 'text/html');
+    const hasDoormats = !!doc.querySelector('.gc-srvinfo');
+    this.isTopicPage = hasDoormats;
+    if (!hasDoormats) {
+      this.topicPageSections = new Map();
+      return;
+    }
+
+    const map = new Map<string, TopicPageLinkInfo>();
+    const baseUrl = this.originalUrl || '';
+    const sections: Array<{ key: TopicSection; selector: string }> = [
+      { key: 'most', selector: '.gc-most-requested' },
+      { key: 'doormats', selector: '.gc-srvinfo' },
+      { key: 'feature', selector: '.gc-features' },
+    ];
+
+    for (const section of sections) {
+      const container = doc.querySelector(section.selector);
+      if (!container) continue;
+      const links = container.querySelectorAll('a[href]');
+      links.forEach((link) => {
+        const href = link.getAttribute('href');
+        if (!href) return;
+        const text = (link.textContent || '').trim();
+        const normalized = this.normalizeUrl(
+          this.resolveUrl(href, baseUrl),
+        );
+        if (normalized) {
+          map.set(normalized, {
+            section: section.key,
+            label: text || href,
+          });
+        }
+      });
+    }
+
+    this.topicPageSections = map;
+  }
+
+  private resolveUrl(href: string, baseUrl: string): string {
+    try {
+      return new URL(href, baseUrl || undefined).href;
+    } catch {
+      return href;
+    }
+  }
+
+  private applySectionDiffState(
+    nodes: TreeNode[],
+    section: TopicSection | 'notOnTopics',
+  ): void {
+    nodes.forEach((node) => {
+      if (node.data?.isMissingIa) {
+        this.applyMissingIaLabel(node, section);
+        return;
+      }
+      if (!this.isTopicPage) {
+        node.data.diffState = null;
+        node.label = this.getTopicNodeBaseLabel(node);
+        return;
+      }
+      const url = node.data?.url?.trim();
+      if (!url) {
+        node.data.diffState = null;
+        node.label = this.getTopicNodeBaseLabel(node);
+        return;
+      }
+      const normalized = this.normalizeUrl(url);
+      const currentInfo =
+        this.topicPageSections.get(normalized) ??
+        this.topicPageSections.get(this.normalizeUrl(this.decodeUrl(url)));
+      if (!currentInfo) {
+        node.data.diffState = null; // all new stays grey
+        node.label = this.getTopicNodeBaseLabel(node);
+        return;
+      }
+      if (section === 'notOnTopics') {
+        node.data.diffState = 'missing';
+        node.label = `${this.getTopicNodeBaseLabel(node)} <span class="topic-ia-badge">Was in ${this.getSectionLabel(currentInfo.section)}</span>`;
+        return;
+      }
+
+      node.data.diffState =
+        currentInfo.section === section ? 'match' : 'move';
+      if (node.data.diffState === 'move') {
+        node.label = `${this.getTopicNodeBaseLabel(node)} <span class="topic-ia-badge">Was in ${this.getSectionLabel(currentInfo.section)}</span>`;
+      } else {
+        node.label = this.getTopicNodeBaseLabel(node);
+      }
+    });
+  }
+
+  private addMissingIaNodes(baseTree: TreeNode[]): void {
+    if (!this.isTopicPage) return;
+    const iaUrls = this.buildIaUrlSet();
+    if (!iaUrls.size) return;
+
+    const root = baseTree[0];
+    const categories = root.children ?? [];
+    const mostRequested = categories[0];
+    const doormatsCategory = categories[1];
+    const feature = categories[2];
+
+    const addToCategory = (
+      category: TreeNode | undefined,
+      node: TreeNode,
+    ) => {
+      if (!category) return;
+      category.children = category.children || [];
+      const existing = new Set(
+        category.children
+          .map((child) => this.normalizeUrl(child.data?.url ?? ''))
+          .filter((value) => value.length > 0),
+      );
+      const normalized = this.normalizeUrl(node.data?.url ?? '');
+      if (!existing.has(normalized)) {
+        category.children.push(node);
+      }
+    };
+
+    for (const [url, info] of this.topicPageSections.entries()) {
+      if (iaUrls.has(url)) continue;
+      const label = `${info.label} <span class="topic-ia-badge">Not in IA structure</span>`;
+      const node: TreeNode = {
+        label,
+        data: {
+          url,
+          isCategory: false,
+          diffState: 'missingIa',
+          originalLabel: info.label,
+          originalSuggestedSection: info.section,
+          isMissingIa: true,
+        },
+      };
+      if (info.section === 'most') {
+        addToCategory(mostRequested, node);
+      } else if (info.section === 'doormats') {
+        addToCategory(doormatsCategory, node);
+      } else {
+        addToCategory(feature, node);
+      }
+    }
+  }
+
+  private buildIaUrlSet(): Set<string> {
+    const urls = new Set<string>();
+    const walk = (nodes: TreeNode[]) => {
+      for (const node of nodes) {
+        const url = node.data?.url?.trim();
+        if (url) {
+          urls.add(this.normalizeUrl(url));
+          urls.add(this.normalizeUrl(this.decodeUrl(url)));
+        }
+        if (node.children?.length) {
+          walk(node.children);
+        }
+      }
+    };
+    if (this.iaChart?.length) {
+      walk(this.iaChart);
+    }
+    return urls;
+  }
+
+  private refreshTopicPageDiffStyles(): void {
+    if (!this.topicPageTree.length) return;
+    if (!this.isTopicPage) return;
+
+    const root = this.topicPageTree[0];
+    const categories = root.children ?? [];
+    const mostRequested = categories[0];
+    const doormatsCategory = categories[1];
+    const feature = categories[2];
+    const notOnTopicsCategory = categories[3];
+
+    if (mostRequested?.children?.length) {
+      this.applySectionDiffState(mostRequested.children, 'most');
+    }
+    if (doormatsCategory?.children?.length) {
+      this.applySectionDiffState(doormatsCategory.children, 'doormats');
+    }
+    if (feature?.children?.length) {
+      this.applySectionDiffState(feature.children, 'feature');
+    }
+    if (notOnTopicsCategory?.children?.length) {
+      this.applySectionDiffState(notOnTopicsCategory.children, 'notOnTopics');
+    }
+    this.reorderNotOnTopicsBadged();
+  }
+
+  private getTopicNodeBaseLabel(node: TreeNode): string {
+    const visits = this.getVisitsForNode(node);
+    const baseLabel =
+      typeof node.data?.originalLabel === 'string' &&
+      node.data.originalLabel.trim().length
+        ? node.data.originalLabel
+        : (node.label ?? '').toString();
+    const iaLevel =
+      typeof node.data?.iaLevel === 'number' ? node.data.iaLevel : null;
+    if (visits !== null && iaLevel !== null) {
+      return `${baseLabel} (${this.formatVisits(visits)} visits, level ${iaLevel})`;
+    }
+    return baseLabel;
+  }
+
+  private getSectionLabel(section: TopicSection): string {
+    switch (section) {
+      case 'most':
+        return 'Most requested';
+      case 'doormats':
+        return 'Doormats';
+      case 'feature':
+      default:
+        return 'Features';
+    }
+  }
+
+  private applyMissingIaLabel(
+    node: TreeNode,
+    section: TopicSection | 'notOnTopics',
+  ): void {
+    const baseLabel = this.getMissingIaBaseLabel(node);
+    if (!this.isTopicPage) {
+      node.label = baseLabel;
+      node.data.diffState = 'missingIa';
+      return;
+    }
+
+    const url = node.data?.url?.trim();
+    if (!url) {
+      node.label = baseLabel;
+      return;
+    }
+
+    const normalized = this.normalizeUrl(url);
+    const currentInfo =
+      this.topicPageSections.get(normalized) ??
+      this.topicPageSections.get(this.normalizeUrl(this.decodeUrl(url)));
+    if (!currentInfo) {
+      node.label = baseLabel;
+      node.data.diffState = 'missingIa';
+      return;
+    }
+
+    if (currentInfo.section === section) {
+      node.label = baseLabel;
+      node.data.diffState = 'missingIaMatch';
+      return;
+    }
+
+    const previousText = `<span class="topic-ia-badge">Was in ${this.getSectionLabel(
+      currentInfo.section,
+    )}</span>`;
+    node.label = `${baseLabel} ${previousText}`;
+
+    if (section === 'notOnTopics') {
+      node.data.diffState = 'missingIaMissing';
+      return;
+    }
+
+    node.data.diffState = 'missingIaMove';
+  }
+
+  private getMissingIaBaseLabel(node: TreeNode): string {
+    const baseLabel =
+      typeof node.data?.originalLabel === 'string' &&
+      node.data.originalLabel.trim().length
+        ? node.data.originalLabel
+        : (node.label ?? '').toString();
+    return `${baseLabel} <span class="topic-ia-badge">Not in IA structure</span>`;
   }
 
   private getCurrentPageLabel(): string {
@@ -1308,7 +1647,25 @@ export class TopicPageIaComponent implements OnInit {
         node.data?.borderStyle ||
         'border-2 border-round shadow-2 border-green-500';
 
-      const bgClass = bgColors[level % bgColors.length];
+      const isMostRequested =
+        node.data?.isCategory && node.label === 'Most requested';
+      const bgClass = isMostRequested
+        ? this.topicTreeMostRequestedBgClass
+        : node.data?.diffState === 'match'
+          ? this.topicTreeMatchBgClass
+          : node.data?.diffState === 'move'
+            ? this.topicTreeMoveBgClass
+            : node.data?.diffState === 'missingIaMatch'
+              ? this.topicTreeMissingIaMatchBgClass
+              : node.data?.diffState === 'missingIaMove'
+                ? this.topicTreeMissingIaMoveBgClass
+                : node.data?.diffState === 'missingIaMissing'
+                  ? this.topicTreeMissingIaMissingBgClass
+                  : node.data?.diffState === 'missingIa'
+                    ? this.topicTreeMissingIaBgClass
+                    : node.data?.diffState === 'missing'
+                      ? this.topicTreeMissingBgClass
+                      : bgColors[level % bgColors.length];
       node.styleClass = `${borderStyle} ${bgClass}`;
 
       if (node.children && node.children.length > 0) {
@@ -1318,22 +1675,70 @@ export class TopicPageIaComponent implements OnInit {
   }
 
   topicTreeBgColorsLight: string[] = [
-    'bg-green-50 hover:bg-green-100',
-    'bg-green-100 hover:bg-green-200',
-    'bg-green-200 hover:bg-green-300',
-    'bg-green-300 hover:bg-green-400',
-    'bg-green-400 hover:bg-green-500 text-white',
-    'bg-green-500 hover:bg-green-600 text-white',
+    'surface-0 hover:surface-100',
+    'surface-50 hover:surface-200',
+    'surface-100 hover:surface-300',
+    'surface-200 hover:surface-400',
+    'surface-300 hover:surface-500 text-black',
+    'surface-400 hover:surface-600 text-white',
   ];
 
   topicTreeBgColorsDark: string[] = [
-    'bg-green-900 hover:bg-green-800 text-white',
-    'bg-green-800 hover:bg-green-700 text-white',
-    'bg-green-700 hover:bg-green-600 text-white',
-    'bg-green-600 hover:bg-green-500 text-white',
-    'bg-green-500 hover:bg-green-400 text-black',
-    'bg-green-400 hover:bg-green-300 text-black',
+    'surface-900 hover:surface-800 text-white',
+    'surface-800 hover:surface-700 text-white',
+    'surface-700 hover:surface-600 text-white',
+    'surface-600 hover:surface-500 text-white',
+    'surface-500 hover:surface-400 text-black',
+    'surface-400 hover:surface-300 text-black',
   ];
+
+  get topicTreeMostRequestedBgClass(): string {
+    return this.theme.darkMode()
+      ? 'bg-blue-800 hover:bg-blue-700 text-white'
+      : 'bg-blue-100 hover:bg-blue-200 text-black';
+  }
+
+  get topicTreeMatchBgClass(): string {
+    return this.theme.darkMode()
+      ? 'bg-green-800 hover:bg-green-700 text-white'
+      : 'bg-green-100 hover:bg-green-200 text-black';
+  }
+
+  get topicTreeMoveBgClass(): string {
+    return this.theme.darkMode()
+      ? 'bg-yellow-700 hover:bg-yellow-600 text-black'
+      : 'bg-yellow-100 hover:bg-yellow-200 text-black';
+  }
+
+  get topicTreeMissingBgClass(): string {
+    return this.theme.darkMode()
+      ? 'bg-red-700 hover:bg-red-600 text-white'
+      : 'bg-red-100 hover:bg-red-200 text-black';
+  }
+
+  get topicTreeMissingIaBgClass(): string {
+    return this.theme.darkMode()
+      ? 'bg-purple-800 hover:bg-purple-700 text-white'
+      : 'bg-purple-200 hover:bg-purple-300 text-black';
+  }
+
+  get topicTreeMissingIaMatchBgClass(): string {
+    return this.theme.darkMode()
+      ? 'bg-green-900 hover:bg-green-800 text-white'
+      : 'bg-green-700 hover:bg-green-600 text-white';
+  }
+
+  get topicTreeMissingIaMoveBgClass(): string {
+    return this.theme.darkMode()
+      ? 'bg-yellow-800 hover:bg-yellow-700 text-black'
+      : 'bg-yellow-600 hover:bg-yellow-500 text-black';
+  }
+
+  get topicTreeMissingIaMissingBgClass(): string {
+    return this.theme.darkMode()
+      ? 'bg-red-800 hover:bg-red-700 text-white'
+      : 'bg-red-700 hover:bg-red-600 text-white';
+  }
 
   onTopicPageNodeDrop(event: TreeNodeDropEvent): void {
     const dragNode = event.dragNode;
@@ -1351,10 +1756,52 @@ export class TopicPageIaComponent implements OnInit {
     }
 
     event.accept?.();
+    if (dropOnCategory) {
+      const targetCategory = dropNode;
+      if (targetCategory?.children?.length) {
+        const index = targetCategory.children.indexOf(dragNode);
+        if (index > 0) {
+          targetCategory.children.splice(index, 1);
+          targetCategory.children.unshift(dragNode);
+        }
+      }
+    }
     dropNode.expanded = true;
     if (dropNode.parent?.data?.isCategory) {
       dropNode.parent.expanded = true;
     }
+    this.refreshTopicPageDiffStyles();
     this.updateTopicPageTreeStyles(this.topicPageTree, 0);
+  }
+
+  private reorderNotOnTopicsBadged(rootOverride?: TreeNode): void {
+    const root = rootOverride ?? this.topicPageTree[0];
+    if (!root) return;
+    const categories = root.children ?? [];
+    const notOnTopicsCategory =
+      categories.find(
+        (node) => node.data?.isCategory && node.label === 'Not on topic page',
+      ) ?? categories[3];
+    const children = notOnTopicsCategory?.children;
+    if (!children?.length) return;
+
+    const priority = (node: TreeNode): number => {
+      if (node.data?.diffState === 'missing') return 0;
+      if (node.data?.isMissingIa) return 1;
+      return 2;
+    };
+
+    notOnTopicsCategory.children = [...children].sort((a, b) => {
+      const aPriority = priority(a);
+      const bPriority = priority(b);
+      if (aPriority !== bPriority) {
+        return aPriority - bPriority;
+      }
+      return 0;
+    });
+  }
+
+  private nodeHasBadge(node: TreeNode): boolean {
+    return typeof node.label === 'string' && node.label.includes('topic-ia-badge');
   }
 }

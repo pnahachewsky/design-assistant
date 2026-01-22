@@ -199,7 +199,11 @@
               ></a>
             </ng-container>
             <ng-template #topicLabel>
-              <span [innerHTML]="node.label" class="ia-label"></span>
+              <span
+                [innerHTML]="node.label"
+                class="ia-label"
+                [class.font-bold]="node.data?.isCategory"
+              ></span>
             </ng-template>
           </div>
         </ng-template>
