@@ -194,7 +194,7 @@
   "page.topicIa.csvUpload.toast.summary": "CSV uploaded",
   "page.topicIa.csvUpload.toast.detail": "Loaded {{fileName}}. Topic page sections updated.",
   "page.topicIa.csvUpload.label": "Upload page visits CSV from the UPD",
-  "page.topicIa.csvUpload.choose": "Choose CSV",
+  "page.topicIa.csvUpload.choose": "Upload CSV from the UPD",
   "--------IMAGE ASSISTANT--------------": "--------------------------------IMAGE ASSISTANT--------------------------------------",
   "image.csv.download": "Download CSV",
   "image.csv.noData": "No data processed successfully to generate CSV.",
