@@ -36361,7 +36361,7 @@ function PageProblemsComponent_p_accordion_panel_12_p_5_Template(rf, ctx) {
 function PageProblemsComponent_p_accordion_panel_12_Template(rf, ctx) {
   if (rf & 1) {
     \u0275\u0275elementStart(0, "p-accordion-panel", 2)(1, "p-accordion-header");
-    \u0275\u0275text(2, "Topic IA JSON ");
+    \u0275\u0275text(2, "Topic IA (JSON) ");
     \u0275\u0275element(3, "span", 3);
     \u0275\u0275template(4, PageProblemsComponent_p_accordion_panel_12_span_4_Template, 1, 0, "span", 4);
     \u0275\u0275elementEnd();
@@ -36721,7 +36721,7 @@ var PageProblemsComponent = class _PageProblemsComponent {
     *ngIf="!production"\r
   >\r
     <p-accordion-header\r
-      >Topic IA JSON\r
+      >Topic IA (JSON)\r
       <span class="flex-spacer"></span>\r
       <span\r
         class="feature-badge"\r
@@ -38768,4 +38768,4 @@ ${base}`;
 export {
   PageAssistantCompareComponent
 };
-//# sourceMappingURL=chunk-7S343LKN.js.map
+//# sourceMappingURL=chunk-OAEUBFJI.js.map
