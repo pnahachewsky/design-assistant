@@ -33781,10 +33781,10 @@ var TopicPageIaComponent = class _TopicPageIaComponent {
       \u0275\u0275text(7, "Copy IA URLs");
       \u0275\u0275elementEnd();
       \u0275\u0275elementStart(8, "p-step", 8);
-      \u0275\u0275text(9, "Retrieve UPD visits");
+      \u0275\u0275text(9, "Retrieve visits from UPD");
       \u0275\u0275elementEnd();
       \u0275\u0275elementStart(10, "p-step", 8);
-      \u0275\u0275text(11, "Create the sections of your topic page");
+      \u0275\u0275text(11, "Create new topic page tree");
       \u0275\u0275elementEnd()()();
       \u0275\u0275elementStart(12, "div", 9)(13, "div", 10)(14, "p", 5);
       \u0275\u0275text(15, "Execute a 3-to-4-levels-deep ");
@@ -33924,8 +33924,8 @@ var TopicPageIaComponent = class _TopicPageIaComponent {
   <p-step-list class="topic-ia-step-list">
     <p-step [value]="1">Get current IA Structure</p-step>
     <p-step [value]="2">Copy IA URLs</p-step>
-    <p-step [value]="3">Retrieve UPD visits</p-step>
-    <p-step [value]="4">Create the sections of your topic page</p-step>
+    <p-step [value]="3">Retrieve visits from UPD</p-step>
+    <p-step [value]="4">Create new topic page tree</p-step>
   </p-step-list>
 </p-stepper>
 
@@ -36664,4 +36664,4 @@ ${base}`;
 export {
   PageAssistantCompareComponent
 };
-//# sourceMappingURL=chunk-MAOCYTWC.js.map
+//# sourceMappingURL=chunk-EBIYD5PM.js.map
