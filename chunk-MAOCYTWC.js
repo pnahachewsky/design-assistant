@@ -31820,9 +31820,9 @@ var _c010 = ["chartContainer"];
 var _c17 = ["cm"];
 var _c27 = () => ({ height: "1rem" });
 var _c37 = () => ({ "min-width": "50rem" });
-function TopicPageIaComponent_p_progressbar_31_Template(rf, ctx) {
+function TopicPageIaComponent_p_progressbar_32_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275element(0, "p-progressbar", 19);
+    \u0275\u0275element(0, "p-progressbar", 18);
   }
   if (rf & 2) {
     const ctx_r0 = \u0275\u0275nextContext();
@@ -31830,11 +31830,11 @@ function TopicPageIaComponent_p_progressbar_31_Template(rf, ctx) {
     \u0275\u0275property("value", ctx_r0.iaProgress)("showValue", false);
   }
 }
-function TopicPageIaComponent_div_32_p_button_20_Template(rf, ctx) {
+function TopicPageIaComponent_div_33_p_button_5_Template(rf, ctx) {
   if (rf & 1) {
     const _r2 = \u0275\u0275getCurrentView();
-    \u0275\u0275elementStart(0, "p-button", 22);
-    \u0275\u0275listener("click", function TopicPageIaComponent_div_32_p_button_20_Template_p_button_click_0_listener() {
+    \u0275\u0275elementStart(0, "p-button", 20);
+    \u0275\u0275listener("click", function TopicPageIaComponent_div_33_p_button_5_Template_p_button_click_0_listener() {
       \u0275\u0275restoreView(_r2);
       const ctx_r0 = \u0275\u0275nextContext(2);
       return \u0275\u0275resetView(ctx_r0.copyUrlsToClipboard());
@@ -31846,74 +31846,120 @@ function TopicPageIaComponent_div_32_p_button_20_Template(rf, ctx) {
     \u0275\u0275property("severity", ctx_r0.hasCopiedUrls ? "secondary" : "primary");
   }
 }
-function TopicPageIaComponent_div_32_Template(rf, ctx) {
+function TopicPageIaComponent_div_33_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275elementStart(0, "div", 10)(1, "div", 11)(2, "p", 5);
-    \u0275\u0275text(3, "Manually ");
-    \u0275\u0275elementStart(4, "strong");
-    \u0275\u0275text(5, "retrieve page visits");
+    \u0275\u0275elementStart(0, "div", 10)(1, "p", 5)(2, "strong");
+    \u0275\u0275text(3, "Copy all URLs");
     \u0275\u0275elementEnd();
-    \u0275\u0275text(6, " from the UPD:");
+    \u0275\u0275text(4, " in the IA structure to the clipboard.");
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(7, "ul")(8, "li");
-    \u0275\u0275text(9, "Go to the ");
-    \u0275\u0275elementStart(10, "a", 20);
-    \u0275\u0275text(11, "Custom reports page of the UPD");
-    \u0275\u0275elementEnd()();
-    \u0275\u0275elementStart(12, "li");
-    \u0275\u0275text(13, "Set ... to None");
+    \u0275\u0275template(5, TopicPageIaComponent_div_33_p_button_5_Template, 1, 1, "p-button", 19);
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(14, "li");
-    \u0275\u0275text(15, "Set the date range to the last year");
-    \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(16, "li");
-    \u0275\u0275text(17, "Select page visits");
-    \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(18, "li");
-    \u0275\u0275text(19, "Export the data as a CSV file and save it");
-    \u0275\u0275elementEnd()();
-    \u0275\u0275template(20, TopicPageIaComponent_div_32_p_button_20_Template, 1, 1, "p-button", 21);
-    \u0275\u0275elementEnd()();
   }
   if (rf & 2) {
     const ctx_r0 = \u0275\u0275nextContext();
-    \u0275\u0275advance(20);
+    \u0275\u0275advance(5);
     \u0275\u0275property("ngIf", ctx_r0.iaChart && ctx_r0.iaChart.length > 0 && !ctx_r0.isChartLoading);
   }
 }
-function TopicPageIaComponent_div_33_Template(rf, ctx) {
+function TopicPageIaComponent_div_34_Template(rf, ctx) {
   if (rf & 1) {
     const _r3 = \u0275\u0275getCurrentView();
-    \u0275\u0275elementStart(0, "div", 10)(1, "div", 11)(2, "p", 5)(3, "strong");
-    \u0275\u0275text(4, "Upload your saved CSV");
+    \u0275\u0275elementStart(0, "div", 10)(1, "p", 5);
+    \u0275\u0275text(2, "Manually ");
+    \u0275\u0275elementStart(3, "strong");
+    \u0275\u0275text(4, "retrieve page visits");
     \u0275\u0275elementEnd();
-    \u0275\u0275text(5, " file. This will:");
+    \u0275\u0275text(5, " from the UPD:");
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(6, "ul")(7, "li");
-    \u0275\u0275text(8, "Parse and display the page visits data");
-    \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(9, "li");
-    \u0275\u0275text(10, "Suggest sections for your topic page based on visits and levels");
+    \u0275\u0275elementStart(6, "ol")(7, "li");
+    \u0275\u0275text(8, "Visit ");
+    \u0275\u0275elementStart(9, "a", 21);
+    \u0275\u0275text(10, "Custom reports page of the UPD");
     \u0275\u0275elementEnd()();
-    \u0275\u0275elementStart(11, "p");
-    \u0275\u0275text(12, "You can then manually move the pages from one section to another.");
+    \u0275\u0275elementStart(11, "li");
+    \u0275\u0275text(12, "Select data granularity: ");
+    \u0275\u0275elementStart(13, "strong");
+    \u0275\u0275text(14, "None");
+    \u0275\u0275elementEnd()();
+    \u0275\u0275elementStart(15, "li");
+    \u0275\u0275text(16, "Select a date range > Preset: ");
+    \u0275\u0275elementStart(17, "strong");
+    \u0275\u0275text(18, "Last year");
+    \u0275\u0275elementEnd()();
+    \u0275\u0275elementStart(19, "li");
+    \u0275\u0275text(20, "Select pages > Bulk Pages: Paste the copied URLs into text field");
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(13, "div", 23)(14, "p-fileUpload", 24);
-    \u0275\u0275pipe(15, "translate");
-    \u0275\u0275listener("uploadHandler", function TopicPageIaComponent_div_33_Template_p_fileUpload_uploadHandler_14_listener($event) {
+    \u0275\u0275elementStart(21, "li");
+    \u0275\u0275text(22, "Select metrics: check ");
+    \u0275\u0275elementStart(23, "strong");
+    \u0275\u0275text(24, "Visits");
+    \u0275\u0275elementEnd();
+    \u0275\u0275text(25, " box");
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(26, "li");
+    \u0275\u0275text(27, "Scroll down and select ");
+    \u0275\u0275elementStart(28, "strong");
+    \u0275\u0275text(29, "Generate report");
+    \u0275\u0275elementEnd()();
+    \u0275\u0275elementStart(30, "li");
+    \u0275\u0275text(31, "Export the report as a CSV and save it");
+    \u0275\u0275elementEnd()();
+    \u0275\u0275elementStart(32, "p-button", 22);
+    \u0275\u0275listener("click", function TopicPageIaComponent_div_34_Template_p_button_click_32_listener() {
       \u0275\u0275restoreView(_r3);
       const ctx_r0 = \u0275\u0275nextContext();
-      return \u0275\u0275resetView(ctx_r0.onCsvUpload($event));
+      return \u0275\u0275resetView(ctx_r0.proceedToCsvUpload());
     });
-    \u0275\u0275elementEnd()()()();
+    \u0275\u0275elementEnd()();
   }
   if (rf & 2) {
     const ctx_r0 = \u0275\u0275nextContext();
-    \u0275\u0275advance(14);
-    \u0275\u0275property("auto", true)("customUpload", true)("chooseLabel", \u0275\u0275pipeBind1(15, 4, "page.topicIa.csvUpload.choose"))("chooseStyleClass", ctx_r0.csvUploaded ? "p-button-secondary" : "p-button-primary");
+    \u0275\u0275advance(32);
+    \u0275\u0275property("severity", ctx_r0.updInstructionsComplete ? "secondary" : "primary");
   }
 }
-function TopicPageIaComponent_ng_container_34_span_5_Template(rf, ctx) {
+function TopicPageIaComponent_div_35_Template(rf, ctx) {
+  if (rf & 1) {
+    const _r4 = \u0275\u0275getCurrentView();
+    \u0275\u0275elementStart(0, "div", 10)(1, "p", 5)(2, "strong");
+    \u0275\u0275text(3, "Upload your saved CSV");
+    \u0275\u0275elementEnd();
+    \u0275\u0275text(4, " file. This will:");
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(5, "ul")(6, "li");
+    \u0275\u0275text(7, "Display page visits in IA structure");
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(8, "li");
+    \u0275\u0275text(9, "Create a new tree: you can drag pages to design");
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(10, "li");
+    \u0275\u0275text(11, "Suggest pages for ");
+    \u0275\u0275elementStart(12, "strong");
+    \u0275\u0275text(13, "Most requested");
+    \u0275\u0275elementEnd();
+    \u0275\u0275text(14, " and ");
+    \u0275\u0275elementStart(15, "strong");
+    \u0275\u0275text(16, "Doormats");
+    \u0275\u0275elementEnd();
+    \u0275\u0275text(17, " based on visits and levels");
+    \u0275\u0275elementEnd()();
+    \u0275\u0275elementStart(18, "div", 23)(19, "p-fileUpload", 24);
+    \u0275\u0275pipe(20, "translate");
+    \u0275\u0275listener("uploadHandler", function TopicPageIaComponent_div_35_Template_p_fileUpload_uploadHandler_19_listener($event) {
+      \u0275\u0275restoreView(_r4);
+      const ctx_r0 = \u0275\u0275nextContext();
+      return \u0275\u0275resetView(ctx_r0.onCsvUpload($event));
+    });
+    \u0275\u0275elementEnd()()();
+  }
+  if (rf & 2) {
+    const ctx_r0 = \u0275\u0275nextContext();
+    \u0275\u0275advance(19);
+    \u0275\u0275property("auto", true)("customUpload", true)("chooseLabel", \u0275\u0275pipeBind1(20, 4, "page.topicIa.csvUpload.choose"))("chooseStyleClass", ctx_r0.csvUploaded ? "p-button-secondary" : "p-button-primary");
+  }
+}
+function TopicPageIaComponent_ng_container_36_span_5_Template(rf, ctx) {
   if (rf & 1) {
     \u0275\u0275elementStart(0, "span", 29);
     \u0275\u0275element(1, "i", 30);
@@ -31921,7 +31967,7 @@ function TopicPageIaComponent_ng_container_34_span_5_Template(rf, ctx) {
     \u0275\u0275elementEnd();
   }
 }
-function TopicPageIaComponent_ng_container_34_span_6_Template(rf, ctx) {
+function TopicPageIaComponent_ng_container_36_span_6_Template(rf, ctx) {
   if (rf & 1) {
     \u0275\u0275elementStart(0, "span", 31);
     \u0275\u0275element(1, "i", 32);
@@ -31929,7 +31975,7 @@ function TopicPageIaComponent_ng_container_34_span_6_Template(rf, ctx) {
     \u0275\u0275elementEnd();
   }
 }
-function TopicPageIaComponent_ng_container_34_Template(rf, ctx) {
+function TopicPageIaComponent_ng_container_36_Template(rf, ctx) {
   if (rf & 1) {
     \u0275\u0275elementContainerStart(0);
     \u0275\u0275elementStart(1, "h2");
@@ -31937,7 +31983,7 @@ function TopicPageIaComponent_ng_container_34_Template(rf, ctx) {
     \u0275\u0275elementEnd();
     \u0275\u0275elementStart(3, "div", 25);
     \u0275\u0275element(4, "p-breadcrumb", 26);
-    \u0275\u0275template(5, TopicPageIaComponent_ng_container_34_span_5_Template, 3, 0, "span", 27)(6, TopicPageIaComponent_ng_container_34_span_6_Template, 3, 0, "span", 28);
+    \u0275\u0275template(5, TopicPageIaComponent_ng_container_36_span_5_Template, 3, 0, "span", 27)(6, TopicPageIaComponent_ng_container_36_span_6_Template, 3, 0, "span", 28);
     \u0275\u0275elementEnd();
     \u0275\u0275elementContainerEnd();
   }
@@ -31951,33 +31997,33 @@ function TopicPageIaComponent_ng_container_34_Template(rf, ctx) {
     \u0275\u0275property("ngIf", ctx_r0.urlFound === false);
   }
 }
-function TopicPageIaComponent_ng_container_35_ng_template_8_i_1_Template(rf, ctx) {
+function TopicPageIaComponent_ng_container_37_ng_template_8_i_1_Template(rf, ctx) {
   if (rf & 1) {
     \u0275\u0275element(0, "i", 44);
   }
 }
-function TopicPageIaComponent_ng_container_35_ng_template_8_i_2_Template(rf, ctx) {
+function TopicPageIaComponent_ng_container_37_ng_template_8_i_2_Template(rf, ctx) {
   if (rf & 1) {
     \u0275\u0275element(0, "i", 45);
   }
 }
-function TopicPageIaComponent_ng_container_35_ng_template_8_i_3_Template(rf, ctx) {
+function TopicPageIaComponent_ng_container_37_ng_template_8_i_3_Template(rf, ctx) {
   if (rf & 1) {
     \u0275\u0275element(0, "i", 46);
   }
 }
-function TopicPageIaComponent_ng_container_35_ng_template_8_i_4_Template(rf, ctx) {
+function TopicPageIaComponent_ng_container_37_ng_template_8_i_4_Template(rf, ctx) {
   if (rf & 1) {
     \u0275\u0275element(0, "i", 47);
   }
 }
-function TopicPageIaComponent_ng_container_35_ng_template_8_ng_container_5_Template(rf, ctx) {
+function TopicPageIaComponent_ng_container_37_ng_template_8_ng_container_5_Template(rf, ctx) {
   if (rf & 1) {
-    const _r5 = \u0275\u0275getCurrentView();
+    const _r6 = \u0275\u0275getCurrentView();
     \u0275\u0275elementContainerStart(0);
     \u0275\u0275elementStart(1, "a", 48);
-    \u0275\u0275listener("click", function TopicPageIaComponent_ng_container_35_ng_template_8_ng_container_5_Template_a_click_1_listener($event) {
-      \u0275\u0275restoreView(_r5);
+    \u0275\u0275listener("click", function TopicPageIaComponent_ng_container_37_ng_template_8_ng_container_5_Template_a_click_1_listener($event) {
+      \u0275\u0275restoreView(_r6);
       const ctx_r0 = \u0275\u0275nextContext(3);
       return \u0275\u0275resetView(ctx_r0.onNodeClick($event));
     });
@@ -31985,59 +32031,29 @@ function TopicPageIaComponent_ng_container_35_ng_template_8_ng_container_5_Templ
     \u0275\u0275elementContainerEnd();
   }
   if (rf & 2) {
-    const node_r6 = \u0275\u0275nextContext().$implicit;
+    const node_r7 = \u0275\u0275nextContext().$implicit;
     \u0275\u0275advance();
-    \u0275\u0275property("href", node_r6.data.url, \u0275\u0275sanitizeUrl)("innerHTML", node_r6.label, \u0275\u0275sanitizeHtml);
+    \u0275\u0275property("href", node_r7.data.url, \u0275\u0275sanitizeUrl)("innerHTML", node_r7.label, \u0275\u0275sanitizeHtml);
   }
 }
-function TopicPageIaComponent_ng_container_35_ng_template_8_p_inputgroup_6_Template(rf, ctx) {
-  if (rf & 1) {
-    const _r7 = \u0275\u0275getCurrentView();
-    \u0275\u0275elementStart(0, "p-inputgroup")(1, "input", 49);
-    \u0275\u0275twoWayListener("ngModelChange", function TopicPageIaComponent_ng_container_35_ng_template_8_p_inputgroup_6_Template_input_ngModelChange_1_listener($event) {
-      \u0275\u0275restoreView(_r7);
-      const node_r6 = \u0275\u0275nextContext().$implicit;
-      \u0275\u0275twoWayBindingSet(node_r6.label, $event) || (node_r6.label = $event);
-      return \u0275\u0275resetView($event);
-    });
-    \u0275\u0275listener("keydown", function TopicPageIaComponent_ng_container_35_ng_template_8_p_inputgroup_6_Template_input_keydown_1_listener($event) {
-      \u0275\u0275restoreView(_r7);
-      const ctx_r0 = \u0275\u0275nextContext(3);
-      return \u0275\u0275resetView(ctx_r0.onInputKeydown($event));
-    });
-    \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(2, "p-inputgroup-addon")(3, "p-button", 50);
-    \u0275\u0275listener("onClick", function TopicPageIaComponent_ng_container_35_ng_template_8_p_inputgroup_6_Template_p_button_onClick_3_listener() {
-      \u0275\u0275restoreView(_r7);
-      const ctx_r0 = \u0275\u0275nextContext(3);
-      return \u0275\u0275resetView(ctx_r0.saveNode());
-    });
-    \u0275\u0275elementEnd()()();
-  }
-  if (rf & 2) {
-    const node_r6 = \u0275\u0275nextContext().$implicit;
-    \u0275\u0275advance();
-    \u0275\u0275twoWayProperty("ngModel", node_r6.label);
-  }
-}
-function TopicPageIaComponent_ng_container_35_ng_template_8_p_inputgroup_7_Template(rf, ctx) {
+function TopicPageIaComponent_ng_container_37_ng_template_8_p_inputgroup_6_Template(rf, ctx) {
   if (rf & 1) {
     const _r8 = \u0275\u0275getCurrentView();
     \u0275\u0275elementStart(0, "p-inputgroup")(1, "input", 49);
-    \u0275\u0275twoWayListener("ngModelChange", function TopicPageIaComponent_ng_container_35_ng_template_8_p_inputgroup_7_Template_input_ngModelChange_1_listener($event) {
+    \u0275\u0275twoWayListener("ngModelChange", function TopicPageIaComponent_ng_container_37_ng_template_8_p_inputgroup_6_Template_input_ngModelChange_1_listener($event) {
       \u0275\u0275restoreView(_r8);
-      const node_r6 = \u0275\u0275nextContext().$implicit;
-      \u0275\u0275twoWayBindingSet(node_r6.data.url, $event) || (node_r6.data.url = $event);
+      const node_r7 = \u0275\u0275nextContext().$implicit;
+      \u0275\u0275twoWayBindingSet(node_r7.label, $event) || (node_r7.label = $event);
       return \u0275\u0275resetView($event);
     });
-    \u0275\u0275listener("keydown", function TopicPageIaComponent_ng_container_35_ng_template_8_p_inputgroup_7_Template_input_keydown_1_listener($event) {
+    \u0275\u0275listener("keydown", function TopicPageIaComponent_ng_container_37_ng_template_8_p_inputgroup_6_Template_input_keydown_1_listener($event) {
       \u0275\u0275restoreView(_r8);
       const ctx_r0 = \u0275\u0275nextContext(3);
       return \u0275\u0275resetView(ctx_r0.onInputKeydown($event));
     });
     \u0275\u0275elementEnd();
     \u0275\u0275elementStart(2, "p-inputgroup-addon")(3, "p-button", 50);
-    \u0275\u0275listener("onClick", function TopicPageIaComponent_ng_container_35_ng_template_8_p_inputgroup_7_Template_p_button_onClick_3_listener() {
+    \u0275\u0275listener("onClick", function TopicPageIaComponent_ng_container_37_ng_template_8_p_inputgroup_6_Template_p_button_onClick_3_listener() {
       \u0275\u0275restoreView(_r8);
       const ctx_r0 = \u0275\u0275nextContext(3);
       return \u0275\u0275resetView(ctx_r0.saveNode());
@@ -32045,58 +32061,88 @@ function TopicPageIaComponent_ng_container_35_ng_template_8_p_inputgroup_7_Templ
     \u0275\u0275elementEnd()()();
   }
   if (rf & 2) {
-    const node_r6 = \u0275\u0275nextContext().$implicit;
+    const node_r7 = \u0275\u0275nextContext().$implicit;
     \u0275\u0275advance();
-    \u0275\u0275twoWayProperty("ngModel", node_r6.data.url);
+    \u0275\u0275twoWayProperty("ngModel", node_r7.label);
   }
 }
-function TopicPageIaComponent_ng_container_35_ng_template_8_Template(rf, ctx) {
+function TopicPageIaComponent_ng_container_37_ng_template_8_p_inputgroup_7_Template(rf, ctx) {
+  if (rf & 1) {
+    const _r9 = \u0275\u0275getCurrentView();
+    \u0275\u0275elementStart(0, "p-inputgroup")(1, "input", 49);
+    \u0275\u0275twoWayListener("ngModelChange", function TopicPageIaComponent_ng_container_37_ng_template_8_p_inputgroup_7_Template_input_ngModelChange_1_listener($event) {
+      \u0275\u0275restoreView(_r9);
+      const node_r7 = \u0275\u0275nextContext().$implicit;
+      \u0275\u0275twoWayBindingSet(node_r7.data.url, $event) || (node_r7.data.url = $event);
+      return \u0275\u0275resetView($event);
+    });
+    \u0275\u0275listener("keydown", function TopicPageIaComponent_ng_container_37_ng_template_8_p_inputgroup_7_Template_input_keydown_1_listener($event) {
+      \u0275\u0275restoreView(_r9);
+      const ctx_r0 = \u0275\u0275nextContext(3);
+      return \u0275\u0275resetView(ctx_r0.onInputKeydown($event));
+    });
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(2, "p-inputgroup-addon")(3, "p-button", 50);
+    \u0275\u0275listener("onClick", function TopicPageIaComponent_ng_container_37_ng_template_8_p_inputgroup_7_Template_p_button_onClick_3_listener() {
+      \u0275\u0275restoreView(_r9);
+      const ctx_r0 = \u0275\u0275nextContext(3);
+      return \u0275\u0275resetView(ctx_r0.saveNode());
+    });
+    \u0275\u0275elementEnd()()();
+  }
+  if (rf & 2) {
+    const node_r7 = \u0275\u0275nextContext().$implicit;
+    \u0275\u0275advance();
+    \u0275\u0275twoWayProperty("ngModel", node_r7.data.url);
+  }
+}
+function TopicPageIaComponent_ng_container_37_ng_template_8_Template(rf, ctx) {
   if (rf & 1) {
     \u0275\u0275elementStart(0, "div", 39);
-    \u0275\u0275template(1, TopicPageIaComponent_ng_container_35_ng_template_8_i_1_Template, 1, 0, "i", 40)(2, TopicPageIaComponent_ng_container_35_ng_template_8_i_2_Template, 1, 0, "i", 41)(3, TopicPageIaComponent_ng_container_35_ng_template_8_i_3_Template, 1, 0, "i", 42)(4, TopicPageIaComponent_ng_container_35_ng_template_8_i_4_Template, 1, 0, "i", 43)(5, TopicPageIaComponent_ng_container_35_ng_template_8_ng_container_5_Template, 2, 2, "ng-container", 18)(6, TopicPageIaComponent_ng_container_35_ng_template_8_p_inputgroup_6_Template, 4, 1, "p-inputgroup", 18)(7, TopicPageIaComponent_ng_container_35_ng_template_8_p_inputgroup_7_Template, 4, 1, "p-inputgroup", 18);
+    \u0275\u0275template(1, TopicPageIaComponent_ng_container_37_ng_template_8_i_1_Template, 1, 0, "i", 40)(2, TopicPageIaComponent_ng_container_37_ng_template_8_i_2_Template, 1, 0, "i", 41)(3, TopicPageIaComponent_ng_container_37_ng_template_8_i_3_Template, 1, 0, "i", 42)(4, TopicPageIaComponent_ng_container_37_ng_template_8_i_4_Template, 1, 0, "i", 43)(5, TopicPageIaComponent_ng_container_37_ng_template_8_ng_container_5_Template, 2, 2, "ng-container", 17)(6, TopicPageIaComponent_ng_container_37_ng_template_8_p_inputgroup_6_Template, 4, 1, "p-inputgroup", 17)(7, TopicPageIaComponent_ng_container_37_ng_template_8_p_inputgroup_7_Template, 4, 1, "p-inputgroup", 17);
     \u0275\u0275elementEnd();
   }
   if (rf & 2) {
-    const node_r6 = ctx.$implicit;
+    const node_r7 = ctx.$implicit;
     const ctx_r0 = \u0275\u0275nextContext(2);
     \u0275\u0275advance();
-    \u0275\u0275property("ngIf", node_r6.children.length > 0 && !ctx_r0.draggable && !node_r6.data.editing);
+    \u0275\u0275property("ngIf", node_r7.children.length > 0 && !ctx_r0.draggable && !node_r7.data.editing);
     \u0275\u0275advance();
-    \u0275\u0275property("ngIf", (node_r6.children.length === 0 || !node_r6.children) && !ctx_r0.draggable && !node_r6.data.editing);
+    \u0275\u0275property("ngIf", (node_r7.children.length === 0 || !node_r7.children) && !ctx_r0.draggable && !node_r7.data.editing);
     \u0275\u0275advance();
     \u0275\u0275property("ngIf", ctx_r0.draggable);
     \u0275\u0275advance();
-    \u0275\u0275property("ngIf", node_r6.data.editing);
+    \u0275\u0275property("ngIf", node_r7.data.editing);
     \u0275\u0275advance();
-    \u0275\u0275property("ngIf", !node_r6.data.editing);
+    \u0275\u0275property("ngIf", !node_r7.data.editing);
     \u0275\u0275advance();
-    \u0275\u0275property("ngIf", node_r6.data.editing === "label");
+    \u0275\u0275property("ngIf", node_r7.data.editing === "label");
     \u0275\u0275advance();
-    \u0275\u0275property("ngIf", node_r6.data.editing === "link");
+    \u0275\u0275property("ngIf", node_r7.data.editing === "link");
   }
 }
-function TopicPageIaComponent_ng_container_35_div_9_ng_template_4_i_1_Template(rf, ctx) {
+function TopicPageIaComponent_ng_container_37_div_9_ng_template_4_i_1_Template(rf, ctx) {
   if (rf & 1) {
     \u0275\u0275element(0, "i", 44);
   }
 }
-function TopicPageIaComponent_ng_container_35_div_9_ng_template_4_i_2_Template(rf, ctx) {
+function TopicPageIaComponent_ng_container_37_div_9_ng_template_4_i_2_Template(rf, ctx) {
   if (rf & 1) {
     \u0275\u0275element(0, "i", 45);
   }
 }
-function TopicPageIaComponent_ng_container_35_div_9_ng_template_4_i_3_Template(rf, ctx) {
+function TopicPageIaComponent_ng_container_37_div_9_ng_template_4_i_3_Template(rf, ctx) {
   if (rf & 1) {
     \u0275\u0275element(0, "i", 46);
   }
 }
-function TopicPageIaComponent_ng_container_35_div_9_ng_template_4_ng_container_4_Template(rf, ctx) {
+function TopicPageIaComponent_ng_container_37_div_9_ng_template_4_ng_container_4_Template(rf, ctx) {
   if (rf & 1) {
-    const _r10 = \u0275\u0275getCurrentView();
+    const _r11 = \u0275\u0275getCurrentView();
     \u0275\u0275elementContainerStart(0);
     \u0275\u0275elementStart(1, "a", 48);
-    \u0275\u0275listener("click", function TopicPageIaComponent_ng_container_35_div_9_ng_template_4_ng_container_4_Template_a_click_1_listener($event) {
-      \u0275\u0275restoreView(_r10);
+    \u0275\u0275listener("click", function TopicPageIaComponent_ng_container_37_div_9_ng_template_4_ng_container_4_Template_a_click_1_listener($event) {
+      \u0275\u0275restoreView(_r11);
       const ctx_r0 = \u0275\u0275nextContext(4);
       return \u0275\u0275resetView(ctx_r0.onNodeClick($event));
     });
@@ -32104,54 +32150,54 @@ function TopicPageIaComponent_ng_container_35_div_9_ng_template_4_ng_container_4
     \u0275\u0275elementContainerEnd();
   }
   if (rf & 2) {
-    const node_r11 = \u0275\u0275nextContext().$implicit;
+    const node_r12 = \u0275\u0275nextContext().$implicit;
     \u0275\u0275advance();
-    \u0275\u0275property("href", node_r11.data.url, \u0275\u0275sanitizeUrl)("innerHTML", node_r11.label, \u0275\u0275sanitizeHtml);
+    \u0275\u0275property("href", node_r12.data.url, \u0275\u0275sanitizeUrl)("innerHTML", node_r12.label, \u0275\u0275sanitizeHtml);
   }
 }
-function TopicPageIaComponent_ng_container_35_div_9_ng_template_4_ng_template_5_Template(rf, ctx) {
+function TopicPageIaComponent_ng_container_37_div_9_ng_template_4_ng_template_5_Template(rf, ctx) {
   if (rf & 1) {
     \u0275\u0275element(0, "span", 54);
   }
   if (rf & 2) {
-    const node_r11 = \u0275\u0275nextContext().$implicit;
-    \u0275\u0275classProp("font-bold", node_r11.data == null ? null : node_r11.data.isCategory);
-    \u0275\u0275property("innerHTML", node_r11.label, \u0275\u0275sanitizeHtml);
+    const node_r12 = \u0275\u0275nextContext().$implicit;
+    \u0275\u0275classProp("font-bold", node_r12.data == null ? null : node_r12.data.isCategory);
+    \u0275\u0275property("innerHTML", node_r12.label, \u0275\u0275sanitizeHtml);
   }
 }
-function TopicPageIaComponent_ng_container_35_div_9_ng_template_4_Template(rf, ctx) {
+function TopicPageIaComponent_ng_container_37_div_9_ng_template_4_Template(rf, ctx) {
   if (rf & 1) {
     \u0275\u0275elementStart(0, "div", 39);
-    \u0275\u0275template(1, TopicPageIaComponent_ng_container_35_div_9_ng_template_4_i_1_Template, 1, 0, "i", 40)(2, TopicPageIaComponent_ng_container_35_div_9_ng_template_4_i_2_Template, 1, 0, "i", 41)(3, TopicPageIaComponent_ng_container_35_div_9_ng_template_4_i_3_Template, 1, 0, "i", 42)(4, TopicPageIaComponent_ng_container_35_div_9_ng_template_4_ng_container_4_Template, 2, 2, "ng-container", 53)(5, TopicPageIaComponent_ng_container_35_div_9_ng_template_4_ng_template_5_Template, 1, 3, "ng-template", null, 1, \u0275\u0275templateRefExtractor);
+    \u0275\u0275template(1, TopicPageIaComponent_ng_container_37_div_9_ng_template_4_i_1_Template, 1, 0, "i", 40)(2, TopicPageIaComponent_ng_container_37_div_9_ng_template_4_i_2_Template, 1, 0, "i", 41)(3, TopicPageIaComponent_ng_container_37_div_9_ng_template_4_i_3_Template, 1, 0, "i", 42)(4, TopicPageIaComponent_ng_container_37_div_9_ng_template_4_ng_container_4_Template, 2, 2, "ng-container", 53)(5, TopicPageIaComponent_ng_container_37_div_9_ng_template_4_ng_template_5_Template, 1, 3, "ng-template", null, 1, \u0275\u0275templateRefExtractor);
     \u0275\u0275elementEnd();
   }
   if (rf & 2) {
-    const node_r11 = ctx.$implicit;
-    const topicLabel_r12 = \u0275\u0275reference(6);
+    const node_r12 = ctx.$implicit;
+    const topicLabel_r13 = \u0275\u0275reference(6);
     const ctx_r0 = \u0275\u0275nextContext(3);
     \u0275\u0275advance();
-    \u0275\u0275property("ngIf", (node_r11.children == null ? null : node_r11.children.length) && !ctx_r0.draggable && !(node_r11.data == null ? null : node_r11.data.isCategory));
+    \u0275\u0275property("ngIf", (node_r12.children == null ? null : node_r12.children.length) && !ctx_r0.draggable && !(node_r12.data == null ? null : node_r12.data.isCategory));
     \u0275\u0275advance();
-    \u0275\u0275property("ngIf", !(node_r11.children == null ? null : node_r11.children.length) && !ctx_r0.draggable && !(node_r11.data == null ? null : node_r11.data.isCategory));
+    \u0275\u0275property("ngIf", !(node_r12.children == null ? null : node_r12.children.length) && !ctx_r0.draggable && !(node_r12.data == null ? null : node_r12.data.isCategory));
     \u0275\u0275advance();
-    \u0275\u0275property("ngIf", ctx_r0.draggable && !(node_r11.data == null ? null : node_r11.data.isCategory));
+    \u0275\u0275property("ngIf", ctx_r0.draggable && !(node_r12.data == null ? null : node_r12.data.isCategory));
     \u0275\u0275advance();
-    \u0275\u0275property("ngIf", node_r11.data == null ? null : node_r11.data.url)("ngIfElse", topicLabel_r12);
+    \u0275\u0275property("ngIf", node_r12.data == null ? null : node_r12.data.url)("ngIfElse", topicLabel_r13);
   }
 }
-function TopicPageIaComponent_ng_container_35_div_9_Template(rf, ctx) {
+function TopicPageIaComponent_ng_container_37_div_9_Template(rf, ctx) {
   if (rf & 1) {
-    const _r9 = \u0275\u0275getCurrentView();
+    const _r10 = \u0275\u0275getCurrentView();
     \u0275\u0275elementStart(0, "div", 51)(1, "h2");
     \u0275\u0275text(2, "Suggested topic page sections");
     \u0275\u0275elementEnd();
     \u0275\u0275elementStart(3, "p-tree", 52);
-    \u0275\u0275listener("onNodeDrop", function TopicPageIaComponent_ng_container_35_div_9_Template_p_tree_onNodeDrop_3_listener($event) {
-      \u0275\u0275restoreView(_r9);
+    \u0275\u0275listener("onNodeDrop", function TopicPageIaComponent_ng_container_37_div_9_Template_p_tree_onNodeDrop_3_listener($event) {
+      \u0275\u0275restoreView(_r10);
       const ctx_r0 = \u0275\u0275nextContext(2);
       return \u0275\u0275resetView(ctx_r0.onTopicPageNodeDrop($event));
     });
-    \u0275\u0275template(4, TopicPageIaComponent_ng_container_35_div_9_ng_template_4_Template, 7, 5, "ng-template", 37);
+    \u0275\u0275template(4, TopicPageIaComponent_ng_container_37_div_9_ng_template_4_Template, 7, 5, "ng-template", 37);
     \u0275\u0275elementEnd()();
   }
   if (rf & 2) {
@@ -32160,9 +32206,9 @@ function TopicPageIaComponent_ng_container_35_div_9_Template(rf, ctx) {
     \u0275\u0275property("value", ctx_r0.topicPageTree)("selectionMode", null)("draggableNodes", true)("droppableNodes", true)("validateDrop", true);
   }
 }
-function TopicPageIaComponent_ng_container_35_Template(rf, ctx) {
+function TopicPageIaComponent_ng_container_37_Template(rf, ctx) {
   if (rf & 1) {
-    const _r4 = \u0275\u0275getCurrentView();
+    const _r5 = \u0275\u0275getCurrentView();
     \u0275\u0275elementContainerStart(0);
     \u0275\u0275elementStart(1, "div", 33)(2, "div", 34);
     \u0275\u0275element(3, "p-contextMenu", 35, 0);
@@ -32170,29 +32216,29 @@ function TopicPageIaComponent_ng_container_35_Template(rf, ctx) {
     \u0275\u0275text(6, "Current IA structure tree");
     \u0275\u0275elementEnd();
     \u0275\u0275elementStart(7, "p-tree", 36);
-    \u0275\u0275twoWayListener("selectionChange", function TopicPageIaComponent_ng_container_35_Template_p_tree_selectionChange_7_listener($event) {
-      \u0275\u0275restoreView(_r4);
+    \u0275\u0275twoWayListener("selectionChange", function TopicPageIaComponent_ng_container_37_Template_p_tree_selectionChange_7_listener($event) {
+      \u0275\u0275restoreView(_r5);
       const ctx_r0 = \u0275\u0275nextContext();
       \u0275\u0275twoWayBindingSet(ctx_r0.selectedNode, $event) || (ctx_r0.selectedNode = $event);
       return \u0275\u0275resetView($event);
     });
-    \u0275\u0275listener("onNodeDrop", function TopicPageIaComponent_ng_container_35_Template_p_tree_onNodeDrop_7_listener($event) {
-      \u0275\u0275restoreView(_r4);
+    \u0275\u0275listener("onNodeDrop", function TopicPageIaComponent_ng_container_37_Template_p_tree_onNodeDrop_7_listener($event) {
+      \u0275\u0275restoreView(_r5);
       const ctx_r0 = \u0275\u0275nextContext();
       return \u0275\u0275resetView(ctx_r0.handleNodeDrop($event));
-    })("onNodeContextMenuSelect", function TopicPageIaComponent_ng_container_35_Template_p_tree_onNodeContextMenuSelect_7_listener($event) {
-      \u0275\u0275restoreView(_r4);
+    })("onNodeContextMenuSelect", function TopicPageIaComponent_ng_container_37_Template_p_tree_onNodeContextMenuSelect_7_listener($event) {
+      \u0275\u0275restoreView(_r5);
       const ctx_r0 = \u0275\u0275nextContext();
       return \u0275\u0275resetView(ctx_r0.onNodeContextMenu($event));
     });
-    \u0275\u0275template(8, TopicPageIaComponent_ng_container_35_ng_template_8_Template, 8, 7, "ng-template", 37);
+    \u0275\u0275template(8, TopicPageIaComponent_ng_container_37_ng_template_8_Template, 8, 7, "ng-template", 37);
     \u0275\u0275elementEnd()();
-    \u0275\u0275template(9, TopicPageIaComponent_ng_container_35_div_9_Template, 5, 5, "div", 38);
+    \u0275\u0275template(9, TopicPageIaComponent_ng_container_37_div_9_Template, 5, 5, "div", 38);
     \u0275\u0275elementEnd();
     \u0275\u0275elementContainerEnd();
   }
   if (rf & 2) {
-    const cm_r13 = \u0275\u0275reference(4);
+    const cm_r14 = \u0275\u0275reference(4);
     const ctx_r0 = \u0275\u0275nextContext();
     \u0275\u0275advance(2);
     \u0275\u0275classProp("md:col-6", ctx_r0.visitsByUrl.size > 0);
@@ -32201,51 +32247,51 @@ function TopicPageIaComponent_ng_container_35_Template(rf, ctx) {
     \u0275\u0275advance(4);
     \u0275\u0275property("value", ctx_r0.iaChart)("selectionMode", ctx_r0.selectable ? "multiple" : null);
     \u0275\u0275twoWayProperty("selection", ctx_r0.selectedNode);
-    \u0275\u0275property("draggableNodes", ctx_r0.draggable)("droppableNodes", true)("validateDrop", true)("contextMenu", cm_r13);
+    \u0275\u0275property("draggableNodes", ctx_r0.draggable)("droppableNodes", true)("validateDrop", true)("contextMenu", cm_r14);
     \u0275\u0275advance(2);
     \u0275\u0275property("ngIf", ctx_r0.visitsByUrl.size > 0);
   }
 }
-function TopicPageIaComponent_ng_container_36_p_button_3_Template(rf, ctx) {
+function TopicPageIaComponent_ng_container_38_p_button_3_Template(rf, ctx) {
   if (rf & 1) {
-    const _r14 = \u0275\u0275getCurrentView();
+    const _r15 = \u0275\u0275getCurrentView();
     \u0275\u0275elementStart(0, "p-button", 57);
-    \u0275\u0275listener("click", function TopicPageIaComponent_ng_container_36_p_button_3_Template_p_button_click_0_listener() {
-      \u0275\u0275restoreView(_r14);
+    \u0275\u0275listener("click", function TopicPageIaComponent_ng_container_38_p_button_3_Template_p_button_click_0_listener() {
+      \u0275\u0275restoreView(_r15);
       const ctx_r0 = \u0275\u0275nextContext(2);
       return \u0275\u0275resetView(ctx_r0.maximize(ctx_r0.chartContainer));
     });
     \u0275\u0275elementEnd();
   }
 }
-function TopicPageIaComponent_ng_container_36_p_4_Template(rf, ctx) {
+function TopicPageIaComponent_ng_container_38_p_4_Template(rf, ctx) {
   if (rf & 1) {
     \u0275\u0275elementStart(0, "p");
     \u0275\u0275text(1, "No child pages found.");
     \u0275\u0275elementEnd();
   }
 }
-function TopicPageIaComponent_ng_container_36_div_5_ng_template_3_Template(rf, ctx) {
+function TopicPageIaComponent_ng_container_38_div_5_ng_template_3_Template(rf, ctx) {
   if (rf & 1) {
-    const _r15 = \u0275\u0275getCurrentView();
+    const _r16 = \u0275\u0275getCurrentView();
     \u0275\u0275elementStart(0, "p")(1, "a", 48);
-    \u0275\u0275listener("click", function TopicPageIaComponent_ng_container_36_div_5_ng_template_3_Template_a_click_1_listener($event) {
-      \u0275\u0275restoreView(_r15);
+    \u0275\u0275listener("click", function TopicPageIaComponent_ng_container_38_div_5_ng_template_3_Template_a_click_1_listener($event) {
+      \u0275\u0275restoreView(_r16);
       const ctx_r0 = \u0275\u0275nextContext(3);
       return \u0275\u0275resetView(ctx_r0.onNodeClick($event));
     });
     \u0275\u0275elementEnd()();
   }
   if (rf & 2) {
-    const node_r16 = ctx.$implicit;
+    const node_r17 = ctx.$implicit;
     \u0275\u0275advance();
-    \u0275\u0275property("href", node_r16.data.url, \u0275\u0275sanitizeUrl)("innerHTML", node_r16.label, \u0275\u0275sanitizeHtml);
+    \u0275\u0275property("href", node_r17.data.url, \u0275\u0275sanitizeUrl)("innerHTML", node_r17.label, \u0275\u0275sanitizeHtml);
   }
 }
-function TopicPageIaComponent_ng_container_36_div_5_Template(rf, ctx) {
+function TopicPageIaComponent_ng_container_38_div_5_Template(rf, ctx) {
   if (rf & 1) {
     \u0275\u0275elementStart(0, "div", 58, 2)(2, "p-organization-chart", 8);
-    \u0275\u0275template(3, TopicPageIaComponent_ng_container_36_div_5_ng_template_3_Template, 2, 2, "ng-template", 37);
+    \u0275\u0275template(3, TopicPageIaComponent_ng_container_38_div_5_ng_template_3_Template, 2, 2, "ng-template", 37);
     \u0275\u0275elementEnd()();
   }
   if (rf & 2) {
@@ -32254,13 +32300,13 @@ function TopicPageIaComponent_ng_container_36_div_5_Template(rf, ctx) {
     \u0275\u0275property("value", ctx_r0.iaChart);
   }
 }
-function TopicPageIaComponent_ng_container_36_Template(rf, ctx) {
+function TopicPageIaComponent_ng_container_38_Template(rf, ctx) {
   if (rf & 1) {
     \u0275\u0275elementContainerStart(0);
     \u0275\u0275elementStart(1, "h2");
     \u0275\u0275text(2, "IA structure");
     \u0275\u0275elementEnd();
-    \u0275\u0275template(3, TopicPageIaComponent_ng_container_36_p_button_3_Template, 1, 0, "p-button", 55)(4, TopicPageIaComponent_ng_container_36_p_4_Template, 2, 0, "p", 18)(5, TopicPageIaComponent_ng_container_36_div_5_Template, 4, 1, "div", 56);
+    \u0275\u0275template(3, TopicPageIaComponent_ng_container_38_p_button_3_Template, 1, 0, "p-button", 55)(4, TopicPageIaComponent_ng_container_38_p_4_Template, 2, 0, "p", 17)(5, TopicPageIaComponent_ng_container_38_div_5_Template, 4, 1, "div", 56);
     \u0275\u0275elementContainerEnd();
   }
   if (rf & 2) {
@@ -32273,18 +32319,18 @@ function TopicPageIaComponent_ng_container_36_Template(rf, ctx) {
     \u0275\u0275property("ngIf", ctx_r0.iaChart.length > 0);
   }
 }
-function TopicPageIaComponent_ng_container_37_p_3_span_2_Template(rf, ctx) {
+function TopicPageIaComponent_ng_container_39_p_3_span_2_Template(rf, ctx) {
   if (rf & 1) {
     \u0275\u0275elementStart(0, "span");
     \u0275\u0275text(1, " or on any detected child pages");
     \u0275\u0275elementEnd();
   }
 }
-function TopicPageIaComponent_ng_container_37_p_3_Template(rf, ctx) {
+function TopicPageIaComponent_ng_container_39_p_3_Template(rf, ctx) {
   if (rf & 1) {
     \u0275\u0275elementStart(0, "p");
     \u0275\u0275text(1, " No broken links found on this page");
-    \u0275\u0275template(2, TopicPageIaComponent_ng_container_37_p_3_span_2_Template, 2, 0, "span", 18);
+    \u0275\u0275template(2, TopicPageIaComponent_ng_container_39_p_3_span_2_Template, 2, 0, "span", 17);
     \u0275\u0275text(3, ". ");
     \u0275\u0275elementEnd();
   }
@@ -32294,7 +32340,7 @@ function TopicPageIaComponent_ng_container_37_p_3_Template(rf, ctx) {
     \u0275\u0275property("ngIf", ctx_r0.iaChart[0].children == null ? null : ctx_r0.iaChart[0].children.length);
   }
 }
-function TopicPageIaComponent_ng_container_37_p_table_4_ng_template_1_Template(rf, ctx) {
+function TopicPageIaComponent_ng_container_39_p_table_4_ng_template_1_Template(rf, ctx) {
   if (rf & 1) {
     \u0275\u0275elementStart(0, "tr")(1, "th");
     \u0275\u0275text(2, "Parent page");
@@ -32307,7 +32353,7 @@ function TopicPageIaComponent_ng_container_37_p_table_4_ng_template_1_Template(r
     \u0275\u0275elementEnd()();
   }
 }
-function TopicPageIaComponent_ng_container_37_p_table_4_ng_template_3_Template(rf, ctx) {
+function TopicPageIaComponent_ng_container_39_p_table_4_ng_template_3_Template(rf, ctx) {
   if (rf & 1) {
     \u0275\u0275elementStart(0, "tr")(1, "td");
     \u0275\u0275text(2);
@@ -32320,19 +32366,19 @@ function TopicPageIaComponent_ng_container_37_p_table_4_ng_template_3_Template(r
     \u0275\u0275elementEnd()();
   }
   if (rf & 2) {
-    const rowData_r17 = ctx.$implicit;
+    const rowData_r18 = ctx.$implicit;
     \u0275\u0275advance(2);
-    \u0275\u0275textInterpolate(rowData_r17.parentUrl);
+    \u0275\u0275textInterpolate(rowData_r18.parentUrl);
     \u0275\u0275advance(2);
-    \u0275\u0275textInterpolate(rowData_r17.url);
+    \u0275\u0275textInterpolate(rowData_r18.url);
     \u0275\u0275advance(2);
-    \u0275\u0275textInterpolate(rowData_r17.status);
+    \u0275\u0275textInterpolate(rowData_r18.status);
   }
 }
-function TopicPageIaComponent_ng_container_37_p_table_4_Template(rf, ctx) {
+function TopicPageIaComponent_ng_container_39_p_table_4_Template(rf, ctx) {
   if (rf & 1) {
     \u0275\u0275elementStart(0, "p-table", 60);
-    \u0275\u0275template(1, TopicPageIaComponent_ng_container_37_p_table_4_ng_template_1_Template, 7, 0, "ng-template", null, 3, \u0275\u0275templateRefExtractor)(3, TopicPageIaComponent_ng_container_37_p_table_4_ng_template_3_Template, 7, 3, "ng-template", null, 4, \u0275\u0275templateRefExtractor);
+    \u0275\u0275template(1, TopicPageIaComponent_ng_container_39_p_table_4_ng_template_1_Template, 7, 0, "ng-template", null, 3, \u0275\u0275templateRefExtractor)(3, TopicPageIaComponent_ng_container_39_p_table_4_ng_template_3_Template, 7, 3, "ng-template", null, 4, \u0275\u0275templateRefExtractor);
     \u0275\u0275elementEnd();
   }
   if (rf & 2) {
@@ -32340,13 +32386,13 @@ function TopicPageIaComponent_ng_container_37_p_table_4_Template(rf, ctx) {
     \u0275\u0275property("value", ctx_r0.brokenLinks)("tableStyle", \u0275\u0275pureFunction0(2, _c37));
   }
 }
-function TopicPageIaComponent_ng_container_37_Template(rf, ctx) {
+function TopicPageIaComponent_ng_container_39_Template(rf, ctx) {
   if (rf & 1) {
     \u0275\u0275elementContainerStart(0);
     \u0275\u0275elementStart(1, "h2");
     \u0275\u0275text(2, "Broken links");
     \u0275\u0275elementEnd();
-    \u0275\u0275template(3, TopicPageIaComponent_ng_container_37_p_3_Template, 4, 1, "p", 18)(4, TopicPageIaComponent_ng_container_37_p_table_4_Template, 5, 3, "p-table", 59);
+    \u0275\u0275template(3, TopicPageIaComponent_ng_container_39_p_3_Template, 4, 1, "p", 17)(4, TopicPageIaComponent_ng_container_39_p_table_4_Template, 5, 3, "p-table", 59);
     \u0275\u0275elementContainerEnd();
   }
   if (rf & 2) {
@@ -32399,6 +32445,7 @@ var TopicPageIaComponent = class _TopicPageIaComponent {
   showCsvUpload = false;
   step1Complete = false;
   hasCopiedUrls = false;
+  updInstructionsComplete = false;
   csvUploaded = false;
   csvFileName = "";
   urlColumnIndex = null;
@@ -32563,7 +32610,6 @@ var TopicPageIaComponent = class _TopicPageIaComponent {
           life: 3e3
         });
         this.hasCopiedUrls = true;
-        this.showCsvUpload = true;
         this.expandStep(3);
       } catch (err) {
         console.error("Failed to copy URLs:", err);
@@ -32584,6 +32630,11 @@ var TopicPageIaComponent = class _TopicPageIaComponent {
   }
   expandStep(stepIndex) {
     this.activeStep = stepIndex;
+  }
+  proceedToCsvUpload() {
+    this.updInstructionsComplete = true;
+    this.showCsvUpload = true;
+    this.expandStep(4);
   }
   readCsvFile(file) {
     const reader = new FileReader();
@@ -33713,7 +33764,7 @@ var TopicPageIaComponent = class _TopicPageIaComponent {
       \u0275\u0275queryRefresh(_t = \u0275\u0275loadQuery()) && (ctx.chartContainer = _t.first);
       \u0275\u0275queryRefresh(_t = \u0275\u0275loadQuery()) && (ctx.cm = _t.first);
     }
-  }, features: [\u0275\u0275ProvidersFeature([TreeDragDropService])], decls: 38, vars: 18, consts: [["cm", ""], ["topicLabel", ""], ["chartContainer", ""], ["header", ""], ["body", ""], [1, "mt-0"], [1, "topic-ia-steps", 3, "valueChange", "value", "linear"], [1, "topic-ia-step-list"], [3, "value"], [1, "grid", "mt-3"], [1, "col-12", "md:col-4"], [1, "h-full", "surface-0", "border-1", "border-round", "border-200", "p-3"], [1, "flex", "flex-row", "flex-wrap", "align-items-center", "gap-3", "mt-0"], ["inputId", "depth", "mode", "decimal", 3, "ngModelChange", "ngModel", "showButtons", "min", "max"], ["for", "depth"], ["label", "Get subpages in IA", "icon", "pi pi-info-circle", 3, "click", "severity", "loading"], ["styleClass", "mt-3", 3, "value", "showValue", "style", 4, "ngIf"], ["class", "col-12 md:col-4", 4, "ngIf"], [4, "ngIf"], ["styleClass", "mt-3", 3, "value", "showValue"], ["href", "#"], ["label", "Copy URLs to clipboard", "icon", "pi pi-copy", 3, "severity", "click", 4, "ngIf"], ["label", "Copy URLs to clipboard", "icon", "pi pi-copy", 3, "click", "severity"], [1, "flex", "justify-content-start"], ["id", "topic-ia-csv-upload", "name", "topicIaCsv", "accept", ".csv", "mode", "basic", "chooseIcon", "pi pi-upload", "outlined", "", 3, "uploadHandler", "auto", "customUpload", "chooseLabel", "chooseStyleClass"], [1, "flex", "flex-row", "align-items-center", "gap-3"], ["styleClass", "pl-1", 1, "max-w-full", 3, "model"], ["class", "flex align-items-center gap-2 text-green-400", 4, "ngIf"], ["class", "flex align-items-center gap-2 text-red-400", 4, "ngIf"], [1, "flex", "align-items-center", "gap-2", "text-green-400"], [1, "pi", "pi-check-circle"], [1, "flex", "align-items-center", "gap-2", "text-red-400"], [1, "pi", "pi-times-circle"], [1, "grid"], [1, "col-12"], [3, "model"], ["styleClass", "w-full md:w-[30rem]", "draggableScope", "self", "droppableScope", "self", 3, "selectionChange", "onNodeDrop", "onNodeContextMenuSelect", "value", "selectionMode", "selection", "draggableNodes", "droppableNodes", "validateDrop", "contextMenu"], ["pTemplate", "default"], ["class", "col-12 md:col-6", 4, "ngIf"], [1, "flex", "flex-row", "align-items-center", "gap-2", "w-full"], ["class", "pi pi-folder", 4, "ngIf"], ["class", "pi pi-file", 4, "ngIf"], ["class", "pi pi-arrows-alt cursor-move text-color-secondary", 4, "ngIf"], ["class", "pi pi-pencil text-color-secondary", 4, "ngIf"], [1, "pi", "pi-folder"], [1, "pi", "pi-file"], [1, "pi", "pi-arrows-alt", "cursor-move", "text-color-secondary"], [1, "pi", "pi-pencil", "text-color-secondary"], ["target", "_blank", 1, "ia-label", 3, "click", "href", "innerHTML"], ["type", "text", "pInputText", "", "pSize", "small", 1, "ia-label", 3, "ngModelChange", "keydown", "ngModel"], ["icon", "pi pi-check", "severity", "secondary", "size", "small", 3, "onClick"], [1, "col-12", "md:col-6"], ["styleClass", "w-full md:w-[30rem]", "draggableScope", "topicPageTree", "droppableScope", "topicPageTree", 3, "onNodeDrop", "value", "selectionMode", "draggableNodes", "droppableNodes", "validateDrop"], [4, "ngIf", "ngIfElse"], [1, "ia-label", 3, "innerHTML"], ["label", "Maximize IA chart", "severity", "secondary", "icon", "pi pi-window-maximize", "styleClass", "mt-1 mb-3", 3, "click", 4, "ngIf"], ["class", "overflow-auto max-h-75vh surface-ground surface-border border-1 py-3 mb-3 ia-chart-container", 4, "ngIf"], ["label", "Maximize IA chart", "severity", "secondary", "icon", "pi pi-window-maximize", "styleClass", "mt-1 mb-3", 3, "click"], [1, "overflow-auto", "max-h-75vh", "surface-ground", "surface-border", "border-1", "py-3", "mb-3", "ia-chart-container"], ["size", "small", "stripedRows", "", 3, "value", "tableStyle", 4, "ngIf"], ["size", "small", "stripedRows", "", 3, "value", "tableStyle"]], template: function TopicPageIaComponent_Template(rf, ctx) {
+  }, features: [\u0275\u0275ProvidersFeature([TreeDragDropService])], decls: 40, vars: 20, consts: [["cm", ""], ["topicLabel", ""], ["chartContainer", ""], ["header", ""], ["body", ""], [1, "mt-0"], [1, "topic-ia-steps", 3, "valueChange", "value", "linear"], [1, "topic-ia-step-list"], [3, "value"], [1, "topic-ia-panels"], [1, "surface-0", "border-1", "border-round", "border-200", "p-3"], [1, "flex", "flex-row", "flex-wrap", "align-items-center", "gap-3", "mt-0"], ["inputId", "depth", "mode", "decimal", 3, "ngModelChange", "ngModel", "showButtons", "min", "max"], ["for", "depth"], ["label", "Get subpages in IA", "icon", "pi pi-info-circle", 3, "click", "severity", "loading"], ["styleClass", "mt-3", 3, "value", "showValue", "style", 4, "ngIf"], ["class", "surface-0 border-1 border-round border-200 p-3", 4, "ngIf"], [4, "ngIf"], ["styleClass", "mt-3", 3, "value", "showValue"], ["label", "Copy URLs to clipboard", "icon", "pi pi-copy", 3, "severity", "click", 4, "ngIf"], ["label", "Copy URLs to clipboard", "icon", "pi pi-copy", 3, "click", "severity"], ["href", "https://cra-arc.alpha.canada.ca/en/custom-reports/create"], ["label", "Next", 3, "click", "severity"], [1, "flex", "justify-content-start"], ["id", "topic-ia-csv-upload", "name", "topicIaCsv", "accept", ".csv", "mode", "basic", "chooseIcon", "pi pi-upload", "outlined", "", 3, "uploadHandler", "auto", "customUpload", "chooseLabel", "chooseStyleClass"], [1, "flex", "flex-row", "align-items-center", "gap-3"], ["styleClass", "pl-1", 1, "max-w-full", 3, "model"], ["class", "flex align-items-center gap-2 text-green-400", 4, "ngIf"], ["class", "flex align-items-center gap-2 text-red-400", 4, "ngIf"], [1, "flex", "align-items-center", "gap-2", "text-green-400"], [1, "pi", "pi-check-circle"], [1, "flex", "align-items-center", "gap-2", "text-red-400"], [1, "pi", "pi-times-circle"], [1, "grid"], [1, "col-12"], [3, "model"], ["styleClass", "w-full md:w-[30rem]", "draggableScope", "self", "droppableScope", "self", 3, "selectionChange", "onNodeDrop", "onNodeContextMenuSelect", "value", "selectionMode", "selection", "draggableNodes", "droppableNodes", "validateDrop", "contextMenu"], ["pTemplate", "default"], ["class", "col-12 md:col-6", 4, "ngIf"], [1, "flex", "flex-row", "align-items-center", "gap-2", "w-full"], ["class", "pi pi-folder", 4, "ngIf"], ["class", "pi pi-file", 4, "ngIf"], ["class", "pi pi-arrows-alt cursor-move text-color-secondary", 4, "ngIf"], ["class", "pi pi-pencil text-color-secondary", 4, "ngIf"], [1, "pi", "pi-folder"], [1, "pi", "pi-file"], [1, "pi", "pi-arrows-alt", "cursor-move", "text-color-secondary"], [1, "pi", "pi-pencil", "text-color-secondary"], ["target", "_blank", 1, "ia-label", 3, "click", "href", "innerHTML"], ["type", "text", "pInputText", "", "pSize", "small", 1, "ia-label", 3, "ngModelChange", "keydown", "ngModel"], ["icon", "pi pi-check", "severity", "secondary", "size", "small", 3, "onClick"], [1, "col-12", "md:col-6"], ["styleClass", "w-full md:w-[30rem]", "draggableScope", "topicPageTree", "droppableScope", "topicPageTree", 3, "onNodeDrop", "value", "selectionMode", "draggableNodes", "droppableNodes", "validateDrop"], [4, "ngIf", "ngIfElse"], [1, "ia-label", 3, "innerHTML"], ["label", "Maximize IA chart", "severity", "secondary", "icon", "pi pi-window-maximize", "styleClass", "mt-1 mb-3", 3, "click", 4, "ngIf"], ["class", "overflow-auto max-h-75vh surface-ground surface-border border-1 py-3 mb-3 ia-chart-container", 4, "ngIf"], ["label", "Maximize IA chart", "severity", "secondary", "icon", "pi pi-window-maximize", "styleClass", "mt-1 mb-3", 3, "click"], [1, "overflow-auto", "max-h-75vh", "surface-ground", "surface-border", "border-1", "py-3", "mb-3", "ia-chart-container"], ["size", "small", "stripedRows", "", 3, "value", "tableStyle", 4, "ngIf"], ["size", "small", "stripedRows", "", 3, "value", "tableStyle"]], template: function TopicPageIaComponent_Template(rf, ctx) {
     if (rf & 1) {
       \u0275\u0275elementStart(0, "p", 5);
       \u0275\u0275text(1, " To edit this topic page or to convert it to one, follow these steps:\n");
@@ -33727,46 +33778,49 @@ var TopicPageIaComponent = class _TopicPageIaComponent {
       \u0275\u0275text(5, "Get current IA Structure");
       \u0275\u0275elementEnd();
       \u0275\u0275elementStart(6, "p-step", 8);
-      \u0275\u0275text(7, "Get page visits");
+      \u0275\u0275text(7, "Copy IA URLs");
       \u0275\u0275elementEnd();
       \u0275\u0275elementStart(8, "p-step", 8);
-      \u0275\u0275text(9, "Create the sections of your topic page");
+      \u0275\u0275text(9, "Retrieve UPD visits");
+      \u0275\u0275elementEnd();
+      \u0275\u0275elementStart(10, "p-step", 8);
+      \u0275\u0275text(11, "Create the sections of your topic page");
       \u0275\u0275elementEnd()()();
-      \u0275\u0275elementStart(10, "div", 9)(11, "div", 10)(12, "div", 11)(13, "p", 5);
-      \u0275\u0275text(14, "Execute a 3-to-4-levels-deep ");
-      \u0275\u0275elementStart(15, "strong");
-      \u0275\u0275text(16, "crawl of the IA");
+      \u0275\u0275elementStart(12, "div", 9)(13, "div", 10)(14, "p", 5);
+      \u0275\u0275text(15, "Execute a 3-to-4-levels-deep ");
+      \u0275\u0275elementStart(16, "strong");
+      \u0275\u0275text(17, "crawl of the IA");
       \u0275\u0275elementEnd();
-      \u0275\u0275text(17, ". This will:");
+      \u0275\u0275text(18, ". This will:");
       \u0275\u0275elementEnd();
-      \u0275\u0275elementStart(18, "ul")(19, "li");
-      \u0275\u0275text(20, "Retrieve subpages");
+      \u0275\u0275elementStart(19, "ul")(20, "li");
+      \u0275\u0275text(21, "Retrieve the subpages");
       \u0275\u0275elementEnd();
-      \u0275\u0275elementStart(21, "li");
-      \u0275\u0275text(22, "Retrieve depths");
+      \u0275\u0275elementStart(22, "li");
+      \u0275\u0275text(23, "Retrieve the depths");
       \u0275\u0275elementEnd();
-      \u0275\u0275elementStart(23, "li");
-      \u0275\u0275text(24, "Generate a visual IA structure tree below");
+      \u0275\u0275elementStart(24, "li");
+      \u0275\u0275text(25, "Generate a visual IA structure tree below");
       \u0275\u0275elementEnd()();
-      \u0275\u0275elementStart(25, "div", 12)(26, "p-iftalabel")(27, "p-inputnumber", 13);
-      \u0275\u0275twoWayListener("ngModelChange", function TopicPageIaComponent_Template_p_inputnumber_ngModelChange_27_listener($event) {
+      \u0275\u0275elementStart(26, "div", 11)(27, "p-iftalabel")(28, "p-inputnumber", 12);
+      \u0275\u0275twoWayListener("ngModelChange", function TopicPageIaComponent_Template_p_inputnumber_ngModelChange_28_listener($event) {
         \u0275\u0275twoWayBindingSet(ctx.depth, $event) || (ctx.depth = $event);
         return $event;
       });
       \u0275\u0275elementEnd();
-      \u0275\u0275elementStart(28, "label", 14);
-      \u0275\u0275text(29, "Depth");
+      \u0275\u0275elementStart(29, "label", 13);
+      \u0275\u0275text(30, "Depth");
       \u0275\u0275elementEnd()();
-      \u0275\u0275elementStart(30, "p-button", 15);
-      \u0275\u0275listener("click", function TopicPageIaComponent_Template_p_button_click_30_listener() {
+      \u0275\u0275elementStart(31, "p-button", 14);
+      \u0275\u0275listener("click", function TopicPageIaComponent_Template_p_button_click_31_listener() {
         return ctx.checkIA();
       });
       \u0275\u0275elementEnd()();
-      \u0275\u0275template(31, TopicPageIaComponent_p_progressbar_31_Template, 1, 5, "p-progressbar", 16);
-      \u0275\u0275elementEnd()();
-      \u0275\u0275template(32, TopicPageIaComponent_div_32_Template, 21, 1, "div", 17)(33, TopicPageIaComponent_div_33_Template, 16, 6, "div", 17);
+      \u0275\u0275template(32, TopicPageIaComponent_p_progressbar_32_Template, 1, 5, "p-progressbar", 15);
       \u0275\u0275elementEnd();
-      \u0275\u0275template(34, TopicPageIaComponent_ng_container_34_Template, 7, 3, "ng-container", 18)(35, TopicPageIaComponent_ng_container_35_Template, 10, 11, "ng-container", 18)(36, TopicPageIaComponent_ng_container_36_Template, 6, 3, "ng-container", 18)(37, TopicPageIaComponent_ng_container_37_Template, 5, 2, "ng-container", 18);
+      \u0275\u0275template(33, TopicPageIaComponent_div_33_Template, 6, 1, "div", 16)(34, TopicPageIaComponent_div_34_Template, 33, 1, "div", 16)(35, TopicPageIaComponent_div_35_Template, 21, 6, "div", 16);
+      \u0275\u0275elementEnd();
+      \u0275\u0275template(36, TopicPageIaComponent_ng_container_36_Template, 7, 3, "ng-container", 17)(37, TopicPageIaComponent_ng_container_37_Template, 10, 11, "ng-container", 17)(38, TopicPageIaComponent_ng_container_38_Template, 6, 3, "ng-container", 17)(39, TopicPageIaComponent_ng_container_39_Template, 5, 2, "ng-container", 17);
     }
     if (rf & 2) {
       \u0275\u0275advance(2);
@@ -33778,7 +33832,9 @@ var TopicPageIaComponent = class _TopicPageIaComponent {
       \u0275\u0275property("value", 2);
       \u0275\u0275advance(2);
       \u0275\u0275property("value", 3);
-      \u0275\u0275advance(19);
+      \u0275\u0275advance(2);
+      \u0275\u0275property("value", 4);
+      \u0275\u0275advance(18);
       \u0275\u0275twoWayProperty("ngModel", ctx.depth);
       \u0275\u0275property("showButtons", true)("min", 2)("max", 6);
       \u0275\u0275advance(3);
@@ -33787,6 +33843,8 @@ var TopicPageIaComponent = class _TopicPageIaComponent {
       \u0275\u0275property("ngIf", ctx.isChartLoading);
       \u0275\u0275advance();
       \u0275\u0275property("ngIf", ctx.step1Complete);
+      \u0275\u0275advance();
+      \u0275\u0275property("ngIf", ctx.hasCopiedUrls);
       \u0275\u0275advance();
       \u0275\u0275property("ngIf", ctx.showCsvUpload);
       \u0275\u0275advance();
@@ -33835,7 +33893,7 @@ var TopicPageIaComponent = class _TopicPageIaComponent {
     InputGroupAddon,
     FileUploadModule,
     FileUpload
-  ], styles: ["\n\n.ia-label[_ngcontent-%COMP%] {\n  white-space: pre-line;\n  display: inline-block;\n  color: var(--text-color) !important;\n  text-decoration: none !important;\n}\n  .p-tree li[class*=text-white] > .p-tree-node-content .ia-label {\n  color: #ffffff !important;\n}\n  .p-tree li[class*=text-black] > .p-tree-node-content .ia-label {\n  color: #000000 !important;\n}\n  .p-tree .p-tree-node-content:hover {\n  background-color: unset !important;\n}\n[_nghost-%COMP%]     .topic-ia-steps .topic-ia-step-list {\n  display: grid;\n  grid-template-columns: repeat(3, minmax(0, 1fr));\n  gap: 0.5rem;\n  margin: 0;\n}\n[_nghost-%COMP%]     .topic-ia-steps .topic-ia-step-list .p-step {\n  justify-content: flex-start;\n  text-align: left;\n  width: 100%;\n}\n  .topic-ia-badge {\n  display: inline-block;\n  margin-left: 0.5rem;\n  padding: 0.1rem 0.45rem;\n  border-radius: 9999px;\n  font-size: 0.875rem;\n  font-weight: 600;\n  border: 1px solid #d1d5db;\n  background: #e5e7eb;\n  color: #374151;\n  white-space: nowrap;\n}\n.dark-mode[_nghost-%COMP%]     .topic-ia-badge, .dark-mode   [_nghost-%COMP%]     .topic-ia-badge {\n  border-color: #4b5563;\n  background: #374151;\n  color: #f9fafb;\n}\n  .ia-chart-container .p-organizationchart-node a {\n  color: var(--text-color) !important;\n  text-decoration: none !important;\n}\n  .ia-chart-container .p-organizationchart-node.text-white a {\n  color: #ffffff !important;\n}\n  .ia-chart-container .p-organizationchart-node.text-black a {\n  color: #000000 !important;\n}\n/*# sourceMappingURL=topic-page-ia.component.css.map */"] });
+  ], styles: ["\n\n.ia-label[_ngcontent-%COMP%] {\n  white-space: pre-line;\n  display: inline-block;\n  color: var(--text-color) !important;\n  text-decoration: none !important;\n}\n  .p-tree li[class*=text-white] > .p-tree-node-content .ia-label {\n  color: #ffffff !important;\n}\n  .p-tree li[class*=text-black] > .p-tree-node-content .ia-label {\n  color: #000000 !important;\n}\n  .p-tree .p-tree-node-content:hover {\n  background-color: unset !important;\n}\n[_nghost-%COMP%]     .topic-ia-steps .topic-ia-step-list {\n  display: grid;\n  grid-template-columns: repeat(4, minmax(0, 1fr));\n  gap: 0.5rem;\n  margin: 0;\n}\n@media (max-width: 1500px) {\n  [_nghost-%COMP%]     .topic-ia-steps .topic-ia-step-list {\n    grid-template-columns: minmax(0, 1fr);\n    gap: 0.1rem;\n  }\n}\n@media (max-width: 1500px) {\n  [_nghost-%COMP%]     .topic-ia-steps .p-step-header {\n    padding: 0;\n  }\n  [_nghost-%COMP%]     .topic-ia-steps .p-stepper-separator {\n    margin: 0;\n  }\n}\n[_nghost-%COMP%]     .topic-ia-steps {\n  margin-bottom: 0;\n}\n[_nghost-%COMP%]     .topic-ia-steps .p-step-title {\n  font-weight: 600;\n  font-size: 1.02rem;\n}\n[_nghost-%COMP%]     .topic-ia-steps .topic-ia-step-list .p-step {\n  justify-content: flex-start;\n  text-align: left;\n  width: 100%;\n}\n[_nghost-%COMP%]     .topic-ia-panels {\n  display: grid;\n  grid-template-columns: repeat(4, minmax(0, 1fr));\n  gap: 1rem;\n  margin-top: 0.75rem;\n}\n@media (max-width: 1500px) {\n  [_nghost-%COMP%]     .topic-ia-panels {\n    grid-template-columns: repeat(2, minmax(0, 1fr));\n  }\n}\n@media (max-width: 1000px) {\n  [_nghost-%COMP%]     .topic-ia-panels {\n    grid-template-columns: minmax(0, 1fr);\n  }\n}\n  .topic-ia-badge {\n  display: inline-block;\n  margin-left: 0.5rem;\n  padding: 0.1rem 0.45rem;\n  border-radius: 9999px;\n  font-size: 0.875rem;\n  font-weight: 600;\n  border: 1px solid #d1d5db;\n  background: #e5e7eb;\n  color: #374151;\n  white-space: nowrap;\n}\n.dark-mode[_nghost-%COMP%]     .topic-ia-badge, .dark-mode   [_nghost-%COMP%]     .topic-ia-badge {\n  border-color: #4b5563;\n  background: #374151;\n  color: #f9fafb;\n}\n  .ia-chart-container .p-organizationchart-node a {\n  color: var(--text-color) !important;\n  text-decoration: none !important;\n}\n  .ia-chart-container .p-organizationchart-node.text-white a {\n  color: #ffffff !important;\n}\n  .ia-chart-container .p-organizationchart-node.text-black a {\n  color: #000000 !important;\n}\n/*# sourceMappingURL=topic-page-ia.component.css.map */"] });
 };
 (() => {
   (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(TopicPageIaComponent, [{
@@ -33865,93 +33923,99 @@ var TopicPageIaComponent = class _TopicPageIaComponent {
 <p-stepper [(value)]="activeStep" [linear]="false" class="topic-ia-steps">
   <p-step-list class="topic-ia-step-list">
     <p-step [value]="1">Get current IA Structure</p-step>
-    <p-step [value]="2">Get page visits</p-step>
-    <p-step [value]="3">Create the sections of your topic page</p-step>
+    <p-step [value]="2">Copy IA URLs</p-step>
+    <p-step [value]="3">Retrieve UPD visits</p-step>
+    <p-step [value]="4">Create the sections of your topic page</p-step>
   </p-step-list>
 </p-stepper>
 
-<div class="grid mt-3">
-  <div class="col-12 md:col-4">
-    <div class="h-full surface-0 border-1 border-round border-200 p-3">
-      <p class="mt-0">Execute a 3-to-4-levels-deep <strong>crawl of the IA</strong>. This will:</p>
-      <ul>
-        <li>Retrieve subpages</li>
-        <li>Retrieve depths</li>
-        <li>Generate a visual IA structure tree below</li>
-      </ul>
-      <div class="flex flex-row flex-wrap align-items-center gap-3 mt-0">
-        <p-iftalabel>
-          <p-inputnumber
-            [(ngModel)]="depth"
-            inputId="depth"
-            mode="decimal"
-            [showButtons]="true"
-            [min]="2"
-            [max]="6"
-          />
-          <label for="depth">Depth</label>
-        </p-iftalabel>
-        <p-button
-          label="Get subpages in IA"
-          [severity]="step1Complete ? 'secondary' : 'primary'"
-          (click)="checkIA()"
-          [loading]="isChartLoading"
-          icon="pi pi-info-circle"
+<div class="topic-ia-panels">
+  <div class="surface-0 border-1 border-round border-200 p-3">
+    <p class="mt-0">Execute a 3-to-4-levels-deep <strong>crawl of the IA</strong>. This will:</p>
+    <ul>
+      <li>Retrieve the subpages</li>
+      <li>Retrieve the depths</li>
+      <li>Generate a visual IA structure tree below</li>
+    </ul>
+    <div class="flex flex-row flex-wrap align-items-center gap-3 mt-0">
+      <p-iftalabel>
+        <p-inputnumber
+          [(ngModel)]="depth"
+          inputId="depth"
+          mode="decimal"
+          [showButtons]="true"
+          [min]="2"
+          [max]="6"
         />
-      </div>
-      <p-progressbar
-        *ngIf="isChartLoading"
-        [value]="iaProgress"
-        [showValue]="false"
-        [style]="{ height: '1rem' }"
-        styleClass="mt-3"
-      />
-    </div>
-  </div>
-
-  <div class="col-12 md:col-4" *ngIf="step1Complete">
-    <div class="h-full surface-0 border-1 border-round border-200 p-3">
-      <p class="mt-0">Manually <strong>retrieve page visits</strong> from the UPD:</p>
-      <ul>
-        <li>Go to the <a href="#">Custom reports page of the UPD</a></li>
-        <li>Set ... to None</li>
-        <li>Set the date range to the last year</li>
-        <li>Select page visits</li>
-        <li>Export the data as a CSV file and save it</li>
-      </ul>
+        <label for="depth">Depth</label>
+      </p-iftalabel>
       <p-button
-        label="Copy URLs to clipboard"
-        [severity]="hasCopiedUrls ? 'secondary' : 'primary'"
-        (click)="copyUrlsToClipboard()"
-        icon="pi pi-copy"
-        *ngIf="iaChart && iaChart.length > 0 && !isChartLoading"
+        label="Get subpages in IA"
+        [severity]="step1Complete ? 'secondary' : 'primary'"
+        (click)="checkIA()"
+        [loading]="isChartLoading"
+        icon="pi pi-info-circle"
       />
     </div>
+    <p-progressbar
+      *ngIf="isChartLoading"
+      [value]="iaProgress"
+      [showValue]="false"
+      [style]="{ height: '1rem' }"
+      styleClass="mt-3"
+    />
   </div>
 
-  <div class="col-12 md:col-4" *ngIf="showCsvUpload">
-    <div class="h-full surface-0 border-1 border-round border-200 p-3">
-      <p class="mt-0"><strong>Upload your saved CSV</strong> file. This will:</p>
-      <ul>
-        <li>Parse and display the page visits data</li>
-        <li>Suggest sections for your topic page based on visits and levels</li>
-      </ul>
-      <p>You can then manually move the pages from one section to another.</p>
-      <div class="flex justify-content-start">
-        <p-fileUpload
-          id="topic-ia-csv-upload"
-          name="topicIaCsv"
-          accept=".csv"
-          mode="basic"
-          [auto]="true"
-          [customUpload]="true"
-            (uploadHandler)="onCsvUpload($event)"
-            [chooseLabel]="'page.topicIa.csvUpload.choose' | translate"
-            chooseIcon="pi pi-upload"
-            [chooseStyleClass]="csvUploaded ? 'p-button-secondary' : 'p-button-primary'"
-            outlined
-          />
-      </div>
+  <div class="surface-0 border-1 border-round border-200 p-3" *ngIf="step1Complete">
+    <p class="mt-0"><strong>Copy all URLs</strong> in the IA structure to the clipboard.</p>
+    <p-button
+      label="Copy URLs to clipboard"
+      [severity]="hasCopiedUrls ? 'secondary' : 'primary'"
+      (click)="copyUrlsToClipboard()"
+      icon="pi pi-copy"
+      *ngIf="iaChart && iaChart.length > 0 && !isChartLoading"
+    />
+  </div>
+
+  <div class="surface-0 border-1 border-round border-200 p-3" *ngIf="hasCopiedUrls">
+    <p class="mt-0">Manually <strong>retrieve page visits</strong> from the UPD:</p>
+    <ol>
+      <li>Visit <a href="https://cra-arc.alpha.canada.ca/en/custom-reports/create">Custom reports page of the UPD</a></li>
+      <li>Select data granularity: <strong>None</strong></li>
+      <li>Select a date range > Preset: <strong>Last year</strong></li>
+      <li>Select pages > Bulk Pages: Paste the copied URLs into text field</li>
+      <li>Select metrics: check <strong>Visits</strong> box</li>
+      <li>Scroll down and select <strong>Generate report</strong></li>
+      <li>Export the report as a CSV and save it</li>
+    </ol>
+    <p-button
+      label="Next"
+      [severity]="updInstructionsComplete ? 'secondary' : 'primary'"
+      (click)="proceedToCsvUpload()"
+    />
+  </div>
+
+  <div class="surface-0 border-1 border-round border-200 p-3" *ngIf="showCsvUpload">
+    <p class="mt-0"><strong>Upload your saved CSV</strong> file. This will:</p>
+    <ul>
+      <li>Display page visits in IA structure</li>
+      <li>Create a new tree: you can drag pages to design</li>
+      <li>Suggest pages for <strong>Most requested</strong> and <strong>Doormats</strong> based on visits and levels</li>
+    </ul>
+    <div class="flex justify-content-start">
+      <p-fileUpload
+        id="topic-ia-csv-upload"
+        name="topicIaCsv"
+        accept=".csv"
+        mode="basic"
+        [auto]="true"
+        [customUpload]="true"
+          (uploadHandler)="onCsvUpload($event)"
+          [chooseLabel]="'page.topicIa.csvUpload.choose' | translate"
+          chooseIcon="pi pi-upload"
+          [chooseStyleClass]="csvUploaded ? 'p-button-secondary' : 'p-button-primary'"
+          outlined
+        />
     </div>
   </div>
 </div>
@@ -34178,7 +34242,7 @@ var TopicPageIaComponent = class _TopicPageIaComponent {
     </ng-template>
   </p-table>
 </ng-container>
-`, styles: ["/* angular:styles/component:css;d8846968b2cfd99d04eced17a928188e552df878cd85c4f070a298f974a63332;C:/my-working-files/GitHub/design-assistant/src/app/views/page-assistant/components/problems/component-guidance/topic-page/topic-page-ia.component.ts */\n.ia-label {\n  white-space: pre-line;\n  display: inline-block;\n  color: var(--text-color) !important;\n  text-decoration: none !important;\n}\n::ng-deep .p-tree li[class*=text-white] > .p-tree-node-content .ia-label {\n  color: #ffffff !important;\n}\n::ng-deep .p-tree li[class*=text-black] > .p-tree-node-content .ia-label {\n  color: #000000 !important;\n}\n::ng-deep .p-tree .p-tree-node-content:hover {\n  background-color: unset !important;\n}\n:host ::ng-deep .topic-ia-steps .topic-ia-step-list {\n  display: grid;\n  grid-template-columns: repeat(3, minmax(0, 1fr));\n  gap: 0.5rem;\n  margin: 0;\n}\n:host ::ng-deep .topic-ia-steps .topic-ia-step-list .p-step {\n  justify-content: flex-start;\n  text-align: left;\n  width: 100%;\n}\n::ng-deep .topic-ia-badge {\n  display: inline-block;\n  margin-left: 0.5rem;\n  padding: 0.1rem 0.45rem;\n  border-radius: 9999px;\n  font-size: 0.875rem;\n  font-weight: 600;\n  border: 1px solid #d1d5db;\n  background: #e5e7eb;\n  color: #374151;\n  white-space: nowrap;\n}\n:host-context(.dark-mode) ::ng-deep .topic-ia-badge {\n  border-color: #4b5563;\n  background: #374151;\n  color: #f9fafb;\n}\n::ng-deep .ia-chart-container .p-organizationchart-node a {\n  color: var(--text-color) !important;\n  text-decoration: none !important;\n}\n::ng-deep .ia-chart-container .p-organizationchart-node.text-white a {\n  color: #ffffff !important;\n}\n::ng-deep .ia-chart-container .p-organizationchart-node.text-black a {\n  color: #000000 !important;\n}\n/*# sourceMappingURL=topic-page-ia.component.css.map */\n"] }]
+`, styles: ["/* angular:styles/component:css;f023c326fff2882959b5b1251af66b8449d673c76ad30dc90b38e91d13fe7f5c;C:/my-working-files/GitHub/design-assistant/src/app/views/page-assistant/components/problems/component-guidance/topic-page/topic-page-ia.component.ts */\n.ia-label {\n  white-space: pre-line;\n  display: inline-block;\n  color: var(--text-color) !important;\n  text-decoration: none !important;\n}\n::ng-deep .p-tree li[class*=text-white] > .p-tree-node-content .ia-label {\n  color: #ffffff !important;\n}\n::ng-deep .p-tree li[class*=text-black] > .p-tree-node-content .ia-label {\n  color: #000000 !important;\n}\n::ng-deep .p-tree .p-tree-node-content:hover {\n  background-color: unset !important;\n}\n:host ::ng-deep .topic-ia-steps .topic-ia-step-list {\n  display: grid;\n  grid-template-columns: repeat(4, minmax(0, 1fr));\n  gap: 0.5rem;\n  margin: 0;\n}\n@media (max-width: 1500px) {\n  :host ::ng-deep .topic-ia-steps .topic-ia-step-list {\n    grid-template-columns: minmax(0, 1fr);\n    gap: 0.1rem;\n  }\n}\n@media (max-width: 1500px) {\n  :host ::ng-deep .topic-ia-steps .p-step-header {\n    padding: 0;\n  }\n  :host ::ng-deep .topic-ia-steps .p-stepper-separator {\n    margin: 0;\n  }\n}\n:host ::ng-deep .topic-ia-steps {\n  margin-bottom: 0;\n}\n:host ::ng-deep .topic-ia-steps .p-step-title {\n  font-weight: 600;\n  font-size: 1.02rem;\n}\n:host ::ng-deep .topic-ia-steps .topic-ia-step-list .p-step {\n  justify-content: flex-start;\n  text-align: left;\n  width: 100%;\n}\n:host ::ng-deep .topic-ia-panels {\n  display: grid;\n  grid-template-columns: repeat(4, minmax(0, 1fr));\n  gap: 1rem;\n  margin-top: 0.75rem;\n}\n@media (max-width: 1500px) {\n  :host ::ng-deep .topic-ia-panels {\n    grid-template-columns: repeat(2, minmax(0, 1fr));\n  }\n}\n@media (max-width: 1000px) {\n  :host ::ng-deep .topic-ia-panels {\n    grid-template-columns: minmax(0, 1fr);\n  }\n}\n::ng-deep .topic-ia-badge {\n  display: inline-block;\n  margin-left: 0.5rem;\n  padding: 0.1rem 0.45rem;\n  border-radius: 9999px;\n  font-size: 0.875rem;\n  font-weight: 600;\n  border: 1px solid #d1d5db;\n  background: #e5e7eb;\n  color: #374151;\n  white-space: nowrap;\n}\n:host-context(.dark-mode) ::ng-deep .topic-ia-badge {\n  border-color: #4b5563;\n  background: #374151;\n  color: #f9fafb;\n}\n::ng-deep .ia-chart-container .p-organizationchart-node a {\n  color: var(--text-color) !important;\n  text-decoration: none !important;\n}\n::ng-deep .ia-chart-container .p-organizationchart-node.text-white a {\n  color: #ffffff !important;\n}\n::ng-deep .ia-chart-container .p-organizationchart-node.text-black a {\n  color: #000000 !important;\n}\n/*# sourceMappingURL=topic-page-ia.component.css.map */\n"] }]
   }], () => [], { chartContainer: [{
     type: ViewChild,
     args: ["chartContainer"]
@@ -34188,7 +34252,7 @@ var TopicPageIaComponent = class _TopicPageIaComponent {
   }] });
 })();
 (() => {
-  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(TopicPageIaComponent, { className: "TopicPageIaComponent", filePath: "src/app/views/page-assistant/components/problems/component-guidance/topic-page/topic-page-ia.component.ts", lineNumber: 150 });
+  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(TopicPageIaComponent, { className: "TopicPageIaComponent", filePath: "src/app/views/page-assistant/components/problems/component-guidance/topic-page/topic-page-ia.component.ts", lineNumber: 195 });
 })();
 
 // src/app/views/page-assistant/components/problems.component.ts
@@ -36600,4 +36664,4 @@ ${base}`;
 export {
   PageAssistantCompareComponent
 };
-//# sourceMappingURL=chunk-CCMVLH5X.js.map
+//# sourceMappingURL=chunk-MAOCYTWC.js.map
