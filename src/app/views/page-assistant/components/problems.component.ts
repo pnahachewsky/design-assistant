@@ -15,6 +15,7 @@ import { UserInsightsComponent } from './problems/user-insights.component';
 import { LinkReportComponent } from './problems/link-report.component';
 import { IaStructureComponent } from './problems/ia-structure.component';
 import { TopicPageIaComponent } from './problems/component-guidance/topic-page/topic-page-ia.component';
+import { TopicIaJsonComponent } from './problems/component-guidance/topic-page/topic-ia-json.component';
 import { environment } from '../../../../environments/environment';
 
 export interface ProblemsFlags {
@@ -40,6 +41,7 @@ export interface ProblemsFlags {
     HeadingStructureComponent,
     IaStructureComponent,
     TopicPageIaComponent,
+    TopicIaJsonComponent,
   ],
   templateUrl: './problems.component.html',
   styles: [

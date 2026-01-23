@@ -62,7 +62,7 @@
     *ngIf="!production"
   >
     <p-accordion-header
-      >Topic page IA
+      >Topic IA JSON
       <span class="flex-spacer"></span>
       <span
         class="feature-badge"
@@ -74,7 +74,7 @@
       Improve or create a topic using a crawl of the IA structure and associated page visits.
     </p>
     <p-accordion-content>
-      <ca-topic-page-ia></ca-topic-page-ia>
+      <ca-topic-ia-json></ca-topic-ia-json>
     </p-accordion-content>
   </p-accordion-panel>
 
@@ -167,6 +167,28 @@
     </p>
     <p-accordion-content>
       <ca-ia-structure></ca-ia-structure>
+    </p-accordion-content>
+  </p-accordion-panel>
+
+  <p-accordion-panel
+    [value]="7"
+    class="border-1 border-round-sm border-surface"
+    *ngIf="!production"
+  >
+    <p-accordion-header
+      >Topic page IA (Manual UPD steps)
+      <span class="flex-spacer"></span>
+      <span
+        class="feature-badge"
+        *ngIf="flags.iaStructure"
+        aria-label="Issues found"
+      ></span>
+    </p-accordion-header>
+    <p class="mt-0 ml-4 text-color-secondary" *ngIf="!isPanelOpen(7)">
+      Improve or create a topic using a crawl of the IA structure and associated page visits.
+    </p>
+    <p-accordion-content>
+      <ca-topic-page-ia></ca-topic-page-ia>
     </p-accordion-content>
   </p-accordion-panel>
 
