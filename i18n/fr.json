@@ -141,7 +141,6 @@
 	"page.topicIa.copyUrls.error": "Unable to copy URLs. Please try again.",
 	"page.topicIa.csvUpload.toast.summary": "CSV téléversé",
 	"page.topicIa.csvUpload.toast.detail": "Chargé {{fileName}}. Sections de la page sujet mises à jour.",
-	"page.topicIa.csvUpload.label": "Upload page visits CSV from the UPD",
 	"page.topicIa.csvUpload.choose": "Téléverser le CSV du UPD",
 	"--------IMAGE ASSISTANT--------------": "--------------------------------IMAGE ASSISTANT--------------------------------------",
 	"image.csv.download": "Télécharger CSV",

@@ -95,6 +95,7 @@ import {
   concat,
   concatMap,
   contentChild,
+  contentChildren,
   createEnvironmentInjector,
   createNgModule,
   createPlatformFactory,
@@ -21022,8 +21023,8 @@ var RouterLinkActive = class _RouterLinkActive {
     });
   }
   set routerLinkActive(data) {
-    const classes38 = Array.isArray(data) ? data : data.split(" ");
-    this.classes = classes38.filter((c) => !!c);
+    const classes39 = Array.isArray(data) ? data : data.split(" ");
+    this.classes = classes39.filter((c) => !!c);
   }
   /** @docs-private */
   ngOnChanges(changes) {
@@ -29754,10 +29755,10 @@ function getRule(selector, properties) {
 }
 var $dt = (tokenPath) => {
   var _a;
-  const theme39 = config_default.getTheme();
-  const variable = dtwt(theme39, tokenPath, void 0, "variable");
+  const theme40 = config_default.getTheme();
+  const variable = dtwt(theme40, tokenPath, void 0, "variable");
   const name = (_a = variable == null ? void 0 : variable.match(/--[\w-]+/g)) == null ? void 0 : _a[0];
-  const value = dtwt(theme39, tokenPath, void 0, "value");
+  const value = dtwt(theme40, tokenPath, void 0, "value");
   return {
     name,
     variable,
@@ -29767,7 +29768,7 @@ var $dt = (tokenPath) => {
 var dt = (...args) => {
   return dtwt(config_default.getTheme(), ...args);
 };
-var dtwt = (theme39 = {}, tokenPath, fallback, type) => {
+var dtwt = (theme40 = {}, tokenPath, fallback, type) => {
   if (tokenPath) {
     const {
       variable: VARIABLE,
@@ -29776,7 +29777,7 @@ var dtwt = (theme39 = {}, tokenPath, fallback, type) => {
     const {
       prefix,
       transform
-    } = (theme39 == null ? void 0 : theme39.options) || OPTIONS || {};
+    } = (theme40 == null ? void 0 : theme40.options) || OPTIONS || {};
     const regex = /{([^}]*)}/g;
     const token = matchRegex(tokenPath, regex) ? tokenPath : `{${tokenPath}}`;
     const isStrictTransform = type === "value" || isEmpty(type) && transform === "strict";
@@ -29784,7 +29785,7 @@ var dtwt = (theme39 = {}, tokenPath, fallback, type) => {
   }
   return "";
 };
-function toVariables_default(theme39, options = {}) {
+function toVariables_default(theme40, options = {}) {
   const VARIABLE = config_default.defaults.variable;
   const {
     prefix = VARIABLE.prefix,
@@ -29815,7 +29816,7 @@ function toVariables_default(theme39, options = {}) {
   const {
     variables,
     tokens
-  } = _toVariables(theme39, prefix);
+  } = _toVariables(theme40, prefix);
   return {
     value: variables,
     tokens,
@@ -29884,14 +29885,14 @@ var themeUtils_default = {
       });
     }
   },
-  _toVariables(theme39, options) {
-    return toVariables_default(theme39, {
+  _toVariables(theme40, options) {
+    return toVariables_default(theme40, {
       prefix: options == null ? void 0 : options.prefix
     });
   },
   getCommon({
     name = "",
-    theme: theme39 = {},
+    theme: theme40 = {},
     params,
     set,
     defaults
@@ -29900,7 +29901,7 @@ var themeUtils_default = {
     const {
       preset,
       options
-    } = theme39;
+    } = theme40;
     let primitive_css, primitive_tokens, semantic_css, semantic_tokens, global_css, global_tokens, style2;
     if (isNotEmpty(preset) && options.transform !== "strict") {
       const {
@@ -30033,7 +30034,7 @@ var themeUtils_default = {
   },
   getPresetC({
     name = "",
-    theme: theme39 = {},
+    theme: theme40 = {},
     params,
     set,
     defaults
@@ -30042,7 +30043,7 @@ var themeUtils_default = {
     const {
       preset,
       options
-    } = theme39;
+    } = theme40;
     const cPreset = (_a = preset == null ? void 0 : preset.components) == null ? void 0 : _a[name];
     return this.getPreset({
       name,
@@ -30055,7 +30056,7 @@ var themeUtils_default = {
   },
   getPresetD({
     name = "",
-    theme: theme39 = {},
+    theme: theme40 = {},
     params,
     set,
     defaults
@@ -30065,7 +30066,7 @@ var themeUtils_default = {
     const {
       preset,
       options
-    } = theme39;
+    } = theme40;
     const dPreset = (_a = preset == null ? void 0 : preset.directives) == null ? void 0 : _a[dName];
     return this.getPreset({
       name: dName,
@@ -30095,7 +30096,7 @@ var themeUtils_default = {
   },
   getCommonStyleSheet({
     name = "",
-    theme: theme39 = {},
+    theme: theme40 = {},
     params,
     props = {},
     set,
@@ -30103,7 +30104,7 @@ var themeUtils_default = {
   }) {
     const common = this.getCommon({
       name,
-      theme: theme39,
+      theme: theme40,
       params,
       set,
       defaults
@@ -30120,7 +30121,7 @@ var themeUtils_default = {
   },
   getStyleSheet({
     name = "",
-    theme: theme39 = {},
+    theme: theme40 = {},
     params,
     props = {},
     set,
@@ -30129,7 +30130,7 @@ var themeUtils_default = {
     var _a;
     const options = {
       name,
-      theme: theme39,
+      theme: theme40,
       params,
       set,
       defaults
@@ -30267,11 +30268,11 @@ var config_default = {
   _tokens: {},
   update(newValues = {}) {
     const {
-      theme: theme39
+      theme: theme40
     } = newValues;
-    if (theme39) {
-      this._theme = __spreadProps2(__spreadValues3({}, theme39), {
-        options: __spreadValues3(__spreadValues3({}, this.defaults.options), theme39.options)
+    if (theme40) {
+      this._theme = __spreadProps2(__spreadValues3({}, theme40), {
+        options: __spreadValues3(__spreadValues3({}, this.defaults.options), theme40.options)
       });
       this._tokens = themeUtils_default.createTokens(this.preset, this.defaults);
       this.clearLoadedStyleNames();
@@ -30872,10 +30873,10 @@ var ThemeProvider = class _ThemeProvider {
   }
   setThemeConfig(config) {
     const {
-      theme: theme39,
+      theme: theme40,
       csp
     } = config || {};
-    if (theme39) this.theme.set(theme39);
+    if (theme40) this.theme.set(theme40);
     if (csp) this.csp.set(csp);
   }
   static \u0275fac = function ThemeProvider_Factory(__ngFactoryType__) {
@@ -31058,7 +31059,7 @@ var PrimeNG = class _PrimeNG extends ThemeProvider {
       ripple,
       inputStyle,
       inputVariant,
-      theme: theme39,
+      theme: theme40,
       overlayOptions,
       translation,
       filterMatchModeOptions
@@ -31070,8 +31071,8 @@ var PrimeNG = class _PrimeNG extends ThemeProvider {
     if (overlayOptions) this.overlayOptions = overlayOptions;
     if (translation) this.setTranslation(translation);
     if (filterMatchModeOptions) this.filterMatchModeOptions = filterMatchModeOptions;
-    if (theme39) this.setThemeConfig({
-      theme: theme39,
+    if (theme40) this.setThemeConfig({
+      theme: theme40,
       csp
     });
   }
@@ -31278,13 +31279,13 @@ var BaseComponent = class _BaseComponent {
     this.themeChangeListeners.push(callback);
   }
   cx(arg, rest) {
-    const classes38 = this.parent ? this.parent.componentStyle?.classes?.[arg] : this.componentStyle?.classes?.[arg];
-    if (typeof classes38 === "function") {
-      return classes38({
+    const classes39 = this.parent ? this.parent.componentStyle?.classes?.[arg] : this.componentStyle?.classes?.[arg];
+    if (typeof classes39 === "function") {
+      return classes39({
         instance: this
       });
     }
-    return typeof classes38 === "string" ? classes38 : arg;
+    return typeof classes39 === "string" ? classes39 : arg;
   }
   sx(arg) {
     const styles = this.componentStyle?.inlineStyles?.[arg];
@@ -33190,27 +33191,27 @@ var Badge = class _Badge extends BaseComponent {
    * @returns An object representing the CSS classes to be applied to the badge container.
    */
   containerClass = computed(() => {
-    let classes38 = "p-badge p-component";
+    let classes39 = "p-badge p-component";
     if (isNotEmpty(this.value()) && String(this.value()).length === 1) {
-      classes38 += " p-badge-circle";
+      classes39 += " p-badge-circle";
     }
     if (this.badgeSize() === "large") {
-      classes38 += " p-badge-lg";
+      classes39 += " p-badge-lg";
     } else if (this.badgeSize() === "xlarge") {
-      classes38 += " p-badge-xl";
+      classes39 += " p-badge-xl";
     } else if (this.badgeSize() === "small") {
-      classes38 += " p-badge-sm";
+      classes39 += " p-badge-sm";
     }
     if (isEmpty(this.value())) {
-      classes38 += " p-badge-dot";
+      classes39 += " p-badge-dot";
     }
     if (this.styleClass()) {
-      classes38 += ` ${this.styleClass()}`;
+      classes39 += ` ${this.styleClass()}`;
     }
     if (this.severity()) {
-      classes38 += ` p-badge-${this.severity()}`;
+      classes39 += ` p-badge-${this.severity()}`;
     }
-    return classes38;
+    return classes39;
   });
   static \u0275fac = /* @__PURE__ */ (() => {
     let \u0275Badge_BaseFactory;
@@ -56705,11 +56706,11 @@ var Chip = class _Chip extends BaseComponent {
     }
   }
   containerClass() {
-    let classes38 = "p-chip p-component";
+    let classes39 = "p-chip p-component";
     if (this.styleClass) {
-      classes38 += ` ${this.styleClass}`;
+      classes39 += ` ${this.styleClass}`;
     }
-    return classes38;
+    return classes39;
   }
   close(event2) {
     this.visible = false;
@@ -71624,7 +71625,7 @@ var Select = class _Select extends BaseComponent {
   }
   // @todo to be refactored
   get hostClass() {
-    const classes38 = this._componentStyle.classes.root({
+    const classes39 = this._componentStyle.classes.root({
       instance: this
     }).map((cls) => {
       if (typeof cls === "string") {
@@ -71633,7 +71634,7 @@ var Select = class _Select extends BaseComponent {
         return Object.keys(cls).filter((key) => cls[key]).join(" ");
       }
     }).join(" ");
-    return classes38 + " " + this.styleClass;
+    return classes39 + " " + this.styleClass;
   }
   get hostStyle() {
     return this.style;
@@ -85637,18 +85638,1005 @@ var TableModule = class _TableModule {
   }], null, null);
 })();
 
+// node_modules/primeng/fesm2022/primeng-stepper.mjs
+var _c033 = ["*"];
+var _c139 = ["content"];
+var _c225 = (a0, a1, a2) => ({
+  activateCallback: a0,
+  value: a1,
+  active: a2
+});
+function Step_Conditional_0_Conditional_5_Template(rf, ctx) {
+  if (rf & 1) {
+    \u0275\u0275element(0, "p-stepper-separator");
+  }
+}
+function Step_Conditional_0_Template(rf, ctx) {
+  if (rf & 1) {
+    const _r1 = \u0275\u0275getCurrentView();
+    \u0275\u0275elementStart(0, "button", 0);
+    \u0275\u0275listener("click", function Step_Conditional_0_Template_button_click_0_listener() {
+      \u0275\u0275restoreView(_r1);
+      const ctx_r1 = \u0275\u0275nextContext();
+      return \u0275\u0275resetView(ctx_r1.onStepClick());
+    });
+    \u0275\u0275elementStart(1, "span", 1);
+    \u0275\u0275text(2);
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(3, "span", 2);
+    \u0275\u0275projection(4);
+    \u0275\u0275elementEnd()();
+    \u0275\u0275template(5, Step_Conditional_0_Conditional_5_Template, 1, 0, "p-stepper-separator");
+  }
+  if (rf & 2) {
+    const ctx_r1 = \u0275\u0275nextContext();
+    \u0275\u0275property("tabindex", ctx_r1.isStepDisabled() ? -1 : void 0)("disabled", ctx_r1.isStepDisabled());
+    \u0275\u0275attribute("id", ctx_r1.id())("role", "tab")("aria-controls", ctx_r1.ariaControls());
+    \u0275\u0275advance(2);
+    \u0275\u0275textInterpolate(ctx_r1.value());
+    \u0275\u0275advance(3);
+    \u0275\u0275conditional(ctx_r1.isSeparatorVisible() ? 5 : -1);
+  }
+}
+function Step_Conditional_1_ng_container_0_Template(rf, ctx) {
+  if (rf & 1) {
+    \u0275\u0275elementContainer(0);
+  }
+}
+function Step_Conditional_1_Conditional_1_Template(rf, ctx) {
+  if (rf & 1) {
+    \u0275\u0275element(0, "p-stepper-separator");
+  }
+}
+function Step_Conditional_1_Template(rf, ctx) {
+  if (rf & 1) {
+    \u0275\u0275template(0, Step_Conditional_1_ng_container_0_Template, 1, 0, "ng-container", 3)(1, Step_Conditional_1_Conditional_1_Template, 1, 0, "p-stepper-separator");
+  }
+  if (rf & 2) {
+    const ctx_r1 = \u0275\u0275nextContext();
+    \u0275\u0275property("ngTemplateOutlet", ctx_r1.content || ctx_r1._contentTemplate)("ngTemplateOutletContext", \u0275\u0275pureFunction3(3, _c225, ctx_r1.onStepClick.bind(ctx_r1), ctx_r1.value(), ctx_r1.active()));
+    \u0275\u0275advance();
+    \u0275\u0275conditional(ctx_r1.isSeparatorVisible() ? 1 : -1);
+  }
+}
+var _c321 = (a0) => ({
+  transitionParams: a0
+});
+var _c417 = (a0) => ({
+  value: "visible",
+  params: a0
+});
+var _c515 = (a0) => ({
+  value: "hidden",
+  params: a0
+});
+function StepPanel_Conditional_0_Template(rf, ctx) {
+  if (rf & 1) {
+    \u0275\u0275element(0, "p-stepper-separator");
+  }
+}
+function StepPanel_Conditional_2_ng_container_0_Template(rf, ctx) {
+  if (rf & 1) {
+    \u0275\u0275elementContainer(0);
+  }
+}
+function StepPanel_Conditional_2_Template(rf, ctx) {
+  if (rf & 1) {
+    \u0275\u0275template(0, StepPanel_Conditional_2_ng_container_0_Template, 1, 0, "ng-container", 1);
+  }
+  if (rf & 2) {
+    const ctx_r0 = \u0275\u0275nextContext();
+    \u0275\u0275property("ngTemplateOutlet", ctx_r0.contentTemplate || ctx_r0._contentTemplate)("ngTemplateOutletContext", \u0275\u0275pureFunction3(2, _c225, ctx_r0.updateValue.bind(ctx_r0), ctx_r0.value(), ctx_r0.active()));
+  }
+}
+var theme34 = ({
+  dt: dt2
+}) => `
+.p-steplist {
+    position: relative;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 0;
+    padding: 0;
+    list-style-type: none;
+    overflow-x: auto;
+}
+
+.p-step {
+    position: relative;
+    display: flex;
+    flex: 1 1 auto;
+    align-items: center;
+    gap: ${dt2("stepper.step.gap")};
+    padding: ${dt2("stepper.step.padding")};
+}
+
+.p-step:last-of-type {
+    flex: initial;
+}
+
+.p-step-header {
+    border: 0 none;
+    display: inline-flex;
+    align-items: center;
+    text-decoration: none;
+    cursor: pointer;
+    transition: background ${dt2("stepper.transition.duration")}, color ${dt2("stepper.transition.duration")}, border-color ${dt2("stepper.transition.duration")}, outline-color ${dt2("stepper.transition.duration")}, box-shadow ${dt2("stepper.transition.duration")};
+    border-radius: ${dt2("stepper.step.header.border.radius")};
+    outline-color: transparent;
+    background: transparent;
+    padding: ${dt2("stepper.step.header.padding")};
+    gap: ${dt2("stepper.step.header.gap")};
+}
+
+.p-step-header:focus-visible {
+    box-shadow: ${dt2("stepper.step.header.focus.ring.shadow")};
+    outline: ${dt2("stepper.step.header.focus.ring.width")} ${dt2("stepper.step.header.focus.ring.style")} ${dt2("stepper.step.header.focus.ring.color")};
+    outline-offset: ${dt2("stepper.step.header.focus.ring.offset")};
+}
+
+.p-stepper.p-stepper-readonly .p-step {
+    cursor: auto;
+}
+
+.p-step-title {
+    display: block;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+    color: ${dt2("stepper.step.title.color")};
+    font-weight: ${dt2("stepper.step.title.font.weight")};
+    transition: background ${dt2("stepper.transition.duration")}, color ${dt2("stepper.transition.duration")}, border-color ${dt2("stepper.transition.duration")}, box-shadow ${dt2("stepper.transition.duration")}, outline-color ${dt2("stepper.transition.duration")};
+}
+
+.p-step-number {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: ${dt2("stepper.step.number.color")};
+    border: 2px solid ${dt2("stepper.step.number.border.color")};
+    background: ${dt2("stepper.step.number.background")};
+    min-width: ${dt2("stepper.step.number.size")};
+    height: ${dt2("stepper.step.number.size")};
+    line-height: ${dt2("stepper.step.number.size")};
+    font-size: ${dt2("stepper.step.number.font.size")};
+    z-index: 1;
+    border-radius: ${dt2("stepper.step.number.border.radius")};
+    position: relative;
+    font-weight: ${dt2("stepper.step.number.font.weight")};
+}
+
+.p-step-number::after {
+    content: " ";
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    border-radius: ${dt2("stepper.step.number.border.radius")};
+    box-shadow: ${dt2("stepper.step.number.shadow")};
+}
+
+.p-step-active .p-step-header {
+    cursor: default;
+}
+
+.p-step-active .p-step-number {
+    background: ${dt2("stepper.step.number.active.background")};
+    border-color: ${dt2("stepper.step.number.active.border.color")};
+    color: ${dt2("stepper.step.number.active.color")};
+}
+
+.p-step-active .p-step-title {
+    color: ${dt2("stepper.step.title.active.color")};
+}
+
+.p-step:not(.p-disabled):focus-visible {
+    outline: ${dt2("focus.ring.width")} ${dt2("focus.ring.style")} ${dt2("focus.ring.color")};
+    outline-offset: ${dt2("focus.ring.offset")};
+}
+
+.p-step:has(~ .p-step-active) .p-stepper-separator {
+    background: ${dt2("stepper.separator.active.background")};
+}
+
+.p-stepper-separator {
+    flex: 1 1 0;
+    background: ${dt2("stepper.separator.background")};
+    width: 100%;
+    height: ${dt2("stepper.separator.size")};
+    transition: background ${dt2("stepper.transition.duration")}, color ${dt2("stepper.transition.duration")}, border-color ${dt2("stepper.transition.duration")}, box-shadow ${dt2("stepper.transition.duration")}, outline-color ${dt2("stepper.transition.duration")};
+}
+
+.p-steppanels {
+    padding: ${dt2("stepper.steppanels.padding")};
+}
+
+.p-steppanel {
+    background: ${dt2("stepper.steppanel.background")};
+    color: ${dt2("stepper.steppanel.color")};
+}
+
+.p-stepper:has(.p-stepitem) {
+    display: flex;
+    flex-direction: column;
+}
+
+.p-stepitem {
+    display: flex;
+    flex-direction: column;
+    flex: initial;
+}
+
+.p-stepitem.p-stepitem-active {
+    flex: 1 1 auto;
+}
+
+.p-stepitem .p-step {
+    flex: initial;
+}
+
+.p-stepitem .p-steppanel-content {
+    width: 100%;
+    padding: ${dt2("stepper.steppanel.padding")};
+    margin-inline-start: 1rem;
+}
+
+.p-stepitem .p-steppanel {
+    display: flex;
+    flex: 1 1 auto;
+}
+
+.p-stepitem .p-stepper-separator {
+    flex: 0 0 auto;
+    width: ${dt2("stepper.separator.size")};
+    height: auto;
+    margin: ${dt2("stepper.separator.margin")};
+    position: relative;
+    left: calc(-1 * ${dt2("stepper.separator.size")});
+}
+
+.p-stepitem .p-stepper-separator:dir(rtl) {
+    left: calc(-9 * ${dt2("stepper.separator.size")});
+}
+
+.p-stepitem:has(~ .p-stepitem-active) .p-stepper-separator {
+    background: ${dt2("stepper.separator.active.background")};
+}
+
+.p-stepitem:last-of-type .p-steppanel {
+    padding-inline-start: ${dt2("stepper.step.number.size")};
+}
+/* For PrimeNG */
+.p-steppanel {
+    overflow: hidden;
+}
+
+.p-stepppanel:not(.ng-animating) {
+    overflow: inherit;
+}
+`;
+var classes33 = {
+  root: ({
+    props
+  }) => ["p-stepper p-component", {
+    "p-readonly": props.linear
+  }],
+  separator: "p-stepper-separator"
+};
+var StepperStyle = class _StepperStyle extends BaseStyle {
+  name = "stepper";
+  theme = theme34;
+  classes = classes33;
+  static \u0275fac = /* @__PURE__ */ (() => {
+    let \u0275StepperStyle_BaseFactory;
+    return function StepperStyle_Factory(__ngFactoryType__) {
+      return (\u0275StepperStyle_BaseFactory || (\u0275StepperStyle_BaseFactory = \u0275\u0275getInheritedFactory(_StepperStyle)))(__ngFactoryType__ || _StepperStyle);
+    };
+  })();
+  static \u0275prov = /* @__PURE__ */ \u0275\u0275defineInjectable({
+    token: _StepperStyle,
+    factory: _StepperStyle.\u0275fac
+  });
+};
+(() => {
+  (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(StepperStyle, [{
+    type: Injectable
+  }], null, null);
+})();
+var StepperClasses;
+(function(StepperClasses2) {
+  StepperClasses2["root"] = "p-stepper";
+  StepperClasses2["separator"] = "p-stepper-separator";
+})(StepperClasses || (StepperClasses = {}));
+var StepList = class _StepList extends BaseComponent {
+  steps = contentChildren(forwardRef(() => Step));
+  static \u0275fac = /* @__PURE__ */ (() => {
+    let \u0275StepList_BaseFactory;
+    return function StepList_Factory(__ngFactoryType__) {
+      return (\u0275StepList_BaseFactory || (\u0275StepList_BaseFactory = \u0275\u0275getInheritedFactory(_StepList)))(__ngFactoryType__ || _StepList);
+    };
+  })();
+  static \u0275cmp = /* @__PURE__ */ \u0275\u0275defineComponent({
+    type: _StepList,
+    selectors: [["p-step-list"]],
+    contentQueries: function StepList_ContentQueries(rf, ctx, dirIndex) {
+      if (rf & 1) {
+        \u0275\u0275contentQuerySignal(dirIndex, ctx.steps, Step, 4);
+      }
+      if (rf & 2) {
+        \u0275\u0275queryAdvance();
+      }
+    },
+    hostVars: 4,
+    hostBindings: function StepList_HostBindings(rf, ctx) {
+      if (rf & 2) {
+        \u0275\u0275classProp("p-steplist", true)("p-component", true);
+      }
+    },
+    features: [\u0275\u0275InheritDefinitionFeature],
+    ngContentSelectors: _c033,
+    decls: 1,
+    vars: 0,
+    template: function StepList_Template(rf, ctx) {
+      if (rf & 1) {
+        \u0275\u0275projectionDef();
+        \u0275\u0275projection(0);
+      }
+    },
+    dependencies: [CommonModule],
+    encapsulation: 2,
+    changeDetection: 0
+  });
+};
+(() => {
+  (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(StepList, [{
+    type: Component,
+    args: [{
+      selector: "p-step-list",
+      standalone: true,
+      imports: [CommonModule],
+      template: ` <ng-content></ng-content>`,
+      changeDetection: ChangeDetectionStrategy.OnPush,
+      encapsulation: ViewEncapsulation.None,
+      host: {
+        "[class.p-steplist]": "true",
+        "[class.p-component]": "true"
+      }
+    }]
+  }], null, null);
+})();
+var StepperSeparator = class _StepperSeparator extends BaseComponent {
+  static \u0275fac = /* @__PURE__ */ (() => {
+    let \u0275StepperSeparator_BaseFactory;
+    return function StepperSeparator_Factory(__ngFactoryType__) {
+      return (\u0275StepperSeparator_BaseFactory || (\u0275StepperSeparator_BaseFactory = \u0275\u0275getInheritedFactory(_StepperSeparator)))(__ngFactoryType__ || _StepperSeparator);
+    };
+  })();
+  static \u0275cmp = /* @__PURE__ */ \u0275\u0275defineComponent({
+    type: _StepperSeparator,
+    selectors: [["p-stepper-separator"]],
+    hostVars: 4,
+    hostBindings: function StepperSeparator_HostBindings(rf, ctx) {
+      if (rf & 2) {
+        \u0275\u0275classProp("p-stepper-separator", true)("p-component", true);
+      }
+    },
+    features: [\u0275\u0275InheritDefinitionFeature],
+    ngContentSelectors: _c033,
+    decls: 1,
+    vars: 0,
+    template: function StepperSeparator_Template(rf, ctx) {
+      if (rf & 1) {
+        \u0275\u0275projectionDef();
+        \u0275\u0275projection(0);
+      }
+    },
+    dependencies: [CommonModule],
+    encapsulation: 2,
+    changeDetection: 0
+  });
+};
+(() => {
+  (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(StepperSeparator, [{
+    type: Component,
+    args: [{
+      selector: "p-stepper-separator",
+      standalone: true,
+      imports: [CommonModule],
+      template: ` <ng-content></ng-content>`,
+      changeDetection: ChangeDetectionStrategy.OnPush,
+      encapsulation: ViewEncapsulation.None,
+      host: {
+        "[class.p-stepper-separator]": "true",
+        "[class.p-component]": "true"
+      }
+    }]
+  }], null, null);
+})();
+var StepItem = class _StepItem extends BaseComponent {
+  pcStepper = inject(forwardRef(() => Stepper));
+  /**
+   * Value of step.
+   * @type {<number | undefined>}
+   * @defaultValue undefined
+   * @group Props
+   */
+  value = model();
+  isActive = computed(() => this.pcStepper.value() === this.value());
+  step = contentChild(forwardRef(() => Step));
+  stepPanel = contentChild(forwardRef(() => StepPanel));
+  constructor() {
+    super();
+    effect(() => {
+      this.step().value.set(this.value());
+    });
+    effect(() => {
+      this.stepPanel().value.set(this.value());
+    });
+  }
+  static \u0275fac = function StepItem_Factory(__ngFactoryType__) {
+    return new (__ngFactoryType__ || _StepItem)();
+  };
+  static \u0275cmp = /* @__PURE__ */ \u0275\u0275defineComponent({
+    type: _StepItem,
+    selectors: [["p-step-item"]],
+    contentQueries: function StepItem_ContentQueries(rf, ctx, dirIndex) {
+      if (rf & 1) {
+        \u0275\u0275contentQuerySignal(dirIndex, ctx.step, Step, 5);
+        \u0275\u0275contentQuerySignal(dirIndex, ctx.stepPanel, StepPanel, 5);
+      }
+      if (rf & 2) {
+        \u0275\u0275queryAdvance(2);
+      }
+    },
+    hostVars: 5,
+    hostBindings: function StepItem_HostBindings(rf, ctx) {
+      if (rf & 2) {
+        \u0275\u0275attribute("data-p-active", ctx.isActive());
+        \u0275\u0275classProp("p-stepitem", true)("p-component", true);
+      }
+    },
+    inputs: {
+      value: [1, "value"]
+    },
+    outputs: {
+      value: "valueChange"
+    },
+    features: [\u0275\u0275InheritDefinitionFeature],
+    ngContentSelectors: _c033,
+    decls: 1,
+    vars: 0,
+    template: function StepItem_Template(rf, ctx) {
+      if (rf & 1) {
+        \u0275\u0275projectionDef();
+        \u0275\u0275projection(0);
+      }
+    },
+    dependencies: [CommonModule],
+    encapsulation: 2,
+    changeDetection: 0
+  });
+};
+(() => {
+  (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(StepItem, [{
+    type: Component,
+    args: [{
+      selector: "p-step-item",
+      standalone: true,
+      imports: [CommonModule],
+      template: ` <ng-content></ng-content>`,
+      changeDetection: ChangeDetectionStrategy.OnPush,
+      encapsulation: ViewEncapsulation.None,
+      host: {
+        "[class.p-stepitem]": "true",
+        "[class.p-component]": "true",
+        "[attr.data-p-active]": "isActive()"
+      }
+    }]
+  }], () => [], null);
+})();
+var Step = class _Step extends BaseComponent {
+  pcStepper = inject(forwardRef(() => Stepper));
+  /**
+   * Active value of stepper.
+   * @type {number}
+   * @defaultValue undefined
+   * @group Props
+   */
+  value = model();
+  /**
+   * Whether the step is disabled.
+   * @type {boolean}
+   * @defaultValue false
+   * @group Props
+   */
+  disabled = input(false, {
+    transform: (v) => transformToBoolean(v)
+  });
+  active = computed(() => this.pcStepper.isStepActive(this.value()));
+  isStepDisabled = computed(() => !this.active() && (this.pcStepper.linear() || this.disabled()));
+  id = computed(() => `${this.pcStepper.id()}_step_${this.value()}`);
+  ariaControls = computed(() => `${this.pcStepper.id()}_steppanel_${this.value()}`);
+  isSeparatorVisible = computed(() => {
+    if (this.pcStepper.stepList()) {
+      const steps = this.pcStepper.stepList().steps();
+      const index = steps.indexOf(this);
+      const stepLen = steps.length;
+      return index !== stepLen - 1;
+    } else {
+      return false;
+    }
+  });
+  /**
+   * Content template.
+   * @type {TemplateRef<StepContentTemplateContext>}
+   * @group Templates
+   */
+  content;
+  templates;
+  _contentTemplate;
+  ngAfterContentInit() {
+    this.templates?.forEach((item) => {
+      switch (item.getType()) {
+        case "content":
+          this._contentTemplate = item.template;
+          break;
+      }
+    });
+  }
+  onStepClick() {
+    this.pcStepper.updateValue(this.value());
+  }
+  static \u0275fac = /* @__PURE__ */ (() => {
+    let \u0275Step_BaseFactory;
+    return function Step_Factory(__ngFactoryType__) {
+      return (\u0275Step_BaseFactory || (\u0275Step_BaseFactory = \u0275\u0275getInheritedFactory(_Step)))(__ngFactoryType__ || _Step);
+    };
+  })();
+  static \u0275cmp = /* @__PURE__ */ \u0275\u0275defineComponent({
+    type: _Step,
+    selectors: [["p-step"]],
+    contentQueries: function Step_ContentQueries(rf, ctx, dirIndex) {
+      if (rf & 1) {
+        \u0275\u0275contentQuery(dirIndex, _c139, 4);
+        \u0275\u0275contentQuery(dirIndex, PrimeTemplate, 4);
+      }
+      if (rf & 2) {
+        let _t;
+        \u0275\u0275queryRefresh(_t = \u0275\u0275loadQuery()) && (ctx.content = _t.first);
+        \u0275\u0275queryRefresh(_t = \u0275\u0275loadQuery()) && (ctx.templates = _t);
+      }
+    },
+    hostVars: 13,
+    hostBindings: function Step_HostBindings(rf, ctx) {
+      if (rf & 2) {
+        \u0275\u0275attribute("aria-current", ctx.active() ? "step" : void 0)("role", "presentation")("data-p-active", ctx.active())("data-p-disabled", ctx.isStepDisabled())("data-pc-name", "step");
+        \u0275\u0275classProp("p-step", true)("p-step-active", ctx.active())("p-disabled", ctx.isStepDisabled())("p-component", true);
+      }
+    },
+    inputs: {
+      value: [1, "value"],
+      disabled: [1, "disabled"]
+    },
+    outputs: {
+      value: "valueChange"
+    },
+    features: [\u0275\u0275InheritDefinitionFeature],
+    ngContentSelectors: _c033,
+    decls: 2,
+    vars: 1,
+    consts: [["type", "button", 1, "p-step-header", 3, "click", "tabindex", "disabled"], [1, "p-step-number"], [1, "p-step-title"], [4, "ngTemplateOutlet", "ngTemplateOutletContext"]],
+    template: function Step_Template(rf, ctx) {
+      if (rf & 1) {
+        \u0275\u0275projectionDef();
+        \u0275\u0275template(0, Step_Conditional_0_Template, 6, 7)(1, Step_Conditional_1_Template, 2, 7);
+      }
+      if (rf & 2) {
+        \u0275\u0275conditional(!ctx.content && !ctx._contentTemplate ? 0 : 1);
+      }
+    },
+    dependencies: [CommonModule, NgTemplateOutlet, StepperSeparator, SharedModule],
+    encapsulation: 2,
+    changeDetection: 0
+  });
+};
+(() => {
+  (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(Step, [{
+    type: Component,
+    args: [{
+      selector: "p-step",
+      standalone: true,
+      imports: [CommonModule, StepperSeparator, SharedModule],
+      template: `
+        @if (!content && !_contentTemplate) {
+            <button [attr.id]="id()" class="p-step-header" [attr.role]="'tab'" [tabindex]="isStepDisabled() ? -1 : undefined" [attr.aria-controls]="ariaControls()" [disabled]="isStepDisabled()" (click)="onStepClick()" type="button">
+                <span class="p-step-number">{{ value() }}</span>
+                <span class="p-step-title">
+                    <ng-content></ng-content>
+                </span>
+            </button>
+            @if (isSeparatorVisible()) {
+                <p-stepper-separator />
+            }
+        } @else {
+            <ng-container *ngTemplateOutlet="content || _contentTemplate; context: { activateCallback: onStepClick.bind(this), value: value(), active: active() }"></ng-container>
+            @if (isSeparatorVisible()) {
+                <p-stepper-separator />
+            }
+        }
+    `,
+      changeDetection: ChangeDetectionStrategy.OnPush,
+      encapsulation: ViewEncapsulation.None,
+      host: {
+        "[class.p-step]": "true",
+        "[class.p-step-active]": "active()",
+        "[class.p-disabled]": "isStepDisabled()",
+        "[class.p-component]": "true",
+        "[attr.aria-current]": 'active() ? "step" : undefined',
+        "[attr.role]": '"presentation"',
+        "[attr.data-p-active]": "active()",
+        "[attr.data-p-disabled]": "isStepDisabled()",
+        "[attr.data-pc-name]": '"step"'
+      }
+    }]
+  }], null, {
+    content: [{
+      type: ContentChild,
+      args: ["content", {
+        descendants: false
+      }]
+    }],
+    templates: [{
+      type: ContentChildren,
+      args: [PrimeTemplate]
+    }]
+  });
+})();
+var StepPanel = class _StepPanel extends BaseComponent {
+  pcStepper = inject(forwardRef(() => Stepper));
+  transitionOptions = computed(() => this.pcStepper.transitionOptions());
+  /**
+   * Active value of stepper.
+   * @type {number}
+   * @defaultValue undefined
+   * @group Props
+   */
+  value = model(void 0);
+  active = computed(() => this.pcStepper.value() === this.value());
+  ariaControls = computed(() => `${this.pcStepper.id()}_step_${this.value()}`);
+  id = computed(() => `${this.pcStepper.id()}_steppanel_${this.value()}`);
+  isVertical = computed(() => this.pcStepper.stepItems().length > 0);
+  isSeparatorVisible = computed(() => {
+    if (this.pcStepper.stepItems()) {
+      const stepLen = this.pcStepper.stepItems().length;
+      const stepPanelElements = find(this.pcStepper.el.nativeElement, '[data-pc-name="steppanel"]');
+      const index = findIndexInList(this.el.nativeElement, stepPanelElements);
+      return index !== stepLen - 1;
+    }
+  });
+  /**
+   * Content template.
+   * @param {StepPanelContentTemplateContext} context - Context of the template
+   * @see {@link StepPanelContentTemplateContext}
+   * @group Templates
+   */
+  contentTemplate;
+  templates;
+  _contentTemplate;
+  ngAfterContentInit() {
+    this.templates?.forEach((item) => {
+      switch (item.getType()) {
+        case "content":
+          this._contentTemplate = item.template;
+          break;
+      }
+    });
+  }
+  updateValue(value) {
+    this.pcStepper.updateValue(value);
+  }
+  static \u0275fac = /* @__PURE__ */ (() => {
+    let \u0275StepPanel_BaseFactory;
+    return function StepPanel_Factory(__ngFactoryType__) {
+      return (\u0275StepPanel_BaseFactory || (\u0275StepPanel_BaseFactory = \u0275\u0275getInheritedFactory(_StepPanel)))(__ngFactoryType__ || _StepPanel);
+    };
+  })();
+  static \u0275cmp = /* @__PURE__ */ \u0275\u0275defineComponent({
+    type: _StepPanel,
+    selectors: [["p-step-panel"]],
+    contentQueries: function StepPanel_ContentQueries(rf, ctx, dirIndex) {
+      if (rf & 1) {
+        \u0275\u0275contentQuery(dirIndex, _c139, 5);
+        \u0275\u0275contentQuery(dirIndex, PrimeTemplate, 4);
+      }
+      if (rf & 2) {
+        let _t;
+        \u0275\u0275queryRefresh(_t = \u0275\u0275loadQuery()) && (ctx.contentTemplate = _t.first);
+        \u0275\u0275queryRefresh(_t = \u0275\u0275loadQuery()) && (ctx.templates = _t);
+      }
+    },
+    hostVars: 11,
+    hostBindings: function StepPanel_HostBindings(rf, ctx) {
+      if (rf & 2) {
+        \u0275\u0275attribute("role", "tabpanel")("aria-controls", ctx.ariaControls())("id", ctx.id())("data-p-active", ctx.active())("data-pc-name", "steppanel");
+        \u0275\u0275classProp("p-steppanel", true)("p-component", true)("p-steppanel-active", ctx.active());
+      }
+    },
+    inputs: {
+      value: [1, "value"]
+    },
+    outputs: {
+      value: "valueChange"
+    },
+    features: [\u0275\u0275InheritDefinitionFeature],
+    decls: 3,
+    vars: 11,
+    consts: [[1, "p-steppanel-content"], [4, "ngTemplateOutlet", "ngTemplateOutletContext"]],
+    template: function StepPanel_Template(rf, ctx) {
+      if (rf & 1) {
+        \u0275\u0275template(0, StepPanel_Conditional_0_Template, 1, 0, "p-stepper-separator");
+        \u0275\u0275elementStart(1, "div", 0);
+        \u0275\u0275template(2, StepPanel_Conditional_2_Template, 1, 6, "ng-container");
+        \u0275\u0275elementEnd();
+      }
+      if (rf & 2) {
+        \u0275\u0275conditional(ctx.isSeparatorVisible() ? 0 : -1);
+        \u0275\u0275advance();
+        \u0275\u0275property("@content", ctx.isVertical() ? ctx.active() ? \u0275\u0275pureFunction1(5, _c417, \u0275\u0275pureFunction1(3, _c321, ctx.transitionOptions())) : \u0275\u0275pureFunction1(9, _c515, \u0275\u0275pureFunction1(7, _c321, ctx.transitionOptions())) : void 0);
+        \u0275\u0275advance();
+        \u0275\u0275conditional(ctx.active() ? 2 : -1);
+      }
+    },
+    dependencies: [CommonModule, NgTemplateOutlet, StepperSeparator, SharedModule],
+    encapsulation: 2,
+    data: {
+      animation: [trigger("content", [state("hidden", style({
+        height: "0",
+        visibility: "hidden"
+      })), state("visible", style({
+        height: "*",
+        visibility: "visible"
+      })), transition("visible <=> hidden", [animate("250ms cubic-bezier(0.86, 0, 0.07, 1)")]), transition("void => *", animate(0))])]
+    },
+    changeDetection: 0
+  });
+};
+(() => {
+  (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(StepPanel, [{
+    type: Component,
+    args: [{
+      selector: "p-step-panel",
+      standalone: true,
+      imports: [CommonModule, StepperSeparator, SharedModule],
+      template: `
+        @if (isSeparatorVisible()) {
+            <p-stepper-separator />
+        }
+        <div class="p-steppanel-content" [@content]="isVertical() ? (active() ? { value: 'visible', params: { transitionParams: transitionOptions() } } : { value: 'hidden', params: { transitionParams: transitionOptions() } }) : undefined">
+            @if (active()) {
+                <ng-container *ngTemplateOutlet="contentTemplate || _contentTemplate; context: { activateCallback: updateValue.bind(this), value: value(), active: active() }"></ng-container>
+            }
+        </div>
+    `,
+      changeDetection: ChangeDetectionStrategy.OnPush,
+      encapsulation: ViewEncapsulation.None,
+      host: {
+        "[class.p-steppanel]": "true",
+        "[class.p-component]": "true",
+        "[class.p-steppanel-active]": "active()",
+        "[attr.role]": '"tabpanel"',
+        "[attr.aria-controls]": "ariaControls()",
+        "[attr.id]": "id()",
+        "[attr.data-p-active]": "active()",
+        "[attr.data-pc-name]": '"steppanel"'
+      },
+      animations: [trigger("content", [state("hidden", style({
+        height: "0",
+        visibility: "hidden"
+      })), state("visible", style({
+        height: "*",
+        visibility: "visible"
+      })), transition("visible <=> hidden", [animate("250ms cubic-bezier(0.86, 0, 0.07, 1)")]), transition("void => *", animate(0))])]
+    }]
+  }], null, {
+    contentTemplate: [{
+      type: ContentChild,
+      args: ["content"]
+    }],
+    templates: [{
+      type: ContentChildren,
+      args: [PrimeTemplate]
+    }]
+  });
+})();
+var StepPanels = class _StepPanels extends BaseComponent {
+  static \u0275fac = /* @__PURE__ */ (() => {
+    let \u0275StepPanels_BaseFactory;
+    return function StepPanels_Factory(__ngFactoryType__) {
+      return (\u0275StepPanels_BaseFactory || (\u0275StepPanels_BaseFactory = \u0275\u0275getInheritedFactory(_StepPanels)))(__ngFactoryType__ || _StepPanels);
+    };
+  })();
+  static \u0275cmp = /* @__PURE__ */ \u0275\u0275defineComponent({
+    type: _StepPanels,
+    selectors: [["p-step-panels"]],
+    hostVars: 4,
+    hostBindings: function StepPanels_HostBindings(rf, ctx) {
+      if (rf & 2) {
+        \u0275\u0275classProp("p-steppanels", true)("p-component", true);
+      }
+    },
+    features: [\u0275\u0275InheritDefinitionFeature],
+    ngContentSelectors: _c033,
+    decls: 1,
+    vars: 0,
+    template: function StepPanels_Template(rf, ctx) {
+      if (rf & 1) {
+        \u0275\u0275projectionDef();
+        \u0275\u0275projection(0);
+      }
+    },
+    dependencies: [CommonModule, SharedModule],
+    encapsulation: 2,
+    changeDetection: 0
+  });
+};
+(() => {
+  (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(StepPanels, [{
+    type: Component,
+    args: [{
+      selector: "p-step-panels",
+      standalone: true,
+      imports: [CommonModule, SharedModule],
+      template: ` <ng-content></ng-content>`,
+      changeDetection: ChangeDetectionStrategy.OnPush,
+      encapsulation: ViewEncapsulation.None,
+      host: {
+        "[class.p-steppanels]": "true",
+        "[class.p-component]": "true"
+      }
+    }]
+  }], null, null);
+})();
+var Stepper = class _Stepper extends BaseComponent {
+  /**
+   * A model that can hold a numeric value or be undefined.
+   * @defaultValue undefined
+   * @type {ModelSignal<number | undefined>}
+   * @group Props
+   */
+  value = model(void 0);
+  /**
+   * A boolean variable that captures user input.
+   * @defaultValue false
+   * @type {InputSignalWithTransform<any, boolean >}
+   * @group Props
+   */
+  linear = input(false, {
+    transform: (v) => transformToBoolean(v)
+  });
+  /**
+   * Transition options of the animation.
+   * @defaultValue 400ms cubic-bezier(0.86, 0, 0.07, 1)
+   * @type {InputSignal<string >}
+   * @group Props
+   */
+  transitionOptions = input("400ms cubic-bezier(0.86, 0, 0.07, 1)");
+  _componentStyle = inject(StepperStyle);
+  id = signal(uuid("pn_id_"));
+  stepItems = contentChildren(StepItem);
+  steps = contentChildren(Step);
+  stepList = contentChild(StepList);
+  updateValue(value) {
+    this.value.set(value);
+  }
+  isStepActive(value) {
+    return this.value() === value;
+  }
+  static \u0275fac = /* @__PURE__ */ (() => {
+    let \u0275Stepper_BaseFactory;
+    return function Stepper_Factory(__ngFactoryType__) {
+      return (\u0275Stepper_BaseFactory || (\u0275Stepper_BaseFactory = \u0275\u0275getInheritedFactory(_Stepper)))(__ngFactoryType__ || _Stepper);
+    };
+  })();
+  static \u0275cmp = /* @__PURE__ */ \u0275\u0275defineComponent({
+    type: _Stepper,
+    selectors: [["p-stepper"]],
+    contentQueries: function Stepper_ContentQueries(rf, ctx, dirIndex) {
+      if (rf & 1) {
+        \u0275\u0275contentQuerySignal(dirIndex, ctx.stepItems, StepItem, 4);
+        \u0275\u0275contentQuerySignal(dirIndex, ctx.steps, Step, 4);
+        \u0275\u0275contentQuerySignal(dirIndex, ctx.stepList, StepList, 5);
+      }
+      if (rf & 2) {
+        \u0275\u0275queryAdvance(3);
+      }
+    },
+    hostVars: 6,
+    hostBindings: function Stepper_HostBindings(rf, ctx) {
+      if (rf & 2) {
+        \u0275\u0275attribute("role", "tablist")("id", ctx.id());
+        \u0275\u0275classProp("p-stepper", true)("p-component", true);
+      }
+    },
+    inputs: {
+      value: [1, "value"],
+      linear: [1, "linear"],
+      transitionOptions: [1, "transitionOptions"]
+    },
+    outputs: {
+      value: "valueChange"
+    },
+    features: [\u0275\u0275ProvidersFeature([StepperStyle]), \u0275\u0275InheritDefinitionFeature],
+    ngContentSelectors: _c033,
+    decls: 1,
+    vars: 0,
+    template: function Stepper_Template(rf, ctx) {
+      if (rf & 1) {
+        \u0275\u0275projectionDef();
+        \u0275\u0275projection(0);
+      }
+    },
+    dependencies: [CommonModule, SharedModule],
+    encapsulation: 2,
+    changeDetection: 0
+  });
+};
+(() => {
+  (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(Stepper, [{
+    type: Component,
+    args: [{
+      selector: "p-stepper",
+      standalone: true,
+      imports: [CommonModule, SharedModule],
+      template: ` <ng-content></ng-content>`,
+      changeDetection: ChangeDetectionStrategy.OnPush,
+      encapsulation: ViewEncapsulation.None,
+      providers: [StepperStyle],
+      host: {
+        "[class.p-stepper]": "true",
+        "[class.p-component]": "true",
+        "[attr.role]": '"tablist"',
+        "[attr.id]": "id()"
+      }
+    }]
+  }], null, null);
+})();
+var StepperModule = class _StepperModule {
+  static \u0275fac = function StepperModule_Factory(__ngFactoryType__) {
+    return new (__ngFactoryType__ || _StepperModule)();
+  };
+  static \u0275mod = /* @__PURE__ */ \u0275\u0275defineNgModule({
+    type: _StepperModule,
+    imports: [Stepper, StepList, StepPanels, StepPanel, StepItem, Step, StepperSeparator, SharedModule],
+    exports: [Stepper, StepList, StepPanels, StepPanel, StepItem, Step, StepperSeparator, SharedModule]
+  });
+  static \u0275inj = /* @__PURE__ */ \u0275\u0275defineInjector({
+    imports: [Stepper, StepList, StepPanels, StepPanel, StepItem, Step, StepperSeparator, SharedModule, SharedModule]
+  });
+};
+(() => {
+  (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(StepperModule, [{
+    type: NgModule,
+    args: [{
+      imports: [Stepper, StepList, StepPanels, StepPanel, StepItem, Step, StepperSeparator, SharedModule],
+      exports: [Stepper, StepList, StepPanels, StepPanel, StepItem, Step, StepperSeparator, SharedModule]
+    }]
+  }], null, null);
+})();
+
 // node_modules/primeng/fesm2022/primeng-popover.mjs
-var _c033 = ["content"];
-var _c139 = ["*"];
-var _c225 = (a0, a1) => ({
+var _c034 = ["content"];
+var _c140 = ["*"];
+var _c226 = (a0, a1) => ({
   showTransitionParams: a0,
   hideTransitionParams: a1
 });
-var _c321 = (a0, a1) => ({
+var _c323 = (a0, a1) => ({
   value: a0,
   params: a1
 });
-var _c417 = (a0) => ({
+var _c418 = (a0) => ({
   closeCallback: a0
 });
 function Popover_div_0_3_ng_template_0_Template(rf, ctx) {
@@ -85692,13 +86680,13 @@ function Popover_div_0_Template(rf, ctx) {
   if (rf & 2) {
     const ctx_r1 = \u0275\u0275nextContext();
     \u0275\u0275classMap(ctx_r1.styleClass);
-    \u0275\u0275property("ngClass", "p-popover p-component")("ngStyle", ctx_r1.style)("@animation", \u0275\u0275pureFunction2(13, _c321, ctx_r1.overlayVisible ? "open" : "close", \u0275\u0275pureFunction2(10, _c225, ctx_r1.showTransitionOptions, ctx_r1.hideTransitionOptions)));
+    \u0275\u0275property("ngClass", "p-popover p-component")("ngStyle", ctx_r1.style)("@animation", \u0275\u0275pureFunction2(13, _c323, ctx_r1.overlayVisible ? "open" : "close", \u0275\u0275pureFunction2(10, _c226, ctx_r1.showTransitionOptions, ctx_r1.hideTransitionOptions)));
     \u0275\u0275attribute("aria-modal", ctx_r1.overlayVisible)("aria-label", ctx_r1.ariaLabel)("aria-labelledBy", ctx_r1.ariaLabelledBy);
     \u0275\u0275advance(3);
-    \u0275\u0275property("ngTemplateOutlet", ctx_r1.contentTemplate || ctx_r1._contentTemplate)("ngTemplateOutletContext", \u0275\u0275pureFunction1(16, _c417, ctx_r1.onCloseClick.bind(ctx_r1)));
+    \u0275\u0275property("ngTemplateOutlet", ctx_r1.contentTemplate || ctx_r1._contentTemplate)("ngTemplateOutletContext", \u0275\u0275pureFunction1(16, _c418, ctx_r1.onCloseClick.bind(ctx_r1)));
   }
 }
-var theme34 = ({
+var theme35 = ({
   dt: dt2
 }) => `
 .p-popover {
@@ -85781,14 +86769,14 @@ var theme34 = ({
 }
 
 `;
-var classes33 = {
+var classes34 = {
   root: "p-popover p-component",
   content: "p-popover-content"
 };
 var PopoverStyle = class _PopoverStyle extends BaseStyle {
   name = "popover";
-  theme = theme34;
-  classes = classes33;
+  theme = theme35;
+  classes = classes34;
   static \u0275fac = /* @__PURE__ */ (() => {
     let \u0275PopoverStyle_BaseFactory;
     return function PopoverStyle_Factory(__ngFactoryType__) {
@@ -86159,7 +87147,7 @@ var Popover = class _Popover extends BaseComponent {
     selectors: [["p-popover"]],
     contentQueries: function Popover_ContentQueries(rf, ctx, dirIndex) {
       if (rf & 1) {
-        \u0275\u0275contentQuery(dirIndex, _c033, 4);
+        \u0275\u0275contentQuery(dirIndex, _c034, 4);
         \u0275\u0275contentQuery(dirIndex, PrimeTemplate, 4);
       }
       if (rf & 2) {
@@ -86194,7 +87182,7 @@ var Popover = class _Popover extends BaseComponent {
       onHide: "onHide"
     },
     features: [\u0275\u0275ProvidersFeature([PopoverStyle]), \u0275\u0275InheritDefinitionFeature],
-    ngContentSelectors: _c139,
+    ngContentSelectors: _c140,
     decls: 1,
     vars: 1,
     consts: [["role", "dialog", 3, "ngClass", "ngStyle", "class", "click", 4, "ngIf"], ["role", "dialog", 3, "click", "ngClass", "ngStyle"], [1, "p-popover-content", 3, "click", "mousedown"], [4, "ngTemplateOutlet", "ngTemplateOutletContext"]],
@@ -86362,16 +87350,16 @@ var PopoverModule = class _PopoverModule {
 })();
 
 // node_modules/primeng/fesm2022/primeng-organizationchart.mjs
-var _c034 = ["pOrganizationChartNode", ""];
-var _c140 = (a0, a1) => ({
+var _c035 = ["pOrganizationChartNode", ""];
+var _c141 = (a0, a1) => ({
   "p-organizationchart-node": true,
   "p-organizationchart-node-selectable": a0,
   "p-organizationchart-node-selected": a1
 });
-var _c226 = (a0) => ({
+var _c227 = (a0) => ({
   $implicit: a0
 });
-var _c323 = (a0) => ({
+var _c324 = (a0) => ({
   "p-organizationchart-connector-top": a0
 });
 function OrganizationChartNode_tbody_0_div_4_Template(rf, ctx) {
@@ -86400,7 +87388,7 @@ function OrganizationChartNode_tbody_0_div_5_Template(rf, ctx) {
   if (rf & 2) {
     const ctx_r1 = \u0275\u0275nextContext(2);
     \u0275\u0275advance();
-    \u0275\u0275property("ngTemplateOutlet", ctx_r1.chart.getTemplateForNode(ctx_r1.node))("ngTemplateOutletContext", \u0275\u0275pureFunction1(2, _c226, ctx_r1.node));
+    \u0275\u0275property("ngTemplateOutlet", ctx_r1.chart.getTemplateForNode(ctx_r1.node))("ngTemplateOutletContext", \u0275\u0275pureFunction1(2, _c227, ctx_r1.node));
   }
 }
 function OrganizationChartNode_tbody_0_ng_container_6_a_1_ng_container_1_ChevronDownIcon_1_Template(rf, ctx) {
@@ -86452,7 +87440,7 @@ function OrganizationChartNode_tbody_0_ng_container_6_a_1_span_2_Template(rf, ct
     const ctx_r1 = \u0275\u0275nextContext(4);
     \u0275\u0275attribute("data-pc-section", "nodeTogglerIcon");
     \u0275\u0275advance();
-    \u0275\u0275property("ngTemplateOutlet", ctx_r1.chart.togglerIconTemplate || ctx_r1.chart._togglerIconTemplate)("ngTemplateOutletContext", \u0275\u0275pureFunction1(3, _c226, ctx_r1.node.expanded));
+    \u0275\u0275property("ngTemplateOutlet", ctx_r1.chart.togglerIconTemplate || ctx_r1.chart._togglerIconTemplate)("ngTemplateOutletContext", \u0275\u0275pureFunction1(3, _c227, ctx_r1.node.expanded));
   }
 }
 function OrganizationChartNode_tbody_0_ng_container_6_a_1_Template(rf, ctx) {
@@ -86524,10 +87512,10 @@ function OrganizationChartNode_tbody_0_ng_container_12_ng_template_1_Template(rf
   if (rf & 2) {
     const first_r4 = ctx.first;
     const last_r5 = ctx.last;
-    \u0275\u0275property("ngClass", \u0275\u0275pureFunction1(4, _c323, !first_r4));
+    \u0275\u0275property("ngClass", \u0275\u0275pureFunction1(4, _c324, !first_r4));
     \u0275\u0275attribute("data-pc-section", "lineLeft");
     \u0275\u0275advance(2);
-    \u0275\u0275property("ngClass", \u0275\u0275pureFunction1(6, _c323, !last_r5));
+    \u0275\u0275property("ngClass", \u0275\u0275pureFunction1(6, _c324, !last_r5));
     \u0275\u0275attribute("data-pc-section", "lineRight");
   }
 }
@@ -86587,7 +87575,7 @@ function OrganizationChartNode_tbody_0_Template(rf, ctx) {
     \u0275\u0275attribute("colspan", ctx_r1.colspan)("data-pc-section", "cell");
     \u0275\u0275advance();
     \u0275\u0275classMap(ctx_r1.node.styleClass);
-    \u0275\u0275property("ngClass", \u0275\u0275pureFunction2(26, _c140, ctx_r1.chart.selectionMode && ctx_r1.node.selectable !== false, ctx_r1.isSelected()));
+    \u0275\u0275property("ngClass", \u0275\u0275pureFunction2(26, _c141, ctx_r1.chart.selectionMode && ctx_r1.node.selectable !== false, ctx_r1.isSelected()));
     \u0275\u0275attribute("data-pc-section", "node");
     \u0275\u0275advance();
     \u0275\u0275property("ngIf", !ctx_r1.chart.getTemplateForNode(ctx_r1.node));
@@ -86616,8 +87604,8 @@ function OrganizationChartNode_tbody_0_Template(rf, ctx) {
     \u0275\u0275property("ngForOf", ctx_r1.node.children);
   }
 }
-var _c418 = ["togglericon"];
-var _c515 = (a0) => ({
+var _c419 = ["togglericon"];
+var _c516 = (a0) => ({
   "p-organizationchart p-component": true,
   "p-organizationchart-preservespace": a0
 });
@@ -86630,7 +87618,7 @@ function OrganizationChart_table_1_Template(rf, ctx) {
     \u0275\u0275property("collapsible", ctx_r0.collapsible)("node", ctx_r0.root);
   }
 }
-var theme35 = ({
+var theme36 = ({
   dt: dt2
 }) => `
 .p-organizationchart-table {
@@ -86745,7 +87733,7 @@ var theme35 = ({
     border-start-start-radius: ${dt2("organizationchart.connector.border.radius")};
 }
 `;
-var classes34 = {
+var classes35 = {
   root: "p-organizationchart p-component",
   table: "p-organizationchart-table",
   node: ({
@@ -86773,8 +87761,8 @@ var classes34 = {
 };
 var OrganizationChartStyle = class _OrganizationChartStyle extends BaseStyle {
   name = "organizationchart";
-  theme = theme35;
-  classes = classes34;
+  theme = theme36;
+  classes = classes35;
   static \u0275fac = /* @__PURE__ */ (() => {
     let \u0275OrganizationChartStyle_BaseFactory;
     return function OrganizationChartStyle_Factory(__ngFactoryType__) {
@@ -86869,7 +87857,7 @@ var OrganizationChartNode = class _OrganizationChartNode {
       last: [2, "last", "last", booleanAttribute],
       collapsible: [2, "collapsible", "collapsible", booleanAttribute]
     },
-    attrs: _c034,
+    attrs: _c035,
     decls: 1,
     vars: 1,
     consts: [[4, "ngIf"], [3, "click", "ngClass"], [1, "p-organizationchart-connectors", 3, "ngStyle"], [1, "p-organizationchart-connector-down"], [1, "p-organizationchart-node-children", 3, "ngStyle"], ["colspan", "2", 4, "ngFor", "ngForOf"], [4, "ngTemplateOutlet", "ngTemplateOutletContext"], ["tabindex", "0", "class", "p-organizationchart-node-toggle-button", 3, "click", "keydown.enter", "keydown.space", 4, "ngIf"], ["tabindex", "0", 1, "p-organizationchart-node-toggle-button", 3, "click", "keydown.enter", "keydown.space"], ["class", "p-organizationchart-node-toggle-button-icon", 4, "ngIf"], [3, "styleClass", 4, "ngIf"], [3, "styleClass"], [1, "p-organizationchart-node-toggle-button-icon"], ["ngFor", "", 3, "ngForOf"], [1, "p-organizationchart-connector-left", 3, "ngClass"], [1, "p-organizationchart-connector-right", 3, "ngClass"], ["colspan", "2"], ["pOrganizationChartNode", "", 1, "p-organizationchart-table", 3, "node", "collapsible"]],
@@ -87192,7 +88180,7 @@ var OrganizationChart = class _OrganizationChart extends BaseComponent {
     selectors: [["p-organizationChart"], ["p-organization-chart"], ["p-organizationchart"]],
     contentQueries: function OrganizationChart_ContentQueries(rf, ctx, dirIndex) {
       if (rf & 1) {
-        \u0275\u0275contentQuery(dirIndex, _c418, 4);
+        \u0275\u0275contentQuery(dirIndex, _c419, 4);
         \u0275\u0275contentQuery(dirIndex, PrimeTemplate, 4);
       }
       if (rf & 2) {
@@ -87229,7 +88217,7 @@ var OrganizationChart = class _OrganizationChart extends BaseComponent {
       }
       if (rf & 2) {
         \u0275\u0275classMap(ctx.styleClass);
-        \u0275\u0275property("ngStyle", ctx.style)("ngClass", \u0275\u0275pureFunction1(6, _c515, ctx.preserveSpace));
+        \u0275\u0275property("ngStyle", ctx.style)("ngClass", \u0275\u0275pureFunction1(6, _c516, ctx.preserveSpace));
         \u0275\u0275attribute("data-pc-section", "root");
         \u0275\u0275advance();
         \u0275\u0275property("ngIf", ctx.root);
@@ -87337,12 +88325,12 @@ var OrganizationChartModule = class _OrganizationChartModule {
 })();
 
 // node_modules/primeng/fesm2022/primeng-treetable.mjs
-var _c035 = ["colgroup"];
-var _c141 = ["caption"];
-var _c227 = ["header"];
-var _c324 = ["body"];
-var _c419 = ["footer"];
-var _c516 = ["summary"];
+var _c036 = ["colgroup"];
+var _c146 = ["caption"];
+var _c228 = ["header"];
+var _c325 = ["body"];
+var _c420 = ["footer"];
+var _c517 = ["summary"];
 var _c615 = ["emptymessage"];
 var _c712 = ["paginatorleft"];
 var _c810 = ["paginatorright"];
@@ -87351,7 +88339,7 @@ var _c109 = ["frozenheader"];
 var _c1114 = ["frozenbody"];
 var _c1212 = ["frozenfooter"];
 var _c1310 = ["frozencolgroup"];
-var _c146 = ["loadingicon"];
+var _c147 = ["loadingicon"];
 var _c155 = ["reorderindicatorupicon"];
 var _c165 = ["reorderindicatordownicon"];
 var _c175 = ["sorticon"];
@@ -87359,7 +88347,7 @@ var _c185 = ["checkboxicon"];
 var _c195 = ["headercheckboxicon"];
 var _c204 = ["togglericon"];
 var _c2112 = ["paginatorfirstpagelinkicon"];
-var _c228 = ["paginatorlastpagelinkicon"];
+var _c229 = ["paginatorlastpagelinkicon"];
 var _c235 = ["paginatorpreviouspagelinkicon"];
 var _c245 = ["paginatornextpagelinkicon"];
 var _c255 = ["loader"];
@@ -87369,7 +88357,7 @@ var _c284 = ["reorderIndicatorUp"];
 var _c294 = ["reorderIndicatorDown"];
 var _c303 = ["table"];
 var _c3110 = ["scrollableView"];
-var _c325 = ["scrollableFrozenView"];
+var _c326 = ["scrollableFrozenView"];
 var _c333 = (a0, a1, a2, a3, a4, a5) => ({
   "p-treetable p-component": true,
   "p-treetable-gridlines": a0,
@@ -87886,7 +88874,7 @@ var _c493 = ["ttScrollableView", ""];
 var _c502 = (a0) => ({
   height: a0
 });
-var _c517 = (a0, a1) => ({
+var _c518 = (a0, a1) => ({
   $implicit: a0,
   options: a1
 });
@@ -87922,7 +88910,7 @@ function TTScrollableView_p_scroller_8_ng_template_2_Template(rf, ctx) {
     const scrollerOptions_r4 = ctx.options;
     \u0275\u0275nextContext(2);
     const buildInItems_r5 = \u0275\u0275reference(11);
-    \u0275\u0275property("ngTemplateOutlet", buildInItems_r5)("ngTemplateOutletContext", \u0275\u0275pureFunction2(2, _c517, items_r3, scrollerOptions_r4));
+    \u0275\u0275property("ngTemplateOutlet", buildInItems_r5)("ngTemplateOutletContext", \u0275\u0275pureFunction2(2, _c518, items_r3, scrollerOptions_r4));
   }
 }
 function TTScrollableView_p_scroller_8_ng_container_4_ng_template_1_ng_container_0_Template(rf, ctx) {
@@ -87986,7 +88974,7 @@ function TTScrollableView_ng_container_9_Template(rf, ctx) {
     \u0275\u0275advance();
     \u0275\u0275property("ngStyle", \u0275\u0275pureFunction2(3, _c533, ctx_r1.tt.scrollHeight !== "flex" ? ctx_r1.scrollHeight : void 0, !ctx_r1.frozen && ctx_r1.tt.scrollHeight ? "scroll" : void 0));
     \u0275\u0275advance(2);
-    \u0275\u0275property("ngTemplateOutlet", buildInItems_r5)("ngTemplateOutletContext", \u0275\u0275pureFunction2(7, _c517, ctx_r1.serializedValue, \u0275\u0275pureFunction0(6, _c543)));
+    \u0275\u0275property("ngTemplateOutlet", buildInItems_r5)("ngTemplateOutletContext", \u0275\u0275pureFunction2(7, _c518, ctx_r1.serializedValue, \u0275\u0275pureFunction0(6, _c543)));
   }
 }
 function TTScrollableView_ng_template_10_ng_container_2_Template(rf, ctx) {
@@ -88230,7 +89218,7 @@ function TreeTableToggler_2_Template(rf, ctx) {
     \u0275\u0275template(0, TreeTableToggler_2_ng_template_0_Template, 0, 0, "ng-template");
   }
 }
-var theme36 = ({
+var theme37 = ({
   dt: dt2
 }) => `
 /* For PrimeNG */
@@ -88681,7 +89669,7 @@ p-tree-table-toggler + p-tree-table-checkbox + span {
     vertical-align: middle;
 }
 `;
-var classes35 = {
+var classes36 = {
   root: ({
     instance
   }) => ({
@@ -88771,8 +89759,8 @@ var inlineStyles5 = {
 };
 var TreeTableStyle = class _TreeTableStyle extends BaseStyle {
   name = "treetable";
-  theme = theme36;
-  classes = classes35;
+  theme = theme37;
+  classes = classes36;
   inlineStyles = inlineStyles5;
   static \u0275fac = /* @__PURE__ */ (() => {
     let \u0275TreeTableStyle_BaseFactory;
@@ -90682,12 +91670,12 @@ var TreeTable = class _TreeTable extends BaseComponent {
     selectors: [["p-treeTable"], ["p-treetable"], ["p-tree-table"]],
     contentQueries: function TreeTable_ContentQueries(rf, ctx, dirIndex) {
       if (rf & 1) {
-        \u0275\u0275contentQuery(dirIndex, _c035, 4);
-        \u0275\u0275contentQuery(dirIndex, _c141, 4);
-        \u0275\u0275contentQuery(dirIndex, _c227, 4);
-        \u0275\u0275contentQuery(dirIndex, _c324, 4);
-        \u0275\u0275contentQuery(dirIndex, _c419, 4);
-        \u0275\u0275contentQuery(dirIndex, _c516, 4);
+        \u0275\u0275contentQuery(dirIndex, _c036, 4);
+        \u0275\u0275contentQuery(dirIndex, _c146, 4);
+        \u0275\u0275contentQuery(dirIndex, _c228, 4);
+        \u0275\u0275contentQuery(dirIndex, _c325, 4);
+        \u0275\u0275contentQuery(dirIndex, _c420, 4);
+        \u0275\u0275contentQuery(dirIndex, _c517, 4);
         \u0275\u0275contentQuery(dirIndex, _c615, 4);
         \u0275\u0275contentQuery(dirIndex, _c712, 4);
         \u0275\u0275contentQuery(dirIndex, _c810, 4);
@@ -90696,7 +91684,7 @@ var TreeTable = class _TreeTable extends BaseComponent {
         \u0275\u0275contentQuery(dirIndex, _c1114, 4);
         \u0275\u0275contentQuery(dirIndex, _c1212, 4);
         \u0275\u0275contentQuery(dirIndex, _c1310, 4);
-        \u0275\u0275contentQuery(dirIndex, _c146, 4);
+        \u0275\u0275contentQuery(dirIndex, _c147, 4);
         \u0275\u0275contentQuery(dirIndex, _c155, 4);
         \u0275\u0275contentQuery(dirIndex, _c165, 4);
         \u0275\u0275contentQuery(dirIndex, _c175, 4);
@@ -90704,7 +91692,7 @@ var TreeTable = class _TreeTable extends BaseComponent {
         \u0275\u0275contentQuery(dirIndex, _c195, 4);
         \u0275\u0275contentQuery(dirIndex, _c204, 4);
         \u0275\u0275contentQuery(dirIndex, _c2112, 4);
-        \u0275\u0275contentQuery(dirIndex, _c228, 4);
+        \u0275\u0275contentQuery(dirIndex, _c229, 4);
         \u0275\u0275contentQuery(dirIndex, _c235, 4);
         \u0275\u0275contentQuery(dirIndex, _c245, 4);
         \u0275\u0275contentQuery(dirIndex, _c255, 4);
@@ -90749,7 +91737,7 @@ var TreeTable = class _TreeTable extends BaseComponent {
         \u0275\u0275viewQuery(_c294, 5);
         \u0275\u0275viewQuery(_c303, 5);
         \u0275\u0275viewQuery(_c3110, 5);
-        \u0275\u0275viewQuery(_c325, 5);
+        \u0275\u0275viewQuery(_c326, 5);
       }
       if (rf & 2) {
         let _t;
@@ -93754,22 +94742,22 @@ var TreeTableModule = class _TreeTableModule {
 })();
 
 // node_modules/primeng/fesm2022/primeng-tree.mjs
-var _c036 = (a0) => ({
+var _c037 = (a0) => ({
   height: a0
 });
-var _c147 = (a0) => ({
+var _c148 = (a0) => ({
   "p-tree-node-droppoint-active": a0
 });
-var _c229 = (a0, a1) => ({
+var _c230 = (a0, a1) => ({
   $implicit: a0,
   loading: a1
 });
-var _c326 = (a0, a1) => ({
+var _c327 = (a0, a1) => ({
   $implicit: a0,
   partialSelected: a1,
   class: "p-tree-node-checkbox"
 });
-var _c420 = (a0) => ({
+var _c421 = (a0) => ({
   $implicit: a0
 });
 function UITreeNode_Conditional_0_li_0_Template(rf, ctx) {
@@ -93797,7 +94785,7 @@ function UITreeNode_Conditional_0_li_0_Template(rf, ctx) {
   }
   if (rf & 2) {
     const ctx_r2 = \u0275\u0275nextContext(2);
-    \u0275\u0275property("ngClass", \u0275\u0275pureFunction1(2, _c147, ctx_r2.draghoverPrev));
+    \u0275\u0275property("ngClass", \u0275\u0275pureFunction1(2, _c148, ctx_r2.draghoverPrev));
     \u0275\u0275attribute("aria-hidden", true);
   }
 }
@@ -93872,7 +94860,7 @@ function UITreeNode_Conditional_0_span_5_Template(rf, ctx) {
   if (rf & 2) {
     const ctx_r2 = \u0275\u0275nextContext(2);
     \u0275\u0275advance();
-    \u0275\u0275property("ngTemplateOutlet", ctx_r2.tree.togglerIconTemplate || ctx_r2.tree._togglerIconTemplate)("ngTemplateOutletContext", \u0275\u0275pureFunction2(2, _c229, ctx_r2.node.expanded, ctx_r2.node.loading));
+    \u0275\u0275property("ngTemplateOutlet", ctx_r2.tree.togglerIconTemplate || ctx_r2.tree._togglerIconTemplate)("ngTemplateOutletContext", \u0275\u0275pureFunction2(2, _c230, ctx_r2.node.expanded, ctx_r2.node.loading));
   }
 }
 function UITreeNode_Conditional_0_p_checkbox_6_ng_container_1_ng_template_1_0_ng_template_0_Template(rf, ctx) {
@@ -93888,7 +94876,7 @@ function UITreeNode_Conditional_0_p_checkbox_6_ng_container_1_ng_template_1_Temp
   }
   if (rf & 2) {
     const ctx_r2 = \u0275\u0275nextContext(4);
-    \u0275\u0275property("ngTemplateOutlet", ctx_r2.tree.checkboxIconTemplate || ctx_r2.tree._checkboxIconTemplate)("ngTemplateOutletContext", \u0275\u0275pureFunction2(2, _c326, ctx_r2.isSelected(), ctx_r2.node.partialSelected));
+    \u0275\u0275property("ngTemplateOutlet", ctx_r2.tree.checkboxIconTemplate || ctx_r2.tree._checkboxIconTemplate)("ngTemplateOutletContext", \u0275\u0275pureFunction2(2, _c327, ctx_r2.isSelected(), ctx_r2.node.partialSelected));
   }
 }
 function UITreeNode_Conditional_0_p_checkbox_6_ng_container_1_Template(rf, ctx) {
@@ -93952,7 +94940,7 @@ function UITreeNode_Conditional_0_span_10_Template(rf, ctx) {
   if (rf & 2) {
     const ctx_r2 = \u0275\u0275nextContext(2);
     \u0275\u0275advance();
-    \u0275\u0275property("ngTemplateOutlet", ctx_r2.tree.getTemplateForNode(ctx_r2.node))("ngTemplateOutletContext", \u0275\u0275pureFunction1(2, _c420, ctx_r2.node));
+    \u0275\u0275property("ngTemplateOutlet", ctx_r2.tree.getTemplateForNode(ctx_r2.node))("ngTemplateOutletContext", \u0275\u0275pureFunction1(2, _c421, ctx_r2.node));
   }
 }
 function UITreeNode_Conditional_0_ul_11_p_treeNode_1_Template(rf, ctx) {
@@ -94006,7 +94994,7 @@ function UITreeNode_Conditional_0_li_12_Template(rf, ctx) {
   }
   if (rf & 2) {
     const ctx_r2 = \u0275\u0275nextContext(2);
-    \u0275\u0275property("ngClass", \u0275\u0275pureFunction1(2, _c147, ctx_r2.draghoverNext));
+    \u0275\u0275property("ngClass", \u0275\u0275pureFunction1(2, _c148, ctx_r2.draghoverNext));
     \u0275\u0275attribute("aria-hidden", true);
   }
 }
@@ -94084,7 +95072,7 @@ function UITreeNode_Conditional_0_Template(rf, ctx) {
     \u0275\u0275advance();
     \u0275\u0275styleMap(ctx_r2.node.style);
     \u0275\u0275classMap(ctx_r2.node.styleClass);
-    \u0275\u0275property("ngClass", ctx_r2.nodeClass)("ngStyle", \u0275\u0275pureFunction1(29, _c036, ctx_r2.itemSize + "px"));
+    \u0275\u0275property("ngClass", ctx_r2.nodeClass)("ngStyle", \u0275\u0275pureFunction1(29, _c037, ctx_r2.itemSize + "px"));
     \u0275\u0275attribute("aria-label", ctx_r2.node.label)("aria-checked", ctx_r2.checked)("aria-setsize", ctx_r2.node.children ? ctx_r2.node.children.length : 0)("aria-selected", ctx_r2.selected)("aria-expanded", ctx_r2.node.expanded)("aria-posinset", ctx_r2.index + 1)("aria-level", ctx_r2.level + 1)("tabindex", ctx_r2.index === 0 ? 0 : -1)("data-id", ctx_r2.node.key);
     \u0275\u0275advance();
     \u0275\u0275styleProp("padding-left", ctx_r2.level * ctx_r2.indentation + "rem");
@@ -94109,7 +95097,7 @@ function UITreeNode_Conditional_0_Template(rf, ctx) {
     \u0275\u0275property("ngIf", ctx_r2.tree.droppableNodes && ctx_r2.lastChild);
   }
 }
-var _c518 = ["filter"];
+var _c519 = ["filter"];
 var _c616 = ["node"];
 var _c713 = ["header"];
 var _c811 = ["footer"];
@@ -94118,7 +95106,7 @@ var _c1010 = ["empty"];
 var _c1115 = ["togglericon"];
 var _c1213 = ["checkboxicon"];
 var _c1311 = ["loadingicon"];
-var _c148 = ["filtericon"];
+var _c149 = ["filtericon"];
 var _c156 = ["scroller"];
 var _c166 = ["wrapper"];
 var _c176 = (a0) => ({
@@ -94204,7 +95192,7 @@ function Tree_Conditional_3_Template(rf, ctx) {
   }
   if (rf & 2) {
     const ctx_r0 = \u0275\u0275nextContext();
-    \u0275\u0275property("ngTemplateOutlet", ctx_r0.filterTemplate || ctx_r0._filterTemplate)("ngTemplateOutletContext", \u0275\u0275pureFunction1(2, _c420, ctx_r0.filterOptions));
+    \u0275\u0275property("ngTemplateOutlet", ctx_r0.filterTemplate || ctx_r0._filterTemplate)("ngTemplateOutletContext", \u0275\u0275pureFunction1(2, _c421, ctx_r0.filterOptions));
   }
 }
 function Tree_Conditional_4_p_iconField_0_SearchIcon_4_Template(rf, ctx) {
@@ -94353,7 +95341,7 @@ function Tree_ng_container_5_p_scroller_1_Template(rf, ctx) {
   }
   if (rf & 2) {
     const ctx_r0 = \u0275\u0275nextContext(2);
-    \u0275\u0275styleMap(\u0275\u0275pureFunction1(9, _c036, ctx_r0.scrollHeight !== "flex" ? ctx_r0.scrollHeight : void 0));
+    \u0275\u0275styleMap(\u0275\u0275pureFunction1(9, _c037, ctx_r0.scrollHeight !== "flex" ? ctx_r0.scrollHeight : void 0));
     \u0275\u0275property("items", ctx_r0.serializedValue)("tabindex", -1)("scrollHeight", ctx_r0.scrollHeight !== "flex" ? void 0 : "100%")("itemSize", ctx_r0.virtualScrollItemSize || ctx_r0._virtualNodeHeight)("lazy", ctx_r0.lazy)("options", ctx_r0.virtualScrollOptions);
     \u0275\u0275advance(4);
     \u0275\u0275property("ngIf", ctx_r0.loaderTemplate || ctx_r0._loaderTemplate);
@@ -94453,7 +95441,7 @@ function Tree_ng_container_7_Template(rf, ctx) {
     \u0275\u0275elementContainer(0);
   }
 }
-var theme37 = ({
+var theme38 = ({
   dt: dt2
 }) => `
 .p-tree {
@@ -94678,7 +95666,7 @@ var theme37 = ({
     height: 0;
 }
 `;
-var classes36 = {
+var classes37 = {
   root: ({
     instance
   }) => ({
@@ -94718,8 +95706,8 @@ var classes36 = {
 };
 var TreeStyle = class _TreeStyle extends BaseStyle {
   name = "tree";
-  theme = theme37;
-  classes = classes36;
+  theme = theme38;
+  classes = classes37;
   static \u0275fac = /* @__PURE__ */ (() => {
     let \u0275TreeStyle_BaseFactory;
     return function TreeStyle_Factory(__ngFactoryType__) {
@@ -96346,7 +97334,7 @@ var Tree2 = class _Tree extends BaseComponent {
     selectors: [["p-tree"]],
     contentQueries: function Tree_ContentQueries(rf, ctx, dirIndex) {
       if (rf & 1) {
-        \u0275\u0275contentQuery(dirIndex, _c518, 4);
+        \u0275\u0275contentQuery(dirIndex, _c519, 4);
         \u0275\u0275contentQuery(dirIndex, _c616, 4);
         \u0275\u0275contentQuery(dirIndex, _c713, 4);
         \u0275\u0275contentQuery(dirIndex, _c811, 4);
@@ -96355,7 +97343,7 @@ var Tree2 = class _Tree extends BaseComponent {
         \u0275\u0275contentQuery(dirIndex, _c1115, 4);
         \u0275\u0275contentQuery(dirIndex, _c1213, 4);
         \u0275\u0275contentQuery(dirIndex, _c1311, 4);
-        \u0275\u0275contentQuery(dirIndex, _c148, 4);
+        \u0275\u0275contentQuery(dirIndex, _c149, 4);
         \u0275\u0275contentQuery(dirIndex, PrimeTemplate, 4);
       }
       if (rf & 2) {
@@ -96375,7 +97363,7 @@ var Tree2 = class _Tree extends BaseComponent {
     },
     viewQuery: function Tree_Query(rf, ctx) {
       if (rf & 1) {
-        \u0275\u0275viewQuery(_c518, 5);
+        \u0275\u0275viewQuery(_c519, 5);
         \u0275\u0275viewQuery(_c156, 5);
         \u0275\u0275viewQuery(_c166, 5);
       }
@@ -96898,21 +97886,21 @@ var TreeModule = class _TreeModule {
 })();
 
 // node_modules/primeng/fesm2022/primeng-contextmenu.mjs
-var _c037 = ["sublist"];
-var _c149 = (a0, a1) => ({
+var _c038 = ["sublist"];
+var _c150 = (a0, a1) => ({
   "p-contextmenu-submenu": a0,
   "p-contextmenu-root-list": a1
 });
-var _c230 = () => ({
+var _c231 = () => ({
   "p-contextmenu-item-link": true
 });
-var _c327 = () => ({
+var _c328 = () => ({
   class: "p-contextmenu-submenu-icon"
 });
-var _c421 = () => ({
+var _c424 = () => ({
   exact: false
 });
-var _c519 = (a0) => ({
+var _c520 = (a0) => ({
   "p-contextmenu-item-link": true,
   "p-disabled": a0
 });
@@ -97007,7 +97995,7 @@ function ContextMenuSub_ul_0_ng_template_2_li_1_ng_container_3_a_1_ng_container_
     \u0275\u0275advance();
     \u0275\u0275property("ngIf", !ctx_r2.contextMenu.submenuIconTemplate && !ctx_r2.contextMenu._submenuIconTemplate);
     \u0275\u0275advance();
-    \u0275\u0275property("ngTemplateOutlet", ctx_r2.contextMenu.submenuIconTemplate || ctx_r2.contextMenu._submenuIconTemplate)("ngTemplateOutletContext", \u0275\u0275pureFunction0(3, _c327));
+    \u0275\u0275property("ngTemplateOutlet", ctx_r2.contextMenu.submenuIconTemplate || ctx_r2.contextMenu._submenuIconTemplate)("ngTemplateOutletContext", \u0275\u0275pureFunction0(3, _c328));
   }
 }
 function ContextMenuSub_ul_0_ng_template_2_li_1_ng_container_3_a_1_Template(rf, ctx) {
@@ -97020,7 +98008,7 @@ function ContextMenuSub_ul_0_ng_template_2_li_1_ng_container_3_a_1_Template(rf, 
     const htmlLabel_r6 = \u0275\u0275reference(4);
     const processedItem_r4 = \u0275\u0275nextContext(3).$implicit;
     const ctx_r2 = \u0275\u0275nextContext(2);
-    \u0275\u0275property("target", ctx_r2.getItemProp(processedItem_r4, "target"))("ngClass", \u0275\u0275pureFunction0(12, _c230));
+    \u0275\u0275property("target", ctx_r2.getItemProp(processedItem_r4, "target"))("ngClass", \u0275\u0275pureFunction0(12, _c231));
     \u0275\u0275attribute("href", ctx_r2.getItemProp(processedItem_r4, "url"), \u0275\u0275sanitizeUrl)("aria-hidden", true)("data-automationid", ctx_r2.getItemProp(processedItem_r4, "automationId"))("data-pc-section", "action")("tabindex", -1);
     \u0275\u0275advance();
     \u0275\u0275property("ngIf", ctx_r2.getItemProp(processedItem_r4, "icon"));
@@ -97108,7 +98096,7 @@ function ContextMenuSub_ul_0_ng_template_2_li_1_ng_container_3_a_2_ng_container_
     \u0275\u0275advance();
     \u0275\u0275property("ngIf", !ctx_r2.contextMenu.submenuIconTemplate && !ctx_r2.contextMenu._submenuIconTemplate);
     \u0275\u0275advance();
-    \u0275\u0275property("ngTemplateOutlet", !ctx_r2.contextMenu.submenuIconTemplate || !ctx_r2.contextMenu._submenuIconTemplate)("ngTemplateOutletContext", \u0275\u0275pureFunction0(3, _c327));
+    \u0275\u0275property("ngTemplateOutlet", !ctx_r2.contextMenu.submenuIconTemplate || !ctx_r2.contextMenu._submenuIconTemplate)("ngTemplateOutletContext", \u0275\u0275pureFunction0(3, _c328));
   }
 }
 function ContextMenuSub_ul_0_ng_template_2_li_1_ng_container_3_a_2_Template(rf, ctx) {
@@ -97121,7 +98109,7 @@ function ContextMenuSub_ul_0_ng_template_2_li_1_ng_container_3_a_2_Template(rf, 
     const htmlLabel_r7 = \u0275\u0275reference(4);
     const processedItem_r4 = \u0275\u0275nextContext(3).$implicit;
     const ctx_r2 = \u0275\u0275nextContext(2);
-    \u0275\u0275property("routerLink", ctx_r2.getItemProp(processedItem_r4, "routerLink"))("queryParams", ctx_r2.getItemProp(processedItem_r4, "queryParams"))("routerLinkActiveOptions", ctx_r2.getItemProp(processedItem_r4, "routerLinkActiveOptions") || \u0275\u0275pureFunction0(20, _c421))("target", ctx_r2.getItemProp(processedItem_r4, "target"))("ngClass", \u0275\u0275pureFunction1(21, _c519, ctx_r2.getItemProp(processedItem_r4, "disabled")))("fragment", ctx_r2.getItemProp(processedItem_r4, "fragment"))("queryParamsHandling", ctx_r2.getItemProp(processedItem_r4, "queryParamsHandling"))("preserveFragment", ctx_r2.getItemProp(processedItem_r4, "preserveFragment"))("skipLocationChange", ctx_r2.getItemProp(processedItem_r4, "skipLocationChange"))("replaceUrl", ctx_r2.getItemProp(processedItem_r4, "replaceUrl"))("state", ctx_r2.getItemProp(processedItem_r4, "state"));
+    \u0275\u0275property("routerLink", ctx_r2.getItemProp(processedItem_r4, "routerLink"))("queryParams", ctx_r2.getItemProp(processedItem_r4, "queryParams"))("routerLinkActiveOptions", ctx_r2.getItemProp(processedItem_r4, "routerLinkActiveOptions") || \u0275\u0275pureFunction0(20, _c424))("target", ctx_r2.getItemProp(processedItem_r4, "target"))("ngClass", \u0275\u0275pureFunction1(21, _c520, ctx_r2.getItemProp(processedItem_r4, "disabled")))("fragment", ctx_r2.getItemProp(processedItem_r4, "fragment"))("queryParamsHandling", ctx_r2.getItemProp(processedItem_r4, "queryParamsHandling"))("preserveFragment", ctx_r2.getItemProp(processedItem_r4, "preserveFragment"))("skipLocationChange", ctx_r2.getItemProp(processedItem_r4, "skipLocationChange"))("replaceUrl", ctx_r2.getItemProp(processedItem_r4, "replaceUrl"))("state", ctx_r2.getItemProp(processedItem_r4, "state"));
     \u0275\u0275attribute("data-automationid", ctx_r2.getItemProp(processedItem_r4, "automationId"))("tabindex", -1)("aria-hidden", true)("data-pc-section", "action");
     \u0275\u0275advance();
     \u0275\u0275property("ngIf", ctx_r2.getItemProp(processedItem_r4, "icon"));
@@ -97269,7 +98257,7 @@ function ContextMenuSub_ul_0_Template(rf, ctx) {
   }
   if (rf & 2) {
     const ctx_r2 = \u0275\u0275nextContext();
-    \u0275\u0275property("ngClass", \u0275\u0275pureFunction2(10, _c149, !ctx_r2.root, ctx_r2.root))("@overlayAnimation", ctx_r2.visible)("tabindex", ctx_r2.tabindex);
+    \u0275\u0275property("ngClass", \u0275\u0275pureFunction2(10, _c150, !ctx_r2.root, ctx_r2.root))("@overlayAnimation", ctx_r2.visible)("tabindex", ctx_r2.tabindex);
     \u0275\u0275attribute("id", ctx_r2.menuId + "_list")("aria-label", ctx_r2.ariaLabel)("aria-labelledBy", ctx_r2.ariaLabelledBy)("aria-activedescendant", ctx_r2.focusedItemId)("aria-orientation", "vertical")("data-pc-section", "menu");
     \u0275\u0275advance(2);
     \u0275\u0275property("ngForOf", ctx_r2.items);
@@ -97332,7 +98320,7 @@ function ContextMenu_div_0_Template(rf, ctx) {
     \u0275\u0275property("root", true)("items", ctx_r1.processedItems)("itemTemplate", ctx_r1.itemTemplate || ctx_r1._itemTemplate)("menuId", ctx_r1.id)("tabindex", !ctx_r1.disabled ? ctx_r1.tabindex : -1)("ariaLabel", ctx_r1.ariaLabel)("ariaLabelledBy", ctx_r1.ariaLabelledBy)("baseZIndex", ctx_r1.baseZIndex)("autoZIndex", ctx_r1.autoZIndex)("visible", ctx_r1.submenuVisible())("focusedItemId", ctx_r1.focused ? ctx_r1.focusedItemId : void 0)("activeItemPath", ctx_r1.activeItemPath());
   }
 }
-var theme38 = ({
+var theme39 = ({
   dt: dt2
 }) => `
 .p-contextmenu {
@@ -97492,7 +98480,7 @@ var theme38 = ({
     margin-right: auto;
 }
 `;
-var classes37 = {
+var classes38 = {
   root: "p-contextmenu p-component",
   rootList: "p-contextmenu-root-list",
   item: ({
@@ -97513,8 +98501,8 @@ var classes37 = {
 };
 var ContextMenuStyle = class _ContextMenuStyle extends BaseStyle {
   name = "contextmenu";
-  theme = theme38;
-  classes = classes37;
+  theme = theme39;
+  classes = classes38;
   static \u0275fac = /* @__PURE__ */ (() => {
     let \u0275ContextMenuStyle_BaseFactory;
     return function ContextMenuStyle_Factory(__ngFactoryType__) {
@@ -97666,7 +98654,7 @@ var ContextMenuSub = class _ContextMenuSub extends BaseComponent {
     selectors: [["p-contextMenuSub"], ["p-contextmenu-sub"]],
     viewQuery: function ContextMenuSub_Query(rf, ctx) {
       if (rf & 1) {
-        \u0275\u0275viewQuery(_c037, 5);
+        \u0275\u0275viewQuery(_c038, 5);
       }
       if (rf & 2) {
         let _t;
@@ -99058,7 +100046,6 @@ export {
   getOuterWidth,
   relativePosition,
   appendChild,
-  find,
   findSingle,
   focus,
   getBrowser,
@@ -99077,7 +100064,6 @@ export {
   isNotEmpty,
   resolveFieldData,
   equals2 as equals,
-  findIndexInList,
   findLastIndex,
   isPrintableCharacter,
   uuid,
@@ -99152,7 +100138,6 @@ export {
   IftaLabel,
   IftaLabelModule,
   zindexutils,
-  transformToBoolean,
   Tooltip,
   TooltipModule,
   Toast,
@@ -99208,6 +100193,12 @@ export {
   CompareTask,
   PromptKey,
   AiModel,
+  StepList,
+  Step,
+  StepPanel,
+  StepPanels,
+  Stepper,
+  StepperModule,
   Popover,
   PopoverModule,
   Toolbar,
@@ -99246,4 +100237,4 @@ export {
    * License: MIT
    *)
 */
-//# sourceMappingURL=chunk-PXZ4WSZL.js.map
+//# sourceMappingURL=chunk-YY665KVB.js.map

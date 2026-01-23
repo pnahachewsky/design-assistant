@@ -104,6 +104,12 @@ import {
   SpinnerIcon,
   SplitButton,
   SplitButtonModule,
+  Step,
+  StepList,
+  StepPanel,
+  StepPanels,
+  Stepper,
+  StepperModule,
   Tab,
   TabList,
   TabPanel,
@@ -150,8 +156,6 @@ import {
   definePreset,
   environment,
   equals,
-  find,
-  findIndexInList,
   findLastIndex,
   findSingle,
   focus,
@@ -176,11 +180,10 @@ import {
   removeClass,
   resolveFieldData,
   scrollInView,
-  transformToBoolean,
   unblockBodyScroll,
   uuid,
   zindexutils
-} from "./chunk-PXZ4WSZL.js";
+} from "./chunk-YY665KVB.js";
 import {
   ANIMATION_MODULE_TYPE,
   BehaviorSubject,
@@ -218,18 +221,14 @@ import {
   booleanAttribute,
   catchError,
   computed,
-  contentChild,
-  contentChildren,
   delay,
   effect,
   forwardRef,
   from,
   importProvidersFrom,
   inject,
-  input,
   makeEnvironmentProviders,
   map,
-  model,
   numberAttribute,
   of,
   performanceMarkFeature,
@@ -256,7 +255,6 @@ import {
   ɵɵclassProp,
   ɵɵconditional,
   ɵɵcontentQuery,
-  ɵɵcontentQuerySignal,
   ɵɵdefineComponent,
   ɵɵdefineDirective,
   ɵɵdefineInjectable,
@@ -290,7 +288,6 @@ import {
   ɵɵpureFunction1,
   ɵɵpureFunction2,
   ɵɵpureFunction3,
-  ɵɵqueryAdvance,
   ɵɵqueryRefresh,
   ɵɵreference,
   ɵɵresetView,
@@ -8247,7 +8244,7 @@ var ImageProcessorService = class _ImageProcessorService {
     }
     return this.translateWithFallback(text2, apiKey, identifier, 0);
   }
-  callTranslationAPI(text2, apiKey, model2, identifier) {
+  callTranslationAPI(text2, apiKey, model, identifier) {
     const systemPrompt = `You are a professional translator for the Canada Revenue Agency (CRA).
 Your task is to translate the following English text into clear, concise, and accurate Canadian French,
 using official CRA terminology and tone where applicable.
@@ -8264,7 +8261,7 @@ CRITICAL INSTRUCTIONS:
       { "role": "user", "content": text2 }
     ];
     const payload = {
-      model: model2,
+      model,
       messages,
       temperature: 0.1,
       max_tokens: Math.max(500, Math.ceil(text2.length * 2.5)),
@@ -8464,8 +8461,8 @@ var ImageAssistantStateService = class _ImageAssistantStateService {
       // Preserve selected model
     });
   }
-  setSelectedTranslationModel(model2) {
-    this.updateState({ selectedTranslationModel: model2 });
+  setSelectedTranslationModel(model) {
+    this.updateState({ selectedTranslationModel: model });
   }
   incrementProcessedCount() {
     const currentState = this.stateSubject.value;
@@ -10392,7 +10389,7 @@ var Dropdown = class _Dropdown extends BaseComponent {
   lastHiddenFocusableElementOnOverlay;
   // @todo to be refactored
   get hostClass() {
-    const classes15 = this._componentStyle.classes.root({
+    const classes14 = this._componentStyle.classes.root({
       instance: this
     }).map((cls) => {
       if (typeof cls === "string") {
@@ -10401,7 +10398,7 @@ var Dropdown = class _Dropdown extends BaseComponent {
         return Object.keys(cls).filter((key) => cls[key]).join(" ");
       }
     }).join(" ");
-    return classes15 + " " + this.styleClass;
+    return classes14 + " " + this.styleClass;
   }
   get hostStyle() {
     return this.style;
@@ -12191,8 +12188,8 @@ var SharedModelSelectorComponent = class _SharedModelSelectorComponent {
   }
   initializeModels() {
     if (this.models && this.models.length > 0) {
-      this.localModels = this.models.map((model2) => __spreadProps(__spreadValues({}, model2), {
-        name: this.translate.instant(model2.name)
+      this.localModels = this.models.map((model) => __spreadProps(__spreadValues({}, model), {
+        name: this.translate.instant(model.name)
       }));
     }
   }
@@ -13418,8 +13415,8 @@ var ImageAssistantComponent = class _ImageAssistantComponent {
     });
     this.processNextFile();
   }
-  onModelChange(model2) {
-    this.selectedVisionModel = model2;
+  onModelChange(model) {
+    this.selectedVisionModel = model;
     this.messageService.add({
       severity: "warn",
       summary: this.translate.instant("image.model.changeWarning"),
@@ -13428,8 +13425,8 @@ var ImageAssistantComponent = class _ImageAssistantComponent {
     });
     this.stateService.resetState();
   }
-  onTranslationModelChange(model2) {
-    this.stateService.setSelectedTranslationModel(model2);
+  onTranslationModelChange(model) {
+    this.stateService.setSelectedTranslationModel(model);
   }
   processNextFile() {
     return __async(this, null, function* () {
@@ -16673,7 +16670,7 @@ var render = function(iconDefinition) {
     maskId = null,
     title = null,
     titleId = null,
-    classes: classes15 = [],
+    classes: classes14 = [],
     attributes = {},
     styles: styles2 = {}
   } = params;
@@ -16718,7 +16715,7 @@ var render = function(iconDefinition) {
       extra: {
         attributes,
         styles: styles2,
-        classes: classes15
+        classes: classes14
       }
     });
   });
@@ -16820,7 +16817,7 @@ var Layers = {
       layer(assembler) {
         let params = arguments.length > 1 && arguments[1] !== void 0 ? arguments[1] : {};
         const {
-          classes: classes15 = []
+          classes: classes14 = []
         } = params;
         return domVariants({
           type: "layer"
@@ -16838,7 +16835,7 @@ var Layers = {
           return [{
             tag: "span",
             attributes: {
-              class: ["".concat(config.cssPrefix, "-layers"), ...classes15].join(" ")
+              class: ["".concat(config.cssPrefix, "-layers"), ...classes14].join(" ")
             },
             children
           }];
@@ -16854,7 +16851,7 @@ var LayersCounter = {
         let params = arguments.length > 1 && arguments[1] !== void 0 ? arguments[1] : {};
         const {
           title = null,
-          classes: classes15 = [],
+          classes: classes14 = [],
           attributes = {},
           styles: styles2 = {}
         } = params;
@@ -16872,7 +16869,7 @@ var LayersCounter = {
             extra: {
               attributes,
               styles: styles2,
-              classes: ["".concat(config.cssPrefix, "-layers-counter"), ...classes15]
+              classes: ["".concat(config.cssPrefix, "-layers-counter"), ...classes14]
             }
           });
         });
@@ -16888,7 +16885,7 @@ var LayersText = {
         const {
           transform = meaninglessTransform,
           title = null,
-          classes: classes15 = [],
+          classes: classes14 = [],
           attributes = {},
           styles: styles2 = {}
         } = params;
@@ -16907,7 +16904,7 @@ var LayersText = {
             extra: {
               attributes,
               styles: styles2,
-              classes: ["".concat(config.cssPrefix, "-layers-text"), ...classes15]
+              classes: ["".concat(config.cssPrefix, "-layers-text"), ...classes14]
             }
           });
         });
@@ -17482,7 +17479,7 @@ var faWarnIfIconSpecMissing = () => {
 var isKnownRotateValue = (rotate) => rotate != null && (rotate === 90 || rotate === 180 || rotate === 270 || rotate === "90" || rotate === "180" || rotate === "270");
 var faClassList = (props) => {
   const knownRotateValue = isKnownRotateValue(props.rotate);
-  const classes15 = {
+  const classes14 = {
     [`fa-${props.animation}`]: props.animation != null && !props.animation.startsWith("spin"),
     "fa-spin": props.animation === "spin" || props.animation === "spin-reverse",
     "fa-spin-pulse": props.animation === "spin-pulse" || props.animation === "spin-pulse-reverse",
@@ -17503,7 +17500,7 @@ var faClassList = (props) => {
     [`fa-pull-${props.pull}`]: props.pull !== null,
     [`fa-stack-${props.stackItemSize}`]: props.stackItemSize != null
   };
-  return Object.keys(classes15).map((key) => classes15[key] ? key : null).filter((key) => key);
+  return Object.keys(classes14).map((key) => classes14[key] ? key : null).filter((key) => key);
 };
 var cssInserted = /* @__PURE__ */ new WeakSet();
 var autoCssId = "fa-auto-css";
@@ -18545,8 +18542,8 @@ Return the French document in HTML format that exactly follows the structure of 
         { role: "user", content: combinedPrompt }
       ];
       let finalResponse = null;
-      for (const model2 of this.models) {
-        const aiResponse = yield this.getORData(model2, requestMessages, 0);
+      for (const model of this.models) {
+        const aiResponse = yield this.getORData(model, requestMessages, 0);
         const text2 = aiResponse?.choices?.[0]?.message?.content;
         if (text2) {
           finalResponse = this.removeCodeFences(text2);
@@ -18560,7 +18557,7 @@ Return the French document in HTML format that exactly follows the structure of 
   /**
    * Fetches data from OpenRouter API
    */
-  getORData(model2, messages, temperature = 0) {
+  getORData(model, messages, temperature = 0) {
     return __async(this, null, function* () {
       const apiKey = this.apiKeyService.getCurrentKey();
       if (!apiKey)
@@ -18571,7 +18568,7 @@ Return the French document in HTML format that exactly follows the structure of 
         Accept: "application/json",
         "X-Title": "Content Assistant"
       });
-      const payload = { model: model2, messages, temperature };
+      const payload = { model, messages, temperature };
       try {
         const resp = yield this.http.post(this.openRouterApiUrl, payload, {
           headers,
@@ -18591,7 +18588,7 @@ Return the French document in HTML format that exactly follows the structure of 
         const httpErr = err;
         const status = httpErr?.status;
         const bodySnippet = typeof httpErr?.error === "string" ? httpErr.error.slice(0, 500) : JSON.stringify(httpErr?.error);
-        console.error(`OpenRouter HTTP error (model: ${model2}) status=${status}: ${bodySnippet}`);
+        console.error(`OpenRouter HTTP error (model: ${model}) status=${status}: ${bodySnippet}`);
         return void 0;
       }
     });
@@ -18824,8 +18821,8 @@ var TranslationAssistantComponent = class _TranslationAssistantComponent {
     this.previewText = "";
     this.showSecondUpload = false;
     this.sourceError = "";
-    const input2 = event.target;
-    this.selectedFile = input2.files?.[0] ?? null;
+    const input = event.target;
+    this.selectedFile = input.files?.[0] ?? null;
     if (this.selectedFile) {
       this.buildEnglishHtmlStored(this.selectedFile).catch(console.error);
     }
@@ -22370,7 +22367,7 @@ var AutoComplete = class _AutoComplete extends BaseComponent {
   }
   isSelected(option) {
     if (this.multiple) {
-      return this.unique ? this.modelValue()?.find((model2) => equals(model2, this.getOptionValue(option), this.equalityKey())) : false;
+      return this.unique ? this.modelValue()?.find((model) => equals(model, this.getOptionValue(option), this.equalityKey())) : false;
     }
     return equals(this.modelValue(), this.getOptionValue(option), this.equalityKey());
   }
@@ -27809,8 +27806,8 @@ var InventoryAssistantComponent = class _InventoryAssistantComponent {
   /**
    * Splits a multi-line string into a clean array of trimmed, non-empty URLs.
    */
-  getCleanUrls(input2) {
-    return input2.split("\n").map((url) => url.trim()).filter((url) => url.length > 0);
+  getCleanUrls(input) {
+    return input.split("\n").map((url) => url.trim()).filter((url) => url.length > 0);
   }
   /**
    * Processes a single URL, extracting metadata and updating the results buffer.
@@ -27900,9 +27897,9 @@ var InventoryAssistantComponent = class _InventoryAssistantComponent {
   /**
    * Extract metadata for preview URLs using local CSV data.
    */
-  fetchPreviewMetadata(input2) {
+  fetchPreviewMetadata(input) {
     return __async(this, null, function* () {
-      const urls = this.getCleanUrls(input2);
+      const urls = this.getCleanUrls(input);
       if (!urls.length)
         return;
       this.loading = true;
@@ -28242,13 +28239,13 @@ var MetadataAssistantService = class _MetadataAssistantService {
       return throwError(() => error);
     }));
   }
-  processUrl(url, model2, translateToFrench, fallbackModels, translationModel) {
+  processUrl(url, model, translateToFrench, fallbackModels, translationModel) {
     return this.scrapeUrl(url).pipe(switchMap((scrapedContent) => {
       if (!scrapedContent || scrapedContent.length < 50) {
         return throwError(() => new Error(this.translate.instant("metadata.errors.contentTooShort")));
       }
       const language = this.detectLanguage(scrapedContent);
-      return this.generateMetadataWithFallback(scrapedContent, model2, language, fallbackModels).pipe(switchMap((metadata) => {
+      return this.generateMetadataWithFallback(scrapedContent, model, language, fallbackModels).pipe(switchMap((metadata) => {
         const result = {
           url,
           scrapedContent,
@@ -28491,7 +28488,7 @@ var MetadataAssistantService = class _MetadataAssistantService {
     const errorLower = typeof errorMessage === "string" ? errorMessage.toLowerCase() : "";
     return errorLower.includes("rate limit") || errorLower.includes("quota exceeded") || errorLower.includes("too many requests") || errorLower.includes("429") || errorLower.includes("key limit exceeded") || errorAny.status === 403 || errorAny.status === 429;
   }
-  generateMetadata(content, model2, language) {
+  generateMetadata(content, model, language) {
     const apiKey = this.apiKeyService.getCurrentKey();
     if (!apiKey) {
       return throwError(() => new Error(this.translate.instant("metadata.errors.noApiKey")));
@@ -28570,8 +28567,8 @@ Keywords (comma-separated list only):` : `En tant qu'expert en optimisation pour
 ${content}
 
 Mots-cl\xE9s (liste s\xE9par\xE9e par des virgules uniquement):`;
-    return this.callOpenRouter(descriptionPrompt, model2, 200).pipe(switchMap((description) => {
-      return this.callOpenRouter(keywordsPrompt, model2, 100).pipe(map((keywords) => ({
+    return this.callOpenRouter(descriptionPrompt, model, 200).pipe(switchMap((description) => {
+      return this.callOpenRouter(keywordsPrompt, model, 100).pipe(map((keywords) => ({
         description: this.cleanMetadataResponse(description),
         keywords: this.cleanKeywordsResponse(keywords)
       })));
@@ -28584,7 +28581,7 @@ Mots-cl\xE9s (liste s\xE9par\xE9e par des virgules uniquement):`;
     }
     return this.translateWithFallback(metadata, 0);
   }
-  translateWithModel(metadata, model2) {
+  translateWithModel(metadata, model) {
     const descriptionPrompt = `You are a professional translator specializing in Canadian government content. Translate the following English meta description to French, maintaining the formal tone used by the Canada Revenue Agency (CRA).
 
 Important CRA-specific terminology:
@@ -28632,11 +28629,11 @@ French translation (text only):`;
 ${metadata.keywords}
 
 French keywords (comma-separated list only):`;
-    return this.callOpenRouter(descriptionPrompt, model2, 200, this.TRANSLATION_TIMEOUT).pipe(
+    return this.callOpenRouter(descriptionPrompt, model, 200, this.TRANSLATION_TIMEOUT).pipe(
       retry({ count: 1, delay: 2e3 }),
       // Retry once after 2 seconds for cold starts
       switchMap((description) => {
-        return this.callOpenRouter(keywordsPrompt, model2, 100, this.TRANSLATION_TIMEOUT).pipe(retry({ count: 1, delay: 2e3 }), map((keywords) => ({
+        return this.callOpenRouter(keywordsPrompt, model, 100, this.TRANSLATION_TIMEOUT).pipe(retry({ count: 1, delay: 2e3 }), map((keywords) => ({
           description: this.cleanMetadataResponse(description),
           keywords: this.cleanKeywordsResponse(keywords)
         })));
@@ -28719,7 +28716,7 @@ French keywords (comma-separated list only):`;
       })
     );
   }
-  callOpenRouter(prompt, model2, maxTokens, timeoutMs = this.API_TIMEOUT) {
+  callOpenRouter(prompt, model, maxTokens, timeoutMs = this.API_TIMEOUT) {
     const apiKey = this.apiKeyService.getCurrentKey();
     if (!apiKey) {
       return throwError(() => new Error(this.translate.instant("metadata.errors.noApiKey")));
@@ -28735,7 +28732,7 @@ French keywords (comma-separated list only):`;
       content: "You are a precise metadata generator. Output ONLY the requested content with absolutely NO reasoning, NO explanations, NO thinking process, NO preamble, and NO additional commentary. Your response must contain ONLY the final answer."
     };
     const payload = {
-      model: model2,
+      model,
       messages: [systemMessage, { role: "user", content: prompt }],
       max_tokens: maxTokens,
       temperature: 0.1,
@@ -28890,12 +28887,12 @@ French keywords (comma-separated list only):`;
     }));
   }
   // New document processing methods for enhanced document upload
-  processEnglishDocument(file, model2, translationModel) {
+  processEnglishDocument(file, model, translationModel) {
     return from(this.extractDocumentText(file)).pipe(switchMap((content) => {
       if (!content || content.length < 50) {
         return throwError(() => new Error(this.translate.instant("metadata.errors.documentContentTooShort")));
       }
-      return this.generateMetadata(content, model2, "en").pipe(switchMap((englishMetadata) => {
+      return this.generateMetadata(content, model, "en").pipe(switchMap((englishMetadata) => {
         return this.translateMetadata(englishMetadata, translationModel).pipe(map((frenchTranslation) => ({
           englishMetadata,
           frenchTranslation
@@ -28911,12 +28908,12 @@ French keywords (comma-separated list only):`;
       return this.generateMetadataFromDocument(content);
     }));
   }
-  processFrenchDocumentWithEnglishTranslation(file, model2, translationModel) {
+  processFrenchDocumentWithEnglishTranslation(file, model, translationModel) {
     return from(this.extractDocumentText(file)).pipe(switchMap((content) => {
       if (!content || content.length < 50) {
         return throwError(() => new Error(this.translate.instant("metadata.errors.documentContentTooShort")));
       }
-      return this.generateMetadata(content, model2, "fr").pipe(switchMap((frenchMetadata) => {
+      return this.generateMetadata(content, model, "fr").pipe(switchMap((frenchMetadata) => {
         return this.translateMetadataToEnglish(frenchMetadata, translationModel).pipe(map((englishTranslation) => ({
           frenchMetadata,
           englishTranslation
@@ -28925,8 +28922,8 @@ French keywords (comma-separated list only):`;
     }));
   }
   translateMetadataToEnglish(metadata, selectedModel) {
-    const model2 = selectedModel || "anthropic/claude-3.5-sonnet";
-    console.log(`Translating French to English using model: ${model2}`);
+    const model = selectedModel || "anthropic/claude-3.5-sonnet";
+    console.log(`Translating French to English using model: ${model}`);
     const descriptionPrompt = `You are a professional translator specializing in Canadian government content. Translate the following French meta description to English, maintaining the formal tone used by the Canada Revenue Agency (CRA).
 
 Important CRA-specific terminology:
@@ -28974,15 +28971,15 @@ English translation (text only):`;
 ${metadata.keywords}
 
 English keywords (comma-separated list only):`;
-    return this.callOpenRouter(descriptionPrompt, model2, 200, this.TRANSLATION_TIMEOUT).pipe(retry({ count: 1, delay: 2e3 }), switchMap((description) => {
-      return this.callOpenRouter(keywordsPrompt, model2, 100, this.TRANSLATION_TIMEOUT).pipe(retry({ count: 1, delay: 2e3 }), map((keywords) => ({
+    return this.callOpenRouter(descriptionPrompt, model, 200, this.TRANSLATION_TIMEOUT).pipe(retry({ count: 1, delay: 2e3 }), switchMap((description) => {
+      return this.callOpenRouter(keywordsPrompt, model, 100, this.TRANSLATION_TIMEOUT).pipe(retry({ count: 1, delay: 2e3 }), map((keywords) => ({
         description: this.cleanMetadataResponse(description),
         keywords: this.cleanKeywordsResponse(keywords)
       })));
     }));
   }
-  processBothDocuments(englishFile, frenchFile, model2) {
-    return this.processEnglishDocument(englishFile, model2).pipe(switchMap((englishResult) => {
+  processBothDocuments(englishFile, frenchFile, model) {
+    return this.processEnglishDocument(englishFile, model).pipe(switchMap((englishResult) => {
       return this.processFrenchDocument(frenchFile).pipe(switchMap((frenchDocMetadata) => {
         return this.evaluateMetadata(englishResult.frenchTranslation, frenchDocMetadata).pipe(map((comparison) => ({
           englishMetadata: englishResult.englishMetadata,
@@ -28994,7 +28991,7 @@ English keywords (comma-separated list only):`;
     }));
   }
   // New method for document tab - extracts text, detects language, generates metadata
-  processDocumentForMetadata(file, model2) {
+  processDocumentForMetadata(file, model) {
     return from(this.extractDocumentText(file)).pipe(switchMap((content) => {
       if (!content || content.length < 50) {
         return throwError(() => new Error(this.translate.instant("metadata.errors.documentContentTooShort")));
@@ -29016,7 +29013,7 @@ English keywords (comma-separated list only):`;
           }
         })));
       } else {
-        return this.generateMetadata(content, model2, language).pipe(map((metadata) => ({
+        return this.generateMetadata(content, model, language).pipe(map((metadata) => ({
           language,
           text: content,
           metadata: {
@@ -29026,7 +29023,7 @@ English keywords (comma-separated list only):`;
             metaDescription: metadata.description,
             metaKeywords: metadata.keywords,
             language: "en",
-            modelUsed: model2,
+            modelUsed: model,
             fallbackUsed: false
           }
         })));
@@ -29082,8 +29079,8 @@ M\xE9ta-description (texte uniquement):`;
 ${content}
 
 Mots-cl\xE9s (liste s\xE9par\xE9e par des virgules uniquement):`;
-    const model2 = "anthropic/claude-3.5-sonnet";
-    return this.callOpenRouter(descriptionPrompt, model2, 200).pipe(retry({
+    const model = "anthropic/claude-3.5-sonnet";
+    return this.callOpenRouter(descriptionPrompt, model, 200).pipe(retry({
       count: 2,
       delay: (error, retryCount) => {
         if (error.status === 503 || error.status === 502) {
@@ -29094,7 +29091,7 @@ Mots-cl\xE9s (liste s\xE9par\xE9e par des virgules uniquement):`;
         throw error;
       }
     }), switchMap((description) => {
-      return this.callOpenRouter(keywordsPrompt, model2, 100).pipe(retry({
+      return this.callOpenRouter(keywordsPrompt, model, 100).pipe(retry({
         count: 2,
         delay: (error, retryCount) => {
           if (error.status === 503 || error.status === 502) {
@@ -29145,8 +29142,8 @@ Format EXACT requis (copiez cette structure):
 DESCRIPTION: [la m\xE9ta-description finale sugg\xE9r\xE9e, maximum 275 caract\xE8res]
 KEYWORDS: [les mots-cl\xE9s finaux sugg\xE9r\xE9s, s\xE9par\xE9s par des virgules]
 RATIONALE: [expliquez quelle version vous avez privil\xE9gi\xE9e et pourquoi, bas\xE9 sur: clart\xE9, pr\xE9cision terminologique, compl\xE9tude, ou combinaison]`;
-    const model2 = "anthropic/claude-3.5-sonnet";
-    return this.callOpenRouter(evaluationPrompt, model2, 500, this.TRANSLATION_TIMEOUT).pipe(retry({ count: 1, delay: 2e3 }), map((response) => {
+    const model = "anthropic/claude-3.5-sonnet";
+    return this.callOpenRouter(evaluationPrompt, model, 500, this.TRANSLATION_TIMEOUT).pipe(retry({ count: 1, delay: 2e3 }), map((response) => {
       console.log("===== RAW EVALUATION RESPONSE START =====");
       console.log(response);
       console.log("===== RAW EVALUATION RESPONSE END =====");
@@ -29159,7 +29156,7 @@ RATIONALE: [expliquez quelle version vous avez privil\xE9gi\xE9e et pourquoi, ba
 ${result.rationale}
 
 English translation:`;
-      return this.callOpenRouter(translationPrompt, model2, 300, this.TRANSLATION_TIMEOUT).pipe(retry({ count: 1, delay: 2e3 }), map((englishRationale) => __spreadProps(__spreadValues({}, result), {
+      return this.callOpenRouter(translationPrompt, model, 300, this.TRANSLATION_TIMEOUT).pipe(retry({ count: 1, delay: 2e3 }), map((englishRationale) => __spreadProps(__spreadValues({}, result), {
         rationaleEnglish: this.cleanMetadataResponse(englishRationale)
       })), catchError((error) => {
         console.warn("Failed to translate rationale to English:", error);
@@ -29207,8 +29204,8 @@ EXACT required format (copy this structure):
 DESCRIPTION: [the suggested final meta description, maximum 275 characters]
 KEYWORDS: [the suggested final keywords, comma-separated]
 RATIONALE: [explain which version you preferred and why, based on: clarity, terminological precision, completeness, or combination]`;
-    const model2 = "anthropic/claude-3.5-sonnet";
-    return this.callOpenRouter(evaluationPrompt, model2, 500, this.TRANSLATION_TIMEOUT).pipe(retry({ count: 1, delay: 2e3 }), map((response) => {
+    const model = "anthropic/claude-3.5-sonnet";
+    return this.callOpenRouter(evaluationPrompt, model, 500, this.TRANSLATION_TIMEOUT).pipe(retry({ count: 1, delay: 2e3 }), map((response) => {
       console.log("===== RAW EVALUATION RESPONSE (ENGLISH) START =====");
       console.log(response);
       console.log("===== RAW EVALUATION RESPONSE (ENGLISH) END =====");
@@ -29367,7 +29364,7 @@ var MetadataAssistantStateService = class _MetadataAssistantStateService {
     const currentState = this.getState();
     this.stateSubject.next(__spreadValues(__spreadValues({}, currentState), updates));
   }
-  startProcessing(urls, model2, translateToFrench) {
+  startProcessing(urls, model, translateToFrench) {
     this.updateState({
       isProcessing: true,
       currentStep: "scraping",
@@ -29376,7 +29373,7 @@ var MetadataAssistantStateService = class _MetadataAssistantStateService {
       processedUrls: 0,
       results: [],
       error: null,
-      selectedModel: model2,
+      selectedModel: model,
       translateToFrench
     });
   }
@@ -29417,11 +29414,11 @@ var MetadataAssistantStateService = class _MetadataAssistantStateService {
   reset() {
     this.stateSubject.next(this.initialState);
   }
-  setSelectedModel(model2) {
-    this.updateState({ selectedModel: model2 });
+  setSelectedModel(model) {
+    this.updateState({ selectedModel: model });
   }
-  setSelectedTranslationModel(model2) {
-    this.updateState({ selectedTranslationModel: model2 });
+  setSelectedTranslationModel(model) {
+    this.updateState({ selectedTranslationModel: model });
   }
   setTranslateToFrench(translate) {
     this.updateState({ translateToFrench: translate });
@@ -30342,17 +30339,17 @@ var Tag = class _Tag extends BaseComponent {
     });
   }
   containerClass() {
-    let classes15 = "p-tag p-component";
+    let classes14 = "p-tag p-component";
     if (this.severity) {
-      classes15 += ` p-tag-${this.severity}`;
+      classes14 += ` p-tag-${this.severity}`;
     }
     if (this.rounded) {
-      classes15 += " p-tag-rounded";
+      classes14 += " p-tag-rounded";
     }
     if (this.styleClass) {
-      classes15 += ` ${this.styleClass}`;
+      classes14 += ` ${this.styleClass}`;
     }
-    return classes15;
+    return classes14;
   }
   static \u0275fac = /* @__PURE__ */ (() => {
     let \u0275Tag_BaseFactory;
@@ -30885,20 +30882,20 @@ var DocumentUploadComponent = class _DocumentUploadComponent {
   }
   // English file handlers
   onEnglishFileSelected(event) {
-    const input2 = event.target;
-    if (input2.files && input2.files.length > 0) {
-      const file = input2.files[0];
+    const input = event.target;
+    if (input.files && input.files.length > 0) {
+      const file = input.files[0];
       if (this.isDocx(file)) {
         this.englishFile = file;
         this.englishFileSelected.emit(this.englishFile);
         this.stateService.setEnglishDocument(this.englishFile);
       }
     }
-    input2.value = "";
+    input.value = "";
   }
   onEnglishFileInputClick(event) {
-    const input2 = event.target;
-    input2.value = "";
+    const input = event.target;
+    input.value = "";
   }
   onEnglishDragOver(event) {
     event.preventDefault();
@@ -30926,20 +30923,20 @@ var DocumentUploadComponent = class _DocumentUploadComponent {
   }
   // French file handlers
   onFrenchFileSelected(event) {
-    const input2 = event.target;
-    if (input2.files && input2.files.length > 0) {
-      const file = input2.files[0];
+    const input = event.target;
+    if (input.files && input.files.length > 0) {
+      const file = input.files[0];
       if (this.isDocx(file)) {
         this.frenchFile = file;
         this.frenchFileSelected.emit(this.frenchFile);
         this.stateService.setFrenchDocument(this.frenchFile);
       }
     }
-    input2.value = "";
+    input.value = "";
   }
   onFrenchFileInputClick(event) {
-    const input2 = event.target;
-    input2.value = "";
+    const input = event.target;
+    input.value = "";
   }
   onFrenchDragOver(event) {
     event.preventDefault();
@@ -33540,8 +33537,8 @@ var MetadataAssistantComponent = class _MetadataAssistantComponent {
   onUrlsChange(urls) {
     this.urls = urls;
   }
-  onUrlInputChange(input2) {
-    this.urlInput = input2;
+  onUrlInputChange(input) {
+    this.urlInput = input;
   }
   isValidUrl(url) {
     try {
@@ -33551,11 +33548,11 @@ var MetadataAssistantComponent = class _MetadataAssistantComponent {
       return false;
     }
   }
-  onModelChange(model2) {
-    this.stateService.setSelectedModel(model2);
+  onModelChange(model) {
+    this.stateService.setSelectedModel(model);
   }
-  onTranslationModelChange(model2) {
-    this.stateService.setSelectedTranslationModel(model2);
+  onTranslationModelChange(model) {
+    this.stateService.setSelectedTranslationModel(model);
   }
   onTranslateToggle(translate) {
     this.stateService.setTranslateToFrench(translate);
@@ -33647,8 +33644,8 @@ var MetadataAssistantComponent = class _MetadataAssistantComponent {
     return "metadata.translationModelSelector.title";
   }
   getModelDisplayName(modelValue) {
-    const model2 = this.models.find((m) => m.value === modelValue);
-    return model2 ? model2.name : modelValue;
+    const model = this.models.find((m) => m.value === modelValue);
+    return model ? model.name : modelValue;
   }
   onDocumentSelected(file, resultIndex) {
     if (!this.apiKeyService.hasApiKey$.value) {
@@ -34886,1003 +34883,16 @@ var TestComponent = class _TestComponent {
   (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(TestComponent, { className: "TestComponent", filePath: "src/app/views/example/test.component.ts", lineNumber: 24 });
 })();
 
-// node_modules/primeng/fesm2022/primeng-stepper.mjs
-var _c014 = ["*"];
-var _c115 = ["content"];
-var _c28 = (a0, a1, a2) => ({
-  activateCallback: a0,
-  value: a1,
-  active: a2
-});
-function Step_Conditional_0_Conditional_5_Template(rf, ctx) {
-  if (rf & 1) {
-    \u0275\u0275element(0, "p-stepper-separator");
-  }
-}
-function Step_Conditional_0_Template(rf, ctx) {
-  if (rf & 1) {
-    const _r1 = \u0275\u0275getCurrentView();
-    \u0275\u0275elementStart(0, "button", 0);
-    \u0275\u0275listener("click", function Step_Conditional_0_Template_button_click_0_listener() {
-      \u0275\u0275restoreView(_r1);
-      const ctx_r1 = \u0275\u0275nextContext();
-      return \u0275\u0275resetView(ctx_r1.onStepClick());
-    });
-    \u0275\u0275elementStart(1, "span", 1);
-    \u0275\u0275text(2);
-    \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(3, "span", 2);
-    \u0275\u0275projection(4);
-    \u0275\u0275elementEnd()();
-    \u0275\u0275template(5, Step_Conditional_0_Conditional_5_Template, 1, 0, "p-stepper-separator");
-  }
-  if (rf & 2) {
-    const ctx_r1 = \u0275\u0275nextContext();
-    \u0275\u0275property("tabindex", ctx_r1.isStepDisabled() ? -1 : void 0)("disabled", ctx_r1.isStepDisabled());
-    \u0275\u0275attribute("id", ctx_r1.id())("role", "tab")("aria-controls", ctx_r1.ariaControls());
-    \u0275\u0275advance(2);
-    \u0275\u0275textInterpolate(ctx_r1.value());
-    \u0275\u0275advance(3);
-    \u0275\u0275conditional(ctx_r1.isSeparatorVisible() ? 5 : -1);
-  }
-}
-function Step_Conditional_1_ng_container_0_Template(rf, ctx) {
-  if (rf & 1) {
-    \u0275\u0275elementContainer(0);
-  }
-}
-function Step_Conditional_1_Conditional_1_Template(rf, ctx) {
-  if (rf & 1) {
-    \u0275\u0275element(0, "p-stepper-separator");
-  }
-}
-function Step_Conditional_1_Template(rf, ctx) {
-  if (rf & 1) {
-    \u0275\u0275template(0, Step_Conditional_1_ng_container_0_Template, 1, 0, "ng-container", 3)(1, Step_Conditional_1_Conditional_1_Template, 1, 0, "p-stepper-separator");
-  }
-  if (rf & 2) {
-    const ctx_r1 = \u0275\u0275nextContext();
-    \u0275\u0275property("ngTemplateOutlet", ctx_r1.content || ctx_r1._contentTemplate)("ngTemplateOutletContext", \u0275\u0275pureFunction3(3, _c28, ctx_r1.onStepClick.bind(ctx_r1), ctx_r1.value(), ctx_r1.active()));
-    \u0275\u0275advance();
-    \u0275\u0275conditional(ctx_r1.isSeparatorVisible() ? 1 : -1);
-  }
-}
-var _c36 = (a0) => ({
-  transitionParams: a0
-});
-var _c46 = (a0) => ({
-  value: "visible",
-  params: a0
-});
-var _c56 = (a0) => ({
-  value: "hidden",
-  params: a0
-});
-function StepPanel_Conditional_0_Template(rf, ctx) {
-  if (rf & 1) {
-    \u0275\u0275element(0, "p-stepper-separator");
-  }
-}
-function StepPanel_Conditional_2_ng_container_0_Template(rf, ctx) {
-  if (rf & 1) {
-    \u0275\u0275elementContainer(0);
-  }
-}
-function StepPanel_Conditional_2_Template(rf, ctx) {
-  if (rf & 1) {
-    \u0275\u0275template(0, StepPanel_Conditional_2_ng_container_0_Template, 1, 0, "ng-container", 1);
-  }
-  if (rf & 2) {
-    const ctx_r0 = \u0275\u0275nextContext();
-    \u0275\u0275property("ngTemplateOutlet", ctx_r0.contentTemplate || ctx_r0._contentTemplate)("ngTemplateOutletContext", \u0275\u0275pureFunction3(2, _c28, ctx_r0.updateValue.bind(ctx_r0), ctx_r0.value(), ctx_r0.active()));
-  }
-}
-var theme10 = ({
-  dt
-}) => `
-.p-steplist {
-    position: relative;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin: 0;
-    padding: 0;
-    list-style-type: none;
-    overflow-x: auto;
-}
-
-.p-step {
-    position: relative;
-    display: flex;
-    flex: 1 1 auto;
-    align-items: center;
-    gap: ${dt("stepper.step.gap")};
-    padding: ${dt("stepper.step.padding")};
-}
-
-.p-step:last-of-type {
-    flex: initial;
-}
-
-.p-step-header {
-    border: 0 none;
-    display: inline-flex;
-    align-items: center;
-    text-decoration: none;
-    cursor: pointer;
-    transition: background ${dt("stepper.transition.duration")}, color ${dt("stepper.transition.duration")}, border-color ${dt("stepper.transition.duration")}, outline-color ${dt("stepper.transition.duration")}, box-shadow ${dt("stepper.transition.duration")};
-    border-radius: ${dt("stepper.step.header.border.radius")};
-    outline-color: transparent;
-    background: transparent;
-    padding: ${dt("stepper.step.header.padding")};
-    gap: ${dt("stepper.step.header.gap")};
-}
-
-.p-step-header:focus-visible {
-    box-shadow: ${dt("stepper.step.header.focus.ring.shadow")};
-    outline: ${dt("stepper.step.header.focus.ring.width")} ${dt("stepper.step.header.focus.ring.style")} ${dt("stepper.step.header.focus.ring.color")};
-    outline-offset: ${dt("stepper.step.header.focus.ring.offset")};
-}
-
-.p-stepper.p-stepper-readonly .p-step {
-    cursor: auto;
-}
-
-.p-step-title {
-    display: block;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    max-width: 100%;
-    color: ${dt("stepper.step.title.color")};
-    font-weight: ${dt("stepper.step.title.font.weight")};
-    transition: background ${dt("stepper.transition.duration")}, color ${dt("stepper.transition.duration")}, border-color ${dt("stepper.transition.duration")}, box-shadow ${dt("stepper.transition.duration")}, outline-color ${dt("stepper.transition.duration")};
-}
-
-.p-step-number {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: ${dt("stepper.step.number.color")};
-    border: 2px solid ${dt("stepper.step.number.border.color")};
-    background: ${dt("stepper.step.number.background")};
-    min-width: ${dt("stepper.step.number.size")};
-    height: ${dt("stepper.step.number.size")};
-    line-height: ${dt("stepper.step.number.size")};
-    font-size: ${dt("stepper.step.number.font.size")};
-    z-index: 1;
-    border-radius: ${dt("stepper.step.number.border.radius")};
-    position: relative;
-    font-weight: ${dt("stepper.step.number.font.weight")};
-}
-
-.p-step-number::after {
-    content: " ";
-    position: absolute;
-    width: 100%;
-    height: 100%;
-    border-radius: ${dt("stepper.step.number.border.radius")};
-    box-shadow: ${dt("stepper.step.number.shadow")};
-}
-
-.p-step-active .p-step-header {
-    cursor: default;
-}
-
-.p-step-active .p-step-number {
-    background: ${dt("stepper.step.number.active.background")};
-    border-color: ${dt("stepper.step.number.active.border.color")};
-    color: ${dt("stepper.step.number.active.color")};
-}
-
-.p-step-active .p-step-title {
-    color: ${dt("stepper.step.title.active.color")};
-}
-
-.p-step:not(.p-disabled):focus-visible {
-    outline: ${dt("focus.ring.width")} ${dt("focus.ring.style")} ${dt("focus.ring.color")};
-    outline-offset: ${dt("focus.ring.offset")};
-}
-
-.p-step:has(~ .p-step-active) .p-stepper-separator {
-    background: ${dt("stepper.separator.active.background")};
-}
-
-.p-stepper-separator {
-    flex: 1 1 0;
-    background: ${dt("stepper.separator.background")};
-    width: 100%;
-    height: ${dt("stepper.separator.size")};
-    transition: background ${dt("stepper.transition.duration")}, color ${dt("stepper.transition.duration")}, border-color ${dt("stepper.transition.duration")}, box-shadow ${dt("stepper.transition.duration")}, outline-color ${dt("stepper.transition.duration")};
-}
-
-.p-steppanels {
-    padding: ${dt("stepper.steppanels.padding")};
-}
-
-.p-steppanel {
-    background: ${dt("stepper.steppanel.background")};
-    color: ${dt("stepper.steppanel.color")};
-}
-
-.p-stepper:has(.p-stepitem) {
-    display: flex;
-    flex-direction: column;
-}
-
-.p-stepitem {
-    display: flex;
-    flex-direction: column;
-    flex: initial;
-}
-
-.p-stepitem.p-stepitem-active {
-    flex: 1 1 auto;
-}
-
-.p-stepitem .p-step {
-    flex: initial;
-}
-
-.p-stepitem .p-steppanel-content {
-    width: 100%;
-    padding: ${dt("stepper.steppanel.padding")};
-    margin-inline-start: 1rem;
-}
-
-.p-stepitem .p-steppanel {
-    display: flex;
-    flex: 1 1 auto;
-}
-
-.p-stepitem .p-stepper-separator {
-    flex: 0 0 auto;
-    width: ${dt("stepper.separator.size")};
-    height: auto;
-    margin: ${dt("stepper.separator.margin")};
-    position: relative;
-    left: calc(-1 * ${dt("stepper.separator.size")});
-}
-
-.p-stepitem .p-stepper-separator:dir(rtl) {
-    left: calc(-9 * ${dt("stepper.separator.size")});
-}
-
-.p-stepitem:has(~ .p-stepitem-active) .p-stepper-separator {
-    background: ${dt("stepper.separator.active.background")};
-}
-
-.p-stepitem:last-of-type .p-steppanel {
-    padding-inline-start: ${dt("stepper.step.number.size")};
-}
-/* For PrimeNG */
-.p-steppanel {
-    overflow: hidden;
-}
-
-.p-stepppanel:not(.ng-animating) {
-    overflow: inherit;
-}
-`;
-var classes10 = {
-  root: ({
-    props
-  }) => ["p-stepper p-component", {
-    "p-readonly": props.linear
-  }],
-  separator: "p-stepper-separator"
-};
-var StepperStyle = class _StepperStyle extends BaseStyle {
-  name = "stepper";
-  theme = theme10;
-  classes = classes10;
-  static \u0275fac = /* @__PURE__ */ (() => {
-    let \u0275StepperStyle_BaseFactory;
-    return function StepperStyle_Factory(__ngFactoryType__) {
-      return (\u0275StepperStyle_BaseFactory || (\u0275StepperStyle_BaseFactory = \u0275\u0275getInheritedFactory(_StepperStyle)))(__ngFactoryType__ || _StepperStyle);
-    };
-  })();
-  static \u0275prov = /* @__PURE__ */ \u0275\u0275defineInjectable({
-    token: _StepperStyle,
-    factory: _StepperStyle.\u0275fac
-  });
-};
-(() => {
-  (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(StepperStyle, [{
-    type: Injectable
-  }], null, null);
-})();
-var StepperClasses;
-(function(StepperClasses2) {
-  StepperClasses2["root"] = "p-stepper";
-  StepperClasses2["separator"] = "p-stepper-separator";
-})(StepperClasses || (StepperClasses = {}));
-var StepList = class _StepList extends BaseComponent {
-  steps = contentChildren(forwardRef(() => Step));
-  static \u0275fac = /* @__PURE__ */ (() => {
-    let \u0275StepList_BaseFactory;
-    return function StepList_Factory(__ngFactoryType__) {
-      return (\u0275StepList_BaseFactory || (\u0275StepList_BaseFactory = \u0275\u0275getInheritedFactory(_StepList)))(__ngFactoryType__ || _StepList);
-    };
-  })();
-  static \u0275cmp = /* @__PURE__ */ \u0275\u0275defineComponent({
-    type: _StepList,
-    selectors: [["p-step-list"]],
-    contentQueries: function StepList_ContentQueries(rf, ctx, dirIndex) {
-      if (rf & 1) {
-        \u0275\u0275contentQuerySignal(dirIndex, ctx.steps, Step, 4);
-      }
-      if (rf & 2) {
-        \u0275\u0275queryAdvance();
-      }
-    },
-    hostVars: 4,
-    hostBindings: function StepList_HostBindings(rf, ctx) {
-      if (rf & 2) {
-        \u0275\u0275classProp("p-steplist", true)("p-component", true);
-      }
-    },
-    features: [\u0275\u0275InheritDefinitionFeature],
-    ngContentSelectors: _c014,
-    decls: 1,
-    vars: 0,
-    template: function StepList_Template(rf, ctx) {
-      if (rf & 1) {
-        \u0275\u0275projectionDef();
-        \u0275\u0275projection(0);
-      }
-    },
-    dependencies: [CommonModule],
-    encapsulation: 2,
-    changeDetection: 0
-  });
-};
-(() => {
-  (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(StepList, [{
-    type: Component,
-    args: [{
-      selector: "p-step-list",
-      standalone: true,
-      imports: [CommonModule],
-      template: ` <ng-content></ng-content>`,
-      changeDetection: ChangeDetectionStrategy.OnPush,
-      encapsulation: ViewEncapsulation.None,
-      host: {
-        "[class.p-steplist]": "true",
-        "[class.p-component]": "true"
-      }
-    }]
-  }], null, null);
-})();
-var StepperSeparator = class _StepperSeparator extends BaseComponent {
-  static \u0275fac = /* @__PURE__ */ (() => {
-    let \u0275StepperSeparator_BaseFactory;
-    return function StepperSeparator_Factory(__ngFactoryType__) {
-      return (\u0275StepperSeparator_BaseFactory || (\u0275StepperSeparator_BaseFactory = \u0275\u0275getInheritedFactory(_StepperSeparator)))(__ngFactoryType__ || _StepperSeparator);
-    };
-  })();
-  static \u0275cmp = /* @__PURE__ */ \u0275\u0275defineComponent({
-    type: _StepperSeparator,
-    selectors: [["p-stepper-separator"]],
-    hostVars: 4,
-    hostBindings: function StepperSeparator_HostBindings(rf, ctx) {
-      if (rf & 2) {
-        \u0275\u0275classProp("p-stepper-separator", true)("p-component", true);
-      }
-    },
-    features: [\u0275\u0275InheritDefinitionFeature],
-    ngContentSelectors: _c014,
-    decls: 1,
-    vars: 0,
-    template: function StepperSeparator_Template(rf, ctx) {
-      if (rf & 1) {
-        \u0275\u0275projectionDef();
-        \u0275\u0275projection(0);
-      }
-    },
-    dependencies: [CommonModule],
-    encapsulation: 2,
-    changeDetection: 0
-  });
-};
-(() => {
-  (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(StepperSeparator, [{
-    type: Component,
-    args: [{
-      selector: "p-stepper-separator",
-      standalone: true,
-      imports: [CommonModule],
-      template: ` <ng-content></ng-content>`,
-      changeDetection: ChangeDetectionStrategy.OnPush,
-      encapsulation: ViewEncapsulation.None,
-      host: {
-        "[class.p-stepper-separator]": "true",
-        "[class.p-component]": "true"
-      }
-    }]
-  }], null, null);
-})();
-var StepItem = class _StepItem extends BaseComponent {
-  pcStepper = inject(forwardRef(() => Stepper));
-  /**
-   * Value of step.
-   * @type {<number | undefined>}
-   * @defaultValue undefined
-   * @group Props
-   */
-  value = model();
-  isActive = computed(() => this.pcStepper.value() === this.value());
-  step = contentChild(forwardRef(() => Step));
-  stepPanel = contentChild(forwardRef(() => StepPanel));
-  constructor() {
-    super();
-    effect(() => {
-      this.step().value.set(this.value());
-    });
-    effect(() => {
-      this.stepPanel().value.set(this.value());
-    });
-  }
-  static \u0275fac = function StepItem_Factory(__ngFactoryType__) {
-    return new (__ngFactoryType__ || _StepItem)();
-  };
-  static \u0275cmp = /* @__PURE__ */ \u0275\u0275defineComponent({
-    type: _StepItem,
-    selectors: [["p-step-item"]],
-    contentQueries: function StepItem_ContentQueries(rf, ctx, dirIndex) {
-      if (rf & 1) {
-        \u0275\u0275contentQuerySignal(dirIndex, ctx.step, Step, 5);
-        \u0275\u0275contentQuerySignal(dirIndex, ctx.stepPanel, StepPanel, 5);
-      }
-      if (rf & 2) {
-        \u0275\u0275queryAdvance(2);
-      }
-    },
-    hostVars: 5,
-    hostBindings: function StepItem_HostBindings(rf, ctx) {
-      if (rf & 2) {
-        \u0275\u0275attribute("data-p-active", ctx.isActive());
-        \u0275\u0275classProp("p-stepitem", true)("p-component", true);
-      }
-    },
-    inputs: {
-      value: [1, "value"]
-    },
-    outputs: {
-      value: "valueChange"
-    },
-    features: [\u0275\u0275InheritDefinitionFeature],
-    ngContentSelectors: _c014,
-    decls: 1,
-    vars: 0,
-    template: function StepItem_Template(rf, ctx) {
-      if (rf & 1) {
-        \u0275\u0275projectionDef();
-        \u0275\u0275projection(0);
-      }
-    },
-    dependencies: [CommonModule],
-    encapsulation: 2,
-    changeDetection: 0
-  });
-};
-(() => {
-  (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(StepItem, [{
-    type: Component,
-    args: [{
-      selector: "p-step-item",
-      standalone: true,
-      imports: [CommonModule],
-      template: ` <ng-content></ng-content>`,
-      changeDetection: ChangeDetectionStrategy.OnPush,
-      encapsulation: ViewEncapsulation.None,
-      host: {
-        "[class.p-stepitem]": "true",
-        "[class.p-component]": "true",
-        "[attr.data-p-active]": "isActive()"
-      }
-    }]
-  }], () => [], null);
-})();
-var Step = class _Step extends BaseComponent {
-  pcStepper = inject(forwardRef(() => Stepper));
-  /**
-   * Active value of stepper.
-   * @type {number}
-   * @defaultValue undefined
-   * @group Props
-   */
-  value = model();
-  /**
-   * Whether the step is disabled.
-   * @type {boolean}
-   * @defaultValue false
-   * @group Props
-   */
-  disabled = input(false, {
-    transform: (v) => transformToBoolean(v)
-  });
-  active = computed(() => this.pcStepper.isStepActive(this.value()));
-  isStepDisabled = computed(() => !this.active() && (this.pcStepper.linear() || this.disabled()));
-  id = computed(() => `${this.pcStepper.id()}_step_${this.value()}`);
-  ariaControls = computed(() => `${this.pcStepper.id()}_steppanel_${this.value()}`);
-  isSeparatorVisible = computed(() => {
-    if (this.pcStepper.stepList()) {
-      const steps = this.pcStepper.stepList().steps();
-      const index = steps.indexOf(this);
-      const stepLen = steps.length;
-      return index !== stepLen - 1;
-    } else {
-      return false;
-    }
-  });
-  /**
-   * Content template.
-   * @type {TemplateRef<StepContentTemplateContext>}
-   * @group Templates
-   */
-  content;
-  templates;
-  _contentTemplate;
-  ngAfterContentInit() {
-    this.templates?.forEach((item) => {
-      switch (item.getType()) {
-        case "content":
-          this._contentTemplate = item.template;
-          break;
-      }
-    });
-  }
-  onStepClick() {
-    this.pcStepper.updateValue(this.value());
-  }
-  static \u0275fac = /* @__PURE__ */ (() => {
-    let \u0275Step_BaseFactory;
-    return function Step_Factory(__ngFactoryType__) {
-      return (\u0275Step_BaseFactory || (\u0275Step_BaseFactory = \u0275\u0275getInheritedFactory(_Step)))(__ngFactoryType__ || _Step);
-    };
-  })();
-  static \u0275cmp = /* @__PURE__ */ \u0275\u0275defineComponent({
-    type: _Step,
-    selectors: [["p-step"]],
-    contentQueries: function Step_ContentQueries(rf, ctx, dirIndex) {
-      if (rf & 1) {
-        \u0275\u0275contentQuery(dirIndex, _c115, 4);
-        \u0275\u0275contentQuery(dirIndex, PrimeTemplate, 4);
-      }
-      if (rf & 2) {
-        let _t;
-        \u0275\u0275queryRefresh(_t = \u0275\u0275loadQuery()) && (ctx.content = _t.first);
-        \u0275\u0275queryRefresh(_t = \u0275\u0275loadQuery()) && (ctx.templates = _t);
-      }
-    },
-    hostVars: 13,
-    hostBindings: function Step_HostBindings(rf, ctx) {
-      if (rf & 2) {
-        \u0275\u0275attribute("aria-current", ctx.active() ? "step" : void 0)("role", "presentation")("data-p-active", ctx.active())("data-p-disabled", ctx.isStepDisabled())("data-pc-name", "step");
-        \u0275\u0275classProp("p-step", true)("p-step-active", ctx.active())("p-disabled", ctx.isStepDisabled())("p-component", true);
-      }
-    },
-    inputs: {
-      value: [1, "value"],
-      disabled: [1, "disabled"]
-    },
-    outputs: {
-      value: "valueChange"
-    },
-    features: [\u0275\u0275InheritDefinitionFeature],
-    ngContentSelectors: _c014,
-    decls: 2,
-    vars: 1,
-    consts: [["type", "button", 1, "p-step-header", 3, "click", "tabindex", "disabled"], [1, "p-step-number"], [1, "p-step-title"], [4, "ngTemplateOutlet", "ngTemplateOutletContext"]],
-    template: function Step_Template(rf, ctx) {
-      if (rf & 1) {
-        \u0275\u0275projectionDef();
-        \u0275\u0275template(0, Step_Conditional_0_Template, 6, 7)(1, Step_Conditional_1_Template, 2, 7);
-      }
-      if (rf & 2) {
-        \u0275\u0275conditional(!ctx.content && !ctx._contentTemplate ? 0 : 1);
-      }
-    },
-    dependencies: [CommonModule, NgTemplateOutlet, StepperSeparator, SharedModule],
-    encapsulation: 2,
-    changeDetection: 0
-  });
-};
-(() => {
-  (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(Step, [{
-    type: Component,
-    args: [{
-      selector: "p-step",
-      standalone: true,
-      imports: [CommonModule, StepperSeparator, SharedModule],
-      template: `
-        @if (!content && !_contentTemplate) {
-            <button [attr.id]="id()" class="p-step-header" [attr.role]="'tab'" [tabindex]="isStepDisabled() ? -1 : undefined" [attr.aria-controls]="ariaControls()" [disabled]="isStepDisabled()" (click)="onStepClick()" type="button">
-                <span class="p-step-number">{{ value() }}</span>
-                <span class="p-step-title">
-                    <ng-content></ng-content>
-                </span>
-            </button>
-            @if (isSeparatorVisible()) {
-                <p-stepper-separator />
-            }
-        } @else {
-            <ng-container *ngTemplateOutlet="content || _contentTemplate; context: { activateCallback: onStepClick.bind(this), value: value(), active: active() }"></ng-container>
-            @if (isSeparatorVisible()) {
-                <p-stepper-separator />
-            }
-        }
-    `,
-      changeDetection: ChangeDetectionStrategy.OnPush,
-      encapsulation: ViewEncapsulation.None,
-      host: {
-        "[class.p-step]": "true",
-        "[class.p-step-active]": "active()",
-        "[class.p-disabled]": "isStepDisabled()",
-        "[class.p-component]": "true",
-        "[attr.aria-current]": 'active() ? "step" : undefined',
-        "[attr.role]": '"presentation"',
-        "[attr.data-p-active]": "active()",
-        "[attr.data-p-disabled]": "isStepDisabled()",
-        "[attr.data-pc-name]": '"step"'
-      }
-    }]
-  }], null, {
-    content: [{
-      type: ContentChild,
-      args: ["content", {
-        descendants: false
-      }]
-    }],
-    templates: [{
-      type: ContentChildren,
-      args: [PrimeTemplate]
-    }]
-  });
-})();
-var StepPanel = class _StepPanel extends BaseComponent {
-  pcStepper = inject(forwardRef(() => Stepper));
-  transitionOptions = computed(() => this.pcStepper.transitionOptions());
-  /**
-   * Active value of stepper.
-   * @type {number}
-   * @defaultValue undefined
-   * @group Props
-   */
-  value = model(void 0);
-  active = computed(() => this.pcStepper.value() === this.value());
-  ariaControls = computed(() => `${this.pcStepper.id()}_step_${this.value()}`);
-  id = computed(() => `${this.pcStepper.id()}_steppanel_${this.value()}`);
-  isVertical = computed(() => this.pcStepper.stepItems().length > 0);
-  isSeparatorVisible = computed(() => {
-    if (this.pcStepper.stepItems()) {
-      const stepLen = this.pcStepper.stepItems().length;
-      const stepPanelElements = find(this.pcStepper.el.nativeElement, '[data-pc-name="steppanel"]');
-      const index = findIndexInList(this.el.nativeElement, stepPanelElements);
-      return index !== stepLen - 1;
-    }
-  });
-  /**
-   * Content template.
-   * @param {StepPanelContentTemplateContext} context - Context of the template
-   * @see {@link StepPanelContentTemplateContext}
-   * @group Templates
-   */
-  contentTemplate;
-  templates;
-  _contentTemplate;
-  ngAfterContentInit() {
-    this.templates?.forEach((item) => {
-      switch (item.getType()) {
-        case "content":
-          this._contentTemplate = item.template;
-          break;
-      }
-    });
-  }
-  updateValue(value) {
-    this.pcStepper.updateValue(value);
-  }
-  static \u0275fac = /* @__PURE__ */ (() => {
-    let \u0275StepPanel_BaseFactory;
-    return function StepPanel_Factory(__ngFactoryType__) {
-      return (\u0275StepPanel_BaseFactory || (\u0275StepPanel_BaseFactory = \u0275\u0275getInheritedFactory(_StepPanel)))(__ngFactoryType__ || _StepPanel);
-    };
-  })();
-  static \u0275cmp = /* @__PURE__ */ \u0275\u0275defineComponent({
-    type: _StepPanel,
-    selectors: [["p-step-panel"]],
-    contentQueries: function StepPanel_ContentQueries(rf, ctx, dirIndex) {
-      if (rf & 1) {
-        \u0275\u0275contentQuery(dirIndex, _c115, 5);
-        \u0275\u0275contentQuery(dirIndex, PrimeTemplate, 4);
-      }
-      if (rf & 2) {
-        let _t;
-        \u0275\u0275queryRefresh(_t = \u0275\u0275loadQuery()) && (ctx.contentTemplate = _t.first);
-        \u0275\u0275queryRefresh(_t = \u0275\u0275loadQuery()) && (ctx.templates = _t);
-      }
-    },
-    hostVars: 11,
-    hostBindings: function StepPanel_HostBindings(rf, ctx) {
-      if (rf & 2) {
-        \u0275\u0275attribute("role", "tabpanel")("aria-controls", ctx.ariaControls())("id", ctx.id())("data-p-active", ctx.active())("data-pc-name", "steppanel");
-        \u0275\u0275classProp("p-steppanel", true)("p-component", true)("p-steppanel-active", ctx.active());
-      }
-    },
-    inputs: {
-      value: [1, "value"]
-    },
-    outputs: {
-      value: "valueChange"
-    },
-    features: [\u0275\u0275InheritDefinitionFeature],
-    decls: 3,
-    vars: 11,
-    consts: [[1, "p-steppanel-content"], [4, "ngTemplateOutlet", "ngTemplateOutletContext"]],
-    template: function StepPanel_Template(rf, ctx) {
-      if (rf & 1) {
-        \u0275\u0275template(0, StepPanel_Conditional_0_Template, 1, 0, "p-stepper-separator");
-        \u0275\u0275elementStart(1, "div", 0);
-        \u0275\u0275template(2, StepPanel_Conditional_2_Template, 1, 6, "ng-container");
-        \u0275\u0275elementEnd();
-      }
-      if (rf & 2) {
-        \u0275\u0275conditional(ctx.isSeparatorVisible() ? 0 : -1);
-        \u0275\u0275advance();
-        \u0275\u0275property("@content", ctx.isVertical() ? ctx.active() ? \u0275\u0275pureFunction1(5, _c46, \u0275\u0275pureFunction1(3, _c36, ctx.transitionOptions())) : \u0275\u0275pureFunction1(9, _c56, \u0275\u0275pureFunction1(7, _c36, ctx.transitionOptions())) : void 0);
-        \u0275\u0275advance();
-        \u0275\u0275conditional(ctx.active() ? 2 : -1);
-      }
-    },
-    dependencies: [CommonModule, NgTemplateOutlet, StepperSeparator, SharedModule],
-    encapsulation: 2,
-    data: {
-      animation: [trigger("content", [state("hidden", style({
-        height: "0",
-        visibility: "hidden"
-      })), state("visible", style({
-        height: "*",
-        visibility: "visible"
-      })), transition("visible <=> hidden", [animate("250ms cubic-bezier(0.86, 0, 0.07, 1)")]), transition("void => *", animate(0))])]
-    },
-    changeDetection: 0
-  });
-};
-(() => {
-  (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(StepPanel, [{
-    type: Component,
-    args: [{
-      selector: "p-step-panel",
-      standalone: true,
-      imports: [CommonModule, StepperSeparator, SharedModule],
-      template: `
-        @if (isSeparatorVisible()) {
-            <p-stepper-separator />
-        }
-        <div class="p-steppanel-content" [@content]="isVertical() ? (active() ? { value: 'visible', params: { transitionParams: transitionOptions() } } : { value: 'hidden', params: { transitionParams: transitionOptions() } }) : undefined">
-            @if (active()) {
-                <ng-container *ngTemplateOutlet="contentTemplate || _contentTemplate; context: { activateCallback: updateValue.bind(this), value: value(), active: active() }"></ng-container>
-            }
-        </div>
-    `,
-      changeDetection: ChangeDetectionStrategy.OnPush,
-      encapsulation: ViewEncapsulation.None,
-      host: {
-        "[class.p-steppanel]": "true",
-        "[class.p-component]": "true",
-        "[class.p-steppanel-active]": "active()",
-        "[attr.role]": '"tabpanel"',
-        "[attr.aria-controls]": "ariaControls()",
-        "[attr.id]": "id()",
-        "[attr.data-p-active]": "active()",
-        "[attr.data-pc-name]": '"steppanel"'
-      },
-      animations: [trigger("content", [state("hidden", style({
-        height: "0",
-        visibility: "hidden"
-      })), state("visible", style({
-        height: "*",
-        visibility: "visible"
-      })), transition("visible <=> hidden", [animate("250ms cubic-bezier(0.86, 0, 0.07, 1)")]), transition("void => *", animate(0))])]
-    }]
-  }], null, {
-    contentTemplate: [{
-      type: ContentChild,
-      args: ["content"]
-    }],
-    templates: [{
-      type: ContentChildren,
-      args: [PrimeTemplate]
-    }]
-  });
-})();
-var StepPanels = class _StepPanels extends BaseComponent {
-  static \u0275fac = /* @__PURE__ */ (() => {
-    let \u0275StepPanels_BaseFactory;
-    return function StepPanels_Factory(__ngFactoryType__) {
-      return (\u0275StepPanels_BaseFactory || (\u0275StepPanels_BaseFactory = \u0275\u0275getInheritedFactory(_StepPanels)))(__ngFactoryType__ || _StepPanels);
-    };
-  })();
-  static \u0275cmp = /* @__PURE__ */ \u0275\u0275defineComponent({
-    type: _StepPanels,
-    selectors: [["p-step-panels"]],
-    hostVars: 4,
-    hostBindings: function StepPanels_HostBindings(rf, ctx) {
-      if (rf & 2) {
-        \u0275\u0275classProp("p-steppanels", true)("p-component", true);
-      }
-    },
-    features: [\u0275\u0275InheritDefinitionFeature],
-    ngContentSelectors: _c014,
-    decls: 1,
-    vars: 0,
-    template: function StepPanels_Template(rf, ctx) {
-      if (rf & 1) {
-        \u0275\u0275projectionDef();
-        \u0275\u0275projection(0);
-      }
-    },
-    dependencies: [CommonModule, SharedModule],
-    encapsulation: 2,
-    changeDetection: 0
-  });
-};
-(() => {
-  (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(StepPanels, [{
-    type: Component,
-    args: [{
-      selector: "p-step-panels",
-      standalone: true,
-      imports: [CommonModule, SharedModule],
-      template: ` <ng-content></ng-content>`,
-      changeDetection: ChangeDetectionStrategy.OnPush,
-      encapsulation: ViewEncapsulation.None,
-      host: {
-        "[class.p-steppanels]": "true",
-        "[class.p-component]": "true"
-      }
-    }]
-  }], null, null);
-})();
-var Stepper = class _Stepper extends BaseComponent {
-  /**
-   * A model that can hold a numeric value or be undefined.
-   * @defaultValue undefined
-   * @type {ModelSignal<number | undefined>}
-   * @group Props
-   */
-  value = model(void 0);
-  /**
-   * A boolean variable that captures user input.
-   * @defaultValue false
-   * @type {InputSignalWithTransform<any, boolean >}
-   * @group Props
-   */
-  linear = input(false, {
-    transform: (v) => transformToBoolean(v)
-  });
-  /**
-   * Transition options of the animation.
-   * @defaultValue 400ms cubic-bezier(0.86, 0, 0.07, 1)
-   * @type {InputSignal<string >}
-   * @group Props
-   */
-  transitionOptions = input("400ms cubic-bezier(0.86, 0, 0.07, 1)");
-  _componentStyle = inject(StepperStyle);
-  id = signal(uuid("pn_id_"));
-  stepItems = contentChildren(StepItem);
-  steps = contentChildren(Step);
-  stepList = contentChild(StepList);
-  updateValue(value) {
-    this.value.set(value);
-  }
-  isStepActive(value) {
-    return this.value() === value;
-  }
-  static \u0275fac = /* @__PURE__ */ (() => {
-    let \u0275Stepper_BaseFactory;
-    return function Stepper_Factory(__ngFactoryType__) {
-      return (\u0275Stepper_BaseFactory || (\u0275Stepper_BaseFactory = \u0275\u0275getInheritedFactory(_Stepper)))(__ngFactoryType__ || _Stepper);
-    };
-  })();
-  static \u0275cmp = /* @__PURE__ */ \u0275\u0275defineComponent({
-    type: _Stepper,
-    selectors: [["p-stepper"]],
-    contentQueries: function Stepper_ContentQueries(rf, ctx, dirIndex) {
-      if (rf & 1) {
-        \u0275\u0275contentQuerySignal(dirIndex, ctx.stepItems, StepItem, 4);
-        \u0275\u0275contentQuerySignal(dirIndex, ctx.steps, Step, 4);
-        \u0275\u0275contentQuerySignal(dirIndex, ctx.stepList, StepList, 5);
-      }
-      if (rf & 2) {
-        \u0275\u0275queryAdvance(3);
-      }
-    },
-    hostVars: 6,
-    hostBindings: function Stepper_HostBindings(rf, ctx) {
-      if (rf & 2) {
-        \u0275\u0275attribute("role", "tablist")("id", ctx.id());
-        \u0275\u0275classProp("p-stepper", true)("p-component", true);
-      }
-    },
-    inputs: {
-      value: [1, "value"],
-      linear: [1, "linear"],
-      transitionOptions: [1, "transitionOptions"]
-    },
-    outputs: {
-      value: "valueChange"
-    },
-    features: [\u0275\u0275ProvidersFeature([StepperStyle]), \u0275\u0275InheritDefinitionFeature],
-    ngContentSelectors: _c014,
-    decls: 1,
-    vars: 0,
-    template: function Stepper_Template(rf, ctx) {
-      if (rf & 1) {
-        \u0275\u0275projectionDef();
-        \u0275\u0275projection(0);
-      }
-    },
-    dependencies: [CommonModule, SharedModule],
-    encapsulation: 2,
-    changeDetection: 0
-  });
-};
-(() => {
-  (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(Stepper, [{
-    type: Component,
-    args: [{
-      selector: "p-stepper",
-      standalone: true,
-      imports: [CommonModule, SharedModule],
-      template: ` <ng-content></ng-content>`,
-      changeDetection: ChangeDetectionStrategy.OnPush,
-      encapsulation: ViewEncapsulation.None,
-      providers: [StepperStyle],
-      host: {
-        "[class.p-stepper]": "true",
-        "[class.p-component]": "true",
-        "[attr.role]": '"tablist"',
-        "[attr.id]": "id()"
-      }
-    }]
-  }], null, null);
-})();
-var StepperModule = class _StepperModule {
-  static \u0275fac = function StepperModule_Factory(__ngFactoryType__) {
-    return new (__ngFactoryType__ || _StepperModule)();
-  };
-  static \u0275mod = /* @__PURE__ */ \u0275\u0275defineNgModule({
-    type: _StepperModule,
-    imports: [Stepper, StepList, StepPanels, StepPanel, StepItem, Step, StepperSeparator, SharedModule],
-    exports: [Stepper, StepList, StepPanels, StepPanel, StepItem, Step, StepperSeparator, SharedModule]
-  });
-  static \u0275inj = /* @__PURE__ */ \u0275\u0275defineInjector({
-    imports: [Stepper, StepList, StepPanels, StepPanel, StepItem, Step, StepperSeparator, SharedModule, SharedModule]
-  });
-};
-(() => {
-  (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(StepperModule, [{
-    type: NgModule,
-    args: [{
-      imports: [Stepper, StepList, StepPanels, StepPanel, StepItem, Step, StepperSeparator, SharedModule],
-      exports: [Stepper, StepList, StepPanels, StepPanel, StepItem, Step, StepperSeparator, SharedModule]
-    }]
-  }], null, null);
-})();
-
 // node_modules/primeng/fesm2022/primeng-confirmpopup.mjs
-var _c015 = ["content"];
-var _c116 = ["accepticon"];
-var _c29 = ["rejecticon"];
-var _c37 = ["headless"];
-var _c47 = (a0, a1) => ({
+var _c014 = ["content"];
+var _c115 = ["accepticon"];
+var _c28 = ["rejecticon"];
+var _c36 = ["headless"];
+var _c46 = (a0, a1) => ({
   showTransitionParams: a0,
   hideTransitionParams: a1
 });
-var _c57 = (a0) => ({
+var _c56 = (a0) => ({
   value: "open",
   params: a0
 });
@@ -36067,12 +35077,12 @@ function ConfirmPopup_div_0_Template(rf, ctx) {
     const notHeadless_r6 = \u0275\u0275reference(3);
     const ctx_r1 = \u0275\u0275nextContext();
     \u0275\u0275classMap(ctx_r1.styleClass);
-    \u0275\u0275property("ngClass", "p-confirmpopup p-component")("ngStyle", ctx_r1.style)("@animation", \u0275\u0275pureFunction1(10, _c57, \u0275\u0275pureFunction2(7, _c47, ctx_r1.showTransitionOptions, ctx_r1.hideTransitionOptions)));
+    \u0275\u0275property("ngClass", "p-confirmpopup p-component")("ngStyle", ctx_r1.style)("@animation", \u0275\u0275pureFunction1(10, _c56, \u0275\u0275pureFunction2(7, _c46, ctx_r1.showTransitionOptions, ctx_r1.hideTransitionOptions)));
     \u0275\u0275advance();
     \u0275\u0275property("ngIf", ctx_r1.headlessTemplate || ctx_r1._headlessTemplate)("ngIfElse", notHeadless_r6);
   }
 }
-var theme11 = ({
+var theme10 = ({
   dt
 }) => `
 .p-confirmpopup {
@@ -36181,7 +35191,7 @@ var theme11 = ({
     border-top-color: ${dt("confirmpopup.border.color")};
 }
 `;
-var classes11 = {
+var classes10 = {
   root: "p-confirmpopup p-component",
   content: "p-confirmpopup-content",
   icon: "p-confirmpopup-icon",
@@ -36192,8 +35202,8 @@ var classes11 = {
 };
 var ConfirmPopupStyle = class _ConfirmPopupStyle extends BaseStyle {
   name = "confirmpopup";
-  theme = theme11;
-  classes = classes11;
+  theme = theme10;
+  classes = classes10;
   static \u0275fac = /* @__PURE__ */ (() => {
     let \u0275ConfirmPopupStyle_BaseFactory;
     return function ConfirmPopupStyle_Factory(__ngFactoryType__) {
@@ -36544,10 +35554,10 @@ var ConfirmPopup = class _ConfirmPopup extends BaseComponent {
     selectors: [["p-confirmPopup"], ["p-confirmpopup"], ["p-confirm-popup"]],
     contentQueries: function ConfirmPopup_ContentQueries(rf, ctx, dirIndex) {
       if (rf & 1) {
-        \u0275\u0275contentQuery(dirIndex, _c015, 4);
-        \u0275\u0275contentQuery(dirIndex, _c116, 4);
-        \u0275\u0275contentQuery(dirIndex, _c29, 4);
-        \u0275\u0275contentQuery(dirIndex, _c37, 4);
+        \u0275\u0275contentQuery(dirIndex, _c014, 4);
+        \u0275\u0275contentQuery(dirIndex, _c115, 4);
+        \u0275\u0275contentQuery(dirIndex, _c28, 4);
+        \u0275\u0275contentQuery(dirIndex, _c36, 4);
         \u0275\u0275contentQuery(dirIndex, PrimeTemplate, 4);
       }
       if (rf & 2) {
@@ -38523,9 +37533,9 @@ var SearchCriteriaComponent = class _SearchCriteriaComponent {
 })();
 
 // node_modules/primeng/fesm2022/primeng-toggleswitch.mjs
-var _c016 = ["handle"];
-var _c117 = ["input"];
-var _c210 = (a0) => ({
+var _c015 = ["handle"];
+var _c116 = ["input"];
+var _c29 = (a0) => ({
   checked: a0
 });
 function ToggleSwitch_Conditional_5_ng_container_0_Template(rf, ctx) {
@@ -38539,10 +37549,10 @@ function ToggleSwitch_Conditional_5_Template(rf, ctx) {
   }
   if (rf & 2) {
     const ctx_r1 = \u0275\u0275nextContext();
-    \u0275\u0275property("ngTemplateOutlet", ctx_r1.handleTemplate || ctx_r1._handleTemplate)("ngTemplateOutletContext", \u0275\u0275pureFunction1(2, _c210, ctx_r1.checked()));
+    \u0275\u0275property("ngTemplateOutlet", ctx_r1.handleTemplate || ctx_r1._handleTemplate)("ngTemplateOutletContext", \u0275\u0275pureFunction1(2, _c29, ctx_r1.checked()));
   }
 }
-var theme12 = ({
+var theme11 = ({
   dt
 }) => `
 .p-toggleswitch {
@@ -38663,7 +37673,7 @@ var inlineStyles4 = {
     position: "relative"
   }
 };
-var classes12 = {
+var classes11 = {
   root: ({
     instance
   }) => ({
@@ -38678,8 +37688,8 @@ var classes12 = {
 };
 var ToggleSwitchStyle = class _ToggleSwitchStyle extends BaseStyle {
   name = "toggleswitch";
-  theme = theme12;
-  classes = classes12;
+  theme = theme11;
+  classes = classes11;
   inlineStyles = inlineStyles4;
   static \u0275fac = /* @__PURE__ */ (() => {
     let \u0275ToggleSwitchStyle_BaseFactory;
@@ -38854,7 +37864,7 @@ var ToggleSwitch = class _ToggleSwitch extends BaseComponent {
     selectors: [["p-toggleswitch"], ["p-toggleSwitch"], ["p-toggle-switch"]],
     contentQueries: function ToggleSwitch_ContentQueries(rf, ctx, dirIndex) {
       if (rf & 1) {
-        \u0275\u0275contentQuery(dirIndex, _c016, 4);
+        \u0275\u0275contentQuery(dirIndex, _c015, 4);
         \u0275\u0275contentQuery(dirIndex, PrimeTemplate, 4);
       }
       if (rf & 2) {
@@ -38865,7 +37875,7 @@ var ToggleSwitch = class _ToggleSwitch extends BaseComponent {
     },
     viewQuery: function ToggleSwitch_Query(rf, ctx) {
       if (rf & 1) {
-        \u0275\u0275viewQuery(_c117, 5);
+        \u0275\u0275viewQuery(_c116, 5);
       }
       if (rf & 2) {
         let _t;
@@ -39422,9 +38432,9 @@ var IaTreeService = class _IaTreeService {
 })();
 
 // src/app/views/ia-assistant/components/ia-tree.component.ts
-var _c017 = ["chartContainer"];
-var _c118 = ["cm"];
-var _c211 = () => ({ "min-width": "50rem" });
+var _c016 = ["chartContainer"];
+var _c117 = ["cm"];
+var _c210 = () => ({ "min-width": "50rem" });
 function IaTreeComponent_ng_container_2_p_3_Template(rf, ctx) {
   if (rf & 1) {
     \u0275\u0275elementStart(0, "p");
@@ -39782,7 +38792,7 @@ function IaTreeComponent_ng_container_2_p_tabs_4_p_table_32_Template(rf, ctx) {
   }
   if (rf & 2) {
     const ctx_r1 = \u0275\u0275nextContext(3);
-    \u0275\u0275property("value", ctx_r1.iaData().brokenLinks)("tableStyle", \u0275\u0275pureFunction0(2, _c211));
+    \u0275\u0275property("value", ctx_r1.iaData().brokenLinks)("tableStyle", \u0275\u0275pureFunction0(2, _c210));
   }
 }
 function IaTreeComponent_ng_container_2_p_tabs_4_p_36_Template(rf, ctx) {
@@ -40213,8 +39223,8 @@ var IaTreeComponent = class _IaTreeComponent {
       this.draggable = false;
       this.selectable = false;
       setTimeout(() => {
-        const input2 = document.querySelector("input.ia-label");
-        input2?.focus();
+        const input = document.querySelector("input.ia-label");
+        input?.focus();
       });
     }
   }
@@ -40427,8 +39437,8 @@ var IaTreeComponent = class _IaTreeComponent {
   };
   static \u0275cmp = /* @__PURE__ */ \u0275\u0275defineComponent({ type: _IaTreeComponent, selectors: [["ca-ia-tree"]], viewQuery: function IaTreeComponent_Query(rf, ctx) {
     if (rf & 1) {
-      \u0275\u0275viewQuery(_c017, 5);
-      \u0275\u0275viewQuery(_c118, 5);
+      \u0275\u0275viewQuery(_c016, 5);
+      \u0275\u0275viewQuery(_c117, 5);
     }
     if (rf & 2) {
       let _t;
@@ -41090,7 +40100,7 @@ var IaAssistantComponent = class _IaAssistantComponent {
 })();
 
 // node_modules/primeng/fesm2022/primeng-avatar.mjs
-var _c018 = ["*"];
+var _c017 = ["*"];
 function Avatar_span_1_Template(rf, ctx) {
   if (rf & 1) {
     \u0275\u0275elementStart(0, "span", 3);
@@ -41149,7 +40159,7 @@ function Avatar_ng_template_4_Template(rf, ctx) {
     \u0275\u0275property("ngIf", ctx_r0.image);
   }
 }
-var theme13 = ({
+var theme12 = ({
   dt
 }) => `
 .p-avatar {
@@ -41232,7 +40242,7 @@ var theme13 = ({
     margin-inline-start: ${dt("avatar.xl.group.offset")};
 }
 `;
-var classes13 = {
+var classes12 = {
   root: ({
     props
   }) => ["p-avatar p-component", {
@@ -41246,8 +40256,8 @@ var classes13 = {
 };
 var AvatarStyle = class _AvatarStyle extends BaseStyle {
   name = "avatar";
-  theme = theme13;
-  classes = classes13;
+  theme = theme12;
+  classes = classes12;
   static \u0275fac = /* @__PURE__ */ (() => {
     let \u0275AvatarStyle_BaseFactory;
     return function AvatarStyle_Factory(__ngFactoryType__) {
@@ -41362,7 +40372,7 @@ var Avatar = class _Avatar extends BaseComponent {
       onImageError: "onImageError"
     },
     features: [\u0275\u0275ProvidersFeature([AvatarStyle]), \u0275\u0275InheritDefinitionFeature],
-    ngContentSelectors: _c018,
+    ngContentSelectors: _c017,
     decls: 6,
     vars: 2,
     consts: [["iconTemplate", ""], ["imageTemplate", ""], ["class", "p-avatar-text", 4, "ngIf", "ngIfElse"], [1, "p-avatar-text"], [3, "class", "ngClass", 4, "ngIf", "ngIfElse"], [3, "ngClass"], [3, "src", "error", 4, "ngIf"], [3, "error", "src"]],
@@ -41473,15 +40483,15 @@ var AvatarModule = class _AvatarModule {
 })();
 
 // node_modules/primeng/fesm2022/primeng-sidebar.mjs
-var _c019 = ["maskRef"];
-var _c119 = ["container"];
-var _c212 = ["closeButton"];
-var _c38 = ["*"];
-var _c48 = (a0, a1) => ({
+var _c018 = ["maskRef"];
+var _c118 = ["container"];
+var _c211 = ["closeButton"];
+var _c37 = ["*"];
+var _c47 = (a0, a1) => ({
   transform: a0,
   transition: a1
 });
-var _c58 = (a0) => ({
+var _c57 = (a0) => ({
   value: "visible",
   params: a0
 });
@@ -41642,7 +40652,7 @@ function Sidebar_div_0_Template(rf, ctx) {
   if (rf & 2) {
     const ctx_r1 = \u0275\u0275nextContext();
     \u0275\u0275styleMap(ctx_r1.maskStyle);
-    \u0275\u0275property("ngClass", ctx_r1.cx("mask"))("ngStyle", ctx_r1.sx("mask"))("@panelState", \u0275\u0275pureFunction1(15, _c58, \u0275\u0275pureFunction2(12, _c48, ctx_r1.transformOptions, ctx_r1.transitionOptions)));
+    \u0275\u0275property("ngClass", ctx_r1.cx("mask"))("ngStyle", ctx_r1.sx("mask"))("@panelState", \u0275\u0275pureFunction1(15, _c57, \u0275\u0275pureFunction2(12, _c47, ctx_r1.transformOptions, ctx_r1.transitionOptions)));
     \u0275\u0275attribute("data-pc-name", "mask")("data-pc-section", "mask");
     \u0275\u0275advance(2);
     \u0275\u0275classMap(ctx_r1.styleClass);
@@ -41652,7 +40662,7 @@ function Sidebar_div_0_Template(rf, ctx) {
     \u0275\u0275conditional(ctx_r1.headlessTemplate || ctx_r1._headlessTemplate ? 3 : 4);
   }
 }
-var theme14 = ({
+var theme13 = ({
   dt
 }) => `
 
@@ -41797,7 +40807,7 @@ var inlineStyles5 = {
     alignItems: instance.position === "top" ? "flex-start" : instance.position === "bottom" ? "flex-end" : "center"
   })
 };
-var classes14 = {
+var classes13 = {
   mask: ({
     instance
   }) => ({
@@ -41821,8 +40831,8 @@ var classes14 = {
 };
 var DrawerStyle = class _DrawerStyle extends BaseStyle {
   name = "drawer";
-  theme = theme14;
-  classes = classes14;
+  theme = theme13;
+  classes = classes13;
   inlineStyles = inlineStyles5;
   static \u0275fac = /* @__PURE__ */ (() => {
     let \u0275DrawerStyle_BaseFactory;
@@ -42162,9 +41172,9 @@ var Sidebar = class _Sidebar extends BaseComponent {
     },
     viewQuery: function Sidebar_Query(rf, ctx) {
       if (rf & 1) {
-        \u0275\u0275viewQuery(_c019, 5);
-        \u0275\u0275viewQuery(_c119, 5);
-        \u0275\u0275viewQuery(_c212, 5);
+        \u0275\u0275viewQuery(_c018, 5);
+        \u0275\u0275viewQuery(_c118, 5);
+        \u0275\u0275viewQuery(_c211, 5);
       }
       if (rf & 2) {
         let _t;
@@ -42203,7 +41213,7 @@ var Sidebar = class _Sidebar extends BaseComponent {
       visibleChange: "visibleChange"
     },
     features: [\u0275\u0275ProvidersFeature([DrawerStyle]), \u0275\u0275InheritDefinitionFeature, \u0275\u0275NgOnChangesFeature],
-    ngContentSelectors: _c38,
+    ngContentSelectors: _c37,
     decls: 1,
     vars: 1,
     consts: [["maskRef", ""], [3, "ngClass", "ngStyle", "style", "click", 4, "ngIf"], [3, "click", "ngClass", "ngStyle"], [3, "keydown", "ngClass"], [4, "ngTemplateOutlet"], [3, "ngClass"], [3, "ngClass", "buttonProps", "ariaLabel", "onClick", "keydown.enter", 4, "ngIf"], [4, "ngIf"], [3, "onClick", "keydown.enter", "ngClass", "buttonProps", "ariaLabel"], ["class", "p-sidebar-close-icon", 4, "ngIf"], [1, "p-sidebar-close-icon"]],
@@ -42426,12 +41436,12 @@ var SidebarModule = class _SidebarModule {
 })();
 
 // src/app/views/journey-map/journey-map.component.ts
-var _c020 = () => ({ width: "450px" });
-var _c120 = () => ({ width: "400px" });
-var _c213 = (a0, a1) => ({ "border-indigo-500 bg-indigo-50 text-indigo-700": a0, "border-gray-200 hover:surface-100": a1 });
-var _c39 = (a0, a1) => ({ "border-green-500 bg-green-50 text-green-700": a0, "border-gray-200 hover:surface-100": a1 });
-var _c49 = () => ({ width: "500px" });
-var _c59 = (a0, a1) => ({ "border-red-200 text-red-700": a0, "border-indigo-200 text-indigo-700": a1 });
+var _c019 = () => ({ width: "450px" });
+var _c119 = () => ({ width: "400px" });
+var _c212 = (a0, a1) => ({ "border-indigo-500 bg-indigo-50 text-indigo-700": a0, "border-gray-200 hover:surface-100": a1 });
+var _c38 = (a0, a1) => ({ "border-green-500 bg-green-50 text-green-700": a0, "border-gray-200 hover:surface-100": a1 });
+var _c48 = () => ({ width: "500px" });
+var _c58 = (a0, a1) => ({ "border-red-200 text-red-700": a0, "border-indigo-200 text-indigo-700": a1 });
 var _c67 = (a0, a1, a2) => ({ "pi-check-circle text-green-500": a0, "pi-times-circle text-red-500": a1, "pi-minus-circle text-gray-400": a2 });
 var _c76 = (a0, a1) => ({ "surface-card border-green-200 shadow-1": a0, "surface-0 border-indigo-200 border-dashed": a1 });
 var _c86 = (a0, a1, a2) => ({ "pi-star-fill text-indigo-400": a0, "pi-star-fill text-green-500": a1, "pi-user text-gray-400": a2 });
@@ -42569,7 +41579,7 @@ function JourneyMapComponent_div_54_div_26_Template(rf, ctx) {
   if (rf & 2) {
     const step_r5 = ctx.$implicit;
     \u0275\u0275advance(2);
-    \u0275\u0275property("ngClass", \u0275\u0275pureFunction2(7, _c59, step_r5.sentiment === "negative", step_r5.sentiment !== "negative"));
+    \u0275\u0275property("ngClass", \u0275\u0275pureFunction2(7, _c58, step_r5.sentiment === "negative", step_r5.sentiment !== "negative"));
     \u0275\u0275advance(2);
     \u0275\u0275textInterpolate(step_r5.action);
     \u0275\u0275advance(2);
@@ -43137,8 +42147,8 @@ var JourneyMapComponent = class _JourneyMapComponent {
       step.opportunities = step.opportunities.filter((o2) => o2.id !== optId);
     }
   }
-  handleAddManual(stepId, input2) {
-    const text2 = input2.value.trim();
+  handleAddManual(stepId, input) {
+    const text2 = input.value.trim();
     if (!text2)
       return;
     const step = this.journeySteps.find((s2) => s2.id === stepId);
@@ -43149,7 +42159,7 @@ var JourneyMapComponent = class _JourneyMapComponent {
         source: "user",
         status: "approved"
       });
-      input2.value = "";
+      input.value = "";
     }
   }
   handleAnalyzeUrl() {
@@ -43601,7 +42611,7 @@ var JourneyMapComponent = class _JourneyMapComponent {
       \u0275\u0275advance();
       \u0275\u0275property("ngIf", ctx.feedbackData.length > 0 && ctx.showRecentInputs);
       \u0275\u0275advance();
-      \u0275\u0275styleMap(\u0275\u0275pureFunction0(54, _c020));
+      \u0275\u0275styleMap(\u0275\u0275pureFunction0(54, _c019));
       \u0275\u0275twoWayProperty("visible", ctx.showFeedbackModal);
       \u0275\u0275property("modal", true)("draggable", false)("resizable", false);
       \u0275\u0275advance(5);
@@ -43621,13 +42631,13 @@ var JourneyMapComponent = class _JourneyMapComponent {
       \u0275\u0275advance(5);
       \u0275\u0275twoWayProperty("ngModel", ctx.newFeedback.comment);
       \u0275\u0275advance(2);
-      \u0275\u0275styleMap(\u0275\u0275pureFunction0(55, _c120));
+      \u0275\u0275styleMap(\u0275\u0275pureFunction0(55, _c119));
       \u0275\u0275twoWayProperty("visible", ctx.showSettingsModal);
       \u0275\u0275property("modal", true)("draggable", false)("resizable", false);
       \u0275\u0275advance(7);
-      \u0275\u0275property("ngClass", \u0275\u0275pureFunction2(56, _c213, ctx.llmConfig.provider === "gemini", ctx.llmConfig.provider !== "gemini"));
+      \u0275\u0275property("ngClass", \u0275\u0275pureFunction2(56, _c212, ctx.llmConfig.provider === "gemini", ctx.llmConfig.provider !== "gemini"));
       \u0275\u0275advance(5);
-      \u0275\u0275property("ngClass", \u0275\u0275pureFunction2(59, _c39, ctx.llmConfig.provider === "openai", ctx.llmConfig.provider !== "openai"));
+      \u0275\u0275property("ngClass", \u0275\u0275pureFunction2(59, _c38, ctx.llmConfig.provider === "openai", ctx.llmConfig.provider !== "openai"));
       \u0275\u0275advance(10);
       \u0275\u0275property("placeholder", ctx.llmConfig.provider === "gemini" ? "Gemini Key" : "OpenAI Key");
       \u0275\u0275twoWayProperty("ngModel", ctx.llmConfig.apiKey);
@@ -43636,7 +42646,7 @@ var JourneyMapComponent = class _JourneyMapComponent {
       \u0275\u0275advance(4);
       \u0275\u0275textInterpolate1(" ", ctx.llmConfig.provider === "gemini" ? "gemini-2.5-flash-preview" : "gpt-4-turbo", " ");
       \u0275\u0275advance(2);
-      \u0275\u0275styleMap(\u0275\u0275pureFunction0(62, _c49));
+      \u0275\u0275styleMap(\u0275\u0275pureFunction0(62, _c48));
       \u0275\u0275twoWayProperty("visible", ctx.showGeneratorModal);
       \u0275\u0275property("modal", true)("draggable", false)("resizable", false)("header", "AI Project Generator");
       \u0275\u0275advance(8);
@@ -44139,7 +43149,7 @@ var routes = [
       }
       return true;
     }],
-    loadComponent: () => import("./chunk-JWFJM57Y.js").then((m) => m.PageAssistantCompareComponent)
+    loadComponent: () => import("./chunk-CCMVLH5X.js").then((m) => m.PageAssistantCompareComponent)
   },
   {
     path: "page-assistant/share",
@@ -44404,12 +43414,12 @@ var HeaderComponent = class _HeaderComponent {
 })();
 
 // src/app/template/sidebar.component.ts
-var _c021 = () => ["/"];
-var _c121 = () => ["/page-assistant"];
-var _c214 = () => ["/image-assistant"];
-var _c310 = () => ["/translation-assistant"];
-var _c410 = () => ["/ia-assistant"];
-var _c510 = () => ["/inventory-assistant"];
+var _c020 = () => ["/"];
+var _c120 = () => ["/page-assistant"];
+var _c213 = () => ["/image-assistant"];
+var _c39 = () => ["/translation-assistant"];
+var _c49 = () => ["/ia-assistant"];
+var _c59 = () => ["/inventory-assistant"];
 var _c68 = () => ["/metadata-assistant"];
 var _c77 = () => ["/llm-evaluation"];
 var _c87 = () => ["/about-us"];
@@ -44548,7 +43558,7 @@ var SidebarComponent = class _SidebarComponent {
     }
     if (rf & 2) {
       \u0275\u0275advance(5);
-      \u0275\u0275property("routerLink", \u0275\u0275pureFunction0(65, _c021));
+      \u0275\u0275property("routerLink", \u0275\u0275pureFunction0(65, _c020));
       \u0275\u0275advance(4);
       \u0275\u0275textInterpolate(\u0275\u0275pipeBind1(10, 37, "title.landing"));
       \u0275\u0275advance(3);
@@ -44560,15 +43570,15 @@ var SidebarComponent = class _SidebarComponent {
       \u0275\u0275advance();
       \u0275\u0275classProp("hidden", !ctx.isExpanded.main);
       \u0275\u0275advance();
-      \u0275\u0275property("routerLink", \u0275\u0275pureFunction0(66, _c121));
+      \u0275\u0275property("routerLink", \u0275\u0275pureFunction0(66, _c120));
       \u0275\u0275advance(4);
       \u0275\u0275textInterpolate(\u0275\u0275pipeBind1(24, 41, "menu.page"));
       \u0275\u0275advance(2);
-      \u0275\u0275property("routerLink", \u0275\u0275pureFunction0(67, _c214));
+      \u0275\u0275property("routerLink", \u0275\u0275pureFunction0(67, _c213));
       \u0275\u0275advance(4);
       \u0275\u0275textInterpolate(\u0275\u0275pipeBind1(30, 43, "menu.image"));
       \u0275\u0275advance(2);
-      \u0275\u0275property("routerLink", \u0275\u0275pureFunction0(68, _c310));
+      \u0275\u0275property("routerLink", \u0275\u0275pureFunction0(68, _c39));
       \u0275\u0275advance(4);
       \u0275\u0275textInterpolate(\u0275\u0275pipeBind1(36, 45, "menu.translation"));
       \u0275\u0275advance(3);
@@ -44580,11 +43590,11 @@ var SidebarComponent = class _SidebarComponent {
       \u0275\u0275advance();
       \u0275\u0275classProp("hidden", !ctx.isExpanded.project);
       \u0275\u0275advance();
-      \u0275\u0275property("routerLink", \u0275\u0275pureFunction0(69, _c410));
+      \u0275\u0275property("routerLink", \u0275\u0275pureFunction0(69, _c49));
       \u0275\u0275advance(4);
       \u0275\u0275textInterpolate(\u0275\u0275pipeBind1(50, 49, "menu.ia"));
       \u0275\u0275advance(2);
-      \u0275\u0275property("routerLink", \u0275\u0275pureFunction0(70, _c510));
+      \u0275\u0275property("routerLink", \u0275\u0275pureFunction0(70, _c59));
       \u0275\u0275advance(4);
       \u0275\u0275textInterpolate(\u0275\u0275pipeBind1(56, 51, "menu.inventory"));
       \u0275\u0275advance(2);
