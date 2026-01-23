@@ -5,7 +5,7 @@
 <div class="flex flex-wrap justify-content-between mb-3">
   <div class="flex gap-2">
     <p-button
-      label="Send to GenAI"
+      label="{{ 'page.compare.button.genai' | translate }}"
       [icon]="isLoading ? 'pi pi-spinner pi-spin' : 'pi pi-comments'"
       severity="primary"
       (onClick)="sendToAI()"
@@ -162,8 +162,8 @@
                 [(ngModel)]="toggleEdit"
                 offLabel="Edit"
                 onLabel="Save"
-                offIcon="pi pi-pen-to-square"
-                onIcon="pi pi-save"
+                [offIcon]="'pi pi-pen-to-square'"
+                [onIcon]="'pi pi-save'"
                 ariaLabel="Edit/Save"
                 styleClass="font-bold border-none w-6rem"
                 (onChange)="toolbarToggleEdit(webSelectedView())"

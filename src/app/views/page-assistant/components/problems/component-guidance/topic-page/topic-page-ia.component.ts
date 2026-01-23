@@ -18,6 +18,7 @@ import { OrganizationChartModule } from 'primeng/organizationchart';
 import { ProgressBarModule } from 'primeng/progressbar';
 import { InputNumberModule } from 'primeng/inputnumber';
 import { InputTextModule } from 'primeng/inputtext';
+import { StepperModule } from 'primeng/stepper';
 import {
   Tree,
   TreeNodeContextMenuSelectEvent,
@@ -62,6 +63,7 @@ type TopicPageLinkInfo = {
     ProgressBarModule,
     InputNumberModule,
     InputTextModule,
+    StepperModule,
     Tree,
     ContextMenuModule,
     InputGroup,
@@ -92,6 +94,19 @@ type TopicPageLinkInfo = {
     /* remove default hover style from tree nodes */
     ::ng-deep .p-tree .p-tree-node-content:hover {
       background-color: unset !important;
+    }
+
+    :host ::ng-deep .topic-ia-steps .topic-ia-step-list {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 0.5rem;
+      margin: 0;
+    }
+
+    :host ::ng-deep .topic-ia-steps .topic-ia-step-list .p-step {
+      justify-content: flex-start;
+      text-align: left;
+      width: 100%;
     }
 
     ::ng-deep .topic-ia-badge {
@@ -141,6 +156,7 @@ export class TopicPageIaComponent implements OnInit {
   private messageService = inject(MessageService);
 
   production: boolean = environment.production;
+  activeStep = 1;
 
   constructor() {
     effect(() => {
@@ -176,6 +192,9 @@ export class TopicPageIaComponent implements OnInit {
   totalUrls = 0;
   processedUrls = 0;
   showCsvUpload = false;
+  step1Complete = false;
+  hasCopiedUrls = false;
+  csvUploaded = false;
   csvFileName = '';
   urlColumnIndex: number | null = null;
   topicPageTree: TreeNode[] = [];
@@ -224,6 +243,8 @@ export class TopicPageIaComponent implements OnInit {
     this.updateNodeStyles(this.iaChart, 0);
     this.applyVisitsToIaTree();
     this.rebuildTopicPageTreeFromIa();
+    this.step1Complete = true;
+    this.expandStep(2);
 
     // Avoid shifting the view after crawl completion.
   }
@@ -373,7 +394,9 @@ export class TopicPageIaComponent implements OnInit {
         summary: this.translate.instant('page.topicIa.copyUrls.success'),
         life: 3000,
       });
+      this.hasCopiedUrls = true;
       this.showCsvUpload = true;
+      this.expandStep(3);
     } catch (err) {
       console.error('Failed to copy URLs:', err);
       this.messageService.add({
@@ -391,6 +414,10 @@ export class TopicPageIaComponent implements OnInit {
     this.readCsvFile(file);
   }
 
+  private expandStep(stepIndex: number): void {
+    this.activeStep = stepIndex;
+  }
+
   private readCsvFile(file: File) {
     const reader = new FileReader();
     reader.onload = () => {
@@ -404,6 +431,7 @@ export class TopicPageIaComponent implements OnInit {
         this.urlColumnIndex,
         this.visitsColumnIndex,
       );
+      this.csvUploaded = this.visitsByUrl.size > 0;
       this.applyVisitsToIaTree();
       this.rebuildTopicPageTreeFromIa();
       this.messageService.add({

@@ -1,58 +1,100 @@
 <!--UI-->
-<div class="flex flex-row flex-wrap align-items-center gap-3 mt-0">
-  <p-iftalabel>
-    <p-inputnumber
-      [(ngModel)]="depth"
-      inputId="depth"
-      mode="decimal"
-      [showButtons]="true"
-      [min]="2"
-      [max]="6"
-    />
-    <label for="depth">Depth</label>
-  </p-iftalabel>
-  <p-button
-    label="Verify IA"
-    severity="help"
-    (click)="checkIA()"
-    [loading]="isChartLoading"
-    icon="pi pi-info-circle"
-  />
-  <p-button
-    label="Copy URLs to clipboard"
-    severity="secondary"
-    (click)="copyUrlsToClipboard()"
-    icon="pi pi-copy"
-    *ngIf="iaChart && iaChart.length > 0 && !isChartLoading"
-  />
-  <ng-container *ngIf="showCsvUpload">
-    <div class="flex flex-column gap-1">
-      <label for="topic-ia-csv-upload">{{
-        'page.topicIa.csvUpload.label' | translate
-      }}</label>
-      <p-fileUpload
-        id="topic-ia-csv-upload"
-        name="topicIaCsv"
-        accept=".csv"
-        mode="basic"
-        [auto]="true"
-        [customUpload]="true"
-        (uploadHandler)="onCsvUpload($event)"
-        [chooseLabel]="'page.topicIa.csvUpload.choose' | translate"
-        chooseIcon="pi pi-upload"
-        severity="secondary"
-        outlined
+<p class="mt-0">
+  To edit this topic page or to convert it to one, follow these steps:
+</p>
+<p-stepper [(value)]="activeStep" [linear]="false" class="topic-ia-steps">
+  <p-step-list class="topic-ia-step-list">
+    <p-step [value]="1">Get current IA Structure</p-step>
+    <p-step [value]="2">Get page visits</p-step>
+    <p-step [value]="3">Create the sections of your topic page</p-step>
+  </p-step-list>
+</p-stepper>
+
+<div class="grid mt-3">
+  <div class="col-12 md:col-4">
+    <div class="h-full surface-0 border-1 border-round border-200 p-3">
+      <p class="mt-0">Execute a 3-to-4-levels-deep <strong>crawl of the IA</strong>. This will:</p>
+      <ul>
+        <li>Retrieve subpages</li>
+        <li>Retrieve depths</li>
+        <li>Generate a visual IA structure tree below</li>
+      </ul>
+      <div class="flex flex-row flex-wrap align-items-center gap-3 mt-0">
+        <p-iftalabel>
+          <p-inputnumber
+            [(ngModel)]="depth"
+            inputId="depth"
+            mode="decimal"
+            [showButtons]="true"
+            [min]="2"
+            [max]="6"
+          />
+          <label for="depth">Depth</label>
+        </p-iftalabel>
+        <p-button
+          label="Get subpages in IA"
+          [severity]="step1Complete ? 'secondary' : 'primary'"
+          (click)="checkIA()"
+          [loading]="isChartLoading"
+          icon="pi pi-info-circle"
+        />
+      </div>
+      <p-progressbar
+        *ngIf="isChartLoading"
+        [value]="iaProgress"
+        [showValue]="false"
+        [style]="{ height: '1rem' }"
+        styleClass="mt-3"
       />
     </div>
-  </ng-container>
+  </div>
+
+  <div class="col-12 md:col-4" *ngIf="step1Complete">
+    <div class="h-full surface-0 border-1 border-round border-200 p-3">
+      <p class="mt-0">Manually <strong>retrieve page visits</strong> from the UPD:</p>
+      <ul>
+        <li>Go to the <a href="#">Custom reports page of the UPD</a></li>
+        <li>Set ... to None</li>
+        <li>Set the date range to the last year</li>
+        <li>Select page visits</li>
+        <li>Export the data as a CSV file and save it</li>
+      </ul>
+      <p-button
+        label="Copy URLs to clipboard"
+        [severity]="hasCopiedUrls ? 'secondary' : 'primary'"
+        (click)="copyUrlsToClipboard()"
+        icon="pi pi-copy"
+        *ngIf="iaChart && iaChart.length > 0 && !isChartLoading"
+      />
+    </div>
+  </div>
+
+  <div class="col-12 md:col-4" *ngIf="showCsvUpload">
+    <div class="h-full surface-0 border-1 border-round border-200 p-3">
+      <p class="mt-0"><strong>Upload your saved CSV</strong> file. This will:</p>
+      <ul>
+        <li>Parse and display the page visits data</li>
+        <li>Suggest sections for your topic page based on visits and levels</li>
+      </ul>
+      <p>You can then manually move the pages from one section to another.</p>
+      <div class="flex justify-content-start">
+        <p-fileUpload
+          id="topic-ia-csv-upload"
+          name="topicIaCsv"
+          accept=".csv"
+          mode="basic"
+          [auto]="true"
+          [customUpload]="true"
+            (uploadHandler)="onCsvUpload($event)"
+            [chooseLabel]="'page.topicIa.csvUpload.choose' | translate"
+            chooseIcon="pi pi-upload"
+            [chooseStyleClass]="csvUploaded ? 'p-button-secondary' : 'p-button-primary'"
+            outlined
+          />
+      </div>
+    </div>
+  </div>
 </div>
-<p-progressbar
-  *ngIf="isChartLoading"
-  [value]="iaProgress"
-  [showValue]="false"
-  [style]="{ height: '1rem' }"
-  styleClass="mt-3"
-/>
 
 <!--Breadcrumb-->
 <ng-container *ngIf="breadcrumb.length > 0">
