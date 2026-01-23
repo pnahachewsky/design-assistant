@@ -27904,12 +27904,6 @@ var InventoryAssistantComponent = class _InventoryAssistantComponent {
         return;
       this.loading = true;
       this.results = [];
-      if (!csvCache["en"] || !csvCache["fr"]) {
-        [csvCache["en"], csvCache["fr"]] = yield Promise.all([
-          this.loadCsv("gcPage-report/sanitized_cra_gcPageReport_en.csv"),
-          this.loadCsv("gcPage-report/sanitized_cra_gcPageReport_fr.csv")
-        ]);
-      }
       const metadataResults = [];
       for (const url of urls) {
         let result;
@@ -43149,7 +43143,7 @@ var routes = [
       }
       return true;
     }],
-    loadComponent: () => import("./chunk-BOQCWU74.js").then((m) => m.PageAssistantCompareComponent)
+    loadComponent: () => import("./chunk-7S343LKN.js").then((m) => m.PageAssistantCompareComponent)
   },
   {
     path: "page-assistant/share",
