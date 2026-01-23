@@ -98,15 +98,60 @@ type TopicPageLinkInfo = {
 
     :host ::ng-deep .topic-ia-steps .topic-ia-step-list {
       display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
+      grid-template-columns: repeat(4, minmax(0, 1fr));
       gap: 0.5rem;
       margin: 0;
+    }
+
+    @media (max-width: 1500px) {
+      :host ::ng-deep .topic-ia-steps .topic-ia-step-list {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 0.1rem;
+      }
+    }
+
+    @media (max-width: 1500px) {
+      :host ::ng-deep .topic-ia-steps .p-step-header {
+        padding: 0;
+      }
+
+      :host ::ng-deep .topic-ia-steps .p-stepper-separator {
+        margin: 0;
+      }
+    }
+
+    :host ::ng-deep .topic-ia-steps {
+      margin-bottom: 0;
+    }
+
+    :host ::ng-deep .topic-ia-steps .p-step-title {
+      font-weight: 600;
+      font-size: 1.02rem;
     }
 
     :host ::ng-deep .topic-ia-steps .topic-ia-step-list .p-step {
       justify-content: flex-start;
       text-align: left;
       width: 100%;
+    }
+
+    :host ::ng-deep .topic-ia-panels {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 1rem;
+      margin-top: 0.75rem;
+    }
+
+    @media (max-width: 1500px) {
+      :host ::ng-deep .topic-ia-panels {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 1000px) {
+      :host ::ng-deep .topic-ia-panels {
+        grid-template-columns: minmax(0, 1fr);
+      }
     }
 
     ::ng-deep .topic-ia-badge {
@@ -194,6 +239,7 @@ export class TopicPageIaComponent implements OnInit {
   showCsvUpload = false;
   step1Complete = false;
   hasCopiedUrls = false;
+  updInstructionsComplete = false;
   csvUploaded = false;
   csvFileName = '';
   urlColumnIndex: number | null = null;
@@ -395,7 +441,6 @@ export class TopicPageIaComponent implements OnInit {
         life: 3000,
       });
       this.hasCopiedUrls = true;
-      this.showCsvUpload = true;
       this.expandStep(3);
     } catch (err) {
       console.error('Failed to copy URLs:', err);
@@ -416,6 +461,12 @@ export class TopicPageIaComponent implements OnInit {
 
   private expandStep(stepIndex: number): void {
     this.activeStep = stepIndex;
+  }
+
+  proceedToCsvUpload(): void {
+    this.updInstructionsComplete = true;
+    this.showCsvUpload = true;
+    this.expandStep(4);
   }
 
   private readCsvFile(file: File) {
