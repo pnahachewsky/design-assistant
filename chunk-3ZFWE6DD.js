@@ -24627,7 +24627,7 @@ var AiOptionsComponent = class _AiOptionsComponent {
     this.promptChange.emit(key2);
   }
   //AI model
-  selectedAi = AiModel.Llama33;
+  selectedAi = AiModel.Nemotron;
   selectedAis = [];
   freeAiOptions = [
     { id: AiModel.Qwen, label: "page.ai-options.model.Qwen", disabled: false },
@@ -38243,7 +38243,7 @@ ${base}`;
     });
   }
   //AI Model
-  selectedAiModel = AiModel.Llama33;
+  selectedAiModel = AiModel.Nemotron;
   onAiChange(key2) {
     this.selectedAiModel = key2;
   }
@@ -38255,7 +38255,7 @@ ${base}`;
     return key2 ? this.translate.instant(`page.ai-options.model.short.${key2}`) : model;
   }
   buildModelRotation(model) {
-    const invalidFallbacks = /* @__PURE__ */ new Set([AiModel.Qwen]);
+    const invalidFallbacks = /* @__PURE__ */ new Set([AiModel.Nemotron]);
     const available = this.openRouter.freeModels.filter((candidate) => !invalidFallbacks.has(candidate));
     return [model, ...available.filter((candidate) => candidate !== model)].slice(0, 3);
   }
@@ -39187,4 +39187,4 @@ ${base}`;
 export {
   PageAssistantCompareComponent
 };
-//# sourceMappingURL=chunk-VFAXLCIO.js.map
+//# sourceMappingURL=chunk-3ZFWE6DD.js.map
