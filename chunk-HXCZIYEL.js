@@ -21413,6 +21413,21 @@ JSON Structure:
 }
 `
 };
+var CommsObjectivePrompt = `You are a CRA IA assistant. Match a communications objective to the best candidates from the provided list of pages.
+- The communications objective might be a page that has low or no visits but should be highlighted.
+- The objective may be a URL or a page title.
+- Compare the objective against the provided candidates list.
+- Use the suggested section (if present) to decide where the best match should live.
+- Choose up to 3 best matches from the candidates list.
+- If there is no reasonable match, return an empty list.
+
+Return ONLY compact JSON (no prose):
+{
+  "targetSection": "most|doormats|feature|notOnTopics",
+  "recommended": [
+    { "url": "string", "label": "string", "reason": "short reason", "currentSection": "most|doormats|feature|notOnTopics" }
+  ]
+}`;
 
 // src/app/views/page-assistant/services/openrouter.service.ts
 var OpenRouterService = class _OpenRouterService {
@@ -34925,21 +34940,7 @@ var TopicIaJsonComponent = class _TopicIaJsonComponent {
         });
         return { recommendations: [] };
       }
-      const system = `You are a CRA IA assistant. Match a communications objective to the best candidates from the provided list of pages.
-- The communications objective might be a page that has low or no visits but should be highlighted.
-- The objective may be a URL or a page title.
-- Compare the objective against the provided candidates list.
-- Use the suggested section (if present) to decide where the best match should live.
-- Choose up to 3 best matches from the candidates list.
-- If there is no reasonable match, return an empty list.
-
-Return ONLY compact JSON (no prose):
-{
-  "targetSection": "most|doormats|feature|notOnTopics",
-  "recommended": [
-    { "url": "string", "label": "string", "reason": "short reason", "currentSection": "most|doormats|feature|notOnTopics" }
-  ]
-}`;
+      const system = CommsObjectivePrompt;
       const payload = {
         objective: input,
         targetSectionHint,
@@ -36710,7 +36711,7 @@ Return ONLY compact JSON (no prose):
   }] });
 })();
 (() => {
-  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(TopicIaJsonComponent, { className: "TopicIaJsonComponent", filePath: "src/app/views/page-assistant/components/problems/component-guidance/topic-page/topic-ia-json.component.ts", lineNumber: 215 });
+  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(TopicIaJsonComponent, { className: "TopicIaJsonComponent", filePath: "src/app/views/page-assistant/components/problems/component-guidance/topic-page/topic-ia-json.component.ts", lineNumber: 216 });
 })();
 
 // src/app/views/page-assistant/components/problems.component.ts
@@ -39187,4 +39188,4 @@ ${base}`;
 export {
   PageAssistantCompareComponent
 };
-//# sourceMappingURL=chunk-HBZGT7MY.js.map
+//# sourceMappingURL=chunk-HXCZIYEL.js.map
