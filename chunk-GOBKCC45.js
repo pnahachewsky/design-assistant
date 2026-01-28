@@ -48364,13 +48364,13 @@ var PromptKey;
 })(PromptKey || (PromptKey = {}));
 var AiModel;
 (function(AiModel2) {
-  AiModel2["Qwen"] = "qwen/qwen3-next-80b-a3b-instruct:free";
   AiModel2["Nemotron"] = "nvidia/nemotron-3-nano-30b-a3b:free";
   AiModel2["DeepSeek"] = "deepseek/deepseek-r1-0528:free";
   AiModel2["Chimera"] = "tngtech/deepseek-r1t2-chimera:free";
   AiModel2["Gemma"] = "google/gemma-3-27b-it:free";
   AiModel2["Mistral"] = "mistralai/mistral-small-3.1-24b-instruct:free";
   AiModel2["Llama33"] = "meta-llama/llama-3.3-70b-instruct:free";
+  AiModel2["Qwen"] = "qwen/qwen3-next-80b-a3b-instruct:free";
   AiModel2["Llama32"] = "meta-llama/llama-3.2-3b-instruct";
   AiModel2["Gpt5Mini"] = "openai/gpt-5-mini";
   AiModel2["Gemini"] = "google/gemini-2.5-flash-lite";
@@ -100236,4 +100236,4 @@ export {
    * License: MIT
    *)
 */
-//# sourceMappingURL=chunk-NBQ54YL3.js.map
+//# sourceMappingURL=chunk-GOBKCC45.js.map
