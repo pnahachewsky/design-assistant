@@ -100,13 +100,13 @@ export class AiOptionsComponent implements OnInit {
   selectedAis: AiModel[] = [];
 
   freeAiOptions = [
-    { id: AiModel.Qwen, label: 'page.ai-options.model.Qwen', disabled: false },
     { id: AiModel.Nemotron, label: 'page.ai-options.model.Nemotron', disabled: false },
     { id: AiModel.DeepSeek, label: 'page.ai-options.model.DeepSeek', disabled: false },
     { id: AiModel.Chimera, label: 'page.ai-options.model.Chimera', disabled: false },
     { id: AiModel.Gemma, label: 'page.ai-options.model.Gemma', disabled: false },
     { id: AiModel.Mistral, label: 'page.ai-options.model.Mistral', disabled: false },
     { id: AiModel.Llama33, label: 'page.ai-options.model.Llama33', disabled: false },
+    { id: AiModel.Qwen, label: 'page.ai-options.model.Qwen', disabled: false },
   ];
   paidAiOptions = [
     { id: AiModel.Llama32, label: 'page.ai-options.model.Llama32', disabled: false },
