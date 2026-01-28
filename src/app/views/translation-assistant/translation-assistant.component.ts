@@ -11,6 +11,7 @@ import { PanelModule } from 'primeng/panel';
 import { MessageModule } from 'primeng/message';
 import { FileUploadModule } from 'primeng/fileupload';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
+import { TextareaModule } from 'primeng/textarea';
 
 // FontAwesome
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
@@ -33,6 +34,7 @@ import { TranslationService } from '../../services/translation.service';
     FileUploadModule,
     FormsModule,
     ProgressSpinnerModule,
+    TextareaModule,
     FontAwesomeModule,
   ],
   templateUrl: './translation-assistant.component.html',

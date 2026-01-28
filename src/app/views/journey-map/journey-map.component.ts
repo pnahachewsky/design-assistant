@@ -529,7 +529,7 @@ const INITIAL_USER_STORIES: UserStory[] = [
 
           <div>
             <label class="block font-medium mb-2 text-700">Feedback</label>
-            <textarea pInputTextarea rows="4" class="w-full" placeholder="Describe the feedback..." [(ngModel)]="newFeedback.comment"></textarea>
+            <textarea pTextarea rows="4" class="w-full" placeholder="Describe the feedback..." [(ngModel)]="newFeedback.comment"></textarea>
           </div>
         </div>
         <ng-template pTemplate="footer">
@@ -596,7 +596,7 @@ const INITIAL_USER_STORIES: UserStory[] = [
           
           <div>
             <label class="block font-bold mb-2 text-700">Project Context</label>
-            <textarea pInputTextarea rows="5" class="w-full" placeholder="e.g., Applying for a Passport online..." [(ngModel)]="generatorContext"></textarea>
+            <textarea pTextarea rows="5" class="w-full" placeholder="e.g., Applying for a Passport online..." [(ngModel)]="generatorContext"></textarea>
           </div>
 
           <div *ngIf="generatorError" class="bg-red-50 text-red-700 p-3 border-round flex align-items-center gap-2">

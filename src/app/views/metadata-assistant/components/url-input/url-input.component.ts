@@ -2,7 +2,7 @@ import { Component, EventEmitter, Input, Output, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
-import { InputTextarea } from 'primeng/inputtextarea';
+import { Textarea } from 'primeng/textarea';
 import { ButtonModule } from 'primeng/button';
 import { CardModule } from 'primeng/card';
 import { ChipModule } from 'primeng/chip';
@@ -15,7 +15,7 @@ import { MessageModule } from 'primeng/message';
     CommonModule,
     FormsModule,
     TranslateModule,
-    InputTextarea,
+    Textarea,
     ButtonModule,
     CardModule,
     ChipModule,

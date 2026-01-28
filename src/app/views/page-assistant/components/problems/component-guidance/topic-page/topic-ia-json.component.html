@@ -14,7 +14,7 @@
     </p-iftalabel>
     <p-button
       label="Get subpages in IA"
-      severity="primary"
+      [severity]="step1Complete ? 'secondary' : 'primary'"
       (click)="checkIA()"
       [loading]="isChartLoading"
       icon="pi pi-info-circle"
@@ -30,6 +30,67 @@
 
 <!--Breadcrumb-->
 <ng-container *ngIf="breadcrumb.length > 0">
+  <h2>Contextual input (for Most requested or Features)</h2>
+  <div class="grid mt-3">
+    <div class="col-12 md:col-4">
+      <label
+        for="topic-ia-comm-objectives"
+        class="block text-lg font-semibold mb-2"
+      >
+        Are there any communications objectives to consider?
+      </label>
+      <textarea
+        pTextarea
+        id="topic-ia-comm-objectives"
+        [(ngModel)]="commObjectivesInput"
+        rows="3"
+        class="w-full"
+        style="height: 6rem; overflow: auto;"
+      ></textarea>
+    </div>
+    <div class="col-12 md:col-4">
+      <label
+        for="topic-ia-feedback-insights"
+        class="block text-lg font-semibold mb-2"
+      >
+        What insights do you have from feedback data?
+      </label>
+      <textarea
+        pTextarea
+        id="topic-ia-feedback-insights"
+        [(ngModel)]="feedbackInsightsInput"
+        rows="3"
+        class="w-full"
+        style="height: 6rem; overflow: auto;"
+      ></textarea>
+    </div>
+    <div class="col-12 md:col-4">
+      <label
+        for="topic-ia-call-trouble"
+        class="block text-lg font-semibold mb-2"
+      >
+        What are people having trouble with when they call us?
+      </label>
+      <textarea
+        pTextarea
+        id="topic-ia-call-trouble"
+        [(ngModel)]="callTroubleInput"
+        rows="3"
+        class="w-full"
+        style="height: 6rem; overflow: auto;"
+      ></textarea>
+    </div>
+  </div>
+  <div class="flex justify-content-end mt-3">
+    <p-button
+      label="Send my input to GenAI"
+      [severity]="commObjectivesInput.trim() ? 'primary' : 'secondary'"
+      icon="pi pi-send"
+      [loading]="isAiLoading"
+      [disabled]="!commObjectivesInput.trim() || isAiLoading"
+      (click)="sendContextInputToGenAI()"
+    />
+  </div>
   <h2>Breadcrumb</h2>
   <div class="flex flex-row align-items-center gap-3">
     <p-breadcrumb class="max-w-full" styleClass="pl-1" [model]="breadcrumb" />
