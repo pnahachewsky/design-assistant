@@ -137,7 +137,7 @@ import {
   unblockBodyScroll,
   uuid,
   zindexutils
-} from "./chunk-YY665KVB.js";
+} from "./chunk-NBQ54YL3.js";
 import {
   ChangeDetectionStrategy,
   ChangeDetectorRef,
@@ -21414,6 +21414,75 @@ JSON Structure:
 `
 };
 
+// src/app/views/page-assistant/services/openrouter.service.ts
+var OpenRouterService = class _OpenRouterService {
+  http = inject(HttpClient);
+  apiKeyService = inject(ApiKeyService);
+  openRouterApiUrl = "https://openrouter.ai/api/v1/chat/completions";
+  models = Object.values(AiModel);
+  freeModels = this.models.filter((model) => model !== AiModel.Gpt5Mini);
+  get hasApiKey() {
+    return !!this.apiKeyService.getCurrentKey();
+  }
+  call(_0, _1) {
+    return __async(this, arguments, function* (model, messages, options = {}) {
+      const apiKey = this.apiKeyService.getCurrentKey();
+      if (!apiKey) {
+        throw new Error("API key is required.");
+      }
+      const headers = new HttpHeaders({
+        Authorization: `Bearer ${apiKey}`,
+        "Content-Type": "application/json",
+        Accept: "application/json",
+        "X-Title": options.title ?? "Content Assistant"
+      });
+      const payload = {
+        model,
+        messages,
+        temperature: options.temperature ?? 0
+      };
+      try {
+        const resp = yield this.http.post(this.openRouterApiUrl, payload, {
+          headers,
+          responseType: "text",
+          observe: "response"
+        }).toPromise();
+        const ct = resp?.headers.get("content-type") || "";
+        if (ct.includes("application/json") && typeof resp?.body === "string") {
+          return JSON.parse(resp.body);
+        }
+        const nonJsonMessage = `OpenRouter non-JSON (status ${resp?.status}, ${ct})`;
+        console.error(`${nonJsonMessage}:
+`, (resp?.body || "").slice(0, 500));
+        if (options.throwOnError) {
+          throw new Error(nonJsonMessage);
+        }
+        return void 0;
+      } catch (err) {
+        const httpErr = err;
+        const status = httpErr?.status;
+        const bodySnippet = typeof httpErr?.error === "string" ? httpErr.error.slice(0, 500) : JSON.stringify(httpErr?.error);
+        const message = `OpenRouter HTTP error (model: ${model}) status=${status}: ${bodySnippet}`;
+        console.error(message);
+        if (options.throwOnError) {
+          throw new Error(message);
+        }
+        return void 0;
+      }
+    });
+  }
+  static \u0275fac = function OpenRouterService_Factory(__ngFactoryType__) {
+    return new (__ngFactoryType__ || _OpenRouterService)();
+  };
+  static \u0275prov = /* @__PURE__ */ \u0275\u0275defineInjectable({ token: _OpenRouterService, factory: _OpenRouterService.\u0275fac, providedIn: "root" });
+};
+(() => {
+  (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(OpenRouterService, [{
+    type: Injectable,
+    args: [{ providedIn: "root" }]
+  }], null, null);
+})();
+
 // src/app/views/page-assistant/components/problems/component-guidance/alerts-guidance/severity-include-fallback.json
 var severity_include_fallback_default = {
   Misuse: { severity: "Medium", include: true },
@@ -21441,8 +21510,7 @@ var severity_include_fallback_default = {
 
 // src/app/views/page-assistant/services/alert-ai.service.ts
 var AlertAiService = class _AlertAiService {
-  http = inject(HttpClient);
-  apiKeyService = inject(ApiKeyService);
+  openRouter = inject(OpenRouterService);
   messageService = inject(MessageService);
   translate = inject(TranslateService);
   issuesUpdatedSubject = new Subject();
@@ -21456,8 +21524,7 @@ var AlertAiService = class _AlertAiService {
     const include = typeof v?.include === "boolean" ? v.include : void 0;
     return [k.toLowerCase(), { severity, include }];
   }));
-  openRouterApiUrl = "https://openrouter.ai/api/v1/chat/completions";
-  models = Object.values(AiModel);
+  models = this.openRouter.freeModels;
   /** Call OpenRouter with the AlertsIssues prompt and return normalized issues. */
   analyze(alertHtml, pageContext) {
     return __async(this, null, function* () {
@@ -21490,7 +21557,11 @@ var AlertAiService = class _AlertAiService {
         for (let i = 0; i < this.models.length; i += 1) {
           const model = this.models[i];
           try {
-            const resp = yield this.callOpenRouter(model, messages);
+            const resp = yield this.openRouter.call(model, messages, {
+              temperature: 0,
+              title: "Content Assistant - Alert Guidance",
+              throwOnError: true
+            });
             const text = resp?.choices?.[0]?.message?.content;
             if (!text)
               continue;
@@ -21582,43 +21653,6 @@ var AlertAiService = class _AlertAiService {
     this.issuesUpdatedSubject.next({
       html: normalized,
       issues: copied.map((issue) => __spreadValues({}, issue))
-    });
-  }
-  // ---------- OpenRouter plumbing ----------
-  callOpenRouter(model, messages, temperature = 0) {
-    return __async(this, null, function* () {
-      const apiKey = this.apiKeyService.getCurrentKey();
-      if (!apiKey)
-        throw new Error("API key is required.");
-      const headers = new HttpHeaders({
-        Authorization: `Bearer ${apiKey}`,
-        "Content-Type": "application/json",
-        Accept: "application/json",
-        "X-Title": "Content Assistant - Alert Guidance"
-      });
-      const payload = { model, messages, temperature };
-      try {
-        const resp = yield this.http.post(this.openRouterApiUrl, payload, {
-          headers,
-          responseType: "text",
-          observe: "response"
-        }).toPromise();
-        const ct = resp?.headers.get("content-type") || "";
-        if (ct.includes("application/json") && typeof resp?.body === "string") {
-          return JSON.parse(resp.body);
-        }
-        const nonJsonMessage = `OpenRouter non-JSON (status ${resp?.status}, ${ct})`;
-        console.error(`${nonJsonMessage}:
-`, (resp?.body || "").slice(0, 500));
-        throw new Error(nonJsonMessage);
-      } catch (err) {
-        const httpErr = err;
-        const status = httpErr?.status;
-        const bodySnippet = typeof httpErr?.error === "string" ? httpErr.error.slice(0, 500) : JSON.stringify(httpErr?.error);
-        const message = `OpenRouter HTTP error (model: ${model}) status=${status}: ${bodySnippet}`;
-        console.error(message);
-        throw new Error(message);
-      }
     });
   }
   notifyError(err) {
@@ -24593,22 +24627,29 @@ var AiOptionsComponent = class _AiOptionsComponent {
     this.promptChange.emit(key2);
   }
   //AI model
-  selectedAi = AiModel.Devstral;
+  selectedAi = AiModel.Llama33;
   selectedAis = [];
   freeAiOptions = [
-    { id: AiModel.Devstral, label: "page.ai-options.model.Devstral", disabled: false },
     { id: AiModel.Qwen, label: "page.ai-options.model.Qwen", disabled: false },
-    { id: AiModel.Xiaomi, label: "page.ai-options.model.Xiaomi", disabled: false },
     { id: AiModel.Nemotron, label: "page.ai-options.model.Nemotron", disabled: false },
     { id: AiModel.DeepSeek, label: "page.ai-options.model.DeepSeek", disabled: false },
+    { id: AiModel.Chimera, label: "page.ai-options.model.Chimera", disabled: false },
     { id: AiModel.Gemma, label: "page.ai-options.model.Gemma", disabled: false },
     { id: AiModel.Mistral, label: "page.ai-options.model.Mistral", disabled: false },
-    { id: AiModel.Llama32, label: "page.ai-options.model.Llama32", disabled: false },
-    { id: AiModel.Llama31, label: "page.ai-options.model.Llama31", disabled: false }
+    { id: AiModel.Llama33, label: "page.ai-options.model.Llama33", disabled: false }
   ];
   paidAiOptions = [
+    { id: AiModel.Llama32, label: "page.ai-options.model.Llama32", disabled: false },
+    { id: AiModel.Gemini, label: "page.ai-options.model.Gemini", disabled: false },
     { id: AiModel.Gpt5Mini, label: "page.ai-options.model.Gpt5Mini", disabled: false }
   ];
+  ngOnInit() {
+    const freeIds = new Set(this.freeAiOptions.map((option) => option.id));
+    if (!freeIds.has(this.selectedAi)) {
+      this.selectedAi = this.freeAiOptions[0]?.id ?? this.selectedAi;
+    }
+    this.selectedAis = this.selectedAis.filter((id) => freeIds.has(id));
+  }
   isAiCheckboxDisabled(id) {
     return !this.selectedAis.includes(id) && this.selectedAis.length >= 2;
   }
@@ -25921,26 +25962,8 @@ var ValidatorService = class _ValidatorService {
 
 // src/app/views/page-assistant/services/component-ai.service.ts
 var ComponentAiService = class _ComponentAiService {
-  http = inject(HttpClient);
-  apiKeyService = inject(ApiKeyService);
-  openRouterApiUrl = "https://openrouter.ai/api/v1/chat/completions";
-  // Same rotation style as Link Report
-  models = [
-    "meta-llama/llama-3.3-70b-instruct:free",
-    //Still good
-    "google/gemini-2.0-flash-exp:free",
-    //Deprecated
-    "google/gemini-exp-1206:free",
-    // gone
-    "cognitivecomputations/dolphin3.0-mistral-24b:free",
-    // gone
-    "cognitivecomputations/dolphin3.0-r1-mistral-24b:free",
-    // gone
-    "nvidia/llama-3.1-nemotron-70b-instruct:free",
-    // gone
-    "deepseek/deepseek-r1:free"
-    // gone
-  ];
+  openRouter = inject(OpenRouterService);
+  models = this.openRouter.freeModels;
   /** Batch assess selected components; returns a result per input (same order). */
   assess(components) {
     return __async(this, null, function* () {
@@ -25980,7 +26003,10 @@ Return ONLY compact JSON (no prose):
         { role: "user", content: JSON.stringify(user) }
       ];
       for (const model of this.models) {
-        const resp = yield this.callOpenRouter(model, messages, 0);
+        const resp = yield this.openRouter.call(model, messages, {
+          temperature: 0,
+          title: "Content Assistant - Component Guidance"
+        });
         const text = resp?.choices?.[0]?.message?.content;
         if (!text)
           continue;
@@ -25998,42 +26024,6 @@ Return ONLY compact JSON (no prose):
         issues: [],
         rationale: "No AI response."
       };
-    });
-  }
-  // ---------- OpenRouter plumbing ----------
-  callOpenRouter(model, messages, temperature = 0) {
-    return __async(this, null, function* () {
-      const apiKey = this.apiKeyService.getCurrentKey();
-      if (!apiKey)
-        throw new Error("API key is required.");
-      const headers = new HttpHeaders({
-        Authorization: `Bearer ${apiKey}`,
-        "Content-Type": "application/json",
-        Accept: "application/json",
-        "X-Title": "Content Assistant - Component Guidance"
-      });
-      const payload = { model, messages, temperature };
-      try {
-        const resp = yield this.http.post(this.openRouterApiUrl, payload, {
-          headers,
-          responseType: "text",
-          observe: "response"
-        }).toPromise();
-        const ct = resp?.headers.get("content-type") || "";
-        if (ct.includes("application/json") && typeof resp?.body === "string") {
-          return JSON.parse(resp.body);
-        } else {
-          console.error(`OpenRouter non-JSON (status ${resp?.status}, ${ct}):
-`, (resp?.body || "").slice(0, 500));
-          return void 0;
-        }
-      } catch (err) {
-        const httpErr = err;
-        const status = httpErr?.status;
-        const bodySnippet = typeof httpErr?.error === "string" ? httpErr.error.slice(0, 500) : JSON.stringify(httpErr?.error);
-        console.error(`OpenRouter HTTP error (model: ${model}) status=${status}: ${bodySnippet}`);
-        return void 0;
-      }
     });
   }
   // ---------- Output hygiene ----------
@@ -34268,36 +34258,88 @@ function TopicIaJsonComponent_p_progressbar_8_Template(rf, ctx) {
     \u0275\u0275property("value", ctx_r0.iaProgress)("showValue", false);
   }
 }
-function TopicIaJsonComponent_ng_container_9_span_5_Template(rf, ctx) {
+function TopicIaJsonComponent_ng_container_9_span_22_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275elementStart(0, "span", 17);
-    \u0275\u0275element(1, "i", 18);
+    \u0275\u0275elementStart(0, "span", 27);
+    \u0275\u0275element(1, "i", 28);
     \u0275\u0275text(2, "Link found on parent page");
     \u0275\u0275elementEnd();
   }
 }
-function TopicIaJsonComponent_ng_container_9_span_6_Template(rf, ctx) {
+function TopicIaJsonComponent_ng_container_9_span_23_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275elementStart(0, "span", 19);
-    \u0275\u0275element(1, "i", 20);
+    \u0275\u0275elementStart(0, "span", 29);
+    \u0275\u0275element(1, "i", 30);
     \u0275\u0275text(2, "IA Orphan");
     \u0275\u0275elementEnd();
   }
 }
 function TopicIaJsonComponent_ng_container_9_Template(rf, ctx) {
   if (rf & 1) {
+    const _r2 = \u0275\u0275getCurrentView();
     \u0275\u0275elementContainerStart(0);
     \u0275\u0275elementStart(1, "h2");
-    \u0275\u0275text(2, "Breadcrumb");
+    \u0275\u0275text(2, "Contextual input (for Most requested or Features)");
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(3, "div", 13);
-    \u0275\u0275element(4, "p-breadcrumb", 14);
-    \u0275\u0275template(5, TopicIaJsonComponent_ng_container_9_span_5_Template, 3, 0, "span", 15)(6, TopicIaJsonComponent_ng_container_9_span_6_Template, 3, 0, "span", 16);
+    \u0275\u0275elementStart(3, "div", 13)(4, "div", 14)(5, "label", 15);
+    \u0275\u0275text(6, " Are there any communications objectives to consider? ");
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(7, "textarea", 16);
+    \u0275\u0275twoWayListener("ngModelChange", function TopicIaJsonComponent_ng_container_9_Template_textarea_ngModelChange_7_listener($event) {
+      \u0275\u0275restoreView(_r2);
+      const ctx_r0 = \u0275\u0275nextContext();
+      \u0275\u0275twoWayBindingSet(ctx_r0.commObjectivesInput, $event) || (ctx_r0.commObjectivesInput = $event);
+      return \u0275\u0275resetView($event);
+    });
+    \u0275\u0275elementEnd()();
+    \u0275\u0275elementStart(8, "div", 14)(9, "label", 17);
+    \u0275\u0275text(10, " What insights do you have from feedback data? ");
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(11, "textarea", 18);
+    \u0275\u0275twoWayListener("ngModelChange", function TopicIaJsonComponent_ng_container_9_Template_textarea_ngModelChange_11_listener($event) {
+      \u0275\u0275restoreView(_r2);
+      const ctx_r0 = \u0275\u0275nextContext();
+      \u0275\u0275twoWayBindingSet(ctx_r0.feedbackInsightsInput, $event) || (ctx_r0.feedbackInsightsInput = $event);
+      return \u0275\u0275resetView($event);
+    });
+    \u0275\u0275elementEnd()();
+    \u0275\u0275elementStart(12, "div", 14)(13, "label", 19);
+    \u0275\u0275text(14, " What are people having trouble with when they call us? ");
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(15, "textarea", 20);
+    \u0275\u0275twoWayListener("ngModelChange", function TopicIaJsonComponent_ng_container_9_Template_textarea_ngModelChange_15_listener($event) {
+      \u0275\u0275restoreView(_r2);
+      const ctx_r0 = \u0275\u0275nextContext();
+      \u0275\u0275twoWayBindingSet(ctx_r0.callTroubleInput, $event) || (ctx_r0.callTroubleInput = $event);
+      return \u0275\u0275resetView($event);
+    });
+    \u0275\u0275elementEnd()()();
+    \u0275\u0275elementStart(16, "div", 21)(17, "p-button", 22);
+    \u0275\u0275listener("click", function TopicIaJsonComponent_ng_container_9_Template_p_button_click_17_listener() {
+      \u0275\u0275restoreView(_r2);
+      const ctx_r0 = \u0275\u0275nextContext();
+      return \u0275\u0275resetView(ctx_r0.sendContextInputToGenAI());
+    });
+    \u0275\u0275elementEnd()();
+    \u0275\u0275elementStart(18, "h2");
+    \u0275\u0275text(19, "Breadcrumb");
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(20, "div", 23);
+    \u0275\u0275element(21, "p-breadcrumb", 24);
+    \u0275\u0275template(22, TopicIaJsonComponent_ng_container_9_span_22_Template, 3, 0, "span", 25)(23, TopicIaJsonComponent_ng_container_9_span_23_Template, 3, 0, "span", 26);
     \u0275\u0275elementEnd();
     \u0275\u0275elementContainerEnd();
   }
   if (rf & 2) {
     const ctx_r0 = \u0275\u0275nextContext();
+    \u0275\u0275advance(7);
+    \u0275\u0275twoWayProperty("ngModel", ctx_r0.commObjectivesInput);
+    \u0275\u0275advance(4);
+    \u0275\u0275twoWayProperty("ngModel", ctx_r0.feedbackInsightsInput);
+    \u0275\u0275advance(4);
+    \u0275\u0275twoWayProperty("ngModel", ctx_r0.callTroubleInput);
+    \u0275\u0275advance(2);
+    \u0275\u0275property("severity", ctx_r0.commObjectivesInput.trim() ? "primary" : "secondary")("loading", ctx_r0.isAiLoading)("disabled", !ctx_r0.commObjectivesInput.trim() || ctx_r0.isAiLoading);
     \u0275\u0275advance(4);
     \u0275\u0275property("model", ctx_r0.breadcrumb);
     \u0275\u0275advance();
@@ -34308,31 +34350,31 @@ function TopicIaJsonComponent_ng_container_9_Template(rf, ctx) {
 }
 function TopicIaJsonComponent_ng_container_10_ng_template_8_i_1_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275element(0, "i", 32);
+    \u0275\u0275element(0, "i", 42);
   }
 }
 function TopicIaJsonComponent_ng_container_10_ng_template_8_i_2_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275element(0, "i", 33);
+    \u0275\u0275element(0, "i", 43);
   }
 }
 function TopicIaJsonComponent_ng_container_10_ng_template_8_i_3_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275element(0, "i", 34);
+    \u0275\u0275element(0, "i", 44);
   }
 }
 function TopicIaJsonComponent_ng_container_10_ng_template_8_i_4_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275element(0, "i", 35);
+    \u0275\u0275element(0, "i", 45);
   }
 }
 function TopicIaJsonComponent_ng_container_10_ng_template_8_ng_container_5_Template(rf, ctx) {
   if (rf & 1) {
-    const _r3 = \u0275\u0275getCurrentView();
+    const _r4 = \u0275\u0275getCurrentView();
     \u0275\u0275elementContainerStart(0);
-    \u0275\u0275elementStart(1, "a", 36);
+    \u0275\u0275elementStart(1, "a", 46);
     \u0275\u0275listener("click", function TopicIaJsonComponent_ng_container_10_ng_template_8_ng_container_5_Template_a_click_1_listener($event) {
-      \u0275\u0275restoreView(_r3);
+      \u0275\u0275restoreView(_r4);
       const ctx_r0 = \u0275\u0275nextContext(3);
       return \u0275\u0275resetView(ctx_r0.onNodeClick($event));
     });
@@ -34340,118 +34382,118 @@ function TopicIaJsonComponent_ng_container_10_ng_template_8_ng_container_5_Templ
     \u0275\u0275elementContainerEnd();
   }
   if (rf & 2) {
-    const node_r4 = \u0275\u0275nextContext().$implicit;
+    const node_r5 = \u0275\u0275nextContext().$implicit;
     \u0275\u0275advance();
-    \u0275\u0275property("href", node_r4.data.url, \u0275\u0275sanitizeUrl)("innerHTML", node_r4.label, \u0275\u0275sanitizeHtml);
+    \u0275\u0275property("href", node_r5.data.url, \u0275\u0275sanitizeUrl)("innerHTML", node_r5.label, \u0275\u0275sanitizeHtml);
   }
 }
 function TopicIaJsonComponent_ng_container_10_ng_template_8_p_inputgroup_6_Template(rf, ctx) {
   if (rf & 1) {
-    const _r5 = \u0275\u0275getCurrentView();
-    \u0275\u0275elementStart(0, "p-inputgroup")(1, "input", 37);
+    const _r6 = \u0275\u0275getCurrentView();
+    \u0275\u0275elementStart(0, "p-inputgroup")(1, "input", 47);
     \u0275\u0275twoWayListener("ngModelChange", function TopicIaJsonComponent_ng_container_10_ng_template_8_p_inputgroup_6_Template_input_ngModelChange_1_listener($event) {
-      \u0275\u0275restoreView(_r5);
-      const node_r4 = \u0275\u0275nextContext().$implicit;
-      \u0275\u0275twoWayBindingSet(node_r4.label, $event) || (node_r4.label = $event);
+      \u0275\u0275restoreView(_r6);
+      const node_r5 = \u0275\u0275nextContext().$implicit;
+      \u0275\u0275twoWayBindingSet(node_r5.label, $event) || (node_r5.label = $event);
       return \u0275\u0275resetView($event);
     });
     \u0275\u0275listener("keydown", function TopicIaJsonComponent_ng_container_10_ng_template_8_p_inputgroup_6_Template_input_keydown_1_listener($event) {
-      \u0275\u0275restoreView(_r5);
+      \u0275\u0275restoreView(_r6);
       const ctx_r0 = \u0275\u0275nextContext(3);
       return \u0275\u0275resetView(ctx_r0.onInputKeydown($event));
     });
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(2, "p-inputgroup-addon")(3, "p-button", 38);
+    \u0275\u0275elementStart(2, "p-inputgroup-addon")(3, "p-button", 48);
     \u0275\u0275listener("onClick", function TopicIaJsonComponent_ng_container_10_ng_template_8_p_inputgroup_6_Template_p_button_onClick_3_listener() {
-      \u0275\u0275restoreView(_r5);
+      \u0275\u0275restoreView(_r6);
       const ctx_r0 = \u0275\u0275nextContext(3);
       return \u0275\u0275resetView(ctx_r0.saveNode());
     });
     \u0275\u0275elementEnd()()();
   }
   if (rf & 2) {
-    const node_r4 = \u0275\u0275nextContext().$implicit;
+    const node_r5 = \u0275\u0275nextContext().$implicit;
     \u0275\u0275advance();
-    \u0275\u0275twoWayProperty("ngModel", node_r4.label);
+    \u0275\u0275twoWayProperty("ngModel", node_r5.label);
   }
 }
 function TopicIaJsonComponent_ng_container_10_ng_template_8_p_inputgroup_7_Template(rf, ctx) {
   if (rf & 1) {
-    const _r6 = \u0275\u0275getCurrentView();
-    \u0275\u0275elementStart(0, "p-inputgroup")(1, "input", 37);
+    const _r7 = \u0275\u0275getCurrentView();
+    \u0275\u0275elementStart(0, "p-inputgroup")(1, "input", 47);
     \u0275\u0275twoWayListener("ngModelChange", function TopicIaJsonComponent_ng_container_10_ng_template_8_p_inputgroup_7_Template_input_ngModelChange_1_listener($event) {
-      \u0275\u0275restoreView(_r6);
-      const node_r4 = \u0275\u0275nextContext().$implicit;
-      \u0275\u0275twoWayBindingSet(node_r4.data.url, $event) || (node_r4.data.url = $event);
+      \u0275\u0275restoreView(_r7);
+      const node_r5 = \u0275\u0275nextContext().$implicit;
+      \u0275\u0275twoWayBindingSet(node_r5.data.url, $event) || (node_r5.data.url = $event);
       return \u0275\u0275resetView($event);
     });
     \u0275\u0275listener("keydown", function TopicIaJsonComponent_ng_container_10_ng_template_8_p_inputgroup_7_Template_input_keydown_1_listener($event) {
-      \u0275\u0275restoreView(_r6);
+      \u0275\u0275restoreView(_r7);
       const ctx_r0 = \u0275\u0275nextContext(3);
       return \u0275\u0275resetView(ctx_r0.onInputKeydown($event));
     });
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(2, "p-inputgroup-addon")(3, "p-button", 38);
+    \u0275\u0275elementStart(2, "p-inputgroup-addon")(3, "p-button", 48);
     \u0275\u0275listener("onClick", function TopicIaJsonComponent_ng_container_10_ng_template_8_p_inputgroup_7_Template_p_button_onClick_3_listener() {
-      \u0275\u0275restoreView(_r6);
+      \u0275\u0275restoreView(_r7);
       const ctx_r0 = \u0275\u0275nextContext(3);
       return \u0275\u0275resetView(ctx_r0.saveNode());
     });
     \u0275\u0275elementEnd()()();
   }
   if (rf & 2) {
-    const node_r4 = \u0275\u0275nextContext().$implicit;
+    const node_r5 = \u0275\u0275nextContext().$implicit;
     \u0275\u0275advance();
-    \u0275\u0275twoWayProperty("ngModel", node_r4.data.url);
+    \u0275\u0275twoWayProperty("ngModel", node_r5.data.url);
   }
 }
 function TopicIaJsonComponent_ng_container_10_ng_template_8_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275elementStart(0, "div", 27);
-    \u0275\u0275template(1, TopicIaJsonComponent_ng_container_10_ng_template_8_i_1_Template, 1, 0, "i", 28)(2, TopicIaJsonComponent_ng_container_10_ng_template_8_i_2_Template, 1, 0, "i", 29)(3, TopicIaJsonComponent_ng_container_10_ng_template_8_i_3_Template, 1, 0, "i", 30)(4, TopicIaJsonComponent_ng_container_10_ng_template_8_i_4_Template, 1, 0, "i", 31)(5, TopicIaJsonComponent_ng_container_10_ng_template_8_ng_container_5_Template, 2, 2, "ng-container", 11)(6, TopicIaJsonComponent_ng_container_10_ng_template_8_p_inputgroup_6_Template, 4, 1, "p-inputgroup", 11)(7, TopicIaJsonComponent_ng_container_10_ng_template_8_p_inputgroup_7_Template, 4, 1, "p-inputgroup", 11);
+    \u0275\u0275elementStart(0, "div", 37);
+    \u0275\u0275template(1, TopicIaJsonComponent_ng_container_10_ng_template_8_i_1_Template, 1, 0, "i", 38)(2, TopicIaJsonComponent_ng_container_10_ng_template_8_i_2_Template, 1, 0, "i", 39)(3, TopicIaJsonComponent_ng_container_10_ng_template_8_i_3_Template, 1, 0, "i", 40)(4, TopicIaJsonComponent_ng_container_10_ng_template_8_i_4_Template, 1, 0, "i", 41)(5, TopicIaJsonComponent_ng_container_10_ng_template_8_ng_container_5_Template, 2, 2, "ng-container", 11)(6, TopicIaJsonComponent_ng_container_10_ng_template_8_p_inputgroup_6_Template, 4, 1, "p-inputgroup", 11)(7, TopicIaJsonComponent_ng_container_10_ng_template_8_p_inputgroup_7_Template, 4, 1, "p-inputgroup", 11);
     \u0275\u0275elementEnd();
   }
   if (rf & 2) {
-    const node_r4 = ctx.$implicit;
+    const node_r5 = ctx.$implicit;
     const ctx_r0 = \u0275\u0275nextContext(2);
     \u0275\u0275advance();
-    \u0275\u0275property("ngIf", node_r4.children.length > 0 && !ctx_r0.draggable && !node_r4.data.editing);
+    \u0275\u0275property("ngIf", node_r5.children.length > 0 && !ctx_r0.draggable && !node_r5.data.editing);
     \u0275\u0275advance();
-    \u0275\u0275property("ngIf", (node_r4.children.length === 0 || !node_r4.children) && !ctx_r0.draggable && !node_r4.data.editing);
+    \u0275\u0275property("ngIf", (node_r5.children.length === 0 || !node_r5.children) && !ctx_r0.draggable && !node_r5.data.editing);
     \u0275\u0275advance();
     \u0275\u0275property("ngIf", ctx_r0.draggable);
     \u0275\u0275advance();
-    \u0275\u0275property("ngIf", node_r4.data.editing);
+    \u0275\u0275property("ngIf", node_r5.data.editing);
     \u0275\u0275advance();
-    \u0275\u0275property("ngIf", !node_r4.data.editing);
+    \u0275\u0275property("ngIf", !node_r5.data.editing);
     \u0275\u0275advance();
-    \u0275\u0275property("ngIf", node_r4.data.editing === "label");
+    \u0275\u0275property("ngIf", node_r5.data.editing === "label");
     \u0275\u0275advance();
-    \u0275\u0275property("ngIf", node_r4.data.editing === "link");
+    \u0275\u0275property("ngIf", node_r5.data.editing === "link");
   }
 }
 function TopicIaJsonComponent_ng_container_10_div_9_ng_template_4_i_1_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275element(0, "i", 32);
+    \u0275\u0275element(0, "i", 42);
   }
 }
 function TopicIaJsonComponent_ng_container_10_div_9_ng_template_4_i_2_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275element(0, "i", 33);
+    \u0275\u0275element(0, "i", 43);
   }
 }
 function TopicIaJsonComponent_ng_container_10_div_9_ng_template_4_i_3_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275element(0, "i", 34);
+    \u0275\u0275element(0, "i", 44);
   }
 }
 function TopicIaJsonComponent_ng_container_10_div_9_ng_template_4_ng_container_4_Template(rf, ctx) {
   if (rf & 1) {
-    const _r8 = \u0275\u0275getCurrentView();
+    const _r9 = \u0275\u0275getCurrentView();
     \u0275\u0275elementContainerStart(0);
-    \u0275\u0275elementStart(1, "a", 36);
+    \u0275\u0275elementStart(1, "a", 46);
     \u0275\u0275listener("click", function TopicIaJsonComponent_ng_container_10_div_9_ng_template_4_ng_container_4_Template_a_click_1_listener($event) {
-      \u0275\u0275restoreView(_r8);
+      \u0275\u0275restoreView(_r9);
       const ctx_r0 = \u0275\u0275nextContext(4);
       return \u0275\u0275resetView(ctx_r0.onNodeClick($event));
     });
@@ -34459,54 +34501,54 @@ function TopicIaJsonComponent_ng_container_10_div_9_ng_template_4_ng_container_4
     \u0275\u0275elementContainerEnd();
   }
   if (rf & 2) {
-    const node_r9 = \u0275\u0275nextContext().$implicit;
+    const node_r10 = \u0275\u0275nextContext().$implicit;
     \u0275\u0275advance();
-    \u0275\u0275property("href", node_r9.data.url, \u0275\u0275sanitizeUrl)("innerHTML", node_r9.label, \u0275\u0275sanitizeHtml);
+    \u0275\u0275property("href", node_r10.data.url, \u0275\u0275sanitizeUrl)("innerHTML", node_r10.label, \u0275\u0275sanitizeHtml);
   }
 }
 function TopicIaJsonComponent_ng_container_10_div_9_ng_template_4_ng_template_5_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275element(0, "span", 42);
+    \u0275\u0275element(0, "span", 52);
   }
   if (rf & 2) {
-    const node_r9 = \u0275\u0275nextContext().$implicit;
-    \u0275\u0275classProp("font-bold", node_r9.data == null ? null : node_r9.data.isCategory);
-    \u0275\u0275property("innerHTML", node_r9.label, \u0275\u0275sanitizeHtml);
+    const node_r10 = \u0275\u0275nextContext().$implicit;
+    \u0275\u0275classProp("font-bold", node_r10.data == null ? null : node_r10.data.isCategory);
+    \u0275\u0275property("innerHTML", node_r10.label, \u0275\u0275sanitizeHtml);
   }
 }
 function TopicIaJsonComponent_ng_container_10_div_9_ng_template_4_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275elementStart(0, "div", 27);
-    \u0275\u0275template(1, TopicIaJsonComponent_ng_container_10_div_9_ng_template_4_i_1_Template, 1, 0, "i", 28)(2, TopicIaJsonComponent_ng_container_10_div_9_ng_template_4_i_2_Template, 1, 0, "i", 29)(3, TopicIaJsonComponent_ng_container_10_div_9_ng_template_4_i_3_Template, 1, 0, "i", 30)(4, TopicIaJsonComponent_ng_container_10_div_9_ng_template_4_ng_container_4_Template, 2, 2, "ng-container", 41)(5, TopicIaJsonComponent_ng_container_10_div_9_ng_template_4_ng_template_5_Template, 1, 3, "ng-template", null, 1, \u0275\u0275templateRefExtractor);
+    \u0275\u0275elementStart(0, "div", 37);
+    \u0275\u0275template(1, TopicIaJsonComponent_ng_container_10_div_9_ng_template_4_i_1_Template, 1, 0, "i", 38)(2, TopicIaJsonComponent_ng_container_10_div_9_ng_template_4_i_2_Template, 1, 0, "i", 39)(3, TopicIaJsonComponent_ng_container_10_div_9_ng_template_4_i_3_Template, 1, 0, "i", 40)(4, TopicIaJsonComponent_ng_container_10_div_9_ng_template_4_ng_container_4_Template, 2, 2, "ng-container", 51)(5, TopicIaJsonComponent_ng_container_10_div_9_ng_template_4_ng_template_5_Template, 1, 3, "ng-template", null, 1, \u0275\u0275templateRefExtractor);
     \u0275\u0275elementEnd();
   }
   if (rf & 2) {
-    const node_r9 = ctx.$implicit;
-    const topicLabel_r10 = \u0275\u0275reference(6);
+    const node_r10 = ctx.$implicit;
+    const topicLabel_r11 = \u0275\u0275reference(6);
     const ctx_r0 = \u0275\u0275nextContext(3);
     \u0275\u0275advance();
-    \u0275\u0275property("ngIf", (node_r9.children == null ? null : node_r9.children.length) && !ctx_r0.draggable && !(node_r9.data == null ? null : node_r9.data.isCategory));
+    \u0275\u0275property("ngIf", (node_r10.children == null ? null : node_r10.children.length) && !ctx_r0.draggable && !(node_r10.data == null ? null : node_r10.data.isCategory));
     \u0275\u0275advance();
-    \u0275\u0275property("ngIf", !(node_r9.children == null ? null : node_r9.children.length) && !ctx_r0.draggable && !(node_r9.data == null ? null : node_r9.data.isCategory));
+    \u0275\u0275property("ngIf", !(node_r10.children == null ? null : node_r10.children.length) && !ctx_r0.draggable && !(node_r10.data == null ? null : node_r10.data.isCategory));
     \u0275\u0275advance();
-    \u0275\u0275property("ngIf", ctx_r0.draggable && !(node_r9.data == null ? null : node_r9.data.isCategory));
+    \u0275\u0275property("ngIf", ctx_r0.draggable && !(node_r10.data == null ? null : node_r10.data.isCategory));
     \u0275\u0275advance();
-    \u0275\u0275property("ngIf", node_r9.data == null ? null : node_r9.data.url)("ngIfElse", topicLabel_r10);
+    \u0275\u0275property("ngIf", node_r10.data == null ? null : node_r10.data.url)("ngIfElse", topicLabel_r11);
   }
 }
 function TopicIaJsonComponent_ng_container_10_div_9_Template(rf, ctx) {
   if (rf & 1) {
-    const _r7 = \u0275\u0275getCurrentView();
-    \u0275\u0275elementStart(0, "div", 39)(1, "h2");
+    const _r8 = \u0275\u0275getCurrentView();
+    \u0275\u0275elementStart(0, "div", 49)(1, "h2");
     \u0275\u0275text(2, "Suggested topic page sections");
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(3, "p-tree", 40);
+    \u0275\u0275elementStart(3, "p-tree", 50);
     \u0275\u0275listener("onNodeDrop", function TopicIaJsonComponent_ng_container_10_div_9_Template_p_tree_onNodeDrop_3_listener($event) {
-      \u0275\u0275restoreView(_r7);
+      \u0275\u0275restoreView(_r8);
       const ctx_r0 = \u0275\u0275nextContext(2);
       return \u0275\u0275resetView(ctx_r0.onTopicPageNodeDrop($event));
     });
-    \u0275\u0275template(4, TopicIaJsonComponent_ng_container_10_div_9_ng_template_4_Template, 7, 5, "ng-template", 25);
+    \u0275\u0275template(4, TopicIaJsonComponent_ng_container_10_div_9_ng_template_4_Template, 7, 5, "ng-template", 35);
     \u0275\u0275elementEnd()();
   }
   if (rf & 2) {
@@ -34517,37 +34559,37 @@ function TopicIaJsonComponent_ng_container_10_div_9_Template(rf, ctx) {
 }
 function TopicIaJsonComponent_ng_container_10_Template(rf, ctx) {
   if (rf & 1) {
-    const _r2 = \u0275\u0275getCurrentView();
+    const _r3 = \u0275\u0275getCurrentView();
     \u0275\u0275elementContainerStart(0);
-    \u0275\u0275elementStart(1, "div", 21)(2, "div", 22);
-    \u0275\u0275element(3, "p-contextMenu", 23, 0);
+    \u0275\u0275elementStart(1, "div", 31)(2, "div", 32);
+    \u0275\u0275element(3, "p-contextMenu", 33, 0);
     \u0275\u0275elementStart(5, "h2");
     \u0275\u0275text(6, "Current IA structure tree");
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(7, "p-tree", 24);
+    \u0275\u0275elementStart(7, "p-tree", 34);
     \u0275\u0275twoWayListener("selectionChange", function TopicIaJsonComponent_ng_container_10_Template_p_tree_selectionChange_7_listener($event) {
-      \u0275\u0275restoreView(_r2);
+      \u0275\u0275restoreView(_r3);
       const ctx_r0 = \u0275\u0275nextContext();
       \u0275\u0275twoWayBindingSet(ctx_r0.selectedNode, $event) || (ctx_r0.selectedNode = $event);
       return \u0275\u0275resetView($event);
     });
     \u0275\u0275listener("onNodeDrop", function TopicIaJsonComponent_ng_container_10_Template_p_tree_onNodeDrop_7_listener($event) {
-      \u0275\u0275restoreView(_r2);
+      \u0275\u0275restoreView(_r3);
       const ctx_r0 = \u0275\u0275nextContext();
       return \u0275\u0275resetView(ctx_r0.handleNodeDrop($event));
     })("onNodeContextMenuSelect", function TopicIaJsonComponent_ng_container_10_Template_p_tree_onNodeContextMenuSelect_7_listener($event) {
-      \u0275\u0275restoreView(_r2);
+      \u0275\u0275restoreView(_r3);
       const ctx_r0 = \u0275\u0275nextContext();
       return \u0275\u0275resetView(ctx_r0.onNodeContextMenu($event));
     });
-    \u0275\u0275template(8, TopicIaJsonComponent_ng_container_10_ng_template_8_Template, 8, 7, "ng-template", 25);
+    \u0275\u0275template(8, TopicIaJsonComponent_ng_container_10_ng_template_8_Template, 8, 7, "ng-template", 35);
     \u0275\u0275elementEnd()();
-    \u0275\u0275template(9, TopicIaJsonComponent_ng_container_10_div_9_Template, 5, 5, "div", 26);
+    \u0275\u0275template(9, TopicIaJsonComponent_ng_container_10_div_9_Template, 5, 5, "div", 36);
     \u0275\u0275elementEnd();
     \u0275\u0275elementContainerEnd();
   }
   if (rf & 2) {
-    const cm_r11 = \u0275\u0275reference(4);
+    const cm_r12 = \u0275\u0275reference(4);
     const ctx_r0 = \u0275\u0275nextContext();
     \u0275\u0275advance(2);
     \u0275\u0275classProp("md:col-6", ctx_r0.visitsByUrl.size > 0);
@@ -34556,17 +34598,17 @@ function TopicIaJsonComponent_ng_container_10_Template(rf, ctx) {
     \u0275\u0275advance(4);
     \u0275\u0275property("value", ctx_r0.iaChart)("selectionMode", ctx_r0.selectable ? "multiple" : null);
     \u0275\u0275twoWayProperty("selection", ctx_r0.selectedNode);
-    \u0275\u0275property("draggableNodes", ctx_r0.draggable)("droppableNodes", true)("validateDrop", true)("contextMenu", cm_r11);
+    \u0275\u0275property("draggableNodes", ctx_r0.draggable)("droppableNodes", true)("validateDrop", true)("contextMenu", cm_r12);
     \u0275\u0275advance(2);
     \u0275\u0275property("ngIf", ctx_r0.visitsByUrl.size > 0);
   }
 }
 function TopicIaJsonComponent_ng_container_11_p_button_3_Template(rf, ctx) {
   if (rf & 1) {
-    const _r12 = \u0275\u0275getCurrentView();
-    \u0275\u0275elementStart(0, "p-button", 45);
+    const _r13 = \u0275\u0275getCurrentView();
+    \u0275\u0275elementStart(0, "p-button", 55);
     \u0275\u0275listener("click", function TopicIaJsonComponent_ng_container_11_p_button_3_Template_p_button_click_0_listener() {
-      \u0275\u0275restoreView(_r12);
+      \u0275\u0275restoreView(_r13);
       const ctx_r0 = \u0275\u0275nextContext(2);
       return \u0275\u0275resetView(ctx_r0.maximize(ctx_r0.chartContainer));
     });
@@ -34582,25 +34624,25 @@ function TopicIaJsonComponent_ng_container_11_p_4_Template(rf, ctx) {
 }
 function TopicIaJsonComponent_ng_container_11_div_5_ng_template_3_Template(rf, ctx) {
   if (rf & 1) {
-    const _r13 = \u0275\u0275getCurrentView();
-    \u0275\u0275elementStart(0, "p")(1, "a", 36);
+    const _r14 = \u0275\u0275getCurrentView();
+    \u0275\u0275elementStart(0, "p")(1, "a", 46);
     \u0275\u0275listener("click", function TopicIaJsonComponent_ng_container_11_div_5_ng_template_3_Template_a_click_1_listener($event) {
-      \u0275\u0275restoreView(_r13);
+      \u0275\u0275restoreView(_r14);
       const ctx_r0 = \u0275\u0275nextContext(3);
       return \u0275\u0275resetView(ctx_r0.onNodeClick($event));
     });
     \u0275\u0275elementEnd()();
   }
   if (rf & 2) {
-    const node_r14 = ctx.$implicit;
+    const node_r15 = ctx.$implicit;
     \u0275\u0275advance();
-    \u0275\u0275property("href", node_r14.data.url, \u0275\u0275sanitizeUrl)("innerHTML", node_r14.label, \u0275\u0275sanitizeHtml);
+    \u0275\u0275property("href", node_r15.data.url, \u0275\u0275sanitizeUrl)("innerHTML", node_r15.label, \u0275\u0275sanitizeHtml);
   }
 }
 function TopicIaJsonComponent_ng_container_11_div_5_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275elementStart(0, "div", 46, 2)(2, "p-organization-chart", 47);
-    \u0275\u0275template(3, TopicIaJsonComponent_ng_container_11_div_5_ng_template_3_Template, 2, 2, "ng-template", 25);
+    \u0275\u0275elementStart(0, "div", 56, 2)(2, "p-organization-chart", 57);
+    \u0275\u0275template(3, TopicIaJsonComponent_ng_container_11_div_5_ng_template_3_Template, 2, 2, "ng-template", 35);
     \u0275\u0275elementEnd()();
   }
   if (rf & 2) {
@@ -34615,7 +34657,7 @@ function TopicIaJsonComponent_ng_container_11_Template(rf, ctx) {
     \u0275\u0275elementStart(1, "h2");
     \u0275\u0275text(2, "IA structure");
     \u0275\u0275elementEnd();
-    \u0275\u0275template(3, TopicIaJsonComponent_ng_container_11_p_button_3_Template, 1, 0, "p-button", 43)(4, TopicIaJsonComponent_ng_container_11_p_4_Template, 2, 0, "p", 11)(5, TopicIaJsonComponent_ng_container_11_div_5_Template, 4, 1, "div", 44);
+    \u0275\u0275template(3, TopicIaJsonComponent_ng_container_11_p_button_3_Template, 1, 0, "p-button", 53)(4, TopicIaJsonComponent_ng_container_11_p_4_Template, 2, 0, "p", 11)(5, TopicIaJsonComponent_ng_container_11_div_5_Template, 4, 1, "div", 54);
     \u0275\u0275elementContainerEnd();
   }
   if (rf & 2) {
@@ -34675,18 +34717,18 @@ function TopicIaJsonComponent_ng_container_12_p_table_4_ng_template_3_Template(r
     \u0275\u0275elementEnd()();
   }
   if (rf & 2) {
-    const rowData_r15 = ctx.$implicit;
+    const rowData_r16 = ctx.$implicit;
     \u0275\u0275advance(2);
-    \u0275\u0275textInterpolate(rowData_r15.parentUrl);
+    \u0275\u0275textInterpolate(rowData_r16.parentUrl);
     \u0275\u0275advance(2);
-    \u0275\u0275textInterpolate(rowData_r15.url);
+    \u0275\u0275textInterpolate(rowData_r16.url);
     \u0275\u0275advance(2);
-    \u0275\u0275textInterpolate(rowData_r15.status);
+    \u0275\u0275textInterpolate(rowData_r16.status);
   }
 }
 function TopicIaJsonComponent_ng_container_12_p_table_4_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275elementStart(0, "p-table", 49);
+    \u0275\u0275elementStart(0, "p-table", 59);
     \u0275\u0275template(1, TopicIaJsonComponent_ng_container_12_p_table_4_ng_template_1_Template, 7, 0, "ng-template", null, 3, \u0275\u0275templateRefExtractor)(3, TopicIaJsonComponent_ng_container_12_p_table_4_ng_template_3_Template, 7, 3, "ng-template", null, 4, \u0275\u0275templateRefExtractor);
     \u0275\u0275elementEnd();
   }
@@ -34701,7 +34743,7 @@ function TopicIaJsonComponent_ng_container_12_Template(rf, ctx) {
     \u0275\u0275elementStart(1, "h2");
     \u0275\u0275text(2, "Broken links");
     \u0275\u0275elementEnd();
-    \u0275\u0275template(3, TopicIaJsonComponent_ng_container_12_p_3_Template, 4, 1, "p", 11)(4, TopicIaJsonComponent_ng_container_12_p_table_4_Template, 5, 3, "p-table", 48);
+    \u0275\u0275template(3, TopicIaJsonComponent_ng_container_12_p_3_Template, 4, 1, "p", 11)(4, TopicIaJsonComponent_ng_container_12_p_table_4_Template, 5, 3, "p-table", 58);
     \u0275\u0275elementContainerEnd();
   }
   if (rf & 2) {
@@ -34719,6 +34761,7 @@ var TopicIaJsonComponent = class _TopicIaJsonComponent {
   theme = inject(ThemeService);
   iaStructure = inject(IaStructureService);
   messageService = inject(MessageService);
+  openRouter = inject(OpenRouterService);
   production = environment.production;
   activeStep = 1;
   constructor() {
@@ -34759,9 +34802,17 @@ var TopicIaJsonComponent = class _TopicIaJsonComponent {
   visitsSourcePath = "visits-urls.json";
   isTopicPage = false;
   topicPageSections = /* @__PURE__ */ new Map();
+  commObjectivesInput = "";
+  feedbackInsightsInput = "";
+  callTroubleInput = "";
+  isAiLoading = false;
+  aiRecommendedUrls = /* @__PURE__ */ new Set();
+  aiTargetSection = "most";
+  aiModels = this.openRouter.freeModels;
   //Button fxn
   checkIA() {
     return __async(this, null, function* () {
+      this.step1Complete = false;
       this.urlFound = yield this.checkParentLinks(this.breadcrumb, this.originalUrl);
       this.isChartLoading = true;
       this.iaProgress = 5;
@@ -34795,6 +34846,303 @@ var TopicIaJsonComponent = class _TopicIaJsonComponent {
       this.rebuildTopicPageTreeFromIa();
       this.expandStep(4);
     });
+  }
+  sendContextInputToGenAI() {
+    return __async(this, null, function* () {
+      if (this.isAiLoading)
+        return;
+      const input = (this.commObjectivesInput || "").trim();
+      if (!input) {
+        this.messageService.add({
+          severity: "warn",
+          summary: "Missing input",
+          detail: "Add communications objectives to send to GenAI.",
+          life: 3e3
+        });
+        return;
+      }
+      const targetSectionHint = this.parseTargetSection(input);
+      const candidates = this.buildSectionCandidates();
+      if (!candidates.length) {
+        this.messageService.add({
+          severity: "warn",
+          summary: "No candidates available",
+          detail: "Run the IA crawl to populate Most requested suggestions.",
+          life: 4e3
+        });
+        return;
+      }
+      this.isAiLoading = true;
+      try {
+        const recommendations = yield this.requestCommsRecommendations(input, candidates, targetSectionHint);
+        this.applyCommsRecommendations(recommendations, targetSectionHint);
+      } catch (err) {
+        console.error("GenAI recommendation failed:", err);
+        this.messageService.add({
+          severity: "error",
+          summary: "GenAI request failed",
+          detail: "Unable to get recommendations. Please try again.",
+          life: 4e3
+        });
+      } finally {
+        this.isAiLoading = false;
+      }
+    });
+  }
+  buildSectionCandidates() {
+    const root = this.topicPageTree[0];
+    const categories = root?.children ?? [];
+    const sectionMap = [
+      { section: "most", node: categories[0] },
+      { section: "doormats", node: categories[1] },
+      { section: "feature", node: categories[2] },
+      { section: "notOnTopics", node: categories[3] }
+    ];
+    return sectionMap.flatMap((entry) => {
+      const nodes = entry.node?.children ?? [];
+      return nodes.filter((node) => !node.data?.isCategory).map((node) => ({
+        label: this.getCandidateLabel(node),
+        url: node.data?.url ?? "",
+        visits: this.getVisitsForNode(node),
+        section: entry.section
+      })).filter((candidate) => candidate.label || candidate.url);
+    });
+  }
+  getCandidateLabel(node) {
+    if (typeof node.data?.originalLabel === "string" && node.data.originalLabel.trim().length) {
+      return node.data.originalLabel.trim();
+    }
+    return this.stripBadges(this.getTopicNodeBaseLabel(node));
+  }
+  requestCommsRecommendations(input, candidates, targetSectionHint) {
+    return __async(this, null, function* () {
+      if (!this.openRouter.hasApiKey) {
+        this.messageService.add({
+          severity: "warn",
+          summary: "API key required",
+          detail: "Add your API key before sending input to GenAI.",
+          life: 4e3
+        });
+        return { recommendations: [] };
+      }
+      const system = `You are a CRA IA assistant. Match a communications objective to the best candidates from the provided list of pages.
+- The communications objective might be a page that has low or no visits but should be highlighted.
+- The objective may be a URL or a page title.
+- Compare the objective against the provided candidates list.
+- Use the suggested section (if present) to decide where the best match should live.
+- Choose up to 3 best matches from the candidates list.
+- If there is no reasonable match, return an empty list.
+
+Return ONLY compact JSON (no prose):
+{
+  "targetSection": "most|doormats|feature|notOnTopics",
+  "recommended": [
+    { "url": "string", "label": "string", "reason": "short reason", "currentSection": "most|doormats|feature|notOnTopics" }
+  ]
+}`;
+      const payload = {
+        objective: input,
+        targetSectionHint,
+        candidates: candidates.map((c) => ({
+          label: c.label,
+          url: c.url,
+          visits: c.visits,
+          section: c.section
+        }))
+      };
+      const messages = [
+        { role: "system", content: system },
+        { role: "user", content: JSON.stringify(payload) }
+      ];
+      for (const model of this.aiModels) {
+        const resp = yield this.openRouter.call(model, messages, {
+          temperature: 0,
+          title: "Content Assistant - Topic IA"
+        });
+        const text = resp?.choices?.[0]?.message?.content;
+        if (!text)
+          continue;
+        const parsed = this.parseRecommendations(text);
+        if (parsed)
+          return parsed;
+      }
+      return { recommendations: [] };
+    });
+  }
+  applyCommsRecommendations(aiResult, targetSectionHint) {
+    const recommendations = aiResult.recommendations ?? [];
+    const nodes = this.getAllCandidateNodes();
+    const targetSection = this.pickTargetSection(aiResult.targetSection, targetSectionHint);
+    this.aiTargetSection = targetSection;
+    const bestMatch = this.findBestRecommendationNode(recommendations, targetSection);
+    this.aiRecommendedUrls = new Set(bestMatch?.data?.url ? [this.normalizeUrl(bestMatch.data.url)] : []);
+    nodes.forEach((node) => {
+      const isMatch = bestMatch === node;
+      node.data = __spreadProps(__spreadValues({}, node.data ?? {}), { aiRecommended: isMatch });
+    });
+    if (bestMatch) {
+      this.moveNodeToSection(bestMatch, targetSection);
+    }
+    this.applyCommsRecommendationsToLabels();
+    this.updateTopicPageTreeStyles(this.topicPageTree, 0);
+    this.messageService.add({
+      severity: bestMatch ? "success" : "info",
+      summary: bestMatch ? "GenAI recommendations applied." : "No GenAI matches found.",
+      life: 3e3
+    });
+  }
+  applyCommsRecommendationsToLabels() {
+    const nodes = this.getAllCandidateNodes();
+    nodes.forEach((node) => {
+      if (typeof node.label !== "string")
+        return;
+      const cleaned = this.removeCommsBadge(node.label);
+      if (node.data?.aiRecommended) {
+        node.label = `${cleaned} <span class="topic-ia-badge topic-ia-comm-badge">Comms highlight</span>`;
+      } else {
+        node.label = cleaned;
+      }
+    });
+  }
+  getMostRequestedCategory() {
+    const root = this.topicPageTree[0];
+    const categories = root?.children ?? [];
+    return categories.find((node) => node.data?.isCategory && node.label === "Most requested") ?? categories[0] ?? null;
+  }
+  getCategoryBySection(section) {
+    const root = this.topicPageTree[0];
+    const categories = root?.children ?? [];
+    switch (section) {
+      case "most":
+        return categories[0] ?? null;
+      case "doormats":
+        return categories[1] ?? null;
+      case "feature":
+        return categories[2] ?? null;
+      case "notOnTopics":
+        return categories[3] ?? null;
+      default:
+        return categories[0] ?? null;
+    }
+  }
+  getAllCandidateNodes() {
+    const root = this.topicPageTree[0];
+    const categories = root?.children ?? [];
+    return categories.flatMap((category) => category?.children ?? []);
+  }
+  moveNodeToSection(node, targetSection) {
+    const targetCategory = this.getCategoryBySection(targetSection);
+    if (!targetCategory)
+      return;
+    targetCategory.children = targetCategory.children || [];
+    const root = this.topicPageTree[0];
+    const categories = root?.children ?? [];
+    const currentCategory = categories.find((cat) => (cat?.children ?? []).includes(node));
+    if (!currentCategory || currentCategory === targetCategory)
+      return;
+    currentCategory.children = (currentCategory.children ?? []).filter((child) => child !== node);
+    targetCategory.children.unshift(node);
+  }
+  parseTargetSection(input) {
+    const normalized = (input || "").toLowerCase();
+    if (normalized.includes("doormat"))
+      return "doormats";
+    if (normalized.includes("feature"))
+      return "feature";
+    if (normalized.includes("not on topic"))
+      return "notOnTopics";
+    if (normalized.includes("not on the topic"))
+      return "notOnTopics";
+    if (normalized.includes("not on topic page"))
+      return "notOnTopics";
+    if (normalized.includes("most requested"))
+      return "most";
+    return "most";
+  }
+  pickTargetSection(modelTarget, hint) {
+    const normalizedModel = this.parseTargetSection(modelTarget || "");
+    const model = normalizedModel === "most" || normalizedModel === "doormats" || normalizedModel === "feature" || normalizedModel === "notOnTopics" ? normalizedModel : null;
+    return model ?? hint ?? "most";
+  }
+  findBestRecommendationNode(recommendations, targetSection) {
+    const nodes = this.getAllCandidateNodes();
+    for (const rec of recommendations) {
+      const recUrl = this.normalizeUrl(rec.url ?? "");
+      const recLabel = this.normalizeLabel(rec.label ?? "");
+      const node = nodes.find((candidate) => {
+        const url = this.normalizeUrl(candidate.data?.url ?? "");
+        const label = this.normalizeLabel(this.getCandidateLabel(candidate));
+        const matches = recUrl && url === recUrl || recLabel && label === recLabel;
+        if (!matches)
+          return false;
+        const section = this.getSectionForNode(candidate);
+        return section !== targetSection;
+      });
+      if (node)
+        return node;
+    }
+    return null;
+  }
+  getSectionForNode(node) {
+    const root = this.topicPageTree[0];
+    const categories = root?.children ?? [];
+    const sectionMap = [
+      { section: "most", node: categories[0] },
+      { section: "doormats", node: categories[1] },
+      { section: "feature", node: categories[2] },
+      { section: "notOnTopics", node: categories[3] }
+    ];
+    const match = sectionMap.find((entry) => (entry.node?.children ?? []).includes(node));
+    return match?.section ?? null;
+  }
+  normalizeLabel(label) {
+    return (label || "").replace(/\s+/g, " ").trim().toLowerCase();
+  }
+  stripBadges(label) {
+    return label.replace(/<span[^>]*>.*?<\/span>/g, "").trim();
+  }
+  removeCommsBadge(label) {
+    return label.replace(/\s*<span class="topic-ia-badge topic-ia-comm-badge">.*?<\/span>/g, "").trim();
+  }
+  parseRecommendations(text) {
+    const cleaned = this.stripCodeFences(text);
+    const parsed = this.looseJsonParse(cleaned);
+    if (!parsed || typeof parsed !== "object")
+      return null;
+    const targetSection = typeof parsed.targetSection === "string" ? parsed.targetSection : void 0;
+    const recs = parsed.recommended;
+    if (!Array.isArray(recs)) {
+      return { targetSection, recommendations: [] };
+    }
+    const recommendations = recs.map((rec) => {
+      if (!rec || typeof rec !== "object")
+        return null;
+      const obj = rec;
+      return {
+        url: typeof obj["url"] === "string" ? obj["url"] : void 0,
+        label: typeof obj["label"] === "string" ? obj["label"] : void 0,
+        reason: typeof obj["reason"] === "string" ? obj["reason"] : void 0,
+        currentSection: typeof obj["currentSection"] === "string" ? obj["currentSection"] : void 0
+      };
+    }).filter((rec) => !!rec);
+    return { targetSection, recommendations };
+  }
+  stripCodeFences(s) {
+    return s.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/i, "").trim();
+  }
+  tryParseJSON(s) {
+    try {
+      return JSON.parse(s);
+    } catch {
+      return null;
+    }
+  }
+  looseJsonParse(s) {
+    const direct = this.tryParseJSON(s);
+    if (direct !== null)
+      return direct;
+    const match = s.match(/\{[\s\S]*\}/);
+    return match ? this.tryParseJSON(match[0]) : null;
   }
   loadVisitsFromJson() {
     return __async(this, null, function* () {
@@ -35070,6 +35418,7 @@ var TopicIaJsonComponent = class _TopicIaJsonComponent {
     }
     this.reorderNotOnTopicsBadged(root);
     this.topicPageTree = [root];
+    this.applyCommsRecommendationsToLabels();
     this.updateTopicPageTreeStyles(this.topicPageTree, 0);
   }
   getVisitsForNode(node) {
@@ -35277,6 +35626,7 @@ var TopicIaJsonComponent = class _TopicIaJsonComponent {
       this.applySectionDiffState(notOnTopicsCategory.children, "notOnTopics");
     }
     this.reorderNotOnTopicsBadged();
+    this.applyCommsRecommendationsToLabels();
   }
   getTopicNodeBaseLabel(node) {
     const visits = this.getVisitsForNode(node);
@@ -35944,7 +36294,7 @@ var TopicIaJsonComponent = class _TopicIaJsonComponent {
       \u0275\u0275queryRefresh(_t = \u0275\u0275loadQuery()) && (ctx.chartContainer = _t.first);
       \u0275\u0275queryRefresh(_t = \u0275\u0275loadQuery()) && (ctx.cm = _t.first);
     }
-  }, features: [\u0275\u0275ProvidersFeature([TreeDragDropService])], decls: 13, vars: 10, consts: [["cm", ""], ["topicLabel", ""], ["chartContainer", ""], ["header", ""], ["body", ""], [1, "mt-0"], [1, "flex", "flex-row", "flex-wrap", "align-items-center", "gap-3", "mt-0"], ["inputId", "depth", "mode", "decimal", 3, "ngModelChange", "ngModel", "showButtons", "min", "max"], ["for", "depth"], ["label", "Get subpages in IA", "severity", "primary", "icon", "pi pi-info-circle", 3, "click", "loading"], ["styleClass", "mt-3", 3, "value", "showValue", "style", 4, "ngIf"], [4, "ngIf"], ["styleClass", "mt-3", 3, "value", "showValue"], [1, "flex", "flex-row", "align-items-center", "gap-3"], ["styleClass", "pl-1", 1, "max-w-full", 3, "model"], ["class", "flex align-items-center gap-2 text-green-400", 4, "ngIf"], ["class", "flex align-items-center gap-2 text-red-400", 4, "ngIf"], [1, "flex", "align-items-center", "gap-2", "text-green-400"], [1, "pi", "pi-check-circle"], [1, "flex", "align-items-center", "gap-2", "text-red-400"], [1, "pi", "pi-times-circle"], [1, "grid"], [1, "col-12"], [3, "model"], ["styleClass", "w-full md:w-[30rem]", "draggableScope", "self", "droppableScope", "self", 3, "selectionChange", "onNodeDrop", "onNodeContextMenuSelect", "value", "selectionMode", "selection", "draggableNodes", "droppableNodes", "validateDrop", "contextMenu"], ["pTemplate", "default"], ["class", "col-12 md:col-6", 4, "ngIf"], [1, "flex", "flex-row", "align-items-center", "gap-2", "w-full"], ["class", "pi pi-folder", 4, "ngIf"], ["class", "pi pi-file", 4, "ngIf"], ["class", "pi pi-arrows-alt cursor-move text-color-secondary", 4, "ngIf"], ["class", "pi pi-pencil text-color-secondary", 4, "ngIf"], [1, "pi", "pi-folder"], [1, "pi", "pi-file"], [1, "pi", "pi-arrows-alt", "cursor-move", "text-color-secondary"], [1, "pi", "pi-pencil", "text-color-secondary"], ["target", "_blank", 1, "ia-label", 3, "click", "href", "innerHTML"], ["type", "text", "pInputText", "", "pSize", "small", 1, "ia-label", 3, "ngModelChange", "keydown", "ngModel"], ["icon", "pi pi-check", "severity", "secondary", "size", "small", 3, "onClick"], [1, "col-12", "md:col-6"], ["styleClass", "w-full md:w-[30rem]", "draggableScope", "topicPageTree", "droppableScope", "topicPageTree", 3, "onNodeDrop", "value", "selectionMode", "draggableNodes", "droppableNodes", "validateDrop"], [4, "ngIf", "ngIfElse"], [1, "ia-label", 3, "innerHTML"], ["label", "Maximize IA chart", "severity", "secondary", "icon", "pi pi-window-maximize", "styleClass", "mt-1 mb-3", 3, "click", 4, "ngIf"], ["class", "overflow-auto max-h-75vh surface-ground surface-border border-1 py-3 mb-3 ia-chart-container", 4, "ngIf"], ["label", "Maximize IA chart", "severity", "secondary", "icon", "pi pi-window-maximize", "styleClass", "mt-1 mb-3", 3, "click"], [1, "overflow-auto", "max-h-75vh", "surface-ground", "surface-border", "border-1", "py-3", "mb-3", "ia-chart-container"], [3, "value"], ["size", "small", "stripedRows", "", 3, "value", "tableStyle", 4, "ngIf"], ["size", "small", "stripedRows", "", 3, "value", "tableStyle"]], template: function TopicIaJsonComponent_Template(rf, ctx) {
+  }, features: [\u0275\u0275ProvidersFeature([TreeDragDropService])], decls: 13, vars: 11, consts: [["cm", ""], ["topicLabel", ""], ["chartContainer", ""], ["header", ""], ["body", ""], [1, "mt-0"], [1, "flex", "flex-row", "flex-wrap", "align-items-center", "gap-3", "mt-0"], ["inputId", "depth", "mode", "decimal", 3, "ngModelChange", "ngModel", "showButtons", "min", "max"], ["for", "depth"], ["label", "Get subpages in IA", "icon", "pi pi-info-circle", 3, "click", "severity", "loading"], ["styleClass", "mt-3", 3, "value", "showValue", "style", 4, "ngIf"], [4, "ngIf"], ["styleClass", "mt-3", 3, "value", "showValue"], [1, "grid", "mt-3"], [1, "col-12", "md:col-4"], ["for", "topic-ia-comm-objectives", 1, "block", "text-lg", "font-semibold", "mb-2"], ["pTextarea", "", "id", "topic-ia-comm-objectives", "rows", "3", 1, "w-full", 2, "height", "6rem", "overflow", "auto", 3, "ngModelChange", "ngModel"], ["for", "topic-ia-feedback-insights", 1, "block", "text-lg", "font-semibold", "mb-2"], ["pTextarea", "", "id", "topic-ia-feedback-insights", "rows", "3", 1, "w-full", 2, "height", "6rem", "overflow", "auto", 3, "ngModelChange", "ngModel"], ["for", "topic-ia-call-trouble", 1, "block", "text-lg", "font-semibold", "mb-2"], ["pTextarea", "", "id", "topic-ia-call-trouble", "rows", "3", 1, "w-full", 2, "height", "6rem", "overflow", "auto", 3, "ngModelChange", "ngModel"], [1, "flex", "justify-content-end", "mt-3"], ["label", "Send my input to GenAI", "icon", "pi pi-send", 3, "click", "severity", "loading", "disabled"], [1, "flex", "flex-row", "align-items-center", "gap-3"], ["styleClass", "pl-1", 1, "max-w-full", 3, "model"], ["class", "flex align-items-center gap-2 text-green-400", 4, "ngIf"], ["class", "flex align-items-center gap-2 text-red-400", 4, "ngIf"], [1, "flex", "align-items-center", "gap-2", "text-green-400"], [1, "pi", "pi-check-circle"], [1, "flex", "align-items-center", "gap-2", "text-red-400"], [1, "pi", "pi-times-circle"], [1, "grid"], [1, "col-12"], [3, "model"], ["styleClass", "w-full md:w-[30rem]", "draggableScope", "self", "droppableScope", "self", 3, "selectionChange", "onNodeDrop", "onNodeContextMenuSelect", "value", "selectionMode", "selection", "draggableNodes", "droppableNodes", "validateDrop", "contextMenu"], ["pTemplate", "default"], ["class", "col-12 md:col-6", 4, "ngIf"], [1, "flex", "flex-row", "align-items-center", "gap-2", "w-full"], ["class", "pi pi-folder", 4, "ngIf"], ["class", "pi pi-file", 4, "ngIf"], ["class", "pi pi-arrows-alt cursor-move text-color-secondary", 4, "ngIf"], ["class", "pi pi-pencil text-color-secondary", 4, "ngIf"], [1, "pi", "pi-folder"], [1, "pi", "pi-file"], [1, "pi", "pi-arrows-alt", "cursor-move", "text-color-secondary"], [1, "pi", "pi-pencil", "text-color-secondary"], ["target", "_blank", 1, "ia-label", 3, "click", "href", "innerHTML"], ["type", "text", "pInputText", "", "pSize", "small", 1, "ia-label", 3, "ngModelChange", "keydown", "ngModel"], ["icon", "pi pi-check", "severity", "secondary", "size", "small", 3, "onClick"], [1, "col-12", "md:col-6"], ["styleClass", "w-full md:w-[30rem]", "draggableScope", "topicPageTree", "droppableScope", "topicPageTree", 3, "onNodeDrop", "value", "selectionMode", "draggableNodes", "droppableNodes", "validateDrop"], [4, "ngIf", "ngIfElse"], [1, "ia-label", 3, "innerHTML"], ["label", "Maximize IA chart", "severity", "secondary", "icon", "pi pi-window-maximize", "styleClass", "mt-1 mb-3", 3, "click", 4, "ngIf"], ["class", "overflow-auto max-h-75vh surface-ground surface-border border-1 py-3 mb-3 ia-chart-container", 4, "ngIf"], ["label", "Maximize IA chart", "severity", "secondary", "icon", "pi pi-window-maximize", "styleClass", "mt-1 mb-3", 3, "click"], [1, "overflow-auto", "max-h-75vh", "surface-ground", "surface-border", "border-1", "py-3", "mb-3", "ia-chart-container"], [3, "value"], ["size", "small", "stripedRows", "", 3, "value", "tableStyle", 4, "ngIf"], ["size", "small", "stripedRows", "", 3, "value", "tableStyle"]], template: function TopicIaJsonComponent_Template(rf, ctx) {
     if (rf & 1) {
       \u0275\u0275elementStart(0, "p", 5);
       \u0275\u0275text(1, "To edit this topic page (or to convert it to one), choose the depth of the IA crawl.");
@@ -35963,14 +36313,14 @@ var TopicIaJsonComponent = class _TopicIaJsonComponent {
         return ctx.checkIA();
       });
       \u0275\u0275elementEnd()();
-      \u0275\u0275template(8, TopicIaJsonComponent_p_progressbar_8_Template, 1, 5, "p-progressbar", 10)(9, TopicIaJsonComponent_ng_container_9_Template, 7, 3, "ng-container", 11)(10, TopicIaJsonComponent_ng_container_10_Template, 10, 11, "ng-container", 11)(11, TopicIaJsonComponent_ng_container_11_Template, 6, 3, "ng-container", 11)(12, TopicIaJsonComponent_ng_container_12_Template, 5, 2, "ng-container", 11);
+      \u0275\u0275template(8, TopicIaJsonComponent_p_progressbar_8_Template, 1, 5, "p-progressbar", 10)(9, TopicIaJsonComponent_ng_container_9_Template, 24, 9, "ng-container", 11)(10, TopicIaJsonComponent_ng_container_10_Template, 10, 11, "ng-container", 11)(11, TopicIaJsonComponent_ng_container_11_Template, 6, 3, "ng-container", 11)(12, TopicIaJsonComponent_ng_container_12_Template, 5, 2, "ng-container", 11);
     }
     if (rf & 2) {
       \u0275\u0275advance(4);
       \u0275\u0275twoWayProperty("ngModel", ctx.depth);
       \u0275\u0275property("showButtons", true)("min", 2)("max", 6);
       \u0275\u0275advance(3);
-      \u0275\u0275property("loading", ctx.isChartLoading);
+      \u0275\u0275property("severity", ctx.step1Complete ? "secondary" : "primary")("loading", ctx.isChartLoading);
       \u0275\u0275advance();
       \u0275\u0275property("ngIf", ctx.isChartLoading);
       \u0275\u0275advance();
@@ -36006,6 +36356,7 @@ var TopicIaJsonComponent = class _TopicIaJsonComponent {
     InputNumber,
     InputTextModule,
     InputText,
+    Textarea,
     StepperModule,
     Tree,
     ContextMenuModule,
@@ -36013,7 +36364,7 @@ var TopicIaJsonComponent = class _TopicIaJsonComponent {
     InputGroup,
     InputGroupAddonModule,
     InputGroupAddon
-  ], styles: ["\n\n.ia-label[_ngcontent-%COMP%] {\n  white-space: pre-line;\n  display: inline-block;\n  color: var(--text-color) !important;\n  text-decoration: none !important;\n}\n  .p-tree li[class*=text-white] > .p-tree-node-content .ia-label {\n  color: #ffffff !important;\n}\n  .p-tree li[class*=text-black] > .p-tree-node-content .ia-label {\n  color: #000000 !important;\n}\n  .p-tree .p-tree-node-content:hover {\n  background-color: unset !important;\n}\n[_nghost-%COMP%]     .topic-ia-steps .topic-ia-step-list {\n  display: grid;\n  grid-template-columns: repeat(4, minmax(0, 1fr));\n  gap: 0.5rem;\n  margin: 0;\n}\n@media (max-width: 1500px) {\n  [_nghost-%COMP%]     .topic-ia-steps .topic-ia-step-list {\n    grid-template-columns: minmax(0, 1fr);\n    gap: 0.1rem;\n  }\n}\n@media (max-width: 1500px) {\n  [_nghost-%COMP%]     .topic-ia-steps .p-step-header {\n    padding: 0;\n  }\n  [_nghost-%COMP%]     .topic-ia-steps .p-stepper-separator {\n    margin: 0;\n  }\n}\n[_nghost-%COMP%]     .topic-ia-steps {\n  margin-bottom: 0;\n}\n[_nghost-%COMP%]     .topic-ia-steps .p-step-title {\n  font-weight: 600;\n  font-size: 1.02rem;\n}\n[_nghost-%COMP%]     .topic-ia-steps .topic-ia-step-list .p-step {\n  justify-content: flex-start;\n  text-align: left;\n  width: 100%;\n}\n[_nghost-%COMP%]     .topic-ia-panels {\n  display: grid;\n  grid-template-columns: repeat(4, minmax(0, 1fr));\n  gap: 1rem;\n  margin-top: 0.75rem;\n}\n@media (max-width: 1500px) {\n  [_nghost-%COMP%]     .topic-ia-panels {\n    grid-template-columns: repeat(2, minmax(0, 1fr));\n  }\n}\n@media (max-width: 1000px) {\n  [_nghost-%COMP%]     .topic-ia-panels {\n    grid-template-columns: minmax(0, 1fr);\n  }\n}\n  .topic-ia-badge {\n  display: inline-block;\n  margin-left: 0.5rem;\n  padding: 0.1rem 0.45rem;\n  border-radius: 9999px;\n  font-size: 0.875rem;\n  font-weight: 600;\n  border: 1px solid #d1d5db;\n  background: #e5e7eb;\n  color: #374151;\n  white-space: nowrap;\n}\n.dark-mode[_nghost-%COMP%]     .topic-ia-badge, .dark-mode   [_nghost-%COMP%]     .topic-ia-badge {\n  border-color: #4b5563;\n  background: #374151;\n  color: #f9fafb;\n}\n  .ia-chart-container .p-organizationchart-node a {\n  color: var(--text-color) !important;\n  text-decoration: none !important;\n}\n  .ia-chart-container .p-organizationchart-node.text-white a {\n  color: #ffffff !important;\n}\n  .ia-chart-container .p-organizationchart-node.text-black a {\n  color: #000000 !important;\n}\n/*# sourceMappingURL=topic-ia-json.component.css.map */"] });
+  ], styles: ["\n\n.ia-label[_ngcontent-%COMP%] {\n  white-space: pre-line;\n  display: inline-block;\n  color: var(--text-color) !important;\n  text-decoration: none !important;\n}\n  .p-tree li[class*=text-white] > .p-tree-node-content .ia-label {\n  color: #ffffff !important;\n}\n  .p-tree li[class*=text-black] > .p-tree-node-content .ia-label {\n  color: #000000 !important;\n}\n  .p-tree .p-tree-node-content:hover {\n  background-color: unset !important;\n}\n[_nghost-%COMP%]     .topic-ia-steps .topic-ia-step-list {\n  display: grid;\n  grid-template-columns: repeat(4, minmax(0, 1fr));\n  gap: 0.5rem;\n  margin: 0;\n}\n@media (max-width: 1500px) {\n  [_nghost-%COMP%]     .topic-ia-steps .topic-ia-step-list {\n    grid-template-columns: minmax(0, 1fr);\n    gap: 0.1rem;\n  }\n}\n@media (max-width: 1500px) {\n  [_nghost-%COMP%]     .topic-ia-steps .p-step-header {\n    padding: 0;\n  }\n  [_nghost-%COMP%]     .topic-ia-steps .p-stepper-separator {\n    margin: 0;\n  }\n}\n[_nghost-%COMP%]     .topic-ia-steps {\n  margin-bottom: 0;\n}\n[_nghost-%COMP%]     .topic-ia-steps .p-step-title {\n  font-weight: 600;\n  font-size: 1.02rem;\n}\n[_nghost-%COMP%]     .topic-ia-steps .topic-ia-step-list .p-step {\n  justify-content: flex-start;\n  text-align: left;\n  width: 100%;\n}\n[_nghost-%COMP%]     .topic-ia-panels {\n  display: grid;\n  grid-template-columns: repeat(4, minmax(0, 1fr));\n  gap: 1rem;\n  margin-top: 0.75rem;\n}\n@media (max-width: 1500px) {\n  [_nghost-%COMP%]     .topic-ia-panels {\n    grid-template-columns: repeat(2, minmax(0, 1fr));\n  }\n}\n@media (max-width: 1000px) {\n  [_nghost-%COMP%]     .topic-ia-panels {\n    grid-template-columns: minmax(0, 1fr);\n  }\n}\n  .topic-ia-badge {\n  display: inline-block;\n  margin-left: 0.5rem;\n  padding: 0.1rem 0.45rem;\n  border-radius: 9999px;\n  font-size: 0.875rem;\n  font-weight: 600;\n  border: 1px solid #d1d5db;\n  background: #e5e7eb;\n  color: #374151;\n  white-space: nowrap;\n}\n.dark-mode[_nghost-%COMP%]     .topic-ia-badge, .dark-mode   [_nghost-%COMP%]     .topic-ia-badge {\n  border-color: #4b5563;\n  background: #374151;\n  color: #f9fafb;\n}\n  .topic-ia-comm-badge {\n  border-color: #93c5fd;\n  background: #dbeafe;\n  color: #1e3a8a;\n}\n.dark-mode[_nghost-%COMP%]     .topic-ia-comm-badge, .dark-mode   [_nghost-%COMP%]     .topic-ia-comm-badge {\n  border-color: #1d4ed8;\n  background: #1e40af;\n  color: #e0e7ff;\n}\n  .ia-chart-container .p-organizationchart-node a {\n  color: var(--text-color) !important;\n  text-decoration: none !important;\n}\n  .ia-chart-container .p-organizationchart-node.text-white a {\n  color: #ffffff !important;\n}\n  .ia-chart-container .p-organizationchart-node.text-black a {\n  color: #000000 !important;\n}\n/*# sourceMappingURL=topic-ia-json.component.css.map */"] });
 };
 (() => {
   (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(TopicIaJsonComponent, [{
@@ -36030,6 +36381,7 @@ var TopicIaJsonComponent = class _TopicIaJsonComponent {
       ProgressBarModule,
       InputNumberModule,
       InputTextModule,
+      Textarea,
       StepperModule,
       Tree,
       ContextMenuModule,
@@ -36051,7 +36403,7 @@ var TopicIaJsonComponent = class _TopicIaJsonComponent {
     </p-iftalabel>
     <p-button
       label="Get subpages in IA"
-      severity="primary"
+      [severity]="step1Complete ? 'secondary' : 'primary'"
       (click)="checkIA()"
       [loading]="isChartLoading"
       icon="pi pi-info-circle"
@@ -36067,6 +36419,67 @@ var TopicIaJsonComponent = class _TopicIaJsonComponent {
 
 <!--Breadcrumb-->
 <ng-container *ngIf="breadcrumb.length > 0">
+  <h2>Contextual input (for Most requested or Features)</h2>
+  <div class="grid mt-3">
+    <div class="col-12 md:col-4">
+      <label
+        for="topic-ia-comm-objectives"
+        class="block text-lg font-semibold mb-2"
+      >
+        Are there any communications objectives to consider?
+      </label>
+      <textarea
+        pTextarea
+        id="topic-ia-comm-objectives"
+        [(ngModel)]="commObjectivesInput"
+        rows="3"
+        class="w-full"
+        style="height: 6rem; overflow: auto;"
+      ></textarea>
+    </div>
+    <div class="col-12 md:col-4">
+      <label
+        for="topic-ia-feedback-insights"
+        class="block text-lg font-semibold mb-2"
+      >
+        What insights do you have from feedback data?
+      </label>
+      <textarea
+        pTextarea
+        id="topic-ia-feedback-insights"
+        [(ngModel)]="feedbackInsightsInput"
+        rows="3"
+        class="w-full"
+        style="height: 6rem; overflow: auto;"
+      ></textarea>
+    </div>
+    <div class="col-12 md:col-4">
+      <label
+        for="topic-ia-call-trouble"
+        class="block text-lg font-semibold mb-2"
+      >
+        What are people having trouble with when they call us?
+      </label>
+      <textarea
+        pTextarea
+        id="topic-ia-call-trouble"
+        [(ngModel)]="callTroubleInput"
+        rows="3"
+        class="w-full"
+        style="height: 6rem; overflow: auto;"
+      ></textarea>
+    </div>
+  </div>
+  <div class="flex justify-content-end mt-3">
+    <p-button
+      label="Send my input to GenAI"
+      [severity]="commObjectivesInput.trim() ? 'primary' : 'secondary'"
+      icon="pi pi-send"
+      [loading]="isAiLoading"
+      [disabled]="!commObjectivesInput.trim() || isAiLoading"
+      (click)="sendContextInputToGenAI()"
+    />
+  </div>
   <h2>Breadcrumb</h2>
   <div class="flex flex-row align-items-center gap-3">
     <p-breadcrumb class="max-w-full" styleClass="pl-1" [model]="breadcrumb" />
@@ -36287,7 +36700,7 @@ var TopicIaJsonComponent = class _TopicIaJsonComponent {
     </ng-template>
   </p-table>
 </ng-container>
-`, styles: ["/* angular:styles/component:css;f023c326fff2882959b5b1251af66b8449d673c76ad30dc90b38e91d13fe7f5c;C:/my-working-files/GitHub/design-assistant/src/app/views/page-assistant/components/problems/component-guidance/topic-page/topic-ia-json.component.ts */\n.ia-label {\n  white-space: pre-line;\n  display: inline-block;\n  color: var(--text-color) !important;\n  text-decoration: none !important;\n}\n::ng-deep .p-tree li[class*=text-white] > .p-tree-node-content .ia-label {\n  color: #ffffff !important;\n}\n::ng-deep .p-tree li[class*=text-black] > .p-tree-node-content .ia-label {\n  color: #000000 !important;\n}\n::ng-deep .p-tree .p-tree-node-content:hover {\n  background-color: unset !important;\n}\n:host ::ng-deep .topic-ia-steps .topic-ia-step-list {\n  display: grid;\n  grid-template-columns: repeat(4, minmax(0, 1fr));\n  gap: 0.5rem;\n  margin: 0;\n}\n@media (max-width: 1500px) {\n  :host ::ng-deep .topic-ia-steps .topic-ia-step-list {\n    grid-template-columns: minmax(0, 1fr);\n    gap: 0.1rem;\n  }\n}\n@media (max-width: 1500px) {\n  :host ::ng-deep .topic-ia-steps .p-step-header {\n    padding: 0;\n  }\n  :host ::ng-deep .topic-ia-steps .p-stepper-separator {\n    margin: 0;\n  }\n}\n:host ::ng-deep .topic-ia-steps {\n  margin-bottom: 0;\n}\n:host ::ng-deep .topic-ia-steps .p-step-title {\n  font-weight: 600;\n  font-size: 1.02rem;\n}\n:host ::ng-deep .topic-ia-steps .topic-ia-step-list .p-step {\n  justify-content: flex-start;\n  text-align: left;\n  width: 100%;\n}\n:host ::ng-deep .topic-ia-panels {\n  display: grid;\n  grid-template-columns: repeat(4, minmax(0, 1fr));\n  gap: 1rem;\n  margin-top: 0.75rem;\n}\n@media (max-width: 1500px) {\n  :host ::ng-deep .topic-ia-panels {\n    grid-template-columns: repeat(2, minmax(0, 1fr));\n  }\n}\n@media (max-width: 1000px) {\n  :host ::ng-deep .topic-ia-panels {\n    grid-template-columns: minmax(0, 1fr);\n  }\n}\n::ng-deep .topic-ia-badge {\n  display: inline-block;\n  margin-left: 0.5rem;\n  padding: 0.1rem 0.45rem;\n  border-radius: 9999px;\n  font-size: 0.875rem;\n  font-weight: 600;\n  border: 1px solid #d1d5db;\n  background: #e5e7eb;\n  color: #374151;\n  white-space: nowrap;\n}\n:host-context(.dark-mode) ::ng-deep .topic-ia-badge {\n  border-color: #4b5563;\n  background: #374151;\n  color: #f9fafb;\n}\n::ng-deep .ia-chart-container .p-organizationchart-node a {\n  color: var(--text-color) !important;\n  text-decoration: none !important;\n}\n::ng-deep .ia-chart-container .p-organizationchart-node.text-white a {\n  color: #ffffff !important;\n}\n::ng-deep .ia-chart-container .p-organizationchart-node.text-black a {\n  color: #000000 !important;\n}\n/*# sourceMappingURL=topic-ia-json.component.css.map */\n"] }]
+`, styles: ["/* angular:styles/component:css;13f38666d2023750fffa0de1bb355c48020f842c50e039bfe6182a35640d4f96;C:/my-working-files/GitHub/design-assistant/src/app/views/page-assistant/components/problems/component-guidance/topic-page/topic-ia-json.component.ts */\n.ia-label {\n  white-space: pre-line;\n  display: inline-block;\n  color: var(--text-color) !important;\n  text-decoration: none !important;\n}\n::ng-deep .p-tree li[class*=text-white] > .p-tree-node-content .ia-label {\n  color: #ffffff !important;\n}\n::ng-deep .p-tree li[class*=text-black] > .p-tree-node-content .ia-label {\n  color: #000000 !important;\n}\n::ng-deep .p-tree .p-tree-node-content:hover {\n  background-color: unset !important;\n}\n:host ::ng-deep .topic-ia-steps .topic-ia-step-list {\n  display: grid;\n  grid-template-columns: repeat(4, minmax(0, 1fr));\n  gap: 0.5rem;\n  margin: 0;\n}\n@media (max-width: 1500px) {\n  :host ::ng-deep .topic-ia-steps .topic-ia-step-list {\n    grid-template-columns: minmax(0, 1fr);\n    gap: 0.1rem;\n  }\n}\n@media (max-width: 1500px) {\n  :host ::ng-deep .topic-ia-steps .p-step-header {\n    padding: 0;\n  }\n  :host ::ng-deep .topic-ia-steps .p-stepper-separator {\n    margin: 0;\n  }\n}\n:host ::ng-deep .topic-ia-steps {\n  margin-bottom: 0;\n}\n:host ::ng-deep .topic-ia-steps .p-step-title {\n  font-weight: 600;\n  font-size: 1.02rem;\n}\n:host ::ng-deep .topic-ia-steps .topic-ia-step-list .p-step {\n  justify-content: flex-start;\n  text-align: left;\n  width: 100%;\n}\n:host ::ng-deep .topic-ia-panels {\n  display: grid;\n  grid-template-columns: repeat(4, minmax(0, 1fr));\n  gap: 1rem;\n  margin-top: 0.75rem;\n}\n@media (max-width: 1500px) {\n  :host ::ng-deep .topic-ia-panels {\n    grid-template-columns: repeat(2, minmax(0, 1fr));\n  }\n}\n@media (max-width: 1000px) {\n  :host ::ng-deep .topic-ia-panels {\n    grid-template-columns: minmax(0, 1fr);\n  }\n}\n::ng-deep .topic-ia-badge {\n  display: inline-block;\n  margin-left: 0.5rem;\n  padding: 0.1rem 0.45rem;\n  border-radius: 9999px;\n  font-size: 0.875rem;\n  font-weight: 600;\n  border: 1px solid #d1d5db;\n  background: #e5e7eb;\n  color: #374151;\n  white-space: nowrap;\n}\n:host-context(.dark-mode) ::ng-deep .topic-ia-badge {\n  border-color: #4b5563;\n  background: #374151;\n  color: #f9fafb;\n}\n::ng-deep .topic-ia-comm-badge {\n  border-color: #93c5fd;\n  background: #dbeafe;\n  color: #1e3a8a;\n}\n:host-context(.dark-mode) ::ng-deep .topic-ia-comm-badge {\n  border-color: #1d4ed8;\n  background: #1e40af;\n  color: #e0e7ff;\n}\n::ng-deep .ia-chart-container .p-organizationchart-node a {\n  color: var(--text-color) !important;\n  text-decoration: none !important;\n}\n::ng-deep .ia-chart-container .p-organizationchart-node.text-white a {\n  color: #ffffff !important;\n}\n::ng-deep .ia-chart-container .p-organizationchart-node.text-black a {\n  color: #000000 !important;\n}\n/*# sourceMappingURL=topic-ia-json.component.css.map */\n"] }]
   }], () => [], { chartContainer: [{
     type: ViewChild,
     args: ["chartContainer"]
@@ -36297,7 +36710,7 @@ var TopicIaJsonComponent = class _TopicIaJsonComponent {
   }] });
 })();
 (() => {
-  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(TopicIaJsonComponent, { className: "TopicIaJsonComponent", filePath: "src/app/views/page-assistant/components/problems/component-guidance/topic-page/topic-ia-json.component.ts", lineNumber: 190 });
+  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(TopicIaJsonComponent, { className: "TopicIaJsonComponent", filePath: "src/app/views/page-assistant/components/problems/component-guidance/topic-page/topic-ia-json.component.ts", lineNumber: 215 });
 })();
 
 // src/app/views/page-assistant/components/problems.component.ts
@@ -37392,6 +37805,7 @@ var PageAssistantCompareComponent = class _PageAssistantCompareComponent {
   sourceDiffService = inject(SourceDiffService);
   shadowDomService = inject(ShadowDomService);
   alertAi = inject(AlertAiService);
+  openRouter = inject(OpenRouterService);
   urlDataService = inject(UrlDataService);
   router = inject(Router);
   locationStrategy = inject(LocationStrategy);
@@ -37795,7 +38209,7 @@ ${base}`;
         method: "POST",
         headers,
         body: JSON.stringify({
-          models: [model, AiModel.Devstral, AiModel.Qwen],
+          models: this.buildModelRotation(model),
           messages: [
             { role: "system", content: recPrompt },
             { role: "user", content: recPayload }
@@ -37829,7 +38243,7 @@ ${base}`;
     });
   }
   //AI Model
-  selectedAiModel = AiModel.Devstral;
+  selectedAiModel = AiModel.Llama33;
   onAiChange(key2) {
     this.selectedAiModel = key2;
   }
@@ -37839,6 +38253,11 @@ ${base}`;
   getShortModelName(model) {
     const key2 = this.getEnumKeyByValue(AiModel, model);
     return key2 ? this.translate.instant(`page.ai-options.model.short.${key2}`) : model;
+  }
+  buildModelRotation(model) {
+    const invalidFallbacks = /* @__PURE__ */ new Set([AiModel.Qwen]);
+    const available = this.openRouter.freeModels.filter((candidate) => !invalidFallbacks.has(candidate));
+    return [model, ...available.filter((candidate) => candidate !== model)].slice(0, 3);
   }
   //AI interaction
   isLoading = false;
@@ -37869,7 +38288,7 @@ ${base}`;
           "Content-Type": "application/json"
         };
         const payload = {
-          models: [model, AiModel.Devstral, AiModel.Qwen],
+          models: this.buildModelRotation(model),
           messages: [
             { role: "system", content: prompt },
             { role: "user", content: html }
@@ -38763,9 +39182,9 @@ ${base}`;
   }] });
 })();
 (() => {
-  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(PageAssistantCompareComponent, { className: "PageAssistantCompareComponent", filePath: "src/app/views/page-assistant/page-assistant.component.ts", lineNumber: 85 });
+  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(PageAssistantCompareComponent, { className: "PageAssistantCompareComponent", filePath: "src/app/views/page-assistant/page-assistant.component.ts", lineNumber: 86 });
 })();
 export {
   PageAssistantCompareComponent
 };
-//# sourceMappingURL=chunk-OAEUBFJI.js.map
+//# sourceMappingURL=chunk-VFAXLCIO.js.map

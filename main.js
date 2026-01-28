@@ -66,7 +66,6 @@ import {
   NG_VALIDATORS,
   NG_VALUE_ACCESSOR,
   NgClass,
-  NgControl,
   NgControlStatus,
   NgForOf,
   NgIf,
@@ -183,7 +182,7 @@ import {
   unblockBodyScroll,
   uuid,
   zindexutils
-} from "./chunk-YY665KVB.js";
+} from "./chunk-NBQ54YL3.js";
 import {
   ANIMATION_MODULE_TYPE,
   BehaviorSubject,
@@ -10389,7 +10388,7 @@ var Dropdown = class _Dropdown extends BaseComponent {
   lastHiddenFocusableElementOnOverlay;
   // @todo to be refactored
   get hostClass() {
-    const classes14 = this._componentStyle.classes.root({
+    const classes13 = this._componentStyle.classes.root({
       instance: this
     }).map((cls) => {
       if (typeof cls === "string") {
@@ -10398,7 +10397,7 @@ var Dropdown = class _Dropdown extends BaseComponent {
         return Object.keys(cls).filter((key) => cls[key]).join(" ");
       }
     }).join(" ");
-    return classes14 + " " + this.styleClass;
+    return classes13 + " " + this.styleClass;
   }
   get hostStyle() {
     return this.style;
@@ -16670,7 +16669,7 @@ var render = function(iconDefinition) {
     maskId = null,
     title = null,
     titleId = null,
-    classes: classes14 = [],
+    classes: classes13 = [],
     attributes = {},
     styles: styles2 = {}
   } = params;
@@ -16715,7 +16714,7 @@ var render = function(iconDefinition) {
       extra: {
         attributes,
         styles: styles2,
-        classes: classes14
+        classes: classes13
       }
     });
   });
@@ -16817,7 +16816,7 @@ var Layers = {
       layer(assembler) {
         let params = arguments.length > 1 && arguments[1] !== void 0 ? arguments[1] : {};
         const {
-          classes: classes14 = []
+          classes: classes13 = []
         } = params;
         return domVariants({
           type: "layer"
@@ -16835,7 +16834,7 @@ var Layers = {
           return [{
             tag: "span",
             attributes: {
-              class: ["".concat(config.cssPrefix, "-layers"), ...classes14].join(" ")
+              class: ["".concat(config.cssPrefix, "-layers"), ...classes13].join(" ")
             },
             children
           }];
@@ -16851,7 +16850,7 @@ var LayersCounter = {
         let params = arguments.length > 1 && arguments[1] !== void 0 ? arguments[1] : {};
         const {
           title = null,
-          classes: classes14 = [],
+          classes: classes13 = [],
           attributes = {},
           styles: styles2 = {}
         } = params;
@@ -16869,7 +16868,7 @@ var LayersCounter = {
             extra: {
               attributes,
               styles: styles2,
-              classes: ["".concat(config.cssPrefix, "-layers-counter"), ...classes14]
+              classes: ["".concat(config.cssPrefix, "-layers-counter"), ...classes13]
             }
           });
         });
@@ -16885,7 +16884,7 @@ var LayersText = {
         const {
           transform = meaninglessTransform,
           title = null,
-          classes: classes14 = [],
+          classes: classes13 = [],
           attributes = {},
           styles: styles2 = {}
         } = params;
@@ -16904,7 +16903,7 @@ var LayersText = {
             extra: {
               attributes,
               styles: styles2,
-              classes: ["".concat(config.cssPrefix, "-layers-text"), ...classes14]
+              classes: ["".concat(config.cssPrefix, "-layers-text"), ...classes13]
             }
           });
         });
@@ -17479,7 +17478,7 @@ var faWarnIfIconSpecMissing = () => {
 var isKnownRotateValue = (rotate) => rotate != null && (rotate === 90 || rotate === 180 || rotate === 270 || rotate === "90" || rotate === "180" || rotate === "270");
 var faClassList = (props) => {
   const knownRotateValue = isKnownRotateValue(props.rotate);
-  const classes14 = {
+  const classes13 = {
     [`fa-${props.animation}`]: props.animation != null && !props.animation.startsWith("spin"),
     "fa-spin": props.animation === "spin" || props.animation === "spin-reverse",
     "fa-spin-pulse": props.animation === "spin-pulse" || props.animation === "spin-pulse-reverse",
@@ -17500,7 +17499,7 @@ var faClassList = (props) => {
     [`fa-pull-${props.pull}`]: props.pull !== null,
     [`fa-stack-${props.stackItemSize}`]: props.stackItemSize != null
   };
-  return Object.keys(classes14).map((key) => classes14[key] ? key : null).filter((key) => key);
+  return Object.keys(classes13).map((key) => classes13[key] ? key : null).filter((key) => key);
 };
 var cssInserted = /* @__PURE__ */ new WeakSet();
 var autoCssId = "fa-auto-css";
@@ -19132,7 +19131,7 @@ var TranslationAssistantComponent = class _TranslationAssistantComponent {
   static \u0275fac = function TranslationAssistantComponent_Factory(__ngFactoryType__) {
     return new (__ngFactoryType__ || _TranslationAssistantComponent)();
   };
-  static \u0275cmp = /* @__PURE__ */ \u0275\u0275defineComponent({ type: _TranslationAssistantComponent, selectors: [["ca-translation-assistant"]], decls: 22, vars: 7, consts: [["fileInput", ""], ["dragArea", ""], [1, "p-mb-3"], [1, "p-text-bold"], [1, "surface-100", "border-round", "shadow-3", "p-4", "max-w-3xl", "mx-auto"], [1, "p-mb-4"], [1, "p-m-0", "p-text-bold", "p-text-2xl", 2, "color", "black"], ["role", "button", "tabindex", "0", "aria-label", "Select a source .docx or .pptx file", 1, "flex", "flex-column", "align-items-center", "justify-content-center", "p-3", "border-dashed", "border-round", "border-200", "surface-100", "hover:surface-200", "hover:border-primary-400", "transition-colors", "transition-duration-300", "cursor-pointer", "w-full", "max-w-30rem", "min-h-12rem", 3, "click", "keyup.enter", "keyup.space", "dragover", "dragleave", "drop"], ["type", "file", "accept", ".docx,.pptx", 2, "display", "none", 3, "change"], [4, "ngIf", "ngIfElse"], [1, "flex", "gap-2", "mt-3"], ["pButton", "", "type", "button", "icon", "pi pi-upload", 1, "p-button", "p-component", "p-button-primary", 3, "click", "disabled"], ["class", "mt-3", 4, "ngIf"], ["class", "surface-100 border-round shadow-3", "style", "border: 2px solid #00000000; padding: 1rem", 4, "ngIf"], ["class", "p-mt-4 text-center", 4, "ngIf"], [1, "text-xl", "text-center"], ["class", "pi pi-file-word text-blue-500 text-2xl mr-1", "aria-hidden", "true", 4, "ngIf"], ["class", "text-orange-500 text-2xl mr-1", "aria-hidden", "true", 3, "icon", 4, "ngIf"], ["aria-hidden", "true", 1, "pi", "pi-file-word", "text-blue-500", "text-2xl", "mr-1"], ["aria-hidden", "true", 1, "text-orange-500", "text-2xl", "mr-1", 3, "icon"], ["aria-hidden", "true", 1, "pi", "pi-upload", "border-2", "border-circle", "border-300", "p-3", "text-3xl", "text-color-secondary", "mb-2", "hover:bg-primary", "hover:text-white", "transition-colors", "transition-duration-300"], [1, "m-0", "text-center", "text-sm"], [1, "mt-3"], [1, "p-panel", "p-component", "border-1", "border-round", "surface-100", 2, "border-color", "#00000023", "font-size", "1rem", "font-family", '"Segoe UI", Roboto, sans-serif'], ["role", "button", "tabindex", "0", "aria-controls", "preview-panel-content", 1, "p-panel-header", "d-flex", "justify-content-between", "align-items-center", "cursor-pointer", 2, "height", "4rem", "padding", "0 1rem", "display", "flex", "font-size", "1rem", "justify-content", "space-between", "align-items", "center", "flex-wrap", "nowrap", "gap", "0.5rem", "width", "100%", 3, "click", "keyup.enter", "keyup.space"], [1, "d-flex", "align-items-center"], ["aria-hidden", "true", 1, "pi", 2, "margin-right", "0.5rem", 3, "ngClass"], [1, "p-panel-title", "font-semibold", 2, "color", "black"], ["pButton", "", "type", "button", "title", "Copy All", "aria-label", "Copy all preview text", 1, "p-button-text", "p-button-icon-only", "flex-shrink-0", 2, "width", "3rem", "height", "3rem", 3, "click"], ["aria-hidden", "true", 1, "pi", "pi-copy", 2, "font-size", "1.4rem"], [1, "sr-only"], ["id", "preview-panel-content", "class", "p-panel-content p-mt-2", "style", "\n            background-color: white;\n            padding: 1rem;\n            border-top: 1px solid #ccc;\n          ", 4, "ngIf"], ["id", "preview-panel-content", 1, "p-panel-content", "p-mt-2", 2, "background-color", "white", "padding", "1rem", "border-top", "1px solid #ccc"], [1, "surface-100", "border-round", "shadow-3", 2, "border", "2px solid #00000000", "padding", "1rem"], [1, "p-mb-3", 2, "color", "black"], ["pInputTextarea", "", "rows", "15", "cols", "70", "placeholder", "", 1, "p-inputtext", "p-mb-3", "w-full", 2, "border-color", "#00000052", "min-height", "10rem", "resize", "vertical text", "font-family", '"Segoe UI", Roboto, sans-serif', "font-size", "1rem", "color", "#000000be", 3, "ngModelChange", "ngModel"], ["pButton", "", "type", "button", "icon", "pi pi-align-left", 1, "p-button-primary", 3, "click"], [1, "p-mt-4", "text-center"], ["styleClass", "p-mt-3"], [1, "p-mt-2", "font-bold"], ["pButton", "", "type", "button", "icon", "pi pi-download", 1, "p-button-primary", 3, "click"]], template: function TranslationAssistantComponent_Template(rf, ctx) {
+  static \u0275cmp = /* @__PURE__ */ \u0275\u0275defineComponent({ type: _TranslationAssistantComponent, selectors: [["ca-translation-assistant"]], decls: 22, vars: 7, consts: [["fileInput", ""], ["dragArea", ""], [1, "p-mb-3"], [1, "p-text-bold"], [1, "surface-100", "border-round", "shadow-3", "p-4", "max-w-3xl", "mx-auto"], [1, "p-mb-4"], [1, "p-m-0", "p-text-bold", "p-text-2xl", 2, "color", "black"], ["role", "button", "tabindex", "0", "aria-label", "Select a source .docx or .pptx file", 1, "flex", "flex-column", "align-items-center", "justify-content-center", "p-3", "border-dashed", "border-round", "border-200", "surface-100", "hover:surface-200", "hover:border-primary-400", "transition-colors", "transition-duration-300", "cursor-pointer", "w-full", "max-w-30rem", "min-h-12rem", 3, "click", "keyup.enter", "keyup.space", "dragover", "dragleave", "drop"], ["type", "file", "accept", ".docx,.pptx", 2, "display", "none", 3, "change"], [4, "ngIf", "ngIfElse"], [1, "flex", "gap-2", "mt-3"], ["pButton", "", "type", "button", "icon", "pi pi-upload", 1, "p-button", "p-component", "p-button-primary", 3, "click", "disabled"], ["class", "mt-3", 4, "ngIf"], ["class", "surface-100 border-round shadow-3", "style", "border: 2px solid #00000000; padding: 1rem", 4, "ngIf"], ["class", "p-mt-4 text-center", 4, "ngIf"], [1, "text-xl", "text-center"], ["class", "pi pi-file-word text-blue-500 text-2xl mr-1", "aria-hidden", "true", 4, "ngIf"], ["class", "text-orange-500 text-2xl mr-1", "aria-hidden", "true", 3, "icon", 4, "ngIf"], ["aria-hidden", "true", 1, "pi", "pi-file-word", "text-blue-500", "text-2xl", "mr-1"], ["aria-hidden", "true", 1, "text-orange-500", "text-2xl", "mr-1", 3, "icon"], ["aria-hidden", "true", 1, "pi", "pi-upload", "border-2", "border-circle", "border-300", "p-3", "text-3xl", "text-color-secondary", "mb-2", "hover:bg-primary", "hover:text-white", "transition-colors", "transition-duration-300"], [1, "m-0", "text-center", "text-sm"], [1, "mt-3"], [1, "p-panel", "p-component", "border-1", "border-round", "surface-100", 2, "border-color", "#00000023", "font-size", "1rem", "font-family", '"Segoe UI", Roboto, sans-serif'], ["role", "button", "tabindex", "0", "aria-controls", "preview-panel-content", 1, "p-panel-header", "d-flex", "justify-content-between", "align-items-center", "cursor-pointer", 2, "height", "4rem", "padding", "0 1rem", "display", "flex", "font-size", "1rem", "justify-content", "space-between", "align-items", "center", "flex-wrap", "nowrap", "gap", "0.5rem", "width", "100%", 3, "click", "keyup.enter", "keyup.space"], [1, "d-flex", "align-items-center"], ["aria-hidden", "true", 1, "pi", 2, "margin-right", "0.5rem", 3, "ngClass"], [1, "p-panel-title", "font-semibold", 2, "color", "black"], ["pButton", "", "type", "button", "title", "Copy All", "aria-label", "Copy all preview text", 1, "p-button-text", "p-button-icon-only", "flex-shrink-0", 2, "width", "3rem", "height", "3rem", 3, "click"], ["aria-hidden", "true", 1, "pi", "pi-copy", 2, "font-size", "1.4rem"], [1, "sr-only"], ["id", "preview-panel-content", "class", "p-panel-content p-mt-2", "style", "\n            background-color: white;\n            padding: 1rem;\n            border-top: 1px solid #ccc;\n          ", 4, "ngIf"], ["id", "preview-panel-content", 1, "p-panel-content", "p-mt-2", 2, "background-color", "white", "padding", "1rem", "border-top", "1px solid #ccc"], [1, "surface-100", "border-round", "shadow-3", 2, "border", "2px solid #00000000", "padding", "1rem"], [1, "p-mb-3", 2, "color", "black"], ["pTextarea", "", "rows", "15", "cols", "70", "placeholder", "", 1, "p-inputtext", "p-mb-3", "w-full", 2, "border-color", "#00000052", "min-height", "10rem", "resize", "vertical text", "font-family", '"Segoe UI", Roboto, sans-serif', "font-size", "1rem", "color", "#000000be", 3, "ngModelChange", "ngModel"], ["pButton", "", "type", "button", "icon", "pi pi-align-left", 1, "p-button-primary", 3, "click"], [1, "p-mt-4", "text-center"], ["styleClass", "p-mt-3"], [1, "p-mt-2", "font-bold"], ["pButton", "", "type", "button", "icon", "pi pi-download", 1, "p-button-primary", 3, "click"]], template: function TranslationAssistantComponent_Template(rf, ctx) {
     if (rf & 1) {
       const _r1 = \u0275\u0275getCurrentView();
       \u0275\u0275elementStart(0, "div", 2)(1, "h1", 3);
@@ -19219,6 +19218,8 @@ var TranslationAssistantComponent = class _TranslationAssistantComponent {
     NgModel,
     ProgressSpinnerModule,
     ProgressSpinner,
+    TextareaModule,
+    Textarea,
     FontAwesomeModule,
     FaIconComponent
   ], encapsulation: 2 });
@@ -19236,6 +19237,7 @@ var TranslationAssistantComponent = class _TranslationAssistantComponent {
       FileUploadModule,
       FormsModule,
       ProgressSpinnerModule,
+      TextareaModule,
       FontAwesomeModule
     ], template: `<div class="p-mb-3">\r
   <h1 class="p-text-bold">Translation Assistant</h1>\r
@@ -19407,7 +19409,7 @@ var TranslationAssistantComponent = class _TranslationAssistantComponent {
       below.\r
     </p>\r
     <textarea\r
-      pInputTextarea\r
+      pTextarea
       rows="15"\r
       cols="70"\r
       placeholder=""\r
@@ -19471,7 +19473,7 @@ var TranslationAssistantComponent = class _TranslationAssistantComponent {
   }], null, null);
 })();
 (() => {
-  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(TranslationAssistantComponent, { className: "TranslationAssistantComponent", filePath: "src/app/views/translation-assistant/translation-assistant.component.ts", lineNumber: 41 });
+  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(TranslationAssistantComponent, { className: "TranslationAssistantComponent", filePath: "src/app/views/translation-assistant/translation-assistant.component.ts", lineNumber: 43 });
 })();
 
 // node_modules/primeng/fesm2022/primeng-fieldset.mjs
@@ -29495,301 +29497,6 @@ var MetadataAssistantStateService = class _MetadataAssistantStateService {
   }], null, null);
 })();
 
-// node_modules/primeng/fesm2022/primeng-inputtextarea.mjs
-var theme8 = ({
-  dt
-}) => `
-.p-textarea {
-    font-family: inherit;
-    font-feature-settings: inherit;
-    font-size: 1rem;
-    color: ${dt("textarea.color")};
-    background: ${dt("textarea.background")};
-    padding: ${dt("textarea.padding.y")} ${dt("textarea.padding.x")};
-    border: 1px solid ${dt("textarea.border.color")};
-    transition: background ${dt("textarea.transition.duration")}, color ${dt("textarea.transition.duration")}, border-color ${dt("textarea.transition.duration")}, outline-color ${dt("textarea.transition.duration")}, box-shadow ${dt("textarea.transition.duration")};
-    appearance: none;
-    border-radius: ${dt("textarea.border.radius")};
-    outline-color: transparent;
-    box-shadow: ${dt("textarea.shadow")};
-}
-
-.p-textarea:enabled:hover {
-    border-color: ${dt("textarea.hover.border.color")};
-}
-
-.p-textarea:enabled:focus {
-    border-color: ${dt("textarea.focus.border.color")};
-    box-shadow: ${dt("textarea.focus.ring.shadow")};
-    outline: ${dt("textarea.focus.ring.width")} ${dt("textarea.focus.ring.style")} ${dt("textarea.focus.ring.color")};
-    outline-offset: ${dt("textarea.focus.ring.offset")};
-}
-
-.p-textarea.p-invalid {
-    border-color: ${dt("textarea.invalid.border.color")};
-}
-
-.p-textarea.p-variant-filled {
-    background: ${dt("textarea.filled.background")};
-}
-
-.p-textarea.p-variant-filled:enabled:focus {
-    background: ${dt("textarea.filled.focus.background")};
-}
-
-.p-textarea:disabled {
-    opacity: 1;
-    background: ${dt("textarea.disabled.background")};
-    color: ${dt("textarea.disabled.color")};
-}
-
-.p-textarea::placeholder {
-    color: ${dt("textarea.placeholder.color")};
-}
-
-.p-textarea-fluid {
-    width: 100%;
-}
-
-.p-textarea-resizable {
-    overflow: hidden;
-    resize: none;
-}
-
-.p-textarea.ng-invalid.ng-dirty {
-    border-color: ${dt("textarea.invalid.border.color")}
-}
-
-.p-textarea.ng-invalid.ng-dirty::placeholder {
-    color: ${dt("textarea.invalid.placeholder.color")};
-}`;
-var classes8 = {
-  root: ({
-    instance,
-    props
-  }) => ["p-textarea p-component", {
-    "p-filled": instance.filled,
-    "p-textarea-resizable ": props.autoResize,
-    "p-invalid": props.invalid,
-    "p-variant-filled": props.variant ? props.variant === "filled" : instance.config.inputStyle === "filled" || instance.config.inputVariant === "filled",
-    "p-textarea-fluid": props.fluid
-  }]
-};
-var TextareaStyle = class _TextareaStyle extends BaseStyle {
-  name = "textarea";
-  theme = theme8;
-  classes = classes8;
-  static \u0275fac = /* @__PURE__ */ (() => {
-    let \u0275TextareaStyle_BaseFactory;
-    return function TextareaStyle_Factory(__ngFactoryType__) {
-      return (\u0275TextareaStyle_BaseFactory || (\u0275TextareaStyle_BaseFactory = \u0275\u0275getInheritedFactory(_TextareaStyle)))(__ngFactoryType__ || _TextareaStyle);
-    };
-  })();
-  static \u0275prov = /* @__PURE__ */ \u0275\u0275defineInjectable({
-    token: _TextareaStyle,
-    factory: _TextareaStyle.\u0275fac
-  });
-};
-(() => {
-  (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(TextareaStyle, [{
-    type: Injectable
-  }], null, null);
-})();
-var TextareaClasses;
-(function(TextareaClasses2) {
-  TextareaClasses2["root"] = "p-textarea";
-})(TextareaClasses || (TextareaClasses = {}));
-var InputTextarea = class _InputTextarea extends BaseComponent {
-  ngModel;
-  control;
-  /**
-   * When present, textarea size changes as being typed.
-   * @group Props
-   */
-  autoResize;
-  /**
-   * Specifies the input variant of the component.
-   * @group Props
-   */
-  variant;
-  /**
-   * Spans 100% width of the container when enabled.
-   * @group Props
-   */
-  fluid = false;
-  /**
-   * Callback to invoke on textarea resize.
-   * @param {(Event | {})} event - Custom resize event.
-   * @group Emits
-   */
-  onResize = new EventEmitter();
-  filled;
-  cachedScrollHeight;
-  ngModelSubscription;
-  ngControlSubscription;
-  _componentStyle = inject(TextareaStyle);
-  constructor(ngModel, control) {
-    super();
-    this.ngModel = ngModel;
-    this.control = control;
-    console.log("pInputTextarea directive is deprecated in v18. Use pTextarea directive instead");
-  }
-  ngOnInit() {
-    super.ngOnInit();
-    if (this.ngModel) {
-      this.ngModelSubscription = this.ngModel.valueChanges.subscribe(() => {
-        this.updateState();
-      });
-    }
-    if (this.control) {
-      this.ngControlSubscription = this.control.valueChanges.subscribe(() => {
-        this.updateState();
-      });
-    }
-  }
-  get hasFluid() {
-    const nativeElement = this.el.nativeElement;
-    const fluidComponent = nativeElement.closest("p-fluid");
-    return this.fluid || !!fluidComponent;
-  }
-  ngAfterViewInit() {
-    super.ngAfterViewInit();
-    if (this.autoResize) this.resize();
-    this.updateFilledState();
-    this.cd.detectChanges();
-  }
-  onInput(e) {
-    this.updateState();
-  }
-  updateFilledState() {
-    this.filled = this.el.nativeElement.value && this.el.nativeElement.value.length;
-  }
-  resize(event) {
-    this.el.nativeElement.style.height = "auto";
-    this.el.nativeElement.style.height = this.el.nativeElement.scrollHeight + "px";
-    if (parseFloat(this.el.nativeElement.style.height) >= parseFloat(this.el.nativeElement.style.maxHeight)) {
-      this.el.nativeElement.style.overflowY = "scroll";
-      this.el.nativeElement.style.height = this.el.nativeElement.style.maxHeight;
-    } else {
-      this.el.nativeElement.style.overflow = "hidden";
-    }
-    this.onResize.emit(event || {});
-  }
-  updateState() {
-    this.updateFilledState();
-    if (this.autoResize) {
-      this.resize();
-    }
-  }
-  ngOnDestroy() {
-    if (this.ngModelSubscription) {
-      this.ngModelSubscription.unsubscribe();
-    }
-    if (this.ngControlSubscription) {
-      this.ngControlSubscription.unsubscribe();
-    }
-    super.ngOnDestroy();
-  }
-  static \u0275fac = function InputTextarea_Factory(__ngFactoryType__) {
-    return new (__ngFactoryType__ || _InputTextarea)(\u0275\u0275directiveInject(NgModel, 8), \u0275\u0275directiveInject(NgControl, 8));
-  };
-  static \u0275dir = /* @__PURE__ */ \u0275\u0275defineDirective({
-    type: _InputTextarea,
-    selectors: [["", "pInputTextarea", ""]],
-    hostAttrs: [1, "p-textarea", "p-component"],
-    hostVars: 8,
-    hostBindings: function InputTextarea_HostBindings(rf, ctx) {
-      if (rf & 1) {
-        \u0275\u0275listener("input", function InputTextarea_input_HostBindingHandler($event) {
-          return ctx.onInput($event);
-        });
-      }
-      if (rf & 2) {
-        \u0275\u0275classProp("p-filled", ctx.filled)("p-textarea-resizable", ctx.autoResize)("p-variant-filled", ctx.variant === "filled" || ctx.config.inputStyle() === "filled" || ctx.config.inputVariant() === "filled")("p-textarea-fluid", ctx.hasFluid);
-      }
-    },
-    inputs: {
-      autoResize: [2, "autoResize", "autoResize", booleanAttribute],
-      variant: "variant",
-      fluid: [2, "fluid", "fluid", booleanAttribute]
-    },
-    outputs: {
-      onResize: "onResize"
-    },
-    features: [\u0275\u0275ProvidersFeature([TextareaStyle]), \u0275\u0275InheritDefinitionFeature]
-  });
-};
-(() => {
-  (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(InputTextarea, [{
-    type: Directive,
-    args: [{
-      selector: "[pInputTextarea]",
-      standalone: true,
-      host: {
-        class: "p-textarea p-component",
-        "[class.p-filled]": "filled",
-        "[class.p-textarea-resizable]": "autoResize",
-        "[class.p-variant-filled]": 'variant === "filled" || config.inputStyle() === "filled" || config.inputVariant() === "filled"',
-        "[class.p-textarea-fluid]": "hasFluid"
-      },
-      providers: [TextareaStyle]
-    }]
-  }], () => [{
-    type: NgModel,
-    decorators: [{
-      type: Optional
-    }]
-  }, {
-    type: NgControl,
-    decorators: [{
-      type: Optional
-    }]
-  }], {
-    autoResize: [{
-      type: Input,
-      args: [{
-        transform: booleanAttribute
-      }]
-    }],
-    variant: [{
-      type: Input
-    }],
-    fluid: [{
-      type: Input,
-      args: [{
-        transform: booleanAttribute
-      }]
-    }],
-    onResize: [{
-      type: Output
-    }],
-    onInput: [{
-      type: HostListener,
-      args: ["input", ["$event"]]
-    }]
-  });
-})();
-var Textarea2 = class _Textarea {
-  static \u0275fac = function Textarea_Factory(__ngFactoryType__) {
-    return new (__ngFactoryType__ || _Textarea)();
-  };
-  static \u0275mod = /* @__PURE__ */ \u0275\u0275defineNgModule({
-    type: _Textarea,
-    imports: [InputTextarea],
-    exports: [InputTextarea]
-  });
-  static \u0275inj = /* @__PURE__ */ \u0275\u0275defineInjector({});
-};
-(() => {
-  (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(Textarea2, [{
-    type: NgModule,
-    args: [{
-      imports: [InputTextarea],
-      exports: [InputTextarea]
-    }]
-  }], null, null);
-})();
-
 // src/app/views/metadata-assistant/components/url-input/url-input.component.ts
 function UrlInputComponent_ng_template_2_Template(rf, ctx) {
   if (rf & 1) {
@@ -29965,7 +29672,7 @@ var UrlInputComponent = class _UrlInputComponent {
   static \u0275fac = function UrlInputComponent_Factory(__ngFactoryType__) {
     return new (__ngFactoryType__ || _UrlInputComponent)();
   };
-  static \u0275cmp = /* @__PURE__ */ \u0275\u0275defineComponent({ type: _UrlInputComponent, selectors: [["ca-url-input"]], inputs: { disabled: "disabled" }, outputs: { urlsChange: "urlsChange", urlInputChange: "urlInputChange" }, decls: 21, vars: 18, consts: [[1, "w-full"], ["pTemplate", "header"], [1, "p-0"], [1, "field"], ["for", "urls", 1, "block", "mb-2", "font-semibold"], ["pInputTextarea", "", "id", "urls", 1, "w-full", "line-height-3", 3, "ngModelChange", "ngModel", "disabled", "rows", "placeholder"], [1, "block", "mt-1", "text-500"], [1, "block", "mt-1", "text-400"], [1, "pi", "pi-info-circle", "mr-1"], [1, "p-3", "surface-50", "border-round", "mt-3"], ["class", "mb-2", 4, "ngIf"], [4, "ngIf"], [1, "flex", "align-items-center", "justify-content-between", "p-3"], [1, "m-0"], [1, "flex", "gap-2"], ["icon", "pi pi-times", "severity", "secondary", 3, "onClick", "label", "text", "disabled"], [1, "mb-2"], [1, "flex", "align-items-center", "gap-2", "mb-2"], [1, "pi", "pi-check-circle", "text-green-500"], [1, "font-semibold"], [1, "flex", "flex-wrap", "gap-2"], ["styleClass", "text-xs", 3, "label", 4, "ngFor", "ngForOf"], ["styleClass", "text-xs surface-200", 3, "label", 4, "ngIf"], ["styleClass", "text-xs", 3, "label"], ["styleClass", "text-xs surface-200", 3, "label"], ["severity", "warn", "styleClass", "w-full m-0", 3, "text"], [1, "mt-2", "text-orange-600"], [1, "m-0", "pl-3"], ["class", "text-sm", 4, "ngFor", "ngForOf"], [1, "text-sm"], [1, "text-xs", "text-gray-500", "ml-2"]], template: function UrlInputComponent_Template(rf, ctx) {
+  static \u0275cmp = /* @__PURE__ */ \u0275\u0275defineComponent({ type: _UrlInputComponent, selectors: [["ca-url-input"]], inputs: { disabled: "disabled" }, outputs: { urlsChange: "urlsChange", urlInputChange: "urlInputChange" }, decls: 21, vars: 18, consts: [[1, "w-full"], ["pTemplate", "header"], [1, "p-0"], [1, "field"], ["for", "urls", 1, "block", "mb-2", "font-semibold"], ["pTextarea", "", "id", "urls", 1, "w-full", "line-height-3", 3, "ngModelChange", "ngModel", "disabled", "rows", "placeholder"], [1, "block", "mt-1", "text-500"], [1, "block", "mt-1", "text-400"], [1, "pi", "pi-info-circle", "mr-1"], [1, "p-3", "surface-50", "border-round", "mt-3"], ["class", "mb-2", 4, "ngIf"], [4, "ngIf"], [1, "flex", "align-items-center", "justify-content-between", "p-3"], [1, "m-0"], [1, "flex", "gap-2"], ["icon", "pi pi-times", "severity", "secondary", 3, "onClick", "label", "text", "disabled"], [1, "mb-2"], [1, "flex", "align-items-center", "gap-2", "mb-2"], [1, "pi", "pi-check-circle", "text-green-500"], [1, "font-semibold"], [1, "flex", "flex-wrap", "gap-2"], ["styleClass", "text-xs", 3, "label", 4, "ngFor", "ngForOf"], ["styleClass", "text-xs surface-200", 3, "label", 4, "ngIf"], ["styleClass", "text-xs", 3, "label"], ["styleClass", "text-xs surface-200", 3, "label"], ["severity", "warn", "styleClass", "w-full m-0", 3, "text"], [1, "mt-2", "text-orange-600"], [1, "m-0", "pl-3"], ["class", "text-sm", 4, "ngFor", "ngForOf"], [1, "text-sm"], [1, "text-xs", "text-gray-500", "ml-2"]], template: function UrlInputComponent_Template(rf, ctx) {
     if (rf & 1) {
       \u0275\u0275elementStart(0, "div", 0)(1, "p-card");
       \u0275\u0275template(2, UrlInputComponent_ng_template_2_Template, 7, 8, "ng-template", 1);
@@ -30022,7 +29729,7 @@ var UrlInputComponent = class _UrlInputComponent {
     NgModel,
     TranslateModule,
     TranslatePipe,
-    InputTextarea,
+    Textarea,
     ButtonModule,
     Button,
     PrimeTemplate,
@@ -30041,7 +29748,7 @@ var UrlInputComponent = class _UrlInputComponent {
       CommonModule,
       FormsModule,
       TranslateModule,
-      InputTextarea,
+      Textarea,
       ButtonModule,
       CardModule,
       ChipModule,
@@ -30070,7 +29777,7 @@ var UrlInputComponent = class _UrlInputComponent {
           {{ 'metadata.urlInput.label' | translate }}\r
         </label>\r
         <textarea\r
-          pInputTextarea\r
+        pTextarea\r
           id="urls"\r
           [(ngModel)]="urlText"\r
           (ngModelChange)="onTextChange()"\r
@@ -30184,7 +29891,7 @@ function Tag_span_2_Template(rf, ctx) {
     \u0275\u0275property("ngTemplateOutlet", ctx_r0.iconTemplate || ctx_r0._iconTemplate);
   }
 }
-var theme9 = ({
+var theme8 = ({
   dt
 }) => `
 .p-tag {
@@ -30240,7 +29947,7 @@ var theme9 = ({
     color: ${dt("tag.contrast.color")};
 }
 `;
-var classes9 = {
+var classes8 = {
   root: ({
     props
   }) => ["p-tag p-component", {
@@ -30257,8 +29964,8 @@ var classes9 = {
 };
 var TagStyle = class _TagStyle extends BaseStyle {
   name = "tag";
-  theme = theme9;
-  classes = classes9;
+  theme = theme8;
+  classes = classes8;
   static \u0275fac = /* @__PURE__ */ (() => {
     let \u0275TagStyle_BaseFactory;
     return function TagStyle_Factory(__ngFactoryType__) {
@@ -30333,17 +30040,17 @@ var Tag = class _Tag extends BaseComponent {
     });
   }
   containerClass() {
-    let classes14 = "p-tag p-component";
+    let classes13 = "p-tag p-component";
     if (this.severity) {
-      classes14 += ` p-tag-${this.severity}`;
+      classes13 += ` p-tag-${this.severity}`;
     }
     if (this.rounded) {
-      classes14 += " p-tag-rounded";
+      classes13 += " p-tag-rounded";
     }
     if (this.styleClass) {
-      classes14 += ` ${this.styleClass}`;
+      classes13 += ` ${this.styleClass}`;
     }
-    return classes14;
+    return classes13;
   }
   static \u0275fac = /* @__PURE__ */ (() => {
     let \u0275Tag_BaseFactory;
@@ -35076,7 +34783,7 @@ function ConfirmPopup_div_0_Template(rf, ctx) {
     \u0275\u0275property("ngIf", ctx_r1.headlessTemplate || ctx_r1._headlessTemplate)("ngIfElse", notHeadless_r6);
   }
 }
-var theme10 = ({
+var theme9 = ({
   dt
 }) => `
 .p-confirmpopup {
@@ -35185,7 +34892,7 @@ var theme10 = ({
     border-top-color: ${dt("confirmpopup.border.color")};
 }
 `;
-var classes10 = {
+var classes9 = {
   root: "p-confirmpopup p-component",
   content: "p-confirmpopup-content",
   icon: "p-confirmpopup-icon",
@@ -35196,8 +34903,8 @@ var classes10 = {
 };
 var ConfirmPopupStyle = class _ConfirmPopupStyle extends BaseStyle {
   name = "confirmpopup";
-  theme = theme10;
-  classes = classes10;
+  theme = theme9;
+  classes = classes9;
   static \u0275fac = /* @__PURE__ */ (() => {
     let \u0275ConfirmPopupStyle_BaseFactory;
     return function ConfirmPopupStyle_Factory(__ngFactoryType__) {
@@ -37546,7 +37253,7 @@ function ToggleSwitch_Conditional_5_Template(rf, ctx) {
     \u0275\u0275property("ngTemplateOutlet", ctx_r1.handleTemplate || ctx_r1._handleTemplate)("ngTemplateOutletContext", \u0275\u0275pureFunction1(2, _c29, ctx_r1.checked()));
   }
 }
-var theme11 = ({
+var theme10 = ({
   dt
 }) => `
 .p-toggleswitch {
@@ -37667,7 +37374,7 @@ var inlineStyles4 = {
     position: "relative"
   }
 };
-var classes11 = {
+var classes10 = {
   root: ({
     instance
   }) => ({
@@ -37682,8 +37389,8 @@ var classes11 = {
 };
 var ToggleSwitchStyle = class _ToggleSwitchStyle extends BaseStyle {
   name = "toggleswitch";
-  theme = theme11;
-  classes = classes11;
+  theme = theme10;
+  classes = classes10;
   inlineStyles = inlineStyles4;
   static \u0275fac = /* @__PURE__ */ (() => {
     let \u0275ToggleSwitchStyle_BaseFactory;
@@ -40153,7 +39860,7 @@ function Avatar_ng_template_4_Template(rf, ctx) {
     \u0275\u0275property("ngIf", ctx_r0.image);
   }
 }
-var theme12 = ({
+var theme11 = ({
   dt
 }) => `
 .p-avatar {
@@ -40236,7 +39943,7 @@ var theme12 = ({
     margin-inline-start: ${dt("avatar.xl.group.offset")};
 }
 `;
-var classes12 = {
+var classes11 = {
   root: ({
     props
   }) => ["p-avatar p-component", {
@@ -40250,8 +39957,8 @@ var classes12 = {
 };
 var AvatarStyle = class _AvatarStyle extends BaseStyle {
   name = "avatar";
-  theme = theme12;
-  classes = classes12;
+  theme = theme11;
+  classes = classes11;
   static \u0275fac = /* @__PURE__ */ (() => {
     let \u0275AvatarStyle_BaseFactory;
     return function AvatarStyle_Factory(__ngFactoryType__) {
@@ -40656,7 +40363,7 @@ function Sidebar_div_0_Template(rf, ctx) {
     \u0275\u0275conditional(ctx_r1.headlessTemplate || ctx_r1._headlessTemplate ? 3 : 4);
   }
 }
-var theme13 = ({
+var theme12 = ({
   dt
 }) => `
 
@@ -40801,7 +40508,7 @@ var inlineStyles5 = {
     alignItems: instance.position === "top" ? "flex-start" : instance.position === "bottom" ? "flex-end" : "center"
   })
 };
-var classes13 = {
+var classes12 = {
   mask: ({
     instance
   }) => ({
@@ -40825,8 +40532,8 @@ var classes13 = {
 };
 var DrawerStyle = class _DrawerStyle extends BaseStyle {
   name = "drawer";
-  theme = theme13;
-  classes = classes13;
+  theme = theme12;
+  classes = classes12;
   inlineStyles = inlineStyles5;
   static \u0275fac = /* @__PURE__ */ (() => {
     let \u0275DrawerStyle_BaseFactory;
@@ -42340,7 +42047,7 @@ var JourneyMapComponent = class _JourneyMapComponent {
   static \u0275fac = function JourneyMapComponent_Factory(__ngFactoryType__) {
     return new (__ngFactoryType__ || _JourneyMapComponent)();
   };
-  static \u0275cmp = /* @__PURE__ */ \u0275\u0275defineComponent({ type: _JourneyMapComponent, selectors: [["app-cx-dashboard"]], features: [\u0275\u0275ProvidersFeature([MessageService])], decls: 126, vars: 63, consts: [["manualOptInput", ""], [1, "flex", "h-screen", "surface-ground", "font-family"], [1, "hidden", "md:flex", "flex-column", "w-18rem", "surface-section", "border-right-1", "surface-border", "h-full", "fixed", "z-2"], [1, "p-4", "border-bottom-1", "surface-border", "flex", "align-items-center", "gap-2"], [1, "pi", "pi-th-large", "text-indigo-600", "text-2xl"], [1, "font-bold", "text-xl", "text-indigo-600"], [1, "flex-1", "overflow-y-auto", "p-3"], [1, "list-none", "p-0", "m-0", "flex", "flex-column", "gap-2"], ["pButton", "", 1, "p-button-text", "w-full", "justify-content-start", 3, "click"], [1, "pi", "pi-map", "mr-2"], [1, "pi", "pi-users", "mr-2"], [1, "pi", "pi-list", "mr-2"], [1, "pi", "pi-file", "mr-2"], [1, "p-3", "border-top-1", "surface-border", "flex", "flex-column", "gap-2"], ["pButton", "", "label", "AI Generator", "icon", "pi pi-bolt", 1, "p-button-outlined", "p-button-warning", "w-full", 3, "click"], ["pButton", "", "label", "Input Feedback", "icon", "pi pi-plus", 1, "w-full", 3, "click"], ["pButton", "", "label", "Show Recent Inputs", "icon", "pi pi-history", "class", "p-button-text p-button-secondary w-full text-sm", 3, "click", 4, "ngIf"], ["pButton", "", "label", "Configuration", "icon", "pi pi-cog", 1, "p-button-text", "p-button-secondary", "w-full", 3, "click"], [1, "md:hidden", "fixed", "top-0", "left-0", "right-0", "surface-section", "border-bottom-1", "surface-border", "p-3", "flex", "justify-content-between", "align-items-center", "z-3"], [1, "font-bold", "text-indigo-600", "text-lg"], ["pButton", "", "icon", "pi pi-bars", 1, "p-button-text", 3, "click"], [3, "visibleChange", "visible", "fullScreen"], [1, "flex", "flex-column", "h-full"], [1, "flex-1"], ["pButton", "", 1, "p-button-text", "w-full", "justify-content-start", "mb-2", 3, "click"], [1, "flex", "flex-column", "gap-2"], ["pButton", "", "label", "Config", "icon", "pi pi-cog", 1, "p-button-text", "p-button-secondary", "w-full", 3, "click"], [1, "flex-1", "md:ml-18rem", "p-4", "md:p-6", "pt-7", "md:pt-6", "overflow-y-auto", "relative"], ["class", "fadein animation-duration-300", 4, "ngIf"], ["class", "fixed bottom-0 right-0 m-4 w-20rem border-round-xl shadow-6 overflow-hidden z-5 animation-duration-300 slide-in-up surface-overlay border-1 surface-border", 4, "ngIf"], ["header", "Input Feedback", 3, "visibleChange", "visible", "modal", "draggable", "resizable"], [1, "flex", "flex-column", "gap-3", "pt-2"], [1, "block", "font-medium", "mb-2", "text-700"], ["optionLabel", "step", "optionValue", "step", "styleClass", "w-full", "appendTo", "body", 3, "ngModelChange", "options", "ngModel"], [1, "p-inputgroup"], [1, "p-inputgroup-addon"], [1, "pi", "pi-link"], ["type", "text", "pInputText", "", "placeholder", "https://example.com/page", 3, "ngModelChange", "ngModel"], ["pButton", "", "icon", "pi", 1, "p-button-outlined", 3, "click", "icon", "label", "disabled"], ["class", "bg-red-50 text-red-600 p-2 border-round text-sm", 4, "ngIf"], ["class", "bg-blue-50 p-3 border-round border-1 border-blue-100", 4, "ngIf"], ["optionLabel", "label", "optionValue", "value", "styleClass", "w-full flex", 3, "ngModelChange", "options", "ngModel"], ["pInputTextarea", "", "rows", "4", "placeholder", "Describe the feedback...", 1, "w-full", 3, "ngModelChange", "ngModel"], ["pTemplate", "footer"], ["header", "AI Configuration", 3, "visibleChange", "visible", "modal", "draggable", "resizable"], [1, "flex", "flex-column", "gap-4", "pt-2"], [1, "block", "font-bold", "mb-2", "text-700"], [1, "grid"], [1, "col-6"], [1, "p-3", "border-round", "border-2", "cursor-pointer", "text-center", "transition-colors", 3, "click", "ngClass"], [1, "pi", "pi-star-fill", "text-xl", "mb-2", "block"], [1, "font-medium", "text-sm"], [1, "pi", "pi-globe", "text-xl", "mb-2", "block"], [1, "pi", "pi-key"], ["type", "password", "pInputText", "", 3, "ngModelChange", "placeholder", "ngModel"], [1, "text-500", "block", "mt-1"], [1, "surface-50", "p-2", "border-round", "text-xs", "text-500", "border-1", "surface-border"], ["styleClass", "custom-header-dialog", 3, "visibleChange", "visible", "modal", "draggable", "resizable", "header"], ["pTemplate", "header"], [1, "text-sm", "text-600", "m-0"], ["pInputTextarea", "", "rows", "5", "placeholder", "e.g., Applying for a Passport online...", 1, "w-full", 3, "ngModelChange", "ngModel"], ["class", "bg-red-50 text-red-700 p-3 border-round flex align-items-center gap-2", 4, "ngIf"], ["pButton", "", "label", "Show Recent Inputs", "icon", "pi pi-history", 1, "p-button-text", "p-button-secondary", "w-full", "text-sm", 3, "click"], [1, "fadein", "animation-duration-300"], [1, "flex", "justify-content-between", "align-items-center", "mb-4"], [1, "text-2xl", "font-bold", "text-900", "m-0"], [1, "text-500", "m-0"], [1, "hidden", "md:flex", "gap-3"], [1, "flex", "align-items-center", "text-sm", "text-600"], [1, "w-1rem", "h-1rem", "bg-orange-100", "border-1", "border-orange-300", "border-round", "mr-2"], [1, "pi", "pi-star-fill", "text-indigo-500", "mr-2"], [1, "card", "surface-card", "p-4", "border-round", "shadow-1", "overflow-x-auto"], [1, "min-w-max"], [1, "grid", "grid-nogutter", "surface-50", "p-3", "border-round", "mb-4", "font-bold", "text-700", "text-center"], [1, "col-4"], [1, "col-4", "border-left-1", "surface-border"], [1, "flex", "flex-column", "gap-5", "relative"], [1, "absolute", "top-0", "bottom-0", "left-33", "w-1", "border-left-1", "border-dashed", "surface-border", 2, "left", "33.33%"], [1, "absolute", "top-0", "bottom-0", "left-66", "w-1", "border-left-1", "border-dashed", "surface-border", 2, "left", "66.66%"], ["class", "grid grid-nogutter align-items-stretch z-1 relative", 4, "ngFor", "ngForOf"], [1, "grid", "grid-nogutter", "align-items-stretch", "z-1", "relative"], [1, "col-4", "px-3", "flex", "align-items-center", "justify-content-center"], [1, "p-3", "border-round", "shadow-1", "w-10", "text-center", "surface-card", "border-1", 3, "ngClass"], [1, "mt-2"], [1, "pi", 3, "ngClass"], [1, "col-4", "px-3", "relative"], [1, "absolute", "top-50", "left-0", "-ml-2", "text-300", 2, "margin-top", "-0.5rem"], [1, "pi", "pi-arrow-right"], [1, "surface-50", "p-3", "border-round", "border-1", "surface-border", "h-full", "text-sm"], [1, "font-bold", "text-800", "mb-2"], [1, "text-600", "m-0", "mb-3", "line-height-3"], ["class", "flex flex-column gap-2", 4, "ngIf"], [1, "col-4", "px-3", "h-full"], [1, "bg-indigo-50", "p-3", "border-round", "border-1", "border-indigo-100", "h-full", "flex", "flex-column", "text-sm"], [1, "flex", "align-items-center", "gap-2", "font-semibold", "text-indigo-900", "mb-3"], [1, "pi", "pi-info-circle"], [1, "flex", "flex-column", "gap-2", "flex-grow-1"], ["class", "p-2 border-round border-1 flex gap-2 align-items-start transition-colors", 3, "ngClass", 4, "ngFor", "ngForOf"], [1, "mt-3", "pt-2", "border-top-1", "border-indigo-100"], ["type", "text", "pInputText", "", "placeholder", "Add idea...", 1, "p-inputtext-sm", 3, "keydown.enter"], ["type", "button", "pButton", "", "icon", "pi pi-plus", 1, "p-button-indigo", 3, "click"], ["class", "flex align-items-start gap-2 bg-orange-50 border-1 border-orange-200 p-2 border-round text-xs text-orange-800", 4, "ngFor", "ngForOf"], [1, "flex", "align-items-start", "gap-2", "bg-orange-50", "border-1", "border-orange-200", "p-2", "border-round", "text-xs", "text-orange-800"], [1, "pi", "pi-exclamation-circle", "mt-1"], [1, "p-2", "border-round", "border-1", "flex", "gap-2", "align-items-start", "transition-colors", 3, "ngClass"], [1, "pi", "mt-1", 3, "ngClass"], [1, "text-xs", "flex-grow-1", 3, "ngClass"], ["class", "flex gap-1", 4, "ngIf"], [1, "flex", "gap-1"], ["pButton", "", "icon", "pi pi-check", 1, "p-button-rounded", "p-button-text", "p-button-success", "p-0", "w-2rem", "h-2rem", 3, "click"], ["pButton", "", "icon", "pi pi-times", 1, "p-button-rounded", "p-button-text", "p-button-danger", "p-0", "w-2rem", "h-2rem", 3, "click"], [1, "text-2xl", "font-bold", "text-900", "mb-2"], [1, "text-500", "mb-4"], [1, "col-12", "md:col-4"], [1, "card", "surface-card", "p-4", "border-round", "shadow-1", "text-center"], ["icon", "pi pi-user", "size", "xlarge", "shape", "circle", "styleClass", "bg-indigo-50 text-indigo-500 mb-3"], [1, "text-xl", "font-bold", "m-0", "text-800"], [1, "text-500", "mt-2"], [1, "col-12", "md:col-8"], [1, "flex", "flex-column", "gap-3"], [1, "card", "surface-card", "p-4", "border-round", "shadow-1"], [1, "m-0", "mb-3", "text-800"], ["class", "flex align-items-center gap-2", 4, "ngFor", "ngForOf"], [1, "flex", "align-items-center", "gap-2"], [1, "w-1rem", "h-1rem", "border-circle", "bg-green-400"], [1, "text-700"], [1, "w-1rem", "h-1rem", "border-circle", "bg-red-400"], ["class", "card surface-card p-4 border-round shadow-1 hover:shadow-3 transition-shadow transition-duration-200", 4, "ngFor", "ngForOf"], [1, "card", "surface-card", "p-4", "border-round", "shadow-1", "hover:shadow-3", "transition-shadow", "transition-duration-200"], [1, "flex", "flex-column", "md:flex-row", "gap-4", "align-items-start"], [1, "md:w-4"], [1, "text-lg", "font-bold", "m-0", "text-800"], [1, "text-500", "mt-1"], [1, "hidden", "md:block", "w-1px", "bg-gray-200", "align-self-stretch"], [1, "md:w-8", "bg-blue-50", "p-3", "border-round", "border-1", "border-blue-100"], [1, "text-xs", "font-bold", "text-blue-600", "uppercase", "tracking-wide", "mb-1", "block"], [1, "text-sm", "text-700", "font-italic", "m-0"], ["class", "col-12 md:col-6 flex", 4, "ngFor", "ngForOf"], [1, "col-12", "md:col-6", "flex"], [1, "card", "surface-card", "p-4", "border-round", "shadow-1", "flex", "flex-column", "w-full"], [1, "flex", "justify-content-between", "align-items-start", "mb-3"], [1, "font-bold", "text-800", "m-0"], ["severity", "warning", 3, "value"], [1, "bg-gray-50", "p-3", "border-round", "border-1", "border-gray-200", "mb-3", "flex-grow-1"], [1, "text-700", "font-medium", "m-0", "line-height-3"], [1, "text-xs", "font-bold", "text-500", "uppercase", "mb-2"], ["class", "flex align-items-center gap-2 text-sm text-600", 4, "ngFor", "ngForOf"], [1, "flex", "align-items-center", "gap-2", "text-sm", "text-600"], [1, "w-1", "h-1", "border-circle", "bg-gray-400"], [1, "fixed", "bottom-0", "right-0", "m-4", "w-20rem", "border-round-xl", "shadow-6", "overflow-hidden", "z-5", "animation-duration-300", "slide-in-up", "surface-overlay", "border-1", "surface-border"], [1, "bg-gray-900", "text-white", "px-3", "py-2", "flex", "justify-content-between", "align-items-center"], ["styleClass", "bg-gray-700", 3, "value"], ["pButton", "", "icon", "pi pi-times", 1, "p-button-rounded", "p-button-text", "p-button-plain", "text-white", "h-2rem", "w-2rem", 3, "click"], [1, "max-h-15rem", "overflow-y-auto", "p-3", "flex", "flex-column", "gap-3", "bg-white"], ["class", "border-bottom-1 surface-border pb-2", 4, "ngFor", "ngForOf"], [1, "border-bottom-1", "surface-border", "pb-2"], [1, "flex", "justify-content-between", "mb-1"], [1, "overflow-hidden", "text-overflow-ellipsis", "white-space-nowrap", "w-9"], [1, "font-semibold", "text-700", "block", "text-sm"], ["class", "text-xs text-indigo-500 block text-overflow-ellipsis overflow-hidden", 4, "ngIf"], [1, "text-500", "text-xs", "m-0", "white-space-pre-line"], [1, "text-xs", "text-indigo-500", "block", "text-overflow-ellipsis", "overflow-hidden"], [1, "bg-red-50", "text-red-600", "p-2", "border-round", "text-sm"], [1, "bg-blue-50", "p-3", "border-round", "border-1", "border-blue-100"], [1, "flex", "align-items-center", "gap-2", "mb-2", "text-sm", "font-semibold", "text-700"], [1, "pi", "pi-star-fill", "text-orange-500"], ["pButton", "", "class", "p-button-outlined p-button-secondary p-button-sm text-left justify-content-start p-2 text-xs bg-white", 3, "click", 4, "ngFor", "ngForOf"], ["pButton", "", 1, "p-button-outlined", "p-button-secondary", "p-button-sm", "text-left", "justify-content-start", "p-2", "text-xs", "bg-white", 3, "click"], [1, "pi", "pi-plus", "mr-2", "opacity-50"], ["pButton", "", "label", "Add Feedback", 1, "w-full", 3, "click"], ["pButton", "", "label", "Save Configuration", 1, "w-full", "p-button-secondary", 3, "click"], [1, "flex", "align-items-center", "gap-2", "text-orange-500"], [1, "pi", "pi-bolt", "text-xl"], [1, "font-bold", "text-lg"], [1, "bg-red-50", "text-red-700", "p-3", "border-round", "flex", "align-items-center", "gap-2"], [1, "pi", "pi-exclamation-circle"], [1, "text-sm"], ["pButton", "", 1, "w-full", "p-button-warning", 3, "click", "label", "icon", "disabled"]], template: function JourneyMapComponent_Template(rf, ctx) {
+  static \u0275cmp = /* @__PURE__ */ \u0275\u0275defineComponent({ type: _JourneyMapComponent, selectors: [["app-cx-dashboard"]], features: [\u0275\u0275ProvidersFeature([MessageService])], decls: 126, vars: 63, consts: [["manualOptInput", ""], [1, "flex", "h-screen", "surface-ground", "font-family"], [1, "hidden", "md:flex", "flex-column", "w-18rem", "surface-section", "border-right-1", "surface-border", "h-full", "fixed", "z-2"], [1, "p-4", "border-bottom-1", "surface-border", "flex", "align-items-center", "gap-2"], [1, "pi", "pi-th-large", "text-indigo-600", "text-2xl"], [1, "font-bold", "text-xl", "text-indigo-600"], [1, "flex-1", "overflow-y-auto", "p-3"], [1, "list-none", "p-0", "m-0", "flex", "flex-column", "gap-2"], ["pButton", "", 1, "p-button-text", "w-full", "justify-content-start", 3, "click"], [1, "pi", "pi-map", "mr-2"], [1, "pi", "pi-users", "mr-2"], [1, "pi", "pi-list", "mr-2"], [1, "pi", "pi-file", "mr-2"], [1, "p-3", "border-top-1", "surface-border", "flex", "flex-column", "gap-2"], ["pButton", "", "label", "AI Generator", "icon", "pi pi-bolt", 1, "p-button-outlined", "p-button-warning", "w-full", 3, "click"], ["pButton", "", "label", "Input Feedback", "icon", "pi pi-plus", 1, "w-full", 3, "click"], ["pButton", "", "label", "Show Recent Inputs", "icon", "pi pi-history", "class", "p-button-text p-button-secondary w-full text-sm", 3, "click", 4, "ngIf"], ["pButton", "", "label", "Configuration", "icon", "pi pi-cog", 1, "p-button-text", "p-button-secondary", "w-full", 3, "click"], [1, "md:hidden", "fixed", "top-0", "left-0", "right-0", "surface-section", "border-bottom-1", "surface-border", "p-3", "flex", "justify-content-between", "align-items-center", "z-3"], [1, "font-bold", "text-indigo-600", "text-lg"], ["pButton", "", "icon", "pi pi-bars", 1, "p-button-text", 3, "click"], [3, "visibleChange", "visible", "fullScreen"], [1, "flex", "flex-column", "h-full"], [1, "flex-1"], ["pButton", "", 1, "p-button-text", "w-full", "justify-content-start", "mb-2", 3, "click"], [1, "flex", "flex-column", "gap-2"], ["pButton", "", "label", "Config", "icon", "pi pi-cog", 1, "p-button-text", "p-button-secondary", "w-full", 3, "click"], [1, "flex-1", "md:ml-18rem", "p-4", "md:p-6", "pt-7", "md:pt-6", "overflow-y-auto", "relative"], ["class", "fadein animation-duration-300", 4, "ngIf"], ["class", "fixed bottom-0 right-0 m-4 w-20rem border-round-xl shadow-6 overflow-hidden z-5 animation-duration-300 slide-in-up surface-overlay border-1 surface-border", 4, "ngIf"], ["header", "Input Feedback", 3, "visibleChange", "visible", "modal", "draggable", "resizable"], [1, "flex", "flex-column", "gap-3", "pt-2"], [1, "block", "font-medium", "mb-2", "text-700"], ["optionLabel", "step", "optionValue", "step", "styleClass", "w-full", "appendTo", "body", 3, "ngModelChange", "options", "ngModel"], [1, "p-inputgroup"], [1, "p-inputgroup-addon"], [1, "pi", "pi-link"], ["type", "text", "pInputText", "", "placeholder", "https://example.com/page", 3, "ngModelChange", "ngModel"], ["pButton", "", "icon", "pi", 1, "p-button-outlined", 3, "click", "icon", "label", "disabled"], ["class", "bg-red-50 text-red-600 p-2 border-round text-sm", 4, "ngIf"], ["class", "bg-blue-50 p-3 border-round border-1 border-blue-100", 4, "ngIf"], ["optionLabel", "label", "optionValue", "value", "styleClass", "w-full flex", 3, "ngModelChange", "options", "ngModel"], ["pTextarea", "", "rows", "4", "placeholder", "Describe the feedback...", 1, "w-full", 3, "ngModelChange", "ngModel"], ["pTemplate", "footer"], ["header", "AI Configuration", 3, "visibleChange", "visible", "modal", "draggable", "resizable"], [1, "flex", "flex-column", "gap-4", "pt-2"], [1, "block", "font-bold", "mb-2", "text-700"], [1, "grid"], [1, "col-6"], [1, "p-3", "border-round", "border-2", "cursor-pointer", "text-center", "transition-colors", 3, "click", "ngClass"], [1, "pi", "pi-star-fill", "text-xl", "mb-2", "block"], [1, "font-medium", "text-sm"], [1, "pi", "pi-globe", "text-xl", "mb-2", "block"], [1, "pi", "pi-key"], ["type", "password", "pInputText", "", 3, "ngModelChange", "placeholder", "ngModel"], [1, "text-500", "block", "mt-1"], [1, "surface-50", "p-2", "border-round", "text-xs", "text-500", "border-1", "surface-border"], ["styleClass", "custom-header-dialog", 3, "visibleChange", "visible", "modal", "draggable", "resizable", "header"], ["pTemplate", "header"], [1, "text-sm", "text-600", "m-0"], ["pTextarea", "", "rows", "5", "placeholder", "e.g., Applying for a Passport online...", 1, "w-full", 3, "ngModelChange", "ngModel"], ["class", "bg-red-50 text-red-700 p-3 border-round flex align-items-center gap-2", 4, "ngIf"], ["pButton", "", "label", "Show Recent Inputs", "icon", "pi pi-history", 1, "p-button-text", "p-button-secondary", "w-full", "text-sm", 3, "click"], [1, "fadein", "animation-duration-300"], [1, "flex", "justify-content-between", "align-items-center", "mb-4"], [1, "text-2xl", "font-bold", "text-900", "m-0"], [1, "text-500", "m-0"], [1, "hidden", "md:flex", "gap-3"], [1, "flex", "align-items-center", "text-sm", "text-600"], [1, "w-1rem", "h-1rem", "bg-orange-100", "border-1", "border-orange-300", "border-round", "mr-2"], [1, "pi", "pi-star-fill", "text-indigo-500", "mr-2"], [1, "card", "surface-card", "p-4", "border-round", "shadow-1", "overflow-x-auto"], [1, "min-w-max"], [1, "grid", "grid-nogutter", "surface-50", "p-3", "border-round", "mb-4", "font-bold", "text-700", "text-center"], [1, "col-4"], [1, "col-4", "border-left-1", "surface-border"], [1, "flex", "flex-column", "gap-5", "relative"], [1, "absolute", "top-0", "bottom-0", "left-33", "w-1", "border-left-1", "border-dashed", "surface-border", 2, "left", "33.33%"], [1, "absolute", "top-0", "bottom-0", "left-66", "w-1", "border-left-1", "border-dashed", "surface-border", 2, "left", "66.66%"], ["class", "grid grid-nogutter align-items-stretch z-1 relative", 4, "ngFor", "ngForOf"], [1, "grid", "grid-nogutter", "align-items-stretch", "z-1", "relative"], [1, "col-4", "px-3", "flex", "align-items-center", "justify-content-center"], [1, "p-3", "border-round", "shadow-1", "w-10", "text-center", "surface-card", "border-1", 3, "ngClass"], [1, "mt-2"], [1, "pi", 3, "ngClass"], [1, "col-4", "px-3", "relative"], [1, "absolute", "top-50", "left-0", "-ml-2", "text-300", 2, "margin-top", "-0.5rem"], [1, "pi", "pi-arrow-right"], [1, "surface-50", "p-3", "border-round", "border-1", "surface-border", "h-full", "text-sm"], [1, "font-bold", "text-800", "mb-2"], [1, "text-600", "m-0", "mb-3", "line-height-3"], ["class", "flex flex-column gap-2", 4, "ngIf"], [1, "col-4", "px-3", "h-full"], [1, "bg-indigo-50", "p-3", "border-round", "border-1", "border-indigo-100", "h-full", "flex", "flex-column", "text-sm"], [1, "flex", "align-items-center", "gap-2", "font-semibold", "text-indigo-900", "mb-3"], [1, "pi", "pi-info-circle"], [1, "flex", "flex-column", "gap-2", "flex-grow-1"], ["class", "p-2 border-round border-1 flex gap-2 align-items-start transition-colors", 3, "ngClass", 4, "ngFor", "ngForOf"], [1, "mt-3", "pt-2", "border-top-1", "border-indigo-100"], ["type", "text", "pInputText", "", "placeholder", "Add idea...", 1, "p-inputtext-sm", 3, "keydown.enter"], ["type", "button", "pButton", "", "icon", "pi pi-plus", 1, "p-button-indigo", 3, "click"], ["class", "flex align-items-start gap-2 bg-orange-50 border-1 border-orange-200 p-2 border-round text-xs text-orange-800", 4, "ngFor", "ngForOf"], [1, "flex", "align-items-start", "gap-2", "bg-orange-50", "border-1", "border-orange-200", "p-2", "border-round", "text-xs", "text-orange-800"], [1, "pi", "pi-exclamation-circle", "mt-1"], [1, "p-2", "border-round", "border-1", "flex", "gap-2", "align-items-start", "transition-colors", 3, "ngClass"], [1, "pi", "mt-1", 3, "ngClass"], [1, "text-xs", "flex-grow-1", 3, "ngClass"], ["class", "flex gap-1", 4, "ngIf"], [1, "flex", "gap-1"], ["pButton", "", "icon", "pi pi-check", 1, "p-button-rounded", "p-button-text", "p-button-success", "p-0", "w-2rem", "h-2rem", 3, "click"], ["pButton", "", "icon", "pi pi-times", 1, "p-button-rounded", "p-button-text", "p-button-danger", "p-0", "w-2rem", "h-2rem", 3, "click"], [1, "text-2xl", "font-bold", "text-900", "mb-2"], [1, "text-500", "mb-4"], [1, "col-12", "md:col-4"], [1, "card", "surface-card", "p-4", "border-round", "shadow-1", "text-center"], ["icon", "pi pi-user", "size", "xlarge", "shape", "circle", "styleClass", "bg-indigo-50 text-indigo-500 mb-3"], [1, "text-xl", "font-bold", "m-0", "text-800"], [1, "text-500", "mt-2"], [1, "col-12", "md:col-8"], [1, "flex", "flex-column", "gap-3"], [1, "card", "surface-card", "p-4", "border-round", "shadow-1"], [1, "m-0", "mb-3", "text-800"], ["class", "flex align-items-center gap-2", 4, "ngFor", "ngForOf"], [1, "flex", "align-items-center", "gap-2"], [1, "w-1rem", "h-1rem", "border-circle", "bg-green-400"], [1, "text-700"], [1, "w-1rem", "h-1rem", "border-circle", "bg-red-400"], ["class", "card surface-card p-4 border-round shadow-1 hover:shadow-3 transition-shadow transition-duration-200", 4, "ngFor", "ngForOf"], [1, "card", "surface-card", "p-4", "border-round", "shadow-1", "hover:shadow-3", "transition-shadow", "transition-duration-200"], [1, "flex", "flex-column", "md:flex-row", "gap-4", "align-items-start"], [1, "md:w-4"], [1, "text-lg", "font-bold", "m-0", "text-800"], [1, "text-500", "mt-1"], [1, "hidden", "md:block", "w-1px", "bg-gray-200", "align-self-stretch"], [1, "md:w-8", "bg-blue-50", "p-3", "border-round", "border-1", "border-blue-100"], [1, "text-xs", "font-bold", "text-blue-600", "uppercase", "tracking-wide", "mb-1", "block"], [1, "text-sm", "text-700", "font-italic", "m-0"], ["class", "col-12 md:col-6 flex", 4, "ngFor", "ngForOf"], [1, "col-12", "md:col-6", "flex"], [1, "card", "surface-card", "p-4", "border-round", "shadow-1", "flex", "flex-column", "w-full"], [1, "flex", "justify-content-between", "align-items-start", "mb-3"], [1, "font-bold", "text-800", "m-0"], ["severity", "warning", 3, "value"], [1, "bg-gray-50", "p-3", "border-round", "border-1", "border-gray-200", "mb-3", "flex-grow-1"], [1, "text-700", "font-medium", "m-0", "line-height-3"], [1, "text-xs", "font-bold", "text-500", "uppercase", "mb-2"], ["class", "flex align-items-center gap-2 text-sm text-600", 4, "ngFor", "ngForOf"], [1, "flex", "align-items-center", "gap-2", "text-sm", "text-600"], [1, "w-1", "h-1", "border-circle", "bg-gray-400"], [1, "fixed", "bottom-0", "right-0", "m-4", "w-20rem", "border-round-xl", "shadow-6", "overflow-hidden", "z-5", "animation-duration-300", "slide-in-up", "surface-overlay", "border-1", "surface-border"], [1, "bg-gray-900", "text-white", "px-3", "py-2", "flex", "justify-content-between", "align-items-center"], ["styleClass", "bg-gray-700", 3, "value"], ["pButton", "", "icon", "pi pi-times", 1, "p-button-rounded", "p-button-text", "p-button-plain", "text-white", "h-2rem", "w-2rem", 3, "click"], [1, "max-h-15rem", "overflow-y-auto", "p-3", "flex", "flex-column", "gap-3", "bg-white"], ["class", "border-bottom-1 surface-border pb-2", 4, "ngFor", "ngForOf"], [1, "border-bottom-1", "surface-border", "pb-2"], [1, "flex", "justify-content-between", "mb-1"], [1, "overflow-hidden", "text-overflow-ellipsis", "white-space-nowrap", "w-9"], [1, "font-semibold", "text-700", "block", "text-sm"], ["class", "text-xs text-indigo-500 block text-overflow-ellipsis overflow-hidden", 4, "ngIf"], [1, "text-500", "text-xs", "m-0", "white-space-pre-line"], [1, "text-xs", "text-indigo-500", "block", "text-overflow-ellipsis", "overflow-hidden"], [1, "bg-red-50", "text-red-600", "p-2", "border-round", "text-sm"], [1, "bg-blue-50", "p-3", "border-round", "border-1", "border-blue-100"], [1, "flex", "align-items-center", "gap-2", "mb-2", "text-sm", "font-semibold", "text-700"], [1, "pi", "pi-star-fill", "text-orange-500"], ["pButton", "", "class", "p-button-outlined p-button-secondary p-button-sm text-left justify-content-start p-2 text-xs bg-white", 3, "click", 4, "ngFor", "ngForOf"], ["pButton", "", 1, "p-button-outlined", "p-button-secondary", "p-button-sm", "text-left", "justify-content-start", "p-2", "text-xs", "bg-white", 3, "click"], [1, "pi", "pi-plus", "mr-2", "opacity-50"], ["pButton", "", "label", "Add Feedback", 1, "w-full", 3, "click"], ["pButton", "", "label", "Save Configuration", 1, "w-full", "p-button-secondary", 3, "click"], [1, "flex", "align-items-center", "gap-2", "text-orange-500"], [1, "pi", "pi-bolt", "text-xl"], [1, "font-bold", "text-lg"], [1, "bg-red-50", "text-red-700", "p-3", "border-round", "flex", "align-items-center", "gap-2"], [1, "pi", "pi-exclamation-circle"], [1, "text-sm"], ["pButton", "", 1, "w-full", "p-button-warning", 3, "click", "label", "icon", "disabled"]], template: function JourneyMapComponent_Template(rf, ctx) {
     if (rf & 1) {
       \u0275\u0275elementStart(0, "div", 1)(1, "div", 2)(2, "div", 3);
       \u0275\u0275element(3, "i", 4);
@@ -43034,7 +42741,7 @@ var JourneyMapComponent = class _JourneyMapComponent {
 
           <div>
             <label class="block font-medium mb-2 text-700">Feedback</label>
-            <textarea pInputTextarea rows="4" class="w-full" placeholder="Describe the feedback..." [(ngModel)]="newFeedback.comment"></textarea>
+            <textarea pTextarea rows="4" class="w-full" placeholder="Describe the feedback..." [(ngModel)]="newFeedback.comment"></textarea>
           </div>
         </div>
         <ng-template pTemplate="footer">
@@ -43101,7 +42808,7 @@ var JourneyMapComponent = class _JourneyMapComponent {
           
           <div>
             <label class="block font-bold mb-2 text-700">Project Context</label>
-            <textarea pInputTextarea rows="5" class="w-full" placeholder="e.g., Applying for a Passport online..." [(ngModel)]="generatorContext"></textarea>
+            <textarea pTextarea rows="5" class="w-full" placeholder="e.g., Applying for a Passport online..." [(ngModel)]="generatorContext"></textarea>
           </div>
 
           <div *ngIf="generatorError" class="bg-red-50 text-red-700 p-3 border-round flex align-items-center gap-2">
@@ -43143,7 +42850,7 @@ var routes = [
       }
       return true;
     }],
-    loadComponent: () => import("./chunk-OAEUBFJI.js").then((m) => m.PageAssistantCompareComponent)
+    loadComponent: () => import("./chunk-VFAXLCIO.js").then((m) => m.PageAssistantCompareComponent)
   },
   {
     path: "page-assistant/share",
