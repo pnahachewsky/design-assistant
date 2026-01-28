@@ -35,6 +35,7 @@ import { IaStructureService } from '../../../../services/ia-structure.service';
 import { OpenRouterService, ChatMessage } from '../../../../services/openrouter.service';
 import { TranslateService, TranslateModule } from '@ngx-translate/core';
 import { ThemeService } from '../../../../../../services/theme.service';
+import { CommsObjectivePrompt } from '../../../../data/ai-prompts.constants';
 
 import { MenuItem, TreeNode, TreeDragDropService, MessageService } from 'primeng/api';
 import { FullscreenHTMLElement } from '../../../../../../views/ia-assistant/data/data.model';
@@ -423,21 +424,7 @@ export class TopicIaJsonComponent implements OnInit {
       return { recommendations: [] };
     }
 
-    const system = `You are a CRA IA assistant. Match a communications objective to the best candidates from the provided list of pages.
-- The communications objective might be a page that has low or no visits but should be highlighted.
-- The objective may be a URL or a page title.
-- Compare the objective against the provided candidates list.
-- Use the suggested section (if present) to decide where the best match should live.
-- Choose up to 3 best matches from the candidates list.
-- If there is no reasonable match, return an empty list.
-
-Return ONLY compact JSON (no prose):
-{
-  "targetSection": "most|doormats|feature|notOnTopics",
-  "recommended": [
-    { "url": "string", "label": "string", "reason": "short reason", "currentSection": "most|doormats|feature|notOnTopics" }
-  ]
-}`;
+    const system = CommsObjectivePrompt;
 
     const payload = {
       objective: input,
