@@ -37,6 +37,7 @@ import { UrlDataService } from './services/url-data.service';
 import { SourceDiffService } from './services/source-diff.service';
 import { ShadowDomService } from './services/shadowdom.service';
 import { AlertAiService } from './services/alert-ai.service';
+import { OpenRouterService } from './services/openrouter.service';
 
 //Data
 import {
@@ -97,6 +98,7 @@ export class PageAssistantCompareComponent
   private sourceDiffService = inject(SourceDiffService);
   private shadowDomService = inject(ShadowDomService);
   private alertAi = inject(AlertAiService);
+  private openRouter = inject(OpenRouterService);
   private urlDataService = inject(UrlDataService);
   private router = inject(Router);
   private locationStrategy = inject(LocationStrategy);
@@ -607,15 +609,15 @@ export class PageAssistantCompareComponent
     }));
     const recPayload = JSON.stringify({ pageHtml: html, issues, alerts });
 
-    const recResponse = await fetch(url, {
-      method: 'POST',
-      headers,
-      body: JSON.stringify({
-        models: [model, AiModel.Devstral, AiModel.Qwen],
-        messages: [
-          { role: 'system', content: recPrompt },
-          { role: 'user', content: recPayload },
-        ],
+      const recResponse = await fetch(url, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({
+          models: this.buildModelRotation(model),
+          messages: [
+            { role: 'system', content: recPrompt },
+            { role: 'user', content: recPayload },
+          ],
         temperature: 0,
         provider: { allow_fallbacks: true },
       }),
@@ -662,7 +664,7 @@ export class PageAssistantCompareComponent
   }
 
   //AI Model
-  selectedAiModel: AiModel = AiModel.Devstral;
+  selectedAiModel: AiModel = AiModel.Nemotron;
 
   onAiChange(key: AiModel) {
     this.selectedAiModel = key;
@@ -680,6 +682,17 @@ export class PageAssistantCompareComponent
   private getShortModelName(model: string): string {
     const key = this.getEnumKeyByValue(AiModel, model);
     return key ? this.translate.instant(`page.ai-options.model.short.${key}`) : model;
+  }
+
+  private buildModelRotation(model: AiModel): string[] {
+    const invalidFallbacks = new Set<AiModel>([AiModel.Nemotron]);
+    const available = this.openRouter.freeModels.filter(
+      (candidate) => !invalidFallbacks.has(candidate as AiModel),
+    );
+    return [model, ...available.filter((candidate) => candidate !== model)].slice(
+      0,
+      3,
+    );
   }
   //AI interaction
   isLoading = false;
@@ -713,7 +726,7 @@ export class PageAssistantCompareComponent
       };
 
       const payload = {
-        models: [model, AiModel.Devstral, AiModel.Qwen],
+        models: this.buildModelRotation(model),
         messages: [
           { role: 'system', content: prompt },
           { role: 'user', content: html },

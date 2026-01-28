@@ -1,4 +1,4 @@
-import { Component, Output, EventEmitter, inject } from '@angular/core';
+import { Component, Output, EventEmitter, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
@@ -29,7 +29,7 @@ import { UploadWordComponent } from './upload/upload-word.component';
   templateUrl: './ai-options.component.html',
   styles: ``,
 })
-export class AiOptionsComponent {
+export class AiOptionsComponent implements OnInit {
   private uploadState = inject(UploadStateService);
 
   @Output() promptChange = new EventEmitter<PromptKey>();
@@ -96,23 +96,31 @@ export class AiOptionsComponent {
 
   //AI model
 
-  selectedAi: AiModel = AiModel.Devstral;
+  selectedAi: AiModel = AiModel.Nemotron;
   selectedAis: AiModel[] = [];
 
   freeAiOptions = [
-    { id: AiModel.Devstral, label: 'page.ai-options.model.Devstral', disabled: false },
     { id: AiModel.Qwen, label: 'page.ai-options.model.Qwen', disabled: false },
-    { id: AiModel.Xiaomi, label: 'page.ai-options.model.Xiaomi', disabled: false },
     { id: AiModel.Nemotron, label: 'page.ai-options.model.Nemotron', disabled: false },
     { id: AiModel.DeepSeek, label: 'page.ai-options.model.DeepSeek', disabled: false },
+    { id: AiModel.Chimera, label: 'page.ai-options.model.Chimera', disabled: false },
     { id: AiModel.Gemma, label: 'page.ai-options.model.Gemma', disabled: false },
     { id: AiModel.Mistral, label: 'page.ai-options.model.Mistral', disabled: false },
-    { id: AiModel.Llama32, label: 'page.ai-options.model.Llama32', disabled: false },
-    { id: AiModel.Llama31, label: 'page.ai-options.model.Llama31', disabled: false },
+    { id: AiModel.Llama33, label: 'page.ai-options.model.Llama33', disabled: false },
   ];
   paidAiOptions = [
+    { id: AiModel.Llama32, label: 'page.ai-options.model.Llama32', disabled: false },
+    { id: AiModel.Gemini, label: 'page.ai-options.model.Gemini', disabled: false },
     { id: AiModel.Gpt5Mini, label: 'page.ai-options.model.Gpt5Mini', disabled: false },
   ];
+
+  ngOnInit(): void {
+    const freeIds = new Set(this.freeAiOptions.map((option) => option.id));
+    if (!freeIds.has(this.selectedAi)) {
+      this.selectedAi = this.freeAiOptions[0]?.id ?? this.selectedAi;
+    }
+    this.selectedAis = this.selectedAis.filter((id) => freeIds.has(id));
+  }
 
   isAiCheckboxDisabled(id: AiModel): boolean {
     return (

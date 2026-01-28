@@ -18,6 +18,7 @@ import { OrganizationChartModule } from 'primeng/organizationchart';
 import { ProgressBarModule } from 'primeng/progressbar';
 import { InputNumberModule } from 'primeng/inputnumber';
 import { InputTextModule } from 'primeng/inputtext';
+import { Textarea } from 'primeng/textarea';
 import { StepperModule } from 'primeng/stepper';
 import {
   Tree,
@@ -31,6 +32,7 @@ import { InputGroupAddonModule } from 'primeng/inputgroupaddon';
 //Services
 import { UploadStateService } from '../../../../services/upload-state.service';
 import { IaStructureService } from '../../../../services/ia-structure.service';
+import { OpenRouterService, ChatMessage } from '../../../../services/openrouter.service';
 import { TranslateService, TranslateModule } from '@ngx-translate/core';
 import { ThemeService } from '../../../../../../services/theme.service';
 
@@ -44,6 +46,16 @@ type TopicPageLinkInfo = {
   section: TopicSection;
   label: string;
 };
+interface TopicAiRecommendation {
+  url?: string;
+  label?: string;
+  reason?: string;
+  currentSection?: string;
+}
+interface TopicAiResult {
+  targetSection?: string;
+  recommendations: TopicAiRecommendation[];
+}
 
 @Component({
   selector: 'ca-topic-ia-json',
@@ -59,6 +71,7 @@ type TopicPageLinkInfo = {
     ProgressBarModule,
     InputNumberModule,
     InputTextModule,
+    Textarea,
     StepperModule,
     Tree,
     ContextMenuModule,
@@ -168,6 +181,18 @@ type TopicPageLinkInfo = {
       color: #f9fafb;
     }
 
+    ::ng-deep .topic-ia-comm-badge {
+      border-color: #93c5fd;
+      background: #dbeafe;
+      color: #1e3a8a;
+    }
+
+    :host-context(.dark-mode) ::ng-deep .topic-ia-comm-badge {
+      border-color: #1d4ed8;
+      background: #1e40af;
+      color: #e0e7ff;
+    }
+
 
     /* remove link style from IA chart */
     ::ng-deep .ia-chart-container .p-organizationchart-node a {
@@ -194,6 +219,7 @@ export class TopicIaJsonComponent implements OnInit {
   private theme = inject(ThemeService);
   private iaStructure = inject(IaStructureService);
   private messageService = inject(MessageService);
+  private openRouter = inject(OpenRouterService);
 
   production: boolean = environment.production;
   activeStep = 1;
@@ -239,9 +265,17 @@ export class TopicIaJsonComponent implements OnInit {
   visitsSourcePath = 'visits-urls.json';
   isTopicPage = false;
   topicPageSections = new Map<string, TopicPageLinkInfo>();
+  commObjectivesInput = '';
+  feedbackInsightsInput = '';
+  callTroubleInput = '';
+  isAiLoading = false;
+  private aiRecommendedUrls = new Set<string>();
+  private aiTargetSection: TopicSection | 'notOnTopics' = 'most';
+  private aiModels: string[] = this.openRouter.freeModels;
 
   //Button fxn
   async checkIA() {
+    this.step1Complete = false;
     //IA orphan status
     this.urlFound = await this.checkParentLinks(
       this.breadcrumb,
@@ -287,6 +321,398 @@ export class TopicIaJsonComponent implements OnInit {
     this.expandStep(4);
 
     // Avoid shifting the view after crawl completion.
+  }
+
+  async sendContextInputToGenAI(): Promise<void> {
+    if (this.isAiLoading) return;
+    const input = (this.commObjectivesInput || '').trim();
+    if (!input) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Missing input',
+        detail: 'Add communications objectives to send to GenAI.',
+        life: 3000,
+      });
+      return;
+    }
+
+    const targetSectionHint = this.parseTargetSection(input);
+    const candidates = this.buildSectionCandidates();
+    if (!candidates.length) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'No candidates available',
+        detail: 'Run the IA crawl to populate Most requested suggestions.',
+        life: 4000,
+      });
+      return;
+    }
+
+    this.isAiLoading = true;
+    try {
+      const recommendations = await this.requestCommsRecommendations(
+        input,
+        candidates,
+        targetSectionHint,
+      );
+      this.applyCommsRecommendations(recommendations, targetSectionHint);
+    } catch (err) {
+      console.error('GenAI recommendation failed:', err);
+      this.messageService.add({
+        severity: 'error',
+        summary: 'GenAI request failed',
+        detail: 'Unable to get recommendations. Please try again.',
+        life: 4000,
+      });
+    } finally {
+      this.isAiLoading = false;
+    }
+  }
+
+  private buildSectionCandidates(): {
+    label: string;
+    url: string;
+    visits: number | null;
+    section: string;
+  }[] {
+    const root = this.topicPageTree[0];
+    const categories = root?.children ?? [];
+    const sectionMap: { section: string; node?: TreeNode }[] = [
+      { section: 'most', node: categories[0] },
+      { section: 'doormats', node: categories[1] },
+      { section: 'feature', node: categories[2] },
+      { section: 'notOnTopics', node: categories[3] },
+    ];
+
+    return sectionMap.flatMap((entry) => {
+      const nodes = entry.node?.children ?? [];
+      return nodes
+        .filter((node) => !node.data?.isCategory)
+        .map((node) => ({
+          label: this.getCandidateLabel(node),
+          url: node.data?.url ?? '',
+          visits: this.getVisitsForNode(node),
+          section: entry.section,
+        }))
+        .filter((candidate) => candidate.label || candidate.url);
+    });
+  }
+
+  private getCandidateLabel(node: TreeNode): string {
+    if (
+      typeof node.data?.originalLabel === 'string' &&
+      node.data.originalLabel.trim().length
+    ) {
+      return node.data.originalLabel.trim();
+    }
+    return this.stripBadges(this.getTopicNodeBaseLabel(node));
+  }
+
+  private async requestCommsRecommendations(
+    input: string,
+    candidates: { label: string; url: string; visits: number | null; section: string }[],
+    targetSectionHint: TopicSection | 'notOnTopics',
+  ): Promise<TopicAiResult> {
+    if (!this.openRouter.hasApiKey) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'API key required',
+        detail: 'Add your API key before sending input to GenAI.',
+        life: 4000,
+      });
+      return { recommendations: [] };
+    }
+
+    const system = `You are a CRA IA assistant. Match a communications objective to the best candidates from the provided list of pages.
+- The communications objective might be a page that has low or no visits but should be highlighted.
+- The objective may be a URL or a page title.
+- Compare the objective against the provided candidates list.
+- Use the suggested section (if present) to decide where the best match should live.
+- Choose up to 3 best matches from the candidates list.
+- If there is no reasonable match, return an empty list.
+
+Return ONLY compact JSON (no prose):
+{
+  "targetSection": "most|doormats|feature|notOnTopics",
+  "recommended": [
+    { "url": "string", "label": "string", "reason": "short reason", "currentSection": "most|doormats|feature|notOnTopics" }
+  ]
+}`;
+
+    const payload = {
+      objective: input,
+      targetSectionHint,
+      candidates: candidates.map((c) => ({
+        label: c.label,
+        url: c.url,
+        visits: c.visits,
+        section: c.section,
+      })),
+    };
+
+    const messages: ChatMessage[] = [
+      { role: 'system', content: system },
+      { role: 'user', content: JSON.stringify(payload) },
+    ];
+
+    for (const model of this.aiModels) {
+      const resp = await this.openRouter.call(model, messages, {
+        temperature: 0.0,
+        title: 'Content Assistant - Topic IA',
+      });
+      const text = resp?.choices?.[0]?.message?.content;
+      if (!text) continue;
+      const parsed = this.parseRecommendations(text);
+      if (parsed) return parsed;
+    }
+
+    return { recommendations: [] };
+  }
+
+  private applyCommsRecommendations(
+    aiResult: TopicAiResult,
+    targetSectionHint: TopicSection | 'notOnTopics',
+  ): void {
+    const recommendations = aiResult.recommendations ?? [];
+    const nodes = this.getAllCandidateNodes();
+    const targetSection = this.pickTargetSection(
+      aiResult.targetSection,
+      targetSectionHint,
+    );
+    this.aiTargetSection = targetSection;
+    const bestMatch = this.findBestRecommendationNode(
+      recommendations,
+      targetSection,
+    );
+
+    this.aiRecommendedUrls = new Set(
+      bestMatch?.data?.url ? [this.normalizeUrl(bestMatch.data.url)] : [],
+    );
+
+    nodes.forEach((node) => {
+      const isMatch = bestMatch === node;
+      node.data = { ...(node.data ?? {}), aiRecommended: isMatch };
+    });
+
+    if (bestMatch) {
+      this.moveNodeToSection(bestMatch, targetSection);
+    }
+    this.applyCommsRecommendationsToLabels();
+    this.updateTopicPageTreeStyles(this.topicPageTree, 0);
+
+    this.messageService.add({
+      severity: bestMatch ? 'success' : 'info',
+      summary: bestMatch
+        ? 'GenAI recommendations applied.'
+        : 'No GenAI matches found.',
+      life: 3000,
+    });
+  }
+
+  private applyCommsRecommendationsToLabels(): void {
+    const nodes = this.getAllCandidateNodes();
+    nodes.forEach((node) => {
+      if (typeof node.label !== 'string') return;
+      const cleaned = this.removeCommsBadge(node.label);
+      if (node.data?.aiRecommended) {
+        node.label = `${cleaned} <span class="topic-ia-badge topic-ia-comm-badge">Comms highlight</span>`;
+      } else {
+        node.label = cleaned;
+      }
+    });
+  }
+
+  private getMostRequestedCategory(): TreeNode | null {
+    const root = this.topicPageTree[0];
+    const categories = root?.children ?? [];
+    return (
+      categories.find(
+        (node) => node.data?.isCategory && node.label === 'Most requested',
+      ) ?? categories[0] ?? null
+    );
+  }
+
+  private getCategoryBySection(
+    section: TopicSection | 'notOnTopics',
+  ): TreeNode | null {
+    const root = this.topicPageTree[0];
+    const categories = root?.children ?? [];
+    switch (section) {
+      case 'most':
+        return categories[0] ?? null;
+      case 'doormats':
+        return categories[1] ?? null;
+      case 'feature':
+        return categories[2] ?? null;
+      case 'notOnTopics':
+        return categories[3] ?? null;
+      default:
+        return categories[0] ?? null;
+    }
+  }
+
+  private getAllCandidateNodes(): TreeNode[] {
+    const root = this.topicPageTree[0];
+    const categories = root?.children ?? [];
+    return categories.flatMap((category) => category?.children ?? []);
+  }
+
+  private moveNodeToSection(
+    node: TreeNode,
+    targetSection: TopicSection | 'notOnTopics',
+  ): void {
+    const targetCategory = this.getCategoryBySection(targetSection);
+    if (!targetCategory) return;
+    targetCategory.children = targetCategory.children || [];
+
+    const root = this.topicPageTree[0];
+    const categories = root?.children ?? [];
+
+    const currentCategory = categories.find((cat) =>
+      (cat?.children ?? []).includes(node),
+    );
+    if (!currentCategory || currentCategory === targetCategory) return;
+    currentCategory.children = (currentCategory.children ?? []).filter(
+      (child) => child !== node,
+    );
+    targetCategory.children.unshift(node);
+  }
+
+  private parseTargetSection(
+    input: string,
+  ): TopicSection | 'notOnTopics' {
+    const normalized = (input || '').toLowerCase();
+    if (normalized.includes('doormat')) return 'doormats';
+    if (normalized.includes('feature')) return 'feature';
+    if (normalized.includes('not on topic')) return 'notOnTopics';
+    if (normalized.includes('not on the topic')) return 'notOnTopics';
+    if (normalized.includes('not on topic page')) return 'notOnTopics';
+    if (normalized.includes('most requested')) return 'most';
+    return 'most';
+  }
+
+  private pickTargetSection(
+    modelTarget: string | undefined,
+    hint: TopicSection | 'notOnTopics',
+  ): TopicSection | 'notOnTopics' {
+    const normalizedModel = this.parseTargetSection(modelTarget || '');
+    const model =
+      normalizedModel === 'most' ||
+      normalizedModel === 'doormats' ||
+      normalizedModel === 'feature' ||
+      normalizedModel === 'notOnTopics'
+        ? normalizedModel
+        : null;
+    return model ?? hint ?? 'most';
+  }
+
+  private findBestRecommendationNode(
+    recommendations: TopicAiRecommendation[],
+    targetSection: TopicSection | 'notOnTopics',
+  ): TreeNode | null {
+    const nodes = this.getAllCandidateNodes();
+    for (const rec of recommendations) {
+      const recUrl = this.normalizeUrl(rec.url ?? '');
+      const recLabel = this.normalizeLabel(rec.label ?? '');
+      const node = nodes.find((candidate) => {
+        const url = this.normalizeUrl(candidate.data?.url ?? '');
+        const label = this.normalizeLabel(this.getCandidateLabel(candidate));
+        const matches =
+          (recUrl && url === recUrl) ||
+          (recLabel && label === recLabel);
+        if (!matches) return false;
+        const section = this.getSectionForNode(candidate);
+        return section !== targetSection;
+      });
+      if (node) return node;
+    }
+    return null;
+  }
+
+  private getSectionForNode(
+    node: TreeNode,
+  ): TopicSection | 'notOnTopics' | null {
+    const root = this.topicPageTree[0];
+    const categories = root?.children ?? [];
+    const sectionMap: { section: TopicSection | 'notOnTopics'; node?: TreeNode }[] = [
+      { section: 'most', node: categories[0] },
+      { section: 'doormats', node: categories[1] },
+      { section: 'feature', node: categories[2] },
+      { section: 'notOnTopics', node: categories[3] },
+    ];
+    const match = sectionMap.find((entry) =>
+      (entry.node?.children ?? []).includes(node),
+    );
+    return match?.section ?? null;
+  }
+
+  private normalizeLabel(label: string): string {
+    return (label || '').replace(/\s+/g, ' ').trim().toLowerCase();
+  }
+
+  private stripBadges(label: string): string {
+    return label.replace(/<span[^>]*>.*?<\/span>/g, '').trim();
+  }
+
+  private removeCommsBadge(label: string): string {
+    return label
+      .replace(
+        /\s*<span class="topic-ia-badge topic-ia-comm-badge">.*?<\/span>/g,
+        '',
+      )
+      .trim();
+  }
+
+  private parseRecommendations(text: string): TopicAiResult | null {
+    const cleaned = this.stripCodeFences(text);
+    const parsed = this.looseJsonParse(cleaned);
+    if (!parsed || typeof parsed !== 'object') return null;
+    const targetSection =
+      typeof (parsed as { targetSection?: unknown }).targetSection === 'string'
+        ? ((parsed as { targetSection?: unknown }).targetSection as string)
+        : undefined;
+    const recs = (parsed as { recommended?: unknown }).recommended;
+    if (!Array.isArray(recs)) {
+      return { targetSection, recommendations: [] };
+    }
+    const recommendations = recs
+      .map((rec) => {
+        if (!rec || typeof rec !== 'object') return null;
+        const obj = rec as Record<string, unknown>;
+        return {
+          url: typeof obj['url'] === 'string' ? obj['url'] : undefined,
+          label: typeof obj['label'] === 'string' ? obj['label'] : undefined,
+          reason: typeof obj['reason'] === 'string' ? obj['reason'] : undefined,
+          currentSection:
+            typeof obj['currentSection'] === 'string'
+              ? obj['currentSection']
+              : undefined,
+        } as TopicAiRecommendation;
+      })
+      .filter((rec): rec is TopicAiRecommendation => !!rec);
+    return { targetSection, recommendations };
+  }
+
+  private stripCodeFences(s: string): string {
+    return s
+      .replace(/^```(?:json)?\s*/i, '')
+      .replace(/\s*```$/i, '')
+      .trim();
+  }
+
+  private tryParseJSON<T = unknown>(s: string): T | null {
+    try {
+      return JSON.parse(s) as T;
+    } catch {
+      return null;
+    }
+  }
+
+  private looseJsonParse(s: string): unknown | null {
+    const direct = this.tryParseJSON(s);
+    if (direct !== null) return direct;
+    const match = s.match(/\{[\s\S]*\}/);
+    return match ? this.tryParseJSON(match[0]!) : null;
   }
 
   private async loadVisitsFromJson(): Promise<boolean> {
@@ -620,6 +1046,7 @@ export class TopicIaJsonComponent implements OnInit {
     this.reorderNotOnTopicsBadged(root);
 
     this.topicPageTree = [root];
+    this.applyCommsRecommendationsToLabels();
     this.updateTopicPageTreeStyles(this.topicPageTree, 0);
   }
 
@@ -861,6 +1288,7 @@ export class TopicIaJsonComponent implements OnInit {
       this.applySectionDiffState(notOnTopicsCategory.children, 'notOnTopics');
     }
     this.reorderNotOnTopicsBadged();
+    this.applyCommsRecommendationsToLabels();
   }
 
   private getTopicNodeBaseLabel(node: TreeNode): string {

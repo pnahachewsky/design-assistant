@@ -1,19 +1,6 @@
 // src/app/views/page-assistant/services/component-ai.service.ts
 import { Injectable, inject } from '@angular/core';
-import { HttpClient, HttpHeaders, HttpResponse } from '@angular/common/http';
-import { ApiKeyService } from '../../../services/api-key.service';
-
-type ChatRole = 'system' | 'user' | 'assistant';
-interface ChatMessage {
-  role: ChatRole;
-  content: string;
-}
-interface OpenRouterChoice {
-  message?: { role?: string; content?: string };
-}
-interface OpenRouterResponse {
-  choices?: OpenRouterChoice[];
-}
+import { OpenRouterService, ChatMessage } from './openrouter.service';
 
 export type ComponentHealth = 'ok' | 'issue' | 'unknown';
 
@@ -34,21 +21,8 @@ export interface ComponentAiResult {
 
 @Injectable({ providedIn: 'root' })
 export class ComponentAiService {
-  private readonly http = inject(HttpClient);
-  private readonly apiKeyService = inject(ApiKeyService);
-
-  private openRouterApiUrl = 'https://openrouter.ai/api/v1/chat/completions';
-
-  // Same rotation style as Link Report
-  private models: string[] = [
-    'meta-llama/llama-3.3-70b-instruct:free', //Still good
-    'google/gemini-2.0-flash-exp:free', //Deprecated
-    'google/gemini-exp-1206:free', // gone
-    'cognitivecomputations/dolphin3.0-mistral-24b:free', // gone
-    'cognitivecomputations/dolphin3.0-r1-mistral-24b:free', // gone
-    'nvidia/llama-3.1-nemotron-70b-instruct:free', // gone
-    'deepseek/deepseek-r1:free', // gone
-  ];
+  private readonly openRouter = inject(OpenRouterService);
+  private readonly models = this.openRouter.freeModels;
 
   /** Batch assess selected components; returns a result per input (same order). */
   async assess(components: ComponentAiInput[]): Promise<ComponentAiResult[]> {
@@ -91,7 +65,10 @@ Return ONLY compact JSON (no prose):
     ];
 
     for (const model of this.models) {
-      const resp = await this.callOpenRouter(model, messages, 0.0);
+      const resp = await this.openRouter.call(model, messages, {
+        temperature: 0.0,
+        title: 'Content Assistant - Component Guidance',
+      });
       const text = resp?.choices?.[0]?.message?.content;
       if (!text) continue;
 
@@ -110,57 +87,6 @@ Return ONLY compact JSON (no prose):
       issues: [],
       rationale: 'No AI response.',
     };
-  }
-
-  // ---------- OpenRouter plumbing ----------
-  private async callOpenRouter(
-    model: string,
-    messages: ChatMessage[],
-    temperature = 0.0,
-  ): Promise<OpenRouterResponse | undefined> {
-    const apiKey = this.apiKeyService.getCurrentKey();
-    if (!apiKey) throw new Error('API key is required.');
-
-    const headers = new HttpHeaders({
-      Authorization: `Bearer ${apiKey}`,
-      'Content-Type': 'application/json',
-      Accept: 'application/json',
-      'X-Title': 'Content Assistant - Component Guidance',
-    });
-
-    const payload = { model, messages, temperature };
-
-    try {
-      const resp = (await this.http
-        .post(this.openRouterApiUrl, payload, {
-          headers,
-          responseType: 'text',
-          observe: 'response',
-        })
-        .toPromise()) as HttpResponse<string> | null;
-
-      const ct = resp?.headers.get('content-type') || '';
-      if (ct.includes('application/json') && typeof resp?.body === 'string') {
-        return JSON.parse(resp.body) as OpenRouterResponse;
-      } else {
-        console.error(
-          `OpenRouter non-JSON (status ${resp?.status}, ${ct}):\n`,
-          (resp?.body || '').slice(0, 500),
-        );
-        return undefined;
-      }
-    } catch (err: unknown) {
-      const httpErr = err as { status?: number; error?: unknown };
-      const status = httpErr?.status;
-      const bodySnippet =
-        typeof httpErr?.error === 'string'
-          ? httpErr.error.slice(0, 500)
-          : JSON.stringify(httpErr?.error);
-      console.error(
-        `OpenRouter HTTP error (model: ${model}) status=${status}: ${bodySnippet}`,
-      );
-      return undefined;
-    }
   }
 
   // ---------- Output hygiene ----------

@@ -1,30 +1,16 @@
 import { Injectable, inject } from '@angular/core';
 import { Subject } from 'rxjs';
-import { HttpClient, HttpHeaders, HttpResponse } from '@angular/common/http';
 import { MessageService } from 'primeng/api';
 import { TranslateService } from '@ngx-translate/core';
-import { ApiKeyService } from '../../../services/api-key.service';
 import { PromptTemplates } from '../data/ai-prompts.constants';
 import { PromptKey, AiModel } from '../data/data.model';
+import { OpenRouterService, ChatMessage } from './openrouter.service';
 import type { AlertIssue } from '../components/problems/component-guidance/alerts-guidance/alerts-guidance.component';
 import fallbackSeverityJson from '../components/problems/component-guidance/alerts-guidance/severity-include-fallback.json';
 
-type ChatRole = 'system' | 'user' | 'assistant';
-interface ChatMessage {
-  role: ChatRole;
-  content: string;
-}
-interface OpenRouterChoice {
-  message?: { role?: string; content?: string };
-}
-interface OpenRouterResponse {
-  choices?: OpenRouterChoice[];
-}
-
 @Injectable({ providedIn: 'root' })
 export class AlertAiService {
-  private readonly http = inject(HttpClient);
-  private readonly apiKeyService = inject(ApiKeyService);
+  private readonly openRouter = inject(OpenRouterService);
   private readonly messageService = inject(MessageService);
   private readonly translate = inject(TranslateService);
   private readonly issuesUpdatedSubject = new Subject<{
@@ -50,8 +36,7 @@ export class AlertAiService {
       }),
     );
 
-  private readonly openRouterApiUrl = 'https://openrouter.ai/api/v1/chat/completions';
-  private readonly models: string[] = Object.values(AiModel);
+  private readonly models: string[] = this.openRouter.freeModels;
 
   /** Call OpenRouter with the AlertsIssues prompt and return normalized issues. */
   async analyze(alertHtml: string, pageContext?: string): Promise<AlertIssue[]> {
@@ -87,7 +72,11 @@ export class AlertAiService {
       for (let i = 0; i < this.models.length; i += 1) {
         const model = this.models[i];
         try {
-          const resp = await this.callOpenRouter(model, messages);
+          const resp = await this.openRouter.call(model, messages, {
+            temperature: 0.0,
+            title: 'Content Assistant - Alert Guidance',
+            throwOnError: true,
+          });
           const text = resp?.choices?.[0]?.message?.content;
           if (!text) continue;
           sawResponse = true;
@@ -187,56 +176,6 @@ export class AlertAiService {
       html: normalized,
       issues: copied.map((issue) => ({ ...issue })),
     });
-  }
-
-  // ---------- OpenRouter plumbing ----------
-  private async callOpenRouter(
-    model: string,
-    messages: ChatMessage[],
-    temperature = 0.0,
-  ): Promise<OpenRouterResponse | undefined> {
-    const apiKey = this.apiKeyService.getCurrentKey();
-    if (!apiKey) throw new Error('API key is required.');
-
-    const headers = new HttpHeaders({
-      Authorization: `Bearer ${apiKey}`,
-      'Content-Type': 'application/json',
-      Accept: 'application/json',
-      'X-Title': 'Content Assistant - Alert Guidance',
-    });
-
-    const payload = { model, messages, temperature };
-
-    try {
-      const resp = (await this.http
-        .post(this.openRouterApiUrl, payload, {
-          headers,
-          responseType: 'text',
-          observe: 'response',
-        })
-        .toPromise()) as HttpResponse<string> | null;
-
-      const ct = resp?.headers.get('content-type') || '';
-      if (ct.includes('application/json') && typeof resp?.body === 'string') {
-        return JSON.parse(resp.body) as OpenRouterResponse;
-      }
-      const nonJsonMessage = `OpenRouter non-JSON (status ${resp?.status}, ${ct})`;
-      console.error(
-        `${nonJsonMessage}:\n`,
-        (resp?.body || '').slice(0, 500),
-      );
-      throw new Error(nonJsonMessage);
-    } catch (err: unknown) {
-      const httpErr = err as { status?: number; error?: unknown };
-      const status = httpErr?.status;
-      const bodySnippet =
-        typeof httpErr?.error === 'string'
-          ? httpErr.error.slice(0, 500)
-          : JSON.stringify(httpErr?.error);
-      const message = `OpenRouter HTTP error (model: ${model}) status=${status}: ${bodySnippet}`;
-      console.error(message);
-      throw new Error(message);
-    }
   }
 
   private notifyError(err: unknown): void {

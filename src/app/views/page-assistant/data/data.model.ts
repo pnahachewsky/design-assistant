@@ -89,16 +89,18 @@ export enum PromptKey {
 }
 
 export enum AiModel {
-  Devstral = 'mistralai/devstral-2512:free', //262.1K context
-  Xiaomi = 'xiaomi/mimo-v2-flash:free', //262.1K context
+  //Free models
   Qwen = 'qwen/qwen3-next-80b-a3b-instruct:free', //262k context
   Nemotron = 'nvidia/nemotron-3-nano-30b-a3b:free', //256k context
   DeepSeek = 'deepseek/deepseek-r1-0528:free', //164k context
+  Chimera = 'tngtech/deepseek-r1t2-chimera:free', //164k context
   Gemma = 'google/gemma-3-27b-it:free', //131k context
   Mistral = 'mistralai/mistral-small-3.1-24b-instruct:free', //128k context
-  Llama32 = 'meta-llama/llama-3.2-3b-instruct:free', //131k context = wonky results for some reason
-  Llama31 = 'meta-llama/llama-3.1-405b-instruct:free', //66k context = fine???
-  Gpt5Mini = 'openai/gpt-5-mini' // 400k context paid
+  Llama33 = 'meta-llama/llama-3.3-70b-instruct:free', //262k context
+  ///Paid models
+  Llama32 = 'meta-llama/llama-3.2-3b-instruct', //131k context paid - $0.02/M input tokens$0.02/M output tokens
+  Gpt5Mini = 'openai/gpt-5-mini', // 400k context paid - $0.25/M input tokens, $2/M output tokens
+  Gemini = 'google/gemini-2.5-flash-lite', // 1.05M context paid - $0.10/M input tokens, $0.40/M output tokens
 }
 
 export interface LinkData {
