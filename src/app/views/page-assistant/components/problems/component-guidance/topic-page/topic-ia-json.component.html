@@ -198,48 +198,92 @@
       </p-tree>
     </div>
     <div class="col-12 md:col-6" *ngIf="visitsByUrl.size > 0">
+      <p-contextMenu #cmTopic [model]="options"></p-contextMenu>
       <h2>Suggested topic page sections</h2>
       <p-tree
         [value]="topicPageTree"
         styleClass="w-full md:w-[30rem]"
-        [selectionMode]="null"
+        [selectionMode]="selectable ? 'multiple' : null"
+        [(selection)]="selectedNode"
         [draggableNodes]="true"
         [droppableNodes]="true"
         draggableScope="topicPageTree"
         droppableScope="topicPageTree"
         [validateDrop]="true"
         (onNodeDrop)="onTopicPageNodeDrop($event)"
+        [contextMenu]="cmTopic"
+        (onNodeContextMenuSelect)="onNodeContextMenu($event, 'topic')"
       >
         <ng-template pTemplate="default" let-node>
           <div class="flex flex-row align-items-center gap-2 w-full">
             <i
               class="pi pi-folder"
-              *ngIf="node.children?.length && !draggable && !node.data?.isCategory"
+              *ngIf="node.children?.length && !draggable && !node.data?.isCategory && !node.data?.editing"
             ></i>
             <i
               class="pi pi-file"
-              *ngIf="!node.children?.length && !draggable && !node.data?.isCategory"
+              *ngIf="!node.children?.length && !draggable && !node.data?.isCategory && !node.data?.editing"
             ></i>
             <i
-              *ngIf="draggable && !node.data?.isCategory"
+              *ngIf="draggable && !node.data?.isCategory && !node.data?.editing"
               class="pi pi-arrows-alt cursor-move text-color-secondary"
             ></i>
-            <ng-container *ngIf="node.data?.url; else topicLabel">
-              <a
-                [href]="node.data.url"
-                target="_blank"
-                (click)="onNodeClick($event)"
-                [innerHTML]="node.label"
-                class="ia-label"
-              ></a>
+            <i
+              *ngIf="node.data?.editing"
+              class="pi pi-pencil text-color-secondary"
+            ></i>
+            <ng-container *ngIf="!node.data?.editing">
+              <ng-container *ngIf="node.data?.url; else topicLabel">
+                <a
+                  [href]="node.data.url"
+                  target="_blank"
+                  (click)="onNodeClick($event)"
+                  [innerHTML]="node.label"
+                  class="ia-label"
+                ></a>
+              </ng-container>
+              <ng-template #topicLabel>
+                <span
+                  [innerHTML]="node.label"
+                  class="ia-label"
+                  [class.font-bold]="node.data?.isCategory"
+                ></span>
+              </ng-template>
             </ng-container>
-            <ng-template #topicLabel>
-              <span
-                [innerHTML]="node.label"
+            <p-inputgroup *ngIf="node.data?.editing === 'label'">
+              <input
+                type="text"
+                pInputText
+                [(ngModel)]="node.label"
+                pSize="small"
                 class="ia-label"
-                [class.font-bold]="node.data?.isCategory"
-              ></span>
-            </ng-template>
+                (keydown)="onInputKeydown($event)"
+              />
+              <p-inputgroup-addon
+                ><p-button
+                  icon="pi pi-check"
+                  severity="secondary"
+                  size="small"
+                  (onClick)="saveNode()"
+              /></p-inputgroup-addon>
+            </p-inputgroup>
+            <p-inputgroup *ngIf="node.data?.editing === 'link'">
+              <input
+                type="text"
+                pInputText
+                [(ngModel)]="node.data.url"
+                pSize="small"
+                class="ia-label"
+                (keydown)="onInputKeydown($event)"
+              />
+              <p-inputgroup-addon
+                ><p-button
+                  icon="pi pi-check"
+                  severity="secondary"
+                  size="small"
+                  (onClick)="saveNode()"
+              /></p-inputgroup-addon>
+            </p-inputgroup>
           </div>
         </ng-template>
       </p-tree>

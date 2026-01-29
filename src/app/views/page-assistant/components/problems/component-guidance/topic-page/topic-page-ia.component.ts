@@ -37,6 +37,7 @@ import { UploadStateService } from '../../../../services/upload-state.service';
 import { IaStructureService } from '../../../../services/ia-structure.service';
 import { TranslateService, TranslateModule } from '@ngx-translate/core';
 import { ThemeService } from '../../../../../../services/theme.service';
+import topicPageExceptionsJson from './topic-page-exceptions.json';
 
 import { MenuItem, TreeNode, TreeDragDropService, MessageService } from 'primeng/api';
 import { FullscreenHTMLElement } from '../../../../../../views/ia-assistant/data/data.model';
@@ -245,9 +246,16 @@ export class TopicPageIaComponent implements OnInit {
   urlColumnIndex: number | null = null;
   topicPageTree: TreeNode[] = [];
   visitsByUrl = new Map<string, number>();
+  visitsByPath = new Map<string, number>();
   visitsColumnIndex: number | null = null;
   isTopicPage = false;
   topicPageSections = new Map<string, TopicPageLinkInfo>();
+  nonTopicPageLinks = new Map<string, string>();
+  private readonly topicPageExcludedUrlFragments = (
+    topicPageExceptionsJson as string[]
+  )
+    .map((value) => String(value).trim().toLowerCase())
+    .filter((value) => value.length > 0);
 
   //Button fxn
   async checkIA() {
@@ -418,7 +426,7 @@ export class TopicPageIaComponent implements OnInit {
   }
 
   async copyUrlsToClipboard() {
-    const urls = this.collectUrls(this.iaChart);
+    const urls = this.collectUrls(this.topicPageTree?.length ? this.topicPageTree : this.iaChart);
     if (!urls.length) {
       this.messageService.add({
         severity: 'warn',
@@ -482,6 +490,7 @@ export class TopicPageIaComponent implements OnInit {
         this.urlColumnIndex,
         this.visitsColumnIndex,
       );
+      this.visitsByPath = this.buildVisitsPathMap(this.visitsByUrl);
       this.csvUploaded = this.visitsByUrl.size > 0;
       this.applyVisitsToIaTree();
       this.rebuildTopicPageTreeFromIa();
@@ -534,7 +543,46 @@ export class TopicPageIaComponent implements OnInit {
     return index >= 0 ? index : null;
   }
 
-  private buildTopicPageTree(rootLabel: string): TreeNode[] {
+  private buildTopicPageTree(
+    rootLabel: string,
+    includeNonTopicCategory = false,
+  ): TreeNode[] {
+    const baseChildren: TreeNode[] = [
+      {
+        label: 'Most requested',
+        data: { url: '', isCategory: true },
+        expanded: true,
+        children: [],
+      },
+      {
+        label: 'Doormats',
+        data: { url: '', isCategory: true },
+        expanded: true,
+        children: [],
+      },
+      {
+        label: 'Features',
+        data: { url: '', isCategory: true },
+        expanded: true,
+        children: [],
+      },
+      {
+        label: 'Not suggested for topic page',
+        data: { url: '', isCategory: true },
+        expanded: true,
+        children: [],
+      },
+    ];
+
+    if (includeNonTopicCategory) {
+      baseChildren.push({
+        label: 'Found on non-topic page',
+        data: { url: '', isCategory: true, isNonTopicCategory: true },
+        expanded: true,
+        children: [],
+      });
+    }
+
     return [
       {
         label: rootLabel,
@@ -543,39 +591,17 @@ export class TopicPageIaComponent implements OnInit {
           isRoot: true,
         },
         expanded: true,
-        children: [
-          {
-            label: 'Most requested',
-            data: { url: '', isCategory: true },
-            expanded: true,
-            children: [],
-          },
-          {
-            label: 'Doormats',
-            data: { url: '', isCategory: true },
-            expanded: true,
-            children: [],
-          },
-          {
-            label: 'Features',
-            data: { url: '', isCategory: true },
-            expanded: true,
-            children: [],
-          },
-          {
-            label: 'Not on topic page',
-            data: { url: '', isCategory: true },
-            expanded: true,
-            children: [],
-          },
-        ],
+        children: baseChildren,
       },
     ];
   }
 
   private rebuildTopicPageTreeFromIa(): void {
     this.updateTopicPageSectionMap();
-    const baseTree = this.buildTopicPageTree(this.getCurrentPageLabel());
+    const baseTree = this.buildTopicPageTree(
+      this.getCurrentPageLabel(),
+      !this.isTopicPage,
+    );
     if (!this.iaChart?.length) {
       this.topicPageTree = baseTree;
       this.updateTopicPageTreeStyles(this.topicPageTree, 0);
@@ -664,13 +690,26 @@ export class TopicPageIaComponent implements OnInit {
   }
 
   private getVisitsForNode(node: TreeNode): number | null {
-    const url = node.data?.url?.trim();
+    return this.getVisitsForUrl(node.data?.url);
+  }
+
+  private getVisitsForUrl(urlRaw?: string): number | null {
+    const url = urlRaw?.trim();
     if (!url) return null;
     const normalized = this.normalizeUrl(url);
     const visits =
       this.visitsByUrl.get(normalized) ??
       this.visitsByUrl.get(this.normalizeUrl(this.decodeUrl(url)));
-    return visits ?? null;
+    if (visits !== undefined) return visits;
+
+    const pathKey = this.getPathSuffixKey(url);
+    if (pathKey) {
+      const pathVisits =
+        this.visitsByPath.get(pathKey) ??
+        this.visitsByPath.get(this.normalizePath(pathKey));
+      if (pathVisits !== undefined) return pathVisits;
+    }
+    return null;
   }
 
   private sortByVisitsDesc(nodes: TreeNode[]): TreeNode[] {
@@ -707,6 +746,7 @@ export class TopicPageIaComponent implements OnInit {
 
   private updateTopicPageSectionMap(): void {
     const html = this.uploadState.getUploadData()?.originalHtml || '';
+    this.nonTopicPageLinks = new Map();
     if (!html) {
       this.isTopicPage = false;
       this.topicPageSections = new Map();
@@ -718,6 +758,7 @@ export class TopicPageIaComponent implements OnInit {
     this.isTopicPage = hasDoormats;
     if (!hasDoormats) {
       this.topicPageSections = new Map();
+      this.nonTopicPageLinks = this.collectNonTopicPageLinks(doc);
       return;
     }
 
@@ -740,6 +781,7 @@ export class TopicPageIaComponent implements OnInit {
         const normalized = this.normalizeUrl(
           this.resolveUrl(href, baseUrl),
         );
+        if (this.isExcludedUrl(normalized)) return;
         if (normalized) {
           map.set(normalized, {
             section: section.key,
@@ -750,6 +792,59 @@ export class TopicPageIaComponent implements OnInit {
     }
 
     this.topicPageSections = map;
+  }
+
+  private collectNonTopicPageLinks(doc: Document): Map<string, string> {
+    const map = new Map<string, string>();
+    const baseUrl = this.originalUrl || '';
+    const container =
+      this.findMainContentElement(doc) ?? doc.body ?? doc.documentElement;
+    if (!container) return map;
+
+    const links = container.querySelectorAll('a[href]');
+    links.forEach((link) => {
+      const href = link.getAttribute('href');
+      if (!href || href.startsWith('#')) return;
+      const text = (link.textContent || '').trim();
+      const normalized = this.normalizeUrl(
+        this.resolveUrl(href, baseUrl),
+      );
+      if (this.isExcludedUrl(normalized)) return;
+      if (normalized) {
+        map.set(normalized, text || href);
+      }
+    });
+
+    return map;
+  }
+
+  private findMainContentElement(doc: Document): Element | null {
+    const selectors = [
+      'main[property="mainContentOfPage"][resource="#wb-main"][typeof="WebPageElement"]',
+      'main[property="mainContentOfPage"][resource="#wb-main"][typeof="WebPageElement"].col-md-9.col-md-push-3',
+      'main[role="main"][property="mainContentOfPage"].container',
+      'main[role="main"][property="mainContentOfPage"]',
+      'main[role="main"]',
+      'main',
+      '[role="main"]',
+    ];
+
+    for (const selector of selectors) {
+      const element = doc.querySelector(selector);
+      if (!element) continue;
+      const containerDiv = element.querySelector('div.container');
+      return containerDiv ?? element;
+    }
+
+    return null;
+  }
+
+  private isExcludedUrl(url: string): boolean {
+    if (!url) return false;
+    const normalized = url.toLowerCase();
+    return this.topicPageExcludedUrlFragments.some((fragment) =>
+      normalized.includes(fragment),
+    );
   }
 
   private resolveUrl(href: string, baseUrl: string): string {
@@ -806,9 +901,12 @@ export class TopicPageIaComponent implements OnInit {
   }
 
   private addMissingIaNodes(baseTree: TreeNode[]): void {
-    if (!this.isTopicPage) return;
     const iaUrls = this.buildIaUrlSet();
     if (!iaUrls.size) return;
+    if (!this.isTopicPage) {
+      this.addNonTopicMissingIaNodes(baseTree, iaUrls);
+      return;
+    }
 
     const root = baseTree[0];
     const categories = root.children ?? [];
@@ -835,7 +933,12 @@ export class TopicPageIaComponent implements OnInit {
 
     for (const [url, info] of this.topicPageSections.entries()) {
       if (iaUrls.has(url)) continue;
-      const label = `${info.label} <span class="topic-ia-badge">Not in IA structure</span>`;
+      const visits = this.getVisitsForUrl(url);
+      const visitsLabel =
+        visits !== null
+          ? `${info.label} (${this.formatVisits(visits)} visits)`
+          : info.label;
+      const label = `${visitsLabel} <span class="topic-ia-badge">Not in IA structure</span>`;
       const node: TreeNode = {
         label,
         data: {
@@ -854,6 +957,47 @@ export class TopicPageIaComponent implements OnInit {
       } else {
         addToCategory(feature, node);
       }
+    }
+  }
+
+  private addNonTopicMissingIaNodes(
+    baseTree: TreeNode[],
+    iaUrls: Set<string>,
+  ): void {
+    if (!this.nonTopicPageLinks.size) return;
+    const root = baseTree[0];
+    const categories = root.children ?? [];
+    const nonTopicCategory =
+      categories.find((node) => node.data?.isNonTopicCategory) ??
+      categories[4];
+    if (!nonTopicCategory) return;
+    nonTopicCategory.children = nonTopicCategory.children || [];
+
+    const existing = new Set(
+      nonTopicCategory.children
+        .map((child) => this.normalizeUrl(child.data?.url ?? ''))
+        .filter((value) => value.length > 0),
+    );
+
+    for (const [url, label] of this.nonTopicPageLinks.entries()) {
+      if (iaUrls.has(url)) continue;
+      if (existing.has(url)) continue;
+      const visits = this.getVisitsForUrl(url);
+      const visitsLabel =
+        visits !== null
+          ? `${label} (${this.formatVisits(visits)} visits)`
+          : label;
+      const node: TreeNode = {
+        label: `${visitsLabel} <span class="topic-ia-badge">Not in IA structure</span>`,
+        data: {
+          url,
+          isCategory: false,
+          diffState: 'missingIa',
+          originalLabel: label,
+          isMissingIa: true,
+        },
+      };
+      nonTopicCategory.children.push(node);
     }
   }
 
@@ -914,6 +1058,9 @@ export class TopicPageIaComponent implements OnInit {
       typeof node.data?.iaLevel === 'number' ? node.data.iaLevel : null;
     if (visits !== null && iaLevel !== null) {
       return `${baseLabel} (${this.formatVisits(visits)} visits, level ${iaLevel})`;
+    }
+    if (visits !== null) {
+      return `${baseLabel} (${this.formatVisits(visits)} visits)`;
     }
     return baseLabel;
   }
@@ -977,12 +1124,17 @@ export class TopicPageIaComponent implements OnInit {
   }
 
   private getMissingIaBaseLabel(node: TreeNode): string {
+    const visits = this.getVisitsForNode(node);
     const baseLabel =
       typeof node.data?.originalLabel === 'string' &&
       node.data.originalLabel.trim().length
         ? node.data.originalLabel
         : (node.label ?? '').toString();
-    return `${baseLabel} <span class="topic-ia-badge">Not in IA structure</span>`;
+    const withVisits =
+      visits !== null
+        ? `${baseLabel} (${this.formatVisits(visits)} visits)`
+        : baseLabel;
+    return `${withVisits} <span class="topic-ia-badge">Not in IA structure</span>`;
   }
 
   private getCurrentPageLabel(): string {
@@ -1074,6 +1226,17 @@ export class TopicPageIaComponent implements OnInit {
     return map;
   }
 
+  private buildVisitsPathMap(source: Map<string, number>): Map<string, number> {
+    const map = new Map<string, number>();
+    source.forEach((visits, url) => {
+      const pathKey = this.getPathSuffixKey(url);
+      if (pathKey) {
+        map.set(pathKey, visits);
+      }
+    });
+    return map;
+  }
+
   private applyVisitsToIaTree(): void {
     if (!this.iaChart?.length || this.visitsByUrl.size === 0) return;
 
@@ -1081,10 +1244,8 @@ export class TopicPageIaComponent implements OnInit {
       for (const node of nodes) {
         const url = node?.data?.url?.trim();
         if (url) {
-          const visits =
-            this.visitsByUrl.get(this.normalizeUrl(url)) ??
-            this.visitsByUrl.get(this.normalizeUrl(this.decodeUrl(url)));
-          if (visits !== undefined) {
+          const visits = this.getVisitsForUrl(url);
+          if (visits !== null) {
             const baseLabel =
               node.data?.originalLabel ?? (node.label ?? '').toString();
             if (!node.data.originalLabel) {
@@ -1112,6 +1273,44 @@ export class TopicPageIaComponent implements OnInit {
 
   private formatVisits(value: number): string {
     return new Intl.NumberFormat('en-CA').format(value);
+  }
+
+  private getPathSuffixKey(url: string): string | null {
+    const path = this.extractPathname(url);
+    if (!path) return null;
+    const normalizedPath = this.normalizePath(path);
+    const marker = this.findLangMarker(normalizedPath);
+    if (marker) {
+      const index = normalizedPath.indexOf(marker);
+      if (index >= 0) {
+        return normalizedPath.slice(index);
+      }
+    }
+    return normalizedPath;
+  }
+
+  private extractPathname(url: string): string | null {
+    try {
+      const parsed = new URL(this.ensureUrlScheme(url));
+      return parsed.pathname || null;
+    } catch {
+      const stripped = url.split('#')[0].split('?')[0];
+      const slashIndex = stripped.indexOf('/');
+      if (slashIndex >= 0) {
+        return stripped.slice(slashIndex);
+      }
+      return null;
+    }
+  }
+
+  private normalizePath(path: string): string {
+    return path.toLowerCase().replace(/\/+$/, '');
+  }
+
+  private findLangMarker(path: string): string | null {
+    if (path.includes('/en/')) return '/en/';
+    if (path.includes('/fr/')) return '/fr/';
+    return null;
   }
 
   private normalizeUrl(url: string): string {
@@ -1178,6 +1377,7 @@ export class TopicPageIaComponent implements OnInit {
   //Context menu
   @ViewChild('cm') cm!: ContextMenu;
   options: MenuItem[] = []; //options for editing chart nodes
+  private activeContextTree: 'ia' | 'topic' = 'ia';
 
   baseMenu: MenuItem[] = [
     {
@@ -1337,11 +1537,15 @@ export class TopicPageIaComponent implements OnInit {
   //for loading in page assistant
   baseHref: string | null = null;
 
-  onNodeContextMenu(event: TreeNodeContextMenuSelectEvent) {
+  onNodeContextMenu(
+    event: TreeNodeContextMenuSelectEvent,
+    context: 'ia' | 'topic' = 'ia',
+  ) {
     if (this.editingNode) {
       //auto-save before switching
       this.editingNode.data.editing = null;
     }
+    this.activeContextTree = context;
     this.selectedNode = event.node;
     const customStyle = this.selectedNode.data.customStyle;
 
@@ -1353,7 +1557,7 @@ export class TopicPageIaComponent implements OnInit {
         item.disabled = !this.selectedNode?.data?.url?.trim(); //disable if no URL
       }
       if (item.label === 'Change template' || item.label === 'Change style') {
-        item.disabled = customStyle; //disable if custom style
+        item.disabled = customStyle || context === 'topic'; //disable if custom style or topic tree
       }
     });
   }
@@ -1432,7 +1636,7 @@ export class TopicPageIaComponent implements OnInit {
     this.editNode('label');
 
     this.updateMenu(); // refresh context menu, undo, etc.
-    this.updateNodeStyles(this.iaChart, 0); // refresh styles
+    this.refreshActiveTreeStyles();
   }
 
   //Will be used to create a container to mark pages for template change
@@ -1502,12 +1706,13 @@ export class TopicPageIaComponent implements OnInit {
   }
 
   deleteNode() {
-    if (!this.iaChart || !this.selectedNode) return;
+    const tree = this.getActiveTree();
+    if (!tree || !this.selectedNode) return;
 
     const nodeToDelete = this.selectedNode;
 
     // Root-level (don't delete the root!!!)
-    const rootIndex = this.iaChart.findIndex((n) => n === nodeToDelete);
+    const rootIndex = tree.findIndex((n) => n === nodeToDelete);
     if (rootIndex > -1) {
       console.warn('Cannot delete root node.');
       return;
@@ -1536,8 +1741,9 @@ export class TopicPageIaComponent implements OnInit {
       return false;
     };
 
-    findAndDelete(this.iaChart);
+    findAndDelete(tree);
     this.updateMenu();
+    this.refreshActiveTreeStyles();
   }
 
   restoreNode() {
@@ -1557,7 +1763,7 @@ export class TopicPageIaComponent implements OnInit {
       this.selectedNode.data.customStyleKey = 'rot';
       this.selectedNode.data.borderStyle =
         'border-2 border-primary border-round border-dashed shadow-2';
-      this.updateNodeStyles(this.iaChart, 0);
+      this.refreshActiveTreeStyles();
     }
     this.updateMenu();
   }
@@ -1577,6 +1783,20 @@ export class TopicPageIaComponent implements OnInit {
         command: () => this.restoreNode(),
       });
     }
+  }
+
+  private getActiveTree(): TreeNode[] | null {
+    return this.activeContextTree === 'topic'
+      ? this.topicPageTree
+      : this.iaChart;
+  }
+
+  private refreshActiveTreeStyles(): void {
+    if (this.activeContextTree === 'topic') {
+      this.updateTopicPageTreeStyles(this.topicPageTree, 0);
+      return;
+    }
+    this.updateNodeStyles(this.iaChart, 0);
   }
 
   //Placeholder for export function
@@ -1859,7 +2079,7 @@ export class TopicPageIaComponent implements OnInit {
     const categories = root.children ?? [];
     const notOnTopicsCategory =
       categories.find(
-        (node) => node.data?.isCategory && node.label === 'Not on topic page',
+        (node) => node.data?.isCategory && node.label === 'Not suggested for topic page',
       ) ?? categories[3];
     const children = notOnTopicsCategory?.children;
     if (!children?.length) return;
