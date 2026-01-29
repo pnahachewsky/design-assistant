@@ -31820,6 +31820,11 @@ var IaStructureComponent = class _IaStructureComponent {
   (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(IaStructureComponent, { className: "IaStructureComponent", filePath: "src/app/views/page-assistant/components/problems/ia-structure.component.ts", lineNumber: 105 });
 })();
 
+// src/app/views/page-assistant/components/problems/component-guidance/topic-page/topic-page-exceptions.json
+var topic_page_exceptions_default = [
+  "/en/revenue-agency/services/e-services/cra-login-services.html"
+];
+
 // src/app/views/page-assistant/components/problems/component-guidance/topic-page/topic-page-ia.component.ts
 var _c010 = ["chartContainer"];
 var _c17 = ["cm"];
@@ -31827,7 +31832,7 @@ var _c27 = () => ({ height: "1rem" });
 var _c37 = () => ({ "min-width": "50rem" });
 function TopicPageIaComponent_p_progressbar_31_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275element(0, "p-progressbar", 18);
+    \u0275\u0275element(0, "p-progressbar", 19);
   }
   if (rf & 2) {
     const ctx_r0 = \u0275\u0275nextContext();
@@ -31838,7 +31843,7 @@ function TopicPageIaComponent_p_progressbar_31_Template(rf, ctx) {
 function TopicPageIaComponent_div_32_p_button_5_Template(rf, ctx) {
   if (rf & 1) {
     const _r2 = \u0275\u0275getCurrentView();
-    \u0275\u0275elementStart(0, "p-button", 20);
+    \u0275\u0275elementStart(0, "p-button", 21);
     \u0275\u0275listener("click", function TopicPageIaComponent_div_32_p_button_5_Template_p_button_click_0_listener() {
       \u0275\u0275restoreView(_r2);
       const ctx_r0 = \u0275\u0275nextContext(2);
@@ -31853,12 +31858,12 @@ function TopicPageIaComponent_div_32_p_button_5_Template(rf, ctx) {
 }
 function TopicPageIaComponent_div_32_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275elementStart(0, "div", 10)(1, "p", 5)(2, "strong");
+    \u0275\u0275elementStart(0, "div", 11)(1, "p", 6)(2, "strong");
     \u0275\u0275text(3, "Copy all URLs");
     \u0275\u0275elementEnd();
     \u0275\u0275text(4, " in the IA structure to the clipboard.");
     \u0275\u0275elementEnd();
-    \u0275\u0275template(5, TopicPageIaComponent_div_32_p_button_5_Template, 1, 1, "p-button", 19);
+    \u0275\u0275template(5, TopicPageIaComponent_div_32_p_button_5_Template, 1, 1, "p-button", 20);
     \u0275\u0275elementEnd();
   }
   if (rf & 2) {
@@ -31870,7 +31875,7 @@ function TopicPageIaComponent_div_32_Template(rf, ctx) {
 function TopicPageIaComponent_div_33_Template(rf, ctx) {
   if (rf & 1) {
     const _r3 = \u0275\u0275getCurrentView();
-    \u0275\u0275elementStart(0, "div", 10)(1, "p", 5);
+    \u0275\u0275elementStart(0, "div", 11)(1, "p", 6);
     \u0275\u0275text(2, "Manually ");
     \u0275\u0275elementStart(3, "strong");
     \u0275\u0275text(4, "retrieve page visits");
@@ -31879,7 +31884,7 @@ function TopicPageIaComponent_div_33_Template(rf, ctx) {
     \u0275\u0275elementEnd();
     \u0275\u0275elementStart(6, "ol")(7, "li");
     \u0275\u0275text(8, "Visit ");
-    \u0275\u0275elementStart(9, "a", 21);
+    \u0275\u0275elementStart(9, "a", 22);
     \u0275\u0275text(10, "Custom reports page of the UPD");
     \u0275\u0275elementEnd()();
     \u0275\u0275elementStart(11, "li");
@@ -31910,7 +31915,7 @@ function TopicPageIaComponent_div_33_Template(rf, ctx) {
     \u0275\u0275elementStart(30, "li");
     \u0275\u0275text(31, "Export the report as a CSV and save it");
     \u0275\u0275elementEnd()();
-    \u0275\u0275elementStart(32, "p-button", 22);
+    \u0275\u0275elementStart(32, "p-button", 23);
     \u0275\u0275listener("click", function TopicPageIaComponent_div_33_Template_p_button_click_32_listener() {
       \u0275\u0275restoreView(_r3);
       const ctx_r0 = \u0275\u0275nextContext();
@@ -31927,7 +31932,7 @@ function TopicPageIaComponent_div_33_Template(rf, ctx) {
 function TopicPageIaComponent_div_34_Template(rf, ctx) {
   if (rf & 1) {
     const _r4 = \u0275\u0275getCurrentView();
-    \u0275\u0275elementStart(0, "div", 10)(1, "p", 5)(2, "strong");
+    \u0275\u0275elementStart(0, "div", 11)(1, "p", 6)(2, "strong");
     \u0275\u0275text(3, "Upload your saved CSV");
     \u0275\u0275elementEnd();
     \u0275\u0275text(4, " file. This will:");
@@ -31949,7 +31954,7 @@ function TopicPageIaComponent_div_34_Template(rf, ctx) {
     \u0275\u0275elementEnd();
     \u0275\u0275text(17, " based on visits and levels");
     \u0275\u0275elementEnd()();
-    \u0275\u0275elementStart(18, "div", 23)(19, "p-fileUpload", 24);
+    \u0275\u0275elementStart(18, "div", 24)(19, "p-fileUpload", 25);
     \u0275\u0275pipe(20, "translate");
     \u0275\u0275listener("uploadHandler", function TopicPageIaComponent_div_34_Template_p_fileUpload_uploadHandler_19_listener($event) {
       \u0275\u0275restoreView(_r4);
@@ -31966,16 +31971,16 @@ function TopicPageIaComponent_div_34_Template(rf, ctx) {
 }
 function TopicPageIaComponent_ng_container_35_span_5_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275elementStart(0, "span", 29);
-    \u0275\u0275element(1, "i", 30);
+    \u0275\u0275elementStart(0, "span", 30);
+    \u0275\u0275element(1, "i", 31);
     \u0275\u0275text(2, "Link found on parent page");
     \u0275\u0275elementEnd();
   }
 }
 function TopicPageIaComponent_ng_container_35_span_6_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275elementStart(0, "span", 31);
-    \u0275\u0275element(1, "i", 32);
+    \u0275\u0275elementStart(0, "span", 32);
+    \u0275\u0275element(1, "i", 33);
     \u0275\u0275text(2, "IA Orphan");
     \u0275\u0275elementEnd();
   }
@@ -31986,9 +31991,9 @@ function TopicPageIaComponent_ng_container_35_Template(rf, ctx) {
     \u0275\u0275elementStart(1, "h2");
     \u0275\u0275text(2, "Breadcrumb");
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(3, "div", 25);
-    \u0275\u0275element(4, "p-breadcrumb", 26);
-    \u0275\u0275template(5, TopicPageIaComponent_ng_container_35_span_5_Template, 3, 0, "span", 27)(6, TopicPageIaComponent_ng_container_35_span_6_Template, 3, 0, "span", 28);
+    \u0275\u0275elementStart(3, "div", 26);
+    \u0275\u0275element(4, "p-breadcrumb", 27);
+    \u0275\u0275template(5, TopicPageIaComponent_ng_container_35_span_5_Template, 3, 0, "span", 28)(6, TopicPageIaComponent_ng_container_35_span_6_Template, 3, 0, "span", 29);
     \u0275\u0275elementEnd();
     \u0275\u0275elementContainerEnd();
   }
@@ -32004,29 +32009,29 @@ function TopicPageIaComponent_ng_container_35_Template(rf, ctx) {
 }
 function TopicPageIaComponent_ng_container_36_ng_template_8_i_1_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275element(0, "i", 44);
+    \u0275\u0275element(0, "i", 45);
   }
 }
 function TopicPageIaComponent_ng_container_36_ng_template_8_i_2_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275element(0, "i", 45);
+    \u0275\u0275element(0, "i", 46);
   }
 }
 function TopicPageIaComponent_ng_container_36_ng_template_8_i_3_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275element(0, "i", 46);
+    \u0275\u0275element(0, "i", 47);
   }
 }
 function TopicPageIaComponent_ng_container_36_ng_template_8_i_4_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275element(0, "i", 47);
+    \u0275\u0275element(0, "i", 48);
   }
 }
 function TopicPageIaComponent_ng_container_36_ng_template_8_ng_container_5_Template(rf, ctx) {
   if (rf & 1) {
     const _r6 = \u0275\u0275getCurrentView();
     \u0275\u0275elementContainerStart(0);
-    \u0275\u0275elementStart(1, "a", 48);
+    \u0275\u0275elementStart(1, "a", 49);
     \u0275\u0275listener("click", function TopicPageIaComponent_ng_container_36_ng_template_8_ng_container_5_Template_a_click_1_listener($event) {
       \u0275\u0275restoreView(_r6);
       const ctx_r0 = \u0275\u0275nextContext(3);
@@ -32044,7 +32049,7 @@ function TopicPageIaComponent_ng_container_36_ng_template_8_ng_container_5_Templ
 function TopicPageIaComponent_ng_container_36_ng_template_8_p_inputgroup_6_Template(rf, ctx) {
   if (rf & 1) {
     const _r8 = \u0275\u0275getCurrentView();
-    \u0275\u0275elementStart(0, "p-inputgroup")(1, "input", 49);
+    \u0275\u0275elementStart(0, "p-inputgroup")(1, "input", 50);
     \u0275\u0275twoWayListener("ngModelChange", function TopicPageIaComponent_ng_container_36_ng_template_8_p_inputgroup_6_Template_input_ngModelChange_1_listener($event) {
       \u0275\u0275restoreView(_r8);
       const node_r7 = \u0275\u0275nextContext().$implicit;
@@ -32057,7 +32062,7 @@ function TopicPageIaComponent_ng_container_36_ng_template_8_p_inputgroup_6_Templ
       return \u0275\u0275resetView(ctx_r0.onInputKeydown($event));
     });
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(2, "p-inputgroup-addon")(3, "p-button", 50);
+    \u0275\u0275elementStart(2, "p-inputgroup-addon")(3, "p-button", 51);
     \u0275\u0275listener("onClick", function TopicPageIaComponent_ng_container_36_ng_template_8_p_inputgroup_6_Template_p_button_onClick_3_listener() {
       \u0275\u0275restoreView(_r8);
       const ctx_r0 = \u0275\u0275nextContext(3);
@@ -32074,7 +32079,7 @@ function TopicPageIaComponent_ng_container_36_ng_template_8_p_inputgroup_6_Templ
 function TopicPageIaComponent_ng_container_36_ng_template_8_p_inputgroup_7_Template(rf, ctx) {
   if (rf & 1) {
     const _r9 = \u0275\u0275getCurrentView();
-    \u0275\u0275elementStart(0, "p-inputgroup")(1, "input", 49);
+    \u0275\u0275elementStart(0, "p-inputgroup")(1, "input", 50);
     \u0275\u0275twoWayListener("ngModelChange", function TopicPageIaComponent_ng_container_36_ng_template_8_p_inputgroup_7_Template_input_ngModelChange_1_listener($event) {
       \u0275\u0275restoreView(_r9);
       const node_r7 = \u0275\u0275nextContext().$implicit;
@@ -32087,7 +32092,7 @@ function TopicPageIaComponent_ng_container_36_ng_template_8_p_inputgroup_7_Templ
       return \u0275\u0275resetView(ctx_r0.onInputKeydown($event));
     });
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(2, "p-inputgroup-addon")(3, "p-button", 50);
+    \u0275\u0275elementStart(2, "p-inputgroup-addon")(3, "p-button", 51);
     \u0275\u0275listener("onClick", function TopicPageIaComponent_ng_container_36_ng_template_8_p_inputgroup_7_Template_p_button_onClick_3_listener() {
       \u0275\u0275restoreView(_r9);
       const ctx_r0 = \u0275\u0275nextContext(3);
@@ -32103,8 +32108,8 @@ function TopicPageIaComponent_ng_container_36_ng_template_8_p_inputgroup_7_Templ
 }
 function TopicPageIaComponent_ng_container_36_ng_template_8_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275elementStart(0, "div", 39);
-    \u0275\u0275template(1, TopicPageIaComponent_ng_container_36_ng_template_8_i_1_Template, 1, 0, "i", 40)(2, TopicPageIaComponent_ng_container_36_ng_template_8_i_2_Template, 1, 0, "i", 41)(3, TopicPageIaComponent_ng_container_36_ng_template_8_i_3_Template, 1, 0, "i", 42)(4, TopicPageIaComponent_ng_container_36_ng_template_8_i_4_Template, 1, 0, "i", 43)(5, TopicPageIaComponent_ng_container_36_ng_template_8_ng_container_5_Template, 2, 2, "ng-container", 17)(6, TopicPageIaComponent_ng_container_36_ng_template_8_p_inputgroup_6_Template, 4, 1, "p-inputgroup", 17)(7, TopicPageIaComponent_ng_container_36_ng_template_8_p_inputgroup_7_Template, 4, 1, "p-inputgroup", 17);
+    \u0275\u0275elementStart(0, "div", 40);
+    \u0275\u0275template(1, TopicPageIaComponent_ng_container_36_ng_template_8_i_1_Template, 1, 0, "i", 41)(2, TopicPageIaComponent_ng_container_36_ng_template_8_i_2_Template, 1, 0, "i", 42)(3, TopicPageIaComponent_ng_container_36_ng_template_8_i_3_Template, 1, 0, "i", 43)(4, TopicPageIaComponent_ng_container_36_ng_template_8_i_4_Template, 1, 0, "i", 44)(5, TopicPageIaComponent_ng_container_36_ng_template_8_ng_container_5_Template, 2, 2, "ng-container", 18)(6, TopicPageIaComponent_ng_container_36_ng_template_8_p_inputgroup_6_Template, 4, 1, "p-inputgroup", 18)(7, TopicPageIaComponent_ng_container_36_ng_template_8_p_inputgroup_7_Template, 4, 1, "p-inputgroup", 18);
     \u0275\u0275elementEnd();
   }
   if (rf & 2) {
@@ -32126,101 +32131,201 @@ function TopicPageIaComponent_ng_container_36_ng_template_8_Template(rf, ctx) {
     \u0275\u0275property("ngIf", node_r7.data.editing === "link");
   }
 }
-function TopicPageIaComponent_ng_container_36_div_9_ng_template_4_i_1_Template(rf, ctx) {
-  if (rf & 1) {
-    \u0275\u0275element(0, "i", 44);
-  }
-}
-function TopicPageIaComponent_ng_container_36_div_9_ng_template_4_i_2_Template(rf, ctx) {
+function TopicPageIaComponent_ng_container_36_div_9_ng_template_6_i_1_Template(rf, ctx) {
   if (rf & 1) {
     \u0275\u0275element(0, "i", 45);
   }
 }
-function TopicPageIaComponent_ng_container_36_div_9_ng_template_4_i_3_Template(rf, ctx) {
+function TopicPageIaComponent_ng_container_36_div_9_ng_template_6_i_2_Template(rf, ctx) {
   if (rf & 1) {
     \u0275\u0275element(0, "i", 46);
   }
 }
-function TopicPageIaComponent_ng_container_36_div_9_ng_template_4_ng_container_4_Template(rf, ctx) {
+function TopicPageIaComponent_ng_container_36_div_9_ng_template_6_i_3_Template(rf, ctx) {
+  if (rf & 1) {
+    \u0275\u0275element(0, "i", 47);
+  }
+}
+function TopicPageIaComponent_ng_container_36_div_9_ng_template_6_i_4_Template(rf, ctx) {
+  if (rf & 1) {
+    \u0275\u0275element(0, "i", 48);
+  }
+}
+function TopicPageIaComponent_ng_container_36_div_9_ng_template_6_ng_container_5_ng_container_1_Template(rf, ctx) {
   if (rf & 1) {
     const _r11 = \u0275\u0275getCurrentView();
     \u0275\u0275elementContainerStart(0);
-    \u0275\u0275elementStart(1, "a", 48);
-    \u0275\u0275listener("click", function TopicPageIaComponent_ng_container_36_div_9_ng_template_4_ng_container_4_Template_a_click_1_listener($event) {
+    \u0275\u0275elementStart(1, "a", 49);
+    \u0275\u0275listener("click", function TopicPageIaComponent_ng_container_36_div_9_ng_template_6_ng_container_5_ng_container_1_Template_a_click_1_listener($event) {
       \u0275\u0275restoreView(_r11);
-      const ctx_r0 = \u0275\u0275nextContext(4);
+      const ctx_r0 = \u0275\u0275nextContext(5);
       return \u0275\u0275resetView(ctx_r0.onNodeClick($event));
     });
     \u0275\u0275elementEnd();
     \u0275\u0275elementContainerEnd();
   }
   if (rf & 2) {
-    const node_r12 = \u0275\u0275nextContext().$implicit;
+    const node_r12 = \u0275\u0275nextContext(2).$implicit;
     \u0275\u0275advance();
     \u0275\u0275property("href", node_r12.data.url, \u0275\u0275sanitizeUrl)("innerHTML", node_r12.label, \u0275\u0275sanitizeHtml);
   }
 }
-function TopicPageIaComponent_ng_container_36_div_9_ng_template_4_ng_template_5_Template(rf, ctx) {
+function TopicPageIaComponent_ng_container_36_div_9_ng_template_6_ng_container_5_ng_template_2_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275element(0, "span", 54);
+    \u0275\u0275element(0, "span", 55);
   }
   if (rf & 2) {
-    const node_r12 = \u0275\u0275nextContext().$implicit;
+    const node_r12 = \u0275\u0275nextContext(2).$implicit;
     \u0275\u0275classProp("font-bold", node_r12.data == null ? null : node_r12.data.isCategory);
     \u0275\u0275property("innerHTML", node_r12.label, \u0275\u0275sanitizeHtml);
   }
 }
-function TopicPageIaComponent_ng_container_36_div_9_ng_template_4_Template(rf, ctx) {
+function TopicPageIaComponent_ng_container_36_div_9_ng_template_6_ng_container_5_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275elementStart(0, "div", 39);
-    \u0275\u0275template(1, TopicPageIaComponent_ng_container_36_div_9_ng_template_4_i_1_Template, 1, 0, "i", 40)(2, TopicPageIaComponent_ng_container_36_div_9_ng_template_4_i_2_Template, 1, 0, "i", 41)(3, TopicPageIaComponent_ng_container_36_div_9_ng_template_4_i_3_Template, 1, 0, "i", 42)(4, TopicPageIaComponent_ng_container_36_div_9_ng_template_4_ng_container_4_Template, 2, 2, "ng-container", 53)(5, TopicPageIaComponent_ng_container_36_div_9_ng_template_4_ng_template_5_Template, 1, 3, "ng-template", null, 1, \u0275\u0275templateRefExtractor);
+    \u0275\u0275elementContainerStart(0);
+    \u0275\u0275template(1, TopicPageIaComponent_ng_container_36_div_9_ng_template_6_ng_container_5_ng_container_1_Template, 2, 2, "ng-container", 54)(2, TopicPageIaComponent_ng_container_36_div_9_ng_template_6_ng_container_5_ng_template_2_Template, 1, 3, "ng-template", null, 2, \u0275\u0275templateRefExtractor);
+    \u0275\u0275elementContainerEnd();
+  }
+  if (rf & 2) {
+    const topicLabel_r13 = \u0275\u0275reference(3);
+    const node_r12 = \u0275\u0275nextContext().$implicit;
+    \u0275\u0275advance();
+    \u0275\u0275property("ngIf", node_r12.data == null ? null : node_r12.data.url)("ngIfElse", topicLabel_r13);
+  }
+}
+function TopicPageIaComponent_ng_container_36_div_9_ng_template_6_p_inputgroup_6_Template(rf, ctx) {
+  if (rf & 1) {
+    const _r14 = \u0275\u0275getCurrentView();
+    \u0275\u0275elementStart(0, "p-inputgroup")(1, "input", 50);
+    \u0275\u0275twoWayListener("ngModelChange", function TopicPageIaComponent_ng_container_36_div_9_ng_template_6_p_inputgroup_6_Template_input_ngModelChange_1_listener($event) {
+      \u0275\u0275restoreView(_r14);
+      const node_r12 = \u0275\u0275nextContext().$implicit;
+      \u0275\u0275twoWayBindingSet(node_r12.label, $event) || (node_r12.label = $event);
+      return \u0275\u0275resetView($event);
+    });
+    \u0275\u0275listener("keydown", function TopicPageIaComponent_ng_container_36_div_9_ng_template_6_p_inputgroup_6_Template_input_keydown_1_listener($event) {
+      \u0275\u0275restoreView(_r14);
+      const ctx_r0 = \u0275\u0275nextContext(4);
+      return \u0275\u0275resetView(ctx_r0.onInputKeydown($event));
+    });
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(2, "p-inputgroup-addon")(3, "p-button", 51);
+    \u0275\u0275listener("onClick", function TopicPageIaComponent_ng_container_36_div_9_ng_template_6_p_inputgroup_6_Template_p_button_onClick_3_listener() {
+      \u0275\u0275restoreView(_r14);
+      const ctx_r0 = \u0275\u0275nextContext(4);
+      return \u0275\u0275resetView(ctx_r0.saveNode());
+    });
+    \u0275\u0275elementEnd()()();
+  }
+  if (rf & 2) {
+    const node_r12 = \u0275\u0275nextContext().$implicit;
+    \u0275\u0275advance();
+    \u0275\u0275twoWayProperty("ngModel", node_r12.label);
+  }
+}
+function TopicPageIaComponent_ng_container_36_div_9_ng_template_6_p_inputgroup_7_Template(rf, ctx) {
+  if (rf & 1) {
+    const _r15 = \u0275\u0275getCurrentView();
+    \u0275\u0275elementStart(0, "p-inputgroup")(1, "input", 50);
+    \u0275\u0275twoWayListener("ngModelChange", function TopicPageIaComponent_ng_container_36_div_9_ng_template_6_p_inputgroup_7_Template_input_ngModelChange_1_listener($event) {
+      \u0275\u0275restoreView(_r15);
+      const node_r12 = \u0275\u0275nextContext().$implicit;
+      \u0275\u0275twoWayBindingSet(node_r12.data.url, $event) || (node_r12.data.url = $event);
+      return \u0275\u0275resetView($event);
+    });
+    \u0275\u0275listener("keydown", function TopicPageIaComponent_ng_container_36_div_9_ng_template_6_p_inputgroup_7_Template_input_keydown_1_listener($event) {
+      \u0275\u0275restoreView(_r15);
+      const ctx_r0 = \u0275\u0275nextContext(4);
+      return \u0275\u0275resetView(ctx_r0.onInputKeydown($event));
+    });
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(2, "p-inputgroup-addon")(3, "p-button", 51);
+    \u0275\u0275listener("onClick", function TopicPageIaComponent_ng_container_36_div_9_ng_template_6_p_inputgroup_7_Template_p_button_onClick_3_listener() {
+      \u0275\u0275restoreView(_r15);
+      const ctx_r0 = \u0275\u0275nextContext(4);
+      return \u0275\u0275resetView(ctx_r0.saveNode());
+    });
+    \u0275\u0275elementEnd()()();
+  }
+  if (rf & 2) {
+    const node_r12 = \u0275\u0275nextContext().$implicit;
+    \u0275\u0275advance();
+    \u0275\u0275twoWayProperty("ngModel", node_r12.data.url);
+  }
+}
+function TopicPageIaComponent_ng_container_36_div_9_ng_template_6_Template(rf, ctx) {
+  if (rf & 1) {
+    \u0275\u0275elementStart(0, "div", 40);
+    \u0275\u0275template(1, TopicPageIaComponent_ng_container_36_div_9_ng_template_6_i_1_Template, 1, 0, "i", 41)(2, TopicPageIaComponent_ng_container_36_div_9_ng_template_6_i_2_Template, 1, 0, "i", 42)(3, TopicPageIaComponent_ng_container_36_div_9_ng_template_6_i_3_Template, 1, 0, "i", 43)(4, TopicPageIaComponent_ng_container_36_div_9_ng_template_6_i_4_Template, 1, 0, "i", 44)(5, TopicPageIaComponent_ng_container_36_div_9_ng_template_6_ng_container_5_Template, 4, 2, "ng-container", 18)(6, TopicPageIaComponent_ng_container_36_div_9_ng_template_6_p_inputgroup_6_Template, 4, 1, "p-inputgroup", 18)(7, TopicPageIaComponent_ng_container_36_div_9_ng_template_6_p_inputgroup_7_Template, 4, 1, "p-inputgroup", 18);
     \u0275\u0275elementEnd();
   }
   if (rf & 2) {
     const node_r12 = ctx.$implicit;
-    const topicLabel_r13 = \u0275\u0275reference(6);
     const ctx_r0 = \u0275\u0275nextContext(3);
     \u0275\u0275advance();
-    \u0275\u0275property("ngIf", (node_r12.children == null ? null : node_r12.children.length) && !ctx_r0.draggable && !(node_r12.data == null ? null : node_r12.data.isCategory));
+    \u0275\u0275property("ngIf", (node_r12.children == null ? null : node_r12.children.length) && !ctx_r0.draggable && !(node_r12.data == null ? null : node_r12.data.isCategory) && !(node_r12.data == null ? null : node_r12.data.editing));
     \u0275\u0275advance();
-    \u0275\u0275property("ngIf", !(node_r12.children == null ? null : node_r12.children.length) && !ctx_r0.draggable && !(node_r12.data == null ? null : node_r12.data.isCategory));
+    \u0275\u0275property("ngIf", !(node_r12.children == null ? null : node_r12.children.length) && !ctx_r0.draggable && !(node_r12.data == null ? null : node_r12.data.isCategory) && !(node_r12.data == null ? null : node_r12.data.editing));
     \u0275\u0275advance();
-    \u0275\u0275property("ngIf", ctx_r0.draggable && !(node_r12.data == null ? null : node_r12.data.isCategory));
+    \u0275\u0275property("ngIf", ctx_r0.draggable && !(node_r12.data == null ? null : node_r12.data.isCategory) && !(node_r12.data == null ? null : node_r12.data.editing));
     \u0275\u0275advance();
-    \u0275\u0275property("ngIf", node_r12.data == null ? null : node_r12.data.url)("ngIfElse", topicLabel_r13);
+    \u0275\u0275property("ngIf", node_r12.data == null ? null : node_r12.data.editing);
+    \u0275\u0275advance();
+    \u0275\u0275property("ngIf", !(node_r12.data == null ? null : node_r12.data.editing));
+    \u0275\u0275advance();
+    \u0275\u0275property("ngIf", (node_r12.data == null ? null : node_r12.data.editing) === "label");
+    \u0275\u0275advance();
+    \u0275\u0275property("ngIf", (node_r12.data == null ? null : node_r12.data.editing) === "link");
   }
 }
 function TopicPageIaComponent_ng_container_36_div_9_Template(rf, ctx) {
   if (rf & 1) {
     const _r10 = \u0275\u0275getCurrentView();
-    \u0275\u0275elementStart(0, "div", 51)(1, "h2");
-    \u0275\u0275text(2, "Suggested topic page sections");
+    \u0275\u0275elementStart(0, "div", 52);
+    \u0275\u0275element(1, "p-contextMenu", 36, 1);
+    \u0275\u0275elementStart(3, "h2");
+    \u0275\u0275text(4, "Suggested topic page sections");
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(3, "p-tree", 52);
-    \u0275\u0275listener("onNodeDrop", function TopicPageIaComponent_ng_container_36_div_9_Template_p_tree_onNodeDrop_3_listener($event) {
+    \u0275\u0275elementStart(5, "p-tree", 53);
+    \u0275\u0275twoWayListener("selectionChange", function TopicPageIaComponent_ng_container_36_div_9_Template_p_tree_selectionChange_5_listener($event) {
+      \u0275\u0275restoreView(_r10);
+      const ctx_r0 = \u0275\u0275nextContext(2);
+      \u0275\u0275twoWayBindingSet(ctx_r0.selectedNode, $event) || (ctx_r0.selectedNode = $event);
+      return \u0275\u0275resetView($event);
+    });
+    \u0275\u0275listener("onNodeDrop", function TopicPageIaComponent_ng_container_36_div_9_Template_p_tree_onNodeDrop_5_listener($event) {
       \u0275\u0275restoreView(_r10);
       const ctx_r0 = \u0275\u0275nextContext(2);
       return \u0275\u0275resetView(ctx_r0.onTopicPageNodeDrop($event));
+    })("onNodeContextMenuSelect", function TopicPageIaComponent_ng_container_36_div_9_Template_p_tree_onNodeContextMenuSelect_5_listener($event) {
+      \u0275\u0275restoreView(_r10);
+      const ctx_r0 = \u0275\u0275nextContext(2);
+      return \u0275\u0275resetView(ctx_r0.onNodeContextMenu($event, "topic"));
     });
-    \u0275\u0275template(4, TopicPageIaComponent_ng_container_36_div_9_ng_template_4_Template, 7, 5, "ng-template", 37);
+    \u0275\u0275template(6, TopicPageIaComponent_ng_container_36_div_9_ng_template_6_Template, 8, 7, "ng-template", 38);
     \u0275\u0275elementEnd()();
   }
   if (rf & 2) {
+    const cmTopic_r16 = \u0275\u0275reference(2);
     const ctx_r0 = \u0275\u0275nextContext(2);
-    \u0275\u0275advance(3);
-    \u0275\u0275property("value", ctx_r0.topicPageTree)("selectionMode", null)("draggableNodes", true)("droppableNodes", true)("validateDrop", true);
+    \u0275\u0275advance();
+    \u0275\u0275property("model", ctx_r0.options);
+    \u0275\u0275advance(4);
+    \u0275\u0275property("value", ctx_r0.topicPageTree)("selectionMode", ctx_r0.selectable ? "multiple" : null);
+    \u0275\u0275twoWayProperty("selection", ctx_r0.selectedNode);
+    \u0275\u0275property("draggableNodes", true)("droppableNodes", true)("validateDrop", true)("contextMenu", cmTopic_r16);
   }
 }
 function TopicPageIaComponent_ng_container_36_Template(rf, ctx) {
   if (rf & 1) {
     const _r5 = \u0275\u0275getCurrentView();
     \u0275\u0275elementContainerStart(0);
-    \u0275\u0275elementStart(1, "div", 33)(2, "div", 34);
-    \u0275\u0275element(3, "p-contextMenu", 35, 0);
+    \u0275\u0275elementStart(1, "div", 34)(2, "div", 35);
+    \u0275\u0275element(3, "p-contextMenu", 36, 0);
     \u0275\u0275elementStart(5, "h2");
     \u0275\u0275text(6, "Current IA structure tree");
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(7, "p-tree", 36);
+    \u0275\u0275elementStart(7, "p-tree", 37);
     \u0275\u0275twoWayListener("selectionChange", function TopicPageIaComponent_ng_container_36_Template_p_tree_selectionChange_7_listener($event) {
       \u0275\u0275restoreView(_r5);
       const ctx_r0 = \u0275\u0275nextContext();
@@ -32236,14 +32341,14 @@ function TopicPageIaComponent_ng_container_36_Template(rf, ctx) {
       const ctx_r0 = \u0275\u0275nextContext();
       return \u0275\u0275resetView(ctx_r0.onNodeContextMenu($event));
     });
-    \u0275\u0275template(8, TopicPageIaComponent_ng_container_36_ng_template_8_Template, 8, 7, "ng-template", 37);
+    \u0275\u0275template(8, TopicPageIaComponent_ng_container_36_ng_template_8_Template, 8, 7, "ng-template", 38);
     \u0275\u0275elementEnd()();
-    \u0275\u0275template(9, TopicPageIaComponent_ng_container_36_div_9_Template, 5, 5, "div", 38);
+    \u0275\u0275template(9, TopicPageIaComponent_ng_container_36_div_9_Template, 7, 8, "div", 39);
     \u0275\u0275elementEnd();
     \u0275\u0275elementContainerEnd();
   }
   if (rf & 2) {
-    const cm_r14 = \u0275\u0275reference(4);
+    const cm_r17 = \u0275\u0275reference(4);
     const ctx_r0 = \u0275\u0275nextContext();
     \u0275\u0275advance(2);
     \u0275\u0275classProp("md:col-6", ctx_r0.visitsByUrl.size > 0);
@@ -32252,17 +32357,17 @@ function TopicPageIaComponent_ng_container_36_Template(rf, ctx) {
     \u0275\u0275advance(4);
     \u0275\u0275property("value", ctx_r0.iaChart)("selectionMode", ctx_r0.selectable ? "multiple" : null);
     \u0275\u0275twoWayProperty("selection", ctx_r0.selectedNode);
-    \u0275\u0275property("draggableNodes", ctx_r0.draggable)("droppableNodes", true)("validateDrop", true)("contextMenu", cm_r14);
+    \u0275\u0275property("draggableNodes", ctx_r0.draggable)("droppableNodes", true)("validateDrop", true)("contextMenu", cm_r17);
     \u0275\u0275advance(2);
     \u0275\u0275property("ngIf", ctx_r0.visitsByUrl.size > 0);
   }
 }
 function TopicPageIaComponent_ng_container_37_p_button_3_Template(rf, ctx) {
   if (rf & 1) {
-    const _r15 = \u0275\u0275getCurrentView();
-    \u0275\u0275elementStart(0, "p-button", 57);
+    const _r18 = \u0275\u0275getCurrentView();
+    \u0275\u0275elementStart(0, "p-button", 58);
     \u0275\u0275listener("click", function TopicPageIaComponent_ng_container_37_p_button_3_Template_p_button_click_0_listener() {
-      \u0275\u0275restoreView(_r15);
+      \u0275\u0275restoreView(_r18);
       const ctx_r0 = \u0275\u0275nextContext(2);
       return \u0275\u0275resetView(ctx_r0.maximize(ctx_r0.chartContainer));
     });
@@ -32278,25 +32383,25 @@ function TopicPageIaComponent_ng_container_37_p_4_Template(rf, ctx) {
 }
 function TopicPageIaComponent_ng_container_37_div_5_ng_template_3_Template(rf, ctx) {
   if (rf & 1) {
-    const _r16 = \u0275\u0275getCurrentView();
-    \u0275\u0275elementStart(0, "p")(1, "a", 48);
+    const _r19 = \u0275\u0275getCurrentView();
+    \u0275\u0275elementStart(0, "p")(1, "a", 49);
     \u0275\u0275listener("click", function TopicPageIaComponent_ng_container_37_div_5_ng_template_3_Template_a_click_1_listener($event) {
-      \u0275\u0275restoreView(_r16);
+      \u0275\u0275restoreView(_r19);
       const ctx_r0 = \u0275\u0275nextContext(3);
       return \u0275\u0275resetView(ctx_r0.onNodeClick($event));
     });
     \u0275\u0275elementEnd()();
   }
   if (rf & 2) {
-    const node_r17 = ctx.$implicit;
+    const node_r20 = ctx.$implicit;
     \u0275\u0275advance();
-    \u0275\u0275property("href", node_r17.data.url, \u0275\u0275sanitizeUrl)("innerHTML", node_r17.label, \u0275\u0275sanitizeHtml);
+    \u0275\u0275property("href", node_r20.data.url, \u0275\u0275sanitizeUrl)("innerHTML", node_r20.label, \u0275\u0275sanitizeHtml);
   }
 }
 function TopicPageIaComponent_ng_container_37_div_5_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275elementStart(0, "div", 58, 2)(2, "p-organization-chart", 8);
-    \u0275\u0275template(3, TopicPageIaComponent_ng_container_37_div_5_ng_template_3_Template, 2, 2, "ng-template", 37);
+    \u0275\u0275elementStart(0, "div", 59, 3)(2, "p-organization-chart", 9);
+    \u0275\u0275template(3, TopicPageIaComponent_ng_container_37_div_5_ng_template_3_Template, 2, 2, "ng-template", 38);
     \u0275\u0275elementEnd()();
   }
   if (rf & 2) {
@@ -32311,7 +32416,7 @@ function TopicPageIaComponent_ng_container_37_Template(rf, ctx) {
     \u0275\u0275elementStart(1, "h2");
     \u0275\u0275text(2, "IA structure");
     \u0275\u0275elementEnd();
-    \u0275\u0275template(3, TopicPageIaComponent_ng_container_37_p_button_3_Template, 1, 0, "p-button", 55)(4, TopicPageIaComponent_ng_container_37_p_4_Template, 2, 0, "p", 17)(5, TopicPageIaComponent_ng_container_37_div_5_Template, 4, 1, "div", 56);
+    \u0275\u0275template(3, TopicPageIaComponent_ng_container_37_p_button_3_Template, 1, 0, "p-button", 56)(4, TopicPageIaComponent_ng_container_37_p_4_Template, 2, 0, "p", 18)(5, TopicPageIaComponent_ng_container_37_div_5_Template, 4, 1, "div", 57);
     \u0275\u0275elementContainerEnd();
   }
   if (rf & 2) {
@@ -32335,7 +32440,7 @@ function TopicPageIaComponent_ng_container_38_p_3_Template(rf, ctx) {
   if (rf & 1) {
     \u0275\u0275elementStart(0, "p");
     \u0275\u0275text(1, " No broken links found on this page");
-    \u0275\u0275template(2, TopicPageIaComponent_ng_container_38_p_3_span_2_Template, 2, 0, "span", 17);
+    \u0275\u0275template(2, TopicPageIaComponent_ng_container_38_p_3_span_2_Template, 2, 0, "span", 18);
     \u0275\u0275text(3, ". ");
     \u0275\u0275elementEnd();
   }
@@ -32371,19 +32476,19 @@ function TopicPageIaComponent_ng_container_38_p_table_4_ng_template_3_Template(r
     \u0275\u0275elementEnd()();
   }
   if (rf & 2) {
-    const rowData_r18 = ctx.$implicit;
+    const rowData_r21 = ctx.$implicit;
     \u0275\u0275advance(2);
-    \u0275\u0275textInterpolate(rowData_r18.parentUrl);
+    \u0275\u0275textInterpolate(rowData_r21.parentUrl);
     \u0275\u0275advance(2);
-    \u0275\u0275textInterpolate(rowData_r18.url);
+    \u0275\u0275textInterpolate(rowData_r21.url);
     \u0275\u0275advance(2);
-    \u0275\u0275textInterpolate(rowData_r18.status);
+    \u0275\u0275textInterpolate(rowData_r21.status);
   }
 }
 function TopicPageIaComponent_ng_container_38_p_table_4_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275elementStart(0, "p-table", 60);
-    \u0275\u0275template(1, TopicPageIaComponent_ng_container_38_p_table_4_ng_template_1_Template, 7, 0, "ng-template", null, 3, \u0275\u0275templateRefExtractor)(3, TopicPageIaComponent_ng_container_38_p_table_4_ng_template_3_Template, 7, 3, "ng-template", null, 4, \u0275\u0275templateRefExtractor);
+    \u0275\u0275elementStart(0, "p-table", 61);
+    \u0275\u0275template(1, TopicPageIaComponent_ng_container_38_p_table_4_ng_template_1_Template, 7, 0, "ng-template", null, 4, \u0275\u0275templateRefExtractor)(3, TopicPageIaComponent_ng_container_38_p_table_4_ng_template_3_Template, 7, 3, "ng-template", null, 5, \u0275\u0275templateRefExtractor);
     \u0275\u0275elementEnd();
   }
   if (rf & 2) {
@@ -32397,7 +32502,7 @@ function TopicPageIaComponent_ng_container_38_Template(rf, ctx) {
     \u0275\u0275elementStart(1, "h2");
     \u0275\u0275text(2, "Broken links");
     \u0275\u0275elementEnd();
-    \u0275\u0275template(3, TopicPageIaComponent_ng_container_38_p_3_Template, 4, 1, "p", 17)(4, TopicPageIaComponent_ng_container_38_p_table_4_Template, 5, 3, "p-table", 59);
+    \u0275\u0275template(3, TopicPageIaComponent_ng_container_38_p_3_Template, 4, 1, "p", 18)(4, TopicPageIaComponent_ng_container_38_p_table_4_Template, 5, 3, "p-table", 60);
     \u0275\u0275elementContainerEnd();
   }
   if (rf & 2) {
@@ -32456,9 +32561,12 @@ var TopicPageIaComponent = class _TopicPageIaComponent {
   urlColumnIndex = null;
   topicPageTree = [];
   visitsByUrl = /* @__PURE__ */ new Map();
+  visitsByPath = /* @__PURE__ */ new Map();
   visitsColumnIndex = null;
   isTopicPage = false;
   topicPageSections = /* @__PURE__ */ new Map();
+  nonTopicPageLinks = /* @__PURE__ */ new Map();
+  topicPageExcludedUrlFragments = topic_page_exceptions_default.map((value) => String(value).trim().toLowerCase()).filter((value) => value.length > 0);
   //Button fxn
   checkIA() {
     return __async(this, null, function* () {
@@ -32593,7 +32701,7 @@ var TopicPageIaComponent = class _TopicPageIaComponent {
   }
   copyUrlsToClipboard() {
     return __async(this, null, function* () {
-      const urls = this.collectUrls(this.iaChart);
+      const urls = this.collectUrls(this.topicPageTree?.length ? this.topicPageTree : this.iaChart);
       if (!urls.length) {
         this.messageService.add({
           severity: "warn",
@@ -32650,6 +32758,7 @@ var TopicPageIaComponent = class _TopicPageIaComponent {
       this.urlColumnIndex = this.getUrlColumnIndex(headers);
       this.visitsColumnIndex = this.getVisitsColumnIndex(headers);
       this.visitsByUrl = this.buildVisitsMap(rows, this.urlColumnIndex, this.visitsColumnIndex);
+      this.visitsByPath = this.buildVisitsPathMap(this.visitsByUrl);
       this.csvUploaded = this.visitsByUrl.size > 0;
       this.applyVisitsToIaTree();
       this.rebuildTopicPageTreeFromIa();
@@ -32695,7 +32804,41 @@ var TopicPageIaComponent = class _TopicPageIaComponent {
     const index = headers.findIndex((header) => header.toLowerCase().includes("visit"));
     return index >= 0 ? index : null;
   }
-  buildTopicPageTree(rootLabel) {
+  buildTopicPageTree(rootLabel, includeNonTopicCategory = false) {
+    const baseChildren = [
+      {
+        label: "Most requested",
+        data: { url: "", isCategory: true },
+        expanded: true,
+        children: []
+      },
+      {
+        label: "Doormats",
+        data: { url: "", isCategory: true },
+        expanded: true,
+        children: []
+      },
+      {
+        label: "Features",
+        data: { url: "", isCategory: true },
+        expanded: true,
+        children: []
+      },
+      {
+        label: "Not suggested for topic page",
+        data: { url: "", isCategory: true },
+        expanded: true,
+        children: []
+      }
+    ];
+    if (includeNonTopicCategory) {
+      baseChildren.push({
+        label: "Found on non-topic page",
+        data: { url: "", isCategory: true, isNonTopicCategory: true },
+        expanded: true,
+        children: []
+      });
+    }
     return [
       {
         label: rootLabel,
@@ -32704,38 +32847,13 @@ var TopicPageIaComponent = class _TopicPageIaComponent {
           isRoot: true
         },
         expanded: true,
-        children: [
-          {
-            label: "Most requested",
-            data: { url: "", isCategory: true },
-            expanded: true,
-            children: []
-          },
-          {
-            label: "Doormats",
-            data: { url: "", isCategory: true },
-            expanded: true,
-            children: []
-          },
-          {
-            label: "Features",
-            data: { url: "", isCategory: true },
-            expanded: true,
-            children: []
-          },
-          {
-            label: "Not on topic page",
-            data: { url: "", isCategory: true },
-            expanded: true,
-            children: []
-          }
-        ]
+        children: baseChildren
       }
     ];
   }
   rebuildTopicPageTreeFromIa() {
     this.updateTopicPageSectionMap();
-    const baseTree = this.buildTopicPageTree(this.getCurrentPageLabel());
+    const baseTree = this.buildTopicPageTree(this.getCurrentPageLabel(), !this.isTopicPage);
     if (!this.iaChart?.length) {
       this.topicPageTree = baseTree;
       this.updateTopicPageTreeStyles(this.topicPageTree, 0);
@@ -32806,12 +32924,23 @@ var TopicPageIaComponent = class _TopicPageIaComponent {
     this.updateTopicPageTreeStyles(this.topicPageTree, 0);
   }
   getVisitsForNode(node) {
-    const url = node.data?.url?.trim();
+    return this.getVisitsForUrl(node.data?.url);
+  }
+  getVisitsForUrl(urlRaw) {
+    const url = urlRaw?.trim();
     if (!url)
       return null;
     const normalized = this.normalizeUrl(url);
     const visits = this.visitsByUrl.get(normalized) ?? this.visitsByUrl.get(this.normalizeUrl(this.decodeUrl(url)));
-    return visits ?? null;
+    if (visits !== void 0)
+      return visits;
+    const pathKey = this.getPathSuffixKey(url);
+    if (pathKey) {
+      const pathVisits = this.visitsByPath.get(pathKey) ?? this.visitsByPath.get(this.normalizePath(pathKey));
+      if (pathVisits !== void 0)
+        return pathVisits;
+    }
+    return null;
   }
   sortByVisitsDesc(nodes) {
     return [...nodes].sort((a, b) => {
@@ -32838,6 +32967,7 @@ var TopicPageIaComponent = class _TopicPageIaComponent {
   }
   updateTopicPageSectionMap() {
     const html = this.uploadState.getUploadData()?.originalHtml || "";
+    this.nonTopicPageLinks = /* @__PURE__ */ new Map();
     if (!html) {
       this.isTopicPage = false;
       this.topicPageSections = /* @__PURE__ */ new Map();
@@ -32848,6 +32978,7 @@ var TopicPageIaComponent = class _TopicPageIaComponent {
     this.isTopicPage = hasDoormats;
     if (!hasDoormats) {
       this.topicPageSections = /* @__PURE__ */ new Map();
+      this.nonTopicPageLinks = this.collectNonTopicPageLinks(doc);
       return;
     }
     const map = /* @__PURE__ */ new Map();
@@ -32868,6 +32999,8 @@ var TopicPageIaComponent = class _TopicPageIaComponent {
           return;
         const text = (link.textContent || "").trim();
         const normalized = this.normalizeUrl(this.resolveUrl(href, baseUrl));
+        if (this.isExcludedUrl(normalized))
+          return;
         if (normalized) {
           map.set(normalized, {
             section: section.key,
@@ -32877,6 +33010,52 @@ var TopicPageIaComponent = class _TopicPageIaComponent {
       });
     }
     this.topicPageSections = map;
+  }
+  collectNonTopicPageLinks(doc) {
+    const map = /* @__PURE__ */ new Map();
+    const baseUrl = this.originalUrl || "";
+    const container = this.findMainContentElement(doc) ?? doc.body ?? doc.documentElement;
+    if (!container)
+      return map;
+    const links = container.querySelectorAll("a[href]");
+    links.forEach((link) => {
+      const href = link.getAttribute("href");
+      if (!href || href.startsWith("#"))
+        return;
+      const text = (link.textContent || "").trim();
+      const normalized = this.normalizeUrl(this.resolveUrl(href, baseUrl));
+      if (this.isExcludedUrl(normalized))
+        return;
+      if (normalized) {
+        map.set(normalized, text || href);
+      }
+    });
+    return map;
+  }
+  findMainContentElement(doc) {
+    const selectors = [
+      'main[property="mainContentOfPage"][resource="#wb-main"][typeof="WebPageElement"]',
+      'main[property="mainContentOfPage"][resource="#wb-main"][typeof="WebPageElement"].col-md-9.col-md-push-3',
+      'main[role="main"][property="mainContentOfPage"].container',
+      'main[role="main"][property="mainContentOfPage"]',
+      'main[role="main"]',
+      "main",
+      '[role="main"]'
+    ];
+    for (const selector of selectors) {
+      const element = doc.querySelector(selector);
+      if (!element)
+        continue;
+      const containerDiv = element.querySelector("div.container");
+      return containerDiv ?? element;
+    }
+    return null;
+  }
+  isExcludedUrl(url) {
+    if (!url)
+      return false;
+    const normalized = url.toLowerCase();
+    return this.topicPageExcludedUrlFragments.some((fragment) => normalized.includes(fragment));
   }
   resolveUrl(href, baseUrl) {
     try {
@@ -32923,11 +33102,13 @@ var TopicPageIaComponent = class _TopicPageIaComponent {
     });
   }
   addMissingIaNodes(baseTree) {
-    if (!this.isTopicPage)
-      return;
     const iaUrls = this.buildIaUrlSet();
     if (!iaUrls.size)
       return;
+    if (!this.isTopicPage) {
+      this.addNonTopicMissingIaNodes(baseTree, iaUrls);
+      return;
+    }
     const root = baseTree[0];
     const categories = root.children ?? [];
     const mostRequested = categories[0];
@@ -32946,7 +33127,9 @@ var TopicPageIaComponent = class _TopicPageIaComponent {
     for (const [url, info] of this.topicPageSections.entries()) {
       if (iaUrls.has(url))
         continue;
-      const label = `${info.label} <span class="topic-ia-badge">Not in IA structure</span>`;
+      const visits = this.getVisitsForUrl(url);
+      const visitsLabel = visits !== null ? `${info.label} (${this.formatVisits(visits)} visits)` : info.label;
+      const label = `${visitsLabel} <span class="topic-ia-badge">Not in IA structure</span>`;
       const node = {
         label,
         data: {
@@ -32965,6 +33148,36 @@ var TopicPageIaComponent = class _TopicPageIaComponent {
       } else {
         addToCategory(feature, node);
       }
+    }
+  }
+  addNonTopicMissingIaNodes(baseTree, iaUrls) {
+    if (!this.nonTopicPageLinks.size)
+      return;
+    const root = baseTree[0];
+    const categories = root.children ?? [];
+    const nonTopicCategory = categories.find((node) => node.data?.isNonTopicCategory) ?? categories[4];
+    if (!nonTopicCategory)
+      return;
+    nonTopicCategory.children = nonTopicCategory.children || [];
+    const existing = new Set(nonTopicCategory.children.map((child) => this.normalizeUrl(child.data?.url ?? "")).filter((value) => value.length > 0));
+    for (const [url, label] of this.nonTopicPageLinks.entries()) {
+      if (iaUrls.has(url))
+        continue;
+      if (existing.has(url))
+        continue;
+      const visits = this.getVisitsForUrl(url);
+      const visitsLabel = visits !== null ? `${label} (${this.formatVisits(visits)} visits)` : label;
+      const node = {
+        label: `${visitsLabel} <span class="topic-ia-badge">Not in IA structure</span>`,
+        data: {
+          url,
+          isCategory: false,
+          diffState: "missingIa",
+          originalLabel: label,
+          isMissingIa: true
+        }
+      };
+      nonTopicCategory.children.push(node);
     }
   }
   buildIaUrlSet() {
@@ -33018,6 +33231,9 @@ var TopicPageIaComponent = class _TopicPageIaComponent {
     if (visits !== null && iaLevel !== null) {
       return `${baseLabel} (${this.formatVisits(visits)} visits, level ${iaLevel})`;
     }
+    if (visits !== null) {
+      return `${baseLabel} (${this.formatVisits(visits)} visits)`;
+    }
     return baseLabel;
   }
   getSectionLabel(section) {
@@ -33064,8 +33280,10 @@ var TopicPageIaComponent = class _TopicPageIaComponent {
     node.data.diffState = "missingIaMove";
   }
   getMissingIaBaseLabel(node) {
+    const visits = this.getVisitsForNode(node);
     const baseLabel = typeof node.data?.originalLabel === "string" && node.data.originalLabel.trim().length ? node.data.originalLabel : (node.label ?? "").toString();
-    return `${baseLabel} <span class="topic-ia-badge">Not in IA structure</span>`;
+    const withVisits = visits !== null ? `${baseLabel} (${this.formatVisits(visits)} visits)` : baseLabel;
+    return `${withVisits} <span class="topic-ia-badge">Not in IA structure</span>`;
   }
   getCurrentPageLabel() {
     const label = this.iaChart?.[0]?.label;
@@ -33136,6 +33354,16 @@ var TopicPageIaComponent = class _TopicPageIaComponent {
     }
     return map;
   }
+  buildVisitsPathMap(source) {
+    const map = /* @__PURE__ */ new Map();
+    source.forEach((visits, url) => {
+      const pathKey = this.getPathSuffixKey(url);
+      if (pathKey) {
+        map.set(pathKey, visits);
+      }
+    });
+    return map;
+  }
   applyVisitsToIaTree() {
     if (!this.iaChart?.length || this.visitsByUrl.size === 0)
       return;
@@ -33143,8 +33371,8 @@ var TopicPageIaComponent = class _TopicPageIaComponent {
       for (const node of nodes) {
         const url = node?.data?.url?.trim();
         if (url) {
-          const visits = this.visitsByUrl.get(this.normalizeUrl(url)) ?? this.visitsByUrl.get(this.normalizeUrl(this.decodeUrl(url)));
-          if (visits !== void 0) {
+          const visits = this.getVisitsForUrl(url);
+          if (visits !== null) {
             const baseLabel = node.data?.originalLabel ?? (node.label ?? "").toString();
             if (!node.data.originalLabel) {
               node.data.originalLabel = baseLabel;
@@ -33170,6 +33398,43 @@ var TopicPageIaComponent = class _TopicPageIaComponent {
   }
   formatVisits(value) {
     return new Intl.NumberFormat("en-CA").format(value);
+  }
+  getPathSuffixKey(url) {
+    const path = this.extractPathname(url);
+    if (!path)
+      return null;
+    const normalizedPath = this.normalizePath(path);
+    const marker = this.findLangMarker(normalizedPath);
+    if (marker) {
+      const index = normalizedPath.indexOf(marker);
+      if (index >= 0) {
+        return normalizedPath.slice(index);
+      }
+    }
+    return normalizedPath;
+  }
+  extractPathname(url) {
+    try {
+      const parsed = new URL(this.ensureUrlScheme(url));
+      return parsed.pathname || null;
+    } catch {
+      const stripped = url.split("#")[0].split("?")[0];
+      const slashIndex = stripped.indexOf("/");
+      if (slashIndex >= 0) {
+        return stripped.slice(slashIndex);
+      }
+      return null;
+    }
+  }
+  normalizePath(path) {
+    return path.toLowerCase().replace(/\/+$/, "");
+  }
+  findLangMarker(path) {
+    if (path.includes("/en/"))
+      return "/en/";
+    if (path.includes("/fr/"))
+      return "/fr/";
+    return null;
   }
   normalizeUrl(url) {
     try {
@@ -33232,6 +33497,7 @@ var TopicPageIaComponent = class _TopicPageIaComponent {
   cm;
   options = [];
   //options for editing chart nodes
+  activeContextTree = "ia";
   baseMenu = [
     {
       label: "Edit label",
@@ -33384,10 +33650,11 @@ var TopicPageIaComponent = class _TopicPageIaComponent {
   undoArray = [];
   //for loading in page assistant
   baseHref = null;
-  onNodeContextMenu(event) {
+  onNodeContextMenu(event, context = "ia") {
     if (this.editingNode) {
       this.editingNode.data.editing = null;
     }
+    this.activeContextTree = context;
     this.selectedNode = event.node;
     const customStyle = this.selectedNode.data.customStyle;
     this.options.forEach((item) => {
@@ -33395,7 +33662,7 @@ var TopicPageIaComponent = class _TopicPageIaComponent {
         item.disabled = !this.selectedNode?.data?.url?.trim();
       }
       if (item.label === "Change template" || item.label === "Change style") {
-        item.disabled = customStyle;
+        item.disabled = customStyle || context === "topic";
       }
     });
   }
@@ -33457,7 +33724,7 @@ var TopicPageIaComponent = class _TopicPageIaComponent {
     this.selectedNode = newNode;
     this.editNode("label");
     this.updateMenu();
-    this.updateNodeStyles(this.iaChart, 0);
+    this.refreshActiveTreeStyles();
   }
   //Will be used to create a container to mark pages for template change
   addParentNode(action) {
@@ -33511,10 +33778,11 @@ var TopicPageIaComponent = class _TopicPageIaComponent {
     this.updateNodeStyles(this.iaChart, 0);
   }
   deleteNode() {
-    if (!this.iaChart || !this.selectedNode)
+    const tree = this.getActiveTree();
+    if (!tree || !this.selectedNode)
       return;
     const nodeToDelete = this.selectedNode;
-    const rootIndex = this.iaChart.findIndex((n) => n === nodeToDelete);
+    const rootIndex = tree.findIndex((n) => n === nodeToDelete);
     if (rootIndex > -1) {
       console.warn("Cannot delete root node.");
       return;
@@ -33539,8 +33807,9 @@ var TopicPageIaComponent = class _TopicPageIaComponent {
       }
       return false;
     };
-    findAndDelete(this.iaChart);
+    findAndDelete(tree);
     this.updateMenu();
+    this.refreshActiveTreeStyles();
   }
   restoreNode() {
     if (this.undoArray.length === 0)
@@ -33556,7 +33825,7 @@ var TopicPageIaComponent = class _TopicPageIaComponent {
     if (!this.selectedNode.data.customStyle) {
       this.selectedNode.data.customStyleKey = "rot";
       this.selectedNode.data.borderStyle = "border-2 border-primary border-round border-dashed shadow-2";
-      this.updateNodeStyles(this.iaChart, 0);
+      this.refreshActiveTreeStyles();
     }
     this.updateMenu();
   }
@@ -33571,6 +33840,16 @@ var TopicPageIaComponent = class _TopicPageIaComponent {
         command: () => this.restoreNode()
       });
     }
+  }
+  getActiveTree() {
+    return this.activeContextTree === "topic" ? this.topicPageTree : this.iaChart;
+  }
+  refreshActiveTreeStyles() {
+    if (this.activeContextTree === "topic") {
+      this.updateTopicPageTreeStyles(this.topicPageTree, 0);
+      return;
+    }
+    this.updateNodeStyles(this.iaChart, 0);
   }
   //Placeholder for export function
   exportTable() {
@@ -33733,7 +34012,7 @@ var TopicPageIaComponent = class _TopicPageIaComponent {
     if (!root)
       return;
     const categories = root.children ?? [];
-    const notOnTopicsCategory = categories.find((node) => node.data?.isCategory && node.label === "Not on topic page") ?? categories[3];
+    const notOnTopicsCategory = categories.find((node) => node.data?.isCategory && node.label === "Not suggested for topic page") ?? categories[3];
     const children = notOnTopicsCategory?.children;
     if (!children?.length)
       return;
@@ -33769,29 +34048,29 @@ var TopicPageIaComponent = class _TopicPageIaComponent {
       \u0275\u0275queryRefresh(_t = \u0275\u0275loadQuery()) && (ctx.chartContainer = _t.first);
       \u0275\u0275queryRefresh(_t = \u0275\u0275loadQuery()) && (ctx.cm = _t.first);
     }
-  }, features: [\u0275\u0275ProvidersFeature([TreeDragDropService])], decls: 39, vars: 20, consts: [["cm", ""], ["topicLabel", ""], ["chartContainer", ""], ["header", ""], ["body", ""], [1, "mt-0"], [1, "topic-ia-steps", 3, "valueChange", "value", "linear"], [1, "topic-ia-step-list"], [3, "value"], [1, "topic-ia-panels"], [1, "surface-0", "border-1", "border-round", "border-200", "p-3"], [1, "flex", "flex-row", "flex-wrap", "align-items-center", "gap-3", "mt-0"], ["inputId", "depth", "mode", "decimal", 3, "ngModelChange", "ngModel", "showButtons", "min", "max"], ["for", "depth"], ["label", "Get subpages in IA", "icon", "pi pi-info-circle", 3, "click", "severity", "loading"], ["styleClass", "mt-3", 3, "value", "showValue", "style", 4, "ngIf"], ["class", "surface-0 border-1 border-round border-200 p-3", 4, "ngIf"], [4, "ngIf"], ["styleClass", "mt-3", 3, "value", "showValue"], ["label", "Copy URLs to clipboard", "icon", "pi pi-copy", 3, "severity", "click", 4, "ngIf"], ["label", "Copy URLs to clipboard", "icon", "pi pi-copy", 3, "click", "severity"], ["href", "https://cra-arc.alpha.canada.ca/en/custom-reports/create"], ["label", "Next", 3, "click", "severity"], [1, "flex", "justify-content-start"], ["id", "topic-ia-csv-upload", "name", "topicIaCsv", "accept", ".csv", "mode", "basic", "chooseIcon", "pi pi-upload", "outlined", "", 3, "uploadHandler", "auto", "customUpload", "chooseLabel", "chooseStyleClass"], [1, "flex", "flex-row", "align-items-center", "gap-3"], ["styleClass", "pl-1", 1, "max-w-full", 3, "model"], ["class", "flex align-items-center gap-2 text-green-400", 4, "ngIf"], ["class", "flex align-items-center gap-2 text-red-400", 4, "ngIf"], [1, "flex", "align-items-center", "gap-2", "text-green-400"], [1, "pi", "pi-check-circle"], [1, "flex", "align-items-center", "gap-2", "text-red-400"], [1, "pi", "pi-times-circle"], [1, "grid"], [1, "col-12"], [3, "model"], ["styleClass", "w-full md:w-[30rem]", "draggableScope", "self", "droppableScope", "self", 3, "selectionChange", "onNodeDrop", "onNodeContextMenuSelect", "value", "selectionMode", "selection", "draggableNodes", "droppableNodes", "validateDrop", "contextMenu"], ["pTemplate", "default"], ["class", "col-12 md:col-6", 4, "ngIf"], [1, "flex", "flex-row", "align-items-center", "gap-2", "w-full"], ["class", "pi pi-folder", 4, "ngIf"], ["class", "pi pi-file", 4, "ngIf"], ["class", "pi pi-arrows-alt cursor-move text-color-secondary", 4, "ngIf"], ["class", "pi pi-pencil text-color-secondary", 4, "ngIf"], [1, "pi", "pi-folder"], [1, "pi", "pi-file"], [1, "pi", "pi-arrows-alt", "cursor-move", "text-color-secondary"], [1, "pi", "pi-pencil", "text-color-secondary"], ["target", "_blank", 1, "ia-label", 3, "click", "href", "innerHTML"], ["type", "text", "pInputText", "", "pSize", "small", 1, "ia-label", 3, "ngModelChange", "keydown", "ngModel"], ["icon", "pi pi-check", "severity", "secondary", "size", "small", 3, "onClick"], [1, "col-12", "md:col-6"], ["styleClass", "w-full md:w-[30rem]", "draggableScope", "topicPageTree", "droppableScope", "topicPageTree", 3, "onNodeDrop", "value", "selectionMode", "draggableNodes", "droppableNodes", "validateDrop"], [4, "ngIf", "ngIfElse"], [1, "ia-label", 3, "innerHTML"], ["label", "Maximize IA chart", "severity", "secondary", "icon", "pi pi-window-maximize", "styleClass", "mt-1 mb-3", 3, "click", 4, "ngIf"], ["class", "overflow-auto max-h-75vh surface-ground surface-border border-1 py-3 mb-3 ia-chart-container", 4, "ngIf"], ["label", "Maximize IA chart", "severity", "secondary", "icon", "pi pi-window-maximize", "styleClass", "mt-1 mb-3", 3, "click"], [1, "overflow-auto", "max-h-75vh", "surface-ground", "surface-border", "border-1", "py-3", "mb-3", "ia-chart-container"], ["size", "small", "stripedRows", "", 3, "value", "tableStyle", 4, "ngIf"], ["size", "small", "stripedRows", "", 3, "value", "tableStyle"]], template: function TopicPageIaComponent_Template(rf, ctx) {
+  }, features: [\u0275\u0275ProvidersFeature([TreeDragDropService])], decls: 39, vars: 20, consts: [["cm", ""], ["cmTopic", ""], ["topicLabel", ""], ["chartContainer", ""], ["header", ""], ["body", ""], [1, "mt-0"], [1, "topic-ia-steps", 3, "valueChange", "value", "linear"], [1, "topic-ia-step-list"], [3, "value"], [1, "topic-ia-panels"], [1, "surface-0", "border-1", "border-round", "border-200", "p-3"], [1, "flex", "flex-row", "flex-wrap", "align-items-center", "gap-3", "mt-0"], ["inputId", "depth", "mode", "decimal", 3, "ngModelChange", "ngModel", "showButtons", "min", "max"], ["for", "depth"], ["label", "Get subpages in IA", "icon", "pi pi-info-circle", 3, "click", "severity", "loading"], ["styleClass", "mt-3", 3, "value", "showValue", "style", 4, "ngIf"], ["class", "surface-0 border-1 border-round border-200 p-3", 4, "ngIf"], [4, "ngIf"], ["styleClass", "mt-3", 3, "value", "showValue"], ["label", "Copy URLs to clipboard", "icon", "pi pi-copy", 3, "severity", "click", 4, "ngIf"], ["label", "Copy URLs to clipboard", "icon", "pi pi-copy", 3, "click", "severity"], ["href", "https://cra-arc.alpha.canada.ca/en/custom-reports/create"], ["label", "Next", 3, "click", "severity"], [1, "flex", "justify-content-start"], ["id", "topic-ia-csv-upload", "name", "topicIaCsv", "accept", ".csv", "mode", "basic", "chooseIcon", "pi pi-upload", "outlined", "", 3, "uploadHandler", "auto", "customUpload", "chooseLabel", "chooseStyleClass"], [1, "flex", "flex-row", "align-items-center", "gap-3"], ["styleClass", "pl-1", 1, "max-w-full", 3, "model"], ["class", "flex align-items-center gap-2 text-green-400", 4, "ngIf"], ["class", "flex align-items-center gap-2 text-red-400", 4, "ngIf"], [1, "flex", "align-items-center", "gap-2", "text-green-400"], [1, "pi", "pi-check-circle"], [1, "flex", "align-items-center", "gap-2", "text-red-400"], [1, "pi", "pi-times-circle"], [1, "grid"], [1, "col-12"], [3, "model"], ["styleClass", "w-full md:w-[30rem]", "draggableScope", "self", "droppableScope", "self", 3, "selectionChange", "onNodeDrop", "onNodeContextMenuSelect", "value", "selectionMode", "selection", "draggableNodes", "droppableNodes", "validateDrop", "contextMenu"], ["pTemplate", "default"], ["class", "col-12 md:col-6", 4, "ngIf"], [1, "flex", "flex-row", "align-items-center", "gap-2", "w-full"], ["class", "pi pi-folder", 4, "ngIf"], ["class", "pi pi-file", 4, "ngIf"], ["class", "pi pi-arrows-alt cursor-move text-color-secondary", 4, "ngIf"], ["class", "pi pi-pencil text-color-secondary", 4, "ngIf"], [1, "pi", "pi-folder"], [1, "pi", "pi-file"], [1, "pi", "pi-arrows-alt", "cursor-move", "text-color-secondary"], [1, "pi", "pi-pencil", "text-color-secondary"], ["target", "_blank", 1, "ia-label", 3, "click", "href", "innerHTML"], ["type", "text", "pInputText", "", "pSize", "small", 1, "ia-label", 3, "ngModelChange", "keydown", "ngModel"], ["icon", "pi pi-check", "severity", "secondary", "size", "small", 3, "onClick"], [1, "col-12", "md:col-6"], ["styleClass", "w-full md:w-[30rem]", "draggableScope", "topicPageTree", "droppableScope", "topicPageTree", 3, "selectionChange", "onNodeDrop", "onNodeContextMenuSelect", "value", "selectionMode", "selection", "draggableNodes", "droppableNodes", "validateDrop", "contextMenu"], [4, "ngIf", "ngIfElse"], [1, "ia-label", 3, "innerHTML"], ["label", "Maximize IA chart", "severity", "secondary", "icon", "pi pi-window-maximize", "styleClass", "mt-1 mb-3", 3, "click", 4, "ngIf"], ["class", "overflow-auto max-h-75vh surface-ground surface-border border-1 py-3 mb-3 ia-chart-container", 4, "ngIf"], ["label", "Maximize IA chart", "severity", "secondary", "icon", "pi pi-window-maximize", "styleClass", "mt-1 mb-3", 3, "click"], [1, "overflow-auto", "max-h-75vh", "surface-ground", "surface-border", "border-1", "py-3", "mb-3", "ia-chart-container"], ["size", "small", "stripedRows", "", 3, "value", "tableStyle", 4, "ngIf"], ["size", "small", "stripedRows", "", 3, "value", "tableStyle"]], template: function TopicPageIaComponent_Template(rf, ctx) {
     if (rf & 1) {
-      \u0275\u0275elementStart(0, "p", 5);
+      \u0275\u0275elementStart(0, "p", 6);
       \u0275\u0275text(1, " To edit this topic page or to convert it to one, follow these steps:\n");
       \u0275\u0275elementEnd();
-      \u0275\u0275elementStart(2, "p-stepper", 6);
+      \u0275\u0275elementStart(2, "p-stepper", 7);
       \u0275\u0275twoWayListener("valueChange", function TopicPageIaComponent_Template_p_stepper_valueChange_2_listener($event) {
         \u0275\u0275twoWayBindingSet(ctx.activeStep, $event) || (ctx.activeStep = $event);
         return $event;
       });
-      \u0275\u0275elementStart(3, "p-step-list", 7)(4, "p-step", 8);
+      \u0275\u0275elementStart(3, "p-step-list", 8)(4, "p-step", 9);
       \u0275\u0275text(5, "Get current IA Structure");
       \u0275\u0275elementEnd();
-      \u0275\u0275elementStart(6, "p-step", 8);
+      \u0275\u0275elementStart(6, "p-step", 9);
       \u0275\u0275text(7, "Copy IA URLs");
       \u0275\u0275elementEnd();
-      \u0275\u0275elementStart(8, "p-step", 8);
+      \u0275\u0275elementStart(8, "p-step", 9);
       \u0275\u0275text(9, "Retrieve visits from UPD");
       \u0275\u0275elementEnd();
-      \u0275\u0275elementStart(10, "p-step", 8);
+      \u0275\u0275elementStart(10, "p-step", 9);
       \u0275\u0275text(11, "Create new topic page tree");
       \u0275\u0275elementEnd()()();
-      \u0275\u0275elementStart(12, "div", 9)(13, "div", 10)(14, "p", 5)(15, "strong");
+      \u0275\u0275elementStart(12, "div", 10)(13, "div", 11)(14, "p", 6)(15, "strong");
       \u0275\u0275text(16, "Execute a crawl");
       \u0275\u0275elementEnd();
       \u0275\u0275text(17, " of the IA (depth of 3 or 4 recommended). This will:");
@@ -33805,25 +34084,25 @@ var TopicPageIaComponent = class _TopicPageIaComponent {
       \u0275\u0275elementStart(23, "li");
       \u0275\u0275text(24, "Generate a visual IA structure tree below");
       \u0275\u0275elementEnd()();
-      \u0275\u0275elementStart(25, "div", 11)(26, "p-iftalabel")(27, "p-inputnumber", 12);
+      \u0275\u0275elementStart(25, "div", 12)(26, "p-iftalabel")(27, "p-inputnumber", 13);
       \u0275\u0275twoWayListener("ngModelChange", function TopicPageIaComponent_Template_p_inputnumber_ngModelChange_27_listener($event) {
         \u0275\u0275twoWayBindingSet(ctx.depth, $event) || (ctx.depth = $event);
         return $event;
       });
       \u0275\u0275elementEnd();
-      \u0275\u0275elementStart(28, "label", 13);
+      \u0275\u0275elementStart(28, "label", 14);
       \u0275\u0275text(29, "Depth");
       \u0275\u0275elementEnd()();
-      \u0275\u0275elementStart(30, "p-button", 14);
+      \u0275\u0275elementStart(30, "p-button", 15);
       \u0275\u0275listener("click", function TopicPageIaComponent_Template_p_button_click_30_listener() {
         return ctx.checkIA();
       });
       \u0275\u0275elementEnd()();
-      \u0275\u0275template(31, TopicPageIaComponent_p_progressbar_31_Template, 1, 5, "p-progressbar", 15);
+      \u0275\u0275template(31, TopicPageIaComponent_p_progressbar_31_Template, 1, 5, "p-progressbar", 16);
       \u0275\u0275elementEnd();
-      \u0275\u0275template(32, TopicPageIaComponent_div_32_Template, 6, 1, "div", 16)(33, TopicPageIaComponent_div_33_Template, 33, 1, "div", 16)(34, TopicPageIaComponent_div_34_Template, 21, 6, "div", 16);
+      \u0275\u0275template(32, TopicPageIaComponent_div_32_Template, 6, 1, "div", 17)(33, TopicPageIaComponent_div_33_Template, 33, 1, "div", 17)(34, TopicPageIaComponent_div_34_Template, 21, 6, "div", 17);
       \u0275\u0275elementEnd();
-      \u0275\u0275template(35, TopicPageIaComponent_ng_container_35_Template, 7, 3, "ng-container", 17)(36, TopicPageIaComponent_ng_container_36_Template, 10, 11, "ng-container", 17)(37, TopicPageIaComponent_ng_container_37_Template, 6, 3, "ng-container", 17)(38, TopicPageIaComponent_ng_container_38_Template, 5, 2, "ng-container", 17);
+      \u0275\u0275template(35, TopicPageIaComponent_ng_container_35_Template, 7, 3, "ng-container", 18)(36, TopicPageIaComponent_ng_container_36_Template, 10, 11, "ng-container", 18)(37, TopicPageIaComponent_ng_container_37_Template, 6, 3, "ng-container", 18)(38, TopicPageIaComponent_ng_container_38_Template, 5, 2, "ng-container", 18);
     }
     if (rf & 2) {
       \u0275\u0275advance(2);
@@ -34132,48 +34411,92 @@ var TopicPageIaComponent = class _TopicPageIaComponent {
       </p-tree>
     </div>
     <div class="col-12 md:col-6" *ngIf="visitsByUrl.size > 0">
+      <p-contextMenu #cmTopic [model]="options"></p-contextMenu>
       <h2>Suggested topic page sections</h2>
       <p-tree
         [value]="topicPageTree"
         styleClass="w-full md:w-[30rem]"
-        [selectionMode]="null"
+        [selectionMode]="selectable ? 'multiple' : null"
+        [(selection)]="selectedNode"
         [draggableNodes]="true"
         [droppableNodes]="true"
         draggableScope="topicPageTree"
         droppableScope="topicPageTree"
         [validateDrop]="true"
         (onNodeDrop)="onTopicPageNodeDrop($event)"
+        [contextMenu]="cmTopic"
+        (onNodeContextMenuSelect)="onNodeContextMenu($event, 'topic')"
       >
         <ng-template pTemplate="default" let-node>
           <div class="flex flex-row align-items-center gap-2 w-full">
             <i
               class="pi pi-folder"
-              *ngIf="node.children?.length && !draggable && !node.data?.isCategory"
+              *ngIf="node.children?.length && !draggable && !node.data?.isCategory && !node.data?.editing"
             ></i>
             <i
               class="pi pi-file"
-              *ngIf="!node.children?.length && !draggable && !node.data?.isCategory"
+              *ngIf="!node.children?.length && !draggable && !node.data?.isCategory && !node.data?.editing"
             ></i>
             <i
-              *ngIf="draggable && !node.data?.isCategory"
+              *ngIf="draggable && !node.data?.isCategory && !node.data?.editing"
               class="pi pi-arrows-alt cursor-move text-color-secondary"
             ></i>
-            <ng-container *ngIf="node.data?.url; else topicLabel">
-              <a
-                [href]="node.data.url"
-                target="_blank"
-                (click)="onNodeClick($event)"
-                [innerHTML]="node.label"
-                class="ia-label"
-              ></a>
+            <i
+              *ngIf="node.data?.editing"
+              class="pi pi-pencil text-color-secondary"
+            ></i>
+            <ng-container *ngIf="!node.data?.editing">
+              <ng-container *ngIf="node.data?.url; else topicLabel">
+                <a
+                  [href]="node.data.url"
+                  target="_blank"
+                  (click)="onNodeClick($event)"
+                  [innerHTML]="node.label"
+                  class="ia-label"
+                ></a>
+              </ng-container>
+              <ng-template #topicLabel>
+                <span
+                  [innerHTML]="node.label"
+                  class="ia-label"
+                  [class.font-bold]="node.data?.isCategory"
+                ></span>
+              </ng-template>
             </ng-container>
-            <ng-template #topicLabel>
-              <span
-                [innerHTML]="node.label"
+            <p-inputgroup *ngIf="node.data?.editing === 'label'">
+              <input
+                type="text"
+                pInputText
+                [(ngModel)]="node.label"
+                pSize="small"
                 class="ia-label"
-                [class.font-bold]="node.data?.isCategory"
-              ></span>
-            </ng-template>
+                (keydown)="onInputKeydown($event)"
+              />
+              <p-inputgroup-addon
+                ><p-button
+                  icon="pi pi-check"
+                  severity="secondary"
+                  size="small"
+                  (onClick)="saveNode()"
+              /></p-inputgroup-addon>
+            </p-inputgroup>
+            <p-inputgroup *ngIf="node.data?.editing === 'link'">
+              <input
+                type="text"
+                pInputText
+                [(ngModel)]="node.data.url"
+                pSize="small"
+                class="ia-label"
+                (keydown)="onInputKeydown($event)"
+              />
+              <p-inputgroup-addon
+                ><p-button
+                  icon="pi pi-check"
+                  severity="secondary"
+                  size="small"
+                  (onClick)="saveNode()"
+              /></p-inputgroup-addon>
+            </p-inputgroup>
           </div>
         </ng-template>
       </p-tree>
@@ -34255,7 +34578,7 @@ var TopicPageIaComponent = class _TopicPageIaComponent {
   }] });
 })();
 (() => {
-  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(TopicPageIaComponent, { className: "TopicPageIaComponent", filePath: "src/app/views/page-assistant/components/problems/component-guidance/topic-page/topic-page-ia.component.ts", lineNumber: 195 });
+  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(TopicPageIaComponent, { className: "TopicPageIaComponent", filePath: "src/app/views/page-assistant/components/problems/component-guidance/topic-page/topic-page-ia.component.ts", lineNumber: 196 });
 })();
 
 // src/app/views/page-assistant/components/problems/component-guidance/topic-page/topic-ia-json.component.ts
@@ -34265,7 +34588,7 @@ var _c28 = () => ({ height: "1rem" });
 var _c38 = () => ({ "min-width": "50rem" });
 function TopicIaJsonComponent_p_progressbar_8_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275element(0, "p-progressbar", 12);
+    \u0275\u0275element(0, "p-progressbar", 13);
   }
   if (rf & 2) {
     const ctx_r0 = \u0275\u0275nextContext();
@@ -34275,16 +34598,16 @@ function TopicIaJsonComponent_p_progressbar_8_Template(rf, ctx) {
 }
 function TopicIaJsonComponent_ng_container_9_span_22_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275elementStart(0, "span", 27);
-    \u0275\u0275element(1, "i", 28);
+    \u0275\u0275elementStart(0, "span", 28);
+    \u0275\u0275element(1, "i", 29);
     \u0275\u0275text(2, "Link found on parent page");
     \u0275\u0275elementEnd();
   }
 }
 function TopicIaJsonComponent_ng_container_9_span_23_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275elementStart(0, "span", 29);
-    \u0275\u0275element(1, "i", 30);
+    \u0275\u0275elementStart(0, "span", 30);
+    \u0275\u0275element(1, "i", 31);
     \u0275\u0275text(2, "IA Orphan");
     \u0275\u0275elementEnd();
   }
@@ -34296,10 +34619,10 @@ function TopicIaJsonComponent_ng_container_9_Template(rf, ctx) {
     \u0275\u0275elementStart(1, "h2");
     \u0275\u0275text(2, "Contextual input (for Most requested or Features)");
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(3, "div", 13)(4, "div", 14)(5, "label", 15);
+    \u0275\u0275elementStart(3, "div", 14)(4, "div", 15)(5, "label", 16);
     \u0275\u0275text(6, " Are there any communications objectives to consider? ");
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(7, "textarea", 16);
+    \u0275\u0275elementStart(7, "textarea", 17);
     \u0275\u0275twoWayListener("ngModelChange", function TopicIaJsonComponent_ng_container_9_Template_textarea_ngModelChange_7_listener($event) {
       \u0275\u0275restoreView(_r2);
       const ctx_r0 = \u0275\u0275nextContext();
@@ -34307,10 +34630,10 @@ function TopicIaJsonComponent_ng_container_9_Template(rf, ctx) {
       return \u0275\u0275resetView($event);
     });
     \u0275\u0275elementEnd()();
-    \u0275\u0275elementStart(8, "div", 14)(9, "label", 17);
+    \u0275\u0275elementStart(8, "div", 15)(9, "label", 18);
     \u0275\u0275text(10, " What insights do you have from feedback data? ");
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(11, "textarea", 18);
+    \u0275\u0275elementStart(11, "textarea", 19);
     \u0275\u0275twoWayListener("ngModelChange", function TopicIaJsonComponent_ng_container_9_Template_textarea_ngModelChange_11_listener($event) {
       \u0275\u0275restoreView(_r2);
       const ctx_r0 = \u0275\u0275nextContext();
@@ -34318,10 +34641,10 @@ function TopicIaJsonComponent_ng_container_9_Template(rf, ctx) {
       return \u0275\u0275resetView($event);
     });
     \u0275\u0275elementEnd()();
-    \u0275\u0275elementStart(12, "div", 14)(13, "label", 19);
+    \u0275\u0275elementStart(12, "div", 15)(13, "label", 20);
     \u0275\u0275text(14, " What are people having trouble with when they call us? ");
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(15, "textarea", 20);
+    \u0275\u0275elementStart(15, "textarea", 21);
     \u0275\u0275twoWayListener("ngModelChange", function TopicIaJsonComponent_ng_container_9_Template_textarea_ngModelChange_15_listener($event) {
       \u0275\u0275restoreView(_r2);
       const ctx_r0 = \u0275\u0275nextContext();
@@ -34329,7 +34652,7 @@ function TopicIaJsonComponent_ng_container_9_Template(rf, ctx) {
       return \u0275\u0275resetView($event);
     });
     \u0275\u0275elementEnd()()();
-    \u0275\u0275elementStart(16, "div", 21)(17, "p-button", 22);
+    \u0275\u0275elementStart(16, "div", 22)(17, "p-button", 23);
     \u0275\u0275listener("click", function TopicIaJsonComponent_ng_container_9_Template_p_button_click_17_listener() {
       \u0275\u0275restoreView(_r2);
       const ctx_r0 = \u0275\u0275nextContext();
@@ -34339,9 +34662,9 @@ function TopicIaJsonComponent_ng_container_9_Template(rf, ctx) {
     \u0275\u0275elementStart(18, "h2");
     \u0275\u0275text(19, "Breadcrumb");
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(20, "div", 23);
-    \u0275\u0275element(21, "p-breadcrumb", 24);
-    \u0275\u0275template(22, TopicIaJsonComponent_ng_container_9_span_22_Template, 3, 0, "span", 25)(23, TopicIaJsonComponent_ng_container_9_span_23_Template, 3, 0, "span", 26);
+    \u0275\u0275elementStart(20, "div", 24);
+    \u0275\u0275element(21, "p-breadcrumb", 25);
+    \u0275\u0275template(22, TopicIaJsonComponent_ng_container_9_span_22_Template, 3, 0, "span", 26)(23, TopicIaJsonComponent_ng_container_9_span_23_Template, 3, 0, "span", 27);
     \u0275\u0275elementEnd();
     \u0275\u0275elementContainerEnd();
   }
@@ -34365,29 +34688,29 @@ function TopicIaJsonComponent_ng_container_9_Template(rf, ctx) {
 }
 function TopicIaJsonComponent_ng_container_10_ng_template_8_i_1_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275element(0, "i", 42);
+    \u0275\u0275element(0, "i", 43);
   }
 }
 function TopicIaJsonComponent_ng_container_10_ng_template_8_i_2_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275element(0, "i", 43);
+    \u0275\u0275element(0, "i", 44);
   }
 }
 function TopicIaJsonComponent_ng_container_10_ng_template_8_i_3_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275element(0, "i", 44);
+    \u0275\u0275element(0, "i", 45);
   }
 }
 function TopicIaJsonComponent_ng_container_10_ng_template_8_i_4_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275element(0, "i", 45);
+    \u0275\u0275element(0, "i", 46);
   }
 }
 function TopicIaJsonComponent_ng_container_10_ng_template_8_ng_container_5_Template(rf, ctx) {
   if (rf & 1) {
     const _r4 = \u0275\u0275getCurrentView();
     \u0275\u0275elementContainerStart(0);
-    \u0275\u0275elementStart(1, "a", 46);
+    \u0275\u0275elementStart(1, "a", 47);
     \u0275\u0275listener("click", function TopicIaJsonComponent_ng_container_10_ng_template_8_ng_container_5_Template_a_click_1_listener($event) {
       \u0275\u0275restoreView(_r4);
       const ctx_r0 = \u0275\u0275nextContext(3);
@@ -34405,7 +34728,7 @@ function TopicIaJsonComponent_ng_container_10_ng_template_8_ng_container_5_Templ
 function TopicIaJsonComponent_ng_container_10_ng_template_8_p_inputgroup_6_Template(rf, ctx) {
   if (rf & 1) {
     const _r6 = \u0275\u0275getCurrentView();
-    \u0275\u0275elementStart(0, "p-inputgroup")(1, "input", 47);
+    \u0275\u0275elementStart(0, "p-inputgroup")(1, "input", 48);
     \u0275\u0275twoWayListener("ngModelChange", function TopicIaJsonComponent_ng_container_10_ng_template_8_p_inputgroup_6_Template_input_ngModelChange_1_listener($event) {
       \u0275\u0275restoreView(_r6);
       const node_r5 = \u0275\u0275nextContext().$implicit;
@@ -34418,7 +34741,7 @@ function TopicIaJsonComponent_ng_container_10_ng_template_8_p_inputgroup_6_Templ
       return \u0275\u0275resetView(ctx_r0.onInputKeydown($event));
     });
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(2, "p-inputgroup-addon")(3, "p-button", 48);
+    \u0275\u0275elementStart(2, "p-inputgroup-addon")(3, "p-button", 49);
     \u0275\u0275listener("onClick", function TopicIaJsonComponent_ng_container_10_ng_template_8_p_inputgroup_6_Template_p_button_onClick_3_listener() {
       \u0275\u0275restoreView(_r6);
       const ctx_r0 = \u0275\u0275nextContext(3);
@@ -34435,7 +34758,7 @@ function TopicIaJsonComponent_ng_container_10_ng_template_8_p_inputgroup_6_Templ
 function TopicIaJsonComponent_ng_container_10_ng_template_8_p_inputgroup_7_Template(rf, ctx) {
   if (rf & 1) {
     const _r7 = \u0275\u0275getCurrentView();
-    \u0275\u0275elementStart(0, "p-inputgroup")(1, "input", 47);
+    \u0275\u0275elementStart(0, "p-inputgroup")(1, "input", 48);
     \u0275\u0275twoWayListener("ngModelChange", function TopicIaJsonComponent_ng_container_10_ng_template_8_p_inputgroup_7_Template_input_ngModelChange_1_listener($event) {
       \u0275\u0275restoreView(_r7);
       const node_r5 = \u0275\u0275nextContext().$implicit;
@@ -34448,7 +34771,7 @@ function TopicIaJsonComponent_ng_container_10_ng_template_8_p_inputgroup_7_Templ
       return \u0275\u0275resetView(ctx_r0.onInputKeydown($event));
     });
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(2, "p-inputgroup-addon")(3, "p-button", 48);
+    \u0275\u0275elementStart(2, "p-inputgroup-addon")(3, "p-button", 49);
     \u0275\u0275listener("onClick", function TopicIaJsonComponent_ng_container_10_ng_template_8_p_inputgroup_7_Template_p_button_onClick_3_listener() {
       \u0275\u0275restoreView(_r7);
       const ctx_r0 = \u0275\u0275nextContext(3);
@@ -34464,8 +34787,8 @@ function TopicIaJsonComponent_ng_container_10_ng_template_8_p_inputgroup_7_Templ
 }
 function TopicIaJsonComponent_ng_container_10_ng_template_8_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275elementStart(0, "div", 37);
-    \u0275\u0275template(1, TopicIaJsonComponent_ng_container_10_ng_template_8_i_1_Template, 1, 0, "i", 38)(2, TopicIaJsonComponent_ng_container_10_ng_template_8_i_2_Template, 1, 0, "i", 39)(3, TopicIaJsonComponent_ng_container_10_ng_template_8_i_3_Template, 1, 0, "i", 40)(4, TopicIaJsonComponent_ng_container_10_ng_template_8_i_4_Template, 1, 0, "i", 41)(5, TopicIaJsonComponent_ng_container_10_ng_template_8_ng_container_5_Template, 2, 2, "ng-container", 11)(6, TopicIaJsonComponent_ng_container_10_ng_template_8_p_inputgroup_6_Template, 4, 1, "p-inputgroup", 11)(7, TopicIaJsonComponent_ng_container_10_ng_template_8_p_inputgroup_7_Template, 4, 1, "p-inputgroup", 11);
+    \u0275\u0275elementStart(0, "div", 38);
+    \u0275\u0275template(1, TopicIaJsonComponent_ng_container_10_ng_template_8_i_1_Template, 1, 0, "i", 39)(2, TopicIaJsonComponent_ng_container_10_ng_template_8_i_2_Template, 1, 0, "i", 40)(3, TopicIaJsonComponent_ng_container_10_ng_template_8_i_3_Template, 1, 0, "i", 41)(4, TopicIaJsonComponent_ng_container_10_ng_template_8_i_4_Template, 1, 0, "i", 42)(5, TopicIaJsonComponent_ng_container_10_ng_template_8_ng_container_5_Template, 2, 2, "ng-container", 12)(6, TopicIaJsonComponent_ng_container_10_ng_template_8_p_inputgroup_6_Template, 4, 1, "p-inputgroup", 12)(7, TopicIaJsonComponent_ng_container_10_ng_template_8_p_inputgroup_7_Template, 4, 1, "p-inputgroup", 12);
     \u0275\u0275elementEnd();
   }
   if (rf & 2) {
@@ -34487,101 +34810,201 @@ function TopicIaJsonComponent_ng_container_10_ng_template_8_Template(rf, ctx) {
     \u0275\u0275property("ngIf", node_r5.data.editing === "link");
   }
 }
-function TopicIaJsonComponent_ng_container_10_div_9_ng_template_4_i_1_Template(rf, ctx) {
-  if (rf & 1) {
-    \u0275\u0275element(0, "i", 42);
-  }
-}
-function TopicIaJsonComponent_ng_container_10_div_9_ng_template_4_i_2_Template(rf, ctx) {
+function TopicIaJsonComponent_ng_container_10_div_9_ng_template_6_i_1_Template(rf, ctx) {
   if (rf & 1) {
     \u0275\u0275element(0, "i", 43);
   }
 }
-function TopicIaJsonComponent_ng_container_10_div_9_ng_template_4_i_3_Template(rf, ctx) {
+function TopicIaJsonComponent_ng_container_10_div_9_ng_template_6_i_2_Template(rf, ctx) {
   if (rf & 1) {
     \u0275\u0275element(0, "i", 44);
   }
 }
-function TopicIaJsonComponent_ng_container_10_div_9_ng_template_4_ng_container_4_Template(rf, ctx) {
+function TopicIaJsonComponent_ng_container_10_div_9_ng_template_6_i_3_Template(rf, ctx) {
+  if (rf & 1) {
+    \u0275\u0275element(0, "i", 45);
+  }
+}
+function TopicIaJsonComponent_ng_container_10_div_9_ng_template_6_i_4_Template(rf, ctx) {
+  if (rf & 1) {
+    \u0275\u0275element(0, "i", 46);
+  }
+}
+function TopicIaJsonComponent_ng_container_10_div_9_ng_template_6_ng_container_5_ng_container_1_Template(rf, ctx) {
   if (rf & 1) {
     const _r9 = \u0275\u0275getCurrentView();
     \u0275\u0275elementContainerStart(0);
-    \u0275\u0275elementStart(1, "a", 46);
-    \u0275\u0275listener("click", function TopicIaJsonComponent_ng_container_10_div_9_ng_template_4_ng_container_4_Template_a_click_1_listener($event) {
+    \u0275\u0275elementStart(1, "a", 47);
+    \u0275\u0275listener("click", function TopicIaJsonComponent_ng_container_10_div_9_ng_template_6_ng_container_5_ng_container_1_Template_a_click_1_listener($event) {
       \u0275\u0275restoreView(_r9);
-      const ctx_r0 = \u0275\u0275nextContext(4);
+      const ctx_r0 = \u0275\u0275nextContext(5);
       return \u0275\u0275resetView(ctx_r0.onNodeClick($event));
     });
     \u0275\u0275elementEnd();
     \u0275\u0275elementContainerEnd();
   }
   if (rf & 2) {
-    const node_r10 = \u0275\u0275nextContext().$implicit;
+    const node_r10 = \u0275\u0275nextContext(2).$implicit;
     \u0275\u0275advance();
     \u0275\u0275property("href", node_r10.data.url, \u0275\u0275sanitizeUrl)("innerHTML", node_r10.label, \u0275\u0275sanitizeHtml);
   }
 }
-function TopicIaJsonComponent_ng_container_10_div_9_ng_template_4_ng_template_5_Template(rf, ctx) {
+function TopicIaJsonComponent_ng_container_10_div_9_ng_template_6_ng_container_5_ng_template_2_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275element(0, "span", 52);
+    \u0275\u0275element(0, "span", 53);
   }
   if (rf & 2) {
-    const node_r10 = \u0275\u0275nextContext().$implicit;
+    const node_r10 = \u0275\u0275nextContext(2).$implicit;
     \u0275\u0275classProp("font-bold", node_r10.data == null ? null : node_r10.data.isCategory);
     \u0275\u0275property("innerHTML", node_r10.label, \u0275\u0275sanitizeHtml);
   }
 }
-function TopicIaJsonComponent_ng_container_10_div_9_ng_template_4_Template(rf, ctx) {
+function TopicIaJsonComponent_ng_container_10_div_9_ng_template_6_ng_container_5_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275elementStart(0, "div", 37);
-    \u0275\u0275template(1, TopicIaJsonComponent_ng_container_10_div_9_ng_template_4_i_1_Template, 1, 0, "i", 38)(2, TopicIaJsonComponent_ng_container_10_div_9_ng_template_4_i_2_Template, 1, 0, "i", 39)(3, TopicIaJsonComponent_ng_container_10_div_9_ng_template_4_i_3_Template, 1, 0, "i", 40)(4, TopicIaJsonComponent_ng_container_10_div_9_ng_template_4_ng_container_4_Template, 2, 2, "ng-container", 51)(5, TopicIaJsonComponent_ng_container_10_div_9_ng_template_4_ng_template_5_Template, 1, 3, "ng-template", null, 1, \u0275\u0275templateRefExtractor);
+    \u0275\u0275elementContainerStart(0);
+    \u0275\u0275template(1, TopicIaJsonComponent_ng_container_10_div_9_ng_template_6_ng_container_5_ng_container_1_Template, 2, 2, "ng-container", 52)(2, TopicIaJsonComponent_ng_container_10_div_9_ng_template_6_ng_container_5_ng_template_2_Template, 1, 3, "ng-template", null, 2, \u0275\u0275templateRefExtractor);
+    \u0275\u0275elementContainerEnd();
+  }
+  if (rf & 2) {
+    const topicLabel_r11 = \u0275\u0275reference(3);
+    const node_r10 = \u0275\u0275nextContext().$implicit;
+    \u0275\u0275advance();
+    \u0275\u0275property("ngIf", node_r10.data == null ? null : node_r10.data.url)("ngIfElse", topicLabel_r11);
+  }
+}
+function TopicIaJsonComponent_ng_container_10_div_9_ng_template_6_p_inputgroup_6_Template(rf, ctx) {
+  if (rf & 1) {
+    const _r12 = \u0275\u0275getCurrentView();
+    \u0275\u0275elementStart(0, "p-inputgroup")(1, "input", 48);
+    \u0275\u0275twoWayListener("ngModelChange", function TopicIaJsonComponent_ng_container_10_div_9_ng_template_6_p_inputgroup_6_Template_input_ngModelChange_1_listener($event) {
+      \u0275\u0275restoreView(_r12);
+      const node_r10 = \u0275\u0275nextContext().$implicit;
+      \u0275\u0275twoWayBindingSet(node_r10.label, $event) || (node_r10.label = $event);
+      return \u0275\u0275resetView($event);
+    });
+    \u0275\u0275listener("keydown", function TopicIaJsonComponent_ng_container_10_div_9_ng_template_6_p_inputgroup_6_Template_input_keydown_1_listener($event) {
+      \u0275\u0275restoreView(_r12);
+      const ctx_r0 = \u0275\u0275nextContext(4);
+      return \u0275\u0275resetView(ctx_r0.onInputKeydown($event));
+    });
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(2, "p-inputgroup-addon")(3, "p-button", 49);
+    \u0275\u0275listener("onClick", function TopicIaJsonComponent_ng_container_10_div_9_ng_template_6_p_inputgroup_6_Template_p_button_onClick_3_listener() {
+      \u0275\u0275restoreView(_r12);
+      const ctx_r0 = \u0275\u0275nextContext(4);
+      return \u0275\u0275resetView(ctx_r0.saveNode());
+    });
+    \u0275\u0275elementEnd()()();
+  }
+  if (rf & 2) {
+    const node_r10 = \u0275\u0275nextContext().$implicit;
+    \u0275\u0275advance();
+    \u0275\u0275twoWayProperty("ngModel", node_r10.label);
+  }
+}
+function TopicIaJsonComponent_ng_container_10_div_9_ng_template_6_p_inputgroup_7_Template(rf, ctx) {
+  if (rf & 1) {
+    const _r13 = \u0275\u0275getCurrentView();
+    \u0275\u0275elementStart(0, "p-inputgroup")(1, "input", 48);
+    \u0275\u0275twoWayListener("ngModelChange", function TopicIaJsonComponent_ng_container_10_div_9_ng_template_6_p_inputgroup_7_Template_input_ngModelChange_1_listener($event) {
+      \u0275\u0275restoreView(_r13);
+      const node_r10 = \u0275\u0275nextContext().$implicit;
+      \u0275\u0275twoWayBindingSet(node_r10.data.url, $event) || (node_r10.data.url = $event);
+      return \u0275\u0275resetView($event);
+    });
+    \u0275\u0275listener("keydown", function TopicIaJsonComponent_ng_container_10_div_9_ng_template_6_p_inputgroup_7_Template_input_keydown_1_listener($event) {
+      \u0275\u0275restoreView(_r13);
+      const ctx_r0 = \u0275\u0275nextContext(4);
+      return \u0275\u0275resetView(ctx_r0.onInputKeydown($event));
+    });
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(2, "p-inputgroup-addon")(3, "p-button", 49);
+    \u0275\u0275listener("onClick", function TopicIaJsonComponent_ng_container_10_div_9_ng_template_6_p_inputgroup_7_Template_p_button_onClick_3_listener() {
+      \u0275\u0275restoreView(_r13);
+      const ctx_r0 = \u0275\u0275nextContext(4);
+      return \u0275\u0275resetView(ctx_r0.saveNode());
+    });
+    \u0275\u0275elementEnd()()();
+  }
+  if (rf & 2) {
+    const node_r10 = \u0275\u0275nextContext().$implicit;
+    \u0275\u0275advance();
+    \u0275\u0275twoWayProperty("ngModel", node_r10.data.url);
+  }
+}
+function TopicIaJsonComponent_ng_container_10_div_9_ng_template_6_Template(rf, ctx) {
+  if (rf & 1) {
+    \u0275\u0275elementStart(0, "div", 38);
+    \u0275\u0275template(1, TopicIaJsonComponent_ng_container_10_div_9_ng_template_6_i_1_Template, 1, 0, "i", 39)(2, TopicIaJsonComponent_ng_container_10_div_9_ng_template_6_i_2_Template, 1, 0, "i", 40)(3, TopicIaJsonComponent_ng_container_10_div_9_ng_template_6_i_3_Template, 1, 0, "i", 41)(4, TopicIaJsonComponent_ng_container_10_div_9_ng_template_6_i_4_Template, 1, 0, "i", 42)(5, TopicIaJsonComponent_ng_container_10_div_9_ng_template_6_ng_container_5_Template, 4, 2, "ng-container", 12)(6, TopicIaJsonComponent_ng_container_10_div_9_ng_template_6_p_inputgroup_6_Template, 4, 1, "p-inputgroup", 12)(7, TopicIaJsonComponent_ng_container_10_div_9_ng_template_6_p_inputgroup_7_Template, 4, 1, "p-inputgroup", 12);
     \u0275\u0275elementEnd();
   }
   if (rf & 2) {
     const node_r10 = ctx.$implicit;
-    const topicLabel_r11 = \u0275\u0275reference(6);
     const ctx_r0 = \u0275\u0275nextContext(3);
     \u0275\u0275advance();
-    \u0275\u0275property("ngIf", (node_r10.children == null ? null : node_r10.children.length) && !ctx_r0.draggable && !(node_r10.data == null ? null : node_r10.data.isCategory));
+    \u0275\u0275property("ngIf", (node_r10.children == null ? null : node_r10.children.length) && !ctx_r0.draggable && !(node_r10.data == null ? null : node_r10.data.isCategory) && !(node_r10.data == null ? null : node_r10.data.editing));
     \u0275\u0275advance();
-    \u0275\u0275property("ngIf", !(node_r10.children == null ? null : node_r10.children.length) && !ctx_r0.draggable && !(node_r10.data == null ? null : node_r10.data.isCategory));
+    \u0275\u0275property("ngIf", !(node_r10.children == null ? null : node_r10.children.length) && !ctx_r0.draggable && !(node_r10.data == null ? null : node_r10.data.isCategory) && !(node_r10.data == null ? null : node_r10.data.editing));
     \u0275\u0275advance();
-    \u0275\u0275property("ngIf", ctx_r0.draggable && !(node_r10.data == null ? null : node_r10.data.isCategory));
+    \u0275\u0275property("ngIf", ctx_r0.draggable && !(node_r10.data == null ? null : node_r10.data.isCategory) && !(node_r10.data == null ? null : node_r10.data.editing));
     \u0275\u0275advance();
-    \u0275\u0275property("ngIf", node_r10.data == null ? null : node_r10.data.url)("ngIfElse", topicLabel_r11);
+    \u0275\u0275property("ngIf", node_r10.data == null ? null : node_r10.data.editing);
+    \u0275\u0275advance();
+    \u0275\u0275property("ngIf", !(node_r10.data == null ? null : node_r10.data.editing));
+    \u0275\u0275advance();
+    \u0275\u0275property("ngIf", (node_r10.data == null ? null : node_r10.data.editing) === "label");
+    \u0275\u0275advance();
+    \u0275\u0275property("ngIf", (node_r10.data == null ? null : node_r10.data.editing) === "link");
   }
 }
 function TopicIaJsonComponent_ng_container_10_div_9_Template(rf, ctx) {
   if (rf & 1) {
     const _r8 = \u0275\u0275getCurrentView();
-    \u0275\u0275elementStart(0, "div", 49)(1, "h2");
-    \u0275\u0275text(2, "Suggested topic page sections");
+    \u0275\u0275elementStart(0, "div", 50);
+    \u0275\u0275element(1, "p-contextMenu", 34, 1);
+    \u0275\u0275elementStart(3, "h2");
+    \u0275\u0275text(4, "Suggested topic page sections");
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(3, "p-tree", 50);
-    \u0275\u0275listener("onNodeDrop", function TopicIaJsonComponent_ng_container_10_div_9_Template_p_tree_onNodeDrop_3_listener($event) {
+    \u0275\u0275elementStart(5, "p-tree", 51);
+    \u0275\u0275twoWayListener("selectionChange", function TopicIaJsonComponent_ng_container_10_div_9_Template_p_tree_selectionChange_5_listener($event) {
+      \u0275\u0275restoreView(_r8);
+      const ctx_r0 = \u0275\u0275nextContext(2);
+      \u0275\u0275twoWayBindingSet(ctx_r0.selectedNode, $event) || (ctx_r0.selectedNode = $event);
+      return \u0275\u0275resetView($event);
+    });
+    \u0275\u0275listener("onNodeDrop", function TopicIaJsonComponent_ng_container_10_div_9_Template_p_tree_onNodeDrop_5_listener($event) {
       \u0275\u0275restoreView(_r8);
       const ctx_r0 = \u0275\u0275nextContext(2);
       return \u0275\u0275resetView(ctx_r0.onTopicPageNodeDrop($event));
+    })("onNodeContextMenuSelect", function TopicIaJsonComponent_ng_container_10_div_9_Template_p_tree_onNodeContextMenuSelect_5_listener($event) {
+      \u0275\u0275restoreView(_r8);
+      const ctx_r0 = \u0275\u0275nextContext(2);
+      return \u0275\u0275resetView(ctx_r0.onNodeContextMenu($event, "topic"));
     });
-    \u0275\u0275template(4, TopicIaJsonComponent_ng_container_10_div_9_ng_template_4_Template, 7, 5, "ng-template", 35);
+    \u0275\u0275template(6, TopicIaJsonComponent_ng_container_10_div_9_ng_template_6_Template, 8, 7, "ng-template", 36);
     \u0275\u0275elementEnd()();
   }
   if (rf & 2) {
+    const cmTopic_r14 = \u0275\u0275reference(2);
     const ctx_r0 = \u0275\u0275nextContext(2);
-    \u0275\u0275advance(3);
-    \u0275\u0275property("value", ctx_r0.topicPageTree)("selectionMode", null)("draggableNodes", true)("droppableNodes", true)("validateDrop", true);
+    \u0275\u0275advance();
+    \u0275\u0275property("model", ctx_r0.options);
+    \u0275\u0275advance(4);
+    \u0275\u0275property("value", ctx_r0.topicPageTree)("selectionMode", ctx_r0.selectable ? "multiple" : null);
+    \u0275\u0275twoWayProperty("selection", ctx_r0.selectedNode);
+    \u0275\u0275property("draggableNodes", true)("droppableNodes", true)("validateDrop", true)("contextMenu", cmTopic_r14);
   }
 }
 function TopicIaJsonComponent_ng_container_10_Template(rf, ctx) {
   if (rf & 1) {
     const _r3 = \u0275\u0275getCurrentView();
     \u0275\u0275elementContainerStart(0);
-    \u0275\u0275elementStart(1, "div", 31)(2, "div", 32);
-    \u0275\u0275element(3, "p-contextMenu", 33, 0);
+    \u0275\u0275elementStart(1, "div", 32)(2, "div", 33);
+    \u0275\u0275element(3, "p-contextMenu", 34, 0);
     \u0275\u0275elementStart(5, "h2");
     \u0275\u0275text(6, "Current IA structure tree");
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(7, "p-tree", 34);
+    \u0275\u0275elementStart(7, "p-tree", 35);
     \u0275\u0275twoWayListener("selectionChange", function TopicIaJsonComponent_ng_container_10_Template_p_tree_selectionChange_7_listener($event) {
       \u0275\u0275restoreView(_r3);
       const ctx_r0 = \u0275\u0275nextContext();
@@ -34597,14 +35020,14 @@ function TopicIaJsonComponent_ng_container_10_Template(rf, ctx) {
       const ctx_r0 = \u0275\u0275nextContext();
       return \u0275\u0275resetView(ctx_r0.onNodeContextMenu($event));
     });
-    \u0275\u0275template(8, TopicIaJsonComponent_ng_container_10_ng_template_8_Template, 8, 7, "ng-template", 35);
+    \u0275\u0275template(8, TopicIaJsonComponent_ng_container_10_ng_template_8_Template, 8, 7, "ng-template", 36);
     \u0275\u0275elementEnd()();
-    \u0275\u0275template(9, TopicIaJsonComponent_ng_container_10_div_9_Template, 5, 5, "div", 36);
+    \u0275\u0275template(9, TopicIaJsonComponent_ng_container_10_div_9_Template, 7, 8, "div", 37);
     \u0275\u0275elementEnd();
     \u0275\u0275elementContainerEnd();
   }
   if (rf & 2) {
-    const cm_r12 = \u0275\u0275reference(4);
+    const cm_r15 = \u0275\u0275reference(4);
     const ctx_r0 = \u0275\u0275nextContext();
     \u0275\u0275advance(2);
     \u0275\u0275classProp("md:col-6", ctx_r0.visitsByUrl.size > 0);
@@ -34613,17 +35036,17 @@ function TopicIaJsonComponent_ng_container_10_Template(rf, ctx) {
     \u0275\u0275advance(4);
     \u0275\u0275property("value", ctx_r0.iaChart)("selectionMode", ctx_r0.selectable ? "multiple" : null);
     \u0275\u0275twoWayProperty("selection", ctx_r0.selectedNode);
-    \u0275\u0275property("draggableNodes", ctx_r0.draggable)("droppableNodes", true)("validateDrop", true)("contextMenu", cm_r12);
+    \u0275\u0275property("draggableNodes", ctx_r0.draggable)("droppableNodes", true)("validateDrop", true)("contextMenu", cm_r15);
     \u0275\u0275advance(2);
     \u0275\u0275property("ngIf", ctx_r0.visitsByUrl.size > 0);
   }
 }
 function TopicIaJsonComponent_ng_container_11_p_button_3_Template(rf, ctx) {
   if (rf & 1) {
-    const _r13 = \u0275\u0275getCurrentView();
-    \u0275\u0275elementStart(0, "p-button", 55);
+    const _r16 = \u0275\u0275getCurrentView();
+    \u0275\u0275elementStart(0, "p-button", 56);
     \u0275\u0275listener("click", function TopicIaJsonComponent_ng_container_11_p_button_3_Template_p_button_click_0_listener() {
-      \u0275\u0275restoreView(_r13);
+      \u0275\u0275restoreView(_r16);
       const ctx_r0 = \u0275\u0275nextContext(2);
       return \u0275\u0275resetView(ctx_r0.maximize(ctx_r0.chartContainer));
     });
@@ -34639,25 +35062,25 @@ function TopicIaJsonComponent_ng_container_11_p_4_Template(rf, ctx) {
 }
 function TopicIaJsonComponent_ng_container_11_div_5_ng_template_3_Template(rf, ctx) {
   if (rf & 1) {
-    const _r14 = \u0275\u0275getCurrentView();
-    \u0275\u0275elementStart(0, "p")(1, "a", 46);
+    const _r17 = \u0275\u0275getCurrentView();
+    \u0275\u0275elementStart(0, "p")(1, "a", 47);
     \u0275\u0275listener("click", function TopicIaJsonComponent_ng_container_11_div_5_ng_template_3_Template_a_click_1_listener($event) {
-      \u0275\u0275restoreView(_r14);
+      \u0275\u0275restoreView(_r17);
       const ctx_r0 = \u0275\u0275nextContext(3);
       return \u0275\u0275resetView(ctx_r0.onNodeClick($event));
     });
     \u0275\u0275elementEnd()();
   }
   if (rf & 2) {
-    const node_r15 = ctx.$implicit;
+    const node_r18 = ctx.$implicit;
     \u0275\u0275advance();
-    \u0275\u0275property("href", node_r15.data.url, \u0275\u0275sanitizeUrl)("innerHTML", node_r15.label, \u0275\u0275sanitizeHtml);
+    \u0275\u0275property("href", node_r18.data.url, \u0275\u0275sanitizeUrl)("innerHTML", node_r18.label, \u0275\u0275sanitizeHtml);
   }
 }
 function TopicIaJsonComponent_ng_container_11_div_5_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275elementStart(0, "div", 56, 2)(2, "p-organization-chart", 57);
-    \u0275\u0275template(3, TopicIaJsonComponent_ng_container_11_div_5_ng_template_3_Template, 2, 2, "ng-template", 35);
+    \u0275\u0275elementStart(0, "div", 57, 3)(2, "p-organization-chart", 58);
+    \u0275\u0275template(3, TopicIaJsonComponent_ng_container_11_div_5_ng_template_3_Template, 2, 2, "ng-template", 36);
     \u0275\u0275elementEnd()();
   }
   if (rf & 2) {
@@ -34672,7 +35095,7 @@ function TopicIaJsonComponent_ng_container_11_Template(rf, ctx) {
     \u0275\u0275elementStart(1, "h2");
     \u0275\u0275text(2, "IA structure");
     \u0275\u0275elementEnd();
-    \u0275\u0275template(3, TopicIaJsonComponent_ng_container_11_p_button_3_Template, 1, 0, "p-button", 53)(4, TopicIaJsonComponent_ng_container_11_p_4_Template, 2, 0, "p", 11)(5, TopicIaJsonComponent_ng_container_11_div_5_Template, 4, 1, "div", 54);
+    \u0275\u0275template(3, TopicIaJsonComponent_ng_container_11_p_button_3_Template, 1, 0, "p-button", 54)(4, TopicIaJsonComponent_ng_container_11_p_4_Template, 2, 0, "p", 12)(5, TopicIaJsonComponent_ng_container_11_div_5_Template, 4, 1, "div", 55);
     \u0275\u0275elementContainerEnd();
   }
   if (rf & 2) {
@@ -34696,7 +35119,7 @@ function TopicIaJsonComponent_ng_container_12_p_3_Template(rf, ctx) {
   if (rf & 1) {
     \u0275\u0275elementStart(0, "p");
     \u0275\u0275text(1, " No broken links found on this page");
-    \u0275\u0275template(2, TopicIaJsonComponent_ng_container_12_p_3_span_2_Template, 2, 0, "span", 11);
+    \u0275\u0275template(2, TopicIaJsonComponent_ng_container_12_p_3_span_2_Template, 2, 0, "span", 12);
     \u0275\u0275text(3, ". ");
     \u0275\u0275elementEnd();
   }
@@ -34732,19 +35155,19 @@ function TopicIaJsonComponent_ng_container_12_p_table_4_ng_template_3_Template(r
     \u0275\u0275elementEnd()();
   }
   if (rf & 2) {
-    const rowData_r16 = ctx.$implicit;
+    const rowData_r19 = ctx.$implicit;
     \u0275\u0275advance(2);
-    \u0275\u0275textInterpolate(rowData_r16.parentUrl);
+    \u0275\u0275textInterpolate(rowData_r19.parentUrl);
     \u0275\u0275advance(2);
-    \u0275\u0275textInterpolate(rowData_r16.url);
+    \u0275\u0275textInterpolate(rowData_r19.url);
     \u0275\u0275advance(2);
-    \u0275\u0275textInterpolate(rowData_r16.status);
+    \u0275\u0275textInterpolate(rowData_r19.status);
   }
 }
 function TopicIaJsonComponent_ng_container_12_p_table_4_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275elementStart(0, "p-table", 59);
-    \u0275\u0275template(1, TopicIaJsonComponent_ng_container_12_p_table_4_ng_template_1_Template, 7, 0, "ng-template", null, 3, \u0275\u0275templateRefExtractor)(3, TopicIaJsonComponent_ng_container_12_p_table_4_ng_template_3_Template, 7, 3, "ng-template", null, 4, \u0275\u0275templateRefExtractor);
+    \u0275\u0275elementStart(0, "p-table", 60);
+    \u0275\u0275template(1, TopicIaJsonComponent_ng_container_12_p_table_4_ng_template_1_Template, 7, 0, "ng-template", null, 4, \u0275\u0275templateRefExtractor)(3, TopicIaJsonComponent_ng_container_12_p_table_4_ng_template_3_Template, 7, 3, "ng-template", null, 5, \u0275\u0275templateRefExtractor);
     \u0275\u0275elementEnd();
   }
   if (rf & 2) {
@@ -34758,7 +35181,7 @@ function TopicIaJsonComponent_ng_container_12_Template(rf, ctx) {
     \u0275\u0275elementStart(1, "h2");
     \u0275\u0275text(2, "Broken links");
     \u0275\u0275elementEnd();
-    \u0275\u0275template(3, TopicIaJsonComponent_ng_container_12_p_3_Template, 4, 1, "p", 11)(4, TopicIaJsonComponent_ng_container_12_p_table_4_Template, 5, 3, "p-table", 58);
+    \u0275\u0275template(3, TopicIaJsonComponent_ng_container_12_p_3_Template, 4, 1, "p", 12)(4, TopicIaJsonComponent_ng_container_12_p_table_4_Template, 5, 3, "p-table", 59);
     \u0275\u0275elementContainerEnd();
   }
   if (rf & 2) {
@@ -34812,11 +35235,13 @@ var TopicIaJsonComponent = class _TopicIaJsonComponent {
   step1Complete = false;
   topicPageTree = [];
   visitsByUrl = /* @__PURE__ */ new Map();
+  visitsByPath = /* @__PURE__ */ new Map();
   visitsLoaded = false;
   visitsEntryCount = 0;
   visitsSourcePath = "visits-urls.json";
   isTopicPage = false;
   topicPageSections = /* @__PURE__ */ new Map();
+  nonTopicPageLinks = /* @__PURE__ */ new Map();
   commObjectivesInput = "";
   feedbackInsightsInput = "";
   callTroubleInput = "";
@@ -34824,6 +35249,7 @@ var TopicIaJsonComponent = class _TopicIaJsonComponent {
   aiRecommendedUrls = /* @__PURE__ */ new Set();
   aiTargetSection = "most";
   aiModels = this.openRouter.freeModels;
+  topicPageExcludedUrlFragments = topic_page_exceptions_default.map((value) => String(value).trim().toLowerCase()).filter((value) => value.length > 0);
   //Button fxn
   checkIA() {
     return __async(this, null, function* () {
@@ -35028,7 +35454,7 @@ var TopicIaJsonComponent = class _TopicIaJsonComponent {
   }
   getAllCandidateNodes() {
     const root = this.topicPageTree[0];
-    const categories = root?.children ?? [];
+    const categories = (root?.children ?? []).filter((category) => !category?.data?.isNonTopicCategory);
     return categories.flatMap((category) => category?.children ?? []);
   }
   moveNodeToSection(node, targetSection) {
@@ -35054,7 +35480,7 @@ var TopicIaJsonComponent = class _TopicIaJsonComponent {
       return "notOnTopics";
     if (normalized.includes("not on the topic"))
       return "notOnTopics";
-    if (normalized.includes("not on topic page"))
+    if (normalized.includes("not suggested for topic page"))
       return "notOnTopics";
     if (normalized.includes("most requested"))
       return "most";
@@ -35150,6 +35576,7 @@ var TopicIaJsonComponent = class _TopicIaJsonComponent {
       this.visitsLoaded = false;
       this.visitsEntryCount = 0;
       this.visitsByUrl = /* @__PURE__ */ new Map();
+      this.visitsByPath = /* @__PURE__ */ new Map();
       const baseHref = this.baseHref ?? "/";
       const resourceUrl = new URL(this.visitsSourcePath, `${window.location.origin}${baseHref}`).toString();
       try {
@@ -35174,6 +35601,7 @@ var TopicIaJsonComponent = class _TopicIaJsonComponent {
           return false;
         }
         const map = /* @__PURE__ */ new Map();
+        const pathMap = /* @__PURE__ */ new Map();
         for (const entry of data) {
           if (!entry || typeof entry !== "object")
             continue;
@@ -35188,8 +35616,10 @@ var TopicIaJsonComponent = class _TopicIaJsonComponent {
           const normalized = this.normalizeUrl(url);
           map.set(normalized, visits);
           map.set(this.normalizeUrl(this.decodeUrl(url)), visits);
+          this.addVisitsPath(pathMap, url, visits);
         }
         this.visitsByUrl = map;
+        this.visitsByPath = pathMap;
         this.visitsEntryCount = map.size;
         this.visitsLoaded = true;
         this.messageService.add({
@@ -35311,7 +35741,41 @@ var TopicIaJsonComponent = class _TopicIaJsonComponent {
   expandStep(stepIndex) {
     this.activeStep = stepIndex;
   }
-  buildTopicPageTree(rootLabel) {
+  buildTopicPageTree(rootLabel, includeNonTopicCategory = false) {
+    const baseChildren = [
+      {
+        label: "Most requested",
+        data: { url: "", isCategory: true },
+        expanded: true,
+        children: []
+      },
+      {
+        label: "Doormats",
+        data: { url: "", isCategory: true },
+        expanded: true,
+        children: []
+      },
+      {
+        label: "Features",
+        data: { url: "", isCategory: true },
+        expanded: true,
+        children: []
+      },
+      {
+        label: "Not suggested for topic page",
+        data: { url: "", isCategory: true },
+        expanded: true,
+        children: []
+      }
+    ];
+    if (includeNonTopicCategory) {
+      baseChildren.push({
+        label: "Found on non-topic page",
+        data: { url: "", isCategory: true, isNonTopicCategory: true },
+        expanded: true,
+        children: []
+      });
+    }
     return [
       {
         label: rootLabel,
@@ -35320,38 +35784,13 @@ var TopicIaJsonComponent = class _TopicIaJsonComponent {
           isRoot: true
         },
         expanded: true,
-        children: [
-          {
-            label: "Most requested",
-            data: { url: "", isCategory: true },
-            expanded: true,
-            children: []
-          },
-          {
-            label: "Doormats",
-            data: { url: "", isCategory: true },
-            expanded: true,
-            children: []
-          },
-          {
-            label: "Features",
-            data: { url: "", isCategory: true },
-            expanded: true,
-            children: []
-          },
-          {
-            label: "Not on topic page",
-            data: { url: "", isCategory: true },
-            expanded: true,
-            children: []
-          }
-        ]
+        children: baseChildren
       }
     ];
   }
   rebuildTopicPageTreeFromIa() {
     this.updateTopicPageSectionMap();
-    const baseTree = this.buildTopicPageTree(this.getCurrentPageLabel());
+    const baseTree = this.buildTopicPageTree(this.getCurrentPageLabel(), !this.isTopicPage);
     if (!this.iaChart?.length) {
       this.topicPageTree = baseTree;
       this.updateTopicPageTreeStyles(this.topicPageTree, 0);
@@ -35423,12 +35862,23 @@ var TopicIaJsonComponent = class _TopicIaJsonComponent {
     this.updateTopicPageTreeStyles(this.topicPageTree, 0);
   }
   getVisitsForNode(node) {
-    const url = node.data?.url?.trim();
+    return this.getVisitsForUrl(node.data?.url);
+  }
+  getVisitsForUrl(urlRaw) {
+    const url = urlRaw?.trim();
     if (!url)
       return null;
     const normalized = this.normalizeUrl(url);
     const visits = this.visitsByUrl.get(normalized) ?? this.visitsByUrl.get(this.normalizeUrl(this.decodeUrl(url)));
-    return visits ?? null;
+    if (visits !== void 0)
+      return visits;
+    const pathKey = this.getPathSuffixKey(url);
+    if (pathKey) {
+      const pathVisits = this.visitsByPath.get(pathKey) ?? this.visitsByPath.get(this.normalizePath(pathKey));
+      if (pathVisits !== void 0)
+        return pathVisits;
+    }
+    return null;
   }
   sortByVisitsDesc(nodes) {
     return [...nodes].sort((a, b) => {
@@ -35455,6 +35905,7 @@ var TopicIaJsonComponent = class _TopicIaJsonComponent {
   }
   updateTopicPageSectionMap() {
     const html = this.uploadState.getUploadData()?.originalHtml || "";
+    this.nonTopicPageLinks = /* @__PURE__ */ new Map();
     if (!html) {
       this.isTopicPage = false;
       this.topicPageSections = /* @__PURE__ */ new Map();
@@ -35465,6 +35916,7 @@ var TopicIaJsonComponent = class _TopicIaJsonComponent {
     this.isTopicPage = hasDoormats;
     if (!hasDoormats) {
       this.topicPageSections = /* @__PURE__ */ new Map();
+      this.nonTopicPageLinks = this.collectNonTopicPageLinks(doc);
       return;
     }
     const map = /* @__PURE__ */ new Map();
@@ -35485,6 +35937,8 @@ var TopicIaJsonComponent = class _TopicIaJsonComponent {
           return;
         const text = (link.textContent || "").trim();
         const normalized = this.normalizeUrl(this.resolveUrl(href, baseUrl));
+        if (this.isExcludedUrl(normalized))
+          return;
         if (normalized) {
           map.set(normalized, {
             section: section.key,
@@ -35494,6 +35948,52 @@ var TopicIaJsonComponent = class _TopicIaJsonComponent {
       });
     }
     this.topicPageSections = map;
+  }
+  collectNonTopicPageLinks(doc) {
+    const map = /* @__PURE__ */ new Map();
+    const baseUrl = this.originalUrl || "";
+    const container = this.findMainContentElement(doc) ?? doc.body ?? doc.documentElement;
+    if (!container)
+      return map;
+    const links = container.querySelectorAll("a[href]");
+    links.forEach((link) => {
+      const href = link.getAttribute("href");
+      if (!href || href.startsWith("#"))
+        return;
+      const text = (link.textContent || "").trim();
+      const normalized = this.normalizeUrl(this.resolveUrl(href, baseUrl));
+      if (this.isExcludedUrl(normalized))
+        return;
+      if (normalized) {
+        map.set(normalized, text || href);
+      }
+    });
+    return map;
+  }
+  findMainContentElement(doc) {
+    const selectors = [
+      'main[property="mainContentOfPage"][resource="#wb-main"][typeof="WebPageElement"]',
+      'main[property="mainContentOfPage"][resource="#wb-main"][typeof="WebPageElement"].col-md-9.col-md-push-3',
+      'main[role="main"][property="mainContentOfPage"].container',
+      'main[role="main"][property="mainContentOfPage"]',
+      'main[role="main"]',
+      "main",
+      '[role="main"]'
+    ];
+    for (const selector of selectors) {
+      const element = doc.querySelector(selector);
+      if (!element)
+        continue;
+      const containerDiv = element.querySelector("div.container");
+      return containerDiv ?? element;
+    }
+    return null;
+  }
+  isExcludedUrl(url) {
+    if (!url)
+      return false;
+    const normalized = url.toLowerCase();
+    return this.topicPageExcludedUrlFragments.some((fragment) => normalized.includes(fragment));
   }
   resolveUrl(href, baseUrl) {
     try {
@@ -35540,11 +36040,13 @@ var TopicIaJsonComponent = class _TopicIaJsonComponent {
     });
   }
   addMissingIaNodes(baseTree) {
-    if (!this.isTopicPage)
-      return;
     const iaUrls = this.buildIaUrlSet();
     if (!iaUrls.size)
       return;
+    if (!this.isTopicPage) {
+      this.addNonTopicMissingIaNodes(baseTree, iaUrls);
+      return;
+    }
     const root = baseTree[0];
     const categories = root.children ?? [];
     const mostRequested = categories[0];
@@ -35563,7 +36065,9 @@ var TopicIaJsonComponent = class _TopicIaJsonComponent {
     for (const [url, info] of this.topicPageSections.entries()) {
       if (iaUrls.has(url))
         continue;
-      const label = `${info.label} <span class="topic-ia-badge">Not in IA structure</span>`;
+      const visits = this.getVisitsForUrl(url);
+      const visitsLabel = visits !== null ? `${info.label} (${this.formatVisits(visits)} visits)` : info.label;
+      const label = `${visitsLabel} <span class="topic-ia-badge">Not in IA structure</span>`;
       const node = {
         label,
         data: {
@@ -35582,6 +36086,36 @@ var TopicIaJsonComponent = class _TopicIaJsonComponent {
       } else {
         addToCategory(feature, node);
       }
+    }
+  }
+  addNonTopicMissingIaNodes(baseTree, iaUrls) {
+    if (!this.nonTopicPageLinks.size)
+      return;
+    const root = baseTree[0];
+    const categories = root.children ?? [];
+    const nonTopicCategory = categories.find((node) => node.data?.isNonTopicCategory) ?? categories[4];
+    if (!nonTopicCategory)
+      return;
+    nonTopicCategory.children = nonTopicCategory.children || [];
+    const existing = new Set(nonTopicCategory.children.map((child) => this.normalizeUrl(child.data?.url ?? "")).filter((value) => value.length > 0));
+    for (const [url, label] of this.nonTopicPageLinks.entries()) {
+      if (iaUrls.has(url))
+        continue;
+      if (existing.has(url))
+        continue;
+      const visits = this.getVisitsForUrl(url);
+      const visitsLabel = visits !== null ? `${label} (${this.formatVisits(visits)} visits)` : label;
+      const node = {
+        label: `${visitsLabel} <span class="topic-ia-badge">Not in IA structure</span>`,
+        data: {
+          url,
+          isCategory: false,
+          diffState: "missingIa",
+          originalLabel: label,
+          isMissingIa: true
+        }
+      };
+      nonTopicCategory.children.push(node);
     }
   }
   buildIaUrlSet() {
@@ -35636,6 +36170,9 @@ var TopicIaJsonComponent = class _TopicIaJsonComponent {
     if (visits !== null && iaLevel !== null) {
       return `${baseLabel} (${this.formatVisits(visits)} visits, level ${iaLevel})`;
     }
+    if (visits !== null) {
+      return `${baseLabel} (${this.formatVisits(visits)} visits)`;
+    }
     return baseLabel;
   }
   getSectionLabel(section) {
@@ -35682,8 +36219,10 @@ var TopicIaJsonComponent = class _TopicIaJsonComponent {
     node.data.diffState = "missingIaMove";
   }
   getMissingIaBaseLabel(node) {
+    const visits = this.getVisitsForNode(node);
     const baseLabel = typeof node.data?.originalLabel === "string" && node.data.originalLabel.trim().length ? node.data.originalLabel : (node.label ?? "").toString();
-    return `${baseLabel} <span class="topic-ia-badge">Not in IA structure</span>`;
+    const withVisits = visits !== null ? `${baseLabel} (${this.formatVisits(visits)} visits)` : baseLabel;
+    return `${withVisits} <span class="topic-ia-badge">Not in IA structure</span>`;
   }
   getCurrentPageLabel() {
     const label = this.iaChart?.[0]?.label;
@@ -35699,8 +36238,8 @@ var TopicIaJsonComponent = class _TopicIaJsonComponent {
       for (const node of nodes) {
         const url = node?.data?.url?.trim();
         if (url) {
-          const visits = this.visitsByUrl.get(this.normalizeUrl(url)) ?? this.visitsByUrl.get(this.normalizeUrl(this.decodeUrl(url)));
-          if (visits !== void 0) {
+          const visits = this.getVisitsForUrl(url);
+          if (visits !== null) {
             const baseLabel = node.data?.originalLabel ?? (node.label ?? "").toString();
             if (!node.data.originalLabel) {
               node.data.originalLabel = baseLabel;
@@ -35726,6 +36265,49 @@ var TopicIaJsonComponent = class _TopicIaJsonComponent {
   }
   formatVisits(value) {
     return new Intl.NumberFormat("en-CA").format(value);
+  }
+  addVisitsPath(target, url, visits) {
+    const pathKey = this.getPathSuffixKey(url);
+    if (pathKey) {
+      target.set(pathKey, visits);
+    }
+  }
+  getPathSuffixKey(url) {
+    const path = this.extractPathname(url);
+    if (!path)
+      return null;
+    const normalizedPath = this.normalizePath(path);
+    const marker = this.findLangMarker(normalizedPath);
+    if (marker) {
+      const index = normalizedPath.indexOf(marker);
+      if (index >= 0) {
+        return normalizedPath.slice(index);
+      }
+    }
+    return normalizedPath;
+  }
+  extractPathname(url) {
+    try {
+      const parsed = new URL(this.ensureUrlScheme(url));
+      return parsed.pathname || null;
+    } catch {
+      const stripped = url.split("#")[0].split("?")[0];
+      const slashIndex = stripped.indexOf("/");
+      if (slashIndex >= 0) {
+        return stripped.slice(slashIndex);
+      }
+      return null;
+    }
+  }
+  normalizePath(path) {
+    return path.toLowerCase().replace(/\/+$/, "");
+  }
+  findLangMarker(path) {
+    if (path.includes("/en/"))
+      return "/en/";
+    if (path.includes("/fr/"))
+      return "/fr/";
+    return null;
   }
   normalizeUrl(url) {
     try {
@@ -35758,6 +36340,7 @@ var TopicIaJsonComponent = class _TopicIaJsonComponent {
   cm;
   options = [];
   //options for editing chart nodes
+  activeContextTree = "ia";
   baseMenu = [
     {
       label: "Edit label",
@@ -35910,10 +36493,11 @@ var TopicIaJsonComponent = class _TopicIaJsonComponent {
   undoArray = [];
   //for loading in page assistant
   baseHref = null;
-  onNodeContextMenu(event) {
+  onNodeContextMenu(event, context = "ia") {
     if (this.editingNode) {
       this.editingNode.data.editing = null;
     }
+    this.activeContextTree = context;
     this.selectedNode = event.node;
     const customStyle = this.selectedNode.data.customStyle;
     this.options.forEach((item) => {
@@ -35921,7 +36505,7 @@ var TopicIaJsonComponent = class _TopicIaJsonComponent {
         item.disabled = !this.selectedNode?.data?.url?.trim();
       }
       if (item.label === "Change template" || item.label === "Change style") {
-        item.disabled = customStyle;
+        item.disabled = customStyle || context === "topic";
       }
     });
   }
@@ -35983,7 +36567,7 @@ var TopicIaJsonComponent = class _TopicIaJsonComponent {
     this.selectedNode = newNode;
     this.editNode("label");
     this.updateMenu();
-    this.updateNodeStyles(this.iaChart, 0);
+    this.refreshActiveTreeStyles();
   }
   //Will be used to create a container to mark pages for template change
   addParentNode(action) {
@@ -36037,10 +36621,11 @@ var TopicIaJsonComponent = class _TopicIaJsonComponent {
     this.updateNodeStyles(this.iaChart, 0);
   }
   deleteNode() {
-    if (!this.iaChart || !this.selectedNode)
+    const tree = this.getActiveTree();
+    if (!tree || !this.selectedNode)
       return;
     const nodeToDelete = this.selectedNode;
-    const rootIndex = this.iaChart.findIndex((n) => n === nodeToDelete);
+    const rootIndex = tree.findIndex((n) => n === nodeToDelete);
     if (rootIndex > -1) {
       console.warn("Cannot delete root node.");
       return;
@@ -36065,8 +36650,9 @@ var TopicIaJsonComponent = class _TopicIaJsonComponent {
       }
       return false;
     };
-    findAndDelete(this.iaChart);
+    findAndDelete(tree);
     this.updateMenu();
+    this.refreshActiveTreeStyles();
   }
   restoreNode() {
     if (this.undoArray.length === 0)
@@ -36082,7 +36668,7 @@ var TopicIaJsonComponent = class _TopicIaJsonComponent {
     if (!this.selectedNode.data.customStyle) {
       this.selectedNode.data.customStyleKey = "rot";
       this.selectedNode.data.borderStyle = "border-2 border-primary border-round border-dashed shadow-2";
-      this.updateNodeStyles(this.iaChart, 0);
+      this.refreshActiveTreeStyles();
     }
     this.updateMenu();
   }
@@ -36097,6 +36683,16 @@ var TopicIaJsonComponent = class _TopicIaJsonComponent {
         command: () => this.restoreNode()
       });
     }
+  }
+  getActiveTree() {
+    return this.activeContextTree === "topic" ? this.topicPageTree : this.iaChart;
+  }
+  refreshActiveTreeStyles() {
+    if (this.activeContextTree === "topic") {
+      this.updateTopicPageTreeStyles(this.topicPageTree, 0);
+      return;
+    }
+    this.updateNodeStyles(this.iaChart, 0);
   }
   //Placeholder for export function
   exportTable() {
@@ -36259,7 +36855,7 @@ var TopicIaJsonComponent = class _TopicIaJsonComponent {
     if (!root)
       return;
     const categories = root.children ?? [];
-    const notOnTopicsCategory = categories.find((node) => node.data?.isCategory && node.label === "Not on topic page") ?? categories[3];
+    const notOnTopicsCategory = categories.find((node) => node.data?.isCategory && node.label === "Not suggested for topic page") ?? categories[3];
     const children = notOnTopicsCategory?.children;
     if (!children?.length)
       return;
@@ -36295,26 +36891,26 @@ var TopicIaJsonComponent = class _TopicIaJsonComponent {
       \u0275\u0275queryRefresh(_t = \u0275\u0275loadQuery()) && (ctx.chartContainer = _t.first);
       \u0275\u0275queryRefresh(_t = \u0275\u0275loadQuery()) && (ctx.cm = _t.first);
     }
-  }, features: [\u0275\u0275ProvidersFeature([TreeDragDropService])], decls: 13, vars: 11, consts: [["cm", ""], ["topicLabel", ""], ["chartContainer", ""], ["header", ""], ["body", ""], [1, "mt-0"], [1, "flex", "flex-row", "flex-wrap", "align-items-center", "gap-3", "mt-0"], ["inputId", "depth", "mode", "decimal", 3, "ngModelChange", "ngModel", "showButtons", "min", "max"], ["for", "depth"], ["label", "Get subpages in IA", "icon", "pi pi-info-circle", 3, "click", "severity", "loading"], ["styleClass", "mt-3", 3, "value", "showValue", "style", 4, "ngIf"], [4, "ngIf"], ["styleClass", "mt-3", 3, "value", "showValue"], [1, "grid", "mt-3"], [1, "col-12", "md:col-4"], ["for", "topic-ia-comm-objectives", 1, "block", "text-md", "font-semibold", "mb-2"], ["pTextarea", "", "id", "topic-ia-comm-objectives", "rows", "3", 1, "w-full", 2, "height", "6rem", "overflow", "auto", 3, "ngModelChange", "ngModel"], ["for", "topic-ia-feedback-insights", 1, "block", "text-md", "font-semibold", "mb-2"], ["pTextarea", "", "id", "topic-ia-feedback-insights", "rows", "3", 1, "w-full", 2, "height", "6rem", "overflow", "auto", 3, "ngModelChange", "ngModel"], ["for", "topic-ia-call-trouble", 1, "block", "text-md", "font-semibold", "mb-2"], ["pTextarea", "", "id", "topic-ia-call-trouble", "rows", "3", 1, "w-full", 2, "height", "6rem", "overflow", "auto", 3, "ngModelChange", "ngModel"], [1, "flex", "justify-content-end", "mt-3"], ["label", "Send my input to GenAI", "icon", "pi pi-send", 3, "click", "severity", "loading", "disabled"], [1, "flex", "flex-row", "align-items-center", "gap-3"], ["styleClass", "pl-1", 1, "max-w-full", 3, "model"], ["class", "flex align-items-center gap-2 text-green-400", 4, "ngIf"], ["class", "flex align-items-center gap-2 text-red-400", 4, "ngIf"], [1, "flex", "align-items-center", "gap-2", "text-green-400"], [1, "pi", "pi-check-circle"], [1, "flex", "align-items-center", "gap-2", "text-red-400"], [1, "pi", "pi-times-circle"], [1, "grid"], [1, "col-12"], [3, "model"], ["styleClass", "w-full md:w-[30rem]", "draggableScope", "self", "droppableScope", "self", 3, "selectionChange", "onNodeDrop", "onNodeContextMenuSelect", "value", "selectionMode", "selection", "draggableNodes", "droppableNodes", "validateDrop", "contextMenu"], ["pTemplate", "default"], ["class", "col-12 md:col-6", 4, "ngIf"], [1, "flex", "flex-row", "align-items-center", "gap-2", "w-full"], ["class", "pi pi-folder", 4, "ngIf"], ["class", "pi pi-file", 4, "ngIf"], ["class", "pi pi-arrows-alt cursor-move text-color-secondary", 4, "ngIf"], ["class", "pi pi-pencil text-color-secondary", 4, "ngIf"], [1, "pi", "pi-folder"], [1, "pi", "pi-file"], [1, "pi", "pi-arrows-alt", "cursor-move", "text-color-secondary"], [1, "pi", "pi-pencil", "text-color-secondary"], ["target", "_blank", 1, "ia-label", 3, "click", "href", "innerHTML"], ["type", "text", "pInputText", "", "pSize", "small", 1, "ia-label", 3, "ngModelChange", "keydown", "ngModel"], ["icon", "pi pi-check", "severity", "secondary", "size", "small", 3, "onClick"], [1, "col-12", "md:col-6"], ["styleClass", "w-full md:w-[30rem]", "draggableScope", "topicPageTree", "droppableScope", "topicPageTree", 3, "onNodeDrop", "value", "selectionMode", "draggableNodes", "droppableNodes", "validateDrop"], [4, "ngIf", "ngIfElse"], [1, "ia-label", 3, "innerHTML"], ["label", "Maximize IA chart", "severity", "secondary", "icon", "pi pi-window-maximize", "styleClass", "mt-1 mb-3", 3, "click", 4, "ngIf"], ["class", "overflow-auto max-h-75vh surface-ground surface-border border-1 py-3 mb-3 ia-chart-container", 4, "ngIf"], ["label", "Maximize IA chart", "severity", "secondary", "icon", "pi pi-window-maximize", "styleClass", "mt-1 mb-3", 3, "click"], [1, "overflow-auto", "max-h-75vh", "surface-ground", "surface-border", "border-1", "py-3", "mb-3", "ia-chart-container"], [3, "value"], ["size", "small", "stripedRows", "", 3, "value", "tableStyle", 4, "ngIf"], ["size", "small", "stripedRows", "", 3, "value", "tableStyle"]], template: function TopicIaJsonComponent_Template(rf, ctx) {
+  }, features: [\u0275\u0275ProvidersFeature([TreeDragDropService])], decls: 13, vars: 11, consts: [["cm", ""], ["cmTopic", ""], ["topicLabel", ""], ["chartContainer", ""], ["header", ""], ["body", ""], [1, "mt-0"], [1, "flex", "flex-row", "flex-wrap", "align-items-center", "gap-3", "mt-0"], ["inputId", "depth", "mode", "decimal", 3, "ngModelChange", "ngModel", "showButtons", "min", "max"], ["for", "depth"], ["label", "Get subpages in IA", "icon", "pi pi-info-circle", 3, "click", "severity", "loading"], ["styleClass", "mt-3", 3, "value", "showValue", "style", 4, "ngIf"], [4, "ngIf"], ["styleClass", "mt-3", 3, "value", "showValue"], [1, "grid", "mt-3"], [1, "col-12", "md:col-4"], ["for", "topic-ia-comm-objectives", 1, "block", "text-md", "font-semibold", "mb-2"], ["pTextarea", "", "id", "topic-ia-comm-objectives", "rows", "3", 1, "w-full", 2, "height", "6rem", "overflow", "auto", 3, "ngModelChange", "ngModel"], ["for", "topic-ia-feedback-insights", 1, "block", "text-md", "font-semibold", "mb-2"], ["pTextarea", "", "id", "topic-ia-feedback-insights", "rows", "3", 1, "w-full", 2, "height", "6rem", "overflow", "auto", 3, "ngModelChange", "ngModel"], ["for", "topic-ia-call-trouble", 1, "block", "text-md", "font-semibold", "mb-2"], ["pTextarea", "", "id", "topic-ia-call-trouble", "rows", "3", 1, "w-full", 2, "height", "6rem", "overflow", "auto", 3, "ngModelChange", "ngModel"], [1, "flex", "justify-content-end", "mt-3"], ["label", "Send my input to GenAI", "icon", "pi pi-send", 3, "click", "severity", "loading", "disabled"], [1, "flex", "flex-row", "align-items-center", "gap-3"], ["styleClass", "pl-1", 1, "max-w-full", 3, "model"], ["class", "flex align-items-center gap-2 text-green-400", 4, "ngIf"], ["class", "flex align-items-center gap-2 text-red-400", 4, "ngIf"], [1, "flex", "align-items-center", "gap-2", "text-green-400"], [1, "pi", "pi-check-circle"], [1, "flex", "align-items-center", "gap-2", "text-red-400"], [1, "pi", "pi-times-circle"], [1, "grid"], [1, "col-12"], [3, "model"], ["styleClass", "w-full md:w-[30rem]", "draggableScope", "self", "droppableScope", "self", 3, "selectionChange", "onNodeDrop", "onNodeContextMenuSelect", "value", "selectionMode", "selection", "draggableNodes", "droppableNodes", "validateDrop", "contextMenu"], ["pTemplate", "default"], ["class", "col-12 md:col-6", 4, "ngIf"], [1, "flex", "flex-row", "align-items-center", "gap-2", "w-full"], ["class", "pi pi-folder", 4, "ngIf"], ["class", "pi pi-file", 4, "ngIf"], ["class", "pi pi-arrows-alt cursor-move text-color-secondary", 4, "ngIf"], ["class", "pi pi-pencil text-color-secondary", 4, "ngIf"], [1, "pi", "pi-folder"], [1, "pi", "pi-file"], [1, "pi", "pi-arrows-alt", "cursor-move", "text-color-secondary"], [1, "pi", "pi-pencil", "text-color-secondary"], ["target", "_blank", 1, "ia-label", 3, "click", "href", "innerHTML"], ["type", "text", "pInputText", "", "pSize", "small", 1, "ia-label", 3, "ngModelChange", "keydown", "ngModel"], ["icon", "pi pi-check", "severity", "secondary", "size", "small", 3, "onClick"], [1, "col-12", "md:col-6"], ["styleClass", "w-full md:w-[30rem]", "draggableScope", "topicPageTree", "droppableScope", "topicPageTree", 3, "selectionChange", "onNodeDrop", "onNodeContextMenuSelect", "value", "selectionMode", "selection", "draggableNodes", "droppableNodes", "validateDrop", "contextMenu"], [4, "ngIf", "ngIfElse"], [1, "ia-label", 3, "innerHTML"], ["label", "Maximize IA chart", "severity", "secondary", "icon", "pi pi-window-maximize", "styleClass", "mt-1 mb-3", 3, "click", 4, "ngIf"], ["class", "overflow-auto max-h-75vh surface-ground surface-border border-1 py-3 mb-3 ia-chart-container", 4, "ngIf"], ["label", "Maximize IA chart", "severity", "secondary", "icon", "pi pi-window-maximize", "styleClass", "mt-1 mb-3", 3, "click"], [1, "overflow-auto", "max-h-75vh", "surface-ground", "surface-border", "border-1", "py-3", "mb-3", "ia-chart-container"], [3, "value"], ["size", "small", "stripedRows", "", 3, "value", "tableStyle", 4, "ngIf"], ["size", "small", "stripedRows", "", 3, "value", "tableStyle"]], template: function TopicIaJsonComponent_Template(rf, ctx) {
     if (rf & 1) {
-      \u0275\u0275elementStart(0, "p", 5);
+      \u0275\u0275elementStart(0, "p", 6);
       \u0275\u0275text(1, "To edit this topic page (or to convert it to one), choose the depth of the IA crawl.");
       \u0275\u0275elementEnd();
-      \u0275\u0275elementStart(2, "div", 6)(3, "p-iftalabel")(4, "p-inputnumber", 7);
+      \u0275\u0275elementStart(2, "div", 7)(3, "p-iftalabel")(4, "p-inputnumber", 8);
       \u0275\u0275twoWayListener("ngModelChange", function TopicIaJsonComponent_Template_p_inputnumber_ngModelChange_4_listener($event) {
         \u0275\u0275twoWayBindingSet(ctx.depth, $event) || (ctx.depth = $event);
         return $event;
       });
       \u0275\u0275elementEnd();
-      \u0275\u0275elementStart(5, "label", 8);
+      \u0275\u0275elementStart(5, "label", 9);
       \u0275\u0275text(6, "Depth");
       \u0275\u0275elementEnd()();
-      \u0275\u0275elementStart(7, "p-button", 9);
+      \u0275\u0275elementStart(7, "p-button", 10);
       \u0275\u0275listener("click", function TopicIaJsonComponent_Template_p_button_click_7_listener() {
         return ctx.checkIA();
       });
       \u0275\u0275elementEnd()();
-      \u0275\u0275template(8, TopicIaJsonComponent_p_progressbar_8_Template, 1, 5, "p-progressbar", 10)(9, TopicIaJsonComponent_ng_container_9_Template, 24, 9, "ng-container", 11)(10, TopicIaJsonComponent_ng_container_10_Template, 10, 11, "ng-container", 11)(11, TopicIaJsonComponent_ng_container_11_Template, 6, 3, "ng-container", 11)(12, TopicIaJsonComponent_ng_container_12_Template, 5, 2, "ng-container", 11);
+      \u0275\u0275template(8, TopicIaJsonComponent_p_progressbar_8_Template, 1, 5, "p-progressbar", 11)(9, TopicIaJsonComponent_ng_container_9_Template, 24, 9, "ng-container", 12)(10, TopicIaJsonComponent_ng_container_10_Template, 10, 11, "ng-container", 12)(11, TopicIaJsonComponent_ng_container_11_Template, 6, 3, "ng-container", 12)(12, TopicIaJsonComponent_ng_container_12_Template, 5, 2, "ng-container", 12);
     }
     if (rf & 2) {
       \u0275\u0275advance(4);
@@ -36588,48 +37184,92 @@ var TopicIaJsonComponent = class _TopicIaJsonComponent {
       </p-tree>
     </div>
     <div class="col-12 md:col-6" *ngIf="visitsByUrl.size > 0">
+      <p-contextMenu #cmTopic [model]="options"></p-contextMenu>
       <h2>Suggested topic page sections</h2>
       <p-tree
         [value]="topicPageTree"
         styleClass="w-full md:w-[30rem]"
-        [selectionMode]="null"
+        [selectionMode]="selectable ? 'multiple' : null"
+        [(selection)]="selectedNode"
         [draggableNodes]="true"
         [droppableNodes]="true"
         draggableScope="topicPageTree"
         droppableScope="topicPageTree"
         [validateDrop]="true"
         (onNodeDrop)="onTopicPageNodeDrop($event)"
+        [contextMenu]="cmTopic"
+        (onNodeContextMenuSelect)="onNodeContextMenu($event, 'topic')"
       >
         <ng-template pTemplate="default" let-node>
           <div class="flex flex-row align-items-center gap-2 w-full">
             <i
               class="pi pi-folder"
-              *ngIf="node.children?.length && !draggable && !node.data?.isCategory"
+              *ngIf="node.children?.length && !draggable && !node.data?.isCategory && !node.data?.editing"
             ></i>
             <i
               class="pi pi-file"
-              *ngIf="!node.children?.length && !draggable && !node.data?.isCategory"
+              *ngIf="!node.children?.length && !draggable && !node.data?.isCategory && !node.data?.editing"
             ></i>
             <i
-              *ngIf="draggable && !node.data?.isCategory"
+              *ngIf="draggable && !node.data?.isCategory && !node.data?.editing"
               class="pi pi-arrows-alt cursor-move text-color-secondary"
             ></i>
-            <ng-container *ngIf="node.data?.url; else topicLabel">
-              <a
-                [href]="node.data.url"
-                target="_blank"
-                (click)="onNodeClick($event)"
-                [innerHTML]="node.label"
-                class="ia-label"
-              ></a>
+            <i
+              *ngIf="node.data?.editing"
+              class="pi pi-pencil text-color-secondary"
+            ></i>
+            <ng-container *ngIf="!node.data?.editing">
+              <ng-container *ngIf="node.data?.url; else topicLabel">
+                <a
+                  [href]="node.data.url"
+                  target="_blank"
+                  (click)="onNodeClick($event)"
+                  [innerHTML]="node.label"
+                  class="ia-label"
+                ></a>
+              </ng-container>
+              <ng-template #topicLabel>
+                <span
+                  [innerHTML]="node.label"
+                  class="ia-label"
+                  [class.font-bold]="node.data?.isCategory"
+                ></span>
+              </ng-template>
             </ng-container>
-            <ng-template #topicLabel>
-              <span
-                [innerHTML]="node.label"
+            <p-inputgroup *ngIf="node.data?.editing === 'label'">
+              <input
+                type="text"
+                pInputText
+                [(ngModel)]="node.label"
+                pSize="small"
                 class="ia-label"
-                [class.font-bold]="node.data?.isCategory"
-              ></span>
-            </ng-template>
+                (keydown)="onInputKeydown($event)"
+              />
+              <p-inputgroup-addon
+                ><p-button
+                  icon="pi pi-check"
+                  severity="secondary"
+                  size="small"
+                  (onClick)="saveNode()"
+              /></p-inputgroup-addon>
+            </p-inputgroup>
+            <p-inputgroup *ngIf="node.data?.editing === 'link'">
+              <input
+                type="text"
+                pInputText
+                [(ngModel)]="node.data.url"
+                pSize="small"
+                class="ia-label"
+                (keydown)="onInputKeydown($event)"
+              />
+              <p-inputgroup-addon
+                ><p-button
+                  icon="pi pi-check"
+                  severity="secondary"
+                  size="small"
+                  (onClick)="saveNode()"
+              /></p-inputgroup-addon>
+            </p-inputgroup>
           </div>
         </ng-template>
       </p-tree>
@@ -36711,7 +37351,7 @@ var TopicIaJsonComponent = class _TopicIaJsonComponent {
   }] });
 })();
 (() => {
-  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(TopicIaJsonComponent, { className: "TopicIaJsonComponent", filePath: "src/app/views/page-assistant/components/problems/component-guidance/topic-page/topic-ia-json.component.ts", lineNumber: 216 });
+  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(TopicIaJsonComponent, { className: "TopicIaJsonComponent", filePath: "src/app/views/page-assistant/components/problems/component-guidance/topic-page/topic-ia-json.component.ts", lineNumber: 217 });
 })();
 
 // src/app/views/page-assistant/components/problems.component.ts
@@ -39188,4 +39828,4 @@ ${base}`;
 export {
   PageAssistantCompareComponent
 };
-//# sourceMappingURL=chunk-HXCZIYEL.js.map
+//# sourceMappingURL=chunk-JZVANRYM.js.map
