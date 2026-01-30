@@ -137,7 +137,7 @@ import {
   unblockBodyScroll,
   uuid,
   zindexutils
-} from "./chunk-GOBKCC45.js";
+} from "./chunk-FCH6M5YU.js";
 import {
   ChangeDetectionStrategy,
   ChangeDetectorRef,
@@ -21539,9 +21539,15 @@ var AlertAiService = class _AlertAiService {
     const include = typeof v?.include === "boolean" ? v.include : void 0;
     return [k.toLowerCase(), { severity, include }];
   }));
-  models = this.openRouter.freeModels;
+  buildModelRotation(requested) {
+    const available = this.openRouter.models;
+    if (requested && available.includes(requested)) {
+      return [requested, ...available.filter((candidate) => candidate !== requested)];
+    }
+    return available;
+  }
   /** Call OpenRouter with the AlertsIssues prompt and return normalized issues. */
-  analyze(alertHtml, pageContext) {
+  analyze(alertHtml, pageContext, model) {
     return __async(this, null, function* () {
       const cached = this.getCachedIssues(alertHtml);
       if (cached?.length) {
@@ -21567,12 +21573,13 @@ var AlertAiService = class _AlertAiService {
       let errorNotified = false;
       let lastError;
       let resolvedIssues = [];
-      const primaryModel = this.models[0];
+      const modelRotation = this.buildModelRotation(model);
+      const primaryModel = modelRotation[0];
       try {
-        for (let i = 0; i < this.models.length; i += 1) {
-          const model = this.models[i];
+        for (let i = 0; i < modelRotation.length; i += 1) {
+          const model2 = modelRotation[i];
           try {
-            const resp = yield this.openRouter.call(model, messages, {
+            const resp = yield this.openRouter.call(model2, messages, {
               temperature: 0,
               title: "Content Assistant - Alert Guidance",
               throwOnError: true
@@ -21595,7 +21602,7 @@ var AlertAiService = class _AlertAiService {
               this.messageService.add({
                 severity: "info",
                 summary: this.translate.instant("common.ai.alertIssuesReceived", {
-                  model: this.getShortModelName(model)
+                  model: this.getShortModelName(model2)
                 }),
                 life: 3e3
               });
@@ -21605,7 +21612,7 @@ var AlertAiService = class _AlertAiService {
                   summary: this.translate.instant("common.ai.fallback.summary"),
                   detail: this.translate.instant("common.ai.fallback.detail", {
                     requested: primaryModel,
-                    used: model
+                    used: model2
                   }),
                   life: 1e4
                 });
@@ -25367,7 +25374,8 @@ var AlertsGuidanceComponent = class _AlertsGuidanceComponent {
       this.setLoading(true);
       this.setError(false);
       try {
-        const aiIssues = yield this.alertAi.analyze(html);
+        const selectedModel = this.uploadState.getSelectedAiModel();
+        const aiIssues = yield this.alertAi.analyze(html, void 0, selectedModel);
         if (!aiIssues?.length) {
           this.setError(true);
           return;
@@ -38638,6 +38646,7 @@ var PageAssistantCompareComponent = class _PageAssistantCompareComponent {
   }
   ngOnInit() {
     this.observeDarkMode();
+    this.uploadState.setSelectedAiModel(this.selectedAiModel);
     const undoText = this.translate.instant("page.compare.button.undo");
     this.acceptItems = [
       {
@@ -38887,6 +38896,7 @@ ${base}`;
   selectedAiModel = AiModel.Nemotron;
   onAiChange(key2) {
     this.selectedAiModel = key2;
+    this.uploadState.setSelectedAiModel(key2);
   }
   getEnumKeyByValue(enumObj, value) {
     return Object.keys(enumObj).find((k) => enumObj[k] === value);
@@ -39828,4 +39838,4 @@ ${base}`;
 export {
   PageAssistantCompareComponent
 };
-//# sourceMappingURL=chunk-JZVANRYM.js.map
+//# sourceMappingURL=chunk-RGET4OAE.js.map

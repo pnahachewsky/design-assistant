@@ -38473,13 +38473,99 @@ var MessageModule = class _MessageModule {
   }], null, null);
 })();
 
+// src/app/views/page-assistant/data/data.model.ts
+var WebViewType;
+(function(WebViewType2) {
+  WebViewType2["Original"] = "original";
+  WebViewType2["Modified"] = "modified";
+  WebViewType2["Diff"] = "diff";
+})(WebViewType || (WebViewType = {}));
+var SourceViewType;
+(function(SourceViewType2) {
+  SourceViewType2["Original"] = "original";
+  SourceViewType2["Modified"] = "modified";
+  SourceViewType2["SideBySide"] = "side-by-side";
+  SourceViewType2["LineByLine"] = "line-by-line";
+})(SourceViewType || (SourceViewType = {}));
+var CompareTask;
+(function(CompareTask2) {
+  CompareTask2["AiGenerated"] = "compareAI";
+  CompareTask2["PrototypeUrl"] = "compareUrl";
+  CompareTask2["TwoModels"] = "compare2Models";
+  CompareTask2["TwoPrompts"] = "compare2Prompts";
+})(CompareTask || (CompareTask = {}));
+var PromptKey;
+(function(PromptKey2) {
+  PromptKey2["Headings"] = "headings";
+  PromptKey2["Doormats"] = "doormats";
+  PromptKey2["PlainLanguage"] = "plainLanguage";
+  PromptKey2["AlertsIssues"] = "alertsIssues";
+  PromptKey2["AlertsRecommendations"] = "alertsRecommendations";
+})(PromptKey || (PromptKey = {}));
+var AiModel;
+(function(AiModel2) {
+  AiModel2["Nemotron"] = "nvidia/nemotron-3-nano-30b-a3b:free";
+  AiModel2["DeepSeek"] = "deepseek/deepseek-r1-0528:free";
+  AiModel2["Chimera"] = "tngtech/deepseek-r1t2-chimera:free";
+  AiModel2["Gemma"] = "google/gemma-3-27b-it:free";
+  AiModel2["Mistral"] = "mistralai/mistral-small-3.1-24b-instruct:free";
+  AiModel2["Llama33"] = "meta-llama/llama-3.3-70b-instruct:free";
+  AiModel2["Qwen"] = "qwen/qwen3-next-80b-a3b-instruct:free";
+  AiModel2["Llama32"] = "meta-llama/llama-3.2-3b-instruct";
+  AiModel2["Gpt5Mini"] = "openai/gpt-5-mini";
+  AiModel2["Gemini"] = "google/gemini-2.5-flash-lite";
+})(AiModel || (AiModel = {}));
+
+// src/app/services/local-storage.service.ts
+var LocalStorageService = class _LocalStorageService {
+  saveData(key, value) {
+    localStorage.setItem(key, value);
+    console.log(`Saved ` + key + `: ` + value);
+  }
+  getData(key) {
+    return localStorage.getItem(key);
+  }
+  removeData(key) {
+    localStorage.removeItem(key);
+    console.log(`Removed ` + key);
+  }
+  clearData() {
+    localStorage.clear();
+    console.log(`Removed all stored values`);
+  }
+  static \u0275fac = function LocalStorageService_Factory(__ngFactoryType__) {
+    return new (__ngFactoryType__ || _LocalStorageService)();
+  };
+  static \u0275prov = /* @__PURE__ */ \u0275\u0275defineInjectable({ token: _LocalStorageService, factory: _LocalStorageService.\u0275fac, providedIn: "root" });
+};
+(() => {
+  (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(LocalStorageService, [{
+    type: Injectable,
+    args: [{
+      providedIn: "root"
+    }]
+  }], null, null);
+})();
+
 // src/app/views/page-assistant/services/upload-state.service.ts
 var UploadStateService = class _UploadStateService {
+  storage = inject(LocalStorageService);
+  uploadDataKey = "pageAssistant.uploadData";
+  uploadTypeKey = "pageAssistant.uploadType";
+  aiModelKey = "pageAssistant.aiModel";
   //Upload type
   selectedUploadType = signal("url");
   getSelectedUploadType = computed(() => this.selectedUploadType());
   setUploadType(type) {
     this.selectedUploadType.set(type);
+    this.storage.saveData(this.uploadTypeKey, type);
+  }
+  //AI model
+  selectedAiModel = signal(AiModel.Nemotron);
+  getSelectedAiModel = computed(() => this.selectedAiModel());
+  setSelectedAiModel(model2) {
+    this.selectedAiModel.set(model2);
+    this.storage.saveData(this.aiModelKey, model2);
   }
   //Upload data
   uploadData = signal(null);
@@ -38490,8 +38576,12 @@ var UploadStateService = class _UploadStateService {
   maxHistory = 20;
   //max size of undo array
   getUploadData = computed(() => this.uploadData());
+  constructor() {
+    this.restoreState();
+  }
   setUploadData(data) {
     this.uploadData.set(data);
+    this.persistUploadData();
   }
   mergeModifiedData(modified) {
     const current = this.uploadData() || {};
@@ -38499,6 +38589,7 @@ var UploadStateService = class _UploadStateService {
       modifiedHtml: modified.modifiedHtml,
       modifiedUrl: modified.modifiedUrl
     }));
+    this.persistUploadData();
   }
   mergeOriginalData(original) {
     const current = this.uploadData() || {};
@@ -38506,6 +38597,7 @@ var UploadStateService = class _UploadStateService {
       originalHtml: original.originalHtml,
       originalUrl: original.originalUrl
     }));
+    this.persistUploadData();
   }
   mergeFoundFlags(version, flags) {
     const current = this.uploadData() || {};
@@ -38518,6 +38610,7 @@ var UploadStateService = class _UploadStateService {
         [version]: __spreadValues(__spreadValues({}, currentFound[version]), flags)
       })
     }));
+    this.persistUploadData();
   }
   // Restore the previous state (for undo button)
   undoLastChange() {
@@ -38540,8 +38633,45 @@ var UploadStateService = class _UploadStateService {
   //Reset
   resetUploadFlow() {
     this.selectedUploadType.set("url");
+    this.selectedAiModel.set(AiModel.Nemotron);
     this.uploadData.set(null);
     this.prevUploadData = [];
+    this.storage.removeData(this.uploadTypeKey);
+    this.storage.removeData(this.aiModelKey);
+    this.storage.removeData(this.uploadDataKey);
+  }
+  persistUploadData() {
+    try {
+      const data = this.uploadData();
+      if (!data) {
+        this.storage.removeData(this.uploadDataKey);
+        return;
+      }
+      this.storage.saveData(this.uploadDataKey, JSON.stringify(data));
+    } catch (err) {
+      console.warn("Failed to persist upload state:", err);
+    }
+  }
+  restoreState() {
+    const storedType = this.storage.getData(this.uploadTypeKey);
+    if (storedType === "url" || storedType === "paste" || storedType === "word") {
+      this.selectedUploadType.set(storedType);
+    }
+    const storedModel = this.storage.getData(this.aiModelKey);
+    if (storedModel && Object.values(AiModel).includes(storedModel)) {
+      this.selectedAiModel.set(storedModel);
+    }
+    const storedData = this.storage.getData(this.uploadDataKey);
+    if (!storedData)
+      return;
+    try {
+      const parsed = JSON.parse(storedData);
+      if (parsed && typeof parsed === "object") {
+        this.uploadData.set(parsed);
+      }
+    } catch (err) {
+      console.warn("Failed to restore upload state:", err);
+    }
   }
   static \u0275fac = function UploadStateService_Factory(__ngFactoryType__) {
     return new (__ngFactoryType__ || _UploadStateService)();
@@ -38554,7 +38684,7 @@ var UploadStateService = class _UploadStateService {
     args: [{
       providedIn: "root"
     }]
-  }], null, null);
+  }], () => [], null);
 })();
 
 // src/app/views/page-assistant/data/sample-data.constants.ts
@@ -48333,49 +48463,6 @@ var HorizontalRadioButtonsComponent = class _HorizontalRadioButtonsComponent {
   (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(HorizontalRadioButtonsComponent, { className: "HorizontalRadioButtonsComponent", filePath: "src/app/components/horizontal-radio-buttons/horizontal-radio-buttons.component.ts", lineNumber: 33 });
 })();
 
-// src/app/views/page-assistant/data/data.model.ts
-var WebViewType;
-(function(WebViewType2) {
-  WebViewType2["Original"] = "original";
-  WebViewType2["Modified"] = "modified";
-  WebViewType2["Diff"] = "diff";
-})(WebViewType || (WebViewType = {}));
-var SourceViewType;
-(function(SourceViewType2) {
-  SourceViewType2["Original"] = "original";
-  SourceViewType2["Modified"] = "modified";
-  SourceViewType2["SideBySide"] = "side-by-side";
-  SourceViewType2["LineByLine"] = "line-by-line";
-})(SourceViewType || (SourceViewType = {}));
-var CompareTask;
-(function(CompareTask2) {
-  CompareTask2["AiGenerated"] = "compareAI";
-  CompareTask2["PrototypeUrl"] = "compareUrl";
-  CompareTask2["TwoModels"] = "compare2Models";
-  CompareTask2["TwoPrompts"] = "compare2Prompts";
-})(CompareTask || (CompareTask = {}));
-var PromptKey;
-(function(PromptKey2) {
-  PromptKey2["Headings"] = "headings";
-  PromptKey2["Doormats"] = "doormats";
-  PromptKey2["PlainLanguage"] = "plainLanguage";
-  PromptKey2["AlertsIssues"] = "alertsIssues";
-  PromptKey2["AlertsRecommendations"] = "alertsRecommendations";
-})(PromptKey || (PromptKey = {}));
-var AiModel;
-(function(AiModel2) {
-  AiModel2["Nemotron"] = "nvidia/nemotron-3-nano-30b-a3b:free";
-  AiModel2["DeepSeek"] = "deepseek/deepseek-r1-0528:free";
-  AiModel2["Chimera"] = "tngtech/deepseek-r1t2-chimera:free";
-  AiModel2["Gemma"] = "google/gemma-3-27b-it:free";
-  AiModel2["Mistral"] = "mistralai/mistral-small-3.1-24b-instruct:free";
-  AiModel2["Llama33"] = "meta-llama/llama-3.3-70b-instruct:free";
-  AiModel2["Qwen"] = "qwen/qwen3-next-80b-a3b-instruct:free";
-  AiModel2["Llama32"] = "meta-llama/llama-3.2-3b-instruct";
-  AiModel2["Gpt5Mini"] = "openai/gpt-5-mini";
-  AiModel2["Gemini"] = "google/gemini-2.5-flash-lite";
-})(AiModel || (AiModel = {}));
-
 // node_modules/primeng/fesm2022/primeng-toolbar.mjs
 var _c012 = ["start"];
 var _c110 = ["end"];
@@ -53342,37 +53429,6 @@ var IftaLabelModule = class _IftaLabelModule {
     args: [{
       imports: [IftaLabel, CommonModule, SharedModule, RouterModule],
       exports: [IftaLabel, SharedModule]
-    }]
-  }], null, null);
-})();
-
-// src/app/services/local-storage.service.ts
-var LocalStorageService = class _LocalStorageService {
-  saveData(key, value) {
-    localStorage.setItem(key, value);
-    console.log(`Saved ` + key + `: ` + value);
-  }
-  getData(key) {
-    return localStorage.getItem(key);
-  }
-  removeData(key) {
-    localStorage.removeItem(key);
-    console.log(`Removed ` + key);
-  }
-  clearData() {
-    localStorage.clear();
-    console.log(`Removed all stored values`);
-  }
-  static \u0275fac = function LocalStorageService_Factory(__ngFactoryType__) {
-    return new (__ngFactoryType__ || _LocalStorageService)();
-  };
-  static \u0275prov = /* @__PURE__ */ \u0275\u0275defineInjectable({ token: _LocalStorageService, factory: _LocalStorageService.\u0275fac, providedIn: "root" });
-};
-(() => {
-  (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(LocalStorageService, [{
-    type: Injectable,
-    args: [{
-      providedIn: "root"
     }]
   }], null, null);
 })();
@@ -100122,6 +100178,12 @@ export {
   InputGroupAddonModule,
   Message,
   MessageModule,
+  WebViewType,
+  SourceViewType,
+  CompareTask,
+  PromptKey,
+  AiModel,
+  LocalStorageService,
   UploadStateService,
   FetchService,
   UrlDataService,
@@ -100141,7 +100203,6 @@ export {
   TooltipModule,
   Toast,
   ToastModule,
-  LocalStorageService,
   ApiKeyService,
   Card,
   CardModule,
@@ -100187,11 +100248,6 @@ export {
   Accordion,
   AccordionModule,
   HorizontalRadioButtonsComponent,
-  WebViewType,
-  SourceViewType,
-  CompareTask,
-  PromptKey,
-  AiModel,
   StepList,
   Step,
   StepPanel,
@@ -100236,4 +100292,4 @@ export {
    * License: MIT
    *)
 */
-//# sourceMappingURL=chunk-GOBKCC45.js.map
+//# sourceMappingURL=chunk-FCH6M5YU.js.map
