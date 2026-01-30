@@ -38577,6 +38577,12 @@ var UploadStateService = class _UploadStateService {
   //max size of undo array
   getUploadData = computed(() => this.uploadData());
   constructor() {
+    if (this.isPageReload()) {
+      this.storage.removeData(this.uploadTypeKey);
+      this.storage.removeData(this.aiModelKey);
+      this.storage.removeData(this.uploadDataKey);
+      return;
+    }
     this.restoreState();
   }
   setUploadData(data) {
@@ -38671,6 +38677,19 @@ var UploadStateService = class _UploadStateService {
       }
     } catch (err) {
       console.warn("Failed to restore upload state:", err);
+    }
+  }
+  isPageReload() {
+    try {
+      const navEntries = performance.getEntriesByType("navigation");
+      const nav = navEntries[0];
+      if (nav?.type) {
+        return nav.type === "reload";
+      }
+      const legacy = performance.navigation;
+      return legacy?.type === 1;
+    } catch {
+      return false;
     }
   }
   static \u0275fac = function UploadStateService_Factory(__ngFactoryType__) {
@@ -100292,4 +100311,4 @@ export {
    * License: MIT
    *)
 */
-//# sourceMappingURL=chunk-FCH6M5YU.js.map
+//# sourceMappingURL=chunk-Q7LF4CXO.js.map
