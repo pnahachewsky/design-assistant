@@ -36,10 +36,20 @@ export class AlertAiService {
       }),
     );
 
-  private readonly models: string[] = this.openRouter.freeModels;
+  private buildModelRotation(requested?: string): string[] {
+    const available = this.openRouter.models;
+    if (requested && available.includes(requested)) {
+      return [requested, ...available.filter((candidate) => candidate !== requested)];
+    }
+    return available;
+  }
 
   /** Call OpenRouter with the AlertsIssues prompt and return normalized issues. */
-  async analyze(alertHtml: string, pageContext?: string): Promise<AlertIssue[]> {
+  async analyze(
+    alertHtml: string,
+    pageContext?: string,
+    model?: AiModel,
+  ): Promise<AlertIssue[]> {
     const cached = this.getCachedIssues(alertHtml);
     if (cached?.length) {
       return cached;
@@ -66,11 +76,12 @@ export class AlertAiService {
     let errorNotified = false;
     let lastError: unknown | undefined;
     let resolvedIssues: AlertIssue[] = [];
-    const primaryModel = this.models[0];
+    const modelRotation = this.buildModelRotation(model);
+    const primaryModel = modelRotation[0];
 
     try {
-      for (let i = 0; i < this.models.length; i += 1) {
-        const model = this.models[i];
+      for (let i = 0; i < modelRotation.length; i += 1) {
+        const model = modelRotation[i];
         try {
           const resp = await this.openRouter.call(model, messages, {
             temperature: 0.0,

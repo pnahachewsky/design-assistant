@@ -361,6 +361,7 @@ export class PageAssistantCompareComponent
 
   ngOnInit(): void {
     this.observeDarkMode();
+    this.uploadState.setSelectedAiModel(this.selectedAiModel);
 
     //Translations
     const undoText = this.translate.instant('page.compare.button.undo');
@@ -668,6 +669,7 @@ export class PageAssistantCompareComponent
 
   onAiChange(key: AiModel) {
     this.selectedAiModel = key;
+    this.uploadState.setSelectedAiModel(key);
   }
 
   private getEnumKeyByValue<T extends Record<string, string>>(

@@ -211,7 +211,8 @@ export class AlertsGuidanceComponent implements OnInit, OnChanges, OnDestroy {
     this.setLoading(true);
     this.setError(false);
     try {
-      const aiIssues = await this.alertAi.analyze(html);
+      const selectedModel = this.uploadState.getSelectedAiModel();
+      const aiIssues = await this.alertAi.analyze(html, undefined, selectedModel);
       if (!aiIssues?.length) {
         this.setError(true);
         return;

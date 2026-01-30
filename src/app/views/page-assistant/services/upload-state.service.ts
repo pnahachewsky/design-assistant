@@ -1,16 +1,30 @@
-import { Injectable, signal, computed } from '@angular/core';
-import { UploadData, ModifiedData, OriginalData } from '../data/data.model'
+import { Injectable, signal, computed, inject } from '@angular/core';
+import { UploadData, ModifiedData, OriginalData, AiModel } from '../data/data.model'
+import { LocalStorageService } from '../../../services/local-storage.service';
 
 @Injectable({
   providedIn: 'root'
 })
 export class UploadStateService {
+  private storage = inject(LocalStorageService);
+  private readonly uploadDataKey = 'pageAssistant.uploadData';
+  private readonly uploadTypeKey = 'pageAssistant.uploadType';
+  private readonly aiModelKey = 'pageAssistant.aiModel';
 
   //Upload type
   private selectedUploadType = signal<'url' | 'paste' | 'word'>('url');
   getSelectedUploadType = computed(() => this.selectedUploadType());
   setUploadType(type: 'url' | 'paste' | 'word') {
     this.selectedUploadType.set(type);
+    this.storage.saveData(this.uploadTypeKey, type);
+  }
+
+  //AI model
+  private selectedAiModel = signal<AiModel>(AiModel.Nemotron);
+  getSelectedAiModel = computed(() => this.selectedAiModel());
+  setSelectedAiModel(model: AiModel) {
+    this.selectedAiModel.set(model);
+    this.storage.saveData(this.aiModelKey, model);
   }
 
   //Upload data
@@ -20,8 +34,13 @@ export class UploadStateService {
   private maxHistory = 20; //max size of undo array
   getUploadData = computed(() => this.uploadData());
 
+  constructor() {
+    this.restoreState();
+  }
+
   setUploadData(data: Partial<UploadData>) {
     this.uploadData.set(data);
+    this.persistUploadData();
   }
 
   mergeModifiedData(modified: ModifiedData): void {
@@ -31,6 +50,7 @@ export class UploadStateService {
       modifiedHtml: modified.modifiedHtml,
       modifiedUrl: modified.modifiedUrl,
     });
+    this.persistUploadData();
   }
 
   mergeOriginalData(original: OriginalData): void {
@@ -40,6 +60,7 @@ export class UploadStateService {
       originalHtml: original.originalHtml,
       originalUrl: original.originalUrl,
     });
+    this.persistUploadData();
   }
 
   mergeFoundFlags(version: 'original' | 'modified', flags: { hidden: boolean; modal: boolean; dynamic: boolean }) {
@@ -58,6 +79,7 @@ export class UploadStateService {
         }
       }
     });
+    this.persistUploadData();
   }
 
   // Restore the previous state (for undo button)
@@ -82,8 +104,47 @@ export class UploadStateService {
   //Reset
   resetUploadFlow(): void {
     this.selectedUploadType.set('url'); // default to URL
+    this.selectedAiModel.set(AiModel.Nemotron);
     this.uploadData.set(null);
     this.prevUploadData = [];
+    this.storage.removeData(this.uploadTypeKey);
+    this.storage.removeData(this.aiModelKey);
+    this.storage.removeData(this.uploadDataKey);
   }
 
+  private persistUploadData(): void {
+    try {
+      const data = this.uploadData();
+      if (!data) {
+        this.storage.removeData(this.uploadDataKey);
+        return;
+      }
+      this.storage.saveData(this.uploadDataKey, JSON.stringify(data));
+    } catch (err) {
+      console.warn('Failed to persist upload state:', err);
+    }
+  }
+
+  private restoreState(): void {
+    const storedType = this.storage.getData(this.uploadTypeKey);
+    if (storedType === 'url' || storedType === 'paste' || storedType === 'word') {
+      this.selectedUploadType.set(storedType);
+    }
+
+    const storedModel = this.storage.getData(this.aiModelKey);
+    if (storedModel && Object.values(AiModel).includes(storedModel as AiModel)) {
+      this.selectedAiModel.set(storedModel as AiModel);
+    }
+
+    const storedData = this.storage.getData(this.uploadDataKey);
+    if (!storedData) return;
+    try {
+      const parsed = JSON.parse(storedData) as Partial<UploadData>;
+      if (parsed && typeof parsed === 'object') {
+        this.uploadData.set(parsed);
+      }
+    } catch (err) {
+      console.warn('Failed to restore upload state:', err);
+    }
+  }
 }
