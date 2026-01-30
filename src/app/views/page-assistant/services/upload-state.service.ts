@@ -35,6 +35,12 @@ export class UploadStateService {
   getUploadData = computed(() => this.uploadData());
 
   constructor() {
+    if (this.isPageReload()) {
+      this.storage.removeData(this.uploadTypeKey);
+      this.storage.removeData(this.aiModelKey);
+      this.storage.removeData(this.uploadDataKey);
+      return;
+    }
     this.restoreState();
   }
 
@@ -145,6 +151,21 @@ export class UploadStateService {
       }
     } catch (err) {
       console.warn('Failed to restore upload state:', err);
+    }
+  }
+
+  private isPageReload(): boolean {
+    try {
+      const navEntries = performance.getEntriesByType('navigation');
+      const nav = navEntries[0] as PerformanceNavigationTiming | undefined;
+      if (nav?.type) {
+        return nav.type === 'reload';
+      }
+      // Fallback for older browsers
+      const legacy = (performance as Performance & { navigation?: { type?: number } }).navigation;
+      return legacy?.type === 1;
+    } catch {
+      return false;
     }
   }
 }
