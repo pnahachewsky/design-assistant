@@ -21365,51 +21365,23 @@ JSON Structure:
 }
 `,
   [PromptKey.AlertsRecommendations]: `
-Role: You are an expert in content design, Web Accessibility (WCAG 2.1), the Accessible Canada Act, and the Canada.ca Design System. Your primary function is to propose corrected alert HTML structures without rewriting the existing alert text.
-Objective: Produce HTML recommendations for each alert on the page, using the page context and the provided issues list to choose correct hierarchy and placement. Apply fixes based on the issues list.
-________________________________________
-1. Input Handling
-You must accept input in the form of URLs, copy/pasted content, or uploaded documents. You must distinguish between four specific input types:
- - The Alert(s): The specific HTML or text of the alert component(s) being analyzed. An alert is the entire HTML element with class "alert" (the full container), including all of its children.
- - The Page Context: The surrounding content or page where the alert lives (to determine placement and hierarchy).
- - The Issues: The list of pain points returned by the AlertsIssues phase (category, description, recommendation).
- - The Alerts List: A list of alert_html items with alert_index values. Use these exact snippets for in-place replacement.
-________________________________________
-2. Recommendation Rules
- - Alert scope: only edit inside the alert container (the full element with class "alert" and its children). Do not modify content outside it.
- - Coverage required: return a replacements entry for every alert in the Alerts List (one per alert_index). Do not omit any alert_index.
- - Issue coverage required: for each alert_index, apply all issues from the issues list that are relevant to that alert. If an issue applies to multiple alerts, update each of them.
- - Do not skip issues. Each selected issue must result in at least one concrete HTML change in the corresponding alert.
- - Prefer to keep the exact alert wording. If an issue requires text changes (e.g., too wordy, multiple links, unclear or missing heading), you may edit wording while preserving meaning.
- - Do not rewrite or edit the remainder of the page.
- - You may split existing sentences into a heading and body if needed.
- - Headings should be as short as possible while remaining meaningful.
- - Use Canada.ca alert markup conventions and valid heading levels that match the page outline.
- - Apply fixes only to alerts identified in the issues list. Do not create new alerts.
- - Update alerts in place. Do not move alerts, change their order, or insert duplicates elsewhere on the page.
- - Use alert_index from the alerts list to target replacements. Replace only the matching alert_html snippet in the original page.
- - updated_html must be the full alert component markup, including the wrapper with the correct alert-* class. Do not put alert classes only on headings or child elements.
- - Ensure one alert per component; do not merge unrelated alerts.
- - Ensure accessibility requirements: heading element present, proper hierarchy, text alternatives for icons, no hidden content.
- - Keep links to a single primary link when possible; do not add new link text.
-________________________________________
-3. Output Format (JSON Only)
-Return only JSON. Do not include HTML outside the JSON values.
-JSON Structure:
+You are an expert in Canada.ca alerts + accessibility. Fix alert HTML only.
+Inputs: page HTML, page context, issues list, alerts list (alert_html + alert_index).
+Inputs: issues list, alerts list (alert_html + alert_index).
+Rules (must follow):
+- Edit only inside each .alert container; keep alerts in place; no new alerts.
+- Return a replacements entry for every alert_index in the alerts list.
+- Apply each relevant issue to every alert it affects (e.g., if two alerts are "Too wordy", update both); each issue must cause at least one HTML change per affected alert.
+- Prefer original wording; edit text only when required (too wordy, multiple links, unclear/missing heading).
+- Use valid heading levels, include a heading, no hidden content, add text alternatives if needed.
+- updated_html must be the full alert wrapper with the correct alert-* class.
+- Keep to one primary link when possible; do not add new link text.
+ - Output strict JSON only (no prose, no code fences).
+ - Every alert_index must appear exactly once in replacements.
+ - JSON schema: {"replacements":[{"alert_index":number,"updated_html":string}]}
+Output JSON only, with this structure:
 {
-  "full_html": "[Full HTML input with only the alert recommendations applied]",
-  "recommendations": [
-    {
-      "alert_index": 1,
-      "recommended_html": "<section class="alert alert-info">...</section>"
-    }
-  ],
-  "replacements": [
-    {
-      "alert_index": 1,
-      "updated_html": "<section class="alert alert-info">...</section>"
-    }
-  ]
+  "replacements": [{ "alert_index": 1, "updated_html": "<section class=\\"alert alert-info\\">...</section>" }]
 }
 `
 };
@@ -38811,10 +38783,17 @@ ${base}`;
     const fullHtml = typeof root["full_html"] === "string" ? root["full_html"] : "";
     const recommendations = Array.isArray(root["recommendations"]) ? root["recommendations"] : [];
     const replacements = Array.isArray(root["replacements"]) ? root["replacements"] : [];
+    const filteredReplacements = replacements.filter((x) => x && typeof x === "object");
+    const filteredRecommendations = recommendations.filter((x) => x && typeof x === "object");
+    const normalizedReplacements = filteredReplacements.length ? filteredReplacements : filteredRecommendations.map((rec) => {
+      const alertIndex = rec["alert_index"];
+      const updatedHtml = rec["updated_html"] ?? rec["recommended_html"];
+      return { alert_index: alertIndex, updated_html: updatedHtml };
+    }).filter((rec) => rec["alert_index"] != null && typeof rec["updated_html"] === "string");
     return {
       fullHtml,
-      recommendations: recommendations.filter((x) => x && typeof x === "object"),
-      replacements: replacements.filter((x) => x && typeof x === "object")
+      recommendations: filteredRecommendations,
+      replacements: normalizedReplacements
     };
   }
   applyAlertReplacements(originalHtml, replacements) {
@@ -38845,6 +38824,7 @@ ${base}`;
   runAlertRecommendations(html, issues, model, headers, url) {
     return __async(this, null, function* () {
       const shortModel = this.getShortModelName(model);
+      const recStart = performance.now();
       this.statusMessage = "Generating alert recommendations.";
       const recPrompt = PromptTemplates[PromptKey.AlertsRecommendations];
       const alertDoc = new DOMParser().parseFromString(html, "text/html");
@@ -38854,34 +38834,67 @@ ${base}`;
         alert_html: el.outerHTML,
         alert_text: (el.textContent || "").trim()
       }));
-      const recPayload = JSON.stringify({ pageHtml: html, issues, alerts });
-      const recResponse = yield fetch(url, {
-        method: "POST",
-        headers,
-        body: JSON.stringify({
-          models: this.buildModelRotation(model),
-          messages: [
-            { role: "system", content: recPrompt },
-            { role: "user", content: recPayload }
-          ],
-          temperature: 0,
-          provider: { allow_fallbacks: true }
-        })
+      const recPayload = JSON.stringify({ issues, alerts });
+      const recPayloadBytes = new TextEncoder().encode(recPayload).length;
+      console.log("Alert rec payload", {
+        alerts: alerts.length,
+        issues: issues.length,
+        bytes: recPayloadBytes
       });
-      if (recResponse.status !== 200) {
-        throw new Error(`Alert recommendations failed (${recResponse.status}) for ${shortModel}.`);
+      const candidates = this.buildModelRotation(model);
+      let recText;
+      let usedModel;
+      let lastError;
+      for (const candidate of candidates) {
+        const recResponse = yield fetch(url, {
+          method: "POST",
+          headers,
+          body: JSON.stringify({
+            models: [candidate],
+            messages: [
+              { role: "system", content: recPrompt },
+              { role: "user", content: recPayload }
+            ],
+            temperature: 0,
+            provider: { allow_fallbacks: false }
+          })
+        });
+        if (recResponse.status !== 200) {
+          const shortName = this.getShortModelName(candidate);
+          if (recResponse.status === 429) {
+            const retryAfter = Number.parseInt(recResponse.headers.get("retry-after") || "", 10);
+            const delayMs = Number.isFinite(retryAfter) ? retryAfter * 1e3 : 600;
+            console.warn(`Alert recommendations rate-limited (${shortName}); retrying next model in ${delayMs}ms.`);
+            yield new Promise((resolve) => setTimeout(resolve, delayMs));
+          }
+          lastError = new Error(`Alert recommendations failed (${recResponse.status}) for ${shortName}.`);
+          continue;
+        }
+        const recJson = yield recResponse.json();
+        if (recJson.error) {
+          lastError = new Error(`Alert recommendations error (${this.getShortModelName(candidate)}): ${recJson.error?.message || "Unknown error"}`);
+          continue;
+        }
+        recText = recJson.choices?.[0].message?.content;
+        usedModel = recJson?.model || candidate;
+        if (!recText) {
+          lastError = new Error(`Alert recommendations response was empty (${this.getShortModelName(candidate)}).`);
+          console.warn(lastError.message);
+          continue;
+        }
+        break;
       }
-      const recJson = yield recResponse.json();
-      if (recJson.error) {
-        throw new Error(`Alert recommendations error (${shortModel}): ${recJson.error?.message || "Unknown error"}`);
-      }
-      const recText = recJson.choices?.[0].message?.content;
       if (!recText) {
-        throw new Error(`Alert recommendations response was empty (${shortModel}).`);
+        throw lastError ?? new Error(`Alert recommendations response was empty (${shortModel}).`);
       }
+      console.log("Alert rec model + time", {
+        requestedModel: model,
+        usedModel,
+        ms: Math.round(performance.now() - recStart)
+      });
       const parsed = this.parseRecommendationsFromAi(recText);
       const replacedHtml = parsed ? this.applyAlertReplacements(html, parsed.replacements) : null;
-      const finalHtml = replacedHtml || parsed?.fullHtml;
+      const finalHtml = replacedHtml;
       if (!finalHtml) {
         throw new Error(`Alert recommendations missing updated HTML (${shortModel}).`);
       }
@@ -38906,9 +38919,15 @@ ${base}`;
     return key2 ? this.translate.instant(`page.ai-options.model.short.${key2}`) : model;
   }
   buildModelRotation(model) {
-    const invalidFallbacks = /* @__PURE__ */ new Set([AiModel.Nemotron]);
-    const available = this.openRouter.freeModels.filter((candidate) => !invalidFallbacks.has(candidate));
-    return [model, ...available.filter((candidate) => candidate !== model)].slice(0, 3);
+    const fallbackOrder = [AiModel.Gemma, AiModel.Llama33];
+    const available = new Set(this.openRouter.freeModels);
+    const rotation = [model];
+    for (const candidate of fallbackOrder) {
+      if (candidate !== model && available.has(candidate)) {
+        rotation.push(candidate);
+      }
+    }
+    return rotation;
   }
   //AI interaction
   isLoading = false;
@@ -38975,22 +38994,44 @@ ${base}`;
             return;
           }
         }
-        console.log("Sending to OpenRouter:", { payload });
-        const orResponse = yield fetch(url, {
-          method: "POST",
-          headers,
-          body: JSON.stringify(payload)
-        });
-        console.log(`OpenRouter response status: `, orResponse.status);
-        if (orResponse.status === 200) {
-          console.log("Waiting for AI response");
-          this.statusMessage = this.translate.instant("common.ai.generating");
-        }
-        const aiResponse = yield orResponse.json();
-        if (aiResponse.error) {
-          console.groupCollapsed("AI Error");
-          console.error(aiResponse.error?.status);
-          console.warn(`400: Bad Request (invalid or missing params, CORS)
+        const candidates = this.buildModelRotation(model);
+        let aiResponse = null;
+        let lastAttemptedModel = model;
+        for (let i = 0; i < candidates.length; i += 1) {
+          const candidate = candidates[i];
+          lastAttemptedModel = candidate;
+          const attemptPayload = __spreadProps(__spreadValues({}, payload), {
+            models: [candidate],
+            provider: { allow_fallbacks: false }
+          });
+          console.log("Sending to OpenRouter:", { payload: attemptPayload });
+          const orResponse = yield fetch(url, {
+            method: "POST",
+            headers,
+            body: JSON.stringify(attemptPayload)
+          });
+          console.log(`OpenRouter response status: `, orResponse.status);
+          if (orResponse.status === 200) {
+            console.log("Waiting for AI response");
+            this.statusMessage = this.translate.instant("common.ai.generating");
+          }
+          const attemptResponse = (yield orResponse.json().catch(() => ({}))) || {};
+          if (orResponse.status === 404 && i < candidates.length - 1) {
+            console.warn(`Model not found (404): ${candidate}. Retrying next model in rotation.`);
+            continue;
+          }
+          if (orResponse.status === 429 && i < candidates.length - 1) {
+            const retryAfterHeader = orResponse.headers.get("retry-after");
+            const retryAfterMs = retryAfterHeader ? Math.min(Math.max(Number(retryAfterHeader) * 1e3, 600), 3e4) : 600;
+            console.warn(`Rate limited (429): ${candidate}. Retrying next model in ${retryAfterMs}ms.`);
+            yield new Promise((resolve) => setTimeout(resolve, retryAfterMs));
+            continue;
+          }
+          if (attemptResponse.error) {
+            const attemptModelShort = this.getShortModelName(candidate);
+            console.groupCollapsed("AI Error");
+            console.error(attemptResponse.error?.status);
+            console.warn(`400: Bad Request (invalid or missing params, CORS)
 
                     401: Invalid credentials (OAuth session expired, disabled/invalid API key)
 
@@ -39005,11 +39046,17 @@ ${base}`;
                     502: Your chosen model is down or we received an invalid response from it
 
                     503: There is no available model provider that meets your routing requirements`);
-          console.error(aiResponse.error?.message);
-          console.groupEnd();
-          this.statusSeverity = "error";
-          this.statusMessage = this.translate.instant("common.ai.errorCommunicatingAi");
-          throw new Error(`AI error (${requestedModelShort}): ${aiResponse.error?.message || "Unknown error"}`);
+            console.error(attemptResponse.error?.message);
+            console.groupEnd();
+            this.statusSeverity = "error";
+            this.statusMessage = this.translate.instant("common.ai.errorCommunicatingAi");
+            throw new Error(`AI error (${attemptModelShort}): ${attemptResponse.error?.message || "Unknown error"}`);
+          }
+          aiResponse = attemptResponse;
+          break;
+        }
+        if (!aiResponse) {
+          throw new Error(`AI response was empty (${this.getShortModelName(lastAttemptedModel)}).`);
         }
         const aiHtml = aiResponse.choices?.[0].message.content;
         if (!aiHtml) {
@@ -39027,10 +39074,12 @@ ${base}`;
         const requestedModel = this.translate.instant(`page.ai-options.model.short.${requestedModelKey}`);
         const usedModel = this.translate.instant(`page.ai-options.model.short.${usedModelKey}`);
         if (model != aiResponse.model) {
+          const fallbackOrder = this.buildModelRotation(model).map((candidate) => this.getShortModelName(candidate)).join(" -> ");
           console.warn("A FALLBACK MODEL WAS USED");
           console.groupCollapsed("Fallback model info");
           console.log(`Requested model: `, model);
           console.log(`Fallback model: `, aiResponse.model);
+          console.log(`Fallback order: `, fallbackOrder);
           console.log(`Your requested model may be down or you have exceeded the rate limit`);
           console.groupEnd();
           this.statusSeverity = "warn";
@@ -39838,4 +39887,4 @@ ${base}`;
 export {
   PageAssistantCompareComponent
 };
-//# sourceMappingURL=chunk-LRED32YP.js.map
+//# sourceMappingURL=chunk-XRWKN6D4.js.map
