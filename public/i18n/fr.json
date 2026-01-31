@@ -115,7 +115,7 @@
 	"page.compare.view.sidebyside": "Côte à côte",
 	"page.compare.view.linebyline": "",
 	"page.ai-options.header": "Options GenIA",
-	"page.ai-options.task.header": "Tâche",
+	"page.ai-options.task.header": "Tâche (Type de comparaison)",
 	"page.ai-options.task.legend": "Comparer votre contenu avec :",
 	"page.ai-options.task.AiGenerated": "Contenu généré par l'IA",
 	"page.ai-options.task.PrototypeUrl": "Une URL prototype",
