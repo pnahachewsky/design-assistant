@@ -548,14 +548,30 @@ export class PageAssistantCompareComponent
     const replacements = Array.isArray(root['replacements'])
       ? (root['replacements'] as unknown[])
       : [];
+    const filteredReplacements = replacements.filter(
+      (x) => x && typeof x === 'object',
+    ) as Record<string, unknown>[];
+    const filteredRecommendations = recommendations.filter(
+      (x) => x && typeof x === 'object',
+    ) as Record<string, unknown>[];
+    const normalizedReplacements =
+      filteredReplacements.length
+        ? filteredReplacements
+        : filteredRecommendations
+            .map((rec) => {
+              const alertIndex = rec['alert_index'];
+              const updatedHtml = rec['updated_html'] ?? rec['recommended_html'];
+              return { alert_index: alertIndex, updated_html: updatedHtml };
+            })
+            .filter(
+              (rec) =>
+                rec['alert_index'] != null &&
+                typeof rec['updated_html'] === 'string',
+            );
     return {
       fullHtml,
-      recommendations: recommendations.filter(
-        (x) => x && typeof x === 'object',
-      ) as Record<string, unknown>[],
-      replacements: replacements.filter(
-        (x) => x && typeof x === 'object',
-      ) as Record<string, unknown>[],
+      recommendations: filteredRecommendations,
+      replacements: normalizedReplacements,
     };
   }
 
@@ -599,6 +615,7 @@ export class PageAssistantCompareComponent
     url: string,
   ): Promise<void> {
     const shortModel = this.getShortModelName(model);
+    const recStart = performance.now();
     this.statusMessage = 'Generating alert recommendations.';
     const recPrompt = PromptTemplates[PromptKey.AlertsRecommendations];
     const alertDoc = new DOMParser().parseFromString(html, 'text/html');
@@ -608,48 +625,89 @@ export class PageAssistantCompareComponent
       alert_html: el.outerHTML,
       alert_text: (el.textContent || '').trim(),
     }));
-    const recPayload = JSON.stringify({ pageHtml: html, issues, alerts });
+    const recPayload = JSON.stringify({ issues, alerts });
+    const recPayloadBytes = new TextEncoder().encode(recPayload).length;
+    console.log('Alert rec payload', {
+      alerts: alerts.length,
+      issues: issues.length,
+      bytes: recPayloadBytes,
+    });
 
+    const candidates = this.buildModelRotation(model);
+    let recText: string | undefined;
+    let usedModel: string | undefined;
+    let lastError: Error | undefined;
+
+    for (const candidate of candidates) {
       const recResponse = await fetch(url, {
         method: 'POST',
         headers,
         body: JSON.stringify({
-          models: this.buildModelRotation(model),
+          models: [candidate],
           messages: [
             { role: 'system', content: recPrompt },
             { role: 'user', content: recPayload },
           ],
-        temperature: 0,
-        provider: { allow_fallbacks: true },
-      }),
+          temperature: 0,
+          provider: { allow_fallbacks: false },
+        }),
+      });
+
+      if (recResponse.status !== 200) {
+        const shortName = this.getShortModelName(candidate);
+        if (recResponse.status === 429) {
+          const retryAfter = Number.parseInt(
+            recResponse.headers.get('retry-after') || '',
+            10,
+          );
+          const delayMs = Number.isFinite(retryAfter) ? retryAfter * 1000 : 600;
+          console.warn(`Alert recommendations rate-limited (${shortName}); retrying next model in ${delayMs}ms.`);
+          await new Promise((resolve) => setTimeout(resolve, delayMs));
+        }
+        lastError = new Error(
+          `Alert recommendations failed (${recResponse.status}) for ${shortName}.`,
+        );
+        continue;
+      }
+
+      const recJson = await recResponse.json();
+      if (recJson.error) {
+        lastError = new Error(
+          `Alert recommendations error (${this.getShortModelName(candidate)}): ${
+            recJson.error?.message || 'Unknown error'
+          }`,
+        );
+        continue;
+      }
+
+      recText = recJson.choices?.[0].message?.content;
+      usedModel = recJson?.model || candidate;
+      if (!recText) {
+        lastError = new Error(
+          `Alert recommendations response was empty (${this.getShortModelName(candidate)}).`,
+        );
+        console.warn(lastError.message);
+        continue;
+      }
+      break;
+    }
+
+    if (!recText) {
+      throw lastError ?? new Error(`Alert recommendations response was empty (${shortModel}).`);
+    }
+
+    console.log('Alert rec model + time', {
+      requestedModel: model,
+      usedModel,
+      ms: Math.round(performance.now() - recStart),
     });
 
-    if (recResponse.status !== 200) {
-      throw new Error(
-        `Alert recommendations failed (${recResponse.status}) for ${shortModel}.`,
-      );
-    }
-
-    const recJson = await recResponse.json();
-    if (recJson.error) {
-      throw new Error(
-        `Alert recommendations error (${shortModel}): ${
-          recJson.error?.message || 'Unknown error'
-        }`,
-      );
-    }
-
-    const recText = recJson.choices?.[0].message?.content;
-    if (!recText) {
-      throw new Error(`Alert recommendations response was empty (${shortModel}).`);
-    }
-
-    // Prefer in-place replacements by alert_index; fall back to full_html.
+    // Prefer in-place replacements by alert_index.
     const parsed = this.parseRecommendationsFromAi(recText);
     const replacedHtml = parsed
       ? this.applyAlertReplacements(html, parsed.replacements)
       : null;
-    const finalHtml = replacedHtml || parsed?.fullHtml;
+    const finalHtml = replacedHtml;
     if (!finalHtml) {
       throw new Error(
         `Alert recommendations missing updated HTML (${shortModel}).`,
@@ -687,14 +745,18 @@ export class PageAssistantCompareComponent
   }
 
   private buildModelRotation(model: AiModel): string[] {
-    const invalidFallbacks = new Set<AiModel>([AiModel.Nemotron]);
-    const available = this.openRouter.freeModels.filter(
-      (candidate) => !invalidFallbacks.has(candidate as AiModel),
-    );
-    return [model, ...available.filter((candidate) => candidate !== model)].slice(
-      0,
-      3,
-    );
+    // Fallback order after the user-selected model.
+    const fallbackOrder: AiModel[] = [AiModel.Gemma, AiModel.Llama33];
+    const available = new Set(this.openRouter.freeModels);
+    const rotation: string[] = [model];
+
+    for (const candidate of fallbackOrder) {
+      if (candidate !== model && available.has(candidate)) {
+        rotation.push(candidate);
+      }
+    }
+
+    return rotation;
   }
   //AI interaction
   isLoading = false;
@@ -778,26 +840,59 @@ export class PageAssistantCompareComponent
         }
       }
 
-      console.log('Sending to OpenRouter:', { payload });
+      const candidates = this.buildModelRotation(model);
+      let aiResponse: any | null = null;
+      let lastAttemptedModel = model;
 
-      const orResponse = await fetch(url, {
-        method: 'POST',
-        headers,
-        body: JSON.stringify(payload),
-      });
+      for (let i = 0; i < candidates.length; i += 1) {
+        const candidate = candidates[i];
+        lastAttemptedModel = candidate as AiModel;
+        const attemptPayload = {
+          ...payload,
+          models: [candidate],
+          provider: { allow_fallbacks: false },
+        };
 
-      console.log(`OpenRouter response status: `, orResponse.status);
-      if (orResponse.status === 200) {
-        console.log('Waiting for AI response');
-        this.statusMessage = this.translate.instant('common.ai.generating');
-      }
+        console.log('Sending to OpenRouter:', { payload: attemptPayload });
 
-      const aiResponse = await orResponse.json();
+        const orResponse = await fetch(url, {
+          method: 'POST',
+          headers,
+          body: JSON.stringify(attemptPayload),
+        });
 
-      if (aiResponse.error) {
-        console.groupCollapsed('AI Error');
-        console.error(aiResponse.error?.status);
-        console.warn(`400: Bad Request (invalid or missing params, CORS)\n
+        console.log(`OpenRouter response status: `, orResponse.status);
+        if (orResponse.status === 200) {
+          console.log('Waiting for AI response');
+          this.statusMessage = this.translate.instant('common.ai.generating');
+        }
+
+        const attemptResponse =
+          (await orResponse.json().catch(() => ({}))) || {};
+
+        if (orResponse.status === 404 && i < candidates.length - 1) {
+          console.warn(
+            `Model not found (404): ${candidate}. Retrying next model in rotation.`,
+          );
+          continue;
+        }
+        if (orResponse.status === 429 && i < candidates.length - 1) {
+          const retryAfterHeader = orResponse.headers.get('retry-after');
+          const retryAfterMs = retryAfterHeader
+            ? Math.min(Math.max(Number(retryAfterHeader) * 1000, 600), 30000)
+            : 600;
+          console.warn(
+            `Rate limited (429): ${candidate}. Retrying next model in ${retryAfterMs}ms.`,
+          );
+          await new Promise((resolve) => setTimeout(resolve, retryAfterMs));
+          continue;
+        }
+
+        if (attemptResponse.error) {
+          const attemptModelShort = this.getShortModelName(candidate);
+          console.groupCollapsed('AI Error');
+          console.error(attemptResponse.error?.status);
+          console.warn(`400: Bad Request (invalid or missing params, CORS)\n
                     401: Invalid credentials (OAuth session expired, disabled/invalid API key)\n
                     402: Your account or API key has insufficient credits. Add more credits and retry the request.\n
                     403: Your chosen model requires moderation and your input was flagged\n
@@ -805,16 +900,26 @@ export class PageAssistantCompareComponent
                     429: You are being rate limited\n
                     502: Your chosen model is down or we received an invalid response from it\n
                     503: There is no available model provider that meets your routing requirements`);
-        console.error(aiResponse.error?.message);
-        console.groupEnd();
-        this.statusSeverity = 'error';
-        this.statusMessage = this.translate.instant(
-          'common.ai.errorCommunicatingAi',
-        );
+          console.error(attemptResponse.error?.message);
+          console.groupEnd();
+          this.statusSeverity = 'error';
+          this.statusMessage = this.translate.instant(
+            'common.ai.errorCommunicatingAi',
+          );
+          throw new Error(
+            `AI error (${attemptModelShort}): ${
+              attemptResponse.error?.message || 'Unknown error'
+            }`,
+          );
+        }
+
+        aiResponse = attemptResponse;
+        break;
+      }
+
+      if (!aiResponse) {
         throw new Error(
-          `AI error (${requestedModelShort}): ${
-            aiResponse.error?.message || 'Unknown error'
-          }`,
+          `AI response was empty (${this.getShortModelName(lastAttemptedModel)}).`,
         );
       }
 
@@ -842,10 +947,14 @@ export class PageAssistantCompareComponent
       );
 
       if (model != aiResponse.model) {
+        const fallbackOrder = this.buildModelRotation(model)
+          .map((candidate) => this.getShortModelName(candidate))
+          .join(' -> ');
         console.warn('A FALLBACK MODEL WAS USED');
         console.groupCollapsed('Fallback model info');
         console.log(`Requested model: `, model);
         console.log(`Fallback model: `, aiResponse.model);
+        console.log(`Fallback order: `, fallbackOrder);
         console.log(
           `Your requested model may be down or you have exceeded the rate limit`,
         );

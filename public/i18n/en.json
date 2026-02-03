@@ -143,7 +143,7 @@
   "page.ai-options.model.short.Gemma": "Gemma",
   "page.ai-options.model.Mistral": "Mistral: Mistral Small 3.1 24B (128K)",
   "page.ai-options.model.short.Mistral": "Mistral",
-  "page.ai-options.model.Llama33": "Meta: Llama 3.3 405B Instruct (262K)",
+  "page.ai-options.model.Llama33": "Meta: Llama 3.3 70B Instruct (free)",
   "page.ai-options.model.short.Llama33": "Llama 3.3",
   "page.ai-options.model.Llama32": "Meta: Llama 3.2 3B Instruct ($)",
   "page.ai-options.model.short.Llama32": "Llama 3.2",
