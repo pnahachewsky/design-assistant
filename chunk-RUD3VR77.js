@@ -21366,10 +21366,9 @@ JSON Structure:
 `,
   [PromptKey.AlertsRecommendations]: `
 You are an expert in Canada.ca alerts + accessibility. Fix alert HTML only.
-Inputs: page HTML, page context, issues list, alerts list (alert_html + alert_index).
 Inputs: issues list, alerts list (alert_html + alert_index).
 Rules (must follow):
-- Edit only inside each .alert container; keep alerts in place; no new alerts.
+- Edit only inside each .alert container; keep alerts in place unless they are incorrectly placed; no new alerts.
 - Return a replacements entry for every alert_index in the alerts list.
 - Apply each relevant issue to every alert it affects (e.g., if two alerts are "Too wordy", update both); each issue must cause at least one HTML change per affected alert.
 - Prefer original wording; edit text only when required (too wordy, multiple links, unclear/missing heading).
@@ -21381,7 +21380,7 @@ Rules (must follow):
  - JSON schema: {"replacements":[{"alert_index":number,"updated_html":string}]}
 Output JSON only, with this structure:
 {
-  "replacements": [{ "alert_index": 1, "updated_html": "<section class=\\"alert alert-info\\">...</section>" }]
+  "replacements": [{ "alert_index": 1, "updated_html": "<div class=\\"alert alert-info\\">...</div>" }]
 }
 `
 };
@@ -39887,4 +39886,4 @@ ${base}`;
 export {
   PageAssistantCompareComponent
 };
-//# sourceMappingURL=chunk-XRWKN6D4.js.map
+//# sourceMappingURL=chunk-RUD3VR77.js.map
