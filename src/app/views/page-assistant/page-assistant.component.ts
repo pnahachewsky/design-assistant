@@ -746,7 +746,7 @@ export class PageAssistantCompareComponent
 
   private buildModelRotation(model: AiModel): string[] {
     // Fallback order after the user-selected model.
-    const fallbackOrder: AiModel[] = [AiModel.Gemma, AiModel.Llama33];
+    const fallbackOrder: AiModel[] = [AiModel.Arcee, AiModel.Chimera];
     const available = new Set(this.openRouter.freeModels);
     const rotation: string[] = [model];
 
