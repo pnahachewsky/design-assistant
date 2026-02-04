@@ -137,7 +137,7 @@ import {
   unblockBodyScroll,
   uuid,
   zindexutils
-} from "./chunk-Q7LF4CXO.js";
+} from "./chunk-VVFHCF3R.js";
 import {
   ChangeDetectionStrategy,
   ChangeDetectorRef,
@@ -24624,15 +24624,16 @@ var AiOptionsComponent = class _AiOptionsComponent {
   selectedAis = [];
   freeAiOptions = [
     { id: AiModel.Nemotron, label: "page.ai-options.model.Nemotron", disabled: false },
-    { id: AiModel.DeepSeek, label: "page.ai-options.model.DeepSeek", disabled: false },
     { id: AiModel.Chimera, label: "page.ai-options.model.Chimera", disabled: false },
-    { id: AiModel.Gemma, label: "page.ai-options.model.Gemma", disabled: false },
-    { id: AiModel.Mistral, label: "page.ai-options.model.Mistral", disabled: false },
-    { id: AiModel.Llama33, label: "page.ai-options.model.Llama33", disabled: false },
-    { id: AiModel.Qwen, label: "page.ai-options.model.Qwen", disabled: false }
+    { id: AiModel.DeepSeek, label: "page.ai-options.model.DeepSeek", disabled: false },
+    //{ id: AiModel.Mistral, label: 'page.ai-options.model.Mistral', disabled: false },
+    { id: AiModel.Arcee, label: "page.ai-options.model.Arcee", disabled: false },
+    //{ id: AiModel.Llama33, label: 'page.ai-options.model.Llama33', disabled: false },
+    { id: AiModel.zai, label: "page.ai-options.model.zai", disabled: false },
+    { id: AiModel.Gemma, label: "page.ai-options.model.Gemma", disabled: false }
   ];
   paidAiOptions = [
-    { id: AiModel.Llama32, label: "page.ai-options.model.Llama32", disabled: false },
+    { id: AiModel.GptOSS, label: "page.ai-options.model.GptOSS", disabled: false },
     { id: AiModel.Gemini, label: "page.ai-options.model.Gemini", disabled: false },
     { id: AiModel.Gpt5Mini, label: "page.ai-options.model.Gpt5Mini", disabled: false }
   ];
@@ -38918,7 +38919,7 @@ ${base}`;
     return key2 ? this.translate.instant(`page.ai-options.model.short.${key2}`) : model;
   }
   buildModelRotation(model) {
-    const fallbackOrder = [AiModel.Gemma, AiModel.Llama33];
+    const fallbackOrder = [AiModel.Arcee, AiModel.Chimera];
     const available = new Set(this.openRouter.freeModels);
     const rotation = [model];
     for (const candidate of fallbackOrder) {
@@ -39886,4 +39887,4 @@ ${base}`;
 export {
   PageAssistantCompareComponent
 };
-//# sourceMappingURL=chunk-RUD3VR77.js.map
+//# sourceMappingURL=chunk-KFA5CT72.js.map

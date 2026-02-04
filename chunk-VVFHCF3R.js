@@ -38508,12 +38508,11 @@ var AiModel;
   AiModel2["DeepSeek"] = "deepseek/deepseek-r1-0528:free";
   AiModel2["Chimera"] = "tngtech/deepseek-r1t2-chimera:free";
   AiModel2["Gemma"] = "google/gemma-3-27b-it:free";
-  AiModel2["Mistral"] = "mistralai/mistral-small-3.1-24b-instruct:free";
-  AiModel2["Llama33"] = "meta-llama/llama-3.3-70b-instruct:free";
-  AiModel2["Qwen"] = "qwen/qwen3-next-80b-a3b-instruct:free";
-  AiModel2["Llama32"] = "meta-llama/llama-3.2-3b-instruct";
-  AiModel2["Gpt5Mini"] = "openai/gpt-5-mini";
+  AiModel2["Arcee"] = "arcee-ai/trinity-large-preview:free";
+  AiModel2["zai"] = "z-ai/glm-4.5-air:free";
+  AiModel2["GptOSS"] = "openai/gpt-oss-120b";
   AiModel2["Gemini"] = "google/gemini-2.5-flash-lite";
+  AiModel2["Gpt5Mini"] = "openai/gpt-5-mini";
 })(AiModel || (AiModel = {}));
 
 // src/app/services/local-storage.service.ts
@@ -100311,4 +100310,4 @@ export {
    * License: MIT
    *)
 */
-//# sourceMappingURL=chunk-Q7LF4CXO.js.map
+//# sourceMappingURL=chunk-VVFHCF3R.js.map
