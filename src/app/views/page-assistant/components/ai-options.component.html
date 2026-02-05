@@ -24,123 +24,133 @@
         </p-accordion-content>
       </p-accordion-panel>
       <!--PROMPT OPTIONS-->
-      <p-accordion-panel value="1" *ngIf="!isPrototype" class="border-1 border-round-md border-surface">
-        <p-accordion-header>{{ 'page.ai-options.prompt.header' | translate }}</p-accordion-header>
-        <p-accordion-content>
+      @if (!isPrototype) {
+        <p-accordion-panel value="1" class="border-1 border-round-md border-surface">
+          <p-accordion-header>{{ 'page.ai-options.prompt.header' | translate }}</p-accordion-header>
+          <p-accordion-content>
 
-          <fieldset class="border-none">
-            <legend class="font-bold mb-2">{{ 'page.ai-options.prompt.legend' | translate }}</legend>
-            <div class="flex flex-column gap-2">
-              <ng-container *ngIf="!isTwoPrompts">
-                <ng-container *ngFor="let option of promptOptions; trackBy: trackById">
-                  <div class="p-field-radiobutton">
-                    <p-radioButton name="promptOptions" [value]="option.id" [(ngModel)]="selectedPrompt"
-                                   [inputId]="option.id" [disabled]="option.disabled" (onClick)="onPromptSelect(selectedPrompt)" />
-                    <label [for]="option.id" class="pl-2">{{ option.label | translate }}</label>
-                  </div>
-                </ng-container>
-              </ng-container>
-              <ng-container *ngIf="isTwoPrompts">
-                <ng-container *ngFor="let option of promptOptions; trackBy: trackById">
-                  <div class="p-field-checkbox">
-                    <p-checkbox [value]="option.id" [(ngModel)]="selectedPrompts" [inputId]="option.id"
-                                [disabled]="option.disabled || isPromptCheckboxDisabled(option.id)" />
-                    <label [for]="option.id" class="pl-2">{{ option.label | translate }}</label>
-                  </div>
-                </ng-container>
-              </ng-container>
-              <!--Append custom prompt-->
-              <div class="p-field-checkbox mt-3">
-                <p-checkbox [(ngModel)]="addCustom" [binary]="true" inputId="appendCustom" (onChange)="resetCustom()" />
-                <label for="appendCustom" class="pl-2">{{ "page.ai-options.prompt.checkbox" | translate }}</label>
+            <fieldset class="border-none">
+              <legend class="font-bold mb-2">{{ 'page.ai-options.prompt.legend' | translate }}</legend>
+              <div class="flex flex-column gap-2">
+                @if (!isTwoPrompts) {
+                  <ng-container *ngFor="let option of promptOptions; trackBy: trackById">
+                    <div class="p-field-radiobutton">
+                      <p-radioButton name="promptOptions" [value]="option.id" [(ngModel)]="selectedPrompt"
+                                     [inputId]="option.id" [disabled]="option.disabled" (onClick)="onPromptSelect(selectedPrompt)" />
+                      <label [for]="option.id" class="pl-2">{{ option.label | translate }}</label>
+                    </div>
+                  </ng-container>
+                }
+                @if (isTwoPrompts) {
+                  <ng-container *ngFor="let option of promptOptions; trackBy: trackById">
+                    <div class="p-field-checkbox">
+                      <p-checkbox [value]="option.id" [(ngModel)]="selectedPrompts" [inputId]="option.id"
+                                  [disabled]="option.disabled || isPromptCheckboxDisabled(option.id)" />
+                      <label [for]="option.id" class="pl-2">{{ option.label | translate }}</label>
+                    </div>
+                  </ng-container>
+                }
+                <!--Append custom prompt-->
+                <div class="p-field-checkbox mt-3">
+                  <p-checkbox [(ngModel)]="addCustom" [binary]="true" inputId="appendCustom" (onChange)="resetCustom()" />
+                  <label for="appendCustom" class="pl-2">{{ "page.ai-options.prompt.checkbox" | translate }}</label>
+                </div>
+                @if (addCustom) {
+                  <p-iftalabel>
+                    <textarea pTextarea id="customPrompt" [(ngModel)]="customInstruction" [autoResize]="true"
+                              (blur)="emitCustomPrompt(customInstruction)" fluid></textarea>
+                    <label for="customPrompt">{{ 'page.ai-options.prompt.textarea' | translate }}</label>
+                  </p-iftalabel>
+                }
+                <!--Slider for number of AI changes-->
+                <div class="flex flex-column gap-3 mt-3">
+                  <p id="ai-changes">{{ currentEditLevel?.label }}</p>
+                  <p-slider [(ngModel)]="editLevel" [step]="25" ariaLabelledBy="ai-changes" (onChange)="emitEditPrompt(currentEditLevel!.prompt)" fluid />
+                </div>
               </div>
-              <p-iftalabel *ngIf="addCustom">
-                <textarea pTextarea id="customPrompt" [(ngModel)]="customInstruction" [autoResize]="true"
-                          (blur)="emitCustomPrompt(customInstruction)" fluid></textarea>
-                <label for="customPrompt">{{ 'page.ai-options.prompt.textarea' | translate }}</label>
-              </p-iftalabel>
-              <!--Slider for number of AI changes-->
-              <div class="flex flex-column gap-3 mt-3">
-                <p id="ai-changes">{{ currentEditLevel?.label }}</p>
-                <p-slider [(ngModel)]="editLevel" [step]="25" ariaLabelledBy="ai-changes" (onChange)="emitEditPrompt(currentEditLevel!.prompt)" fluid />
-              </div>
-            </div>
-          </fieldset>
+            </fieldset>
 
-        </p-accordion-content>
-      </p-accordion-panel>
+          </p-accordion-content>
+        </p-accordion-panel>
+      }
       <!--AI OPTIONS-->
-      <p-accordion-panel value="2" *ngIf="!isPrototype" class="border-1 border-round-md border-surface">
-        <p-accordion-header>{{ 'page.ai-options.model.header' | translate }}</p-accordion-header>
-        <p-accordion-content>
+      @if (!isPrototype) {
+        <p-accordion-panel value="2" class="border-1 border-round-md border-surface">
+          <p-accordion-header>{{ 'page.ai-options.model.header' | translate }}</p-accordion-header>
+          <p-accordion-content>
 
-          <fieldset class="border-none">
-            <legend class="font-bold mb-2">{{ 'page.ai-options.model.legend' | translate }}</legend>
-            <div class="flex flex-column gap-2">
-              <ng-container *ngIf="!isTwoAis">
-                <p class="text-xs text-500">{{ 'page.ai-options.model.free' | translate }}</p>
-                <ng-container *ngFor="let option of freeAiOptions; trackBy: trackById">
-                  <div class="p-field-radiobutton">
-                    <p-radioButton name="aiOptions" [value]="option.id" [(ngModel)]="selectedAi" [inputId]="option.id"
-                                   [disabled]="option.disabled" (onClick)="onAiSelect(selectedAi)" />
-                    <label [for]="option.id" class="pl-2">{{ option.label | translate }}</label>
-                  </div>
-                </ng-container>
-                <p class="text-xs text-500 mt-3">{{ 'page.ai-options.model.paid' | translate }}</p>
-                <ng-container *ngFor="let option of paidAiOptions; trackBy: trackById">
-                  <div class="p-field-radiobutton">
-                    <p-radioButton name="aiOptions" [value]="option.id" [(ngModel)]="selectedAi" [inputId]="option.id"
-                                   [disabled]="option.disabled" (onClick)="onAiSelect(selectedAi)" />
-                    <label [for]="option.id" class="pl-2">
-                      {{ option.label | translate }}
-                      <p-chip
-                        [label]="'page.ai-options.model.paidBadge' | translate"
-                        styleClass="chip chip-severe ml-2">
-                      </p-chip>
-                    </label>
-                  </div>
-                </ng-container>
-              </ng-container>
-              <ng-container *ngIf="isTwoAis">
-                <p class="text-xs text-500">{{ 'page.ai-options.model.free' | translate }}</p>
-                <ng-container *ngFor="let option of freeAiOptions; trackBy: trackById">
-                  <div class="p-field-checkbox">
-                    <p-checkbox [value]="option.id" [(ngModel)]="selectedAis" [inputId]="option.id"
-                                [disabled]="option.disabled || isAiCheckboxDisabled(option.id)" />
-                    <label [for]="option.id" class="pl-2">{{ option.label | translate }}</label>
-                  </div>
-                </ng-container>
-                <p class="text-xs text-500 mt-3">{{ 'page.ai-options.model.paid' | translate }}</p>
-                <ng-container *ngFor="let option of paidAiOptions; trackBy: trackById">
-                  <div class="p-field-checkbox">
-                    <p-checkbox [value]="option.id" [(ngModel)]="selectedAis" [inputId]="option.id"
-                                [disabled]="option.disabled || isAiCheckboxDisabled(option.id)" />
-                    <label [for]="option.id" class="pl-2">
-                      {{ option.label | translate }}
-                      <p-chip
-                        [label]="'page.ai-options.model.paidBadge' | translate"
-                        styleClass="chip chip-severe ml-2">
-                      </p-chip>
-                    </label>
-                  </div>
-                </ng-container>
-              </ng-container>
-            </div>
-          </fieldset>
+            <fieldset class="border-none">
+              <legend class="font-bold mb-2">{{ 'page.ai-options.model.legend' | translate }}</legend>
+              <div class="flex flex-column gap-2">
+                @if (!isTwoAis) {
+                  <p class="text-xs text-500">{{ 'page.ai-options.model.free' | translate }}</p>
+                  <ng-container *ngFor="let option of freeAiOptions; trackBy: trackById">
+                    <div class="p-field-radiobutton">
+                      <p-radioButton name="aiOptions" [value]="option.id" [(ngModel)]="selectedAi" [inputId]="option.id"
+                                     [disabled]="option.disabled" (onClick)="onAiSelect(selectedAi)" />
+                      <label [for]="option.id" class="pl-2">{{ option.label | translate }}</label>
+                    </div>
+                  </ng-container>
+                  <p class="text-xs text-500 mt-3">{{ 'page.ai-options.model.paid' | translate }}</p>
+                  <ng-container *ngFor="let option of paidAiOptions; trackBy: trackById">
+                    <div class="p-field-radiobutton">
+                      <p-radioButton name="aiOptions" [value]="option.id" [(ngModel)]="selectedAi" [inputId]="option.id"
+                                     [disabled]="option.disabled" (onClick)="onAiSelect(selectedAi)" />
+                      <label [for]="option.id" class="pl-2">
+                        {{ option.label | translate }}
+                        <p-chip
+                          [label]="'page.ai-options.model.paidBadge' | translate"
+                          styleClass="chip chip-severe ml-2">
+                        </p-chip>
+                      </label>
+                    </div>
+                  </ng-container>
+                }
+                @if (isTwoAis) {
+                  <p class="text-xs text-500">{{ 'page.ai-options.model.free' | translate }}</p>
+                  <ng-container *ngFor="let option of freeAiOptions; trackBy: trackById">
+                    <div class="p-field-checkbox">
+                      <p-checkbox [value]="option.id" [(ngModel)]="selectedAis" [inputId]="option.id"
+                                  [disabled]="option.disabled || isAiCheckboxDisabled(option.id)" />
+                      <label [for]="option.id" class="pl-2">{{ option.label | translate }}</label>
+                    </div>
+                  </ng-container>
+                  <p class="text-xs text-500 mt-3">{{ 'page.ai-options.model.paid' | translate }}</p>
+                  <ng-container *ngFor="let option of paidAiOptions; trackBy: trackById">
+                    <div class="p-field-checkbox">
+                      <p-checkbox [value]="option.id" [(ngModel)]="selectedAis" [inputId]="option.id"
+                                  [disabled]="option.disabled || isAiCheckboxDisabled(option.id)" />
+                      <label [for]="option.id" class="pl-2">
+                        {{ option.label | translate }}
+                        <p-chip
+                          [label]="'page.ai-options.model.paidBadge' | translate"
+                          styleClass="chip chip-severe ml-2">
+                        </p-chip>
+                      </label>
+                    </div>
+                  </ng-container>
+                }
+              </div>
+            </fieldset>
 
-        </p-accordion-content>
-      </p-accordion-panel>
+          </p-accordion-content>
+        </p-accordion-panel>
+      }
     </p-accordion>
 
     <!--Close drawer and emit event-->
-    <p-button *ngIf="!isPrototype" [label]="'page.compare.button.genai' | translate" icon="pi pi-comments"
-              severity="primary" (click)="onSubmit()"></p-button>
+    @if (!isPrototype) {
+      <p-button [label]="'page.compare.button.genai' | translate" icon="pi pi-comments"
+                severity="primary" (click)="onSubmit()"></p-button>
+    }
 
     <!--Upload options if task = compare with prototype-->
-    <ng-container [ngSwitch]="uploadType" *ngIf="isPrototype">
-      <ca-upload-url *ngSwitchCase="'url'" mode="prototype" [showSampleDataButton]="false" />
-      <ca-upload-paste *ngSwitchCase="'paste'" mode="prototype" [showSampleDataButton]="false" />
-      <ca-upload-word *ngSwitchCase="'word'" mode="prototype" [showSampleDataButton]="false" />
-    </ng-container>
+    @if (isPrototype) {
+      <ng-container [ngSwitch]="uploadType">
+        <ca-upload-url *ngSwitchCase="'url'" mode="prototype" [showSampleDataButton]="false" />
+        <ca-upload-paste *ngSwitchCase="'paste'" mode="prototype" [showSampleDataButton]="false" />
+        <ca-upload-word *ngSwitchCase="'word'" mode="prototype" [showSampleDataButton]="false" />
+      </ng-container>
+    }
   </div>
 </p-drawer>

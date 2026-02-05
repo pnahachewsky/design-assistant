@@ -39,27 +39,32 @@
         icon="pi pi-info-circle"
       />
     </div>
-    <p-progressbar
-      *ngIf="isChartLoading"
-      [value]="iaProgress"
-      [showValue]="false"
-      [style]="{ height: '1rem' }"
-      styleClass="mt-3"
-    />
+    @if (isChartLoading) {
+      <p-progressbar
+        [value]="iaProgress"
+        [showValue]="false"
+        [style]="{ height: '1rem' }"
+        styleClass="mt-3"
+      />
+    }
   </div>
 
-  <div class="surface-0 border-1 border-round border-200 p-3" *ngIf="step1Complete">
+  @if (step1Complete) {
+    <div class="surface-0 border-1 border-round border-200 p-3">
     <p class="mt-0"><strong>Copy all URLs</strong> in the IA structure to the clipboard.</p>
-    <p-button
-      label="Copy URLs to clipboard"
-      [severity]="hasCopiedUrls ? 'secondary' : 'primary'"
-      (click)="copyUrlsToClipboard()"
-      icon="pi pi-copy"
-      *ngIf="iaChart && iaChart.length > 0 && !isChartLoading"
-    />
-  </div>
+    @if (iaChart && iaChart.length > 0 && !isChartLoading) {
+      <p-button
+        label="Copy URLs to clipboard"
+        [severity]="hasCopiedUrls ? 'secondary' : 'primary'"
+        (click)="copyUrlsToClipboard()"
+        icon="pi pi-copy"
+      />
+    }
+    </div>
+  }
 
-  <div class="surface-0 border-1 border-round border-200 p-3" *ngIf="hasCopiedUrls">
+  @if (hasCopiedUrls) {
+    <div class="surface-0 border-1 border-round border-200 p-3">
     <p class="mt-0">Manually <strong>retrieve page visits</strong> from the UPD:</p>
     <ol>
       <li>Visit <a href="https://cra-arc.alpha.canada.ca/en/custom-reports/create">Custom reports page of the UPD</a></li>
@@ -75,9 +80,11 @@
       [severity]="updInstructionsComplete ? 'secondary' : 'primary'"
       (click)="proceedToCsvUpload()"
     />
-  </div>
+    </div>
+  }
 
-  <div class="surface-0 border-1 border-round border-200 p-3" *ngIf="showCsvUpload">
+  @if (showCsvUpload) {
+    <div class="surface-0 border-1 border-round border-200 p-3">
     <p class="mt-0"><strong>Upload your saved CSV</strong> file. This will:</p>
     <ul>
       <li>Display page visits in IA structure</li>
@@ -99,30 +106,31 @@
           outlined
         />
     </div>
-  </div>
+    </div>
+  }
 </div>
 
 <!--Breadcrumb-->
-<ng-container *ngIf="breadcrumb.length > 0">
+@if (breadcrumb.length > 0) {
   <h2>Breadcrumb</h2>
   <div class="flex flex-row align-items-center gap-3">
     <p-breadcrumb class="max-w-full" styleClass="pl-1" [model]="breadcrumb" />
-    <span
-      class="flex align-items-center gap-2 text-green-400"
-      *ngIf="urlFound === true"
-      ><i class="pi pi-check-circle"></i>Link found on parent page</span
-    >
-    <span
-      class="flex align-items-center gap-2 text-red-400"
-      *ngIf="urlFound === false"
-      ><i class="pi pi-times-circle"></i>IA Orphan</span
-    >
+    @if (urlFound === true) {
+      <span class="flex align-items-center gap-2 text-green-400">
+        <i class="pi pi-check-circle"></i>Link found on parent page
+      </span>
+    }
+    @if (urlFound === false) {
+      <span class="flex align-items-center gap-2 text-red-400">
+        <i class="pi pi-times-circle"></i>IA Orphan
+      </span>
+    }
   </div>
-</ng-container>
+}
 
 <!--IA Tree-->
 
-<ng-container *ngIf="iaChart">
+@if (iaChart) {
   <div class="grid">
     <div class="col-12" [class.md:col-6]="visitsByUrl.size > 0">
       <p-contextMenu #cm [model]="options"></p-contextMenu>
@@ -143,228 +151,248 @@
       >
         <ng-template pTemplate="default" let-node>
           <div class="flex flex-row align-items-center gap-2 w-full">
-            <i
-              class="pi pi-folder"
-              *ngIf="node.children.length > 0 && !draggable && !node.data.editing"
-            ></i>
-            <i
-              class="pi pi-file"
-              *ngIf="
-                (node.children.length === 0 || !node.children) &&
-                !draggable &&
-                !node.data.editing
-              "
-            ></i>
-            <i
-              *ngIf="draggable"
-              class="pi pi-arrows-alt cursor-move text-color-secondary"
-            ></i>
-            <i
-              *ngIf="node.data.editing"
-              class="pi pi-pencil text-color-secondary"
-            ></i>
-            <ng-container *ngIf="!node.data.editing"
-              ><a
+            @if (node.children.length > 0 && !draggable && !node.data.editing) {
+              <i class="pi pi-folder"></i>
+            }
+            @if (
+              (node.children.length === 0 || !node.children) &&
+              !draggable &&
+              !node.data.editing
+            ) {
+              <i class="pi pi-file"></i>
+            }
+            @if (draggable) {
+              <i class="pi pi-arrows-alt cursor-move text-color-secondary"></i>
+            }
+            @if (node.data.editing) {
+              <i class="pi pi-pencil text-color-secondary"></i>
+            }
+            @if (!node.data.editing) {
+              <a
                 [href]="node.data.url"
                 target="_blank"
                 (click)="onNodeClick($event)"
                 [innerHTML]="node.label"
                 class="ia-label"
-              ></a
-            ></ng-container>
-            <p-inputgroup *ngIf="node.data.editing === 'label'">
-              <input
-                type="text"
-                pInputText
-                [(ngModel)]="node.label"
-                pSize="small"
-                class="ia-label"
-                (keydown)="onInputKeydown($event)"
-              />
-              <p-inputgroup-addon
-                ><p-button
-                  icon="pi pi-check"
-                  severity="secondary"
-                  size="small"
-                  (onClick)="saveNode()"
-              /></p-inputgroup-addon>
-            </p-inputgroup>
-            <p-inputgroup *ngIf="node.data.editing === 'link'">
-              <input
-                type="text"
-                pInputText
-                [(ngModel)]="node.data.url"
-                pSize="small"
-                class="ia-label"
-                (keydown)="onInputKeydown($event)"
-              />
-              <p-inputgroup-addon
-                ><p-button
-                  icon="pi pi-check"
-                  severity="secondary"
-                  size="small"
-                  (onClick)="saveNode()"
-              /></p-inputgroup-addon>
-            </p-inputgroup>
+              ></a>
+            }
+            @if (node.data.editing === 'label') {
+              <p-inputgroup>
+                <input
+                  type="text"
+                  pInputText
+                  [(ngModel)]="node.label"
+                  pSize="small"
+                  class="ia-label"
+                  (keydown)="onInputKeydown($event)"
+                />
+                <p-inputgroup-addon
+                  ><p-button
+                    icon="pi pi-check"
+                    severity="secondary"
+                    size="small"
+                    (onClick)="saveNode()"
+                /></p-inputgroup-addon>
+              </p-inputgroup>
+            }
+            @if (node.data.editing === 'link') {
+              <p-inputgroup>
+                <input
+                  type="text"
+                  pInputText
+                  [(ngModel)]="node.data.url"
+                  pSize="small"
+                  class="ia-label"
+                  (keydown)="onInputKeydown($event)"
+                />
+                <p-inputgroup-addon
+                  ><p-button
+                    icon="pi pi-check"
+                    severity="secondary"
+                    size="small"
+                    (onClick)="saveNode()"
+                /></p-inputgroup-addon>
+              </p-inputgroup>
+            }
           </div>
         </ng-template>
       </p-tree>
     </div>
-    <div class="col-12 md:col-6" *ngIf="visitsByUrl.size > 0">
-      <p-contextMenu #cmTopic [model]="options"></p-contextMenu>
-      <h2>Suggested topic page sections</h2>
-      <p-tree
-        [value]="topicPageTree"
-        styleClass="w-full md:w-[30rem]"
-        [selectionMode]="selectable ? 'multiple' : null"
-        [(selection)]="selectedNode"
-        [draggableNodes]="true"
-        [droppableNodes]="true"
-        draggableScope="topicPageTree"
-        droppableScope="topicPageTree"
-        [validateDrop]="true"
-        (onNodeDrop)="onTopicPageNodeDrop($event)"
-        [contextMenu]="cmTopic"
-        (onNodeContextMenuSelect)="onNodeContextMenu($event, 'topic')"
-      >
-        <ng-template pTemplate="default" let-node>
-          <div class="flex flex-row align-items-center gap-2 w-full">
-            <i
-              class="pi pi-folder"
-              *ngIf="node.children?.length && !draggable && !node.data?.isCategory && !node.data?.editing"
-            ></i>
-            <i
-              class="pi pi-file"
-              *ngIf="!node.children?.length && !draggable && !node.data?.isCategory && !node.data?.editing"
-            ></i>
-            <i
-              *ngIf="draggable && !node.data?.isCategory && !node.data?.editing"
-              class="pi pi-arrows-alt cursor-move text-color-secondary"
-            ></i>
-            <i
-              *ngIf="node.data?.editing"
-              class="pi pi-pencil text-color-secondary"
-            ></i>
-            <ng-container *ngIf="!node.data?.editing">
-              <ng-container *ngIf="node.data?.url; else topicLabel">
-                <a
-                  [href]="node.data.url"
-                  target="_blank"
-                  (click)="onNodeClick($event)"
-                  [innerHTML]="node.label"
-                  class="ia-label"
-                ></a>
-              </ng-container>
-              <ng-template #topicLabel>
-                <span
-                  [innerHTML]="node.label"
-                  class="ia-label"
-                  [class.font-bold]="node.data?.isCategory"
-                ></span>
-              </ng-template>
-            </ng-container>
-            <p-inputgroup *ngIf="node.data?.editing === 'label'">
-              <input
-                type="text"
-                pInputText
-                [(ngModel)]="node.label"
-                pSize="small"
-                class="ia-label"
-                (keydown)="onInputKeydown($event)"
-              />
-              <p-inputgroup-addon
-                ><p-button
-                  icon="pi pi-check"
-                  severity="secondary"
-                  size="small"
-                  (onClick)="saveNode()"
-              /></p-inputgroup-addon>
-            </p-inputgroup>
-            <p-inputgroup *ngIf="node.data?.editing === 'link'">
-              <input
-                type="text"
-                pInputText
-                [(ngModel)]="node.data.url"
-                pSize="small"
-                class="ia-label"
-                (keydown)="onInputKeydown($event)"
-              />
-              <p-inputgroup-addon
-                ><p-button
-                  icon="pi pi-check"
-                  severity="secondary"
-                  size="small"
-                  (onClick)="saveNode()"
-              /></p-inputgroup-addon>
-            </p-inputgroup>
-          </div>
-        </ng-template>
-      </p-tree>
-    </div>
+    @if (visitsByUrl.size > 0) {
+      <div class="col-12 md:col-6">
+        <p-contextMenu #cmTopic [model]="options"></p-contextMenu>
+        <h2>Suggested topic page sections</h2>
+        <p-tree
+          [value]="topicPageTree"
+          styleClass="w-full md:w-[30rem]"
+          [selectionMode]="selectable ? 'multiple' : null"
+          [(selection)]="selectedNode"
+          [draggableNodes]="true"
+          [droppableNodes]="true"
+          draggableScope="topicPageTree"
+          droppableScope="topicPageTree"
+          [validateDrop]="true"
+          (onNodeDrop)="onTopicPageNodeDrop($event)"
+          [contextMenu]="cmTopic"
+          (onNodeContextMenuSelect)="onNodeContextMenu($event, 'topic')"
+        >
+          <ng-template pTemplate="default" let-node>
+            <div class="flex flex-row align-items-center gap-2 w-full">
+              @if (
+                node.children?.length &&
+                !draggable &&
+                !node.data?.isCategory &&
+                !node.data?.editing
+              ) {
+                <i class="pi pi-folder"></i>
+              }
+              @if (
+                !node.children?.length &&
+                !draggable &&
+                !node.data?.isCategory &&
+                !node.data?.editing
+              ) {
+                <i class="pi pi-file"></i>
+              }
+              @if (draggable && !node.data?.isCategory && !node.data?.editing) {
+                <i class="pi pi-arrows-alt cursor-move text-color-secondary"></i>
+              }
+              @if (node.data?.editing) {
+                <i class="pi pi-pencil text-color-secondary"></i>
+              }
+              @if (!node.data?.editing) {
+                @if (node.data?.url) {
+                  <a
+                    [href]="node.data.url"
+                    target="_blank"
+                    (click)="onNodeClick($event)"
+                    [innerHTML]="node.label"
+                    class="ia-label"
+                  ></a>
+                } @else {
+                  <span
+                    [innerHTML]="node.label"
+                    class="ia-label"
+                    [class.font-bold]="node.data?.isCategory"
+                  ></span>
+                }
+              }
+              @if (node.data?.editing === 'label') {
+                <p-inputgroup>
+                  <input
+                    type="text"
+                    pInputText
+                    [(ngModel)]="node.label"
+                    pSize="small"
+                    class="ia-label"
+                    (keydown)="onInputKeydown($event)"
+                  />
+                  <p-inputgroup-addon
+                    ><p-button
+                      icon="pi pi-check"
+                      severity="secondary"
+                      size="small"
+                      (onClick)="saveNode()"
+                  /></p-inputgroup-addon>
+                </p-inputgroup>
+              }
+              @if (node.data?.editing === 'link') {
+                <p-inputgroup>
+                  <input
+                    type="text"
+                    pInputText
+                    [(ngModel)]="node.data.url"
+                    pSize="small"
+                    class="ia-label"
+                    (keydown)="onInputKeydown($event)"
+                  />
+                  <p-inputgroup-addon
+                    ><p-button
+                      icon="pi pi-check"
+                      severity="secondary"
+                      size="small"
+                      (onClick)="saveNode()"
+                  /></p-inputgroup-addon>
+                </p-inputgroup>
+              }
+            </div>
+          </ng-template>
+        </p-tree>
+      </div>
+    }
   </div>
-</ng-container>
+}
 
 <!--IA Chart-->
-<ng-container *ngIf="iaChart">
+@if (iaChart) {
   <h2>IA structure</h2>
-  <p-button
-    label="Maximize IA chart"
-    severity="secondary"
-    (click)="maximize(chartContainer)"
-    icon="pi pi-window-maximize"
-    styleClass="mt-1 mb-3"
-    *ngIf="iaChart.length > 0"
-  />
-  <p *ngIf="iaChart.length === 0">No child pages found.</p>
-  <div
-    #chartContainer
-    *ngIf="iaChart.length > 0"
-    class="overflow-auto max-h-75vh surface-ground surface-border border-1 py-3 mb-3 ia-chart-container"
-  >
-    <p-organization-chart [value]="iaChart">
-      <ng-template let-node pTemplate="default">
-        <p>
-          <a
-            [href]="node.data.url"
-            target="_blank"
-            (click)="onNodeClick($event)"
-            [innerHTML]="node.label"
-            class="ia-label"
-          ></a>
-        </p>
-      </ng-template>
-    </p-organization-chart>
-  </div>
-</ng-container>
+  @if (iaChart.length > 0) {
+    <p-button
+      label="Maximize IA chart"
+      severity="secondary"
+      (click)="maximize(chartContainer)"
+      icon="pi pi-window-maximize"
+      styleClass="mt-1 mb-3"
+    />
+  }
+  @if (iaChart.length === 0) {
+    <p>No child pages found.</p>
+  }
+  @if (iaChart.length > 0) {
+    <div
+      #chartContainer
+      class="overflow-auto max-h-75vh surface-ground surface-border border-1 py-3 mb-3 ia-chart-container"
+    >
+      <p-organization-chart [value]="iaChart">
+        <ng-template let-node pTemplate="default">
+          <p>
+            <a
+              [href]="node.data.url"
+              target="_blank"
+              (click)="onNodeClick($event)"
+              [innerHTML]="node.label"
+              class="ia-label"
+            ></a>
+          </p>
+        </ng-template>
+      </p-organization-chart>
+    </div>
+  }
+}
 
 <!--Broken Links-->
-<ng-container *ngIf="iaChart">
+@if (iaChart) {
   <h2>Broken links</h2>
-  <p *ngIf="brokenLinks.length === 0">
-    No broken links found on this page<span *ngIf="iaChart[0].children?.length">
-      or on any detected child pages</span
-    >.
-  </p>
-  <p-table
-    *ngIf="brokenLinks.length > 0"
-    [value]="brokenLinks"
-    size="small"
-    stripedRows
-    [tableStyle]="{ 'min-width': '50rem' }"
-  >
-    <ng-template #header>
-      <tr>
-        <th>Parent page</th>
-        <th>Broken link</th>
-        <th>Status</th>
-      </tr>
-    </ng-template>
-    <ng-template #body let-rowData>
-      <tr>
-        <td>{{ rowData.parentUrl }}</td>
-        <td>{{ rowData.url }}</td>
-        <td>{{ rowData.status }}</td>
-      </tr>
-    </ng-template>
-  </p-table>
-</ng-container>
+  @if (brokenLinks.length === 0) {
+    <p>
+      No broken links found on this page
+      @if (iaChart[0].children?.length) {
+        <span> or on any detected child pages</span>
+      }
+      .
+    </p>
+  }
+  @if (brokenLinks.length > 0) {
+    <p-table
+      [value]="brokenLinks"
+      size="small"
+      stripedRows
+      [tableStyle]="{ 'min-width': '50rem' }"
+    >
+      <ng-template #header>
+        <tr>
+          <th>Parent page</th>
+          <th>Broken link</th>
+          <th>Status</th>
+        </tr>
+      </ng-template>
+      <ng-template #body let-rowData>
+        <tr>
+          <td>{{ rowData.parentUrl }}</td>
+          <td>{{ rowData.url }}</td>
+          <td>{{ rowData.status }}</td>
+        </tr>
+      </ng-template>
+    </p-table>
+  }
+}
