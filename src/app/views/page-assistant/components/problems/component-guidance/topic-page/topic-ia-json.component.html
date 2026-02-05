@@ -344,6 +344,46 @@
   }
 }
 
+<!--Suggested Topic Page Chart-->
+@if (visitsByUrl.size > 0) {
+  <h2>Suggested topic page sections (chart)</h2>
+  @if (topicPageTree.length > 0) {
+    <p-button
+      label="Maximize suggested chart"
+      severity="secondary"
+      (click)="maximize(topicChartContainer)"
+      icon="pi pi-window-maximize"
+      styleClass="mt-1 mb-3"
+    />
+    <div
+      #topicChartContainer
+      class="overflow-auto max-h-75vh surface-ground surface-border border-1 py-3 mb-3 topic-ia-chart-container"
+    >
+      <p-organization-chart [value]="topicPageTree">
+        <ng-template let-node pTemplate="default">
+          <p>
+            @if (node.data?.url) {
+              <a
+                [href]="node.data.url"
+                target="_blank"
+                (click)="onNodeClick($event)"
+                [innerHTML]="node.label"
+                class="ia-label"
+              ></a>
+            } @else {
+              <span
+                [innerHTML]="node.label"
+                class="ia-label"
+                [class.font-bold]="node.data?.isCategory"
+              ></span>
+            }
+          </p>
+        </ng-template>
+      </p-organization-chart>
+    </div>
+  }
+}
+
 <!--Broken Links-->
 @if (iaChart) {
   <h2>Broken links</h2>

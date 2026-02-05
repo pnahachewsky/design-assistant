@@ -212,6 +212,22 @@ interface TopicAiResult {
       color: #000000 !important;
     }
 
+    /* remove link style from suggested topic chart */
+    ::ng-deep .topic-ia-chart-container .p-organizationchart-node a {
+      color: var(--text-color) !important;
+      text-decoration: none !important;
+    }
+
+    /* fix chart text color for dark backgrounds */
+    ::ng-deep .topic-ia-chart-container .p-organizationchart-node.text-white a {
+      color: #ffffff !important;
+    }
+
+    /* fix chart text color for light backgrounds */
+    ::ng-deep .topic-ia-chart-container .p-organizationchart-node.text-black a {
+      color: #000000 !important;
+    }
+
   `,
 })
 export class TopicIaJsonComponent implements OnInit {
@@ -906,8 +922,10 @@ export class TopicIaJsonComponent implements OnInit {
 
   //Full screen element
   @ViewChild('chartContainer') chartContainer!: ElementRef;
-  maximize(elRef: ElementRef) {
-    const element = elRef.nativeElement as FullscreenHTMLElement;
+  maximize(elRef: ElementRef | HTMLElement) {
+    const element = (
+      elRef instanceof HTMLElement ? elRef : elRef.nativeElement
+    ) as FullscreenHTMLElement;
     if (element.requestFullscreen) {
       element.requestFullscreen();
     } else if (element.webkitRequestFullscreen) {
