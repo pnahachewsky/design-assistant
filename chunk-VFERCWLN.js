@@ -36823,11 +36823,23 @@ var TopicIaJsonComponent = class _TopicIaJsonComponent {
       const featureRowEnd = hasFeature ? "</div>" : "";
       const socialColStart = hasFeature ? '<div class="col-md-4">' : "";
       const socialColEnd = hasFeature ? "</div>" : "";
-      const sectionTitle = this.getSectionTitle();
-      const topicTitle = this.stripVisits(this.stripBadges(this.getCurrentPageLabel()));
+      const titles = this.extractPageTitles(originalHtml);
+      const sectionTitleBlock = titles.sectionTitle ? `<p>${this.escapeHtml(titles.sectionTitle)}</p>` : "";
+      const topicTitle = this.cleanTopicTitle(titles.topicTitle || this.getCurrentPageLabel());
       const rescueLinkHtml = this.extractRescueLinkHtml(originalHtml);
       const alertsBlockHtml = this.extractAlertsHtml(originalHtml);
-      const html = template.replace("{{section_title}}", this.escapeHtml(sectionTitle)).replace("{{topic_title}}", this.escapeHtml(topicTitle)).replace("{{rescue_link}}", rescueLinkHtml).replace("{{alerts_block}}", alertsBlockHtml).replace("{{most_requested_section}}", mostRequestedSection).replace("{{services_items}}", servicesItems).replace("{{focus_items}}", focusItems).replace("{{focus_section_start}}", focusSectionStart).replace("{{focus_section_end}}", focusSectionEnd).replace("{{features_section}}", featuresSection).replace("{{feature_row_start}}", featureRowStart).replace("{{feature_row_end}}", featureRowEnd).replace("{{social_col_start}}", socialColStart).replace("{{social_col_end}}", socialColEnd);
+      const hasAlerts = alertsBlockHtml.trim().length > 0;
+      const heroImageBlock = hasAlerts ? "" : [
+        '<div class="col-md-6 hidden-sm hidden-xs">',
+        "  <img",
+        '    src="https://dummyimage.com/520x200/000000/FFFFFF.png"',
+        '    alt=""',
+        '    class="img-responsive pull-right mrgn-tp-lg"',
+        "  />",
+        "</div>"
+      ].join("\n");
+      const heroTextColClass = hasAlerts ? "col-md-12" : "col-md-6";
+      const html = template.replace("{{section_title_block}}", sectionTitleBlock).replace("{{topic_title}}", this.escapeHtml(topicTitle)).replace("{{rescue_link}}", rescueLinkHtml).replace("{{alerts_block}}", alertsBlockHtml).replace("{{hero_image_block}}", heroImageBlock).replace("{{hero_text_col_class}}", heroTextColClass).replace("{{most_requested_section}}", mostRequestedSection).replace("{{services_items}}", servicesItems).replace("{{focus_items}}", focusItems).replace("{{focus_section_start}}", focusSectionStart).replace("{{focus_section_end}}", focusSectionEnd).replace("{{features_section}}", featuresSection).replace("{{feature_row_start}}", featureRowStart).replace("{{feature_row_end}}", featureRowEnd).replace("{{social_col_start}}", socialColStart).replace("{{social_col_end}}", socialColEnd);
       const formattedHtml = yield this.urlDataService.formatHtml(html, "ai");
       this.uploadState.savePreviousUploadData();
       this.uploadState.mergeModifiedData({
@@ -36942,25 +36954,72 @@ var TopicIaJsonComponent = class _TopicIaJsonComponent {
     const url = typeof node?.data?.url === "string" ? node.data.url.trim() : "";
     return this.escapeHtml(url || "#");
   }
-  getSectionTitle() {
-    const crumbs = this.breadcrumb ?? [];
-    if (!crumbs.length)
-      return "Section title";
-    const sanitize = (value) => this.normalizeLabel(this.stripVisits(this.stripBadges(value)).replace(/<[^>]+>/g, "").trim());
-    const currentLabel = sanitize(this.getCurrentPageLabel());
-    const last = crumbs[crumbs.length - 1];
-    const lastLabel = typeof last?.label === "string" ? last.label.trim() : "";
-    const lastNorm = lastLabel ? sanitize(lastLabel) : "";
-    if (lastNorm && currentLabel && lastNorm === currentLabel) {
-      const parent = crumbs[crumbs.length - 2];
-      if (typeof parent?.label === "string" && parent.label.trim().length) {
-        return parent.label.trim();
+  extractPageTitles(sourceHtml) {
+    if (!sourceHtml)
+      return { sectionTitle: "", topicTitle: "" };
+    const doc = new DOMParser().parseFromString(sourceHtml, "text/html");
+    const hgroup = doc.querySelector("hgroup#wb-cont");
+    const sectionP = hgroup?.querySelector("p");
+    const sectionText = (sectionP?.textContent || "").trim();
+    const h1s = Array.from(doc.querySelectorAll("h1"));
+    const nonNavH1s = h1s.filter((h1) => !h1.closest("nav"));
+    const topicH1 = this.pickTopicH1(doc, nonNavH1s, h1s);
+    const topicTitle = topicH1 ? this.extractH1Text(topicH1) : "";
+    if (sectionText) {
+      return {
+        sectionTitle: sectionText,
+        topicTitle
+      };
+    }
+    const leadSection = topicH1 ? this.findLeadSectionTitle(topicH1) : "";
+    if (leadSection) {
+      return { sectionTitle: leadSection, topicTitle };
+    }
+    const navH1 = h1s.find((h1) => h1.closest("nav"));
+    if (navH1) {
+      const navTitle = this.extractH1Text(navH1);
+      if (navTitle && topicTitle) {
+        return { sectionTitle: navTitle, topicTitle };
       }
     }
-    if (lastLabel) {
-      return lastLabel;
+    return { sectionTitle: "", topicTitle };
+  }
+  pickTopicH1(doc, nonNavH1s, allH1s) {
+    return nonNavH1s.find((h1) => h1.getAttribute("id") === "wb-cont") ?? nonNavH1s[0] ?? doc.querySelector("h1#wb-cont") ?? allH1s[0] ?? null;
+  }
+  extractH1Text(h1) {
+    const clone = h1.cloneNode(true);
+    clone.querySelectorAll(".wb-inv").forEach((el) => el.remove());
+    clone.querySelectorAll('[style*="border: 2px solid rgb(111, 159, 255)"]').forEach((el) => el.remove());
+    return (clone.textContent || "").trim();
+  }
+  findLeadSectionTitle(h1) {
+    const container = h1.parentElement ?? h1;
+    const leadSelectors = [
+      "p.lead.text-muted",
+      "p.lead.mrgn-tp-md.mrgn-bttm-0.text-muted"
+    ];
+    for (const selector of leadSelectors) {
+      const lead = container.querySelector(selector);
+      if (lead && lead.compareDocumentPosition(h1) & Node.DOCUMENT_POSITION_FOLLOWING) {
+        const text = (lead.textContent || "").trim();
+        if (text)
+          return text;
+      }
     }
-    return "Section title";
+    return "";
+  }
+  cleanTopicTitle(label) {
+    const withoutBadges = this.stripBadges(label);
+    const withoutVisits = this.stripVisits(withoutBadges);
+    const withBreaks = withoutVisits.replace(/<br\s*\/?>/gi, "\n").replace(/&lt;br\s*\/?&gt;/gi, "\n");
+    const bottomLine = this.selectBottomLine(withBreaks);
+    const cleaned = bottomLine.replace(/<[^>]+>/g, "").trim();
+    const trimmed = this.trimAfterDash(cleaned).trim();
+    if (trimmed)
+      return trimmed;
+    const fallback = this.selectTopLine(withBreaks).replace(/<[^>]+>/g, "").trim();
+    return this.trimAfterDash(fallback).trim();
   }
   escapeHtml(value) {
     return value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
@@ -37015,6 +37074,13 @@ var TopicIaJsonComponent = class _TopicIaJsonComponent {
       return label;
     const parts = withBreaks.split("\n").map((part) => part.trim()).filter((part) => part.length > 0);
     return parts.length ? parts[parts.length - 1] : label;
+  }
+  selectTopLine(label) {
+    const withBreaks = label.replace(/<br\s*\/?>/gi, "\n");
+    if (!withBreaks.includes("\n"))
+      return label;
+    const parts = withBreaks.split("\n").map((part) => part.trim()).filter((part) => part.length > 0);
+    return parts.length ? parts[0] : label;
   }
   buildFeatureImageMap(sourceHtml) {
     const map = /* @__PURE__ */ new Map();
@@ -40351,4 +40417,4 @@ ${base}`;
 export {
   PageAssistantCompareComponent
 };
-//# sourceMappingURL=chunk-DLTRM63Y.js.map
+//# sourceMappingURL=chunk-VFERCWLN.js.map

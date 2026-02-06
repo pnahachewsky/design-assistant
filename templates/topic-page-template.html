@@ -1,21 +1,17 @@
 <div class="container">
   <div class="row">
-    <div class="col-md-6">
+    <div class="{{hero_text_col_class}}">
       <hgroup id="wb-cont">
-        <p>{{section_title}}</p>
+        {{section_title_block}}
         <h1>{{topic_title}}</h1>
       </hgroup>
       {{rescue_link}}
-      {{alerts_block}}
-      <p>1-2 sentences that describe the topics and top tasks that can be accessed on this page.</p>
+      <div class="gc-srvinfo">
+        {{alerts_block}}
+        <p>1-2 sentences that describe the topics and top tasks that can be accessed on this page.</p>
+      </div>
     </div>
-    <div class="col-md-6 hidden-sm hidden-xs">
-      <img
-        src="https://dummyimage.com/520x200/000000/FFFFFF.png"
-        alt=""
-        class="img-responsive pull-right mrgn-tp-lg"
-      />
-    </div>
+    {{hero_image_block}}
   </div>
 </div>
 {{most_requested_section}}
