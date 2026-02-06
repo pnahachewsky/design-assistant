@@ -24097,18 +24097,18 @@ function AiOptionsComponent_ng_container_15_Template(rf, ctx) {
     \u0275\u0275textInterpolate(\u0275\u0275pipeBind1(5, 6, option_r3.label));
   }
 }
-function AiOptionsComponent_p_accordion_panel_16_ng_container_10_ng_container_1_Template(rf, ctx) {
+function AiOptionsComponent_Conditional_16_Conditional_10_ng_container_0_Template(rf, ctx) {
   if (rf & 1) {
     const _r5 = \u0275\u0275getCurrentView();
     \u0275\u0275elementContainerStart(0);
-    \u0275\u0275elementStart(1, "div", 13)(2, "p-radioButton", 24);
-    \u0275\u0275twoWayListener("ngModelChange", function AiOptionsComponent_p_accordion_panel_16_ng_container_10_ng_container_1_Template_p_radioButton_ngModelChange_2_listener($event) {
+    \u0275\u0275elementStart(1, "div", 13)(2, "p-radioButton", 22);
+    \u0275\u0275twoWayListener("ngModelChange", function AiOptionsComponent_Conditional_16_Conditional_10_ng_container_0_Template_p_radioButton_ngModelChange_2_listener($event) {
       \u0275\u0275restoreView(_r5);
       const ctx_r1 = \u0275\u0275nextContext(3);
       \u0275\u0275twoWayBindingSet(ctx_r1.selectedPrompt, $event) || (ctx_r1.selectedPrompt = $event);
       return \u0275\u0275resetView($event);
     });
-    \u0275\u0275listener("onClick", function AiOptionsComponent_p_accordion_panel_16_ng_container_10_ng_container_1_Template_p_radioButton_onClick_2_listener() {
+    \u0275\u0275listener("onClick", function AiOptionsComponent_Conditional_16_Conditional_10_ng_container_0_Template_p_radioButton_onClick_2_listener() {
       \u0275\u0275restoreView(_r5);
       const ctx_r1 = \u0275\u0275nextContext(3);
       return \u0275\u0275resetView(ctx_r1.onPromptSelect(ctx_r1.selectedPrompt));
@@ -24133,24 +24133,21 @@ function AiOptionsComponent_p_accordion_panel_16_ng_container_10_ng_container_1_
     \u0275\u0275textInterpolate(\u0275\u0275pipeBind1(5, 6, option_r6.label));
   }
 }
-function AiOptionsComponent_p_accordion_panel_16_ng_container_10_Template(rf, ctx) {
+function AiOptionsComponent_Conditional_16_Conditional_10_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275elementContainerStart(0);
-    \u0275\u0275template(1, AiOptionsComponent_p_accordion_panel_16_ng_container_10_ng_container_1_Template, 6, 8, "ng-container", 8);
-    \u0275\u0275elementContainerEnd();
+    \u0275\u0275template(0, AiOptionsComponent_Conditional_16_Conditional_10_ng_container_0_Template, 6, 8, "ng-container", 8);
   }
   if (rf & 2) {
     const ctx_r1 = \u0275\u0275nextContext(2);
-    \u0275\u0275advance();
     \u0275\u0275property("ngForOf", ctx_r1.promptOptions)("ngForTrackBy", ctx_r1.trackById);
   }
 }
-function AiOptionsComponent_p_accordion_panel_16_ng_container_11_ng_container_1_Template(rf, ctx) {
+function AiOptionsComponent_Conditional_16_Conditional_11_ng_container_0_Template(rf, ctx) {
   if (rf & 1) {
     const _r7 = \u0275\u0275getCurrentView();
     \u0275\u0275elementContainerStart(0);
-    \u0275\u0275elementStart(1, "div", 25)(2, "p-checkbox", 26);
-    \u0275\u0275twoWayListener("ngModelChange", function AiOptionsComponent_p_accordion_panel_16_ng_container_11_ng_container_1_Template_p_checkbox_ngModelChange_2_listener($event) {
+    \u0275\u0275elementStart(1, "div", 23)(2, "p-checkbox", 24);
+    \u0275\u0275twoWayListener("ngModelChange", function AiOptionsComponent_Conditional_16_Conditional_11_ng_container_0_Template_p_checkbox_ngModelChange_2_listener($event) {
       \u0275\u0275restoreView(_r7);
       const ctx_r1 = \u0275\u0275nextContext(3);
       \u0275\u0275twoWayBindingSet(ctx_r1.selectedPrompts, $event) || (ctx_r1.selectedPrompts = $event);
@@ -24176,35 +24173,32 @@ function AiOptionsComponent_p_accordion_panel_16_ng_container_11_ng_container_1_
     \u0275\u0275textInterpolate(\u0275\u0275pipeBind1(5, 6, option_r8.label));
   }
 }
-function AiOptionsComponent_p_accordion_panel_16_ng_container_11_Template(rf, ctx) {
+function AiOptionsComponent_Conditional_16_Conditional_11_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275elementContainerStart(0);
-    \u0275\u0275template(1, AiOptionsComponent_p_accordion_panel_16_ng_container_11_ng_container_1_Template, 6, 8, "ng-container", 8);
-    \u0275\u0275elementContainerEnd();
+    \u0275\u0275template(0, AiOptionsComponent_Conditional_16_Conditional_11_ng_container_0_Template, 6, 8, "ng-container", 8);
   }
   if (rf & 2) {
     const ctx_r1 = \u0275\u0275nextContext(2);
-    \u0275\u0275advance();
     \u0275\u0275property("ngForOf", ctx_r1.promptOptions)("ngForTrackBy", ctx_r1.trackById);
   }
 }
-function AiOptionsComponent_p_accordion_panel_16_p_iftalabel_17_Template(rf, ctx) {
+function AiOptionsComponent_Conditional_16_Conditional_17_Template(rf, ctx) {
   if (rf & 1) {
     const _r9 = \u0275\u0275getCurrentView();
-    \u0275\u0275elementStart(0, "p-iftalabel")(1, "textarea", 27);
-    \u0275\u0275twoWayListener("ngModelChange", function AiOptionsComponent_p_accordion_panel_16_p_iftalabel_17_Template_textarea_ngModelChange_1_listener($event) {
+    \u0275\u0275elementStart(0, "p-iftalabel")(1, "textarea", 25);
+    \u0275\u0275twoWayListener("ngModelChange", function AiOptionsComponent_Conditional_16_Conditional_17_Template_textarea_ngModelChange_1_listener($event) {
       \u0275\u0275restoreView(_r9);
       const ctx_r1 = \u0275\u0275nextContext(2);
       \u0275\u0275twoWayBindingSet(ctx_r1.customInstruction, $event) || (ctx_r1.customInstruction = $event);
       return \u0275\u0275resetView($event);
     });
-    \u0275\u0275listener("blur", function AiOptionsComponent_p_accordion_panel_16_p_iftalabel_17_Template_textarea_blur_1_listener() {
+    \u0275\u0275listener("blur", function AiOptionsComponent_Conditional_16_Conditional_17_Template_textarea_blur_1_listener() {
       \u0275\u0275restoreView(_r9);
       const ctx_r1 = \u0275\u0275nextContext(2);
       return \u0275\u0275resetView(ctx_r1.emitCustomPrompt(ctx_r1.customInstruction));
     });
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(2, "label", 28);
+    \u0275\u0275elementStart(2, "label", 26);
     \u0275\u0275text(3);
     \u0275\u0275pipe(4, "translate");
     \u0275\u0275elementEnd()();
@@ -24218,10 +24212,10 @@ function AiOptionsComponent_p_accordion_panel_16_p_iftalabel_17_Template(rf, ctx
     \u0275\u0275textInterpolate(\u0275\u0275pipeBind1(4, 3, "page.ai-options.prompt.textarea"));
   }
 }
-function AiOptionsComponent_p_accordion_panel_16_Template(rf, ctx) {
+function AiOptionsComponent_Conditional_16_Template(rf, ctx) {
   if (rf & 1) {
     const _r4 = \u0275\u0275getCurrentView();
-    \u0275\u0275elementStart(0, "p-accordion-panel", 16)(1, "p-accordion-header");
+    \u0275\u0275elementStart(0, "p-accordion-panel", 9)(1, "p-accordion-header");
     \u0275\u0275text(2);
     \u0275\u0275pipe(3, "translate");
     \u0275\u0275elementEnd();
@@ -24230,36 +24224,36 @@ function AiOptionsComponent_p_accordion_panel_16_Template(rf, ctx) {
     \u0275\u0275pipe(8, "translate");
     \u0275\u0275elementEnd();
     \u0275\u0275elementStart(9, "div", 7);
-    \u0275\u0275template(10, AiOptionsComponent_p_accordion_panel_16_ng_container_10_Template, 2, 2, "ng-container", 17)(11, AiOptionsComponent_p_accordion_panel_16_ng_container_11_Template, 2, 2, "ng-container", 17);
-    \u0275\u0275elementStart(12, "div", 18)(13, "p-checkbox", 19);
-    \u0275\u0275twoWayListener("ngModelChange", function AiOptionsComponent_p_accordion_panel_16_Template_p_checkbox_ngModelChange_13_listener($event) {
+    \u0275\u0275template(10, AiOptionsComponent_Conditional_16_Conditional_10_Template, 1, 2, "ng-container")(11, AiOptionsComponent_Conditional_16_Conditional_11_Template, 1, 2, "ng-container");
+    \u0275\u0275elementStart(12, "div", 16)(13, "p-checkbox", 17);
+    \u0275\u0275twoWayListener("ngModelChange", function AiOptionsComponent_Conditional_16_Template_p_checkbox_ngModelChange_13_listener($event) {
       \u0275\u0275restoreView(_r4);
       const ctx_r1 = \u0275\u0275nextContext();
       \u0275\u0275twoWayBindingSet(ctx_r1.addCustom, $event) || (ctx_r1.addCustom = $event);
       return \u0275\u0275resetView($event);
     });
-    \u0275\u0275listener("onChange", function AiOptionsComponent_p_accordion_panel_16_Template_p_checkbox_onChange_13_listener() {
+    \u0275\u0275listener("onChange", function AiOptionsComponent_Conditional_16_Template_p_checkbox_onChange_13_listener() {
       \u0275\u0275restoreView(_r4);
       const ctx_r1 = \u0275\u0275nextContext();
       return \u0275\u0275resetView(ctx_r1.resetCustom());
     });
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(14, "label", 20);
+    \u0275\u0275elementStart(14, "label", 18);
     \u0275\u0275text(15);
     \u0275\u0275pipe(16, "translate");
     \u0275\u0275elementEnd()();
-    \u0275\u0275template(17, AiOptionsComponent_p_accordion_panel_16_p_iftalabel_17_Template, 5, 5, "p-iftalabel", 17);
-    \u0275\u0275elementStart(18, "div", 21)(19, "p", 22);
+    \u0275\u0275template(17, AiOptionsComponent_Conditional_16_Conditional_17_Template, 5, 5, "p-iftalabel");
+    \u0275\u0275elementStart(18, "div", 19)(19, "p", 20);
     \u0275\u0275text(20);
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(21, "p-slider", 23);
-    \u0275\u0275twoWayListener("ngModelChange", function AiOptionsComponent_p_accordion_panel_16_Template_p_slider_ngModelChange_21_listener($event) {
+    \u0275\u0275elementStart(21, "p-slider", 21);
+    \u0275\u0275twoWayListener("ngModelChange", function AiOptionsComponent_Conditional_16_Template_p_slider_ngModelChange_21_listener($event) {
       \u0275\u0275restoreView(_r4);
       const ctx_r1 = \u0275\u0275nextContext();
       \u0275\u0275twoWayBindingSet(ctx_r1.editLevel, $event) || (ctx_r1.editLevel = $event);
       return \u0275\u0275resetView($event);
     });
-    \u0275\u0275listener("onChange", function AiOptionsComponent_p_accordion_panel_16_Template_p_slider_onChange_21_listener() {
+    \u0275\u0275listener("onChange", function AiOptionsComponent_Conditional_16_Template_p_slider_onChange_21_listener() {
       \u0275\u0275restoreView(_r4);
       const ctx_r1 = \u0275\u0275nextContext();
       return \u0275\u0275resetView(ctx_r1.emitEditPrompt(ctx_r1.currentEditLevel.prompt));
@@ -24273,16 +24267,16 @@ function AiOptionsComponent_p_accordion_panel_16_Template(rf, ctx) {
     \u0275\u0275advance(5);
     \u0275\u0275textInterpolate(\u0275\u0275pipeBind1(8, 13, "page.ai-options.prompt.legend"));
     \u0275\u0275advance(3);
-    \u0275\u0275property("ngIf", !ctx_r1.isTwoPrompts);
+    \u0275\u0275conditional(!ctx_r1.isTwoPrompts ? 10 : -1);
     \u0275\u0275advance();
-    \u0275\u0275property("ngIf", ctx_r1.isTwoPrompts);
+    \u0275\u0275conditional(ctx_r1.isTwoPrompts ? 11 : -1);
     \u0275\u0275advance(2);
     \u0275\u0275twoWayProperty("ngModel", ctx_r1.addCustom);
     \u0275\u0275property("binary", true);
     \u0275\u0275advance(2);
     \u0275\u0275textInterpolate(\u0275\u0275pipeBind1(16, 15, "page.ai-options.prompt.checkbox"));
     \u0275\u0275advance(2);
-    \u0275\u0275property("ngIf", ctx_r1.addCustom);
+    \u0275\u0275conditional(ctx_r1.addCustom ? 17 : -1);
     \u0275\u0275advance(3);
     \u0275\u0275textInterpolate(ctx_r1.currentEditLevel == null ? null : ctx_r1.currentEditLevel.label);
     \u0275\u0275advance();
@@ -24290,18 +24284,18 @@ function AiOptionsComponent_p_accordion_panel_16_Template(rf, ctx) {
     \u0275\u0275property("step", 25);
   }
 }
-function AiOptionsComponent_p_accordion_panel_17_ng_container_10_ng_container_4_Template(rf, ctx) {
+function AiOptionsComponent_Conditional_17_Conditional_10_ng_container_3_Template(rf, ctx) {
   if (rf & 1) {
     const _r10 = \u0275\u0275getCurrentView();
     \u0275\u0275elementContainerStart(0);
-    \u0275\u0275elementStart(1, "div", 13)(2, "p-radioButton", 32);
-    \u0275\u0275twoWayListener("ngModelChange", function AiOptionsComponent_p_accordion_panel_17_ng_container_10_ng_container_4_Template_p_radioButton_ngModelChange_2_listener($event) {
+    \u0275\u0275elementStart(1, "div", 13)(2, "p-radioButton", 29);
+    \u0275\u0275twoWayListener("ngModelChange", function AiOptionsComponent_Conditional_17_Conditional_10_ng_container_3_Template_p_radioButton_ngModelChange_2_listener($event) {
       \u0275\u0275restoreView(_r10);
       const ctx_r1 = \u0275\u0275nextContext(3);
       \u0275\u0275twoWayBindingSet(ctx_r1.selectedAi, $event) || (ctx_r1.selectedAi = $event);
       return \u0275\u0275resetView($event);
     });
-    \u0275\u0275listener("onClick", function AiOptionsComponent_p_accordion_panel_17_ng_container_10_ng_container_4_Template_p_radioButton_onClick_2_listener() {
+    \u0275\u0275listener("onClick", function AiOptionsComponent_Conditional_17_Conditional_10_ng_container_3_Template_p_radioButton_onClick_2_listener() {
       \u0275\u0275restoreView(_r10);
       const ctx_r1 = \u0275\u0275nextContext(3);
       return \u0275\u0275resetView(ctx_r1.onAiSelect(ctx_r1.selectedAi));
@@ -24326,18 +24320,18 @@ function AiOptionsComponent_p_accordion_panel_17_ng_container_10_ng_container_4_
     \u0275\u0275textInterpolate(\u0275\u0275pipeBind1(5, 6, option_r11.label));
   }
 }
-function AiOptionsComponent_p_accordion_panel_17_ng_container_10_ng_container_8_Template(rf, ctx) {
+function AiOptionsComponent_Conditional_17_Conditional_10_ng_container_7_Template(rf, ctx) {
   if (rf & 1) {
     const _r12 = \u0275\u0275getCurrentView();
     \u0275\u0275elementContainerStart(0);
-    \u0275\u0275elementStart(1, "div", 13)(2, "p-radioButton", 32);
-    \u0275\u0275twoWayListener("ngModelChange", function AiOptionsComponent_p_accordion_panel_17_ng_container_10_ng_container_8_Template_p_radioButton_ngModelChange_2_listener($event) {
+    \u0275\u0275elementStart(1, "div", 13)(2, "p-radioButton", 29);
+    \u0275\u0275twoWayListener("ngModelChange", function AiOptionsComponent_Conditional_17_Conditional_10_ng_container_7_Template_p_radioButton_ngModelChange_2_listener($event) {
       \u0275\u0275restoreView(_r12);
       const ctx_r1 = \u0275\u0275nextContext(3);
       \u0275\u0275twoWayBindingSet(ctx_r1.selectedAi, $event) || (ctx_r1.selectedAi = $event);
       return \u0275\u0275resetView($event);
     });
-    \u0275\u0275listener("onClick", function AiOptionsComponent_p_accordion_panel_17_ng_container_10_ng_container_8_Template_p_radioButton_onClick_2_listener() {
+    \u0275\u0275listener("onClick", function AiOptionsComponent_Conditional_17_Conditional_10_ng_container_7_Template_p_radioButton_onClick_2_listener() {
       \u0275\u0275restoreView(_r12);
       const ctx_r1 = \u0275\u0275nextContext(3);
       return \u0275\u0275resetView(ctx_r1.onAiSelect(ctx_r1.selectedAi));
@@ -24346,7 +24340,7 @@ function AiOptionsComponent_p_accordion_panel_17_ng_container_10_ng_container_8_
     \u0275\u0275elementStart(3, "label", 15);
     \u0275\u0275text(4);
     \u0275\u0275pipe(5, "translate");
-    \u0275\u0275element(6, "p-chip", 33);
+    \u0275\u0275element(6, "p-chip", 30);
     \u0275\u0275pipe(7, "translate");
     \u0275\u0275elementEnd()();
     \u0275\u0275elementContainerEnd();
@@ -24366,39 +24360,37 @@ function AiOptionsComponent_p_accordion_panel_17_ng_container_10_ng_container_8_
     \u0275\u0275property("label", \u0275\u0275pipeBind1(7, 9, "page.ai-options.model.paidBadge"));
   }
 }
-function AiOptionsComponent_p_accordion_panel_17_ng_container_10_Template(rf, ctx) {
+function AiOptionsComponent_Conditional_17_Conditional_10_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275elementContainerStart(0);
-    \u0275\u0275elementStart(1, "p", 30);
-    \u0275\u0275text(2);
-    \u0275\u0275pipe(3, "translate");
+    \u0275\u0275elementStart(0, "p", 27);
+    \u0275\u0275text(1);
+    \u0275\u0275pipe(2, "translate");
     \u0275\u0275elementEnd();
-    \u0275\u0275template(4, AiOptionsComponent_p_accordion_panel_17_ng_container_10_ng_container_4_Template, 6, 8, "ng-container", 8);
-    \u0275\u0275elementStart(5, "p", 31);
-    \u0275\u0275text(6);
-    \u0275\u0275pipe(7, "translate");
+    \u0275\u0275template(3, AiOptionsComponent_Conditional_17_Conditional_10_ng_container_3_Template, 6, 8, "ng-container", 8);
+    \u0275\u0275elementStart(4, "p", 28);
+    \u0275\u0275text(5);
+    \u0275\u0275pipe(6, "translate");
     \u0275\u0275elementEnd();
-    \u0275\u0275template(8, AiOptionsComponent_p_accordion_panel_17_ng_container_10_ng_container_8_Template, 8, 11, "ng-container", 8);
-    \u0275\u0275elementContainerEnd();
+    \u0275\u0275template(7, AiOptionsComponent_Conditional_17_Conditional_10_ng_container_7_Template, 8, 11, "ng-container", 8);
   }
   if (rf & 2) {
     const ctx_r1 = \u0275\u0275nextContext(2);
-    \u0275\u0275advance(2);
-    \u0275\u0275textInterpolate(\u0275\u0275pipeBind1(3, 6, "page.ai-options.model.free"));
+    \u0275\u0275advance();
+    \u0275\u0275textInterpolate(\u0275\u0275pipeBind1(2, 6, "page.ai-options.model.free"));
     \u0275\u0275advance(2);
     \u0275\u0275property("ngForOf", ctx_r1.freeAiOptions)("ngForTrackBy", ctx_r1.trackById);
     \u0275\u0275advance(2);
-    \u0275\u0275textInterpolate(\u0275\u0275pipeBind1(7, 8, "page.ai-options.model.paid"));
+    \u0275\u0275textInterpolate(\u0275\u0275pipeBind1(6, 8, "page.ai-options.model.paid"));
     \u0275\u0275advance(2);
     \u0275\u0275property("ngForOf", ctx_r1.paidAiOptions)("ngForTrackBy", ctx_r1.trackById);
   }
 }
-function AiOptionsComponent_p_accordion_panel_17_ng_container_11_ng_container_4_Template(rf, ctx) {
+function AiOptionsComponent_Conditional_17_Conditional_11_ng_container_3_Template(rf, ctx) {
   if (rf & 1) {
     const _r14 = \u0275\u0275getCurrentView();
     \u0275\u0275elementContainerStart(0);
-    \u0275\u0275elementStart(1, "div", 25)(2, "p-checkbox", 26);
-    \u0275\u0275twoWayListener("ngModelChange", function AiOptionsComponent_p_accordion_panel_17_ng_container_11_ng_container_4_Template_p_checkbox_ngModelChange_2_listener($event) {
+    \u0275\u0275elementStart(1, "div", 23)(2, "p-checkbox", 24);
+    \u0275\u0275twoWayListener("ngModelChange", function AiOptionsComponent_Conditional_17_Conditional_11_ng_container_3_Template_p_checkbox_ngModelChange_2_listener($event) {
       \u0275\u0275restoreView(_r14);
       const ctx_r1 = \u0275\u0275nextContext(3);
       \u0275\u0275twoWayBindingSet(ctx_r1.selectedAis, $event) || (ctx_r1.selectedAis = $event);
@@ -24424,12 +24416,12 @@ function AiOptionsComponent_p_accordion_panel_17_ng_container_11_ng_container_4_
     \u0275\u0275textInterpolate(\u0275\u0275pipeBind1(5, 6, option_r15.label));
   }
 }
-function AiOptionsComponent_p_accordion_panel_17_ng_container_11_ng_container_8_Template(rf, ctx) {
+function AiOptionsComponent_Conditional_17_Conditional_11_ng_container_7_Template(rf, ctx) {
   if (rf & 1) {
     const _r16 = \u0275\u0275getCurrentView();
     \u0275\u0275elementContainerStart(0);
-    \u0275\u0275elementStart(1, "div", 25)(2, "p-checkbox", 26);
-    \u0275\u0275twoWayListener("ngModelChange", function AiOptionsComponent_p_accordion_panel_17_ng_container_11_ng_container_8_Template_p_checkbox_ngModelChange_2_listener($event) {
+    \u0275\u0275elementStart(1, "div", 23)(2, "p-checkbox", 24);
+    \u0275\u0275twoWayListener("ngModelChange", function AiOptionsComponent_Conditional_17_Conditional_11_ng_container_7_Template_p_checkbox_ngModelChange_2_listener($event) {
       \u0275\u0275restoreView(_r16);
       const ctx_r1 = \u0275\u0275nextContext(3);
       \u0275\u0275twoWayBindingSet(ctx_r1.selectedAis, $event) || (ctx_r1.selectedAis = $event);
@@ -24439,7 +24431,7 @@ function AiOptionsComponent_p_accordion_panel_17_ng_container_11_ng_container_8_
     \u0275\u0275elementStart(3, "label", 15);
     \u0275\u0275text(4);
     \u0275\u0275pipe(5, "translate");
-    \u0275\u0275element(6, "p-chip", 33);
+    \u0275\u0275element(6, "p-chip", 30);
     \u0275\u0275pipe(7, "translate");
     \u0275\u0275elementEnd()();
     \u0275\u0275elementContainerEnd();
@@ -24459,36 +24451,34 @@ function AiOptionsComponent_p_accordion_panel_17_ng_container_11_ng_container_8_
     \u0275\u0275property("label", \u0275\u0275pipeBind1(7, 9, "page.ai-options.model.paidBadge"));
   }
 }
-function AiOptionsComponent_p_accordion_panel_17_ng_container_11_Template(rf, ctx) {
+function AiOptionsComponent_Conditional_17_Conditional_11_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275elementContainerStart(0);
-    \u0275\u0275elementStart(1, "p", 30);
-    \u0275\u0275text(2);
-    \u0275\u0275pipe(3, "translate");
+    \u0275\u0275elementStart(0, "p", 27);
+    \u0275\u0275text(1);
+    \u0275\u0275pipe(2, "translate");
     \u0275\u0275elementEnd();
-    \u0275\u0275template(4, AiOptionsComponent_p_accordion_panel_17_ng_container_11_ng_container_4_Template, 6, 8, "ng-container", 8);
-    \u0275\u0275elementStart(5, "p", 31);
-    \u0275\u0275text(6);
-    \u0275\u0275pipe(7, "translate");
+    \u0275\u0275template(3, AiOptionsComponent_Conditional_17_Conditional_11_ng_container_3_Template, 6, 8, "ng-container", 8);
+    \u0275\u0275elementStart(4, "p", 28);
+    \u0275\u0275text(5);
+    \u0275\u0275pipe(6, "translate");
     \u0275\u0275elementEnd();
-    \u0275\u0275template(8, AiOptionsComponent_p_accordion_panel_17_ng_container_11_ng_container_8_Template, 8, 11, "ng-container", 8);
-    \u0275\u0275elementContainerEnd();
+    \u0275\u0275template(7, AiOptionsComponent_Conditional_17_Conditional_11_ng_container_7_Template, 8, 11, "ng-container", 8);
   }
   if (rf & 2) {
     const ctx_r1 = \u0275\u0275nextContext(2);
-    \u0275\u0275advance(2);
-    \u0275\u0275textInterpolate(\u0275\u0275pipeBind1(3, 6, "page.ai-options.model.free"));
+    \u0275\u0275advance();
+    \u0275\u0275textInterpolate(\u0275\u0275pipeBind1(2, 6, "page.ai-options.model.free"));
     \u0275\u0275advance(2);
     \u0275\u0275property("ngForOf", ctx_r1.freeAiOptions)("ngForTrackBy", ctx_r1.trackById);
     \u0275\u0275advance(2);
-    \u0275\u0275textInterpolate(\u0275\u0275pipeBind1(7, 8, "page.ai-options.model.paid"));
+    \u0275\u0275textInterpolate(\u0275\u0275pipeBind1(6, 8, "page.ai-options.model.paid"));
     \u0275\u0275advance(2);
     \u0275\u0275property("ngForOf", ctx_r1.paidAiOptions)("ngForTrackBy", ctx_r1.trackById);
   }
 }
-function AiOptionsComponent_p_accordion_panel_17_Template(rf, ctx) {
+function AiOptionsComponent_Conditional_17_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275elementStart(0, "p-accordion-panel", 29)(1, "p-accordion-header");
+    \u0275\u0275elementStart(0, "p-accordion-panel", 10)(1, "p-accordion-header");
     \u0275\u0275text(2);
     \u0275\u0275pipe(3, "translate");
     \u0275\u0275elementEnd();
@@ -24497,7 +24487,7 @@ function AiOptionsComponent_p_accordion_panel_17_Template(rf, ctx) {
     \u0275\u0275pipe(8, "translate");
     \u0275\u0275elementEnd();
     \u0275\u0275elementStart(9, "div", 7);
-    \u0275\u0275template(10, AiOptionsComponent_p_accordion_panel_17_ng_container_10_Template, 9, 10, "ng-container", 17)(11, AiOptionsComponent_p_accordion_panel_17_ng_container_11_Template, 9, 10, "ng-container", 17);
+    \u0275\u0275template(10, AiOptionsComponent_Conditional_17_Conditional_10_Template, 8, 10)(11, AiOptionsComponent_Conditional_17_Conditional_11_Template, 8, 10);
     \u0275\u0275elementEnd()()()();
   }
   if (rf & 2) {
@@ -24507,17 +24497,17 @@ function AiOptionsComponent_p_accordion_panel_17_Template(rf, ctx) {
     \u0275\u0275advance(5);
     \u0275\u0275textInterpolate(\u0275\u0275pipeBind1(8, 6, "page.ai-options.model.legend"));
     \u0275\u0275advance(3);
-    \u0275\u0275property("ngIf", !ctx_r1.isTwoAis);
+    \u0275\u0275conditional(!ctx_r1.isTwoAis ? 10 : -1);
     \u0275\u0275advance();
-    \u0275\u0275property("ngIf", ctx_r1.isTwoAis);
+    \u0275\u0275conditional(ctx_r1.isTwoAis ? 11 : -1);
   }
 }
-function AiOptionsComponent_p_button_18_Template(rf, ctx) {
+function AiOptionsComponent_Conditional_18_Template(rf, ctx) {
   if (rf & 1) {
     const _r18 = \u0275\u0275getCurrentView();
-    \u0275\u0275elementStart(0, "p-button", 34);
+    \u0275\u0275elementStart(0, "p-button", 31);
     \u0275\u0275pipe(1, "translate");
-    \u0275\u0275listener("click", function AiOptionsComponent_p_button_18_Template_p_button_click_0_listener() {
+    \u0275\u0275listener("click", function AiOptionsComponent_Conditional_18_Template_p_button_click_0_listener() {
       \u0275\u0275restoreView(_r18);
       const ctx_r1 = \u0275\u0275nextContext();
       return \u0275\u0275resetView(ctx_r1.onSubmit());
@@ -24528,34 +24518,34 @@ function AiOptionsComponent_p_button_18_Template(rf, ctx) {
     \u0275\u0275property("label", \u0275\u0275pipeBind1(1, 1, "page.compare.button.genai"));
   }
 }
-function AiOptionsComponent_ng_container_19_ca_upload_url_1_Template(rf, ctx) {
+function AiOptionsComponent_Conditional_19_ca_upload_url_1_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275element(0, "ca-upload-url", 37);
+    \u0275\u0275element(0, "ca-upload-url", 33);
   }
   if (rf & 2) {
     \u0275\u0275property("showSampleDataButton", false);
   }
 }
-function AiOptionsComponent_ng_container_19_ca_upload_paste_2_Template(rf, ctx) {
+function AiOptionsComponent_Conditional_19_ca_upload_paste_2_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275element(0, "ca-upload-paste", 37);
+    \u0275\u0275element(0, "ca-upload-paste", 33);
   }
   if (rf & 2) {
     \u0275\u0275property("showSampleDataButton", false);
   }
 }
-function AiOptionsComponent_ng_container_19_ca_upload_word_3_Template(rf, ctx) {
+function AiOptionsComponent_Conditional_19_ca_upload_word_3_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275element(0, "ca-upload-word", 37);
+    \u0275\u0275element(0, "ca-upload-word", 33);
   }
   if (rf & 2) {
     \u0275\u0275property("showSampleDataButton", false);
   }
 }
-function AiOptionsComponent_ng_container_19_Template(rf, ctx) {
+function AiOptionsComponent_Conditional_19_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275elementContainerStart(0, 35);
-    \u0275\u0275template(1, AiOptionsComponent_ng_container_19_ca_upload_url_1_Template, 1, 1, "ca-upload-url", 36)(2, AiOptionsComponent_ng_container_19_ca_upload_paste_2_Template, 1, 1, "ca-upload-paste", 36)(3, AiOptionsComponent_ng_container_19_ca_upload_word_3_Template, 1, 1, "ca-upload-word", 36);
+    \u0275\u0275elementContainerStart(0, 12);
+    \u0275\u0275template(1, AiOptionsComponent_Conditional_19_ca_upload_url_1_Template, 1, 1, "ca-upload-url", 32)(2, AiOptionsComponent_Conditional_19_ca_upload_paste_2_Template, 1, 1, "ca-upload-paste", 32)(3, AiOptionsComponent_Conditional_19_ca_upload_word_3_Template, 1, 1, "ca-upload-word", 32);
     \u0275\u0275elementContainerEnd();
   }
   if (rf & 2) {
@@ -24685,7 +24675,7 @@ var AiOptionsComponent = class _AiOptionsComponent {
   static \u0275fac = function AiOptionsComponent_Factory(__ngFactoryType__) {
     return new (__ngFactoryType__ || _AiOptionsComponent)();
   };
-  static \u0275cmp = /* @__PURE__ */ \u0275\u0275defineComponent({ type: _AiOptionsComponent, selectors: [["ca-ai-options"]], outputs: { promptChange: "promptChange", customPrompt: "customPrompt", editPrompt: "editPrompt", aiChange: "aiChange", aiSubmit: "aiSubmit" }, decls: 20, vars: 19, consts: [["label", "Options", "icon", "pi pi-bars", "severity", "info", 3, "click"], ["position", "right", 3, "visibleChange", "visible", "header"], [1, "flex", "flex-column", "gap-3"], ["value", "1", 1, "flex", "flex-column", "gap-3"], ["value", "0", 1, "border-1", "border-round-md", "border-surface"], [1, "border-none"], [1, "font-bold", "mb-2"], [1, "flex", "flex-column", "gap-2"], [4, "ngFor", "ngForOf", "ngForTrackBy"], ["value", "1", "class", "border-1 border-round-md border-surface", 4, "ngIf"], ["value", "2", "class", "border-1 border-round-md border-surface", 4, "ngIf"], ["icon", "pi pi-comments", "severity", "primary", 3, "label", "click", 4, "ngIf"], [3, "ngSwitch", 4, "ngIf"], [1, "p-field-radiobutton"], ["name", "taskOptions", 3, "ngModelChange", "value", "ngModel", "inputId", "disabled"], [1, "pl-2", 3, "for"], ["value", "1", 1, "border-1", "border-round-md", "border-surface"], [4, "ngIf"], [1, "p-field-checkbox", "mt-3"], ["inputId", "appendCustom", 3, "ngModelChange", "onChange", "ngModel", "binary"], ["for", "appendCustom", 1, "pl-2"], [1, "flex", "flex-column", "gap-3", "mt-3"], ["id", "ai-changes"], ["ariaLabelledBy", "ai-changes", "fluid", "", 3, "ngModelChange", "onChange", "ngModel", "step"], ["name", "promptOptions", 3, "ngModelChange", "onClick", "value", "ngModel", "inputId", "disabled"], [1, "p-field-checkbox"], [3, "ngModelChange", "value", "ngModel", "inputId", "disabled"], ["pTextarea", "", "id", "customPrompt", "fluid", "", 3, "ngModelChange", "blur", "ngModel", "autoResize"], ["for", "customPrompt"], ["value", "2", 1, "border-1", "border-round-md", "border-surface"], [1, "text-xs", "text-500"], [1, "text-xs", "text-500", "mt-3"], ["name", "aiOptions", 3, "ngModelChange", "onClick", "value", "ngModel", "inputId", "disabled"], ["styleClass", "chip chip-severe ml-2", 3, "label"], ["icon", "pi pi-comments", "severity", "primary", 3, "click", "label"], [3, "ngSwitch"], ["mode", "prototype", 3, "showSampleDataButton", 4, "ngSwitchCase"], ["mode", "prototype", 3, "showSampleDataButton"]], template: function AiOptionsComponent_Template(rf, ctx) {
+  static \u0275cmp = /* @__PURE__ */ \u0275\u0275defineComponent({ type: _AiOptionsComponent, selectors: [["ca-ai-options"]], outputs: { promptChange: "promptChange", customPrompt: "customPrompt", editPrompt: "editPrompt", aiChange: "aiChange", aiSubmit: "aiSubmit" }, decls: 20, vars: 19, consts: [["label", "Options", "icon", "pi pi-bars", "severity", "info", 3, "click"], ["position", "right", 3, "visibleChange", "visible", "header"], [1, "flex", "flex-column", "gap-3"], ["value", "1", 1, "flex", "flex-column", "gap-3"], ["value", "0", 1, "border-1", "border-round-md", "border-surface"], [1, "border-none"], [1, "font-bold", "mb-2"], [1, "flex", "flex-column", "gap-2"], [4, "ngFor", "ngForOf", "ngForTrackBy"], ["value", "1", 1, "border-1", "border-round-md", "border-surface"], ["value", "2", 1, "border-1", "border-round-md", "border-surface"], ["icon", "pi pi-comments", "severity", "primary", 3, "label"], [3, "ngSwitch"], [1, "p-field-radiobutton"], ["name", "taskOptions", 3, "ngModelChange", "value", "ngModel", "inputId", "disabled"], [1, "pl-2", 3, "for"], [1, "p-field-checkbox", "mt-3"], ["inputId", "appendCustom", 3, "ngModelChange", "onChange", "ngModel", "binary"], ["for", "appendCustom", 1, "pl-2"], [1, "flex", "flex-column", "gap-3", "mt-3"], ["id", "ai-changes"], ["ariaLabelledBy", "ai-changes", "fluid", "", 3, "ngModelChange", "onChange", "ngModel", "step"], ["name", "promptOptions", 3, "ngModelChange", "onClick", "value", "ngModel", "inputId", "disabled"], [1, "p-field-checkbox"], [3, "ngModelChange", "value", "ngModel", "inputId", "disabled"], ["pTextarea", "", "id", "customPrompt", "fluid", "", 3, "ngModelChange", "blur", "ngModel", "autoResize"], ["for", "customPrompt"], [1, "text-xs", "text-500"], [1, "text-xs", "text-500", "mt-3"], ["name", "aiOptions", 3, "ngModelChange", "onClick", "value", "ngModel", "inputId", "disabled"], ["styleClass", "chip chip-severe ml-2", 3, "label"], ["icon", "pi pi-comments", "severity", "primary", 3, "click", "label"], ["mode", "prototype", 3, "showSampleDataButton", 4, "ngSwitchCase"], ["mode", "prototype", 3, "showSampleDataButton"]], template: function AiOptionsComponent_Template(rf, ctx) {
     if (rf & 1) {
       \u0275\u0275elementStart(0, "p-button", 0);
       \u0275\u0275listener("click", function AiOptionsComponent_Template_p_button_click_0_listener() {
@@ -24709,9 +24699,9 @@ var AiOptionsComponent = class _AiOptionsComponent {
       \u0275\u0275elementStart(14, "div", 7);
       \u0275\u0275template(15, AiOptionsComponent_ng_container_15_Template, 6, 8, "ng-container", 8);
       \u0275\u0275elementEnd()()()();
-      \u0275\u0275template(16, AiOptionsComponent_p_accordion_panel_16_Template, 22, 17, "p-accordion-panel", 9)(17, AiOptionsComponent_p_accordion_panel_17_Template, 12, 8, "p-accordion-panel", 10);
+      \u0275\u0275template(16, AiOptionsComponent_Conditional_16_Template, 22, 17, "p-accordion-panel", 9)(17, AiOptionsComponent_Conditional_17_Template, 12, 8, "p-accordion-panel", 10);
       \u0275\u0275elementEnd();
-      \u0275\u0275template(18, AiOptionsComponent_p_button_18_Template, 2, 3, "p-button", 11)(19, AiOptionsComponent_ng_container_19_Template, 4, 4, "ng-container", 12);
+      \u0275\u0275template(18, AiOptionsComponent_Conditional_18_Template, 2, 3, "p-button", 11)(19, AiOptionsComponent_Conditional_19_Template, 4, 4, "ng-container", 12);
       \u0275\u0275elementEnd()();
     }
     if (rf & 2) {
@@ -24726,15 +24716,15 @@ var AiOptionsComponent = class _AiOptionsComponent {
       \u0275\u0275advance(3);
       \u0275\u0275property("ngForOf", ctx.taskOptions)("ngForTrackBy", ctx.trackById);
       \u0275\u0275advance();
-      \u0275\u0275property("ngIf", !ctx.isPrototype);
+      \u0275\u0275conditional(!ctx.isPrototype ? 16 : -1);
       \u0275\u0275advance();
-      \u0275\u0275property("ngIf", !ctx.isPrototype);
+      \u0275\u0275conditional(!ctx.isPrototype ? 17 : -1);
       \u0275\u0275advance();
-      \u0275\u0275property("ngIf", !ctx.isPrototype);
+      \u0275\u0275conditional(!ctx.isPrototype ? 18 : -1);
       \u0275\u0275advance();
-      \u0275\u0275property("ngIf", ctx.isPrototype);
+      \u0275\u0275conditional(ctx.isPrototype ? 19 : -1);
     }
-  }, dependencies: [TranslateModule, TranslatePipe, CommonModule, NgForOf, NgIf, NgSwitch, NgSwitchCase, FormsModule, DefaultValueAccessor, NgControlStatus, NgModel, ButtonModule, Button, DrawerModule, Drawer, RadioButtonModule, RadioButton, CheckboxModule, Checkbox, AccordionModule, Accordion, AccordionPanel, AccordionHeader, AccordionContent, ChipModule, Chip, TextareaModule, Textarea, IftaLabelModule, IftaLabel, SliderModule, Slider, UploadUrlComponent, UploadPasteComponent, UploadWordComponent], encapsulation: 2 });
+  }, dependencies: [TranslateModule, TranslatePipe, CommonModule, NgForOf, NgSwitch, NgSwitchCase, FormsModule, DefaultValueAccessor, NgControlStatus, NgModel, ButtonModule, Button, DrawerModule, Drawer, RadioButtonModule, RadioButton, CheckboxModule, Checkbox, AccordionModule, Accordion, AccordionPanel, AccordionHeader, AccordionContent, ChipModule, Chip, TextareaModule, Textarea, IftaLabelModule, IftaLabel, SliderModule, Slider, UploadUrlComponent, UploadPasteComponent, UploadWordComponent], encapsulation: 2 });
 };
 (() => {
   (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(AiOptionsComponent, [{
@@ -24781,125 +24771,135 @@ var AiOptionsComponent = class _AiOptionsComponent {
         </p-accordion-content>\r
       </p-accordion-panel>\r
       <!--PROMPT OPTIONS-->\r
-      <p-accordion-panel value="1" *ngIf="!isPrototype" class="border-1 border-round-md border-surface">\r
-        <p-accordion-header>{{ 'page.ai-options.prompt.header' | translate }}</p-accordion-header>\r
-        <p-accordion-content>\r
-\r
-          <fieldset class="border-none">\r
-            <legend class="font-bold mb-2">{{ 'page.ai-options.prompt.legend' | translate }}</legend>\r
-            <div class="flex flex-column gap-2">\r
-              <ng-container *ngIf="!isTwoPrompts">\r
-                <ng-container *ngFor="let option of promptOptions; trackBy: trackById">\r
-                  <div class="p-field-radiobutton">\r
-                    <p-radioButton name="promptOptions" [value]="option.id" [(ngModel)]="selectedPrompt"\r
-                                   [inputId]="option.id" [disabled]="option.disabled" (onClick)="onPromptSelect(selectedPrompt)" />\r
-                    <label [for]="option.id" class="pl-2">{{ option.label | translate }}</label>\r
-                  </div>\r
-                </ng-container>\r
-              </ng-container>\r
-              <ng-container *ngIf="isTwoPrompts">\r
-                <ng-container *ngFor="let option of promptOptions; trackBy: trackById">\r
-                  <div class="p-field-checkbox">\r
-                    <p-checkbox [value]="option.id" [(ngModel)]="selectedPrompts" [inputId]="option.id"\r
-                                [disabled]="option.disabled || isPromptCheckboxDisabled(option.id)" />\r
-                    <label [for]="option.id" class="pl-2">{{ option.label | translate }}</label>\r
-                  </div>\r
-                </ng-container>\r
-              </ng-container>\r
-              <!--Append custom prompt-->\r
-              <div class="p-field-checkbox mt-3">\r
-                <p-checkbox [(ngModel)]="addCustom" [binary]="true" inputId="appendCustom" (onChange)="resetCustom()" />\r
-                <label for="appendCustom" class="pl-2">{{ "page.ai-options.prompt.checkbox" | translate }}</label>\r
-              </div>\r
-              <p-iftalabel *ngIf="addCustom">\r
-                <textarea pTextarea id="customPrompt" [(ngModel)]="customInstruction" [autoResize]="true"\r
-                          (blur)="emitCustomPrompt(customInstruction)" fluid></textarea>\r
-                <label for="customPrompt">{{ 'page.ai-options.prompt.textarea' | translate }}</label>\r
-              </p-iftalabel>\r
-              <!--Slider for number of AI changes-->\r
-              <div class="flex flex-column gap-3 mt-3">\r
-                <p id="ai-changes">{{ currentEditLevel?.label }}</p>\r
-                <p-slider [(ngModel)]="editLevel" [step]="25" ariaLabelledBy="ai-changes" (onChange)="emitEditPrompt(currentEditLevel!.prompt)" fluid />\r
-              </div>\r
-            </div>\r
-          </fieldset>\r
-\r
-        </p-accordion-content>\r
-      </p-accordion-panel>\r
-      <!--AI OPTIONS-->\r
-      <p-accordion-panel value="2" *ngIf="!isPrototype" class="border-1 border-round-md border-surface">\r
-        <p-accordion-header>{{ 'page.ai-options.model.header' | translate }}</p-accordion-header>\r
-        <p-accordion-content>\r
-\r
-          <fieldset class="border-none">\r
-            <legend class="font-bold mb-2">{{ 'page.ai-options.model.legend' | translate }}</legend>\r
-            <div class="flex flex-column gap-2">
-              <ng-container *ngIf="!isTwoAis">
-                <p class="text-xs text-500">{{ 'page.ai-options.model.free' | translate }}</p>
-                <ng-container *ngFor="let option of freeAiOptions; trackBy: trackById">
-                  <div class="p-field-radiobutton">
-                    <p-radioButton name="aiOptions" [value]="option.id" [(ngModel)]="selectedAi" [inputId]="option.id"
-                                   [disabled]="option.disabled" (onClick)="onAiSelect(selectedAi)" />
-                    <label [for]="option.id" class="pl-2">{{ option.label | translate }}</label>
-                  </div>
-                </ng-container>
-                <p class="text-xs text-500 mt-3">{{ 'page.ai-options.model.paid' | translate }}</p>
-                <ng-container *ngFor="let option of paidAiOptions; trackBy: trackById">
-                  <div class="p-field-radiobutton">
-                    <p-radioButton name="aiOptions" [value]="option.id" [(ngModel)]="selectedAi" [inputId]="option.id"
-                                   [disabled]="option.disabled" (onClick)="onAiSelect(selectedAi)" />
-                    <label [for]="option.id" class="pl-2">
-                      {{ option.label | translate }}
-                      <p-chip
-                        [label]="'page.ai-options.model.paidBadge' | translate"
-                        styleClass="chip chip-severe ml-2">
-                      </p-chip>
-                    </label>
-                  </div>
-                </ng-container>
-              </ng-container>
-              <ng-container *ngIf="isTwoAis">
-                <p class="text-xs text-500">{{ 'page.ai-options.model.free' | translate }}</p>
-                <ng-container *ngFor="let option of freeAiOptions; trackBy: trackById">
-                  <div class="p-field-checkbox">
-                    <p-checkbox [value]="option.id" [(ngModel)]="selectedAis" [inputId]="option.id"
-                                [disabled]="option.disabled || isAiCheckboxDisabled(option.id)" />
-                    <label [for]="option.id" class="pl-2">{{ option.label | translate }}</label>
-                  </div>
-                </ng-container>
-                <p class="text-xs text-500 mt-3">{{ 'page.ai-options.model.paid' | translate }}</p>
-                <ng-container *ngFor="let option of paidAiOptions; trackBy: trackById">
-                  <div class="p-field-checkbox">
-                    <p-checkbox [value]="option.id" [(ngModel)]="selectedAis" [inputId]="option.id"
-                                [disabled]="option.disabled || isAiCheckboxDisabled(option.id)" />
-                    <label [for]="option.id" class="pl-2">
-                      {{ option.label | translate }}
-                      <p-chip
-                        [label]="'page.ai-options.model.paidBadge' | translate"
-                        styleClass="chip chip-severe ml-2">
-                      </p-chip>
-                    </label>
-                  </div>
-                </ng-container>
-              </ng-container>
-            </div>
-          </fieldset>\r
-\r
-        </p-accordion-content>\r
-      </p-accordion-panel>\r
-    </p-accordion>\r
-\r
-    <!--Close drawer and emit event-->\r
-    <p-button *ngIf="!isPrototype" [label]="'page.compare.button.genai' | translate" icon="pi pi-comments"\r
-              severity="primary" (click)="onSubmit()"></p-button>\r
-\r
-    <!--Upload options if task = compare with prototype-->\r
-    <ng-container [ngSwitch]="uploadType" *ngIf="isPrototype">\r
-      <ca-upload-url *ngSwitchCase="'url'" mode="prototype" [showSampleDataButton]="false" />\r
-      <ca-upload-paste *ngSwitchCase="'paste'" mode="prototype" [showSampleDataButton]="false" />\r
-      <ca-upload-word *ngSwitchCase="'word'" mode="prototype" [showSampleDataButton]="false" />\r
-    </ng-container>\r
-  </div>\r
+      @if (!isPrototype) {
+        <p-accordion-panel value="1" class="border-1 border-round-md border-surface">
+          <p-accordion-header>{{ 'page.ai-options.prompt.header' | translate }}</p-accordion-header>
+          <p-accordion-content>
+
+            <fieldset class="border-none">
+              <legend class="font-bold mb-2">{{ 'page.ai-options.prompt.legend' | translate }}</legend>
+              <div class="flex flex-column gap-2">
+                @if (!isTwoPrompts) {
+                  <ng-container *ngFor="let option of promptOptions; trackBy: trackById">
+                    <div class="p-field-radiobutton">
+                      <p-radioButton name="promptOptions" [value]="option.id" [(ngModel)]="selectedPrompt"
+                                     [inputId]="option.id" [disabled]="option.disabled" (onClick)="onPromptSelect(selectedPrompt)" />
+                      <label [for]="option.id" class="pl-2">{{ option.label | translate }}</label>
+                    </div>
+                  </ng-container>
+                }
+                @if (isTwoPrompts) {
+                  <ng-container *ngFor="let option of promptOptions; trackBy: trackById">
+                    <div class="p-field-checkbox">
+                      <p-checkbox [value]="option.id" [(ngModel)]="selectedPrompts" [inputId]="option.id"
+                                  [disabled]="option.disabled || isPromptCheckboxDisabled(option.id)" />
+                      <label [for]="option.id" class="pl-2">{{ option.label | translate }}</label>
+                    </div>
+                  </ng-container>
+                }
+                <!--Append custom prompt-->
+                <div class="p-field-checkbox mt-3">
+                  <p-checkbox [(ngModel)]="addCustom" [binary]="true" inputId="appendCustom" (onChange)="resetCustom()" />
+                  <label for="appendCustom" class="pl-2">{{ "page.ai-options.prompt.checkbox" | translate }}</label>
+                </div>
+                @if (addCustom) {
+                  <p-iftalabel>
+                    <textarea pTextarea id="customPrompt" [(ngModel)]="customInstruction" [autoResize]="true"
+                              (blur)="emitCustomPrompt(customInstruction)" fluid></textarea>
+                    <label for="customPrompt">{{ 'page.ai-options.prompt.textarea' | translate }}</label>
+                  </p-iftalabel>
+                }
+                <!--Slider for number of AI changes-->
+                <div class="flex flex-column gap-3 mt-3">
+                  <p id="ai-changes">{{ currentEditLevel?.label }}</p>
+                  <p-slider [(ngModel)]="editLevel" [step]="25" ariaLabelledBy="ai-changes" (onChange)="emitEditPrompt(currentEditLevel!.prompt)" fluid />
+                </div>
+              </div>
+            </fieldset>
+
+          </p-accordion-content>
+        </p-accordion-panel>
+      }
+      <!--AI OPTIONS-->
+      @if (!isPrototype) {
+        <p-accordion-panel value="2" class="border-1 border-round-md border-surface">
+          <p-accordion-header>{{ 'page.ai-options.model.header' | translate }}</p-accordion-header>
+          <p-accordion-content>
+
+            <fieldset class="border-none">
+              <legend class="font-bold mb-2">{{ 'page.ai-options.model.legend' | translate }}</legend>
+              <div class="flex flex-column gap-2">
+                @if (!isTwoAis) {
+                  <p class="text-xs text-500">{{ 'page.ai-options.model.free' | translate }}</p>
+                  <ng-container *ngFor="let option of freeAiOptions; trackBy: trackById">
+                    <div class="p-field-radiobutton">
+                      <p-radioButton name="aiOptions" [value]="option.id" [(ngModel)]="selectedAi" [inputId]="option.id"
+                                     [disabled]="option.disabled" (onClick)="onAiSelect(selectedAi)" />
+                      <label [for]="option.id" class="pl-2">{{ option.label | translate }}</label>
+                    </div>
+                  </ng-container>
+                  <p class="text-xs text-500 mt-3">{{ 'page.ai-options.model.paid' | translate }}</p>
+                  <ng-container *ngFor="let option of paidAiOptions; trackBy: trackById">
+                    <div class="p-field-radiobutton">
+                      <p-radioButton name="aiOptions" [value]="option.id" [(ngModel)]="selectedAi" [inputId]="option.id"
+                                     [disabled]="option.disabled" (onClick)="onAiSelect(selectedAi)" />
+                      <label [for]="option.id" class="pl-2">
+                        {{ option.label | translate }}
+                        <p-chip
+                          [label]="'page.ai-options.model.paidBadge' | translate"
+                          styleClass="chip chip-severe ml-2">
+                        </p-chip>
+                      </label>
+                    </div>
+                  </ng-container>
+                }
+                @if (isTwoAis) {
+                  <p class="text-xs text-500">{{ 'page.ai-options.model.free' | translate }}</p>
+                  <ng-container *ngFor="let option of freeAiOptions; trackBy: trackById">
+                    <div class="p-field-checkbox">
+                      <p-checkbox [value]="option.id" [(ngModel)]="selectedAis" [inputId]="option.id"
+                                  [disabled]="option.disabled || isAiCheckboxDisabled(option.id)" />
+                      <label [for]="option.id" class="pl-2">{{ option.label | translate }}</label>
+                    </div>
+                  </ng-container>
+                  <p class="text-xs text-500 mt-3">{{ 'page.ai-options.model.paid' | translate }}</p>
+                  <ng-container *ngFor="let option of paidAiOptions; trackBy: trackById">
+                    <div class="p-field-checkbox">
+                      <p-checkbox [value]="option.id" [(ngModel)]="selectedAis" [inputId]="option.id"
+                                  [disabled]="option.disabled || isAiCheckboxDisabled(option.id)" />
+                      <label [for]="option.id" class="pl-2">
+                        {{ option.label | translate }}
+                        <p-chip
+                          [label]="'page.ai-options.model.paidBadge' | translate"
+                          styleClass="chip chip-severe ml-2">
+                        </p-chip>
+                      </label>
+                    </div>
+                  </ng-container>
+                }
+              </div>
+            </fieldset>
+
+          </p-accordion-content>
+        </p-accordion-panel>
+      }
+    </p-accordion>
+
+    <!--Close drawer and emit event-->
+    @if (!isPrototype) {
+      <p-button [label]="'page.compare.button.genai' | translate" icon="pi pi-comments"
+                severity="primary" (click)="onSubmit()"></p-button>
+    }
+
+    <!--Upload options if task = compare with prototype-->
+    @if (isPrototype) {
+      <ng-container [ngSwitch]="uploadType">
+        <ca-upload-url *ngSwitchCase="'url'" mode="prototype" [showSampleDataButton]="false" />
+        <ca-upload-paste *ngSwitchCase="'paste'" mode="prototype" [showSampleDataButton]="false" />
+        <ca-upload-word *ngSwitchCase="'word'" mode="prototype" [showSampleDataButton]="false" />
+      </ng-container>
+    }
+  </div>
 </p-drawer>
 ` }]
   }], null, { promptChange: [{
@@ -31810,9 +31810,9 @@ var _c010 = ["chartContainer"];
 var _c17 = ["cm"];
 var _c27 = () => ({ height: "1rem" });
 var _c37 = () => ({ "min-width": "50rem" });
-function TopicPageIaComponent_p_progressbar_31_Template(rf, ctx) {
+function TopicPageIaComponent_Conditional_31_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275element(0, "p-progressbar", 19);
+    \u0275\u0275element(0, "p-progressbar", 17);
   }
   if (rf & 2) {
     const ctx_r0 = \u0275\u0275nextContext();
@@ -31820,11 +31820,11 @@ function TopicPageIaComponent_p_progressbar_31_Template(rf, ctx) {
     \u0275\u0275property("value", ctx_r0.iaProgress)("showValue", false);
   }
 }
-function TopicPageIaComponent_div_32_p_button_5_Template(rf, ctx) {
+function TopicPageIaComponent_Conditional_32_Conditional_5_Template(rf, ctx) {
   if (rf & 1) {
     const _r2 = \u0275\u0275getCurrentView();
-    \u0275\u0275elementStart(0, "p-button", 21);
-    \u0275\u0275listener("click", function TopicPageIaComponent_div_32_p_button_5_Template_p_button_click_0_listener() {
+    \u0275\u0275elementStart(0, "p-button", 19);
+    \u0275\u0275listener("click", function TopicPageIaComponent_Conditional_32_Conditional_5_Template_p_button_click_0_listener() {
       \u0275\u0275restoreView(_r2);
       const ctx_r0 = \u0275\u0275nextContext(2);
       return \u0275\u0275resetView(ctx_r0.copyUrlsToClipboard());
@@ -31836,26 +31836,26 @@ function TopicPageIaComponent_div_32_p_button_5_Template(rf, ctx) {
     \u0275\u0275property("severity", ctx_r0.hasCopiedUrls ? "secondary" : "primary");
   }
 }
-function TopicPageIaComponent_div_32_Template(rf, ctx) {
+function TopicPageIaComponent_Conditional_32_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275elementStart(0, "div", 11)(1, "p", 6)(2, "strong");
+    \u0275\u0275elementStart(0, "div", 10)(1, "p", 5)(2, "strong");
     \u0275\u0275text(3, "Copy all URLs");
     \u0275\u0275elementEnd();
     \u0275\u0275text(4, " in the IA structure to the clipboard.");
     \u0275\u0275elementEnd();
-    \u0275\u0275template(5, TopicPageIaComponent_div_32_p_button_5_Template, 1, 1, "p-button", 20);
+    \u0275\u0275template(5, TopicPageIaComponent_Conditional_32_Conditional_5_Template, 1, 1, "p-button", 18);
     \u0275\u0275elementEnd();
   }
   if (rf & 2) {
     const ctx_r0 = \u0275\u0275nextContext();
     \u0275\u0275advance(5);
-    \u0275\u0275property("ngIf", ctx_r0.iaChart && ctx_r0.iaChart.length > 0 && !ctx_r0.isChartLoading);
+    \u0275\u0275conditional(ctx_r0.iaChart && ctx_r0.iaChart.length > 0 && !ctx_r0.isChartLoading ? 5 : -1);
   }
 }
-function TopicPageIaComponent_div_33_Template(rf, ctx) {
+function TopicPageIaComponent_Conditional_33_Template(rf, ctx) {
   if (rf & 1) {
     const _r3 = \u0275\u0275getCurrentView();
-    \u0275\u0275elementStart(0, "div", 11)(1, "p", 6);
+    \u0275\u0275elementStart(0, "div", 10)(1, "p", 5);
     \u0275\u0275text(2, "Manually ");
     \u0275\u0275elementStart(3, "strong");
     \u0275\u0275text(4, "retrieve page visits");
@@ -31864,7 +31864,7 @@ function TopicPageIaComponent_div_33_Template(rf, ctx) {
     \u0275\u0275elementEnd();
     \u0275\u0275elementStart(6, "ol")(7, "li");
     \u0275\u0275text(8, "Visit ");
-    \u0275\u0275elementStart(9, "a", 22);
+    \u0275\u0275elementStart(9, "a", 20);
     \u0275\u0275text(10, "Custom reports page of the UPD");
     \u0275\u0275elementEnd()();
     \u0275\u0275elementStart(11, "li");
@@ -31895,8 +31895,8 @@ function TopicPageIaComponent_div_33_Template(rf, ctx) {
     \u0275\u0275elementStart(30, "li");
     \u0275\u0275text(31, "Export the report as a CSV and save it");
     \u0275\u0275elementEnd()();
-    \u0275\u0275elementStart(32, "p-button", 23);
-    \u0275\u0275listener("click", function TopicPageIaComponent_div_33_Template_p_button_click_32_listener() {
+    \u0275\u0275elementStart(32, "p-button", 21);
+    \u0275\u0275listener("click", function TopicPageIaComponent_Conditional_33_Template_p_button_click_32_listener() {
       \u0275\u0275restoreView(_r3);
       const ctx_r0 = \u0275\u0275nextContext();
       return \u0275\u0275resetView(ctx_r0.proceedToCsvUpload());
@@ -31909,10 +31909,10 @@ function TopicPageIaComponent_div_33_Template(rf, ctx) {
     \u0275\u0275property("severity", ctx_r0.updInstructionsComplete ? "secondary" : "primary");
   }
 }
-function TopicPageIaComponent_div_34_Template(rf, ctx) {
+function TopicPageIaComponent_Conditional_34_Template(rf, ctx) {
   if (rf & 1) {
     const _r4 = \u0275\u0275getCurrentView();
-    \u0275\u0275elementStart(0, "div", 11)(1, "p", 6)(2, "strong");
+    \u0275\u0275elementStart(0, "div", 10)(1, "p", 5)(2, "strong");
     \u0275\u0275text(3, "Upload your saved CSV");
     \u0275\u0275elementEnd();
     \u0275\u0275text(4, " file. This will:");
@@ -31934,9 +31934,9 @@ function TopicPageIaComponent_div_34_Template(rf, ctx) {
     \u0275\u0275elementEnd();
     \u0275\u0275text(17, " based on visits and levels");
     \u0275\u0275elementEnd()();
-    \u0275\u0275elementStart(18, "div", 24)(19, "p-fileUpload", 25);
+    \u0275\u0275elementStart(18, "div", 22)(19, "p-fileUpload", 23);
     \u0275\u0275pipe(20, "translate");
-    \u0275\u0275listener("uploadHandler", function TopicPageIaComponent_div_34_Template_p_fileUpload_uploadHandler_19_listener($event) {
+    \u0275\u0275listener("uploadHandler", function TopicPageIaComponent_Conditional_34_Template_p_fileUpload_uploadHandler_19_listener($event) {
       \u0275\u0275restoreView(_r4);
       const ctx_r0 = \u0275\u0275nextContext();
       return \u0275\u0275resetView(ctx_r0.onCsvUpload($event));
@@ -31949,101 +31949,96 @@ function TopicPageIaComponent_div_34_Template(rf, ctx) {
     \u0275\u0275property("auto", true)("customUpload", true)("chooseLabel", \u0275\u0275pipeBind1(20, 4, "page.topicIa.csvUpload.choose"))("chooseStyleClass", ctx_r0.csvUploaded ? "p-button-secondary" : "p-button-primary");
   }
 }
-function TopicPageIaComponent_ng_container_35_span_5_Template(rf, ctx) {
+function TopicPageIaComponent_Conditional_35_Conditional_4_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275elementStart(0, "span", 30);
-    \u0275\u0275element(1, "i", 31);
-    \u0275\u0275text(2, "Link found on parent page");
+    \u0275\u0275elementStart(0, "span", 26);
+    \u0275\u0275element(1, "i", 28);
+    \u0275\u0275text(2, "Link found on parent page ");
     \u0275\u0275elementEnd();
   }
 }
-function TopicPageIaComponent_ng_container_35_span_6_Template(rf, ctx) {
+function TopicPageIaComponent_Conditional_35_Conditional_5_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275elementStart(0, "span", 32);
-    \u0275\u0275element(1, "i", 33);
-    \u0275\u0275text(2, "IA Orphan");
+    \u0275\u0275elementStart(0, "span", 27);
+    \u0275\u0275element(1, "i", 29);
+    \u0275\u0275text(2, "IA Orphan ");
     \u0275\u0275elementEnd();
   }
 }
-function TopicPageIaComponent_ng_container_35_Template(rf, ctx) {
+function TopicPageIaComponent_Conditional_35_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275elementContainerStart(0);
-    \u0275\u0275elementStart(1, "h2");
-    \u0275\u0275text(2, "Breadcrumb");
+    \u0275\u0275elementStart(0, "h2");
+    \u0275\u0275text(1, "Breadcrumb");
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(3, "div", 26);
-    \u0275\u0275element(4, "p-breadcrumb", 27);
-    \u0275\u0275template(5, TopicPageIaComponent_ng_container_35_span_5_Template, 3, 0, "span", 28)(6, TopicPageIaComponent_ng_container_35_span_6_Template, 3, 0, "span", 29);
+    \u0275\u0275elementStart(2, "div", 24);
+    \u0275\u0275element(3, "p-breadcrumb", 25);
+    \u0275\u0275template(4, TopicPageIaComponent_Conditional_35_Conditional_4_Template, 3, 0, "span", 26)(5, TopicPageIaComponent_Conditional_35_Conditional_5_Template, 3, 0, "span", 27);
     \u0275\u0275elementEnd();
-    \u0275\u0275elementContainerEnd();
   }
   if (rf & 2) {
     const ctx_r0 = \u0275\u0275nextContext();
-    \u0275\u0275advance(4);
+    \u0275\u0275advance(3);
     \u0275\u0275property("model", ctx_r0.breadcrumb);
     \u0275\u0275advance();
-    \u0275\u0275property("ngIf", ctx_r0.urlFound === true);
+    \u0275\u0275conditional(ctx_r0.urlFound === true ? 4 : -1);
     \u0275\u0275advance();
-    \u0275\u0275property("ngIf", ctx_r0.urlFound === false);
+    \u0275\u0275conditional(ctx_r0.urlFound === false ? 5 : -1);
   }
 }
-function TopicPageIaComponent_ng_container_36_ng_template_8_i_1_Template(rf, ctx) {
+function TopicPageIaComponent_Conditional_36_ng_template_7_Conditional_1_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275element(0, "i", 45);
+    \u0275\u0275element(0, "i", 36);
   }
 }
-function TopicPageIaComponent_ng_container_36_ng_template_8_i_2_Template(rf, ctx) {
+function TopicPageIaComponent_Conditional_36_ng_template_7_Conditional_2_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275element(0, "i", 46);
+    \u0275\u0275element(0, "i", 37);
   }
 }
-function TopicPageIaComponent_ng_container_36_ng_template_8_i_3_Template(rf, ctx) {
+function TopicPageIaComponent_Conditional_36_ng_template_7_Conditional_3_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275element(0, "i", 47);
+    \u0275\u0275element(0, "i", 38);
   }
 }
-function TopicPageIaComponent_ng_container_36_ng_template_8_i_4_Template(rf, ctx) {
+function TopicPageIaComponent_Conditional_36_ng_template_7_Conditional_4_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275element(0, "i", 48);
+    \u0275\u0275element(0, "i", 39);
   }
 }
-function TopicPageIaComponent_ng_container_36_ng_template_8_ng_container_5_Template(rf, ctx) {
+function TopicPageIaComponent_Conditional_36_ng_template_7_Conditional_5_Template(rf, ctx) {
   if (rf & 1) {
     const _r6 = \u0275\u0275getCurrentView();
-    \u0275\u0275elementContainerStart(0);
-    \u0275\u0275elementStart(1, "a", 49);
-    \u0275\u0275listener("click", function TopicPageIaComponent_ng_container_36_ng_template_8_ng_container_5_Template_a_click_1_listener($event) {
+    \u0275\u0275elementStart(0, "a", 41);
+    \u0275\u0275listener("click", function TopicPageIaComponent_Conditional_36_ng_template_7_Conditional_5_Template_a_click_0_listener($event) {
       \u0275\u0275restoreView(_r6);
       const ctx_r0 = \u0275\u0275nextContext(3);
       return \u0275\u0275resetView(ctx_r0.onNodeClick($event));
     });
     \u0275\u0275elementEnd();
-    \u0275\u0275elementContainerEnd();
   }
   if (rf & 2) {
     const node_r7 = \u0275\u0275nextContext().$implicit;
-    \u0275\u0275advance();
     \u0275\u0275property("href", node_r7.data.url, \u0275\u0275sanitizeUrl)("innerHTML", node_r7.label, \u0275\u0275sanitizeHtml);
   }
 }
-function TopicPageIaComponent_ng_container_36_ng_template_8_p_inputgroup_6_Template(rf, ctx) {
+function TopicPageIaComponent_Conditional_36_ng_template_7_Conditional_6_Template(rf, ctx) {
   if (rf & 1) {
     const _r8 = \u0275\u0275getCurrentView();
-    \u0275\u0275elementStart(0, "p-inputgroup")(1, "input", 50);
-    \u0275\u0275twoWayListener("ngModelChange", function TopicPageIaComponent_ng_container_36_ng_template_8_p_inputgroup_6_Template_input_ngModelChange_1_listener($event) {
+    \u0275\u0275elementStart(0, "p-inputgroup")(1, "input", 42);
+    \u0275\u0275twoWayListener("ngModelChange", function TopicPageIaComponent_Conditional_36_ng_template_7_Conditional_6_Template_input_ngModelChange_1_listener($event) {
       \u0275\u0275restoreView(_r8);
       const node_r7 = \u0275\u0275nextContext().$implicit;
       \u0275\u0275twoWayBindingSet(node_r7.label, $event) || (node_r7.label = $event);
       return \u0275\u0275resetView($event);
     });
-    \u0275\u0275listener("keydown", function TopicPageIaComponent_ng_container_36_ng_template_8_p_inputgroup_6_Template_input_keydown_1_listener($event) {
+    \u0275\u0275listener("keydown", function TopicPageIaComponent_Conditional_36_ng_template_7_Conditional_6_Template_input_keydown_1_listener($event) {
       \u0275\u0275restoreView(_r8);
       const ctx_r0 = \u0275\u0275nextContext(3);
       return \u0275\u0275resetView(ctx_r0.onInputKeydown($event));
     });
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(2, "p-inputgroup-addon")(3, "p-button", 51);
-    \u0275\u0275listener("onClick", function TopicPageIaComponent_ng_container_36_ng_template_8_p_inputgroup_6_Template_p_button_onClick_3_listener() {
+    \u0275\u0275elementStart(2, "p-inputgroup-addon")(3, "p-button", 43);
+    \u0275\u0275listener("onClick", function TopicPageIaComponent_Conditional_36_ng_template_7_Conditional_6_Template_p_button_onClick_3_listener() {
       \u0275\u0275restoreView(_r8);
       const ctx_r0 = \u0275\u0275nextContext(3);
       return \u0275\u0275resetView(ctx_r0.saveNode());
@@ -32056,24 +32051,24 @@ function TopicPageIaComponent_ng_container_36_ng_template_8_p_inputgroup_6_Templ
     \u0275\u0275twoWayProperty("ngModel", node_r7.label);
   }
 }
-function TopicPageIaComponent_ng_container_36_ng_template_8_p_inputgroup_7_Template(rf, ctx) {
+function TopicPageIaComponent_Conditional_36_ng_template_7_Conditional_7_Template(rf, ctx) {
   if (rf & 1) {
     const _r9 = \u0275\u0275getCurrentView();
-    \u0275\u0275elementStart(0, "p-inputgroup")(1, "input", 50);
-    \u0275\u0275twoWayListener("ngModelChange", function TopicPageIaComponent_ng_container_36_ng_template_8_p_inputgroup_7_Template_input_ngModelChange_1_listener($event) {
+    \u0275\u0275elementStart(0, "p-inputgroup")(1, "input", 42);
+    \u0275\u0275twoWayListener("ngModelChange", function TopicPageIaComponent_Conditional_36_ng_template_7_Conditional_7_Template_input_ngModelChange_1_listener($event) {
       \u0275\u0275restoreView(_r9);
       const node_r7 = \u0275\u0275nextContext().$implicit;
       \u0275\u0275twoWayBindingSet(node_r7.data.url, $event) || (node_r7.data.url = $event);
       return \u0275\u0275resetView($event);
     });
-    \u0275\u0275listener("keydown", function TopicPageIaComponent_ng_container_36_ng_template_8_p_inputgroup_7_Template_input_keydown_1_listener($event) {
+    \u0275\u0275listener("keydown", function TopicPageIaComponent_Conditional_36_ng_template_7_Conditional_7_Template_input_keydown_1_listener($event) {
       \u0275\u0275restoreView(_r9);
       const ctx_r0 = \u0275\u0275nextContext(3);
       return \u0275\u0275resetView(ctx_r0.onInputKeydown($event));
     });
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(2, "p-inputgroup-addon")(3, "p-button", 51);
-    \u0275\u0275listener("onClick", function TopicPageIaComponent_ng_container_36_ng_template_8_p_inputgroup_7_Template_p_button_onClick_3_listener() {
+    \u0275\u0275elementStart(2, "p-inputgroup-addon")(3, "p-button", 43);
+    \u0275\u0275listener("onClick", function TopicPageIaComponent_Conditional_36_ng_template_7_Conditional_7_Template_p_button_onClick_3_listener() {
       \u0275\u0275restoreView(_r9);
       const ctx_r0 = \u0275\u0275nextContext(3);
       return \u0275\u0275resetView(ctx_r0.saveNode());
@@ -32086,73 +32081,70 @@ function TopicPageIaComponent_ng_container_36_ng_template_8_p_inputgroup_7_Templ
     \u0275\u0275twoWayProperty("ngModel", node_r7.data.url);
   }
 }
-function TopicPageIaComponent_ng_container_36_ng_template_8_Template(rf, ctx) {
+function TopicPageIaComponent_Conditional_36_ng_template_7_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275elementStart(0, "div", 40);
-    \u0275\u0275template(1, TopicPageIaComponent_ng_container_36_ng_template_8_i_1_Template, 1, 0, "i", 41)(2, TopicPageIaComponent_ng_container_36_ng_template_8_i_2_Template, 1, 0, "i", 42)(3, TopicPageIaComponent_ng_container_36_ng_template_8_i_3_Template, 1, 0, "i", 43)(4, TopicPageIaComponent_ng_container_36_ng_template_8_i_4_Template, 1, 0, "i", 44)(5, TopicPageIaComponent_ng_container_36_ng_template_8_ng_container_5_Template, 2, 2, "ng-container", 18)(6, TopicPageIaComponent_ng_container_36_ng_template_8_p_inputgroup_6_Template, 4, 1, "p-inputgroup", 18)(7, TopicPageIaComponent_ng_container_36_ng_template_8_p_inputgroup_7_Template, 4, 1, "p-inputgroup", 18);
+    \u0275\u0275elementStart(0, "div", 35);
+    \u0275\u0275template(1, TopicPageIaComponent_Conditional_36_ng_template_7_Conditional_1_Template, 1, 0, "i", 36)(2, TopicPageIaComponent_Conditional_36_ng_template_7_Conditional_2_Template, 1, 0, "i", 37)(3, TopicPageIaComponent_Conditional_36_ng_template_7_Conditional_3_Template, 1, 0, "i", 38)(4, TopicPageIaComponent_Conditional_36_ng_template_7_Conditional_4_Template, 1, 0, "i", 39)(5, TopicPageIaComponent_Conditional_36_ng_template_7_Conditional_5_Template, 1, 2, "a", 40)(6, TopicPageIaComponent_Conditional_36_ng_template_7_Conditional_6_Template, 4, 1, "p-inputgroup")(7, TopicPageIaComponent_Conditional_36_ng_template_7_Conditional_7_Template, 4, 1, "p-inputgroup");
     \u0275\u0275elementEnd();
   }
   if (rf & 2) {
     const node_r7 = ctx.$implicit;
     const ctx_r0 = \u0275\u0275nextContext(2);
     \u0275\u0275advance();
-    \u0275\u0275property("ngIf", node_r7.children.length > 0 && !ctx_r0.draggable && !node_r7.data.editing);
+    \u0275\u0275conditional(node_r7.children.length > 0 && !ctx_r0.draggable && !node_r7.data.editing ? 1 : -1);
     \u0275\u0275advance();
-    \u0275\u0275property("ngIf", (node_r7.children.length === 0 || !node_r7.children) && !ctx_r0.draggable && !node_r7.data.editing);
+    \u0275\u0275conditional((node_r7.children.length === 0 || !node_r7.children) && !ctx_r0.draggable && !node_r7.data.editing ? 2 : -1);
     \u0275\u0275advance();
-    \u0275\u0275property("ngIf", ctx_r0.draggable);
+    \u0275\u0275conditional(ctx_r0.draggable ? 3 : -1);
     \u0275\u0275advance();
-    \u0275\u0275property("ngIf", node_r7.data.editing);
+    \u0275\u0275conditional(node_r7.data.editing ? 4 : -1);
     \u0275\u0275advance();
-    \u0275\u0275property("ngIf", !node_r7.data.editing);
+    \u0275\u0275conditional(!node_r7.data.editing ? 5 : -1);
     \u0275\u0275advance();
-    \u0275\u0275property("ngIf", node_r7.data.editing === "label");
+    \u0275\u0275conditional(node_r7.data.editing === "label" ? 6 : -1);
     \u0275\u0275advance();
-    \u0275\u0275property("ngIf", node_r7.data.editing === "link");
+    \u0275\u0275conditional(node_r7.data.editing === "link" ? 7 : -1);
   }
 }
-function TopicPageIaComponent_ng_container_36_div_9_ng_template_6_i_1_Template(rf, ctx) {
+function TopicPageIaComponent_Conditional_36_Conditional_8_ng_template_6_Conditional_1_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275element(0, "i", 45);
+    \u0275\u0275element(0, "i", 36);
   }
 }
-function TopicPageIaComponent_ng_container_36_div_9_ng_template_6_i_2_Template(rf, ctx) {
+function TopicPageIaComponent_Conditional_36_Conditional_8_ng_template_6_Conditional_2_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275element(0, "i", 46);
+    \u0275\u0275element(0, "i", 37);
   }
 }
-function TopicPageIaComponent_ng_container_36_div_9_ng_template_6_i_3_Template(rf, ctx) {
+function TopicPageIaComponent_Conditional_36_Conditional_8_ng_template_6_Conditional_3_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275element(0, "i", 47);
+    \u0275\u0275element(0, "i", 38);
   }
 }
-function TopicPageIaComponent_ng_container_36_div_9_ng_template_6_i_4_Template(rf, ctx) {
+function TopicPageIaComponent_Conditional_36_Conditional_8_ng_template_6_Conditional_4_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275element(0, "i", 48);
+    \u0275\u0275element(0, "i", 39);
   }
 }
-function TopicPageIaComponent_ng_container_36_div_9_ng_template_6_ng_container_5_ng_container_1_Template(rf, ctx) {
+function TopicPageIaComponent_Conditional_36_Conditional_8_ng_template_6_Conditional_5_Conditional_0_Template(rf, ctx) {
   if (rf & 1) {
     const _r11 = \u0275\u0275getCurrentView();
-    \u0275\u0275elementContainerStart(0);
-    \u0275\u0275elementStart(1, "a", 49);
-    \u0275\u0275listener("click", function TopicPageIaComponent_ng_container_36_div_9_ng_template_6_ng_container_5_ng_container_1_Template_a_click_1_listener($event) {
+    \u0275\u0275elementStart(0, "a", 41);
+    \u0275\u0275listener("click", function TopicPageIaComponent_Conditional_36_Conditional_8_ng_template_6_Conditional_5_Conditional_0_Template_a_click_0_listener($event) {
       \u0275\u0275restoreView(_r11);
       const ctx_r0 = \u0275\u0275nextContext(5);
       return \u0275\u0275resetView(ctx_r0.onNodeClick($event));
     });
     \u0275\u0275elementEnd();
-    \u0275\u0275elementContainerEnd();
   }
   if (rf & 2) {
     const node_r12 = \u0275\u0275nextContext(2).$implicit;
-    \u0275\u0275advance();
     \u0275\u0275property("href", node_r12.data.url, \u0275\u0275sanitizeUrl)("innerHTML", node_r12.label, \u0275\u0275sanitizeHtml);
   }
 }
-function TopicPageIaComponent_ng_container_36_div_9_ng_template_6_ng_container_5_ng_template_2_Template(rf, ctx) {
+function TopicPageIaComponent_Conditional_36_Conditional_8_ng_template_6_Conditional_5_Conditional_1_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275element(0, "span", 55);
+    \u0275\u0275element(0, "span", 46);
   }
   if (rf & 2) {
     const node_r12 = \u0275\u0275nextContext(2).$implicit;
@@ -32160,38 +32152,34 @@ function TopicPageIaComponent_ng_container_36_div_9_ng_template_6_ng_container_5
     \u0275\u0275property("innerHTML", node_r12.label, \u0275\u0275sanitizeHtml);
   }
 }
-function TopicPageIaComponent_ng_container_36_div_9_ng_template_6_ng_container_5_Template(rf, ctx) {
+function TopicPageIaComponent_Conditional_36_Conditional_8_ng_template_6_Conditional_5_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275elementContainerStart(0);
-    \u0275\u0275template(1, TopicPageIaComponent_ng_container_36_div_9_ng_template_6_ng_container_5_ng_container_1_Template, 2, 2, "ng-container", 54)(2, TopicPageIaComponent_ng_container_36_div_9_ng_template_6_ng_container_5_ng_template_2_Template, 1, 3, "ng-template", null, 2, \u0275\u0275templateRefExtractor);
-    \u0275\u0275elementContainerEnd();
+    \u0275\u0275template(0, TopicPageIaComponent_Conditional_36_Conditional_8_ng_template_6_Conditional_5_Conditional_0_Template, 1, 2, "a", 40)(1, TopicPageIaComponent_Conditional_36_Conditional_8_ng_template_6_Conditional_5_Conditional_1_Template, 1, 3, "span", 45);
   }
   if (rf & 2) {
-    const topicLabel_r13 = \u0275\u0275reference(3);
     const node_r12 = \u0275\u0275nextContext().$implicit;
-    \u0275\u0275advance();
-    \u0275\u0275property("ngIf", node_r12.data == null ? null : node_r12.data.url)("ngIfElse", topicLabel_r13);
+    \u0275\u0275conditional((node_r12.data == null ? null : node_r12.data.url) ? 0 : 1);
   }
 }
-function TopicPageIaComponent_ng_container_36_div_9_ng_template_6_p_inputgroup_6_Template(rf, ctx) {
+function TopicPageIaComponent_Conditional_36_Conditional_8_ng_template_6_Conditional_6_Template(rf, ctx) {
   if (rf & 1) {
-    const _r14 = \u0275\u0275getCurrentView();
-    \u0275\u0275elementStart(0, "p-inputgroup")(1, "input", 50);
-    \u0275\u0275twoWayListener("ngModelChange", function TopicPageIaComponent_ng_container_36_div_9_ng_template_6_p_inputgroup_6_Template_input_ngModelChange_1_listener($event) {
-      \u0275\u0275restoreView(_r14);
+    const _r13 = \u0275\u0275getCurrentView();
+    \u0275\u0275elementStart(0, "p-inputgroup")(1, "input", 42);
+    \u0275\u0275twoWayListener("ngModelChange", function TopicPageIaComponent_Conditional_36_Conditional_8_ng_template_6_Conditional_6_Template_input_ngModelChange_1_listener($event) {
+      \u0275\u0275restoreView(_r13);
       const node_r12 = \u0275\u0275nextContext().$implicit;
       \u0275\u0275twoWayBindingSet(node_r12.label, $event) || (node_r12.label = $event);
       return \u0275\u0275resetView($event);
     });
-    \u0275\u0275listener("keydown", function TopicPageIaComponent_ng_container_36_div_9_ng_template_6_p_inputgroup_6_Template_input_keydown_1_listener($event) {
-      \u0275\u0275restoreView(_r14);
+    \u0275\u0275listener("keydown", function TopicPageIaComponent_Conditional_36_Conditional_8_ng_template_6_Conditional_6_Template_input_keydown_1_listener($event) {
+      \u0275\u0275restoreView(_r13);
       const ctx_r0 = \u0275\u0275nextContext(4);
       return \u0275\u0275resetView(ctx_r0.onInputKeydown($event));
     });
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(2, "p-inputgroup-addon")(3, "p-button", 51);
-    \u0275\u0275listener("onClick", function TopicPageIaComponent_ng_container_36_div_9_ng_template_6_p_inputgroup_6_Template_p_button_onClick_3_listener() {
-      \u0275\u0275restoreView(_r14);
+    \u0275\u0275elementStart(2, "p-inputgroup-addon")(3, "p-button", 43);
+    \u0275\u0275listener("onClick", function TopicPageIaComponent_Conditional_36_Conditional_8_ng_template_6_Conditional_6_Template_p_button_onClick_3_listener() {
+      \u0275\u0275restoreView(_r13);
       const ctx_r0 = \u0275\u0275nextContext(4);
       return \u0275\u0275resetView(ctx_r0.saveNode());
     });
@@ -32203,25 +32191,25 @@ function TopicPageIaComponent_ng_container_36_div_9_ng_template_6_p_inputgroup_6
     \u0275\u0275twoWayProperty("ngModel", node_r12.label);
   }
 }
-function TopicPageIaComponent_ng_container_36_div_9_ng_template_6_p_inputgroup_7_Template(rf, ctx) {
+function TopicPageIaComponent_Conditional_36_Conditional_8_ng_template_6_Conditional_7_Template(rf, ctx) {
   if (rf & 1) {
-    const _r15 = \u0275\u0275getCurrentView();
-    \u0275\u0275elementStart(0, "p-inputgroup")(1, "input", 50);
-    \u0275\u0275twoWayListener("ngModelChange", function TopicPageIaComponent_ng_container_36_div_9_ng_template_6_p_inputgroup_7_Template_input_ngModelChange_1_listener($event) {
-      \u0275\u0275restoreView(_r15);
+    const _r14 = \u0275\u0275getCurrentView();
+    \u0275\u0275elementStart(0, "p-inputgroup")(1, "input", 42);
+    \u0275\u0275twoWayListener("ngModelChange", function TopicPageIaComponent_Conditional_36_Conditional_8_ng_template_6_Conditional_7_Template_input_ngModelChange_1_listener($event) {
+      \u0275\u0275restoreView(_r14);
       const node_r12 = \u0275\u0275nextContext().$implicit;
       \u0275\u0275twoWayBindingSet(node_r12.data.url, $event) || (node_r12.data.url = $event);
       return \u0275\u0275resetView($event);
     });
-    \u0275\u0275listener("keydown", function TopicPageIaComponent_ng_container_36_div_9_ng_template_6_p_inputgroup_7_Template_input_keydown_1_listener($event) {
-      \u0275\u0275restoreView(_r15);
+    \u0275\u0275listener("keydown", function TopicPageIaComponent_Conditional_36_Conditional_8_ng_template_6_Conditional_7_Template_input_keydown_1_listener($event) {
+      \u0275\u0275restoreView(_r14);
       const ctx_r0 = \u0275\u0275nextContext(4);
       return \u0275\u0275resetView(ctx_r0.onInputKeydown($event));
     });
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(2, "p-inputgroup-addon")(3, "p-button", 51);
-    \u0275\u0275listener("onClick", function TopicPageIaComponent_ng_container_36_div_9_ng_template_6_p_inputgroup_7_Template_p_button_onClick_3_listener() {
-      \u0275\u0275restoreView(_r15);
+    \u0275\u0275elementStart(2, "p-inputgroup-addon")(3, "p-button", 43);
+    \u0275\u0275listener("onClick", function TopicPageIaComponent_Conditional_36_Conditional_8_ng_template_6_Conditional_7_Template_p_button_onClick_3_listener() {
+      \u0275\u0275restoreView(_r14);
       const ctx_r0 = \u0275\u0275nextContext(4);
       return \u0275\u0275resetView(ctx_r0.saveNode());
     });
@@ -32233,155 +32221,153 @@ function TopicPageIaComponent_ng_container_36_div_9_ng_template_6_p_inputgroup_7
     \u0275\u0275twoWayProperty("ngModel", node_r12.data.url);
   }
 }
-function TopicPageIaComponent_ng_container_36_div_9_ng_template_6_Template(rf, ctx) {
+function TopicPageIaComponent_Conditional_36_Conditional_8_ng_template_6_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275elementStart(0, "div", 40);
-    \u0275\u0275template(1, TopicPageIaComponent_ng_container_36_div_9_ng_template_6_i_1_Template, 1, 0, "i", 41)(2, TopicPageIaComponent_ng_container_36_div_9_ng_template_6_i_2_Template, 1, 0, "i", 42)(3, TopicPageIaComponent_ng_container_36_div_9_ng_template_6_i_3_Template, 1, 0, "i", 43)(4, TopicPageIaComponent_ng_container_36_div_9_ng_template_6_i_4_Template, 1, 0, "i", 44)(5, TopicPageIaComponent_ng_container_36_div_9_ng_template_6_ng_container_5_Template, 4, 2, "ng-container", 18)(6, TopicPageIaComponent_ng_container_36_div_9_ng_template_6_p_inputgroup_6_Template, 4, 1, "p-inputgroup", 18)(7, TopicPageIaComponent_ng_container_36_div_9_ng_template_6_p_inputgroup_7_Template, 4, 1, "p-inputgroup", 18);
+    \u0275\u0275elementStart(0, "div", 35);
+    \u0275\u0275template(1, TopicPageIaComponent_Conditional_36_Conditional_8_ng_template_6_Conditional_1_Template, 1, 0, "i", 36)(2, TopicPageIaComponent_Conditional_36_Conditional_8_ng_template_6_Conditional_2_Template, 1, 0, "i", 37)(3, TopicPageIaComponent_Conditional_36_Conditional_8_ng_template_6_Conditional_3_Template, 1, 0, "i", 38)(4, TopicPageIaComponent_Conditional_36_Conditional_8_ng_template_6_Conditional_4_Template, 1, 0, "i", 39)(5, TopicPageIaComponent_Conditional_36_Conditional_8_ng_template_6_Conditional_5_Template, 2, 1)(6, TopicPageIaComponent_Conditional_36_Conditional_8_ng_template_6_Conditional_6_Template, 4, 1, "p-inputgroup")(7, TopicPageIaComponent_Conditional_36_Conditional_8_ng_template_6_Conditional_7_Template, 4, 1, "p-inputgroup");
     \u0275\u0275elementEnd();
   }
   if (rf & 2) {
     const node_r12 = ctx.$implicit;
     const ctx_r0 = \u0275\u0275nextContext(3);
     \u0275\u0275advance();
-    \u0275\u0275property("ngIf", (node_r12.children == null ? null : node_r12.children.length) && !ctx_r0.draggable && !(node_r12.data == null ? null : node_r12.data.isCategory) && !(node_r12.data == null ? null : node_r12.data.editing));
+    \u0275\u0275conditional((node_r12.children == null ? null : node_r12.children.length) && !ctx_r0.draggable && !(node_r12.data == null ? null : node_r12.data.isCategory) && !(node_r12.data == null ? null : node_r12.data.editing) ? 1 : -1);
     \u0275\u0275advance();
-    \u0275\u0275property("ngIf", !(node_r12.children == null ? null : node_r12.children.length) && !ctx_r0.draggable && !(node_r12.data == null ? null : node_r12.data.isCategory) && !(node_r12.data == null ? null : node_r12.data.editing));
+    \u0275\u0275conditional(!(node_r12.children == null ? null : node_r12.children.length) && !ctx_r0.draggable && !(node_r12.data == null ? null : node_r12.data.isCategory) && !(node_r12.data == null ? null : node_r12.data.editing) ? 2 : -1);
     \u0275\u0275advance();
-    \u0275\u0275property("ngIf", ctx_r0.draggable && !(node_r12.data == null ? null : node_r12.data.isCategory) && !(node_r12.data == null ? null : node_r12.data.editing));
+    \u0275\u0275conditional(ctx_r0.draggable && !(node_r12.data == null ? null : node_r12.data.isCategory) && !(node_r12.data == null ? null : node_r12.data.editing) ? 3 : -1);
     \u0275\u0275advance();
-    \u0275\u0275property("ngIf", node_r12.data == null ? null : node_r12.data.editing);
+    \u0275\u0275conditional((node_r12.data == null ? null : node_r12.data.editing) ? 4 : -1);
     \u0275\u0275advance();
-    \u0275\u0275property("ngIf", !(node_r12.data == null ? null : node_r12.data.editing));
+    \u0275\u0275conditional(!(node_r12.data == null ? null : node_r12.data.editing) ? 5 : -1);
     \u0275\u0275advance();
-    \u0275\u0275property("ngIf", (node_r12.data == null ? null : node_r12.data.editing) === "label");
+    \u0275\u0275conditional((node_r12.data == null ? null : node_r12.data.editing) === "label" ? 6 : -1);
     \u0275\u0275advance();
-    \u0275\u0275property("ngIf", (node_r12.data == null ? null : node_r12.data.editing) === "link");
+    \u0275\u0275conditional((node_r12.data == null ? null : node_r12.data.editing) === "link" ? 7 : -1);
   }
 }
-function TopicPageIaComponent_ng_container_36_div_9_Template(rf, ctx) {
+function TopicPageIaComponent_Conditional_36_Conditional_8_Template(rf, ctx) {
   if (rf & 1) {
     const _r10 = \u0275\u0275getCurrentView();
-    \u0275\u0275elementStart(0, "div", 52);
-    \u0275\u0275element(1, "p-contextMenu", 36, 1);
+    \u0275\u0275elementStart(0, "div", 34);
+    \u0275\u0275element(1, "p-contextMenu", 31, 1);
     \u0275\u0275elementStart(3, "h2");
     \u0275\u0275text(4, "Suggested topic page sections");
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(5, "p-tree", 53);
-    \u0275\u0275twoWayListener("selectionChange", function TopicPageIaComponent_ng_container_36_div_9_Template_p_tree_selectionChange_5_listener($event) {
+    \u0275\u0275elementStart(5, "p-tree", 44);
+    \u0275\u0275twoWayListener("selectionChange", function TopicPageIaComponent_Conditional_36_Conditional_8_Template_p_tree_selectionChange_5_listener($event) {
       \u0275\u0275restoreView(_r10);
       const ctx_r0 = \u0275\u0275nextContext(2);
       \u0275\u0275twoWayBindingSet(ctx_r0.selectedNode, $event) || (ctx_r0.selectedNode = $event);
       return \u0275\u0275resetView($event);
     });
-    \u0275\u0275listener("onNodeDrop", function TopicPageIaComponent_ng_container_36_div_9_Template_p_tree_onNodeDrop_5_listener($event) {
+    \u0275\u0275listener("onNodeDrop", function TopicPageIaComponent_Conditional_36_Conditional_8_Template_p_tree_onNodeDrop_5_listener($event) {
       \u0275\u0275restoreView(_r10);
       const ctx_r0 = \u0275\u0275nextContext(2);
       return \u0275\u0275resetView(ctx_r0.onTopicPageNodeDrop($event));
-    })("onNodeContextMenuSelect", function TopicPageIaComponent_ng_container_36_div_9_Template_p_tree_onNodeContextMenuSelect_5_listener($event) {
+    })("onNodeContextMenuSelect", function TopicPageIaComponent_Conditional_36_Conditional_8_Template_p_tree_onNodeContextMenuSelect_5_listener($event) {
       \u0275\u0275restoreView(_r10);
       const ctx_r0 = \u0275\u0275nextContext(2);
       return \u0275\u0275resetView(ctx_r0.onNodeContextMenu($event, "topic"));
     });
-    \u0275\u0275template(6, TopicPageIaComponent_ng_container_36_div_9_ng_template_6_Template, 8, 7, "ng-template", 38);
+    \u0275\u0275template(6, TopicPageIaComponent_Conditional_36_Conditional_8_ng_template_6_Template, 8, 7, "ng-template", 33);
     \u0275\u0275elementEnd()();
   }
   if (rf & 2) {
-    const cmTopic_r16 = \u0275\u0275reference(2);
+    const cmTopic_r15 = \u0275\u0275reference(2);
     const ctx_r0 = \u0275\u0275nextContext(2);
     \u0275\u0275advance();
     \u0275\u0275property("model", ctx_r0.options);
     \u0275\u0275advance(4);
     \u0275\u0275property("value", ctx_r0.topicPageTree)("selectionMode", ctx_r0.selectable ? "multiple" : null);
     \u0275\u0275twoWayProperty("selection", ctx_r0.selectedNode);
-    \u0275\u0275property("draggableNodes", true)("droppableNodes", true)("validateDrop", true)("contextMenu", cmTopic_r16);
+    \u0275\u0275property("draggableNodes", true)("droppableNodes", true)("validateDrop", true)("contextMenu", cmTopic_r15);
   }
 }
-function TopicPageIaComponent_ng_container_36_Template(rf, ctx) {
+function TopicPageIaComponent_Conditional_36_Template(rf, ctx) {
   if (rf & 1) {
     const _r5 = \u0275\u0275getCurrentView();
-    \u0275\u0275elementContainerStart(0);
-    \u0275\u0275elementStart(1, "div", 34)(2, "div", 35);
-    \u0275\u0275element(3, "p-contextMenu", 36, 0);
-    \u0275\u0275elementStart(5, "h2");
-    \u0275\u0275text(6, "Current IA structure tree");
+    \u0275\u0275elementStart(0, "div", 16)(1, "div", 30);
+    \u0275\u0275element(2, "p-contextMenu", 31, 0);
+    \u0275\u0275elementStart(4, "h2");
+    \u0275\u0275text(5, "Current IA structure tree");
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(7, "p-tree", 37);
-    \u0275\u0275twoWayListener("selectionChange", function TopicPageIaComponent_ng_container_36_Template_p_tree_selectionChange_7_listener($event) {
+    \u0275\u0275elementStart(6, "p-tree", 32);
+    \u0275\u0275twoWayListener("selectionChange", function TopicPageIaComponent_Conditional_36_Template_p_tree_selectionChange_6_listener($event) {
       \u0275\u0275restoreView(_r5);
       const ctx_r0 = \u0275\u0275nextContext();
       \u0275\u0275twoWayBindingSet(ctx_r0.selectedNode, $event) || (ctx_r0.selectedNode = $event);
       return \u0275\u0275resetView($event);
     });
-    \u0275\u0275listener("onNodeDrop", function TopicPageIaComponent_ng_container_36_Template_p_tree_onNodeDrop_7_listener($event) {
+    \u0275\u0275listener("onNodeDrop", function TopicPageIaComponent_Conditional_36_Template_p_tree_onNodeDrop_6_listener($event) {
       \u0275\u0275restoreView(_r5);
       const ctx_r0 = \u0275\u0275nextContext();
       return \u0275\u0275resetView(ctx_r0.handleNodeDrop($event));
-    })("onNodeContextMenuSelect", function TopicPageIaComponent_ng_container_36_Template_p_tree_onNodeContextMenuSelect_7_listener($event) {
+    })("onNodeContextMenuSelect", function TopicPageIaComponent_Conditional_36_Template_p_tree_onNodeContextMenuSelect_6_listener($event) {
       \u0275\u0275restoreView(_r5);
       const ctx_r0 = \u0275\u0275nextContext();
       return \u0275\u0275resetView(ctx_r0.onNodeContextMenu($event));
     });
-    \u0275\u0275template(8, TopicPageIaComponent_ng_container_36_ng_template_8_Template, 8, 7, "ng-template", 38);
+    \u0275\u0275template(7, TopicPageIaComponent_Conditional_36_ng_template_7_Template, 8, 7, "ng-template", 33);
     \u0275\u0275elementEnd()();
-    \u0275\u0275template(9, TopicPageIaComponent_ng_container_36_div_9_Template, 7, 8, "div", 39);
+    \u0275\u0275template(8, TopicPageIaComponent_Conditional_36_Conditional_8_Template, 7, 8, "div", 34);
     \u0275\u0275elementEnd();
-    \u0275\u0275elementContainerEnd();
   }
   if (rf & 2) {
-    const cm_r17 = \u0275\u0275reference(4);
+    const cm_r16 = \u0275\u0275reference(3);
     const ctx_r0 = \u0275\u0275nextContext();
-    \u0275\u0275advance(2);
+    \u0275\u0275advance();
     \u0275\u0275classProp("md:col-6", ctx_r0.visitsByUrl.size > 0);
     \u0275\u0275advance();
     \u0275\u0275property("model", ctx_r0.options);
     \u0275\u0275advance(4);
     \u0275\u0275property("value", ctx_r0.iaChart)("selectionMode", ctx_r0.selectable ? "multiple" : null);
     \u0275\u0275twoWayProperty("selection", ctx_r0.selectedNode);
-    \u0275\u0275property("draggableNodes", ctx_r0.draggable)("droppableNodes", true)("validateDrop", true)("contextMenu", cm_r17);
+    \u0275\u0275property("draggableNodes", ctx_r0.draggable)("droppableNodes", true)("validateDrop", true)("contextMenu", cm_r16);
     \u0275\u0275advance(2);
-    \u0275\u0275property("ngIf", ctx_r0.visitsByUrl.size > 0);
+    \u0275\u0275conditional(ctx_r0.visitsByUrl.size > 0 ? 8 : -1);
   }
 }
-function TopicPageIaComponent_ng_container_37_p_button_3_Template(rf, ctx) {
+function TopicPageIaComponent_Conditional_37_Conditional_2_Template(rf, ctx) {
   if (rf & 1) {
-    const _r18 = \u0275\u0275getCurrentView();
-    \u0275\u0275elementStart(0, "p-button", 58);
-    \u0275\u0275listener("click", function TopicPageIaComponent_ng_container_37_p_button_3_Template_p_button_click_0_listener() {
-      \u0275\u0275restoreView(_r18);
+    const _r17 = \u0275\u0275getCurrentView();
+    \u0275\u0275elementStart(0, "p-button", 49);
+    \u0275\u0275listener("click", function TopicPageIaComponent_Conditional_37_Conditional_2_Template_p_button_click_0_listener() {
+      \u0275\u0275restoreView(_r17);
       const ctx_r0 = \u0275\u0275nextContext(2);
       return \u0275\u0275resetView(ctx_r0.maximize(ctx_r0.chartContainer));
     });
     \u0275\u0275elementEnd();
   }
 }
-function TopicPageIaComponent_ng_container_37_p_4_Template(rf, ctx) {
+function TopicPageIaComponent_Conditional_37_Conditional_3_Template(rf, ctx) {
   if (rf & 1) {
     \u0275\u0275elementStart(0, "p");
     \u0275\u0275text(1, "No child pages found.");
     \u0275\u0275elementEnd();
   }
 }
-function TopicPageIaComponent_ng_container_37_div_5_ng_template_3_Template(rf, ctx) {
+function TopicPageIaComponent_Conditional_37_Conditional_4_ng_template_3_Template(rf, ctx) {
   if (rf & 1) {
-    const _r19 = \u0275\u0275getCurrentView();
-    \u0275\u0275elementStart(0, "p")(1, "a", 49);
-    \u0275\u0275listener("click", function TopicPageIaComponent_ng_container_37_div_5_ng_template_3_Template_a_click_1_listener($event) {
-      \u0275\u0275restoreView(_r19);
+    const _r18 = \u0275\u0275getCurrentView();
+    \u0275\u0275elementStart(0, "p")(1, "a", 41);
+    \u0275\u0275listener("click", function TopicPageIaComponent_Conditional_37_Conditional_4_ng_template_3_Template_a_click_1_listener($event) {
+      \u0275\u0275restoreView(_r18);
       const ctx_r0 = \u0275\u0275nextContext(3);
       return \u0275\u0275resetView(ctx_r0.onNodeClick($event));
     });
     \u0275\u0275elementEnd()();
   }
   if (rf & 2) {
-    const node_r20 = ctx.$implicit;
+    const node_r19 = ctx.$implicit;
     \u0275\u0275advance();
-    \u0275\u0275property("href", node_r20.data.url, \u0275\u0275sanitizeUrl)("innerHTML", node_r20.label, \u0275\u0275sanitizeHtml);
+    \u0275\u0275property("href", node_r19.data.url, \u0275\u0275sanitizeUrl)("innerHTML", node_r19.label, \u0275\u0275sanitizeHtml);
   }
 }
-function TopicPageIaComponent_ng_container_37_div_5_Template(rf, ctx) {
+function TopicPageIaComponent_Conditional_37_Conditional_4_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275elementStart(0, "div", 59, 3)(2, "p-organization-chart", 9);
-    \u0275\u0275template(3, TopicPageIaComponent_ng_container_37_div_5_ng_template_3_Template, 2, 2, "ng-template", 38);
+    \u0275\u0275elementStart(0, "div", 48, 2)(2, "p-organization-chart", 8);
+    \u0275\u0275template(3, TopicPageIaComponent_Conditional_37_Conditional_4_ng_template_3_Template, 2, 2, "ng-template", 33);
     \u0275\u0275elementEnd()();
   }
   if (rf & 2) {
@@ -32390,47 +32376,45 @@ function TopicPageIaComponent_ng_container_37_div_5_Template(rf, ctx) {
     \u0275\u0275property("value", ctx_r0.iaChart);
   }
 }
-function TopicPageIaComponent_ng_container_37_Template(rf, ctx) {
+function TopicPageIaComponent_Conditional_37_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275elementContainerStart(0);
-    \u0275\u0275elementStart(1, "h2");
-    \u0275\u0275text(2, "IA structure");
+    \u0275\u0275elementStart(0, "h2");
+    \u0275\u0275text(1, "IA structure");
     \u0275\u0275elementEnd();
-    \u0275\u0275template(3, TopicPageIaComponent_ng_container_37_p_button_3_Template, 1, 0, "p-button", 56)(4, TopicPageIaComponent_ng_container_37_p_4_Template, 2, 0, "p", 18)(5, TopicPageIaComponent_ng_container_37_div_5_Template, 4, 1, "div", 57);
-    \u0275\u0275elementContainerEnd();
+    \u0275\u0275template(2, TopicPageIaComponent_Conditional_37_Conditional_2_Template, 1, 0, "p-button", 47)(3, TopicPageIaComponent_Conditional_37_Conditional_3_Template, 2, 0, "p")(4, TopicPageIaComponent_Conditional_37_Conditional_4_Template, 4, 1, "div", 48);
   }
   if (rf & 2) {
     const ctx_r0 = \u0275\u0275nextContext();
-    \u0275\u0275advance(3);
-    \u0275\u0275property("ngIf", ctx_r0.iaChart.length > 0);
+    \u0275\u0275advance(2);
+    \u0275\u0275conditional(ctx_r0.iaChart.length > 0 ? 2 : -1);
     \u0275\u0275advance();
-    \u0275\u0275property("ngIf", ctx_r0.iaChart.length === 0);
+    \u0275\u0275conditional(ctx_r0.iaChart.length === 0 ? 3 : -1);
     \u0275\u0275advance();
-    \u0275\u0275property("ngIf", ctx_r0.iaChart.length > 0);
+    \u0275\u0275conditional(ctx_r0.iaChart.length > 0 ? 4 : -1);
   }
 }
-function TopicPageIaComponent_ng_container_38_p_3_span_2_Template(rf, ctx) {
+function TopicPageIaComponent_Conditional_38_Conditional_2_Conditional_2_Template(rf, ctx) {
   if (rf & 1) {
     \u0275\u0275elementStart(0, "span");
     \u0275\u0275text(1, " or on any detected child pages");
     \u0275\u0275elementEnd();
   }
 }
-function TopicPageIaComponent_ng_container_38_p_3_Template(rf, ctx) {
+function TopicPageIaComponent_Conditional_38_Conditional_2_Template(rf, ctx) {
   if (rf & 1) {
     \u0275\u0275elementStart(0, "p");
-    \u0275\u0275text(1, " No broken links found on this page");
-    \u0275\u0275template(2, TopicPageIaComponent_ng_container_38_p_3_span_2_Template, 2, 0, "span", 18);
-    \u0275\u0275text(3, ". ");
+    \u0275\u0275text(1, " No broken links found on this page ");
+    \u0275\u0275template(2, TopicPageIaComponent_Conditional_38_Conditional_2_Conditional_2_Template, 2, 0, "span");
+    \u0275\u0275text(3, " . ");
     \u0275\u0275elementEnd();
   }
   if (rf & 2) {
     const ctx_r0 = \u0275\u0275nextContext(2);
     \u0275\u0275advance(2);
-    \u0275\u0275property("ngIf", ctx_r0.iaChart[0].children == null ? null : ctx_r0.iaChart[0].children.length);
+    \u0275\u0275conditional((ctx_r0.iaChart[0].children == null ? null : ctx_r0.iaChart[0].children.length) ? 2 : -1);
   }
 }
-function TopicPageIaComponent_ng_container_38_p_table_4_ng_template_1_Template(rf, ctx) {
+function TopicPageIaComponent_Conditional_38_Conditional_3_ng_template_1_Template(rf, ctx) {
   if (rf & 1) {
     \u0275\u0275elementStart(0, "tr")(1, "th");
     \u0275\u0275text(2, "Parent page");
@@ -32443,7 +32427,7 @@ function TopicPageIaComponent_ng_container_38_p_table_4_ng_template_1_Template(r
     \u0275\u0275elementEnd()();
   }
 }
-function TopicPageIaComponent_ng_container_38_p_table_4_ng_template_3_Template(rf, ctx) {
+function TopicPageIaComponent_Conditional_38_Conditional_3_ng_template_3_Template(rf, ctx) {
   if (rf & 1) {
     \u0275\u0275elementStart(0, "tr")(1, "td");
     \u0275\u0275text(2);
@@ -32456,19 +32440,19 @@ function TopicPageIaComponent_ng_container_38_p_table_4_ng_template_3_Template(r
     \u0275\u0275elementEnd()();
   }
   if (rf & 2) {
-    const rowData_r21 = ctx.$implicit;
+    const rowData_r20 = ctx.$implicit;
     \u0275\u0275advance(2);
-    \u0275\u0275textInterpolate(rowData_r21.parentUrl);
+    \u0275\u0275textInterpolate(rowData_r20.parentUrl);
     \u0275\u0275advance(2);
-    \u0275\u0275textInterpolate(rowData_r21.url);
+    \u0275\u0275textInterpolate(rowData_r20.url);
     \u0275\u0275advance(2);
-    \u0275\u0275textInterpolate(rowData_r21.status);
+    \u0275\u0275textInterpolate(rowData_r20.status);
   }
 }
-function TopicPageIaComponent_ng_container_38_p_table_4_Template(rf, ctx) {
+function TopicPageIaComponent_Conditional_38_Conditional_3_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275elementStart(0, "p-table", 61);
-    \u0275\u0275template(1, TopicPageIaComponent_ng_container_38_p_table_4_ng_template_1_Template, 7, 0, "ng-template", null, 4, \u0275\u0275templateRefExtractor)(3, TopicPageIaComponent_ng_container_38_p_table_4_ng_template_3_Template, 7, 3, "ng-template", null, 5, \u0275\u0275templateRefExtractor);
+    \u0275\u0275elementStart(0, "p-table", 50);
+    \u0275\u0275template(1, TopicPageIaComponent_Conditional_38_Conditional_3_ng_template_1_Template, 7, 0, "ng-template", null, 3, \u0275\u0275templateRefExtractor)(3, TopicPageIaComponent_Conditional_38_Conditional_3_ng_template_3_Template, 7, 3, "ng-template", null, 4, \u0275\u0275templateRefExtractor);
     \u0275\u0275elementEnd();
   }
   if (rf & 2) {
@@ -32476,21 +32460,19 @@ function TopicPageIaComponent_ng_container_38_p_table_4_Template(rf, ctx) {
     \u0275\u0275property("value", ctx_r0.brokenLinks)("tableStyle", \u0275\u0275pureFunction0(2, _c37));
   }
 }
-function TopicPageIaComponent_ng_container_38_Template(rf, ctx) {
+function TopicPageIaComponent_Conditional_38_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275elementContainerStart(0);
-    \u0275\u0275elementStart(1, "h2");
-    \u0275\u0275text(2, "Broken links");
+    \u0275\u0275elementStart(0, "h2");
+    \u0275\u0275text(1, "Broken links");
     \u0275\u0275elementEnd();
-    \u0275\u0275template(3, TopicPageIaComponent_ng_container_38_p_3_Template, 4, 1, "p", 18)(4, TopicPageIaComponent_ng_container_38_p_table_4_Template, 5, 3, "p-table", 60);
-    \u0275\u0275elementContainerEnd();
+    \u0275\u0275template(2, TopicPageIaComponent_Conditional_38_Conditional_2_Template, 4, 1, "p")(3, TopicPageIaComponent_Conditional_38_Conditional_3_Template, 5, 3, "p-table", 50);
   }
   if (rf & 2) {
     const ctx_r0 = \u0275\u0275nextContext();
-    \u0275\u0275advance(3);
-    \u0275\u0275property("ngIf", ctx_r0.brokenLinks.length === 0);
+    \u0275\u0275advance(2);
+    \u0275\u0275conditional(ctx_r0.brokenLinks.length === 0 ? 2 : -1);
     \u0275\u0275advance();
-    \u0275\u0275property("ngIf", ctx_r0.brokenLinks.length > 0);
+    \u0275\u0275conditional(ctx_r0.brokenLinks.length > 0 ? 3 : -1);
   }
 }
 var TopicPageIaComponent = class _TopicPageIaComponent {
@@ -34028,29 +34010,29 @@ var TopicPageIaComponent = class _TopicPageIaComponent {
       \u0275\u0275queryRefresh(_t = \u0275\u0275loadQuery()) && (ctx.chartContainer = _t.first);
       \u0275\u0275queryRefresh(_t = \u0275\u0275loadQuery()) && (ctx.cm = _t.first);
     }
-  }, features: [\u0275\u0275ProvidersFeature([TreeDragDropService])], decls: 39, vars: 20, consts: [["cm", ""], ["cmTopic", ""], ["topicLabel", ""], ["chartContainer", ""], ["header", ""], ["body", ""], [1, "mt-0"], [1, "topic-ia-steps", 3, "valueChange", "value", "linear"], [1, "topic-ia-step-list"], [3, "value"], [1, "topic-ia-panels"], [1, "surface-0", "border-1", "border-round", "border-200", "p-3"], [1, "flex", "flex-row", "flex-wrap", "align-items-center", "gap-3", "mt-0"], ["inputId", "depth", "mode", "decimal", 3, "ngModelChange", "ngModel", "showButtons", "min", "max"], ["for", "depth"], ["label", "Get subpages in IA", "icon", "pi pi-info-circle", 3, "click", "severity", "loading"], ["styleClass", "mt-3", 3, "value", "showValue", "style", 4, "ngIf"], ["class", "surface-0 border-1 border-round border-200 p-3", 4, "ngIf"], [4, "ngIf"], ["styleClass", "mt-3", 3, "value", "showValue"], ["label", "Copy URLs to clipboard", "icon", "pi pi-copy", 3, "severity", "click", 4, "ngIf"], ["label", "Copy URLs to clipboard", "icon", "pi pi-copy", 3, "click", "severity"], ["href", "https://cra-arc.alpha.canada.ca/en/custom-reports/create"], ["label", "Next", 3, "click", "severity"], [1, "flex", "justify-content-start"], ["id", "topic-ia-csv-upload", "name", "topicIaCsv", "accept", ".csv", "mode", "basic", "chooseIcon", "pi pi-upload", "outlined", "", 3, "uploadHandler", "auto", "customUpload", "chooseLabel", "chooseStyleClass"], [1, "flex", "flex-row", "align-items-center", "gap-3"], ["styleClass", "pl-1", 1, "max-w-full", 3, "model"], ["class", "flex align-items-center gap-2 text-green-400", 4, "ngIf"], ["class", "flex align-items-center gap-2 text-red-400", 4, "ngIf"], [1, "flex", "align-items-center", "gap-2", "text-green-400"], [1, "pi", "pi-check-circle"], [1, "flex", "align-items-center", "gap-2", "text-red-400"], [1, "pi", "pi-times-circle"], [1, "grid"], [1, "col-12"], [3, "model"], ["styleClass", "w-full md:w-[30rem]", "draggableScope", "self", "droppableScope", "self", 3, "selectionChange", "onNodeDrop", "onNodeContextMenuSelect", "value", "selectionMode", "selection", "draggableNodes", "droppableNodes", "validateDrop", "contextMenu"], ["pTemplate", "default"], ["class", "col-12 md:col-6", 4, "ngIf"], [1, "flex", "flex-row", "align-items-center", "gap-2", "w-full"], ["class", "pi pi-folder", 4, "ngIf"], ["class", "pi pi-file", 4, "ngIf"], ["class", "pi pi-arrows-alt cursor-move text-color-secondary", 4, "ngIf"], ["class", "pi pi-pencil text-color-secondary", 4, "ngIf"], [1, "pi", "pi-folder"], [1, "pi", "pi-file"], [1, "pi", "pi-arrows-alt", "cursor-move", "text-color-secondary"], [1, "pi", "pi-pencil", "text-color-secondary"], ["target", "_blank", 1, "ia-label", 3, "click", "href", "innerHTML"], ["type", "text", "pInputText", "", "pSize", "small", 1, "ia-label", 3, "ngModelChange", "keydown", "ngModel"], ["icon", "pi pi-check", "severity", "secondary", "size", "small", 3, "onClick"], [1, "col-12", "md:col-6"], ["styleClass", "w-full md:w-[30rem]", "draggableScope", "topicPageTree", "droppableScope", "topicPageTree", 3, "selectionChange", "onNodeDrop", "onNodeContextMenuSelect", "value", "selectionMode", "selection", "draggableNodes", "droppableNodes", "validateDrop", "contextMenu"], [4, "ngIf", "ngIfElse"], [1, "ia-label", 3, "innerHTML"], ["label", "Maximize IA chart", "severity", "secondary", "icon", "pi pi-window-maximize", "styleClass", "mt-1 mb-3", 3, "click", 4, "ngIf"], ["class", "overflow-auto max-h-75vh surface-ground surface-border border-1 py-3 mb-3 ia-chart-container", 4, "ngIf"], ["label", "Maximize IA chart", "severity", "secondary", "icon", "pi pi-window-maximize", "styleClass", "mt-1 mb-3", 3, "click"], [1, "overflow-auto", "max-h-75vh", "surface-ground", "surface-border", "border-1", "py-3", "mb-3", "ia-chart-container"], ["size", "small", "stripedRows", "", 3, "value", "tableStyle", 4, "ngIf"], ["size", "small", "stripedRows", "", 3, "value", "tableStyle"]], template: function TopicPageIaComponent_Template(rf, ctx) {
+  }, features: [\u0275\u0275ProvidersFeature([TreeDragDropService])], decls: 39, vars: 20, consts: [["cm", ""], ["cmTopic", ""], ["chartContainer", ""], ["header", ""], ["body", ""], [1, "mt-0"], [1, "topic-ia-steps", 3, "valueChange", "value", "linear"], [1, "topic-ia-step-list"], [3, "value"], [1, "topic-ia-panels"], [1, "surface-0", "border-1", "border-round", "border-200", "p-3"], [1, "flex", "flex-row", "flex-wrap", "align-items-center", "gap-3", "mt-0"], ["inputId", "depth", "mode", "decimal", 3, "ngModelChange", "ngModel", "showButtons", "min", "max"], ["for", "depth"], ["label", "Get subpages in IA", "icon", "pi pi-info-circle", 3, "click", "severity", "loading"], ["styleClass", "mt-3", 3, "value", "showValue", "style"], [1, "grid"], ["styleClass", "mt-3", 3, "value", "showValue"], ["label", "Copy URLs to clipboard", "icon", "pi pi-copy", 3, "severity"], ["label", "Copy URLs to clipboard", "icon", "pi pi-copy", 3, "click", "severity"], ["href", "https://cra-arc.alpha.canada.ca/en/custom-reports/create"], ["label", "Next", 3, "click", "severity"], [1, "flex", "justify-content-start"], ["id", "topic-ia-csv-upload", "name", "topicIaCsv", "accept", ".csv", "mode", "basic", "chooseIcon", "pi pi-upload", "outlined", "", 3, "uploadHandler", "auto", "customUpload", "chooseLabel", "chooseStyleClass"], [1, "flex", "flex-row", "align-items-center", "gap-3"], ["styleClass", "pl-1", 1, "max-w-full", 3, "model"], [1, "flex", "align-items-center", "gap-2", "text-green-400"], [1, "flex", "align-items-center", "gap-2", "text-red-400"], [1, "pi", "pi-check-circle"], [1, "pi", "pi-times-circle"], [1, "col-12"], [3, "model"], ["styleClass", "w-full md:w-[30rem]", "draggableScope", "self", "droppableScope", "self", 3, "selectionChange", "onNodeDrop", "onNodeContextMenuSelect", "value", "selectionMode", "selection", "draggableNodes", "droppableNodes", "validateDrop", "contextMenu"], ["pTemplate", "default"], [1, "col-12", "md:col-6"], [1, "flex", "flex-row", "align-items-center", "gap-2", "w-full"], [1, "pi", "pi-folder"], [1, "pi", "pi-file"], [1, "pi", "pi-arrows-alt", "cursor-move", "text-color-secondary"], [1, "pi", "pi-pencil", "text-color-secondary"], ["target", "_blank", 1, "ia-label", 3, "href", "innerHTML"], ["target", "_blank", 1, "ia-label", 3, "click", "href", "innerHTML"], ["type", "text", "pInputText", "", "pSize", "small", 1, "ia-label", 3, "ngModelChange", "keydown", "ngModel"], ["icon", "pi pi-check", "severity", "secondary", "size", "small", 3, "onClick"], ["styleClass", "w-full md:w-[30rem]", "draggableScope", "topicPageTree", "droppableScope", "topicPageTree", 3, "selectionChange", "onNodeDrop", "onNodeContextMenuSelect", "value", "selectionMode", "selection", "draggableNodes", "droppableNodes", "validateDrop", "contextMenu"], [1, "ia-label", 3, "innerHTML", "font-bold"], [1, "ia-label", 3, "innerHTML"], ["label", "Maximize IA chart", "severity", "secondary", "icon", "pi pi-window-maximize", "styleClass", "mt-1 mb-3"], [1, "overflow-auto", "max-h-75vh", "surface-ground", "surface-border", "border-1", "py-3", "mb-3", "ia-chart-container"], ["label", "Maximize IA chart", "severity", "secondary", "icon", "pi pi-window-maximize", "styleClass", "mt-1 mb-3", 3, "click"], ["size", "small", "stripedRows", "", 3, "value", "tableStyle"]], template: function TopicPageIaComponent_Template(rf, ctx) {
     if (rf & 1) {
-      \u0275\u0275elementStart(0, "p", 6);
+      \u0275\u0275elementStart(0, "p", 5);
       \u0275\u0275text(1, " To edit this topic page or to convert it to one, follow these steps:\n");
       \u0275\u0275elementEnd();
-      \u0275\u0275elementStart(2, "p-stepper", 7);
+      \u0275\u0275elementStart(2, "p-stepper", 6);
       \u0275\u0275twoWayListener("valueChange", function TopicPageIaComponent_Template_p_stepper_valueChange_2_listener($event) {
         \u0275\u0275twoWayBindingSet(ctx.activeStep, $event) || (ctx.activeStep = $event);
         return $event;
       });
-      \u0275\u0275elementStart(3, "p-step-list", 8)(4, "p-step", 9);
+      \u0275\u0275elementStart(3, "p-step-list", 7)(4, "p-step", 8);
       \u0275\u0275text(5, "Get current IA Structure");
       \u0275\u0275elementEnd();
-      \u0275\u0275elementStart(6, "p-step", 9);
+      \u0275\u0275elementStart(6, "p-step", 8);
       \u0275\u0275text(7, "Copy IA URLs");
       \u0275\u0275elementEnd();
-      \u0275\u0275elementStart(8, "p-step", 9);
+      \u0275\u0275elementStart(8, "p-step", 8);
       \u0275\u0275text(9, "Retrieve visits from UPD");
       \u0275\u0275elementEnd();
-      \u0275\u0275elementStart(10, "p-step", 9);
+      \u0275\u0275elementStart(10, "p-step", 8);
       \u0275\u0275text(11, "Create new topic page tree");
       \u0275\u0275elementEnd()()();
-      \u0275\u0275elementStart(12, "div", 10)(13, "div", 11)(14, "p", 6)(15, "strong");
+      \u0275\u0275elementStart(12, "div", 9)(13, "div", 10)(14, "p", 5)(15, "strong");
       \u0275\u0275text(16, "Execute a crawl");
       \u0275\u0275elementEnd();
       \u0275\u0275text(17, " of the IA (depth of 3 or 4 recommended). This will:");
@@ -34064,25 +34046,25 @@ var TopicPageIaComponent = class _TopicPageIaComponent {
       \u0275\u0275elementStart(23, "li");
       \u0275\u0275text(24, "Generate a visual IA structure tree below");
       \u0275\u0275elementEnd()();
-      \u0275\u0275elementStart(25, "div", 12)(26, "p-iftalabel")(27, "p-inputnumber", 13);
+      \u0275\u0275elementStart(25, "div", 11)(26, "p-iftalabel")(27, "p-inputnumber", 12);
       \u0275\u0275twoWayListener("ngModelChange", function TopicPageIaComponent_Template_p_inputnumber_ngModelChange_27_listener($event) {
         \u0275\u0275twoWayBindingSet(ctx.depth, $event) || (ctx.depth = $event);
         return $event;
       });
       \u0275\u0275elementEnd();
-      \u0275\u0275elementStart(28, "label", 14);
+      \u0275\u0275elementStart(28, "label", 13);
       \u0275\u0275text(29, "Depth");
       \u0275\u0275elementEnd()();
-      \u0275\u0275elementStart(30, "p-button", 15);
+      \u0275\u0275elementStart(30, "p-button", 14);
       \u0275\u0275listener("click", function TopicPageIaComponent_Template_p_button_click_30_listener() {
         return ctx.checkIA();
       });
       \u0275\u0275elementEnd()();
-      \u0275\u0275template(31, TopicPageIaComponent_p_progressbar_31_Template, 1, 5, "p-progressbar", 16);
+      \u0275\u0275template(31, TopicPageIaComponent_Conditional_31_Template, 1, 5, "p-progressbar", 15);
       \u0275\u0275elementEnd();
-      \u0275\u0275template(32, TopicPageIaComponent_div_32_Template, 6, 1, "div", 17)(33, TopicPageIaComponent_div_33_Template, 33, 1, "div", 17)(34, TopicPageIaComponent_div_34_Template, 21, 6, "div", 17);
+      \u0275\u0275template(32, TopicPageIaComponent_Conditional_32_Template, 6, 1, "div", 10)(33, TopicPageIaComponent_Conditional_33_Template, 33, 1, "div", 10)(34, TopicPageIaComponent_Conditional_34_Template, 21, 6, "div", 10);
       \u0275\u0275elementEnd();
-      \u0275\u0275template(35, TopicPageIaComponent_ng_container_35_Template, 7, 3, "ng-container", 18)(36, TopicPageIaComponent_ng_container_36_Template, 10, 11, "ng-container", 18)(37, TopicPageIaComponent_ng_container_37_Template, 6, 3, "ng-container", 18)(38, TopicPageIaComponent_ng_container_38_Template, 5, 2, "ng-container", 18);
+      \u0275\u0275template(35, TopicPageIaComponent_Conditional_35_Template, 6, 3)(36, TopicPageIaComponent_Conditional_36_Template, 9, 11, "div", 16)(37, TopicPageIaComponent_Conditional_37_Template, 5, 3)(38, TopicPageIaComponent_Conditional_38_Template, 4, 2);
     }
     if (rf & 2) {
       \u0275\u0275advance(2);
@@ -34102,25 +34084,24 @@ var TopicPageIaComponent = class _TopicPageIaComponent {
       \u0275\u0275advance(3);
       \u0275\u0275property("severity", ctx.step1Complete ? "secondary" : "primary")("loading", ctx.isChartLoading);
       \u0275\u0275advance();
-      \u0275\u0275property("ngIf", ctx.isChartLoading);
+      \u0275\u0275conditional(ctx.isChartLoading ? 31 : -1);
       \u0275\u0275advance();
-      \u0275\u0275property("ngIf", ctx.step1Complete);
+      \u0275\u0275conditional(ctx.step1Complete ? 32 : -1);
       \u0275\u0275advance();
-      \u0275\u0275property("ngIf", ctx.hasCopiedUrls);
+      \u0275\u0275conditional(ctx.hasCopiedUrls ? 33 : -1);
       \u0275\u0275advance();
-      \u0275\u0275property("ngIf", ctx.showCsvUpload);
+      \u0275\u0275conditional(ctx.showCsvUpload ? 34 : -1);
       \u0275\u0275advance();
-      \u0275\u0275property("ngIf", ctx.breadcrumb.length > 0);
+      \u0275\u0275conditional(ctx.breadcrumb.length > 0 ? 35 : -1);
       \u0275\u0275advance();
-      \u0275\u0275property("ngIf", ctx.iaChart);
+      \u0275\u0275conditional(ctx.iaChart ? 36 : -1);
       \u0275\u0275advance();
-      \u0275\u0275property("ngIf", ctx.iaChart);
+      \u0275\u0275conditional(ctx.iaChart ? 37 : -1);
       \u0275\u0275advance();
-      \u0275\u0275property("ngIf", ctx.iaChart);
+      \u0275\u0275conditional(ctx.iaChart ? 38 : -1);
     }
   }, dependencies: [
     CommonModule,
-    NgIf,
     FormsModule,
     DefaultValueAccessor,
     NgControlStatus,
@@ -34219,27 +34200,32 @@ var TopicPageIaComponent = class _TopicPageIaComponent {
         icon="pi pi-info-circle"
       />
     </div>
-    <p-progressbar
-      *ngIf="isChartLoading"
-      [value]="iaProgress"
-      [showValue]="false"
-      [style]="{ height: '1rem' }"
-      styleClass="mt-3"
-    />
+    @if (isChartLoading) {
+      <p-progressbar
+        [value]="iaProgress"
+        [showValue]="false"
+        [style]="{ height: '1rem' }"
+        styleClass="mt-3"
+      />
+    }
   </div>
 
-  <div class="surface-0 border-1 border-round border-200 p-3" *ngIf="step1Complete">
+  @if (step1Complete) {
+    <div class="surface-0 border-1 border-round border-200 p-3">
     <p class="mt-0"><strong>Copy all URLs</strong> in the IA structure to the clipboard.</p>
-    <p-button
-      label="Copy URLs to clipboard"
-      [severity]="hasCopiedUrls ? 'secondary' : 'primary'"
-      (click)="copyUrlsToClipboard()"
-      icon="pi pi-copy"
-      *ngIf="iaChart && iaChart.length > 0 && !isChartLoading"
-    />
-  </div>
+    @if (iaChart && iaChart.length > 0 && !isChartLoading) {
+      <p-button
+        label="Copy URLs to clipboard"
+        [severity]="hasCopiedUrls ? 'secondary' : 'primary'"
+        (click)="copyUrlsToClipboard()"
+        icon="pi pi-copy"
+      />
+    }
+    </div>
+  }
 
-  <div class="surface-0 border-1 border-round border-200 p-3" *ngIf="hasCopiedUrls">
+  @if (hasCopiedUrls) {
+    <div class="surface-0 border-1 border-round border-200 p-3">
     <p class="mt-0">Manually <strong>retrieve page visits</strong> from the UPD:</p>
     <ol>
       <li>Visit <a href="https://cra-arc.alpha.canada.ca/en/custom-reports/create">Custom reports page of the UPD</a></li>
@@ -34255,9 +34241,11 @@ var TopicPageIaComponent = class _TopicPageIaComponent {
       [severity]="updInstructionsComplete ? 'secondary' : 'primary'"
       (click)="proceedToCsvUpload()"
     />
-  </div>
+    </div>
+  }
 
-  <div class="surface-0 border-1 border-round border-200 p-3" *ngIf="showCsvUpload">
+  @if (showCsvUpload) {
+    <div class="surface-0 border-1 border-round border-200 p-3">
     <p class="mt-0"><strong>Upload your saved CSV</strong> file. This will:</p>
     <ul>
       <li>Display page visits in IA structure</li>
@@ -34279,30 +34267,31 @@ var TopicPageIaComponent = class _TopicPageIaComponent {
           outlined
         />
     </div>
-  </div>
+    </div>
+  }
 </div>
 
 <!--Breadcrumb-->
-<ng-container *ngIf="breadcrumb.length > 0">
+@if (breadcrumb.length > 0) {
   <h2>Breadcrumb</h2>
   <div class="flex flex-row align-items-center gap-3">
     <p-breadcrumb class="max-w-full" styleClass="pl-1" [model]="breadcrumb" />
-    <span
-      class="flex align-items-center gap-2 text-green-400"
-      *ngIf="urlFound === true"
-      ><i class="pi pi-check-circle"></i>Link found on parent page</span
-    >
-    <span
-      class="flex align-items-center gap-2 text-red-400"
-      *ngIf="urlFound === false"
-      ><i class="pi pi-times-circle"></i>IA Orphan</span
-    >
+    @if (urlFound === true) {
+      <span class="flex align-items-center gap-2 text-green-400">
+        <i class="pi pi-check-circle"></i>Link found on parent page
+      </span>
+    }
+    @if (urlFound === false) {
+      <span class="flex align-items-center gap-2 text-red-400">
+        <i class="pi pi-times-circle"></i>IA Orphan
+      </span>
+    }
   </div>
-</ng-container>
+}
 
 <!--IA Tree-->
 
-<ng-container *ngIf="iaChart">
+@if (iaChart) {
   <div class="grid">
     <div class="col-12" [class.md:col-6]="visitsByUrl.size > 0">
       <p-contextMenu #cm [model]="options"></p-contextMenu>
@@ -34323,231 +34312,251 @@ var TopicPageIaComponent = class _TopicPageIaComponent {
       >
         <ng-template pTemplate="default" let-node>
           <div class="flex flex-row align-items-center gap-2 w-full">
-            <i
-              class="pi pi-folder"
-              *ngIf="node.children.length > 0 && !draggable && !node.data.editing"
-            ></i>
-            <i
-              class="pi pi-file"
-              *ngIf="
-                (node.children.length === 0 || !node.children) &&
-                !draggable &&
-                !node.data.editing
-              "
-            ></i>
-            <i
-              *ngIf="draggable"
-              class="pi pi-arrows-alt cursor-move text-color-secondary"
-            ></i>
-            <i
-              *ngIf="node.data.editing"
-              class="pi pi-pencil text-color-secondary"
-            ></i>
-            <ng-container *ngIf="!node.data.editing"
-              ><a
+            @if (node.children.length > 0 && !draggable && !node.data.editing) {
+              <i class="pi pi-folder"></i>
+            }
+            @if (
+              (node.children.length === 0 || !node.children) &&
+              !draggable &&
+              !node.data.editing
+            ) {
+              <i class="pi pi-file"></i>
+            }
+            @if (draggable) {
+              <i class="pi pi-arrows-alt cursor-move text-color-secondary"></i>
+            }
+            @if (node.data.editing) {
+              <i class="pi pi-pencil text-color-secondary"></i>
+            }
+            @if (!node.data.editing) {
+              <a
                 [href]="node.data.url"
                 target="_blank"
                 (click)="onNodeClick($event)"
                 [innerHTML]="node.label"
                 class="ia-label"
-              ></a
-            ></ng-container>
-            <p-inputgroup *ngIf="node.data.editing === 'label'">
-              <input
-                type="text"
-                pInputText
-                [(ngModel)]="node.label"
-                pSize="small"
-                class="ia-label"
-                (keydown)="onInputKeydown($event)"
-              />
-              <p-inputgroup-addon
-                ><p-button
-                  icon="pi pi-check"
-                  severity="secondary"
-                  size="small"
-                  (onClick)="saveNode()"
-              /></p-inputgroup-addon>
-            </p-inputgroup>
-            <p-inputgroup *ngIf="node.data.editing === 'link'">
-              <input
-                type="text"
-                pInputText
-                [(ngModel)]="node.data.url"
-                pSize="small"
-                class="ia-label"
-                (keydown)="onInputKeydown($event)"
-              />
-              <p-inputgroup-addon
-                ><p-button
-                  icon="pi pi-check"
-                  severity="secondary"
-                  size="small"
-                  (onClick)="saveNode()"
-              /></p-inputgroup-addon>
-            </p-inputgroup>
+              ></a>
+            }
+            @if (node.data.editing === 'label') {
+              <p-inputgroup>
+                <input
+                  type="text"
+                  pInputText
+                  [(ngModel)]="node.label"
+                  pSize="small"
+                  class="ia-label"
+                  (keydown)="onInputKeydown($event)"
+                />
+                <p-inputgroup-addon
+                  ><p-button
+                    icon="pi pi-check"
+                    severity="secondary"
+                    size="small"
+                    (onClick)="saveNode()"
+                /></p-inputgroup-addon>
+              </p-inputgroup>
+            }
+            @if (node.data.editing === 'link') {
+              <p-inputgroup>
+                <input
+                  type="text"
+                  pInputText
+                  [(ngModel)]="node.data.url"
+                  pSize="small"
+                  class="ia-label"
+                  (keydown)="onInputKeydown($event)"
+                />
+                <p-inputgroup-addon
+                  ><p-button
+                    icon="pi pi-check"
+                    severity="secondary"
+                    size="small"
+                    (onClick)="saveNode()"
+                /></p-inputgroup-addon>
+              </p-inputgroup>
+            }
           </div>
         </ng-template>
       </p-tree>
     </div>
-    <div class="col-12 md:col-6" *ngIf="visitsByUrl.size > 0">
-      <p-contextMenu #cmTopic [model]="options"></p-contextMenu>
-      <h2>Suggested topic page sections</h2>
-      <p-tree
-        [value]="topicPageTree"
-        styleClass="w-full md:w-[30rem]"
-        [selectionMode]="selectable ? 'multiple' : null"
-        [(selection)]="selectedNode"
-        [draggableNodes]="true"
-        [droppableNodes]="true"
-        draggableScope="topicPageTree"
-        droppableScope="topicPageTree"
-        [validateDrop]="true"
-        (onNodeDrop)="onTopicPageNodeDrop($event)"
-        [contextMenu]="cmTopic"
-        (onNodeContextMenuSelect)="onNodeContextMenu($event, 'topic')"
-      >
-        <ng-template pTemplate="default" let-node>
-          <div class="flex flex-row align-items-center gap-2 w-full">
-            <i
-              class="pi pi-folder"
-              *ngIf="node.children?.length && !draggable && !node.data?.isCategory && !node.data?.editing"
-            ></i>
-            <i
-              class="pi pi-file"
-              *ngIf="!node.children?.length && !draggable && !node.data?.isCategory && !node.data?.editing"
-            ></i>
-            <i
-              *ngIf="draggable && !node.data?.isCategory && !node.data?.editing"
-              class="pi pi-arrows-alt cursor-move text-color-secondary"
-            ></i>
-            <i
-              *ngIf="node.data?.editing"
-              class="pi pi-pencil text-color-secondary"
-            ></i>
-            <ng-container *ngIf="!node.data?.editing">
-              <ng-container *ngIf="node.data?.url; else topicLabel">
-                <a
-                  [href]="node.data.url"
-                  target="_blank"
-                  (click)="onNodeClick($event)"
-                  [innerHTML]="node.label"
-                  class="ia-label"
-                ></a>
-              </ng-container>
-              <ng-template #topicLabel>
-                <span
-                  [innerHTML]="node.label"
-                  class="ia-label"
-                  [class.font-bold]="node.data?.isCategory"
-                ></span>
-              </ng-template>
-            </ng-container>
-            <p-inputgroup *ngIf="node.data?.editing === 'label'">
-              <input
-                type="text"
-                pInputText
-                [(ngModel)]="node.label"
-                pSize="small"
-                class="ia-label"
-                (keydown)="onInputKeydown($event)"
-              />
-              <p-inputgroup-addon
-                ><p-button
-                  icon="pi pi-check"
-                  severity="secondary"
-                  size="small"
-                  (onClick)="saveNode()"
-              /></p-inputgroup-addon>
-            </p-inputgroup>
-            <p-inputgroup *ngIf="node.data?.editing === 'link'">
-              <input
-                type="text"
-                pInputText
-                [(ngModel)]="node.data.url"
-                pSize="small"
-                class="ia-label"
-                (keydown)="onInputKeydown($event)"
-              />
-              <p-inputgroup-addon
-                ><p-button
-                  icon="pi pi-check"
-                  severity="secondary"
-                  size="small"
-                  (onClick)="saveNode()"
-              /></p-inputgroup-addon>
-            </p-inputgroup>
-          </div>
-        </ng-template>
-      </p-tree>
-    </div>
+    @if (visitsByUrl.size > 0) {
+      <div class="col-12 md:col-6">
+        <p-contextMenu #cmTopic [model]="options"></p-contextMenu>
+        <h2>Suggested topic page sections</h2>
+        <p-tree
+          [value]="topicPageTree"
+          styleClass="w-full md:w-[30rem]"
+          [selectionMode]="selectable ? 'multiple' : null"
+          [(selection)]="selectedNode"
+          [draggableNodes]="true"
+          [droppableNodes]="true"
+          draggableScope="topicPageTree"
+          droppableScope="topicPageTree"
+          [validateDrop]="true"
+          (onNodeDrop)="onTopicPageNodeDrop($event)"
+          [contextMenu]="cmTopic"
+          (onNodeContextMenuSelect)="onNodeContextMenu($event, 'topic')"
+        >
+          <ng-template pTemplate="default" let-node>
+            <div class="flex flex-row align-items-center gap-2 w-full">
+              @if (
+                node.children?.length &&
+                !draggable &&
+                !node.data?.isCategory &&
+                !node.data?.editing
+              ) {
+                <i class="pi pi-folder"></i>
+              }
+              @if (
+                !node.children?.length &&
+                !draggable &&
+                !node.data?.isCategory &&
+                !node.data?.editing
+              ) {
+                <i class="pi pi-file"></i>
+              }
+              @if (draggable && !node.data?.isCategory && !node.data?.editing) {
+                <i class="pi pi-arrows-alt cursor-move text-color-secondary"></i>
+              }
+              @if (node.data?.editing) {
+                <i class="pi pi-pencil text-color-secondary"></i>
+              }
+              @if (!node.data?.editing) {
+                @if (node.data?.url) {
+                  <a
+                    [href]="node.data.url"
+                    target="_blank"
+                    (click)="onNodeClick($event)"
+                    [innerHTML]="node.label"
+                    class="ia-label"
+                  ></a>
+                } @else {
+                  <span
+                    [innerHTML]="node.label"
+                    class="ia-label"
+                    [class.font-bold]="node.data?.isCategory"
+                  ></span>
+                }
+              }
+              @if (node.data?.editing === 'label') {
+                <p-inputgroup>
+                  <input
+                    type="text"
+                    pInputText
+                    [(ngModel)]="node.label"
+                    pSize="small"
+                    class="ia-label"
+                    (keydown)="onInputKeydown($event)"
+                  />
+                  <p-inputgroup-addon
+                    ><p-button
+                      icon="pi pi-check"
+                      severity="secondary"
+                      size="small"
+                      (onClick)="saveNode()"
+                  /></p-inputgroup-addon>
+                </p-inputgroup>
+              }
+              @if (node.data?.editing === 'link') {
+                <p-inputgroup>
+                  <input
+                    type="text"
+                    pInputText
+                    [(ngModel)]="node.data.url"
+                    pSize="small"
+                    class="ia-label"
+                    (keydown)="onInputKeydown($event)"
+                  />
+                  <p-inputgroup-addon
+                    ><p-button
+                      icon="pi pi-check"
+                      severity="secondary"
+                      size="small"
+                      (onClick)="saveNode()"
+                  /></p-inputgroup-addon>
+                </p-inputgroup>
+              }
+            </div>
+          </ng-template>
+        </p-tree>
+      </div>
+    }
   </div>
-</ng-container>
+}
 
 <!--IA Chart-->
-<ng-container *ngIf="iaChart">
+@if (iaChart) {
   <h2>IA structure</h2>
-  <p-button
-    label="Maximize IA chart"
-    severity="secondary"
-    (click)="maximize(chartContainer)"
-    icon="pi pi-window-maximize"
-    styleClass="mt-1 mb-3"
-    *ngIf="iaChart.length > 0"
-  />
-  <p *ngIf="iaChart.length === 0">No child pages found.</p>
-  <div
-    #chartContainer
-    *ngIf="iaChart.length > 0"
-    class="overflow-auto max-h-75vh surface-ground surface-border border-1 py-3 mb-3 ia-chart-container"
-  >
-    <p-organization-chart [value]="iaChart">
-      <ng-template let-node pTemplate="default">
-        <p>
-          <a
-            [href]="node.data.url"
-            target="_blank"
-            (click)="onNodeClick($event)"
-            [innerHTML]="node.label"
-            class="ia-label"
-          ></a>
-        </p>
-      </ng-template>
-    </p-organization-chart>
-  </div>
-</ng-container>
+  @if (iaChart.length > 0) {
+    <p-button
+      label="Maximize IA chart"
+      severity="secondary"
+      (click)="maximize(chartContainer)"
+      icon="pi pi-window-maximize"
+      styleClass="mt-1 mb-3"
+    />
+  }
+  @if (iaChart.length === 0) {
+    <p>No child pages found.</p>
+  }
+  @if (iaChart.length > 0) {
+    <div
+      #chartContainer
+      class="overflow-auto max-h-75vh surface-ground surface-border border-1 py-3 mb-3 ia-chart-container"
+    >
+      <p-organization-chart [value]="iaChart">
+        <ng-template let-node pTemplate="default">
+          <p>
+            <a
+              [href]="node.data.url"
+              target="_blank"
+              (click)="onNodeClick($event)"
+              [innerHTML]="node.label"
+              class="ia-label"
+            ></a>
+          </p>
+        </ng-template>
+      </p-organization-chart>
+    </div>
+  }
+}
 
 <!--Broken Links-->
-<ng-container *ngIf="iaChart">
+@if (iaChart) {
   <h2>Broken links</h2>
-  <p *ngIf="brokenLinks.length === 0">
-    No broken links found on this page<span *ngIf="iaChart[0].children?.length">
-      or on any detected child pages</span
-    >.
-  </p>
-  <p-table
-    *ngIf="brokenLinks.length > 0"
-    [value]="brokenLinks"
-    size="small"
-    stripedRows
-    [tableStyle]="{ 'min-width': '50rem' }"
-  >
-    <ng-template #header>
-      <tr>
-        <th>Parent page</th>
-        <th>Broken link</th>
-        <th>Status</th>
-      </tr>
-    </ng-template>
-    <ng-template #body let-rowData>
-      <tr>
-        <td>{{ rowData.parentUrl }}</td>
-        <td>{{ rowData.url }}</td>
-        <td>{{ rowData.status }}</td>
-      </tr>
-    </ng-template>
-  </p-table>
-</ng-container>
+  @if (brokenLinks.length === 0) {
+    <p>
+      No broken links found on this page
+      @if (iaChart[0].children?.length) {
+        <span> or on any detected child pages</span>
+      }
+      .
+    </p>
+  }
+  @if (brokenLinks.length > 0) {
+    <p-table
+      [value]="brokenLinks"
+      size="small"
+      stripedRows
+      [tableStyle]="{ 'min-width': '50rem' }"
+    >
+      <ng-template #header>
+        <tr>
+          <th>Parent page</th>
+          <th>Broken link</th>
+          <th>Status</th>
+        </tr>
+      </ng-template>
+      <ng-template #body let-rowData>
+        <tr>
+          <td>{{ rowData.parentUrl }}</td>
+          <td>{{ rowData.url }}</td>
+          <td>{{ rowData.status }}</td>
+        </tr>
+      </ng-template>
+    </p-table>
+  }
+}
 `, styles: ["/* angular:styles/component:css;f023c326fff2882959b5b1251af66b8449d673c76ad30dc90b38e91d13fe7f5c;C:/my-working-files/GitHub/design-assistant/src/app/views/page-assistant/components/problems/component-guidance/topic-page/topic-page-ia.component.ts */\n.ia-label {\n  white-space: pre-line;\n  display: inline-block;\n  color: var(--text-color) !important;\n  text-decoration: none !important;\n}\n::ng-deep .p-tree li[class*=text-white] > .p-tree-node-content .ia-label {\n  color: #ffffff !important;\n}\n::ng-deep .p-tree li[class*=text-black] > .p-tree-node-content .ia-label {\n  color: #000000 !important;\n}\n::ng-deep .p-tree .p-tree-node-content:hover {\n  background-color: unset !important;\n}\n:host ::ng-deep .topic-ia-steps .topic-ia-step-list {\n  display: grid;\n  grid-template-columns: repeat(4, minmax(0, 1fr));\n  gap: 0.5rem;\n  margin: 0;\n}\n@media (max-width: 1500px) {\n  :host ::ng-deep .topic-ia-steps .topic-ia-step-list {\n    grid-template-columns: minmax(0, 1fr);\n    gap: 0.1rem;\n  }\n}\n@media (max-width: 1500px) {\n  :host ::ng-deep .topic-ia-steps .p-step-header {\n    padding: 0;\n  }\n  :host ::ng-deep .topic-ia-steps .p-stepper-separator {\n    margin: 0;\n  }\n}\n:host ::ng-deep .topic-ia-steps {\n  margin-bottom: 0;\n}\n:host ::ng-deep .topic-ia-steps .p-step-title {\n  font-weight: 600;\n  font-size: 1.02rem;\n}\n:host ::ng-deep .topic-ia-steps .topic-ia-step-list .p-step {\n  justify-content: flex-start;\n  text-align: left;\n  width: 100%;\n}\n:host ::ng-deep .topic-ia-panels {\n  display: grid;\n  grid-template-columns: repeat(4, minmax(0, 1fr));\n  gap: 1rem;\n  margin-top: 0.75rem;\n}\n@media (max-width: 1500px) {\n  :host ::ng-deep .topic-ia-panels {\n    grid-template-columns: repeat(2, minmax(0, 1fr));\n  }\n}\n@media (max-width: 1000px) {\n  :host ::ng-deep .topic-ia-panels {\n    grid-template-columns: minmax(0, 1fr);\n  }\n}\n::ng-deep .topic-ia-badge {\n  display: inline-block;\n  margin-left: 0.5rem;\n  padding: 0.1rem 0.45rem;\n  border-radius: 9999px;\n  font-size: 0.875rem;\n  font-weight: 600;\n  border: 1px solid #d1d5db;\n  background: #e5e7eb;\n  color: #374151;\n  white-space: nowrap;\n}\n:host-context(.dark-mode) ::ng-deep .topic-ia-badge {\n  border-color: #4b5563;\n  background: #374151;\n  color: #f9fafb;\n}\n::ng-deep .ia-chart-container .p-organizationchart-node a {\n  color: var(--text-color) !important;\n  text-decoration: none !important;\n}\n::ng-deep .ia-chart-container .p-organizationchart-node.text-white a {\n  color: #ffffff !important;\n}\n::ng-deep .ia-chart-container .p-organizationchart-node.text-black a {\n  color: #000000 !important;\n}\n/*# sourceMappingURL=topic-page-ia.component.css.map */\n"] }]
   }], () => [], { chartContainer: [{
     type: ViewChild,
@@ -34566,7 +34575,7 @@ var _c011 = ["chartContainer"];
 var _c18 = ["cm"];
 var _c28 = () => ({ height: "1rem" });
 var _c38 = () => ({ "min-width": "50rem" });
-function TopicIaJsonComponent_p_progressbar_8_Template(rf, ctx) {
+function TopicIaJsonComponent_Conditional_8_Template(rf, ctx) {
   if (rf & 1) {
     \u0275\u0275element(0, "p-progressbar", 13);
   }
@@ -34576,81 +34585,79 @@ function TopicIaJsonComponent_p_progressbar_8_Template(rf, ctx) {
     \u0275\u0275property("value", ctx_r0.iaProgress)("showValue", false);
   }
 }
-function TopicIaJsonComponent_ng_container_9_span_22_Template(rf, ctx) {
+function TopicIaJsonComponent_Conditional_9_Conditional_21_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275elementStart(0, "span", 28);
+    \u0275\u0275elementStart(0, "span", 26);
+    \u0275\u0275element(1, "i", 28);
+    \u0275\u0275text(2, "Link found on parent page ");
+    \u0275\u0275elementEnd();
+  }
+}
+function TopicIaJsonComponent_Conditional_9_Conditional_22_Template(rf, ctx) {
+  if (rf & 1) {
+    \u0275\u0275elementStart(0, "span", 27);
     \u0275\u0275element(1, "i", 29);
-    \u0275\u0275text(2, "Link found on parent page");
+    \u0275\u0275text(2, "IA Orphan ");
     \u0275\u0275elementEnd();
   }
 }
-function TopicIaJsonComponent_ng_container_9_span_23_Template(rf, ctx) {
-  if (rf & 1) {
-    \u0275\u0275elementStart(0, "span", 30);
-    \u0275\u0275element(1, "i", 31);
-    \u0275\u0275text(2, "IA Orphan");
-    \u0275\u0275elementEnd();
-  }
-}
-function TopicIaJsonComponent_ng_container_9_Template(rf, ctx) {
+function TopicIaJsonComponent_Conditional_9_Template(rf, ctx) {
   if (rf & 1) {
     const _r2 = \u0275\u0275getCurrentView();
-    \u0275\u0275elementContainerStart(0);
-    \u0275\u0275elementStart(1, "h2");
-    \u0275\u0275text(2, "Contextual input (for Most requested or Features)");
+    \u0275\u0275elementStart(0, "h2");
+    \u0275\u0275text(1, "Contextual input (for Most requested or Features)");
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(3, "div", 14)(4, "div", 15)(5, "label", 16);
-    \u0275\u0275text(6, " Are there any communications objectives to consider? ");
+    \u0275\u0275elementStart(2, "div", 14)(3, "div", 15)(4, "label", 16);
+    \u0275\u0275text(5, " Are there any communications objectives to consider? ");
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(7, "textarea", 17);
-    \u0275\u0275twoWayListener("ngModelChange", function TopicIaJsonComponent_ng_container_9_Template_textarea_ngModelChange_7_listener($event) {
+    \u0275\u0275elementStart(6, "textarea", 17);
+    \u0275\u0275twoWayListener("ngModelChange", function TopicIaJsonComponent_Conditional_9_Template_textarea_ngModelChange_6_listener($event) {
       \u0275\u0275restoreView(_r2);
       const ctx_r0 = \u0275\u0275nextContext();
       \u0275\u0275twoWayBindingSet(ctx_r0.commObjectivesInput, $event) || (ctx_r0.commObjectivesInput = $event);
       return \u0275\u0275resetView($event);
     });
     \u0275\u0275elementEnd()();
-    \u0275\u0275elementStart(8, "div", 15)(9, "label", 18);
-    \u0275\u0275text(10, " What insights do you have from feedback data? ");
+    \u0275\u0275elementStart(7, "div", 15)(8, "label", 18);
+    \u0275\u0275text(9, " What insights do you have from feedback data? ");
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(11, "textarea", 19);
-    \u0275\u0275twoWayListener("ngModelChange", function TopicIaJsonComponent_ng_container_9_Template_textarea_ngModelChange_11_listener($event) {
+    \u0275\u0275elementStart(10, "textarea", 19);
+    \u0275\u0275twoWayListener("ngModelChange", function TopicIaJsonComponent_Conditional_9_Template_textarea_ngModelChange_10_listener($event) {
       \u0275\u0275restoreView(_r2);
       const ctx_r0 = \u0275\u0275nextContext();
       \u0275\u0275twoWayBindingSet(ctx_r0.feedbackInsightsInput, $event) || (ctx_r0.feedbackInsightsInput = $event);
       return \u0275\u0275resetView($event);
     });
     \u0275\u0275elementEnd()();
-    \u0275\u0275elementStart(12, "div", 15)(13, "label", 20);
-    \u0275\u0275text(14, " What are people having trouble with when they call us? ");
+    \u0275\u0275elementStart(11, "div", 15)(12, "label", 20);
+    \u0275\u0275text(13, " What are people having trouble with when they call us? ");
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(15, "textarea", 21);
-    \u0275\u0275twoWayListener("ngModelChange", function TopicIaJsonComponent_ng_container_9_Template_textarea_ngModelChange_15_listener($event) {
+    \u0275\u0275elementStart(14, "textarea", 21);
+    \u0275\u0275twoWayListener("ngModelChange", function TopicIaJsonComponent_Conditional_9_Template_textarea_ngModelChange_14_listener($event) {
       \u0275\u0275restoreView(_r2);
       const ctx_r0 = \u0275\u0275nextContext();
       \u0275\u0275twoWayBindingSet(ctx_r0.callTroubleInput, $event) || (ctx_r0.callTroubleInput = $event);
       return \u0275\u0275resetView($event);
     });
     \u0275\u0275elementEnd()()();
-    \u0275\u0275elementStart(16, "div", 22)(17, "p-button", 23);
-    \u0275\u0275listener("click", function TopicIaJsonComponent_ng_container_9_Template_p_button_click_17_listener() {
+    \u0275\u0275elementStart(15, "div", 22)(16, "p-button", 23);
+    \u0275\u0275listener("click", function TopicIaJsonComponent_Conditional_9_Template_p_button_click_16_listener() {
       \u0275\u0275restoreView(_r2);
       const ctx_r0 = \u0275\u0275nextContext();
       return \u0275\u0275resetView(ctx_r0.sendContextInputToGenAI());
     });
     \u0275\u0275elementEnd()();
-    \u0275\u0275elementStart(18, "h2");
-    \u0275\u0275text(19, "Breadcrumb");
+    \u0275\u0275elementStart(17, "h2");
+    \u0275\u0275text(18, "Breadcrumb");
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(20, "div", 24);
-    \u0275\u0275element(21, "p-breadcrumb", 25);
-    \u0275\u0275template(22, TopicIaJsonComponent_ng_container_9_span_22_Template, 3, 0, "span", 26)(23, TopicIaJsonComponent_ng_container_9_span_23_Template, 3, 0, "span", 27);
+    \u0275\u0275elementStart(19, "div", 24);
+    \u0275\u0275element(20, "p-breadcrumb", 25);
+    \u0275\u0275template(21, TopicIaJsonComponent_Conditional_9_Conditional_21_Template, 3, 0, "span", 26)(22, TopicIaJsonComponent_Conditional_9_Conditional_22_Template, 3, 0, "span", 27);
     \u0275\u0275elementEnd();
-    \u0275\u0275elementContainerEnd();
   }
   if (rf & 2) {
     const ctx_r0 = \u0275\u0275nextContext();
-    \u0275\u0275advance(7);
+    \u0275\u0275advance(6);
     \u0275\u0275twoWayProperty("ngModel", ctx_r0.commObjectivesInput);
     \u0275\u0275advance(4);
     \u0275\u0275twoWayProperty("ngModel", ctx_r0.feedbackInsightsInput);
@@ -34661,68 +34668,65 @@ function TopicIaJsonComponent_ng_container_9_Template(rf, ctx) {
     \u0275\u0275advance(4);
     \u0275\u0275property("model", ctx_r0.breadcrumb);
     \u0275\u0275advance();
-    \u0275\u0275property("ngIf", ctx_r0.urlFound === true);
+    \u0275\u0275conditional(ctx_r0.urlFound === true ? 21 : -1);
     \u0275\u0275advance();
-    \u0275\u0275property("ngIf", ctx_r0.urlFound === false);
+    \u0275\u0275conditional(ctx_r0.urlFound === false ? 22 : -1);
   }
 }
-function TopicIaJsonComponent_ng_container_10_ng_template_8_i_1_Template(rf, ctx) {
+function TopicIaJsonComponent_Conditional_10_ng_template_7_Conditional_1_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275element(0, "i", 43);
+    \u0275\u0275element(0, "i", 36);
   }
 }
-function TopicIaJsonComponent_ng_container_10_ng_template_8_i_2_Template(rf, ctx) {
+function TopicIaJsonComponent_Conditional_10_ng_template_7_Conditional_2_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275element(0, "i", 44);
+    \u0275\u0275element(0, "i", 37);
   }
 }
-function TopicIaJsonComponent_ng_container_10_ng_template_8_i_3_Template(rf, ctx) {
+function TopicIaJsonComponent_Conditional_10_ng_template_7_Conditional_3_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275element(0, "i", 45);
+    \u0275\u0275element(0, "i", 38);
   }
 }
-function TopicIaJsonComponent_ng_container_10_ng_template_8_i_4_Template(rf, ctx) {
+function TopicIaJsonComponent_Conditional_10_ng_template_7_Conditional_4_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275element(0, "i", 46);
+    \u0275\u0275element(0, "i", 39);
   }
 }
-function TopicIaJsonComponent_ng_container_10_ng_template_8_ng_container_5_Template(rf, ctx) {
+function TopicIaJsonComponent_Conditional_10_ng_template_7_Conditional_5_Template(rf, ctx) {
   if (rf & 1) {
     const _r4 = \u0275\u0275getCurrentView();
-    \u0275\u0275elementContainerStart(0);
-    \u0275\u0275elementStart(1, "a", 47);
-    \u0275\u0275listener("click", function TopicIaJsonComponent_ng_container_10_ng_template_8_ng_container_5_Template_a_click_1_listener($event) {
+    \u0275\u0275elementStart(0, "a", 41);
+    \u0275\u0275listener("click", function TopicIaJsonComponent_Conditional_10_ng_template_7_Conditional_5_Template_a_click_0_listener($event) {
       \u0275\u0275restoreView(_r4);
       const ctx_r0 = \u0275\u0275nextContext(3);
       return \u0275\u0275resetView(ctx_r0.onNodeClick($event));
     });
     \u0275\u0275elementEnd();
-    \u0275\u0275elementContainerEnd();
   }
   if (rf & 2) {
     const node_r5 = \u0275\u0275nextContext().$implicit;
-    \u0275\u0275advance();
     \u0275\u0275property("href", node_r5.data.url, \u0275\u0275sanitizeUrl)("innerHTML", node_r5.label, \u0275\u0275sanitizeHtml);
   }
 }
-function TopicIaJsonComponent_ng_container_10_ng_template_8_p_inputgroup_6_Template(rf, ctx) {
+function TopicIaJsonComponent_Conditional_10_ng_template_7_Conditional_6_Template(rf, ctx) {
   if (rf & 1) {
     const _r6 = \u0275\u0275getCurrentView();
-    \u0275\u0275elementStart(0, "p-inputgroup")(1, "input", 48);
-    \u0275\u0275twoWayListener("ngModelChange", function TopicIaJsonComponent_ng_container_10_ng_template_8_p_inputgroup_6_Template_input_ngModelChange_1_listener($event) {
+    \u0275\u0275elementStart(0, "p-inputgroup")(1, "input", 42);
+    \u0275\u0275twoWayListener("ngModelChange", function TopicIaJsonComponent_Conditional_10_ng_template_7_Conditional_6_Template_input_ngModelChange_1_listener($event) {
       \u0275\u0275restoreView(_r6);
       const node_r5 = \u0275\u0275nextContext().$implicit;
       \u0275\u0275twoWayBindingSet(node_r5.label, $event) || (node_r5.label = $event);
       return \u0275\u0275resetView($event);
     });
-    \u0275\u0275listener("keydown", function TopicIaJsonComponent_ng_container_10_ng_template_8_p_inputgroup_6_Template_input_keydown_1_listener($event) {
+    \u0275\u0275listener("keydown", function TopicIaJsonComponent_Conditional_10_ng_template_7_Conditional_6_Template_input_keydown_1_listener($event) {
       \u0275\u0275restoreView(_r6);
       const ctx_r0 = \u0275\u0275nextContext(3);
       return \u0275\u0275resetView(ctx_r0.onInputKeydown($event));
     });
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(2, "p-inputgroup-addon")(3, "p-button", 49);
-    \u0275\u0275listener("onClick", function TopicIaJsonComponent_ng_container_10_ng_template_8_p_inputgroup_6_Template_p_button_onClick_3_listener() {
+    \u0275\u0275elementStart(2, "p-inputgroup-addon")(3, "p-button", 43);
+    \u0275\u0275listener("onClick", function TopicIaJsonComponent_Conditional_10_ng_template_7_Conditional_6_Template_p_button_onClick_3_listener() {
       \u0275\u0275restoreView(_r6);
       const ctx_r0 = \u0275\u0275nextContext(3);
       return \u0275\u0275resetView(ctx_r0.saveNode());
@@ -34735,24 +34739,24 @@ function TopicIaJsonComponent_ng_container_10_ng_template_8_p_inputgroup_6_Templ
     \u0275\u0275twoWayProperty("ngModel", node_r5.label);
   }
 }
-function TopicIaJsonComponent_ng_container_10_ng_template_8_p_inputgroup_7_Template(rf, ctx) {
+function TopicIaJsonComponent_Conditional_10_ng_template_7_Conditional_7_Template(rf, ctx) {
   if (rf & 1) {
     const _r7 = \u0275\u0275getCurrentView();
-    \u0275\u0275elementStart(0, "p-inputgroup")(1, "input", 48);
-    \u0275\u0275twoWayListener("ngModelChange", function TopicIaJsonComponent_ng_container_10_ng_template_8_p_inputgroup_7_Template_input_ngModelChange_1_listener($event) {
+    \u0275\u0275elementStart(0, "p-inputgroup")(1, "input", 42);
+    \u0275\u0275twoWayListener("ngModelChange", function TopicIaJsonComponent_Conditional_10_ng_template_7_Conditional_7_Template_input_ngModelChange_1_listener($event) {
       \u0275\u0275restoreView(_r7);
       const node_r5 = \u0275\u0275nextContext().$implicit;
       \u0275\u0275twoWayBindingSet(node_r5.data.url, $event) || (node_r5.data.url = $event);
       return \u0275\u0275resetView($event);
     });
-    \u0275\u0275listener("keydown", function TopicIaJsonComponent_ng_container_10_ng_template_8_p_inputgroup_7_Template_input_keydown_1_listener($event) {
+    \u0275\u0275listener("keydown", function TopicIaJsonComponent_Conditional_10_ng_template_7_Conditional_7_Template_input_keydown_1_listener($event) {
       \u0275\u0275restoreView(_r7);
       const ctx_r0 = \u0275\u0275nextContext(3);
       return \u0275\u0275resetView(ctx_r0.onInputKeydown($event));
     });
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(2, "p-inputgroup-addon")(3, "p-button", 49);
-    \u0275\u0275listener("onClick", function TopicIaJsonComponent_ng_container_10_ng_template_8_p_inputgroup_7_Template_p_button_onClick_3_listener() {
+    \u0275\u0275elementStart(2, "p-inputgroup-addon")(3, "p-button", 43);
+    \u0275\u0275listener("onClick", function TopicIaJsonComponent_Conditional_10_ng_template_7_Conditional_7_Template_p_button_onClick_3_listener() {
       \u0275\u0275restoreView(_r7);
       const ctx_r0 = \u0275\u0275nextContext(3);
       return \u0275\u0275resetView(ctx_r0.saveNode());
@@ -34765,73 +34769,70 @@ function TopicIaJsonComponent_ng_container_10_ng_template_8_p_inputgroup_7_Templ
     \u0275\u0275twoWayProperty("ngModel", node_r5.data.url);
   }
 }
-function TopicIaJsonComponent_ng_container_10_ng_template_8_Template(rf, ctx) {
+function TopicIaJsonComponent_Conditional_10_ng_template_7_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275elementStart(0, "div", 38);
-    \u0275\u0275template(1, TopicIaJsonComponent_ng_container_10_ng_template_8_i_1_Template, 1, 0, "i", 39)(2, TopicIaJsonComponent_ng_container_10_ng_template_8_i_2_Template, 1, 0, "i", 40)(3, TopicIaJsonComponent_ng_container_10_ng_template_8_i_3_Template, 1, 0, "i", 41)(4, TopicIaJsonComponent_ng_container_10_ng_template_8_i_4_Template, 1, 0, "i", 42)(5, TopicIaJsonComponent_ng_container_10_ng_template_8_ng_container_5_Template, 2, 2, "ng-container", 12)(6, TopicIaJsonComponent_ng_container_10_ng_template_8_p_inputgroup_6_Template, 4, 1, "p-inputgroup", 12)(7, TopicIaJsonComponent_ng_container_10_ng_template_8_p_inputgroup_7_Template, 4, 1, "p-inputgroup", 12);
+    \u0275\u0275elementStart(0, "div", 35);
+    \u0275\u0275template(1, TopicIaJsonComponent_Conditional_10_ng_template_7_Conditional_1_Template, 1, 0, "i", 36)(2, TopicIaJsonComponent_Conditional_10_ng_template_7_Conditional_2_Template, 1, 0, "i", 37)(3, TopicIaJsonComponent_Conditional_10_ng_template_7_Conditional_3_Template, 1, 0, "i", 38)(4, TopicIaJsonComponent_Conditional_10_ng_template_7_Conditional_4_Template, 1, 0, "i", 39)(5, TopicIaJsonComponent_Conditional_10_ng_template_7_Conditional_5_Template, 1, 2, "a", 40)(6, TopicIaJsonComponent_Conditional_10_ng_template_7_Conditional_6_Template, 4, 1, "p-inputgroup")(7, TopicIaJsonComponent_Conditional_10_ng_template_7_Conditional_7_Template, 4, 1, "p-inputgroup");
     \u0275\u0275elementEnd();
   }
   if (rf & 2) {
     const node_r5 = ctx.$implicit;
     const ctx_r0 = \u0275\u0275nextContext(2);
     \u0275\u0275advance();
-    \u0275\u0275property("ngIf", node_r5.children.length > 0 && !ctx_r0.draggable && !node_r5.data.editing);
+    \u0275\u0275conditional(node_r5.children.length > 0 && !ctx_r0.draggable && !node_r5.data.editing ? 1 : -1);
     \u0275\u0275advance();
-    \u0275\u0275property("ngIf", (node_r5.children.length === 0 || !node_r5.children) && !ctx_r0.draggable && !node_r5.data.editing);
+    \u0275\u0275conditional((node_r5.children.length === 0 || !node_r5.children) && !ctx_r0.draggable && !node_r5.data.editing ? 2 : -1);
     \u0275\u0275advance();
-    \u0275\u0275property("ngIf", ctx_r0.draggable);
+    \u0275\u0275conditional(ctx_r0.draggable ? 3 : -1);
     \u0275\u0275advance();
-    \u0275\u0275property("ngIf", node_r5.data.editing);
+    \u0275\u0275conditional(node_r5.data.editing ? 4 : -1);
     \u0275\u0275advance();
-    \u0275\u0275property("ngIf", !node_r5.data.editing);
+    \u0275\u0275conditional(!node_r5.data.editing ? 5 : -1);
     \u0275\u0275advance();
-    \u0275\u0275property("ngIf", node_r5.data.editing === "label");
+    \u0275\u0275conditional(node_r5.data.editing === "label" ? 6 : -1);
     \u0275\u0275advance();
-    \u0275\u0275property("ngIf", node_r5.data.editing === "link");
+    \u0275\u0275conditional(node_r5.data.editing === "link" ? 7 : -1);
   }
 }
-function TopicIaJsonComponent_ng_container_10_div_9_ng_template_6_i_1_Template(rf, ctx) {
+function TopicIaJsonComponent_Conditional_10_Conditional_8_ng_template_8_Conditional_1_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275element(0, "i", 43);
+    \u0275\u0275element(0, "i", 36);
   }
 }
-function TopicIaJsonComponent_ng_container_10_div_9_ng_template_6_i_2_Template(rf, ctx) {
+function TopicIaJsonComponent_Conditional_10_Conditional_8_ng_template_8_Conditional_2_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275element(0, "i", 44);
+    \u0275\u0275element(0, "i", 37);
   }
 }
-function TopicIaJsonComponent_ng_container_10_div_9_ng_template_6_i_3_Template(rf, ctx) {
+function TopicIaJsonComponent_Conditional_10_Conditional_8_ng_template_8_Conditional_3_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275element(0, "i", 45);
+    \u0275\u0275element(0, "i", 38);
   }
 }
-function TopicIaJsonComponent_ng_container_10_div_9_ng_template_6_i_4_Template(rf, ctx) {
+function TopicIaJsonComponent_Conditional_10_Conditional_8_ng_template_8_Conditional_4_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275element(0, "i", 46);
+    \u0275\u0275element(0, "i", 39);
   }
 }
-function TopicIaJsonComponent_ng_container_10_div_9_ng_template_6_ng_container_5_ng_container_1_Template(rf, ctx) {
+function TopicIaJsonComponent_Conditional_10_Conditional_8_ng_template_8_Conditional_5_Conditional_0_Template(rf, ctx) {
   if (rf & 1) {
     const _r9 = \u0275\u0275getCurrentView();
-    \u0275\u0275elementContainerStart(0);
-    \u0275\u0275elementStart(1, "a", 47);
-    \u0275\u0275listener("click", function TopicIaJsonComponent_ng_container_10_div_9_ng_template_6_ng_container_5_ng_container_1_Template_a_click_1_listener($event) {
+    \u0275\u0275elementStart(0, "a", 41);
+    \u0275\u0275listener("click", function TopicIaJsonComponent_Conditional_10_Conditional_8_ng_template_8_Conditional_5_Conditional_0_Template_a_click_0_listener($event) {
       \u0275\u0275restoreView(_r9);
       const ctx_r0 = \u0275\u0275nextContext(5);
       return \u0275\u0275resetView(ctx_r0.onNodeClick($event));
     });
     \u0275\u0275elementEnd();
-    \u0275\u0275elementContainerEnd();
   }
   if (rf & 2) {
     const node_r10 = \u0275\u0275nextContext(2).$implicit;
-    \u0275\u0275advance();
     \u0275\u0275property("href", node_r10.data.url, \u0275\u0275sanitizeUrl)("innerHTML", node_r10.label, \u0275\u0275sanitizeHtml);
   }
 }
-function TopicIaJsonComponent_ng_container_10_div_9_ng_template_6_ng_container_5_ng_template_2_Template(rf, ctx) {
+function TopicIaJsonComponent_Conditional_10_Conditional_8_ng_template_8_Conditional_5_Conditional_1_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275element(0, "span", 53);
+    \u0275\u0275element(0, "span", 49);
   }
   if (rf & 2) {
     const node_r10 = \u0275\u0275nextContext(2).$implicit;
@@ -34839,38 +34840,34 @@ function TopicIaJsonComponent_ng_container_10_div_9_ng_template_6_ng_container_5
     \u0275\u0275property("innerHTML", node_r10.label, \u0275\u0275sanitizeHtml);
   }
 }
-function TopicIaJsonComponent_ng_container_10_div_9_ng_template_6_ng_container_5_Template(rf, ctx) {
+function TopicIaJsonComponent_Conditional_10_Conditional_8_ng_template_8_Conditional_5_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275elementContainerStart(0);
-    \u0275\u0275template(1, TopicIaJsonComponent_ng_container_10_div_9_ng_template_6_ng_container_5_ng_container_1_Template, 2, 2, "ng-container", 52)(2, TopicIaJsonComponent_ng_container_10_div_9_ng_template_6_ng_container_5_ng_template_2_Template, 1, 3, "ng-template", null, 2, \u0275\u0275templateRefExtractor);
-    \u0275\u0275elementContainerEnd();
+    \u0275\u0275template(0, TopicIaJsonComponent_Conditional_10_Conditional_8_ng_template_8_Conditional_5_Conditional_0_Template, 1, 2, "a", 40)(1, TopicIaJsonComponent_Conditional_10_Conditional_8_ng_template_8_Conditional_5_Conditional_1_Template, 1, 3, "span", 48);
   }
   if (rf & 2) {
-    const topicLabel_r11 = \u0275\u0275reference(3);
     const node_r10 = \u0275\u0275nextContext().$implicit;
-    \u0275\u0275advance();
-    \u0275\u0275property("ngIf", node_r10.data == null ? null : node_r10.data.url)("ngIfElse", topicLabel_r11);
+    \u0275\u0275conditional((node_r10.data == null ? null : node_r10.data.url) ? 0 : 1);
   }
 }
-function TopicIaJsonComponent_ng_container_10_div_9_ng_template_6_p_inputgroup_6_Template(rf, ctx) {
+function TopicIaJsonComponent_Conditional_10_Conditional_8_ng_template_8_Conditional_6_Template(rf, ctx) {
   if (rf & 1) {
-    const _r12 = \u0275\u0275getCurrentView();
-    \u0275\u0275elementStart(0, "p-inputgroup")(1, "input", 48);
-    \u0275\u0275twoWayListener("ngModelChange", function TopicIaJsonComponent_ng_container_10_div_9_ng_template_6_p_inputgroup_6_Template_input_ngModelChange_1_listener($event) {
-      \u0275\u0275restoreView(_r12);
+    const _r11 = \u0275\u0275getCurrentView();
+    \u0275\u0275elementStart(0, "p-inputgroup")(1, "input", 42);
+    \u0275\u0275twoWayListener("ngModelChange", function TopicIaJsonComponent_Conditional_10_Conditional_8_ng_template_8_Conditional_6_Template_input_ngModelChange_1_listener($event) {
+      \u0275\u0275restoreView(_r11);
       const node_r10 = \u0275\u0275nextContext().$implicit;
       \u0275\u0275twoWayBindingSet(node_r10.label, $event) || (node_r10.label = $event);
       return \u0275\u0275resetView($event);
     });
-    \u0275\u0275listener("keydown", function TopicIaJsonComponent_ng_container_10_div_9_ng_template_6_p_inputgroup_6_Template_input_keydown_1_listener($event) {
-      \u0275\u0275restoreView(_r12);
+    \u0275\u0275listener("keydown", function TopicIaJsonComponent_Conditional_10_Conditional_8_ng_template_8_Conditional_6_Template_input_keydown_1_listener($event) {
+      \u0275\u0275restoreView(_r11);
       const ctx_r0 = \u0275\u0275nextContext(4);
       return \u0275\u0275resetView(ctx_r0.onInputKeydown($event));
     });
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(2, "p-inputgroup-addon")(3, "p-button", 49);
-    \u0275\u0275listener("onClick", function TopicIaJsonComponent_ng_container_10_div_9_ng_template_6_p_inputgroup_6_Template_p_button_onClick_3_listener() {
-      \u0275\u0275restoreView(_r12);
+    \u0275\u0275elementStart(2, "p-inputgroup-addon")(3, "p-button", 43);
+    \u0275\u0275listener("onClick", function TopicIaJsonComponent_Conditional_10_Conditional_8_ng_template_8_Conditional_6_Template_p_button_onClick_3_listener() {
+      \u0275\u0275restoreView(_r11);
       const ctx_r0 = \u0275\u0275nextContext(4);
       return \u0275\u0275resetView(ctx_r0.saveNode());
     });
@@ -34882,25 +34879,25 @@ function TopicIaJsonComponent_ng_container_10_div_9_ng_template_6_p_inputgroup_6
     \u0275\u0275twoWayProperty("ngModel", node_r10.label);
   }
 }
-function TopicIaJsonComponent_ng_container_10_div_9_ng_template_6_p_inputgroup_7_Template(rf, ctx) {
+function TopicIaJsonComponent_Conditional_10_Conditional_8_ng_template_8_Conditional_7_Template(rf, ctx) {
   if (rf & 1) {
-    const _r13 = \u0275\u0275getCurrentView();
-    \u0275\u0275elementStart(0, "p-inputgroup")(1, "input", 48);
-    \u0275\u0275twoWayListener("ngModelChange", function TopicIaJsonComponent_ng_container_10_div_9_ng_template_6_p_inputgroup_7_Template_input_ngModelChange_1_listener($event) {
-      \u0275\u0275restoreView(_r13);
+    const _r12 = \u0275\u0275getCurrentView();
+    \u0275\u0275elementStart(0, "p-inputgroup")(1, "input", 42);
+    \u0275\u0275twoWayListener("ngModelChange", function TopicIaJsonComponent_Conditional_10_Conditional_8_ng_template_8_Conditional_7_Template_input_ngModelChange_1_listener($event) {
+      \u0275\u0275restoreView(_r12);
       const node_r10 = \u0275\u0275nextContext().$implicit;
       \u0275\u0275twoWayBindingSet(node_r10.data.url, $event) || (node_r10.data.url = $event);
       return \u0275\u0275resetView($event);
     });
-    \u0275\u0275listener("keydown", function TopicIaJsonComponent_ng_container_10_div_9_ng_template_6_p_inputgroup_7_Template_input_keydown_1_listener($event) {
-      \u0275\u0275restoreView(_r13);
+    \u0275\u0275listener("keydown", function TopicIaJsonComponent_Conditional_10_Conditional_8_ng_template_8_Conditional_7_Template_input_keydown_1_listener($event) {
+      \u0275\u0275restoreView(_r12);
       const ctx_r0 = \u0275\u0275nextContext(4);
       return \u0275\u0275resetView(ctx_r0.onInputKeydown($event));
     });
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(2, "p-inputgroup-addon")(3, "p-button", 49);
-    \u0275\u0275listener("onClick", function TopicIaJsonComponent_ng_container_10_div_9_ng_template_6_p_inputgroup_7_Template_p_button_onClick_3_listener() {
-      \u0275\u0275restoreView(_r13);
+    \u0275\u0275elementStart(2, "p-inputgroup-addon")(3, "p-button", 43);
+    \u0275\u0275listener("onClick", function TopicIaJsonComponent_Conditional_10_Conditional_8_ng_template_8_Conditional_7_Template_p_button_onClick_3_listener() {
+      \u0275\u0275restoreView(_r12);
       const ctx_r0 = \u0275\u0275nextContext(4);
       return \u0275\u0275resetView(ctx_r0.saveNode());
     });
@@ -34912,155 +34909,160 @@ function TopicIaJsonComponent_ng_container_10_div_9_ng_template_6_p_inputgroup_7
     \u0275\u0275twoWayProperty("ngModel", node_r10.data.url);
   }
 }
-function TopicIaJsonComponent_ng_container_10_div_9_ng_template_6_Template(rf, ctx) {
+function TopicIaJsonComponent_Conditional_10_Conditional_8_ng_template_8_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275elementStart(0, "div", 38);
-    \u0275\u0275template(1, TopicIaJsonComponent_ng_container_10_div_9_ng_template_6_i_1_Template, 1, 0, "i", 39)(2, TopicIaJsonComponent_ng_container_10_div_9_ng_template_6_i_2_Template, 1, 0, "i", 40)(3, TopicIaJsonComponent_ng_container_10_div_9_ng_template_6_i_3_Template, 1, 0, "i", 41)(4, TopicIaJsonComponent_ng_container_10_div_9_ng_template_6_i_4_Template, 1, 0, "i", 42)(5, TopicIaJsonComponent_ng_container_10_div_9_ng_template_6_ng_container_5_Template, 4, 2, "ng-container", 12)(6, TopicIaJsonComponent_ng_container_10_div_9_ng_template_6_p_inputgroup_6_Template, 4, 1, "p-inputgroup", 12)(7, TopicIaJsonComponent_ng_container_10_div_9_ng_template_6_p_inputgroup_7_Template, 4, 1, "p-inputgroup", 12);
+    \u0275\u0275elementStart(0, "div", 35);
+    \u0275\u0275template(1, TopicIaJsonComponent_Conditional_10_Conditional_8_ng_template_8_Conditional_1_Template, 1, 0, "i", 36)(2, TopicIaJsonComponent_Conditional_10_Conditional_8_ng_template_8_Conditional_2_Template, 1, 0, "i", 37)(3, TopicIaJsonComponent_Conditional_10_Conditional_8_ng_template_8_Conditional_3_Template, 1, 0, "i", 38)(4, TopicIaJsonComponent_Conditional_10_Conditional_8_ng_template_8_Conditional_4_Template, 1, 0, "i", 39)(5, TopicIaJsonComponent_Conditional_10_Conditional_8_ng_template_8_Conditional_5_Template, 2, 1)(6, TopicIaJsonComponent_Conditional_10_Conditional_8_ng_template_8_Conditional_6_Template, 4, 1, "p-inputgroup")(7, TopicIaJsonComponent_Conditional_10_Conditional_8_ng_template_8_Conditional_7_Template, 4, 1, "p-inputgroup");
     \u0275\u0275elementEnd();
   }
   if (rf & 2) {
     const node_r10 = ctx.$implicit;
     const ctx_r0 = \u0275\u0275nextContext(3);
     \u0275\u0275advance();
-    \u0275\u0275property("ngIf", (node_r10.children == null ? null : node_r10.children.length) && !ctx_r0.draggable && !(node_r10.data == null ? null : node_r10.data.isCategory) && !(node_r10.data == null ? null : node_r10.data.editing));
+    \u0275\u0275conditional((node_r10.children == null ? null : node_r10.children.length) && !ctx_r0.draggable && !(node_r10.data == null ? null : node_r10.data.isCategory) && !(node_r10.data == null ? null : node_r10.data.editing) ? 1 : -1);
     \u0275\u0275advance();
-    \u0275\u0275property("ngIf", !(node_r10.children == null ? null : node_r10.children.length) && !ctx_r0.draggable && !(node_r10.data == null ? null : node_r10.data.isCategory) && !(node_r10.data == null ? null : node_r10.data.editing));
+    \u0275\u0275conditional(!(node_r10.children == null ? null : node_r10.children.length) && !ctx_r0.draggable && !(node_r10.data == null ? null : node_r10.data.isCategory) && !(node_r10.data == null ? null : node_r10.data.editing) ? 2 : -1);
     \u0275\u0275advance();
-    \u0275\u0275property("ngIf", ctx_r0.draggable && !(node_r10.data == null ? null : node_r10.data.isCategory) && !(node_r10.data == null ? null : node_r10.data.editing));
+    \u0275\u0275conditional(ctx_r0.draggable && !(node_r10.data == null ? null : node_r10.data.isCategory) && !(node_r10.data == null ? null : node_r10.data.editing) ? 3 : -1);
     \u0275\u0275advance();
-    \u0275\u0275property("ngIf", node_r10.data == null ? null : node_r10.data.editing);
+    \u0275\u0275conditional((node_r10.data == null ? null : node_r10.data.editing) ? 4 : -1);
     \u0275\u0275advance();
-    \u0275\u0275property("ngIf", !(node_r10.data == null ? null : node_r10.data.editing));
+    \u0275\u0275conditional(!(node_r10.data == null ? null : node_r10.data.editing) ? 5 : -1);
     \u0275\u0275advance();
-    \u0275\u0275property("ngIf", (node_r10.data == null ? null : node_r10.data.editing) === "label");
+    \u0275\u0275conditional((node_r10.data == null ? null : node_r10.data.editing) === "label" ? 6 : -1);
     \u0275\u0275advance();
-    \u0275\u0275property("ngIf", (node_r10.data == null ? null : node_r10.data.editing) === "link");
+    \u0275\u0275conditional((node_r10.data == null ? null : node_r10.data.editing) === "link" ? 7 : -1);
   }
 }
-function TopicIaJsonComponent_ng_container_10_div_9_Template(rf, ctx) {
+function TopicIaJsonComponent_Conditional_10_Conditional_8_Template(rf, ctx) {
   if (rf & 1) {
     const _r8 = \u0275\u0275getCurrentView();
-    \u0275\u0275elementStart(0, "div", 50);
-    \u0275\u0275element(1, "p-contextMenu", 34, 1);
-    \u0275\u0275elementStart(3, "h2");
-    \u0275\u0275text(4, "Suggested topic page sections");
+    \u0275\u0275elementStart(0, "div", 34);
+    \u0275\u0275element(1, "p-contextMenu", 31, 1);
+    \u0275\u0275elementStart(3, "div", 44)(4, "h2", 45);
+    \u0275\u0275text(5, "Suggested topic page sections");
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(5, "p-tree", 51);
-    \u0275\u0275twoWayListener("selectionChange", function TopicIaJsonComponent_ng_container_10_div_9_Template_p_tree_selectionChange_5_listener($event) {
+    \u0275\u0275elementStart(6, "p-button", 46);
+    \u0275\u0275listener("click", function TopicIaJsonComponent_Conditional_10_Conditional_8_Template_p_button_click_6_listener() {
+      \u0275\u0275restoreView(_r8);
+      const ctx_r0 = \u0275\u0275nextContext(2);
+      return \u0275\u0275resetView(ctx_r0.generateTopicHtml());
+    });
+    \u0275\u0275elementEnd()();
+    \u0275\u0275elementStart(7, "p-tree", 47);
+    \u0275\u0275twoWayListener("selectionChange", function TopicIaJsonComponent_Conditional_10_Conditional_8_Template_p_tree_selectionChange_7_listener($event) {
       \u0275\u0275restoreView(_r8);
       const ctx_r0 = \u0275\u0275nextContext(2);
       \u0275\u0275twoWayBindingSet(ctx_r0.selectedNode, $event) || (ctx_r0.selectedNode = $event);
       return \u0275\u0275resetView($event);
     });
-    \u0275\u0275listener("onNodeDrop", function TopicIaJsonComponent_ng_container_10_div_9_Template_p_tree_onNodeDrop_5_listener($event) {
+    \u0275\u0275listener("onNodeDrop", function TopicIaJsonComponent_Conditional_10_Conditional_8_Template_p_tree_onNodeDrop_7_listener($event) {
       \u0275\u0275restoreView(_r8);
       const ctx_r0 = \u0275\u0275nextContext(2);
       return \u0275\u0275resetView(ctx_r0.onTopicPageNodeDrop($event));
-    })("onNodeContextMenuSelect", function TopicIaJsonComponent_ng_container_10_div_9_Template_p_tree_onNodeContextMenuSelect_5_listener($event) {
+    })("onNodeContextMenuSelect", function TopicIaJsonComponent_Conditional_10_Conditional_8_Template_p_tree_onNodeContextMenuSelect_7_listener($event) {
       \u0275\u0275restoreView(_r8);
       const ctx_r0 = \u0275\u0275nextContext(2);
       return \u0275\u0275resetView(ctx_r0.onNodeContextMenu($event, "topic"));
     });
-    \u0275\u0275template(6, TopicIaJsonComponent_ng_container_10_div_9_ng_template_6_Template, 8, 7, "ng-template", 36);
+    \u0275\u0275template(8, TopicIaJsonComponent_Conditional_10_Conditional_8_ng_template_8_Template, 8, 7, "ng-template", 33);
     \u0275\u0275elementEnd()();
   }
   if (rf & 2) {
-    const cmTopic_r14 = \u0275\u0275reference(2);
+    const cmTopic_r13 = \u0275\u0275reference(2);
     const ctx_r0 = \u0275\u0275nextContext(2);
     \u0275\u0275advance();
     \u0275\u0275property("model", ctx_r0.options);
-    \u0275\u0275advance(4);
+    \u0275\u0275advance(6);
     \u0275\u0275property("value", ctx_r0.topicPageTree)("selectionMode", ctx_r0.selectable ? "multiple" : null);
     \u0275\u0275twoWayProperty("selection", ctx_r0.selectedNode);
-    \u0275\u0275property("draggableNodes", true)("droppableNodes", true)("validateDrop", true)("contextMenu", cmTopic_r14);
+    \u0275\u0275property("draggableNodes", true)("droppableNodes", true)("validateDrop", true)("contextMenu", cmTopic_r13);
   }
 }
-function TopicIaJsonComponent_ng_container_10_Template(rf, ctx) {
+function TopicIaJsonComponent_Conditional_10_Template(rf, ctx) {
   if (rf & 1) {
     const _r3 = \u0275\u0275getCurrentView();
-    \u0275\u0275elementContainerStart(0);
-    \u0275\u0275elementStart(1, "div", 32)(2, "div", 33);
-    \u0275\u0275element(3, "p-contextMenu", 34, 0);
-    \u0275\u0275elementStart(5, "h2");
-    \u0275\u0275text(6, "Current IA structure tree");
+    \u0275\u0275elementStart(0, "div", 12)(1, "div", 30);
+    \u0275\u0275element(2, "p-contextMenu", 31, 0);
+    \u0275\u0275elementStart(4, "h2");
+    \u0275\u0275text(5, "Current IA structure tree");
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(7, "p-tree", 35);
-    \u0275\u0275twoWayListener("selectionChange", function TopicIaJsonComponent_ng_container_10_Template_p_tree_selectionChange_7_listener($event) {
+    \u0275\u0275elementStart(6, "p-tree", 32);
+    \u0275\u0275twoWayListener("selectionChange", function TopicIaJsonComponent_Conditional_10_Template_p_tree_selectionChange_6_listener($event) {
       \u0275\u0275restoreView(_r3);
       const ctx_r0 = \u0275\u0275nextContext();
       \u0275\u0275twoWayBindingSet(ctx_r0.selectedNode, $event) || (ctx_r0.selectedNode = $event);
       return \u0275\u0275resetView($event);
     });
-    \u0275\u0275listener("onNodeDrop", function TopicIaJsonComponent_ng_container_10_Template_p_tree_onNodeDrop_7_listener($event) {
+    \u0275\u0275listener("onNodeDrop", function TopicIaJsonComponent_Conditional_10_Template_p_tree_onNodeDrop_6_listener($event) {
       \u0275\u0275restoreView(_r3);
       const ctx_r0 = \u0275\u0275nextContext();
       return \u0275\u0275resetView(ctx_r0.handleNodeDrop($event));
-    })("onNodeContextMenuSelect", function TopicIaJsonComponent_ng_container_10_Template_p_tree_onNodeContextMenuSelect_7_listener($event) {
+    })("onNodeContextMenuSelect", function TopicIaJsonComponent_Conditional_10_Template_p_tree_onNodeContextMenuSelect_6_listener($event) {
       \u0275\u0275restoreView(_r3);
       const ctx_r0 = \u0275\u0275nextContext();
       return \u0275\u0275resetView(ctx_r0.onNodeContextMenu($event));
     });
-    \u0275\u0275template(8, TopicIaJsonComponent_ng_container_10_ng_template_8_Template, 8, 7, "ng-template", 36);
+    \u0275\u0275template(7, TopicIaJsonComponent_Conditional_10_ng_template_7_Template, 8, 7, "ng-template", 33);
     \u0275\u0275elementEnd()();
-    \u0275\u0275template(9, TopicIaJsonComponent_ng_container_10_div_9_Template, 7, 8, "div", 37);
+    \u0275\u0275template(8, TopicIaJsonComponent_Conditional_10_Conditional_8_Template, 9, 8, "div", 34);
     \u0275\u0275elementEnd();
-    \u0275\u0275elementContainerEnd();
   }
   if (rf & 2) {
-    const cm_r15 = \u0275\u0275reference(4);
+    const cm_r14 = \u0275\u0275reference(3);
     const ctx_r0 = \u0275\u0275nextContext();
-    \u0275\u0275advance(2);
+    \u0275\u0275advance();
     \u0275\u0275classProp("md:col-6", ctx_r0.visitsByUrl.size > 0);
     \u0275\u0275advance();
     \u0275\u0275property("model", ctx_r0.options);
     \u0275\u0275advance(4);
     \u0275\u0275property("value", ctx_r0.iaChart)("selectionMode", ctx_r0.selectable ? "multiple" : null);
     \u0275\u0275twoWayProperty("selection", ctx_r0.selectedNode);
-    \u0275\u0275property("draggableNodes", ctx_r0.draggable)("droppableNodes", true)("validateDrop", true)("contextMenu", cm_r15);
+    \u0275\u0275property("draggableNodes", ctx_r0.draggable)("droppableNodes", true)("validateDrop", true)("contextMenu", cm_r14);
     \u0275\u0275advance(2);
-    \u0275\u0275property("ngIf", ctx_r0.visitsByUrl.size > 0);
+    \u0275\u0275conditional(ctx_r0.visitsByUrl.size > 0 ? 8 : -1);
   }
 }
-function TopicIaJsonComponent_ng_container_11_p_button_3_Template(rf, ctx) {
+function TopicIaJsonComponent_Conditional_11_Conditional_2_Template(rf, ctx) {
   if (rf & 1) {
-    const _r16 = \u0275\u0275getCurrentView();
-    \u0275\u0275elementStart(0, "p-button", 56);
-    \u0275\u0275listener("click", function TopicIaJsonComponent_ng_container_11_p_button_3_Template_p_button_click_0_listener() {
-      \u0275\u0275restoreView(_r16);
+    const _r15 = \u0275\u0275getCurrentView();
+    \u0275\u0275elementStart(0, "p-button", 52);
+    \u0275\u0275listener("click", function TopicIaJsonComponent_Conditional_11_Conditional_2_Template_p_button_click_0_listener() {
+      \u0275\u0275restoreView(_r15);
       const ctx_r0 = \u0275\u0275nextContext(2);
       return \u0275\u0275resetView(ctx_r0.maximize(ctx_r0.chartContainer));
     });
     \u0275\u0275elementEnd();
   }
 }
-function TopicIaJsonComponent_ng_container_11_p_4_Template(rf, ctx) {
+function TopicIaJsonComponent_Conditional_11_Conditional_3_Template(rf, ctx) {
   if (rf & 1) {
     \u0275\u0275elementStart(0, "p");
     \u0275\u0275text(1, "No child pages found.");
     \u0275\u0275elementEnd();
   }
 }
-function TopicIaJsonComponent_ng_container_11_div_5_ng_template_3_Template(rf, ctx) {
+function TopicIaJsonComponent_Conditional_11_Conditional_4_ng_template_3_Template(rf, ctx) {
   if (rf & 1) {
-    const _r17 = \u0275\u0275getCurrentView();
-    \u0275\u0275elementStart(0, "p")(1, "a", 47);
-    \u0275\u0275listener("click", function TopicIaJsonComponent_ng_container_11_div_5_ng_template_3_Template_a_click_1_listener($event) {
-      \u0275\u0275restoreView(_r17);
+    const _r16 = \u0275\u0275getCurrentView();
+    \u0275\u0275elementStart(0, "p")(1, "a", 41);
+    \u0275\u0275listener("click", function TopicIaJsonComponent_Conditional_11_Conditional_4_ng_template_3_Template_a_click_1_listener($event) {
+      \u0275\u0275restoreView(_r16);
       const ctx_r0 = \u0275\u0275nextContext(3);
       return \u0275\u0275resetView(ctx_r0.onNodeClick($event));
     });
     \u0275\u0275elementEnd()();
   }
   if (rf & 2) {
-    const node_r18 = ctx.$implicit;
+    const node_r17 = ctx.$implicit;
     \u0275\u0275advance();
-    \u0275\u0275property("href", node_r18.data.url, \u0275\u0275sanitizeUrl)("innerHTML", node_r18.label, \u0275\u0275sanitizeHtml);
+    \u0275\u0275property("href", node_r17.data.url, \u0275\u0275sanitizeUrl)("innerHTML", node_r17.label, \u0275\u0275sanitizeHtml);
   }
 }
-function TopicIaJsonComponent_ng_container_11_div_5_Template(rf, ctx) {
+function TopicIaJsonComponent_Conditional_11_Conditional_4_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275elementStart(0, "div", 57, 3)(2, "p-organization-chart", 58);
-    \u0275\u0275template(3, TopicIaJsonComponent_ng_container_11_div_5_ng_template_3_Template, 2, 2, "ng-template", 36);
+    \u0275\u0275elementStart(0, "div", 51, 2)(2, "p-organization-chart", 53);
+    \u0275\u0275template(3, TopicIaJsonComponent_Conditional_11_Conditional_4_ng_template_3_Template, 2, 2, "ng-template", 33);
     \u0275\u0275elementEnd()();
   }
   if (rf & 2) {
@@ -35069,47 +35071,117 @@ function TopicIaJsonComponent_ng_container_11_div_5_Template(rf, ctx) {
     \u0275\u0275property("value", ctx_r0.iaChart);
   }
 }
-function TopicIaJsonComponent_ng_container_11_Template(rf, ctx) {
+function TopicIaJsonComponent_Conditional_11_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275elementContainerStart(0);
-    \u0275\u0275elementStart(1, "h2");
-    \u0275\u0275text(2, "IA structure");
+    \u0275\u0275elementStart(0, "h2");
+    \u0275\u0275text(1, "IA structure");
     \u0275\u0275elementEnd();
-    \u0275\u0275template(3, TopicIaJsonComponent_ng_container_11_p_button_3_Template, 1, 0, "p-button", 54)(4, TopicIaJsonComponent_ng_container_11_p_4_Template, 2, 0, "p", 12)(5, TopicIaJsonComponent_ng_container_11_div_5_Template, 4, 1, "div", 55);
-    \u0275\u0275elementContainerEnd();
+    \u0275\u0275template(2, TopicIaJsonComponent_Conditional_11_Conditional_2_Template, 1, 0, "p-button", 50)(3, TopicIaJsonComponent_Conditional_11_Conditional_3_Template, 2, 0, "p")(4, TopicIaJsonComponent_Conditional_11_Conditional_4_Template, 4, 1, "div", 51);
   }
   if (rf & 2) {
     const ctx_r0 = \u0275\u0275nextContext();
-    \u0275\u0275advance(3);
-    \u0275\u0275property("ngIf", ctx_r0.iaChart.length > 0);
+    \u0275\u0275advance(2);
+    \u0275\u0275conditional(ctx_r0.iaChart.length > 0 ? 2 : -1);
     \u0275\u0275advance();
-    \u0275\u0275property("ngIf", ctx_r0.iaChart.length === 0);
+    \u0275\u0275conditional(ctx_r0.iaChart.length === 0 ? 3 : -1);
     \u0275\u0275advance();
-    \u0275\u0275property("ngIf", ctx_r0.iaChart.length > 0);
+    \u0275\u0275conditional(ctx_r0.iaChart.length > 0 ? 4 : -1);
   }
 }
-function TopicIaJsonComponent_ng_container_12_p_3_span_2_Template(rf, ctx) {
+function TopicIaJsonComponent_Conditional_12_Conditional_2_ng_template_4_Conditional_1_Template(rf, ctx) {
+  if (rf & 1) {
+    const _r20 = \u0275\u0275getCurrentView();
+    \u0275\u0275elementStart(0, "a", 41);
+    \u0275\u0275listener("click", function TopicIaJsonComponent_Conditional_12_Conditional_2_ng_template_4_Conditional_1_Template_a_click_0_listener($event) {
+      \u0275\u0275restoreView(_r20);
+      const ctx_r0 = \u0275\u0275nextContext(4);
+      return \u0275\u0275resetView(ctx_r0.onNodeClick($event));
+    });
+    \u0275\u0275elementEnd();
+  }
+  if (rf & 2) {
+    const node_r21 = \u0275\u0275nextContext().$implicit;
+    \u0275\u0275property("href", node_r21.data.url, \u0275\u0275sanitizeUrl)("innerHTML", node_r21.label, \u0275\u0275sanitizeHtml);
+  }
+}
+function TopicIaJsonComponent_Conditional_12_Conditional_2_ng_template_4_Conditional_2_Template(rf, ctx) {
+  if (rf & 1) {
+    \u0275\u0275element(0, "span", 49);
+  }
+  if (rf & 2) {
+    const node_r21 = \u0275\u0275nextContext().$implicit;
+    \u0275\u0275classProp("font-bold", node_r21.data == null ? null : node_r21.data.isCategory);
+    \u0275\u0275property("innerHTML", node_r21.label, \u0275\u0275sanitizeHtml);
+  }
+}
+function TopicIaJsonComponent_Conditional_12_Conditional_2_ng_template_4_Template(rf, ctx) {
+  if (rf & 1) {
+    \u0275\u0275elementStart(0, "p");
+    \u0275\u0275template(1, TopicIaJsonComponent_Conditional_12_Conditional_2_ng_template_4_Conditional_1_Template, 1, 2, "a", 40)(2, TopicIaJsonComponent_Conditional_12_Conditional_2_ng_template_4_Conditional_2_Template, 1, 3, "span", 48);
+    \u0275\u0275elementEnd();
+  }
+  if (rf & 2) {
+    const node_r21 = ctx.$implicit;
+    \u0275\u0275advance();
+    \u0275\u0275conditional((node_r21.data == null ? null : node_r21.data.url) ? 1 : 2);
+  }
+}
+function TopicIaJsonComponent_Conditional_12_Conditional_2_Template(rf, ctx) {
+  if (rf & 1) {
+    const _r18 = \u0275\u0275getCurrentView();
+    \u0275\u0275elementStart(0, "p-button", 54);
+    \u0275\u0275listener("click", function TopicIaJsonComponent_Conditional_12_Conditional_2_Template_p_button_click_0_listener() {
+      \u0275\u0275restoreView(_r18);
+      const topicChartContainer_r19 = \u0275\u0275reference(2);
+      const ctx_r0 = \u0275\u0275nextContext(2);
+      return \u0275\u0275resetView(ctx_r0.maximize(topicChartContainer_r19));
+    });
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(1, "div", 55, 3)(3, "p-organization-chart", 53);
+    \u0275\u0275template(4, TopicIaJsonComponent_Conditional_12_Conditional_2_ng_template_4_Template, 3, 1, "ng-template", 33);
+    \u0275\u0275elementEnd()();
+  }
+  if (rf & 2) {
+    const ctx_r0 = \u0275\u0275nextContext(2);
+    \u0275\u0275advance(3);
+    \u0275\u0275property("value", ctx_r0.topicPageTree);
+  }
+}
+function TopicIaJsonComponent_Conditional_12_Template(rf, ctx) {
+  if (rf & 1) {
+    \u0275\u0275elementStart(0, "h2");
+    \u0275\u0275text(1, "Suggested topic page sections (chart)");
+    \u0275\u0275elementEnd();
+    \u0275\u0275template(2, TopicIaJsonComponent_Conditional_12_Conditional_2_Template, 5, 1);
+  }
+  if (rf & 2) {
+    const ctx_r0 = \u0275\u0275nextContext();
+    \u0275\u0275advance(2);
+    \u0275\u0275conditional(ctx_r0.topicPageTree.length > 0 ? 2 : -1);
+  }
+}
+function TopicIaJsonComponent_Conditional_13_Conditional_2_Conditional_2_Template(rf, ctx) {
   if (rf & 1) {
     \u0275\u0275elementStart(0, "span");
     \u0275\u0275text(1, " or on any detected child pages");
     \u0275\u0275elementEnd();
   }
 }
-function TopicIaJsonComponent_ng_container_12_p_3_Template(rf, ctx) {
+function TopicIaJsonComponent_Conditional_13_Conditional_2_Template(rf, ctx) {
   if (rf & 1) {
     \u0275\u0275elementStart(0, "p");
-    \u0275\u0275text(1, " No broken links found on this page");
-    \u0275\u0275template(2, TopicIaJsonComponent_ng_container_12_p_3_span_2_Template, 2, 0, "span", 12);
-    \u0275\u0275text(3, ". ");
+    \u0275\u0275text(1, " No broken links found on this page ");
+    \u0275\u0275template(2, TopicIaJsonComponent_Conditional_13_Conditional_2_Conditional_2_Template, 2, 0, "span");
+    \u0275\u0275text(3, " . ");
     \u0275\u0275elementEnd();
   }
   if (rf & 2) {
     const ctx_r0 = \u0275\u0275nextContext(2);
     \u0275\u0275advance(2);
-    \u0275\u0275property("ngIf", ctx_r0.iaChart[0].children == null ? null : ctx_r0.iaChart[0].children.length);
+    \u0275\u0275conditional((ctx_r0.iaChart[0].children == null ? null : ctx_r0.iaChart[0].children.length) ? 2 : -1);
   }
 }
-function TopicIaJsonComponent_ng_container_12_p_table_4_ng_template_1_Template(rf, ctx) {
+function TopicIaJsonComponent_Conditional_13_Conditional_3_ng_template_1_Template(rf, ctx) {
   if (rf & 1) {
     \u0275\u0275elementStart(0, "tr")(1, "th");
     \u0275\u0275text(2, "Parent page");
@@ -35122,7 +35194,7 @@ function TopicIaJsonComponent_ng_container_12_p_table_4_ng_template_1_Template(r
     \u0275\u0275elementEnd()();
   }
 }
-function TopicIaJsonComponent_ng_container_12_p_table_4_ng_template_3_Template(rf, ctx) {
+function TopicIaJsonComponent_Conditional_13_Conditional_3_ng_template_3_Template(rf, ctx) {
   if (rf & 1) {
     \u0275\u0275elementStart(0, "tr")(1, "td");
     \u0275\u0275text(2);
@@ -35135,19 +35207,19 @@ function TopicIaJsonComponent_ng_container_12_p_table_4_ng_template_3_Template(r
     \u0275\u0275elementEnd()();
   }
   if (rf & 2) {
-    const rowData_r19 = ctx.$implicit;
+    const rowData_r22 = ctx.$implicit;
     \u0275\u0275advance(2);
-    \u0275\u0275textInterpolate(rowData_r19.parentUrl);
+    \u0275\u0275textInterpolate(rowData_r22.parentUrl);
     \u0275\u0275advance(2);
-    \u0275\u0275textInterpolate(rowData_r19.url);
+    \u0275\u0275textInterpolate(rowData_r22.url);
     \u0275\u0275advance(2);
-    \u0275\u0275textInterpolate(rowData_r19.status);
+    \u0275\u0275textInterpolate(rowData_r22.status);
   }
 }
-function TopicIaJsonComponent_ng_container_12_p_table_4_Template(rf, ctx) {
+function TopicIaJsonComponent_Conditional_13_Conditional_3_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275elementStart(0, "p-table", 60);
-    \u0275\u0275template(1, TopicIaJsonComponent_ng_container_12_p_table_4_ng_template_1_Template, 7, 0, "ng-template", null, 4, \u0275\u0275templateRefExtractor)(3, TopicIaJsonComponent_ng_container_12_p_table_4_ng_template_3_Template, 7, 3, "ng-template", null, 5, \u0275\u0275templateRefExtractor);
+    \u0275\u0275elementStart(0, "p-table", 56);
+    \u0275\u0275template(1, TopicIaJsonComponent_Conditional_13_Conditional_3_ng_template_1_Template, 7, 0, "ng-template", null, 4, \u0275\u0275templateRefExtractor)(3, TopicIaJsonComponent_Conditional_13_Conditional_3_ng_template_3_Template, 7, 3, "ng-template", null, 5, \u0275\u0275templateRefExtractor);
     \u0275\u0275elementEnd();
   }
   if (rf & 2) {
@@ -35155,21 +35227,19 @@ function TopicIaJsonComponent_ng_container_12_p_table_4_Template(rf, ctx) {
     \u0275\u0275property("value", ctx_r0.brokenLinks)("tableStyle", \u0275\u0275pureFunction0(2, _c38));
   }
 }
-function TopicIaJsonComponent_ng_container_12_Template(rf, ctx) {
+function TopicIaJsonComponent_Conditional_13_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275elementContainerStart(0);
-    \u0275\u0275elementStart(1, "h2");
-    \u0275\u0275text(2, "Broken links");
+    \u0275\u0275elementStart(0, "h2");
+    \u0275\u0275text(1, "Broken links");
     \u0275\u0275elementEnd();
-    \u0275\u0275template(3, TopicIaJsonComponent_ng_container_12_p_3_Template, 4, 1, "p", 12)(4, TopicIaJsonComponent_ng_container_12_p_table_4_Template, 5, 3, "p-table", 59);
-    \u0275\u0275elementContainerEnd();
+    \u0275\u0275template(2, TopicIaJsonComponent_Conditional_13_Conditional_2_Template, 4, 1, "p")(3, TopicIaJsonComponent_Conditional_13_Conditional_3_Template, 5, 3, "p-table", 56);
   }
   if (rf & 2) {
     const ctx_r0 = \u0275\u0275nextContext();
-    \u0275\u0275advance(3);
-    \u0275\u0275property("ngIf", ctx_r0.brokenLinks.length === 0);
+    \u0275\u0275advance(2);
+    \u0275\u0275conditional(ctx_r0.brokenLinks.length === 0 ? 2 : -1);
     \u0275\u0275advance();
-    \u0275\u0275property("ngIf", ctx_r0.brokenLinks.length > 0);
+    \u0275\u0275conditional(ctx_r0.brokenLinks.length > 0 ? 3 : -1);
   }
 }
 var TopicIaJsonComponent = class _TopicIaJsonComponent {
@@ -35180,6 +35250,7 @@ var TopicIaJsonComponent = class _TopicIaJsonComponent {
   iaStructure = inject(IaStructureService);
   messageService = inject(MessageService);
   openRouter = inject(OpenRouterService);
+  urlDataService = inject(UrlDataService);
   production = environment.production;
   activeStep = 1;
   constructor() {
@@ -35229,6 +35300,8 @@ var TopicIaJsonComponent = class _TopicIaJsonComponent {
   aiRecommendedUrls = /* @__PURE__ */ new Set();
   aiTargetSection = "most";
   aiModels = this.openRouter.freeModels;
+  topicTemplateUrl = "templates/topic-page-template.html";
+  topicTemplateCache = null;
   topicPageExcludedUrlFragments = topic_page_exceptions_default.map((value) => String(value).trim().toLowerCase()).filter((value) => value.length > 0);
   //Button fxn
   checkIA() {
@@ -35316,8 +35389,9 @@ var TopicIaJsonComponent = class _TopicIaJsonComponent {
     const sectionMap = [
       { section: "most", node: categories[0] },
       { section: "doormats", node: categories[1] },
-      { section: "feature", node: categories[2] },
-      { section: "notOnTopics", node: categories[3] }
+      { section: "focus", node: categories[2] },
+      { section: "feature", node: categories[3] },
+      { section: "notOnTopics", node: categories[4] }
     ];
     return sectionMap.flatMap((entry) => {
       const nodes = entry.node?.children ?? [];
@@ -35424,10 +35498,12 @@ var TopicIaJsonComponent = class _TopicIaJsonComponent {
         return categories[0] ?? null;
       case "doormats":
         return categories[1] ?? null;
-      case "feature":
+      case "focus":
         return categories[2] ?? null;
-      case "notOnTopics":
+      case "feature":
         return categories[3] ?? null;
+      case "notOnTopics":
+        return categories[4] ?? null;
       default:
         return categories[0] ?? null;
     }
@@ -35454,6 +35530,10 @@ var TopicIaJsonComponent = class _TopicIaJsonComponent {
     const normalized = (input || "").toLowerCase();
     if (normalized.includes("doormat"))
       return "doormats";
+    if (normalized.includes("focus on"))
+      return "focus";
+    if (normalized.includes("focus"))
+      return "focus";
     if (normalized.includes("feature"))
       return "feature";
     if (normalized.includes("not on topic"))
@@ -35468,7 +35548,7 @@ var TopicIaJsonComponent = class _TopicIaJsonComponent {
   }
   pickTargetSection(modelTarget, hint) {
     const normalizedModel = this.parseTargetSection(modelTarget || "");
-    const model = normalizedModel === "most" || normalizedModel === "doormats" || normalizedModel === "feature" || normalizedModel === "notOnTopics" ? normalizedModel : null;
+    const model = normalizedModel === "most" || normalizedModel === "doormats" || normalizedModel === "focus" || normalizedModel === "feature" || normalizedModel === "notOnTopics" ? normalizedModel : null;
     return model ?? hint ?? "most";
   }
   findBestRecommendationNode(recommendations, targetSection) {
@@ -35496,8 +35576,9 @@ var TopicIaJsonComponent = class _TopicIaJsonComponent {
     const sectionMap = [
       { section: "most", node: categories[0] },
       { section: "doormats", node: categories[1] },
-      { section: "feature", node: categories[2] },
-      { section: "notOnTopics", node: categories[3] }
+      { section: "focus", node: categories[2] },
+      { section: "feature", node: categories[3] },
+      { section: "notOnTopics", node: categories[4] }
     ];
     const match = sectionMap.find((entry) => (entry.node?.children ?? []).includes(node));
     return match?.section ?? null;
@@ -35709,7 +35790,7 @@ var TopicIaJsonComponent = class _TopicIaJsonComponent {
   //Full screen element
   chartContainer;
   maximize(elRef) {
-    const element = elRef.nativeElement;
+    const element = elRef instanceof HTMLElement ? elRef : elRef.nativeElement;
     if (element.requestFullscreen) {
       element.requestFullscreen();
     } else if (element.webkitRequestFullscreen) {
@@ -35731,6 +35812,12 @@ var TopicIaJsonComponent = class _TopicIaJsonComponent {
       },
       {
         label: "Doormats",
+        data: { url: "", isCategory: true },
+        expanded: true,
+        children: []
+      },
+      {
+        label: "Focus on",
         data: { url: "", isCategory: true },
         expanded: true,
         children: []
@@ -35803,8 +35890,9 @@ var TopicIaJsonComponent = class _TopicIaJsonComponent {
     const categories = root.children ?? [];
     const mostRequested = categories[0];
     const doormatsCategory = categories[1];
-    const feature = categories[2];
-    const notOnTopicsCategory = categories[3];
+    const focus = categories[2];
+    const feature = categories[3];
+    const notOnTopicsCategory = categories[4];
     if (mostRequested) {
       if (this.visitsByUrl.size > 0 && mostRequestedCandidates.length > 0) {
         const top = [...mostRequestedCandidates].sort((a, b) => b.visits - a.visits).slice(0, 6);
@@ -35816,6 +35904,8 @@ var TopicIaJsonComponent = class _TopicIaJsonComponent {
         mostRequested.children = [];
       }
     }
+    if (focus)
+      focus.children = [];
     if (feature)
       feature.children = [];
     if (doormatsCategory)
@@ -35829,6 +35919,9 @@ var TopicIaJsonComponent = class _TopicIaJsonComponent {
     }
     if (doormatsCategory?.children?.length) {
       this.applySectionDiffState(doormatsCategory.children, "doormats");
+    }
+    if (focus?.children?.length) {
+      this.applySectionDiffState(focus.children, "focus");
     }
     if (feature?.children?.length) {
       this.applySectionDiffState(feature.children, "feature");
@@ -35904,10 +35997,11 @@ var TopicIaJsonComponent = class _TopicIaJsonComponent {
     const sections = [
       { key: "most", selector: ".gc-most-requested" },
       { key: "doormats", selector: ".gc-srvinfo" },
+      { key: "focus", selector: "" },
       { key: "feature", selector: ".gc-features" }
     ];
     for (const section of sections) {
-      const container = doc.querySelector(section.selector);
+      const container = section.key === "focus" ? this.findFocusOnContainer(doc) : doc.querySelector(section.selector);
       if (!container)
         continue;
       const links = container.querySelectorAll("a[href]");
@@ -35928,6 +36022,13 @@ var TopicIaJsonComponent = class _TopicIaJsonComponent {
       });
     }
     this.topicPageSections = map;
+  }
+  findFocusOnContainer(doc) {
+    const headings = Array.from(doc.querySelectorAll("h2"));
+    const match = headings.find((h) => (h.textContent || "").trim().toLowerCase() === "focus on");
+    if (!match)
+      return null;
+    return match.closest(".well") ?? match.parentElement ?? match;
   }
   collectNonTopicPageLinks(doc) {
     const map = /* @__PURE__ */ new Map();
@@ -36031,7 +36132,8 @@ var TopicIaJsonComponent = class _TopicIaJsonComponent {
     const categories = root.children ?? [];
     const mostRequested = categories[0];
     const doormatsCategory = categories[1];
-    const feature = categories[2];
+    const focus = categories[2];
+    const feature = categories[3];
     const addToCategory = (category, node) => {
       if (!category)
         return;
@@ -36063,6 +36165,8 @@ var TopicIaJsonComponent = class _TopicIaJsonComponent {
         addToCategory(mostRequested, node);
       } else if (info.section === "doormats") {
         addToCategory(doormatsCategory, node);
+      } else if (info.section === "focus") {
+        addToCategory(focus, node);
       } else {
         addToCategory(feature, node);
       }
@@ -36073,7 +36177,7 @@ var TopicIaJsonComponent = class _TopicIaJsonComponent {
       return;
     const root = baseTree[0];
     const categories = root.children ?? [];
-    const nonTopicCategory = categories.find((node) => node.data?.isNonTopicCategory) ?? categories[4];
+    const nonTopicCategory = categories.find((node) => node.data?.isNonTopicCategory) ?? categories[5];
     if (!nonTopicCategory)
       return;
     nonTopicCategory.children = nonTopicCategory.children || [];
@@ -36126,13 +36230,17 @@ var TopicIaJsonComponent = class _TopicIaJsonComponent {
     const categories = root.children ?? [];
     const mostRequested = categories[0];
     const doormatsCategory = categories[1];
-    const feature = categories[2];
-    const notOnTopicsCategory = categories[3];
+    const focus = categories[2];
+    const feature = categories[3];
+    const notOnTopicsCategory = categories[4];
     if (mostRequested?.children?.length) {
       this.applySectionDiffState(mostRequested.children, "most");
     }
     if (doormatsCategory?.children?.length) {
       this.applySectionDiffState(doormatsCategory.children, "doormats");
+    }
+    if (focus?.children?.length) {
+      this.applySectionDiffState(focus.children, "focus");
     }
     if (feature?.children?.length) {
       this.applySectionDiffState(feature.children, "feature");
@@ -36161,6 +36269,8 @@ var TopicIaJsonComponent = class _TopicIaJsonComponent {
         return "Most requested";
       case "doormats":
         return "Doormats";
+      case "focus":
+        return "Focus on";
       case "feature":
       default:
         return "Features";
@@ -36677,6 +36787,280 @@ var TopicIaJsonComponent = class _TopicIaJsonComponent {
   //Placeholder for export function
   exportTable() {
   }
+  generateTopicHtml() {
+    return __async(this, null, function* () {
+      if (!this.topicPageTree?.length) {
+        this.messageService.add({
+          severity: "warn",
+          summary: "No topic tree available",
+          detail: "Run the IA crawl to build suggested topic page sections first.",
+          life: 4e3
+        });
+        return;
+      }
+      const template = yield this.loadTopicTemplate();
+      if (!template)
+        return;
+      const root = this.topicPageTree[0];
+      const categories = root?.children ?? [];
+      const mostRequested = this.getCategoryByLabel(categories, "Most requested");
+      const doormats = this.getCategoryByLabel(categories, "Doormats");
+      const focus = this.getCategoryByLabel(categories, "Focus on");
+      const features = this.getCategoryByLabel(categories, "Features");
+      const mostRequestedItems = this.buildMostRequestedItems(mostRequested?.children ?? []);
+      const mostRequestedSection = this.buildMostRequestedSection(mostRequestedItems);
+      const servicesItems = this.buildServicesItems(doormats?.children ?? []);
+      const focusItems = this.buildFocusItems(focus?.children ?? []);
+      const hasFocus = focusItems.trim().length > 0;
+      const focusSectionStart = hasFocus ? "" : "<!--";
+      const focusSectionEnd = hasFocus ? "" : "-->";
+      const originalHtml = this.uploadState.getUploadData()?.originalHtml ?? "";
+      const featureImageMap = this.buildFeatureImageMap(originalHtml);
+      const featureItem = this.buildFeatureItem(features?.children ?? [], featureImageMap);
+      const featuresSection = this.buildFeaturesSection(featureItem);
+      const hasFeature = featureItem.trim().length > 0;
+      const featureRowStart = hasFeature ? '<div class="row mrgn-tp-xl">' : "";
+      const featureRowEnd = hasFeature ? "</div>" : "";
+      const socialColStart = hasFeature ? '<div class="col-md-4">' : "";
+      const socialColEnd = hasFeature ? "</div>" : "";
+      const sectionTitle = this.getSectionTitle();
+      const topicTitle = this.stripVisits(this.stripBadges(this.getCurrentPageLabel()));
+      const rescueLinkHtml = this.extractRescueLinkHtml(originalHtml);
+      const alertsBlockHtml = this.extractAlertsHtml(originalHtml);
+      const html = template.replace("{{section_title}}", this.escapeHtml(sectionTitle)).replace("{{topic_title}}", this.escapeHtml(topicTitle)).replace("{{rescue_link}}", rescueLinkHtml).replace("{{alerts_block}}", alertsBlockHtml).replace("{{most_requested_section}}", mostRequestedSection).replace("{{services_items}}", servicesItems).replace("{{focus_items}}", focusItems).replace("{{focus_section_start}}", focusSectionStart).replace("{{focus_section_end}}", focusSectionEnd).replace("{{features_section}}", featuresSection).replace("{{feature_row_start}}", featureRowStart).replace("{{feature_row_end}}", featureRowEnd).replace("{{social_col_start}}", socialColStart).replace("{{social_col_end}}", socialColEnd);
+      const formattedHtml = yield this.urlDataService.formatHtml(html, "ai");
+      this.uploadState.savePreviousUploadData();
+      this.uploadState.mergeModifiedData({
+        modifiedUrl: "Generated topic template",
+        modifiedHtml: formattedHtml
+      });
+      try {
+        yield navigator.clipboard.writeText(formattedHtml);
+        this.messageService.add({
+          severity: "success",
+          summary: "Topic HTML generated",
+          detail: "HTML copied to clipboard and applied to comparison view.",
+          life: 4e3
+        });
+      } catch (err) {
+        console.error("Clipboard write failed:", err);
+        this.messageService.add({
+          severity: "warn",
+          summary: "Generated",
+          detail: "HTML applied to comparison view but could not be copied to clipboard.",
+          life: 4e3
+        });
+      }
+    });
+  }
+  loadTopicTemplate() {
+    return __async(this, null, function* () {
+      if (this.topicTemplateCache)
+        return this.topicTemplateCache;
+      try {
+        const response = yield fetch(this.topicTemplateUrl, { cache: "no-store" });
+        if (!response.ok) {
+          throw new Error(`Template fetch failed: ${response.status}`);
+        }
+        const text = yield response.text();
+        this.topicTemplateCache = text;
+        return text;
+      } catch (err) {
+        console.error("Template load failed:", err);
+        this.messageService.add({
+          severity: "error",
+          summary: "Template load failed",
+          detail: "Unable to load topic HTML template.",
+          life: 4e3
+        });
+        return null;
+      }
+    });
+  }
+  getCategoryByLabel(categories, label) {
+    return categories.find((node) => node?.label === label && node?.data?.isCategory) ?? null;
+  }
+  buildMostRequestedItems(nodes) {
+    const items = nodes.filter((node) => !node?.data?.isCategory).slice(0, 6).map((node) => this.renderListItem(node));
+    return items.join("\n");
+  }
+  buildMostRequestedSection(items) {
+    if (!items.trim())
+      return "";
+    return [
+      '<section class="gc-most-requested">',
+      '  <div class="container">',
+      '    <h2 class="h3">Most requested</h2>',
+      "    <ul>",
+      `      ${items}`,
+      "    </ul>",
+      "  </div>",
+      "</section>"
+    ].join("\n");
+  }
+  buildServicesItems(nodes) {
+    const items = nodes.filter((node) => !node?.data?.isCategory).slice(0, 9).map((node) => this.renderServiceItem(node));
+    if (items.length === 0) {
+      return '<div class="col-lg-4 col-md-6"><h3><a href="#">[No services available]</a></h3><p>Use action verbs, or list keywords to describe this item.</p></div>';
+    }
+    return items.join("\n");
+  }
+  buildFocusItems(nodes) {
+    const items = nodes.filter((node) => !node?.data?.isCategory).slice(0, 6).map((node) => this.renderListItem(node));
+    return items.join("\n");
+  }
+  buildFeatureItem(nodes, featureImageMap) {
+    const first = nodes.find((node) => !node?.data?.isCategory);
+    if (!first) {
+      return "";
+    }
+    const label = this.getNodeLabel(first);
+    const url = this.getNodeUrl(first);
+    const imageSrc = this.getFeatureImageSrc(url, featureImageMap);
+    const imageTag = imageSrc ? `<img src="${imageSrc}" alt="" class="thumbnail">` : '<img src="https://dummyimage.com/360x203/000000/FFFFFF.png" alt="" class="thumbnail">';
+    return '<div class="col-sm-6">' + imageTag + `</div><div class="col-sm-6"><h3><a class="stretched-link" href="${url}">${label}</a></h3><p>Brief description of the feature being promoted.</p></div>`;
+  }
+  renderListItem(node) {
+    const label = this.getNodeLabel(node);
+    const url = this.getNodeUrl(node);
+    return `<li><a href="${url}">${label}</a></li>`;
+  }
+  renderServiceItem(node) {
+    const label = this.getNodeLabel(node);
+    const url = this.getNodeUrl(node);
+    return `<div class="col-lg-4 col-md-6"><h3><a href="${url}">${label}</a></h3><p>Use action verbs, or simply list keywords to summarize the information or tasks that can be accomplished on the page it links to</p></div>`;
+  }
+  getNodeLabel(node) {
+    const raw = typeof node?.data?.originalLabel === "string" && node.data.originalLabel.trim().length ? node.data.originalLabel : (node?.label ?? "").toString();
+    const withoutBadges = this.stripBadges(raw);
+    const bottomLine = this.selectBottomLine(withoutBadges);
+    const cleaned = bottomLine.replace(/<[^>]+>/g, "").trim();
+    const truncated = this.trimAfterDash(cleaned);
+    return this.escapeHtml(truncated || "Untitled");
+  }
+  getNodeUrl(node) {
+    const url = typeof node?.data?.url === "string" ? node.data.url.trim() : "";
+    return this.escapeHtml(url || "#");
+  }
+  getSectionTitle() {
+    const crumbs = this.breadcrumb ?? [];
+    if (!crumbs.length)
+      return "Section title";
+    const sanitize = (value) => this.normalizeLabel(this.stripVisits(this.stripBadges(value)).replace(/<[^>]+>/g, "").trim());
+    const currentLabel = sanitize(this.getCurrentPageLabel());
+    const last = crumbs[crumbs.length - 1];
+    const lastLabel = typeof last?.label === "string" ? last.label.trim() : "";
+    const lastNorm = lastLabel ? sanitize(lastLabel) : "";
+    if (lastNorm && currentLabel && lastNorm === currentLabel) {
+      const parent = crumbs[crumbs.length - 2];
+      if (typeof parent?.label === "string" && parent.label.trim().length) {
+        return parent.label.trim();
+      }
+    }
+    if (lastLabel) {
+      return lastLabel;
+    }
+    return "Section title";
+  }
+  escapeHtml(value) {
+    return value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+  }
+  extractRescueLinkHtml(sourceHtml) {
+    if (!sourceHtml)
+      return "";
+    const doc = new DOMParser().parseFromString(sourceHtml, "text/html");
+    const needle = "you may be looking for";
+    const paragraphs = Array.from(doc.body.querySelectorAll("p"));
+    const match = paragraphs.find((el) => (el.textContent || "").toLowerCase().includes(needle));
+    return match ? match.outerHTML : "";
+  }
+  extractAlertsHtml(sourceHtml) {
+    if (!sourceHtml)
+      return "";
+    const doc = new DOMParser().parseFromString(sourceHtml, "text/html");
+    const alerts = Array.from(doc.body.querySelectorAll(".alert"));
+    if (!alerts.length)
+      return "";
+    const boundary = this.findAlertBoundary(doc);
+    const filtered = boundary ? alerts.filter((alert) => this.isBefore(alert, boundary)) : alerts;
+    if (!filtered.length)
+      return "";
+    return filtered.map((el) => el.outerHTML).join("\n");
+  }
+  findAlertBoundary(doc) {
+    return doc.body.querySelector("section.gc-most-requested") || doc.body.querySelector("section.gc-srvinfo") || doc.body.querySelector("section.gc-features") || doc.body.querySelector("h2");
+  }
+  isBefore(a, b) {
+    const pos = a.compareDocumentPosition(b);
+    return Boolean(pos & Node.DOCUMENT_POSITION_FOLLOWING);
+  }
+  stripVisits(label) {
+    return label.replace(/\s*\(\s*[\d,]+\s+visits?\s*\)\s*$/i, "").trim();
+  }
+  trimAfterDash(label) {
+    const emIdx = label.indexOf("\u2014");
+    if (emIdx !== -1)
+      return label.slice(0, emIdx).trim();
+    const enIdx = label.indexOf("\u2013");
+    if (enIdx !== -1)
+      return label.slice(0, enIdx).trim();
+    const spaced = label.indexOf(" - ");
+    if (spaced !== -1)
+      return label.slice(0, spaced).trim();
+    return label;
+  }
+  selectBottomLine(label) {
+    const withBreaks = label.replace(/<br\s*\/?>/gi, "\n");
+    if (!withBreaks.includes("\n"))
+      return label;
+    const parts = withBreaks.split("\n").map((part) => part.trim()).filter((part) => part.length > 0);
+    return parts.length ? parts[parts.length - 1] : label;
+  }
+  buildFeatureImageMap(sourceHtml) {
+    const map = /* @__PURE__ */ new Map();
+    if (!sourceHtml)
+      return map;
+    const doc = new DOMParser().parseFromString(sourceHtml, "text/html");
+    const featuresSection = doc.body.querySelector("section.gc-features");
+    if (!featuresSection)
+      return map;
+    const items = Array.from(featuresSection.querySelectorAll("a[href]"));
+    items.forEach((link) => {
+      const href = link.getAttribute("href") || "";
+      if (!href)
+        return;
+      const normalized = this.normalizeUrl(href);
+      if (!normalized)
+        return;
+      const container = link.closest("div");
+      const img = container?.querySelector("img") || link.closest("section")?.querySelector("img");
+      const src = img?.getAttribute("src") || "";
+      if (src) {
+        map.set(normalized, src);
+      }
+    });
+    return map;
+  }
+  getFeatureImageSrc(url, featureImageMap) {
+    const normalized = this.normalizeUrl(url);
+    if (!normalized)
+      return "";
+    return featureImageMap.get(normalized) ?? "";
+  }
+  buildFeaturesSection(featureItem) {
+    if (!featureItem.trim())
+      return "";
+    return [
+      '<div class="col-md-8">',
+      '  <section class="gc-features">',
+      '    <h2 class="wb-inv">Featured</h2>',
+      '    <div class="row">',
+      `      ${featureItem}`,
+      "    </div>",
+      "  </section>",
+      "</div>"
+    ].join("\n");
+  }
   //Open link in new tab
   openNodeUrl() {
     window.open(this.selectedNode.data.url, "_blank");
@@ -36835,7 +37219,7 @@ var TopicIaJsonComponent = class _TopicIaJsonComponent {
     if (!root)
       return;
     const categories = root.children ?? [];
-    const notOnTopicsCategory = categories.find((node) => node.data?.isCategory && node.label === "Not suggested for topic page") ?? categories[3];
+    const notOnTopicsCategory = categories.find((node) => node.data?.isCategory && node.label === "Not suggested for topic page") ?? categories[4];
     const children = notOnTopicsCategory?.children;
     if (!children?.length)
       return;
@@ -36871,7 +37255,7 @@ var TopicIaJsonComponent = class _TopicIaJsonComponent {
       \u0275\u0275queryRefresh(_t = \u0275\u0275loadQuery()) && (ctx.chartContainer = _t.first);
       \u0275\u0275queryRefresh(_t = \u0275\u0275loadQuery()) && (ctx.cm = _t.first);
     }
-  }, features: [\u0275\u0275ProvidersFeature([TreeDragDropService])], decls: 13, vars: 11, consts: [["cm", ""], ["cmTopic", ""], ["topicLabel", ""], ["chartContainer", ""], ["header", ""], ["body", ""], [1, "mt-0"], [1, "flex", "flex-row", "flex-wrap", "align-items-center", "gap-3", "mt-0"], ["inputId", "depth", "mode", "decimal", 3, "ngModelChange", "ngModel", "showButtons", "min", "max"], ["for", "depth"], ["label", "Get subpages in IA", "icon", "pi pi-info-circle", 3, "click", "severity", "loading"], ["styleClass", "mt-3", 3, "value", "showValue", "style", 4, "ngIf"], [4, "ngIf"], ["styleClass", "mt-3", 3, "value", "showValue"], [1, "grid", "mt-3"], [1, "col-12", "md:col-4"], ["for", "topic-ia-comm-objectives", 1, "block", "text-md", "font-semibold", "mb-2"], ["pTextarea", "", "id", "topic-ia-comm-objectives", "rows", "3", 1, "w-full", 2, "height", "6rem", "overflow", "auto", 3, "ngModelChange", "ngModel"], ["for", "topic-ia-feedback-insights", 1, "block", "text-md", "font-semibold", "mb-2"], ["pTextarea", "", "id", "topic-ia-feedback-insights", "rows", "3", 1, "w-full", 2, "height", "6rem", "overflow", "auto", 3, "ngModelChange", "ngModel"], ["for", "topic-ia-call-trouble", 1, "block", "text-md", "font-semibold", "mb-2"], ["pTextarea", "", "id", "topic-ia-call-trouble", "rows", "3", 1, "w-full", 2, "height", "6rem", "overflow", "auto", 3, "ngModelChange", "ngModel"], [1, "flex", "justify-content-end", "mt-3"], ["label", "Send my input to GenAI", "icon", "pi pi-send", 3, "click", "severity", "loading", "disabled"], [1, "flex", "flex-row", "align-items-center", "gap-3"], ["styleClass", "pl-1", 1, "max-w-full", 3, "model"], ["class", "flex align-items-center gap-2 text-green-400", 4, "ngIf"], ["class", "flex align-items-center gap-2 text-red-400", 4, "ngIf"], [1, "flex", "align-items-center", "gap-2", "text-green-400"], [1, "pi", "pi-check-circle"], [1, "flex", "align-items-center", "gap-2", "text-red-400"], [1, "pi", "pi-times-circle"], [1, "grid"], [1, "col-12"], [3, "model"], ["styleClass", "w-full md:w-[30rem]", "draggableScope", "self", "droppableScope", "self", 3, "selectionChange", "onNodeDrop", "onNodeContextMenuSelect", "value", "selectionMode", "selection", "draggableNodes", "droppableNodes", "validateDrop", "contextMenu"], ["pTemplate", "default"], ["class", "col-12 md:col-6", 4, "ngIf"], [1, "flex", "flex-row", "align-items-center", "gap-2", "w-full"], ["class", "pi pi-folder", 4, "ngIf"], ["class", "pi pi-file", 4, "ngIf"], ["class", "pi pi-arrows-alt cursor-move text-color-secondary", 4, "ngIf"], ["class", "pi pi-pencil text-color-secondary", 4, "ngIf"], [1, "pi", "pi-folder"], [1, "pi", "pi-file"], [1, "pi", "pi-arrows-alt", "cursor-move", "text-color-secondary"], [1, "pi", "pi-pencil", "text-color-secondary"], ["target", "_blank", 1, "ia-label", 3, "click", "href", "innerHTML"], ["type", "text", "pInputText", "", "pSize", "small", 1, "ia-label", 3, "ngModelChange", "keydown", "ngModel"], ["icon", "pi pi-check", "severity", "secondary", "size", "small", 3, "onClick"], [1, "col-12", "md:col-6"], ["styleClass", "w-full md:w-[30rem]", "draggableScope", "topicPageTree", "droppableScope", "topicPageTree", 3, "selectionChange", "onNodeDrop", "onNodeContextMenuSelect", "value", "selectionMode", "selection", "draggableNodes", "droppableNodes", "validateDrop", "contextMenu"], [4, "ngIf", "ngIfElse"], [1, "ia-label", 3, "innerHTML"], ["label", "Maximize IA chart", "severity", "secondary", "icon", "pi pi-window-maximize", "styleClass", "mt-1 mb-3", 3, "click", 4, "ngIf"], ["class", "overflow-auto max-h-75vh surface-ground surface-border border-1 py-3 mb-3 ia-chart-container", 4, "ngIf"], ["label", "Maximize IA chart", "severity", "secondary", "icon", "pi pi-window-maximize", "styleClass", "mt-1 mb-3", 3, "click"], [1, "overflow-auto", "max-h-75vh", "surface-ground", "surface-border", "border-1", "py-3", "mb-3", "ia-chart-container"], [3, "value"], ["size", "small", "stripedRows", "", 3, "value", "tableStyle", 4, "ngIf"], ["size", "small", "stripedRows", "", 3, "value", "tableStyle"]], template: function TopicIaJsonComponent_Template(rf, ctx) {
+  }, features: [\u0275\u0275ProvidersFeature([TreeDragDropService])], decls: 14, vars: 12, consts: [["cm", ""], ["cmTopic", ""], ["chartContainer", ""], ["topicChartContainer", ""], ["header", ""], ["body", ""], [1, "mt-0"], [1, "flex", "flex-row", "flex-wrap", "align-items-center", "gap-3", "mt-0"], ["inputId", "depth", "mode", "decimal", 3, "ngModelChange", "ngModel", "showButtons", "min", "max"], ["for", "depth"], ["label", "Get subpages in IA", "icon", "pi pi-info-circle", 3, "click", "severity", "loading"], ["styleClass", "mt-3", 3, "value", "showValue", "style"], [1, "grid"], ["styleClass", "mt-3", 3, "value", "showValue"], [1, "grid", "mt-3"], [1, "col-12", "md:col-4"], ["for", "topic-ia-comm-objectives", 1, "block", "text-md", "font-semibold", "mb-2"], ["pTextarea", "", "id", "topic-ia-comm-objectives", "rows", "3", 1, "w-full", 2, "height", "6rem", "overflow", "auto", 3, "ngModelChange", "ngModel"], ["for", "topic-ia-feedback-insights", 1, "block", "text-md", "font-semibold", "mb-2"], ["pTextarea", "", "id", "topic-ia-feedback-insights", "rows", "3", 1, "w-full", 2, "height", "6rem", "overflow", "auto", 3, "ngModelChange", "ngModel"], ["for", "topic-ia-call-trouble", 1, "block", "text-md", "font-semibold", "mb-2"], ["pTextarea", "", "id", "topic-ia-call-trouble", "rows", "3", 1, "w-full", 2, "height", "6rem", "overflow", "auto", 3, "ngModelChange", "ngModel"], [1, "flex", "justify-content-end", "mt-3"], ["label", "Send my input to GenAI", "icon", "pi pi-send", 3, "click", "severity", "loading", "disabled"], [1, "flex", "flex-row", "align-items-center", "gap-3"], ["styleClass", "pl-1", 1, "max-w-full", 3, "model"], [1, "flex", "align-items-center", "gap-2", "text-green-400"], [1, "flex", "align-items-center", "gap-2", "text-red-400"], [1, "pi", "pi-check-circle"], [1, "pi", "pi-times-circle"], [1, "col-12"], [3, "model"], ["styleClass", "w-full md:w-[30rem]", "draggableScope", "self", "droppableScope", "self", 3, "selectionChange", "onNodeDrop", "onNodeContextMenuSelect", "value", "selectionMode", "selection", "draggableNodes", "droppableNodes", "validateDrop", "contextMenu"], ["pTemplate", "default"], [1, "col-12", "md:col-6"], [1, "flex", "flex-row", "align-items-center", "gap-2", "w-full"], [1, "pi", "pi-folder"], [1, "pi", "pi-file"], [1, "pi", "pi-arrows-alt", "cursor-move", "text-color-secondary"], [1, "pi", "pi-pencil", "text-color-secondary"], ["target", "_blank", 1, "ia-label", 3, "href", "innerHTML"], ["target", "_blank", 1, "ia-label", 3, "click", "href", "innerHTML"], ["type", "text", "pInputText", "", "pSize", "small", 1, "ia-label", 3, "ngModelChange", "keydown", "ngModel"], ["icon", "pi pi-check", "severity", "secondary", "size", "small", 3, "onClick"], [1, "flex", "align-items-center", "justify-content-between", "gap-3"], [1, "m-0"], ["label", "Generate topic HTML", "icon", "pi pi-file-export", "severity", "primary", 3, "click"], ["styleClass", "w-full md:w-[30rem]", "draggableScope", "topicPageTree", "droppableScope", "topicPageTree", 3, "selectionChange", "onNodeDrop", "onNodeContextMenuSelect", "value", "selectionMode", "selection", "draggableNodes", "droppableNodes", "validateDrop", "contextMenu"], [1, "ia-label", 3, "innerHTML", "font-bold"], [1, "ia-label", 3, "innerHTML"], ["label", "Maximize IA chart", "severity", "secondary", "icon", "pi pi-window-maximize", "styleClass", "mt-1 mb-3"], [1, "overflow-auto", "max-h-75vh", "surface-ground", "surface-border", "border-1", "py-3", "mb-3", "ia-chart-container"], ["label", "Maximize IA chart", "severity", "secondary", "icon", "pi pi-window-maximize", "styleClass", "mt-1 mb-3", 3, "click"], [3, "value"], ["label", "Maximize suggested chart", "severity", "secondary", "icon", "pi pi-window-maximize", "styleClass", "mt-1 mb-3", 3, "click"], [1, "overflow-auto", "max-h-75vh", "surface-ground", "surface-border", "border-1", "py-3", "mb-3", "topic-ia-chart-container"], ["size", "small", "stripedRows", "", 3, "value", "tableStyle"]], template: function TopicIaJsonComponent_Template(rf, ctx) {
     if (rf & 1) {
       \u0275\u0275elementStart(0, "p", 6);
       \u0275\u0275text(1, "To edit this topic page (or to convert it to one), choose the depth of the IA crawl.");
@@ -36890,7 +37274,7 @@ var TopicIaJsonComponent = class _TopicIaJsonComponent {
         return ctx.checkIA();
       });
       \u0275\u0275elementEnd()();
-      \u0275\u0275template(8, TopicIaJsonComponent_p_progressbar_8_Template, 1, 5, "p-progressbar", 11)(9, TopicIaJsonComponent_ng_container_9_Template, 24, 9, "ng-container", 12)(10, TopicIaJsonComponent_ng_container_10_Template, 10, 11, "ng-container", 12)(11, TopicIaJsonComponent_ng_container_11_Template, 6, 3, "ng-container", 12)(12, TopicIaJsonComponent_ng_container_12_Template, 5, 2, "ng-container", 12);
+      \u0275\u0275template(8, TopicIaJsonComponent_Conditional_8_Template, 1, 5, "p-progressbar", 11)(9, TopicIaJsonComponent_Conditional_9_Template, 23, 9)(10, TopicIaJsonComponent_Conditional_10_Template, 9, 11, "div", 12)(11, TopicIaJsonComponent_Conditional_11_Template, 5, 3)(12, TopicIaJsonComponent_Conditional_12_Template, 3, 1)(13, TopicIaJsonComponent_Conditional_13_Template, 4, 2);
     }
     if (rf & 2) {
       \u0275\u0275advance(4);
@@ -36899,19 +37283,20 @@ var TopicIaJsonComponent = class _TopicIaJsonComponent {
       \u0275\u0275advance(3);
       \u0275\u0275property("severity", ctx.step1Complete ? "secondary" : "primary")("loading", ctx.isChartLoading);
       \u0275\u0275advance();
-      \u0275\u0275property("ngIf", ctx.isChartLoading);
+      \u0275\u0275conditional(ctx.isChartLoading ? 8 : -1);
       \u0275\u0275advance();
-      \u0275\u0275property("ngIf", ctx.breadcrumb.length > 0);
+      \u0275\u0275conditional(ctx.breadcrumb.length > 0 ? 9 : -1);
       \u0275\u0275advance();
-      \u0275\u0275property("ngIf", ctx.iaChart);
+      \u0275\u0275conditional(ctx.iaChart ? 10 : -1);
       \u0275\u0275advance();
-      \u0275\u0275property("ngIf", ctx.iaChart);
+      \u0275\u0275conditional(ctx.iaChart ? 11 : -1);
       \u0275\u0275advance();
-      \u0275\u0275property("ngIf", ctx.iaChart);
+      \u0275\u0275conditional(ctx.visitsByUrl.size > 0 ? 12 : -1);
+      \u0275\u0275advance();
+      \u0275\u0275conditional(ctx.iaChart ? 13 : -1);
     }
   }, dependencies: [
     CommonModule,
-    NgIf,
     FormsModule,
     DefaultValueAccessor,
     NgControlStatus,
@@ -36941,7 +37326,7 @@ var TopicIaJsonComponent = class _TopicIaJsonComponent {
     InputGroup,
     InputGroupAddonModule,
     InputGroupAddon
-  ], styles: ["\n\n.ia-label[_ngcontent-%COMP%] {\n  white-space: pre-line;\n  display: inline-block;\n  color: var(--text-color) !important;\n  text-decoration: none !important;\n}\n  .p-tree li[class*=text-white] > .p-tree-node-content .ia-label {\n  color: #ffffff !important;\n}\n  .p-tree li[class*=text-black] > .p-tree-node-content .ia-label {\n  color: #000000 !important;\n}\n  .p-tree .p-tree-node-content:hover {\n  background-color: unset !important;\n}\n[_nghost-%COMP%]     .topic-ia-steps .topic-ia-step-list {\n  display: grid;\n  grid-template-columns: repeat(4, minmax(0, 1fr));\n  gap: 0.5rem;\n  margin: 0;\n}\n@media (max-width: 1500px) {\n  [_nghost-%COMP%]     .topic-ia-steps .topic-ia-step-list {\n    grid-template-columns: minmax(0, 1fr);\n    gap: 0.1rem;\n  }\n}\n@media (max-width: 1500px) {\n  [_nghost-%COMP%]     .topic-ia-steps .p-step-header {\n    padding: 0;\n  }\n  [_nghost-%COMP%]     .topic-ia-steps .p-stepper-separator {\n    margin: 0;\n  }\n}\n[_nghost-%COMP%]     .topic-ia-steps {\n  margin-bottom: 0;\n}\n[_nghost-%COMP%]     .topic-ia-steps .p-step-title {\n  font-weight: 600;\n  font-size: 1.02rem;\n}\n[_nghost-%COMP%]     .topic-ia-steps .topic-ia-step-list .p-step {\n  justify-content: flex-start;\n  text-align: left;\n  width: 100%;\n}\n[_nghost-%COMP%]     .topic-ia-panels {\n  display: grid;\n  grid-template-columns: repeat(4, minmax(0, 1fr));\n  gap: 1rem;\n  margin-top: 0.75rem;\n}\n@media (max-width: 1500px) {\n  [_nghost-%COMP%]     .topic-ia-panels {\n    grid-template-columns: repeat(2, minmax(0, 1fr));\n  }\n}\n@media (max-width: 1000px) {\n  [_nghost-%COMP%]     .topic-ia-panels {\n    grid-template-columns: minmax(0, 1fr);\n  }\n}\n  .topic-ia-badge {\n  display: inline-block;\n  margin-left: 0.5rem;\n  padding: 0.1rem 0.45rem;\n  border-radius: 9999px;\n  font-size: 0.875rem;\n  font-weight: 600;\n  border: 1px solid #d1d5db;\n  background: #e5e7eb;\n  color: #374151;\n  white-space: nowrap;\n}\n.dark-mode[_nghost-%COMP%]     .topic-ia-badge, .dark-mode   [_nghost-%COMP%]     .topic-ia-badge {\n  border-color: #4b5563;\n  background: #374151;\n  color: #f9fafb;\n}\n  .topic-ia-comm-badge {\n  border-color: #93c5fd;\n  background: #dbeafe;\n  color: #1e3a8a;\n}\n.dark-mode[_nghost-%COMP%]     .topic-ia-comm-badge, .dark-mode   [_nghost-%COMP%]     .topic-ia-comm-badge {\n  border-color: #1d4ed8;\n  background: #1e40af;\n  color: #e0e7ff;\n}\n  .ia-chart-container .p-organizationchart-node a {\n  color: var(--text-color) !important;\n  text-decoration: none !important;\n}\n  .ia-chart-container .p-organizationchart-node.text-white a {\n  color: #ffffff !important;\n}\n  .ia-chart-container .p-organizationchart-node.text-black a {\n  color: #000000 !important;\n}\n/*# sourceMappingURL=topic-ia-json.component.css.map */"] });
+  ], styles: ["\n\n.ia-label[_ngcontent-%COMP%] {\n  white-space: pre-line;\n  display: inline-block;\n  color: var(--text-color) !important;\n  text-decoration: none !important;\n}\n  .p-tree li[class*=text-white] > .p-tree-node-content .ia-label {\n  color: #ffffff !important;\n}\n  .p-tree li[class*=text-black] > .p-tree-node-content .ia-label {\n  color: #000000 !important;\n}\n  .p-tree .p-tree-node-content:hover {\n  background-color: unset !important;\n}\n[_nghost-%COMP%]     .topic-ia-steps .topic-ia-step-list {\n  display: grid;\n  grid-template-columns: repeat(4, minmax(0, 1fr));\n  gap: 0.5rem;\n  margin: 0;\n}\n@media (max-width: 1500px) {\n  [_nghost-%COMP%]     .topic-ia-steps .topic-ia-step-list {\n    grid-template-columns: minmax(0, 1fr);\n    gap: 0.1rem;\n  }\n}\n@media (max-width: 1500px) {\n  [_nghost-%COMP%]     .topic-ia-steps .p-step-header {\n    padding: 0;\n  }\n  [_nghost-%COMP%]     .topic-ia-steps .p-stepper-separator {\n    margin: 0;\n  }\n}\n[_nghost-%COMP%]     .topic-ia-steps {\n  margin-bottom: 0;\n}\n[_nghost-%COMP%]     .topic-ia-steps .p-step-title {\n  font-weight: 600;\n  font-size: 1.02rem;\n}\n[_nghost-%COMP%]     .topic-ia-steps .topic-ia-step-list .p-step {\n  justify-content: flex-start;\n  text-align: left;\n  width: 100%;\n}\n[_nghost-%COMP%]     .topic-ia-panels {\n  display: grid;\n  grid-template-columns: repeat(4, minmax(0, 1fr));\n  gap: 1rem;\n  margin-top: 0.75rem;\n}\n@media (max-width: 1500px) {\n  [_nghost-%COMP%]     .topic-ia-panels {\n    grid-template-columns: repeat(2, minmax(0, 1fr));\n  }\n}\n@media (max-width: 1000px) {\n  [_nghost-%COMP%]     .topic-ia-panels {\n    grid-template-columns: minmax(0, 1fr);\n  }\n}\n  .topic-ia-badge {\n  display: inline-block;\n  margin-left: 0.5rem;\n  padding: 0.1rem 0.45rem;\n  border-radius: 9999px;\n  font-size: 0.875rem;\n  font-weight: 600;\n  border: 1px solid #d1d5db;\n  background: #e5e7eb;\n  color: #374151;\n  white-space: nowrap;\n}\n.dark-mode[_nghost-%COMP%]     .topic-ia-badge, .dark-mode   [_nghost-%COMP%]     .topic-ia-badge {\n  border-color: #4b5563;\n  background: #374151;\n  color: #f9fafb;\n}\n  .topic-ia-comm-badge {\n  border-color: #93c5fd;\n  background: #dbeafe;\n  color: #1e3a8a;\n}\n.dark-mode[_nghost-%COMP%]     .topic-ia-comm-badge, .dark-mode   [_nghost-%COMP%]     .topic-ia-comm-badge {\n  border-color: #1d4ed8;\n  background: #1e40af;\n  color: #e0e7ff;\n}\n  .ia-chart-container .p-organizationchart-node a {\n  color: var(--text-color) !important;\n  text-decoration: none !important;\n}\n  .ia-chart-container .p-organizationchart-node.text-white a {\n  color: #ffffff !important;\n}\n  .ia-chart-container .p-organizationchart-node.text-black a {\n  color: #000000 !important;\n}\n  .topic-ia-chart-container .p-organizationchart-node a {\n  color: var(--text-color) !important;\n  text-decoration: none !important;\n}\n  .topic-ia-chart-container .p-organizationchart-node.text-white a {\n  color: #ffffff !important;\n}\n  .topic-ia-chart-container .p-organizationchart-node.text-black a {\n  color: #000000 !important;\n}\n/*# sourceMappingURL=topic-ia-json.component.css.map */"] });
 };
 (() => {
   (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(TopicIaJsonComponent, [{
@@ -36986,16 +37371,17 @@ var TopicIaJsonComponent = class _TopicIaJsonComponent {
       icon="pi pi-info-circle"
     />
   </div>
-  <p-progressbar
-    *ngIf="isChartLoading"
-    [value]="iaProgress"
-    [showValue]="false"
-    [style]="{ height: '1rem' }"
-    styleClass="mt-3"
-  />
+  @if (isChartLoading) {
+    <p-progressbar
+      [value]="iaProgress"
+      [showValue]="false"
+      [style]="{ height: '1rem' }"
+      styleClass="mt-3"
+    />
+  }
 
 <!--Breadcrumb-->
-<ng-container *ngIf="breadcrumb.length > 0">
+@if (breadcrumb.length > 0) {
   <h2>Contextual input (for Most requested or Features)</h2>
   <div class="grid mt-3">
     <div class="col-12 md:col-4">
@@ -37060,22 +37446,22 @@ var TopicIaJsonComponent = class _TopicIaJsonComponent {
   <h2>Breadcrumb</h2>
   <div class="flex flex-row align-items-center gap-3">
     <p-breadcrumb class="max-w-full" styleClass="pl-1" [model]="breadcrumb" />
-    <span
-      class="flex align-items-center gap-2 text-green-400"
-      *ngIf="urlFound === true"
-      ><i class="pi pi-check-circle"></i>Link found on parent page</span
-    >
-    <span
-      class="flex align-items-center gap-2 text-red-400"
-      *ngIf="urlFound === false"
-      ><i class="pi pi-times-circle"></i>IA Orphan</span
-    >
+    @if (urlFound === true) {
+      <span class="flex align-items-center gap-2 text-green-400">
+        <i class="pi pi-check-circle"></i>Link found on parent page
+      </span>
+    }
+    @if (urlFound === false) {
+      <span class="flex align-items-center gap-2 text-red-400">
+        <i class="pi pi-times-circle"></i>IA Orphan
+      </span>
+    }
   </div>
-</ng-container>
+}
 
 <!--IA Tree-->
 
-<ng-container *ngIf="iaChart">
+@if (iaChart) {
   <div class="grid">
     <div class="col-12" [class.md:col-6]="visitsByUrl.size > 0">
       <p-contextMenu #cm [model]="options"></p-contextMenu>
@@ -37096,232 +37482,304 @@ var TopicIaJsonComponent = class _TopicIaJsonComponent {
       >
         <ng-template pTemplate="default" let-node>
           <div class="flex flex-row align-items-center gap-2 w-full">
-            <i
-              class="pi pi-folder"
-              *ngIf="node.children.length > 0 && !draggable && !node.data.editing"
-            ></i>
-            <i
-              class="pi pi-file"
-              *ngIf="
-                (node.children.length === 0 || !node.children) &&
-                !draggable &&
-                !node.data.editing
-              "
-            ></i>
-            <i
-              *ngIf="draggable"
-              class="pi pi-arrows-alt cursor-move text-color-secondary"
-            ></i>
-            <i
-              *ngIf="node.data.editing"
-              class="pi pi-pencil text-color-secondary"
-            ></i>
-            <ng-container *ngIf="!node.data.editing"
-              ><a
+            @if (node.children.length > 0 && !draggable && !node.data.editing) {
+              <i class="pi pi-folder"></i>
+            }
+            @if (
+              (node.children.length === 0 || !node.children) &&
+              !draggable &&
+              !node.data.editing
+            ) {
+              <i class="pi pi-file"></i>
+            }
+            @if (draggable) {
+              <i class="pi pi-arrows-alt cursor-move text-color-secondary"></i>
+            }
+            @if (node.data.editing) {
+              <i class="pi pi-pencil text-color-secondary"></i>
+            }
+            @if (!node.data.editing) {
+              <a
                 [href]="node.data.url"
                 target="_blank"
                 (click)="onNodeClick($event)"
                 [innerHTML]="node.label"
                 class="ia-label"
-              ></a
-            ></ng-container>
-            <p-inputgroup *ngIf="node.data.editing === 'label'">
-              <input
-                type="text"
-                pInputText
-                [(ngModel)]="node.label"
-                pSize="small"
-                class="ia-label"
-                (keydown)="onInputKeydown($event)"
-              />
-              <p-inputgroup-addon
-                ><p-button
-                  icon="pi pi-check"
-                  severity="secondary"
-                  size="small"
-                  (onClick)="saveNode()"
-              /></p-inputgroup-addon>
-            </p-inputgroup>
-            <p-inputgroup *ngIf="node.data.editing === 'link'">
-              <input
-                type="text"
-                pInputText
-                [(ngModel)]="node.data.url"
-                pSize="small"
-                class="ia-label"
-                (keydown)="onInputKeydown($event)"
-              />
-              <p-inputgroup-addon
-                ><p-button
-                  icon="pi pi-check"
-                  severity="secondary"
-                  size="small"
-                  (onClick)="saveNode()"
-              /></p-inputgroup-addon>
-            </p-inputgroup>
+              ></a>
+            }
+            @if (node.data.editing === 'label') {
+              <p-inputgroup>
+                <input
+                  type="text"
+                  pInputText
+                  [(ngModel)]="node.label"
+                  pSize="small"
+                  class="ia-label"
+                  (keydown)="onInputKeydown($event)"
+                />
+                <p-inputgroup-addon>
+                  <p-button
+                    icon="pi pi-check"
+                    severity="secondary"
+                    size="small"
+                    (onClick)="saveNode()"
+                  ></p-button>
+                </p-inputgroup-addon>
+              </p-inputgroup>
+            }
+            @if (node.data.editing === 'link') {
+              <p-inputgroup>
+                <input
+                  type="text"
+                  pInputText
+                  [(ngModel)]="node.data.url"
+                  pSize="small"
+                  class="ia-label"
+                  (keydown)="onInputKeydown($event)"
+                />
+                <p-inputgroup-addon>
+                  <p-button
+                    icon="pi pi-check"
+                    severity="secondary"
+                    size="small"
+                    (onClick)="saveNode()"
+                  ></p-button>
+                </p-inputgroup-addon>
+              </p-inputgroup>
+            }
           </div>
         </ng-template>
       </p-tree>
     </div>
-    <div class="col-12 md:col-6" *ngIf="visitsByUrl.size > 0">
-      <p-contextMenu #cmTopic [model]="options"></p-contextMenu>
-      <h2>Suggested topic page sections</h2>
-      <p-tree
-        [value]="topicPageTree"
-        styleClass="w-full md:w-[30rem]"
-        [selectionMode]="selectable ? 'multiple' : null"
-        [(selection)]="selectedNode"
-        [draggableNodes]="true"
-        [droppableNodes]="true"
-        draggableScope="topicPageTree"
-        droppableScope="topicPageTree"
-        [validateDrop]="true"
-        (onNodeDrop)="onTopicPageNodeDrop($event)"
-        [contextMenu]="cmTopic"
-        (onNodeContextMenuSelect)="onNodeContextMenu($event, 'topic')"
-      >
-        <ng-template pTemplate="default" let-node>
-          <div class="flex flex-row align-items-center gap-2 w-full">
-            <i
-              class="pi pi-folder"
-              *ngIf="node.children?.length && !draggable && !node.data?.isCategory && !node.data?.editing"
-            ></i>
-            <i
-              class="pi pi-file"
-              *ngIf="!node.children?.length && !draggable && !node.data?.isCategory && !node.data?.editing"
-            ></i>
-            <i
-              *ngIf="draggable && !node.data?.isCategory && !node.data?.editing"
-              class="pi pi-arrows-alt cursor-move text-color-secondary"
-            ></i>
-            <i
-              *ngIf="node.data?.editing"
-              class="pi pi-pencil text-color-secondary"
-            ></i>
-            <ng-container *ngIf="!node.data?.editing">
-              <ng-container *ngIf="node.data?.url; else topicLabel">
-                <a
-                  [href]="node.data.url"
-                  target="_blank"
-                  (click)="onNodeClick($event)"
-                  [innerHTML]="node.label"
-                  class="ia-label"
-                ></a>
-              </ng-container>
-              <ng-template #topicLabel>
-                <span
-                  [innerHTML]="node.label"
-                  class="ia-label"
-                  [class.font-bold]="node.data?.isCategory"
-                ></span>
-              </ng-template>
-            </ng-container>
-            <p-inputgroup *ngIf="node.data?.editing === 'label'">
-              <input
-                type="text"
-                pInputText
-                [(ngModel)]="node.label"
-                pSize="small"
-                class="ia-label"
-                (keydown)="onInputKeydown($event)"
-              />
-              <p-inputgroup-addon
-                ><p-button
-                  icon="pi pi-check"
-                  severity="secondary"
-                  size="small"
-                  (onClick)="saveNode()"
-              /></p-inputgroup-addon>
-            </p-inputgroup>
-            <p-inputgroup *ngIf="node.data?.editing === 'link'">
-              <input
-                type="text"
-                pInputText
-                [(ngModel)]="node.data.url"
-                pSize="small"
-                class="ia-label"
-                (keydown)="onInputKeydown($event)"
-              />
-              <p-inputgroup-addon
-                ><p-button
-                  icon="pi pi-check"
-                  severity="secondary"
-                  size="small"
-                  (onClick)="saveNode()"
-              /></p-inputgroup-addon>
-            </p-inputgroup>
-          </div>
-        </ng-template>
-      </p-tree>
-    </div>
+    @if (visitsByUrl.size > 0) {
+      <div class="col-12 md:col-6">
+        <p-contextMenu #cmTopic [model]="options"></p-contextMenu>
+        <div class="flex align-items-center justify-content-between gap-3">
+          <h2 class="m-0">Suggested topic page sections</h2>
+          <p-button
+            label="Generate topic HTML"
+            icon="pi pi-file-export"
+            severity="primary"
+            (click)="generateTopicHtml()"
+          />
+        </div>
+        <p-tree
+          [value]="topicPageTree"
+          styleClass="w-full md:w-[30rem]"
+          [selectionMode]="selectable ? 'multiple' : null"
+          [(selection)]="selectedNode"
+          [draggableNodes]="true"
+          [droppableNodes]="true"
+          draggableScope="topicPageTree"
+          droppableScope="topicPageTree"
+          [validateDrop]="true"
+          (onNodeDrop)="onTopicPageNodeDrop($event)"
+          [contextMenu]="cmTopic"
+          (onNodeContextMenuSelect)="onNodeContextMenu($event, 'topic')"
+        >
+          <ng-template pTemplate="default" let-node>
+            <div class="flex flex-row align-items-center gap-2 w-full">
+              @if (
+                node.children?.length &&
+                !draggable &&
+                !node.data?.isCategory &&
+                !node.data?.editing
+              ) {
+                <i class="pi pi-folder"></i>
+              }
+              @if (
+                !node.children?.length &&
+                !draggable &&
+                !node.data?.isCategory &&
+                !node.data?.editing
+              ) {
+                <i class="pi pi-file"></i>
+              }
+              @if (draggable && !node.data?.isCategory && !node.data?.editing) {
+                <i class="pi pi-arrows-alt cursor-move text-color-secondary"></i>
+              }
+              @if (node.data?.editing) {
+                <i class="pi pi-pencil text-color-secondary"></i>
+              }
+              @if (!node.data?.editing) {
+                @if (node.data?.url) {
+                  <a
+                    [href]="node.data.url"
+                    target="_blank"
+                    (click)="onNodeClick($event)"
+                    [innerHTML]="node.label"
+                    class="ia-label"
+                  ></a>
+                } @else {
+                  <span
+                    [innerHTML]="node.label"
+                    class="ia-label"
+                    [class.font-bold]="node.data?.isCategory"
+                  ></span>
+                }
+              }
+              @if (node.data?.editing === 'label') {
+                <p-inputgroup>
+                  <input
+                    type="text"
+                    pInputText
+                    [(ngModel)]="node.label"
+                    pSize="small"
+                    class="ia-label"
+                    (keydown)="onInputKeydown($event)"
+                  />
+                  <p-inputgroup-addon>
+                    <p-button
+                      icon="pi pi-check"
+                      severity="secondary"
+                      size="small"
+                      (onClick)="saveNode()"
+                    ></p-button>
+                  </p-inputgroup-addon>
+                </p-inputgroup>
+              }
+              @if (node.data?.editing === 'link') {
+                <p-inputgroup>
+                  <input
+                    type="text"
+                    pInputText
+                    [(ngModel)]="node.data.url"
+                    pSize="small"
+                    class="ia-label"
+                    (keydown)="onInputKeydown($event)"
+                  />
+                  <p-inputgroup-addon>
+                    <p-button
+                      icon="pi pi-check"
+                      severity="secondary"
+                      size="small"
+                      (onClick)="saveNode()"
+                    ></p-button>
+                  </p-inputgroup-addon>
+                </p-inputgroup>
+              }
+            </div>
+          </ng-template>
+        </p-tree>
+      </div>
+    }
   </div>
-</ng-container>
+}
 
 <!--IA Chart-->
-<ng-container *ngIf="iaChart">
+@if (iaChart) {
   <h2>IA structure</h2>
-  <p-button
-    label="Maximize IA chart"
-    severity="secondary"
-    (click)="maximize(chartContainer)"
-    icon="pi pi-window-maximize"
-    styleClass="mt-1 mb-3"
-    *ngIf="iaChart.length > 0"
-  />
-  <p *ngIf="iaChart.length === 0">No child pages found.</p>
-  <div
-    #chartContainer
-    *ngIf="iaChart.length > 0"
-    class="overflow-auto max-h-75vh surface-ground surface-border border-1 py-3 mb-3 ia-chart-container"
-  >
-    <p-organization-chart [value]="iaChart">
-      <ng-template let-node pTemplate="default">
-        <p>
-          <a
-            [href]="node.data.url"
-            target="_blank"
-            (click)="onNodeClick($event)"
-            [innerHTML]="node.label"
-            class="ia-label"
-          ></a>
-        </p>
-      </ng-template>
-    </p-organization-chart>
-  </div>
-</ng-container>
+  @if (iaChart.length > 0) {
+    <p-button
+      label="Maximize IA chart"
+      severity="secondary"
+      (click)="maximize(chartContainer)"
+      icon="pi pi-window-maximize"
+      styleClass="mt-1 mb-3"
+    />
+  }
+  @if (iaChart.length === 0) {
+    <p>No child pages found.</p>
+  }
+  @if (iaChart.length > 0) {
+    <div
+      #chartContainer
+      class="overflow-auto max-h-75vh surface-ground surface-border border-1 py-3 mb-3 ia-chart-container"
+    >
+      <p-organization-chart [value]="iaChart">
+        <ng-template let-node pTemplate="default">
+          <p>
+            <a
+              [href]="node.data.url"
+              target="_blank"
+              (click)="onNodeClick($event)"
+              [innerHTML]="node.label"
+              class="ia-label"
+            ></a>
+          </p>
+        </ng-template>
+      </p-organization-chart>
+    </div>
+  }
+}
+
+<!--Suggested Topic Page Chart-->
+@if (visitsByUrl.size > 0) {
+  <h2>Suggested topic page sections (chart)</h2>
+  @if (topicPageTree.length > 0) {
+    <p-button
+      label="Maximize suggested chart"
+      severity="secondary"
+      (click)="maximize(topicChartContainer)"
+      icon="pi pi-window-maximize"
+      styleClass="mt-1 mb-3"
+    />
+    <div
+      #topicChartContainer
+      class="overflow-auto max-h-75vh surface-ground surface-border border-1 py-3 mb-3 topic-ia-chart-container"
+    >
+      <p-organization-chart [value]="topicPageTree">
+        <ng-template let-node pTemplate="default">
+          <p>
+            @if (node.data?.url) {
+              <a
+                [href]="node.data.url"
+                target="_blank"
+                (click)="onNodeClick($event)"
+                [innerHTML]="node.label"
+                class="ia-label"
+              ></a>
+            } @else {
+              <span
+                [innerHTML]="node.label"
+                class="ia-label"
+                [class.font-bold]="node.data?.isCategory"
+              ></span>
+            }
+          </p>
+        </ng-template>
+      </p-organization-chart>
+    </div>
+  }
+}
 
 <!--Broken Links-->
-<ng-container *ngIf="iaChart">
+@if (iaChart) {
   <h2>Broken links</h2>
-  <p *ngIf="brokenLinks.length === 0">
-    No broken links found on this page<span *ngIf="iaChart[0].children?.length">
-      or on any detected child pages</span
-    >.
-  </p>
-  <p-table
-    *ngIf="brokenLinks.length > 0"
-    [value]="brokenLinks"
-    size="small"
-    stripedRows
-    [tableStyle]="{ 'min-width': '50rem' }"
-  >
-    <ng-template #header>
-      <tr>
-        <th>Parent page</th>
-        <th>Broken link</th>
-        <th>Status</th>
-      </tr>
-    </ng-template>
-    <ng-template #body let-rowData>
-      <tr>
-        <td>{{ rowData.parentUrl }}</td>
-        <td>{{ rowData.url }}</td>
-        <td>{{ rowData.status }}</td>
-      </tr>
-    </ng-template>
-  </p-table>
-</ng-container>
-`, styles: ["/* angular:styles/component:css;13f38666d2023750fffa0de1bb355c48020f842c50e039bfe6182a35640d4f96;C:/my-working-files/GitHub/design-assistant/src/app/views/page-assistant/components/problems/component-guidance/topic-page/topic-ia-json.component.ts */\n.ia-label {\n  white-space: pre-line;\n  display: inline-block;\n  color: var(--text-color) !important;\n  text-decoration: none !important;\n}\n::ng-deep .p-tree li[class*=text-white] > .p-tree-node-content .ia-label {\n  color: #ffffff !important;\n}\n::ng-deep .p-tree li[class*=text-black] > .p-tree-node-content .ia-label {\n  color: #000000 !important;\n}\n::ng-deep .p-tree .p-tree-node-content:hover {\n  background-color: unset !important;\n}\n:host ::ng-deep .topic-ia-steps .topic-ia-step-list {\n  display: grid;\n  grid-template-columns: repeat(4, minmax(0, 1fr));\n  gap: 0.5rem;\n  margin: 0;\n}\n@media (max-width: 1500px) {\n  :host ::ng-deep .topic-ia-steps .topic-ia-step-list {\n    grid-template-columns: minmax(0, 1fr);\n    gap: 0.1rem;\n  }\n}\n@media (max-width: 1500px) {\n  :host ::ng-deep .topic-ia-steps .p-step-header {\n    padding: 0;\n  }\n  :host ::ng-deep .topic-ia-steps .p-stepper-separator {\n    margin: 0;\n  }\n}\n:host ::ng-deep .topic-ia-steps {\n  margin-bottom: 0;\n}\n:host ::ng-deep .topic-ia-steps .p-step-title {\n  font-weight: 600;\n  font-size: 1.02rem;\n}\n:host ::ng-deep .topic-ia-steps .topic-ia-step-list .p-step {\n  justify-content: flex-start;\n  text-align: left;\n  width: 100%;\n}\n:host ::ng-deep .topic-ia-panels {\n  display: grid;\n  grid-template-columns: repeat(4, minmax(0, 1fr));\n  gap: 1rem;\n  margin-top: 0.75rem;\n}\n@media (max-width: 1500px) {\n  :host ::ng-deep .topic-ia-panels {\n    grid-template-columns: repeat(2, minmax(0, 1fr));\n  }\n}\n@media (max-width: 1000px) {\n  :host ::ng-deep .topic-ia-panels {\n    grid-template-columns: minmax(0, 1fr);\n  }\n}\n::ng-deep .topic-ia-badge {\n  display: inline-block;\n  margin-left: 0.5rem;\n  padding: 0.1rem 0.45rem;\n  border-radius: 9999px;\n  font-size: 0.875rem;\n  font-weight: 600;\n  border: 1px solid #d1d5db;\n  background: #e5e7eb;\n  color: #374151;\n  white-space: nowrap;\n}\n:host-context(.dark-mode) ::ng-deep .topic-ia-badge {\n  border-color: #4b5563;\n  background: #374151;\n  color: #f9fafb;\n}\n::ng-deep .topic-ia-comm-badge {\n  border-color: #93c5fd;\n  background: #dbeafe;\n  color: #1e3a8a;\n}\n:host-context(.dark-mode) ::ng-deep .topic-ia-comm-badge {\n  border-color: #1d4ed8;\n  background: #1e40af;\n  color: #e0e7ff;\n}\n::ng-deep .ia-chart-container .p-organizationchart-node a {\n  color: var(--text-color) !important;\n  text-decoration: none !important;\n}\n::ng-deep .ia-chart-container .p-organizationchart-node.text-white a {\n  color: #ffffff !important;\n}\n::ng-deep .ia-chart-container .p-organizationchart-node.text-black a {\n  color: #000000 !important;\n}\n/*# sourceMappingURL=topic-ia-json.component.css.map */\n"] }]
+  @if (brokenLinks.length === 0) {
+    <p>
+      No broken links found on this page
+      @if (iaChart[0].children?.length) {
+        <span> or on any detected child pages</span>
+      }
+      .
+    </p>
+  }
+  @if (brokenLinks.length > 0) {
+    <p-table
+      [value]="brokenLinks"
+      size="small"
+      stripedRows
+      [tableStyle]="{ 'min-width': '50rem' }"
+    >
+      <ng-template #header>
+        <tr>
+          <th>Parent page</th>
+          <th>Broken link</th>
+          <th>Status</th>
+        </tr>
+      </ng-template>
+      <ng-template #body let-rowData>
+        <tr>
+          <td>{{ rowData.parentUrl }}</td>
+          <td>{{ rowData.url }}</td>
+          <td>{{ rowData.status }}</td>
+        </tr>
+      </ng-template>
+    </p-table>
+  }
+}
+`, styles: ["/* angular:styles/component:css;00c1e12e642d8a2501919a0f6b2cf3d94637ec54021bd888f19fdbc52ce3b7a7;C:/my-working-files/GitHub/design-assistant/src/app/views/page-assistant/components/problems/component-guidance/topic-page/topic-ia-json.component.ts */\n.ia-label {\n  white-space: pre-line;\n  display: inline-block;\n  color: var(--text-color) !important;\n  text-decoration: none !important;\n}\n::ng-deep .p-tree li[class*=text-white] > .p-tree-node-content .ia-label {\n  color: #ffffff !important;\n}\n::ng-deep .p-tree li[class*=text-black] > .p-tree-node-content .ia-label {\n  color: #000000 !important;\n}\n::ng-deep .p-tree .p-tree-node-content:hover {\n  background-color: unset !important;\n}\n:host ::ng-deep .topic-ia-steps .topic-ia-step-list {\n  display: grid;\n  grid-template-columns: repeat(4, minmax(0, 1fr));\n  gap: 0.5rem;\n  margin: 0;\n}\n@media (max-width: 1500px) {\n  :host ::ng-deep .topic-ia-steps .topic-ia-step-list {\n    grid-template-columns: minmax(0, 1fr);\n    gap: 0.1rem;\n  }\n}\n@media (max-width: 1500px) {\n  :host ::ng-deep .topic-ia-steps .p-step-header {\n    padding: 0;\n  }\n  :host ::ng-deep .topic-ia-steps .p-stepper-separator {\n    margin: 0;\n  }\n}\n:host ::ng-deep .topic-ia-steps {\n  margin-bottom: 0;\n}\n:host ::ng-deep .topic-ia-steps .p-step-title {\n  font-weight: 600;\n  font-size: 1.02rem;\n}\n:host ::ng-deep .topic-ia-steps .topic-ia-step-list .p-step {\n  justify-content: flex-start;\n  text-align: left;\n  width: 100%;\n}\n:host ::ng-deep .topic-ia-panels {\n  display: grid;\n  grid-template-columns: repeat(4, minmax(0, 1fr));\n  gap: 1rem;\n  margin-top: 0.75rem;\n}\n@media (max-width: 1500px) {\n  :host ::ng-deep .topic-ia-panels {\n    grid-template-columns: repeat(2, minmax(0, 1fr));\n  }\n}\n@media (max-width: 1000px) {\n  :host ::ng-deep .topic-ia-panels {\n    grid-template-columns: minmax(0, 1fr);\n  }\n}\n::ng-deep .topic-ia-badge {\n  display: inline-block;\n  margin-left: 0.5rem;\n  padding: 0.1rem 0.45rem;\n  border-radius: 9999px;\n  font-size: 0.875rem;\n  font-weight: 600;\n  border: 1px solid #d1d5db;\n  background: #e5e7eb;\n  color: #374151;\n  white-space: nowrap;\n}\n:host-context(.dark-mode) ::ng-deep .topic-ia-badge {\n  border-color: #4b5563;\n  background: #374151;\n  color: #f9fafb;\n}\n::ng-deep .topic-ia-comm-badge {\n  border-color: #93c5fd;\n  background: #dbeafe;\n  color: #1e3a8a;\n}\n:host-context(.dark-mode) ::ng-deep .topic-ia-comm-badge {\n  border-color: #1d4ed8;\n  background: #1e40af;\n  color: #e0e7ff;\n}\n::ng-deep .ia-chart-container .p-organizationchart-node a {\n  color: var(--text-color) !important;\n  text-decoration: none !important;\n}\n::ng-deep .ia-chart-container .p-organizationchart-node.text-white a {\n  color: #ffffff !important;\n}\n::ng-deep .ia-chart-container .p-organizationchart-node.text-black a {\n  color: #000000 !important;\n}\n::ng-deep .topic-ia-chart-container .p-organizationchart-node a {\n  color: var(--text-color) !important;\n  text-decoration: none !important;\n}\n::ng-deep .topic-ia-chart-container .p-organizationchart-node.text-white a {\n  color: #ffffff !important;\n}\n::ng-deep .topic-ia-chart-container .p-organizationchart-node.text-black a {\n  color: #000000 !important;\n}\n/*# sourceMappingURL=topic-ia-json.component.css.map */\n"] }]
   }], () => [], { chartContainer: [{
     type: ViewChild,
     args: ["chartContainer"]
@@ -37331,30 +37789,30 @@ var TopicIaJsonComponent = class _TopicIaJsonComponent {
   }] });
 })();
 (() => {
-  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(TopicIaJsonComponent, { className: "TopicIaJsonComponent", filePath: "src/app/views/page-assistant/components/problems/component-guidance/topic-page/topic-ia-json.component.ts", lineNumber: 217 });
+  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(TopicIaJsonComponent, { className: "TopicIaJsonComponent", filePath: "src/app/views/page-assistant/components/problems/component-guidance/topic-page/topic-ia-json.component.ts", lineNumber: 234 });
 })();
 
 // src/app/views/page-assistant/components/problems.component.ts
-function PageProblemsComponent_p_accordion_panel_3_span_4_Template(rf, ctx) {
+function PageProblemsComponent_Conditional_3_Conditional_4_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275element(0, "span", 8);
+    \u0275\u0275element(0, "span", 4);
   }
 }
-function PageProblemsComponent_p_accordion_panel_3_p_5_Template(rf, ctx) {
+function PageProblemsComponent_Conditional_3_Conditional_5_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275elementStart(0, "p", 9);
+    \u0275\u0275elementStart(0, "p", 5);
     \u0275\u0275text(1, " View or reorganize your heading structure. ");
     \u0275\u0275elementEnd();
   }
 }
-function PageProblemsComponent_p_accordion_panel_3_Template(rf, ctx) {
+function PageProblemsComponent_Conditional_3_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275elementStart(0, "p-accordion-panel", 7)(1, "p-accordion-header");
+    \u0275\u0275elementStart(0, "p-accordion-panel", 1)(1, "p-accordion-header");
     \u0275\u0275text(2, "Heading structure ");
     \u0275\u0275element(3, "span", 3);
-    \u0275\u0275template(4, PageProblemsComponent_p_accordion_panel_3_span_4_Template, 1, 0, "span", 4);
+    \u0275\u0275template(4, PageProblemsComponent_Conditional_3_Conditional_4_Template, 1, 0, "span", 4);
     \u0275\u0275elementEnd();
-    \u0275\u0275template(5, PageProblemsComponent_p_accordion_panel_3_p_5_Template, 2, 0, "p", 5);
+    \u0275\u0275template(5, PageProblemsComponent_Conditional_3_Conditional_5_Template, 2, 0, "p", 5);
     \u0275\u0275elementStart(6, "p-accordion-content");
     \u0275\u0275element(7, "ca-heading-structure");
     \u0275\u0275elementEnd()();
@@ -37363,43 +37821,43 @@ function PageProblemsComponent_p_accordion_panel_3_Template(rf, ctx) {
     const ctx_r0 = \u0275\u0275nextContext();
     \u0275\u0275property("value", 0);
     \u0275\u0275advance(4);
-    \u0275\u0275property("ngIf", ctx_r0.flags.headingStructure);
+    \u0275\u0275conditional(ctx_r0.flags.headingStructure ? 4 : -1);
     \u0275\u0275advance();
-    \u0275\u0275property("ngIf", !ctx_r0.isPanelOpen(0));
+    \u0275\u0275conditional(!ctx_r0.isPanelOpen(0) ? 5 : -1);
   }
 }
-function PageProblemsComponent_span_8_Template(rf, ctx) {
+function PageProblemsComponent_Conditional_8_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275element(0, "span", 8);
+    \u0275\u0275element(0, "span", 4);
   }
 }
-function PageProblemsComponent_p_9_Template(rf, ctx) {
+function PageProblemsComponent_Conditional_9_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275elementStart(0, "p", 9);
+    \u0275\u0275elementStart(0, "p", 5);
     \u0275\u0275text(1, " Find guidance on the components used on your page and check for deprecated code or unexpected classes or elements. ");
     \u0275\u0275elementEnd();
   }
 }
-function PageProblemsComponent_p_accordion_panel_12_span_4_Template(rf, ctx) {
+function PageProblemsComponent_Conditional_12_Conditional_4_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275element(0, "span", 8);
+    \u0275\u0275element(0, "span", 4);
   }
 }
-function PageProblemsComponent_p_accordion_panel_12_p_5_Template(rf, ctx) {
+function PageProblemsComponent_Conditional_12_Conditional_5_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275elementStart(0, "p", 9);
+    \u0275\u0275elementStart(0, "p", 5);
     \u0275\u0275text(1, " Improve or create a topic using a crawl of the IA structure and associated page visits. ");
     \u0275\u0275elementEnd();
   }
 }
-function PageProblemsComponent_p_accordion_panel_12_Template(rf, ctx) {
+function PageProblemsComponent_Conditional_12_Template(rf, ctx) {
   if (rf & 1) {
     \u0275\u0275elementStart(0, "p-accordion-panel", 2)(1, "p-accordion-header");
     \u0275\u0275text(2, "Topic IA (JSON) ");
     \u0275\u0275element(3, "span", 3);
-    \u0275\u0275template(4, PageProblemsComponent_p_accordion_panel_12_span_4_Template, 1, 0, "span", 4);
+    \u0275\u0275template(4, PageProblemsComponent_Conditional_12_Conditional_4_Template, 1, 0, "span", 4);
     \u0275\u0275elementEnd();
-    \u0275\u0275template(5, PageProblemsComponent_p_accordion_panel_12_p_5_Template, 2, 0, "p", 5);
+    \u0275\u0275template(5, PageProblemsComponent_Conditional_12_Conditional_5_Template, 2, 0, "p", 5);
     \u0275\u0275elementStart(6, "p-accordion-content");
     \u0275\u0275element(7, "ca-topic-ia-json");
     \u0275\u0275elementEnd()();
@@ -37408,31 +37866,31 @@ function PageProblemsComponent_p_accordion_panel_12_Template(rf, ctx) {
     const ctx_r0 = \u0275\u0275nextContext();
     \u0275\u0275property("value", 2);
     \u0275\u0275advance(4);
-    \u0275\u0275property("ngIf", ctx_r0.flags.iaStructure);
+    \u0275\u0275conditional(ctx_r0.flags.iaStructure ? 4 : -1);
     \u0275\u0275advance();
-    \u0275\u0275property("ngIf", !ctx_r0.isPanelOpen(2));
+    \u0275\u0275conditional(!ctx_r0.isPanelOpen(2) ? 5 : -1);
   }
 }
-function PageProblemsComponent_p_accordion_panel_13_span_4_Template(rf, ctx) {
+function PageProblemsComponent_Conditional_13_Conditional_4_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275element(0, "span", 8);
+    \u0275\u0275element(0, "span", 4);
   }
 }
-function PageProblemsComponent_p_accordion_panel_13_p_5_Template(rf, ctx) {
+function PageProblemsComponent_Conditional_13_Conditional_5_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275elementStart(0, "p", 9);
+    \u0275\u0275elementStart(0, "p", 5);
     \u0275\u0275text(1, " Add doormat text. ");
     \u0275\u0275elementEnd();
   }
 }
-function PageProblemsComponent_p_accordion_panel_13_Template(rf, ctx) {
+function PageProblemsComponent_Conditional_13_Template(rf, ctx) {
   if (rf & 1) {
     \u0275\u0275elementStart(0, "p-accordion-panel", 2)(1, "p-accordion-header");
     \u0275\u0275text(2, "SEO ");
     \u0275\u0275element(3, "span", 3);
-    \u0275\u0275template(4, PageProblemsComponent_p_accordion_panel_13_span_4_Template, 1, 0, "span", 4);
+    \u0275\u0275template(4, PageProblemsComponent_Conditional_13_Conditional_4_Template, 1, 0, "span", 4);
     \u0275\u0275elementEnd();
-    \u0275\u0275template(5, PageProblemsComponent_p_accordion_panel_13_p_5_Template, 2, 0, "p", 5);
+    \u0275\u0275template(5, PageProblemsComponent_Conditional_13_Conditional_5_Template, 2, 0, "p", 5);
     \u0275\u0275elementStart(6, "p-accordion-content");
     \u0275\u0275element(7, "ca-seo");
     \u0275\u0275elementEnd()();
@@ -37441,31 +37899,31 @@ function PageProblemsComponent_p_accordion_panel_13_Template(rf, ctx) {
     const ctx_r0 = \u0275\u0275nextContext();
     \u0275\u0275property("value", 3);
     \u0275\u0275advance(4);
-    \u0275\u0275property("ngIf", ctx_r0.flags.seo);
+    \u0275\u0275conditional(ctx_r0.flags.seo ? 4 : -1);
     \u0275\u0275advance();
-    \u0275\u0275property("ngIf", !ctx_r0.isPanelOpen(3));
+    \u0275\u0275conditional(!ctx_r0.isPanelOpen(3) ? 5 : -1);
   }
 }
-function PageProblemsComponent_p_accordion_panel_14_span_4_Template(rf, ctx) {
+function PageProblemsComponent_Conditional_14_Conditional_4_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275element(0, "span", 8);
+    \u0275\u0275element(0, "span", 4);
   }
 }
-function PageProblemsComponent_p_accordion_panel_14_p_5_Template(rf, ctx) {
+function PageProblemsComponent_Conditional_14_Conditional_5_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275elementStart(0, "p", 9);
+    \u0275\u0275elementStart(0, "p", 5);
     \u0275\u0275text(1, " Add doormat text. ");
     \u0275\u0275elementEnd();
   }
 }
-function PageProblemsComponent_p_accordion_panel_14_Template(rf, ctx) {
+function PageProblemsComponent_Conditional_14_Template(rf, ctx) {
   if (rf & 1) {
     \u0275\u0275elementStart(0, "p-accordion-panel", 2)(1, "p-accordion-header");
     \u0275\u0275text(2, "User insights ");
     \u0275\u0275element(3, "span", 3);
-    \u0275\u0275template(4, PageProblemsComponent_p_accordion_panel_14_span_4_Template, 1, 0, "span", 4);
+    \u0275\u0275template(4, PageProblemsComponent_Conditional_14_Conditional_4_Template, 1, 0, "span", 4);
     \u0275\u0275elementEnd();
-    \u0275\u0275template(5, PageProblemsComponent_p_accordion_panel_14_p_5_Template, 2, 0, "p", 5);
+    \u0275\u0275template(5, PageProblemsComponent_Conditional_14_Conditional_5_Template, 2, 0, "p", 5);
     \u0275\u0275elementStart(6, "p-accordion-content");
     \u0275\u0275element(7, "ca-user-insights");
     \u0275\u0275elementEnd()();
@@ -37474,34 +37932,34 @@ function PageProblemsComponent_p_accordion_panel_14_Template(rf, ctx) {
     const ctx_r0 = \u0275\u0275nextContext();
     \u0275\u0275property("value", 4);
     \u0275\u0275advance(4);
-    \u0275\u0275property("ngIf", ctx_r0.flags.userInsights);
+    \u0275\u0275conditional(ctx_r0.flags.userInsights ? 4 : -1);
     \u0275\u0275advance();
-    \u0275\u0275property("ngIf", !ctx_r0.isPanelOpen(4));
+    \u0275\u0275conditional(!ctx_r0.isPanelOpen(4) ? 5 : -1);
   }
 }
-function PageProblemsComponent_p_accordion_panel_15_span_4_Template(rf, ctx) {
+function PageProblemsComponent_Conditional_15_Conditional_4_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275element(0, "span", 8);
+    \u0275\u0275element(0, "span", 4);
   }
 }
-function PageProblemsComponent_p_accordion_panel_15_p_5_Template(rf, ctx) {
+function PageProblemsComponent_Conditional_15_Conditional_5_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275elementStart(0, "p", 9);
+    \u0275\u0275elementStart(0, "p", 5);
     \u0275\u0275text(1, " Check link text vs destination content, flag duplicate destinations and 404 page. ");
     \u0275\u0275elementEnd();
   }
 }
-function PageProblemsComponent_p_accordion_panel_15_Template(rf, ctx) {
+function PageProblemsComponent_Conditional_15_Template(rf, ctx) {
   if (rf & 1) {
     const _r2 = \u0275\u0275getCurrentView();
     \u0275\u0275elementStart(0, "p-accordion-panel", 2)(1, "p-accordion-header");
     \u0275\u0275text(2, "Link report ");
     \u0275\u0275element(3, "span", 3);
-    \u0275\u0275template(4, PageProblemsComponent_p_accordion_panel_15_span_4_Template, 1, 0, "span", 4);
+    \u0275\u0275template(4, PageProblemsComponent_Conditional_15_Conditional_4_Template, 1, 0, "span", 4);
     \u0275\u0275elementEnd();
-    \u0275\u0275template(5, PageProblemsComponent_p_accordion_panel_15_p_5_Template, 2, 0, "p", 5);
-    \u0275\u0275elementStart(6, "p-accordion-content")(7, "ca-link-report", 10);
-    \u0275\u0275listener("hasProblemsChange", function PageProblemsComponent_p_accordion_panel_15_Template_ca_link_report_hasProblemsChange_7_listener($event) {
+    \u0275\u0275template(5, PageProblemsComponent_Conditional_15_Conditional_5_Template, 2, 0, "p", 5);
+    \u0275\u0275elementStart(6, "p-accordion-content")(7, "ca-link-report", 6);
+    \u0275\u0275listener("hasProblemsChange", function PageProblemsComponent_Conditional_15_Template_ca_link_report_hasProblemsChange_7_listener($event) {
       \u0275\u0275restoreView(_r2);
       const ctx_r0 = \u0275\u0275nextContext();
       return \u0275\u0275resetView(ctx_r0.onFeatureProblem("linkReport", $event));
@@ -37512,31 +37970,31 @@ function PageProblemsComponent_p_accordion_panel_15_Template(rf, ctx) {
     const ctx_r0 = \u0275\u0275nextContext();
     \u0275\u0275property("value", 5);
     \u0275\u0275advance(4);
-    \u0275\u0275property("ngIf", ctx_r0.flags.linkReport);
+    \u0275\u0275conditional(ctx_r0.flags.linkReport ? 4 : -1);
     \u0275\u0275advance();
-    \u0275\u0275property("ngIf", !ctx_r0.isPanelOpen(5));
+    \u0275\u0275conditional(!ctx_r0.isPanelOpen(5) ? 5 : -1);
   }
 }
-function PageProblemsComponent_p_accordion_panel_16_span_4_Template(rf, ctx) {
+function PageProblemsComponent_Conditional_16_Conditional_4_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275element(0, "span", 8);
+    \u0275\u0275element(0, "span", 4);
   }
 }
-function PageProblemsComponent_p_accordion_panel_16_p_5_Template(rf, ctx) {
+function PageProblemsComponent_Conditional_16_Conditional_5_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275elementStart(0, "p", 9);
+    \u0275\u0275elementStart(0, "p", 5);
     \u0275\u0275text(1, " Add doormat text. ");
     \u0275\u0275elementEnd();
   }
 }
-function PageProblemsComponent_p_accordion_panel_16_Template(rf, ctx) {
+function PageProblemsComponent_Conditional_16_Template(rf, ctx) {
   if (rf & 1) {
     \u0275\u0275elementStart(0, "p-accordion-panel", 2)(1, "p-accordion-header");
     \u0275\u0275text(2, "IA structure ");
     \u0275\u0275element(3, "span", 3);
-    \u0275\u0275template(4, PageProblemsComponent_p_accordion_panel_16_span_4_Template, 1, 0, "span", 4);
+    \u0275\u0275template(4, PageProblemsComponent_Conditional_16_Conditional_4_Template, 1, 0, "span", 4);
     \u0275\u0275elementEnd();
-    \u0275\u0275template(5, PageProblemsComponent_p_accordion_panel_16_p_5_Template, 2, 0, "p", 5);
+    \u0275\u0275template(5, PageProblemsComponent_Conditional_16_Conditional_5_Template, 2, 0, "p", 5);
     \u0275\u0275elementStart(6, "p-accordion-content");
     \u0275\u0275element(7, "ca-ia-structure");
     \u0275\u0275elementEnd()();
@@ -37545,31 +38003,31 @@ function PageProblemsComponent_p_accordion_panel_16_Template(rf, ctx) {
     const ctx_r0 = \u0275\u0275nextContext();
     \u0275\u0275property("value", 6);
     \u0275\u0275advance(4);
-    \u0275\u0275property("ngIf", ctx_r0.flags.iaStructure);
+    \u0275\u0275conditional(ctx_r0.flags.iaStructure ? 4 : -1);
     \u0275\u0275advance();
-    \u0275\u0275property("ngIf", !ctx_r0.isPanelOpen(6));
+    \u0275\u0275conditional(!ctx_r0.isPanelOpen(6) ? 5 : -1);
   }
 }
-function PageProblemsComponent_p_accordion_panel_17_span_4_Template(rf, ctx) {
+function PageProblemsComponent_Conditional_17_Conditional_4_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275element(0, "span", 8);
+    \u0275\u0275element(0, "span", 4);
   }
 }
-function PageProblemsComponent_p_accordion_panel_17_p_5_Template(rf, ctx) {
+function PageProblemsComponent_Conditional_17_Conditional_5_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275elementStart(0, "p", 9);
+    \u0275\u0275elementStart(0, "p", 5);
     \u0275\u0275text(1, " Improve or create a topic using a crawl of the IA structure and associated page visits. ");
     \u0275\u0275elementEnd();
   }
 }
-function PageProblemsComponent_p_accordion_panel_17_Template(rf, ctx) {
+function PageProblemsComponent_Conditional_17_Template(rf, ctx) {
   if (rf & 1) {
     \u0275\u0275elementStart(0, "p-accordion-panel", 2)(1, "p-accordion-header");
     \u0275\u0275text(2, "Topic page IA (Manual UPD steps) ");
     \u0275\u0275element(3, "span", 3);
-    \u0275\u0275template(4, PageProblemsComponent_p_accordion_panel_17_span_4_Template, 1, 0, "span", 4);
+    \u0275\u0275template(4, PageProblemsComponent_Conditional_17_Conditional_4_Template, 1, 0, "span", 4);
     \u0275\u0275elementEnd();
-    \u0275\u0275template(5, PageProblemsComponent_p_accordion_panel_17_p_5_Template, 2, 0, "p", 5);
+    \u0275\u0275template(5, PageProblemsComponent_Conditional_17_Conditional_5_Template, 2, 0, "p", 5);
     \u0275\u0275elementStart(6, "p-accordion-content");
     \u0275\u0275element(7, "ca-topic-page-ia");
     \u0275\u0275elementEnd()();
@@ -37578,9 +38036,9 @@ function PageProblemsComponent_p_accordion_panel_17_Template(rf, ctx) {
     const ctx_r0 = \u0275\u0275nextContext();
     \u0275\u0275property("value", 7);
     \u0275\u0275advance(4);
-    \u0275\u0275property("ngIf", ctx_r0.flags.iaStructure);
+    \u0275\u0275conditional(ctx_r0.flags.iaStructure ? 4 : -1);
     \u0275\u0275advance();
-    \u0275\u0275property("ngIf", !ctx_r0.isPanelOpen(7));
+    \u0275\u0275conditional(!ctx_r0.isPanelOpen(7) ? 5 : -1);
   }
 }
 var PageProblemsComponent = class _PageProblemsComponent {
@@ -37609,7 +38067,7 @@ var PageProblemsComponent = class _PageProblemsComponent {
   static \u0275fac = function PageProblemsComponent_Factory(__ngFactoryType__) {
     return new (__ngFactoryType__ || _PageProblemsComponent)();
   };
-  static \u0275cmp = /* @__PURE__ */ \u0275\u0275defineComponent({ type: _PageProblemsComponent, selectors: [["ca-page-problems"]], outputs: { summary: "summary" }, decls: 18, vars: 12, consts: [[1, "flex", "flex-column", "gap-3", 3, "valueChange", "value", "multiple"], ["class", "border-1 border-round-md border-surface", 3, "value", 4, "ngIf"], [1, "border-1", "border-round-sm", "border-surface", 3, "value"], [1, "flex-spacer"], ["class", "feature-badge", "aria-label", "Issues found", 4, "ngIf"], ["class", "mt-0 ml-4 text-color-secondary", 4, "ngIf"], ["class", "border-1 border-round-sm border-surface", 3, "value", 4, "ngIf"], [1, "border-1", "border-round-md", "border-surface", 3, "value"], ["aria-label", "Issues found", 1, "feature-badge"], [1, "mt-0", "ml-4", "text-color-secondary"], [3, "hasProblemsChange"]], template: function PageProblemsComponent_Template(rf, ctx) {
+  static \u0275cmp = /* @__PURE__ */ \u0275\u0275defineComponent({ type: _PageProblemsComponent, selectors: [["ca-page-problems"]], outputs: { summary: "summary" }, decls: 18, vars: 12, consts: [[1, "flex", "flex-column", "gap-3", 3, "valueChange", "value", "multiple"], [1, "border-1", "border-round-md", "border-surface", 3, "value"], [1, "border-1", "border-round-sm", "border-surface", 3, "value"], [1, "flex-spacer"], ["aria-label", "Issues found", 1, "feature-badge"], [1, "mt-0", "ml-4", "text-color-secondary"], [3, "hasProblemsChange"]], template: function PageProblemsComponent_Template(rf, ctx) {
     if (rf & 1) {
       \u0275\u0275elementStart(0, "p");
       \u0275\u0275text(1, " Use these tools to analyze and improve your web page. You can restructure headings, generate an IA diagram, find guidance on the components used in your page, integrate SEO and user insights into your updates, check your link quality, or convert your page to a different template.\n");
@@ -37619,17 +38077,17 @@ var PageProblemsComponent = class _PageProblemsComponent {
         \u0275\u0275twoWayBindingSet(ctx.activePanels, $event) || (ctx.activePanels = $event);
         return $event;
       });
-      \u0275\u0275template(3, PageProblemsComponent_p_accordion_panel_3_Template, 8, 3, "p-accordion-panel", 1);
+      \u0275\u0275template(3, PageProblemsComponent_Conditional_3_Template, 8, 3, "p-accordion-panel", 1);
       \u0275\u0275elementStart(4, "p-accordion-panel", 2)(5, "p-accordion-header");
       \u0275\u0275text(6, "Component guidance ");
       \u0275\u0275element(7, "span", 3);
-      \u0275\u0275template(8, PageProblemsComponent_span_8_Template, 1, 0, "span", 4);
+      \u0275\u0275template(8, PageProblemsComponent_Conditional_8_Template, 1, 0, "span", 4);
       \u0275\u0275elementEnd();
-      \u0275\u0275template(9, PageProblemsComponent_p_9_Template, 2, 0, "p", 5);
+      \u0275\u0275template(9, PageProblemsComponent_Conditional_9_Template, 2, 0, "p", 5);
       \u0275\u0275elementStart(10, "p-accordion-content");
       \u0275\u0275element(11, "ca-component-guidance");
       \u0275\u0275elementEnd()();
-      \u0275\u0275template(12, PageProblemsComponent_p_accordion_panel_12_Template, 8, 3, "p-accordion-panel", 6)(13, PageProblemsComponent_p_accordion_panel_13_Template, 8, 3, "p-accordion-panel", 6)(14, PageProblemsComponent_p_accordion_panel_14_Template, 8, 3, "p-accordion-panel", 6)(15, PageProblemsComponent_p_accordion_panel_15_Template, 8, 3, "p-accordion-panel", 6)(16, PageProblemsComponent_p_accordion_panel_16_Template, 8, 3, "p-accordion-panel", 6)(17, PageProblemsComponent_p_accordion_panel_17_Template, 8, 3, "p-accordion-panel", 6);
+      \u0275\u0275template(12, PageProblemsComponent_Conditional_12_Template, 8, 3, "p-accordion-panel", 2)(13, PageProblemsComponent_Conditional_13_Template, 8, 3, "p-accordion-panel", 2)(14, PageProblemsComponent_Conditional_14_Template, 8, 3, "p-accordion-panel", 2)(15, PageProblemsComponent_Conditional_15_Template, 8, 3, "p-accordion-panel", 2)(16, PageProblemsComponent_Conditional_16_Template, 8, 3, "p-accordion-panel", 2)(17, PageProblemsComponent_Conditional_17_Template, 8, 3, "p-accordion-panel", 2);
       \u0275\u0275elementEnd();
     }
     if (rf & 2) {
@@ -37637,29 +38095,28 @@ var PageProblemsComponent = class _PageProblemsComponent {
       \u0275\u0275twoWayProperty("value", ctx.activePanels);
       \u0275\u0275property("multiple", true);
       \u0275\u0275advance();
-      \u0275\u0275property("ngIf", !ctx.production);
+      \u0275\u0275conditional(!ctx.production ? 3 : -1);
       \u0275\u0275advance();
       \u0275\u0275property("value", 1);
       \u0275\u0275advance(4);
-      \u0275\u0275property("ngIf", ctx.flags.componentGuidance);
+      \u0275\u0275conditional(ctx.flags.componentGuidance ? 8 : -1);
       \u0275\u0275advance();
-      \u0275\u0275property("ngIf", !ctx.isPanelOpen(1));
+      \u0275\u0275conditional(!ctx.isPanelOpen(1) ? 9 : -1);
       \u0275\u0275advance(3);
-      \u0275\u0275property("ngIf", !ctx.production);
+      \u0275\u0275conditional(!ctx.production ? 12 : -1);
       \u0275\u0275advance();
-      \u0275\u0275property("ngIf", !ctx.production);
+      \u0275\u0275conditional(!ctx.production ? 13 : -1);
       \u0275\u0275advance();
-      \u0275\u0275property("ngIf", !ctx.production);
+      \u0275\u0275conditional(!ctx.production ? 14 : -1);
       \u0275\u0275advance();
-      \u0275\u0275property("ngIf", !ctx.production);
+      \u0275\u0275conditional(!ctx.production ? 15 : -1);
       \u0275\u0275advance();
-      \u0275\u0275property("ngIf", !ctx.production);
+      \u0275\u0275conditional(!ctx.production ? 16 : -1);
       \u0275\u0275advance();
-      \u0275\u0275property("ngIf", !ctx.production);
+      \u0275\u0275conditional(!ctx.production ? 17 : -1);
     }
   }, dependencies: [
     CommonModule,
-    NgIf,
     TranslateModule,
     AccordionModule,
     Accordion,
@@ -37705,185 +38162,192 @@ var PageProblemsComponent = class _PageProblemsComponent {
   [multiple]="true"\r
   class="flex flex-column gap-3"\r
 >\r
-  <p-accordion-panel\r
-    [value]="0"\r
-    class="border-1 border-round-md border-surface"\r
-    *ngIf="!production"\r
-  >\r
-    <p-accordion-header\r
-      >Heading structure\r
-      <span class="flex-spacer"></span>\r
-      <span\r
-        class="feature-badge"\r
-        *ngIf="flags.headingStructure"\r
-        aria-label="Issues found"\r
-      ></span>\r
-    </p-accordion-header>\r
-    <p class="mt-0 ml-4 text-color-secondary" *ngIf="!isPanelOpen(0)">\r
-      View or reorganize your heading structure.\r
-    </p>\r
-    <p-accordion-content>\r
-      <ca-heading-structure></ca-heading-structure>\r
-    </p-accordion-content>\r
-  </p-accordion-panel>\r
+  @if (!production) {
+    <p-accordion-panel
+      [value]="0"
+      class="border-1 border-round-md border-surface"
+    >
+    <p-accordion-header
+      >Heading structure
+      <span class="flex-spacer"></span>
+      @if (flags.headingStructure) {
+        <span class="feature-badge" aria-label="Issues found"></span>
+      }
+    </p-accordion-header>
+    @if (!isPanelOpen(0)) {
+      <p class="mt-0 ml-4 text-color-secondary">
+        View or reorganize your heading structure.
+      </p>
+    }
+    <p-accordion-content>
+      <ca-heading-structure></ca-heading-structure>
+    </p-accordion-content>
+    </p-accordion-panel>
+  }
 \r
   <p-accordion-panel\r
     [value]="1"\r
     class="border-1 border-round-sm border-surface"\r
   >\r
-    <p-accordion-header\r
-      >Component guidance\r
-      <span class="flex-spacer"></span>\r
-      <span\r
-        class="feature-badge"\r
-        *ngIf="flags.componentGuidance"\r
-        aria-label="Issues found"\r
-      ></span>\r
-    </p-accordion-header>\r
-    <p class="mt-0 ml-4 text-color-secondary" *ngIf="!isPanelOpen(1)">\r
-      Find guidance on the components used on your page and check for deprecated\r
-      code or unexpected classes or elements.\r
-    </p>\r
-    <p-accordion-content>\r
-      <ca-component-guidance></ca-component-guidance>\r
-    </p-accordion-content>\r
-  </p-accordion-panel>\r
-\r
-  <p-accordion-panel\r
-    [value]="2"\r
-    class="border-1 border-round-sm border-surface"\r
-    *ngIf="!production"\r
-  >\r
-    <p-accordion-header\r
-      >Topic IA (JSON)\r
-      <span class="flex-spacer"></span>\r
-      <span\r
-        class="feature-badge"\r
-        *ngIf="flags.iaStructure"\r
-        aria-label="Issues found"\r
-      ></span>\r
-    </p-accordion-header>\r
-    <p class="mt-0 ml-4 text-color-secondary" *ngIf="!isPanelOpen(2)">\r
-      Improve or create a topic using a crawl of the IA structure and associated page visits.\r
-    </p>\r
-    <p-accordion-content>\r
-      <ca-topic-ia-json></ca-topic-ia-json>\r
-    </p-accordion-content>\r
-  </p-accordion-panel>\r
-\r
-  <p-accordion-panel\r
-    [value]="3"\r
-    class="border-1 border-round-sm border-surface"\r
-    *ngIf="!production"\r
-  >\r
-    <p-accordion-header\r
-      >SEO\r
-      <span class="flex-spacer"></span>\r
-      <span\r
-        class="feature-badge"\r
-        *ngIf="flags.seo"\r
-        aria-label="Issues found"\r
-      ></span>\r
-    </p-accordion-header>\r
-    <p class="mt-0 ml-4 text-color-secondary" *ngIf="!isPanelOpen(3)">\r
-      Add doormat text.\r
-    </p>\r
-    <p-accordion-content>\r
-      <ca-seo></ca-seo>\r
-    </p-accordion-content>\r
-  </p-accordion-panel>\r
-\r
-  <p-accordion-panel\r
-    [value]="4"\r
-    class="border-1 border-round-sm border-surface"\r
-    *ngIf="!production"\r
-  >\r
-    <p-accordion-header\r
-      >User insights\r
-      <span class="flex-spacer"></span>\r
-      <span\r
-        class="feature-badge"\r
-        *ngIf="flags.userInsights"\r
-        aria-label="Issues found"\r
-      ></span>\r
-    </p-accordion-header>\r
-    <p class="mt-0 ml-4 text-color-secondary" *ngIf="!isPanelOpen(4)">\r
-      Add doormat text.\r
-    </p>\r
-    <p-accordion-content>\r
-      <ca-user-insights></ca-user-insights>\r
-    </p-accordion-content>\r
-  </p-accordion-panel>\r
-\r
-  <p-accordion-panel\r
-    [value]="5"\r
-    class="border-1 border-round-sm border-surface"\r
-    *ngIf="!production"\r
-  >\r
-    <p-accordion-header\r
-      >Link report\r
-      <span class="flex-spacer"></span>\r
-      <span\r
-        class="feature-badge"\r
-        *ngIf="flags.linkReport"\r
-        aria-label="Issues found"\r
-      ></span>\r
-    </p-accordion-header>\r
-    <p class="mt-0 ml-4 text-color-secondary" *ngIf="!isPanelOpen(5)">\r
-      Check link text vs destination content, flag duplicate destinations and\r
-      404 page.\r
-    </p>\r
-    <p-accordion-content>\r
-      <ca-link-report\r
-        (hasProblemsChange)="onFeatureProblem('linkReport', $event)"\r
-      >\r
-      </ca-link-report>\r
-    </p-accordion-content>\r
-  </p-accordion-panel>\r
-\r
-  <p-accordion-panel\r
-    [value]="6"\r
-    class="border-1 border-round-sm border-surface"\r
-    *ngIf="!production"\r
-  >\r
-    <p-accordion-header\r
-      >IA structure\r
-      <span class="flex-spacer"></span>\r
-      <span\r
-        class="feature-badge"\r
-        *ngIf="flags.iaStructure"\r
-        aria-label="Issues found"\r
-      ></span>\r
-    </p-accordion-header>\r
-    <p class="mt-0 ml-4 text-color-secondary" *ngIf="!isPanelOpen(6)">\r
-      Add doormat text.\r
-    </p>\r
-    <p-accordion-content>\r
-      <ca-ia-structure></ca-ia-structure>\r
-    </p-accordion-content>\r
-  </p-accordion-panel>\r
-\r
-  <p-accordion-panel\r
-    [value]="7"\r
-    class="border-1 border-round-sm border-surface"\r
-    *ngIf="!production"\r
-  >\r
-    <p-accordion-header\r
-      >Topic page IA (Manual UPD steps)\r
-      <span class="flex-spacer"></span>\r
-      <span\r
-        class="feature-badge"\r
-        *ngIf="flags.iaStructure"\r
-        aria-label="Issues found"\r
-      ></span>\r
-    </p-accordion-header>\r
-    <p class="mt-0 ml-4 text-color-secondary" *ngIf="!isPanelOpen(7)">\r
-      Improve or create a topic using a crawl of the IA structure and associated page visits.\r
-    </p>\r
-    <p-accordion-content>\r
-      <ca-topic-page-ia></ca-topic-page-ia>\r
-    </p-accordion-content>\r
-  </p-accordion-panel>\r
+    <p-accordion-header
+      >Component guidance
+      <span class="flex-spacer"></span>
+      @if (flags.componentGuidance) {
+        <span class="feature-badge" aria-label="Issues found"></span>
+      }
+    </p-accordion-header>
+    @if (!isPanelOpen(1)) {
+      <p class="mt-0 ml-4 text-color-secondary">
+        Find guidance on the components used on your page and check for deprecated
+        code or unexpected classes or elements.
+      </p>
+    }
+    <p-accordion-content>
+      <ca-component-guidance></ca-component-guidance>
+    </p-accordion-content>
+  </p-accordion-panel>
+
+  @if (!production) {
+    <p-accordion-panel
+      [value]="2"
+      class="border-1 border-round-sm border-surface"
+    >
+    <p-accordion-header
+      >Topic IA (JSON)
+      <span class="flex-spacer"></span>
+      @if (flags.iaStructure) {
+        <span class="feature-badge" aria-label="Issues found"></span>
+      }
+    </p-accordion-header>
+    @if (!isPanelOpen(2)) {
+      <p class="mt-0 ml-4 text-color-secondary">
+        Improve or create a topic using a crawl of the IA structure and associated page visits.
+      </p>
+    }
+    <p-accordion-content>
+      <ca-topic-ia-json></ca-topic-ia-json>
+    </p-accordion-content>
+    </p-accordion-panel>
+  }
+
+  @if (!production) {
+    <p-accordion-panel
+      [value]="3"
+      class="border-1 border-round-sm border-surface"
+    >
+    <p-accordion-header
+      >SEO
+      <span class="flex-spacer"></span>
+      @if (flags.seo) {
+        <span class="feature-badge" aria-label="Issues found"></span>
+      }
+    </p-accordion-header>
+    @if (!isPanelOpen(3)) {
+      <p class="mt-0 ml-4 text-color-secondary">
+        Add doormat text.
+      </p>
+    }
+    <p-accordion-content>
+      <ca-seo></ca-seo>
+    </p-accordion-content>
+    </p-accordion-panel>
+  }
+
+  @if (!production) {
+    <p-accordion-panel
+      [value]="4"
+      class="border-1 border-round-sm border-surface"
+    >
+    <p-accordion-header
+      >User insights
+      <span class="flex-spacer"></span>
+      @if (flags.userInsights) {
+        <span class="feature-badge" aria-label="Issues found"></span>
+      }
+    </p-accordion-header>
+    @if (!isPanelOpen(4)) {
+      <p class="mt-0 ml-4 text-color-secondary">
+        Add doormat text.
+      </p>
+    }
+    <p-accordion-content>
+      <ca-user-insights></ca-user-insights>
+    </p-accordion-content>
+    </p-accordion-panel>
+  }
+
+  @if (!production) {
+    <p-accordion-panel
+      [value]="5"
+      class="border-1 border-round-sm border-surface"
+    >
+    <p-accordion-header
+      >Link report
+      <span class="flex-spacer"></span>
+      @if (flags.linkReport) {
+        <span class="feature-badge" aria-label="Issues found"></span>
+      }
+    </p-accordion-header>
+    @if (!isPanelOpen(5)) {
+      <p class="mt-0 ml-4 text-color-secondary">
+        Check link text vs destination content, flag duplicate destinations and
+        404 page.
+      </p>
+    }
+    <p-accordion-content>
+      <ca-link-report
+        (hasProblemsChange)="onFeatureProblem('linkReport', $event)"
+      >
+      </ca-link-report>
+    </p-accordion-content>
+    </p-accordion-panel>
+  }
+
+  @if (!production) {
+    <p-accordion-panel
+      [value]="6"
+      class="border-1 border-round-sm border-surface"
+    >
+    <p-accordion-header
+      >IA structure
+      <span class="flex-spacer"></span>
+      @if (flags.iaStructure) {
+        <span class="feature-badge" aria-label="Issues found"></span>
+      }
+    </p-accordion-header>
+    @if (!isPanelOpen(6)) {
+      <p class="mt-0 ml-4 text-color-secondary">
+        Add doormat text.
+      </p>
+    }
+    <p-accordion-content>
+      <ca-ia-structure></ca-ia-structure>
+    </p-accordion-content>
+    </p-accordion-panel>
+  }
+
+  @if (!production) {
+    <p-accordion-panel
+      [value]="7"
+      class="border-1 border-round-sm border-surface"
+    >
+    <p-accordion-header
+      >Topic page IA (Manual UPD steps)
+      <span class="flex-spacer"></span>
+      @if (flags.iaStructure) {
+        <span class="feature-badge" aria-label="Issues found"></span>
+      }
+    </p-accordion-header>
+    @if (!isPanelOpen(7)) {
+      <p class="mt-0 ml-4 text-color-secondary">
+        Improve or create a topic using a crawl of the IA structure and associated page visits.
+      </p>
+    }
+    <p-accordion-content>
+      <ca-topic-page-ia></ca-topic-page-ia>
+    </p-accordion-content>
+    </p-accordion-panel>
+  }
 \r
 </p-accordion>\r
 `, styles: ["/* angular:styles/component:css;6b9035aeccebb8e4c84e29a4b5f612916f33954446739eb3118b52eabe00dd4a;C:/my-working-files/GitHub/design-assistant/src/app/views/page-assistant/components/problems.component.ts */\n:host ::ng-deep .p-accordion-header-content {\n  display: flex;\n  align-items: center;\n}\n.flex-spacer {\n  flex: 1 1 auto;\n}\n.feature-badge {\n  width: 1rem;\n  height: 1rem;\n  border-radius: 9999px;\n  background: #ef4444;\n  margin-right: 0.25rem;\n  display: inline-block;\n  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.06) inset;\n}\n/*# sourceMappingURL=problems.component.css.map */\n"] }]
@@ -39887,4 +40351,4 @@ ${base}`;
 export {
   PageAssistantCompareComponent
 };
-//# sourceMappingURL=chunk-KFA5CT72.js.map
+//# sourceMappingURL=chunk-DLTRM63Y.js.map

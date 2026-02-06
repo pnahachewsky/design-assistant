@@ -1,0 +1,86 @@
+<div class="container">
+  <div class="row">
+    <div class="col-md-6">
+      <hgroup id="wb-cont">
+        <p>{{section_title}}</p>
+        <h1>{{topic_title}}</h1>
+      </hgroup>
+      {{rescue_link}}
+      {{alerts_block}}
+      <p>1-2 sentences that describe the topics and top tasks that can be accessed on this page.</p>
+    </div>
+    <div class="col-md-6 hidden-sm hidden-xs">
+      <img
+        src="https://dummyimage.com/520x200/000000/FFFFFF.png"
+        alt=""
+        class="img-responsive pull-right mrgn-tp-lg"
+      />
+    </div>
+  </div>
+</div>
+{{most_requested_section}}
+<div class="container">
+  <section class="gc-srvinfo">
+    <h2 class="wb-inv">Services and information</h2>
+    <div class="row wb-eqht-grd">
+      {{services_items}}
+    </div>
+  </section>
+</div>
+{{focus_section_start}}
+<div class="well well-sm brdr-0 brdr-rds-0 mrgn-tp-lg">
+  <div class="container">
+    <h2 class="mrgn-tp-md h3">Focus on</h2>
+    <ul class="mrgn-tp-md mrgn-bttm-md colcount-md-2 lead">
+      {{focus_items}}
+    </ul>
+  </div>
+</div>
+{{focus_section_end}}
+<div class="container">
+  {{feature_row_start}}
+    {{features_section}}
+    {{social_col_start}}
+      <section class="gc-followus">
+        <h2>On social media</h2>
+        <ul>
+          <li>
+            <a href="#facebook" class="facebook wb-lbx"><span class="wb-inv">Facebook: </span>FacebookPageName</a>
+          </li>
+          <li>
+            <a href="#" rel="external" class="x-social"><span class="wb-inv">X: </span>@XAccount</a>
+          </li>
+          <li>
+            <a href="#" rel="external" class="youtube"><span class="wb-inv">YouTube: </span>YouTubeName</a>
+          </li>
+          <li>
+            <a href="#" rel="external" class="instagram"><span class="wb-inv">Instagram: </span>InstagramName</a>
+          </li>
+          <li>
+            <a href="#" rel="external" class="linkedin"><span class="wb-inv">LinkedIn: </span>LinkedInName</a>
+          </li>
+        </ul>
+      </section>
+      <section id="facebook" class="modal-dialog modal-content overlay-def mfp-hide">
+        <header class="modal-header">
+          <h2 class="modal-title" id="lbx-title">Facebook</h2>
+        </header>
+        <div class="modal-body">
+          <ul class="list-unstyled lst-spcd">
+            <li>
+              <a href="#" rel="external">[First Facebook account title]</a>
+            </li>
+            <li>
+              <a href="#" rel="external">[Second Facebook account title]</a>
+            </li>
+          </ul>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-sm btn-primary pull-left popup-modal-dismiss">
+            Close<span class="wb-inv">Close overlay</span>
+          </button>
+        </div>
+      </section>
+    {{social_col_end}}
+  {{feature_row_end}}
+</div>
