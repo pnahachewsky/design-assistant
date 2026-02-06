@@ -2174,16 +2174,36 @@ export class TopicIaJsonComponent implements OnInit {
     const socialColStart = hasFeature ? '<div class="col-md-4">' : '';
     const socialColEnd = hasFeature ? '</div>' : '';
 
-    const sectionTitle = this.getSectionTitle();
-    const topicTitle = this.stripVisits(this.stripBadges(this.getCurrentPageLabel()));
+    const titles = this.extractPageTitles(originalHtml);
+    const sectionTitleBlock = titles.sectionTitle
+      ? `<p>${this.escapeHtml(titles.sectionTitle)}</p>`
+      : '';
+    const topicTitle = this.cleanTopicTitle(
+      titles.topicTitle || this.getCurrentPageLabel(),
+    );
     const rescueLinkHtml = this.extractRescueLinkHtml(originalHtml);
     const alertsBlockHtml = this.extractAlertsHtml(originalHtml);
+    const hasAlerts = alertsBlockHtml.trim().length > 0;
+    const heroImageBlock = hasAlerts
+      ? ''
+      : [
+          '<div class="col-md-6 hidden-sm hidden-xs">',
+          '  <img',
+          '    src="https://dummyimage.com/520x200/000000/FFFFFF.png"',
+          '    alt=""',
+          '    class="img-responsive pull-right mrgn-tp-lg"',
+          '  />',
+          '</div>',
+        ].join('\n');
+    const heroTextColClass = hasAlerts ? 'col-md-12' : 'col-md-6';
 
     const html = template
-      .replace('{{section_title}}', this.escapeHtml(sectionTitle))
+      .replace('{{section_title_block}}', sectionTitleBlock)
       .replace('{{topic_title}}', this.escapeHtml(topicTitle))
       .replace('{{rescue_link}}', rescueLinkHtml)
       .replace('{{alerts_block}}', alertsBlockHtml)
+      .replace('{{hero_image_block}}', heroImageBlock)
+      .replace('{{hero_text_col_class}}', heroTextColClass)
       .replace('{{most_requested_section}}', mostRequestedSection)
       .replace('{{services_items}}', servicesItems)
       .replace('{{focus_items}}', focusItems)
@@ -2362,34 +2382,103 @@ export class TopicIaJsonComponent implements OnInit {
     return this.escapeHtml(url || '#');
   }
 
-  private getSectionTitle(): string {
-    const crumbs = this.breadcrumb ?? [];
-    if (!crumbs.length) return 'Section title';
+  private extractPageTitles(sourceHtml: string): {
+    sectionTitle: string;
+    topicTitle: string;
+  } {
+    if (!sourceHtml) return { sectionTitle: '', topicTitle: '' };
+    const doc = new DOMParser().parseFromString(sourceHtml, 'text/html');
 
-    const sanitize = (value: string): string =>
-      this.normalizeLabel(
-        this.stripVisits(this.stripBadges(value)).replace(/<[^>]+>/g, '').trim(),
-      );
+    const hgroup = doc.querySelector('hgroup#wb-cont');
+    const sectionP = hgroup?.querySelector('p');
+    const sectionText = (sectionP?.textContent || '').trim();
 
-    const currentLabel = sanitize(this.getCurrentPageLabel());
-    const last = crumbs[crumbs.length - 1];
-    const lastLabel =
-      typeof last?.label === 'string' ? last.label.trim() : '';
-    const lastNorm = lastLabel ? sanitize(lastLabel) : '';
+    const h1s = Array.from(doc.querySelectorAll('h1'));
+    const nonNavH1s = h1s.filter((h1) => !h1.closest('nav'));
+    const topicH1 = this.pickTopicH1(doc, nonNavH1s, h1s);
+    const topicTitle = topicH1 ? this.extractH1Text(topicH1) : '';
 
-    // If breadcrumbs include the current page as the last item, use its parent.
-    if (lastNorm && currentLabel && lastNorm === currentLabel) {
-      const parent = crumbs[crumbs.length - 2];
-      if (typeof parent?.label === 'string' && parent.label.trim().length) {
-        return parent.label.trim();
+    // Stacked title source 1: explicit section <p> in hgroup.
+    if (sectionText) {
+      return {
+        sectionTitle: sectionText,
+        topicTitle,
+      };
+    }
+
+    // Stacked title source 2: lead muted paragraph above the H1.
+    const leadSection = topicH1
+      ? this.findLeadSectionTitle(topicH1)
+      : '';
+    if (leadSection) {
+      return { sectionTitle: leadSection, topicTitle };
+    }
+
+    // Stacked title source 3: nav (gc-subway) H1 when main H1 is outside nav.
+    const navH1 = h1s.find((h1) => h1.closest('nav'));
+    if (navH1) {
+      const navTitle = this.extractH1Text(navH1);
+      if (navTitle && topicTitle) {
+        return { sectionTitle: navTitle, topicTitle };
       }
     }
 
-    if (lastLabel) {
-      return lastLabel;
-    }
+    return { sectionTitle: '', topicTitle };
+  }
 
-    return 'Section title';
+  private pickTopicH1(
+    doc: Document,
+    nonNavH1s: Element[],
+    allH1s: Element[],
+  ): Element | null {
+    return (
+      nonNavH1s.find((h1) => h1.getAttribute('id') === 'wb-cont') ??
+      nonNavH1s[0] ??
+      doc.querySelector('h1#wb-cont') ??
+      allH1s[0] ??
+      null
+    );
+  }
+
+  private extractH1Text(h1: Element): string {
+    const clone = h1.cloneNode(true) as HTMLElement;
+    clone.querySelectorAll('.wb-inv').forEach((el) => el.remove());
+    clone
+      .querySelectorAll<HTMLElement>('[style*="border: 2px solid rgb(111, 159, 255)"]')
+      .forEach((el) => el.remove());
+    return (clone.textContent || '').trim();
+  }
+
+  private findLeadSectionTitle(h1: Element): string {
+    const container = h1.parentElement ?? h1;
+    const leadSelectors = [
+      'p.lead.text-muted',
+      'p.lead.mrgn-tp-md.mrgn-bttm-0.text-muted',
+    ];
+    for (const selector of leadSelectors) {
+      const lead = container.querySelector(selector);
+      if (lead && lead.compareDocumentPosition(h1) & Node.DOCUMENT_POSITION_FOLLOWING) {
+        const text = (lead.textContent || '').trim();
+        if (text) return text;
+      }
+    }
+    return '';
+  }
+
+  private cleanTopicTitle(label: string): string {
+    const withoutBadges = this.stripBadges(label);
+    const withoutVisits = this.stripVisits(withoutBadges);
+    const withBreaks = withoutVisits
+      .replace(/<br\s*\/?>/gi, '\n')
+      .replace(/&lt;br\s*\/?&gt;/gi, '\n');
+    const bottomLine = this.selectBottomLine(withBreaks);
+    const cleaned = bottomLine.replace(/<[^>]+>/g, '').trim();
+    const trimmed = this.trimAfterDash(cleaned).trim();
+    if (trimmed) return trimmed;
+    const fallback = this.selectTopLine(withBreaks)
+      .replace(/<[^>]+>/g, '')
+      .trim();
+    return this.trimAfterDash(fallback).trim();
   }
 
   private escapeHtml(value: string): string {
@@ -2463,6 +2552,16 @@ export class TopicIaJsonComponent implements OnInit {
       .map((part) => part.trim())
       .filter((part) => part.length > 0);
     return parts.length ? parts[parts.length - 1] : label;
+  }
+
+  private selectTopLine(label: string): string {
+    const withBreaks = label.replace(/<br\s*\/?>/gi, '\n');
+    if (!withBreaks.includes('\n')) return label;
+    const parts = withBreaks
+      .split('\n')
+      .map((part) => part.trim())
+      .filter((part) => part.length > 0);
+    return parts.length ? parts[0] : label;
   }
 
   private buildFeatureImageMap(sourceHtml: string): Map<string, string> {
