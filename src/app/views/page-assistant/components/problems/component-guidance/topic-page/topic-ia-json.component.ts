@@ -37,13 +37,14 @@ import { TranslateService, TranslateModule } from '@ngx-translate/core';
 import { ThemeService } from '../../../../../../services/theme.service';
 import { CommsObjectivePrompt } from '../../../../data/ai-prompts.constants';
 import topicPageExceptionsJson from './topic-page-exceptions.json';
+import { UrlDataService } from '../../../../services/url-data.service';
 
 import { MenuItem, TreeNode, TreeDragDropService, MessageService } from 'primeng/api';
 import { FullscreenHTMLElement } from '../../../../../../views/ia-assistant/data/data.model';
 
 import { environment } from '../../../../../../../environments/environment';
 
-type TopicSection = 'most' | 'doormats' | 'feature';
+type TopicSection = 'most' | 'doormats' | 'focus' | 'feature';
 type TopicPageLinkInfo = {
   section: TopicSection;
   label: string;
@@ -238,6 +239,7 @@ export class TopicIaJsonComponent implements OnInit {
   private iaStructure = inject(IaStructureService);
   private messageService = inject(MessageService);
   private openRouter = inject(OpenRouterService);
+  private urlDataService = inject(UrlDataService);
 
   production: boolean = environment.production;
   activeStep = 1;
@@ -292,6 +294,8 @@ export class TopicIaJsonComponent implements OnInit {
   private aiRecommendedUrls = new Set<string>();
   private aiTargetSection: TopicSection | 'notOnTopics' = 'most';
   private aiModels: string[] = this.openRouter.freeModels;
+  private readonly topicTemplateUrl = 'templates/topic-page-template.html';
+  private topicTemplateCache: string | null = null;
   private readonly topicPageExcludedUrlFragments = (
     topicPageExceptionsJson as string[]
   )
@@ -405,8 +409,9 @@ export class TopicIaJsonComponent implements OnInit {
     const sectionMap: { section: string; node?: TreeNode }[] = [
       { section: 'most', node: categories[0] },
       { section: 'doormats', node: categories[1] },
-      { section: 'feature', node: categories[2] },
-      { section: 'notOnTopics', node: categories[3] },
+      { section: 'focus', node: categories[2] },
+      { section: 'feature', node: categories[3] },
+      { section: 'notOnTopics', node: categories[4] },
     ];
 
     return sectionMap.flatMap((entry) => {
@@ -553,10 +558,12 @@ export class TopicIaJsonComponent implements OnInit {
         return categories[0] ?? null;
       case 'doormats':
         return categories[1] ?? null;
-      case 'feature':
+      case 'focus':
         return categories[2] ?? null;
-      case 'notOnTopics':
+      case 'feature':
         return categories[3] ?? null;
+      case 'notOnTopics':
+        return categories[4] ?? null;
       default:
         return categories[0] ?? null;
     }
@@ -596,6 +603,8 @@ export class TopicIaJsonComponent implements OnInit {
   ): TopicSection | 'notOnTopics' {
     const normalized = (input || '').toLowerCase();
     if (normalized.includes('doormat')) return 'doormats';
+    if (normalized.includes('focus on')) return 'focus';
+    if (normalized.includes('focus')) return 'focus';
     if (normalized.includes('feature')) return 'feature';
     if (normalized.includes('not on topic')) return 'notOnTopics';
     if (normalized.includes('not on the topic')) return 'notOnTopics';
@@ -612,6 +621,7 @@ export class TopicIaJsonComponent implements OnInit {
     const model =
       normalizedModel === 'most' ||
       normalizedModel === 'doormats' ||
+      normalizedModel === 'focus' ||
       normalizedModel === 'feature' ||
       normalizedModel === 'notOnTopics'
         ? normalizedModel
@@ -650,8 +660,9 @@ export class TopicIaJsonComponent implements OnInit {
     const sectionMap: { section: TopicSection | 'notOnTopics'; node?: TreeNode }[] = [
       { section: 'most', node: categories[0] },
       { section: 'doormats', node: categories[1] },
-      { section: 'feature', node: categories[2] },
-      { section: 'notOnTopics', node: categories[3] },
+      { section: 'focus', node: categories[2] },
+      { section: 'feature', node: categories[3] },
+      { section: 'notOnTopics', node: categories[4] },
     ];
     const match = sectionMap.find((entry) =>
       (entry.node?.children ?? []).includes(node),
@@ -957,6 +968,12 @@ export class TopicIaJsonComponent implements OnInit {
         children: [],
       },
       {
+        label: 'Focus on',
+        data: { url: '', isCategory: true },
+        expanded: true,
+        children: [],
+      },
+      {
         label: 'Features',
         data: { url: '', isCategory: true },
         expanded: true,
@@ -1034,8 +1051,9 @@ export class TopicIaJsonComponent implements OnInit {
     const categories = root.children ?? [];
     const mostRequested = categories[0];
     const doormatsCategory = categories[1];
-    const feature = categories[2];
-    const notOnTopicsCategory = categories[3];
+    const focus = categories[2];
+    const feature = categories[3];
+    const notOnTopicsCategory = categories[4];
 
     if (mostRequested) {
       if (this.visitsByUrl.size > 0 && mostRequestedCandidates.length > 0) {
@@ -1056,6 +1074,7 @@ export class TopicIaJsonComponent implements OnInit {
         mostRequested.children = [];
       }
     }
+    if (focus) focus.children = [];
     if (feature) feature.children = [];
     if (doormatsCategory) doormatsCategory.children = doormats;
     if (notOnTopicsCategory && !notOnTopicsCategory.children) {
@@ -1072,6 +1091,9 @@ export class TopicIaJsonComponent implements OnInit {
     }
     if (doormatsCategory?.children?.length) {
       this.applySectionDiffState(doormatsCategory.children, 'doormats');
+    }
+    if (focus?.children?.length) {
+      this.applySectionDiffState(focus.children, 'focus');
     }
     if (feature?.children?.length) {
       this.applySectionDiffState(feature.children, 'feature');
@@ -1164,11 +1186,15 @@ export class TopicIaJsonComponent implements OnInit {
     const sections: Array<{ key: TopicSection; selector: string }> = [
       { key: 'most', selector: '.gc-most-requested' },
       { key: 'doormats', selector: '.gc-srvinfo' },
+      { key: 'focus', selector: '' },
       { key: 'feature', selector: '.gc-features' },
     ];
 
     for (const section of sections) {
-      const container = doc.querySelector(section.selector);
+      const container =
+        section.key === 'focus'
+          ? this.findFocusOnContainer(doc)
+          : doc.querySelector(section.selector);
       if (!container) continue;
       const links = container.querySelectorAll('a[href]');
       links.forEach((link) => {
@@ -1189,6 +1215,15 @@ export class TopicIaJsonComponent implements OnInit {
     }
 
     this.topicPageSections = map;
+  }
+
+  private findFocusOnContainer(doc: Document): Element | null {
+    const headings = Array.from(doc.querySelectorAll('h2'));
+    const match = headings.find(
+      (h) => (h.textContent || '').trim().toLowerCase() === 'focus on',
+    );
+    if (!match) return null;
+    return match.closest('.well') ?? match.parentElement ?? match;
   }
 
   private collectNonTopicPageLinks(doc: Document): Map<string, string> {
@@ -1309,7 +1344,8 @@ export class TopicIaJsonComponent implements OnInit {
     const categories = root.children ?? [];
     const mostRequested = categories[0];
     const doormatsCategory = categories[1];
-    const feature = categories[2];
+    const focus = categories[2];
+    const feature = categories[3];
 
     const addToCategory = (
       category: TreeNode | undefined,
@@ -1351,6 +1387,8 @@ export class TopicIaJsonComponent implements OnInit {
         addToCategory(mostRequested, node);
       } else if (info.section === 'doormats') {
         addToCategory(doormatsCategory, node);
+      } else if (info.section === 'focus') {
+        addToCategory(focus, node);
       } else {
         addToCategory(feature, node);
       }
@@ -1366,7 +1404,7 @@ export class TopicIaJsonComponent implements OnInit {
     const categories = root.children ?? [];
     const nonTopicCategory =
       categories.find((node) => node.data?.isNonTopicCategory) ??
-      categories[4];
+      categories[5];
     if (!nonTopicCategory) return;
     nonTopicCategory.children = nonTopicCategory.children || [];
 
@@ -1426,14 +1464,18 @@ export class TopicIaJsonComponent implements OnInit {
     const categories = root.children ?? [];
     const mostRequested = categories[0];
     const doormatsCategory = categories[1];
-    const feature = categories[2];
-    const notOnTopicsCategory = categories[3];
+    const focus = categories[2];
+    const feature = categories[3];
+    const notOnTopicsCategory = categories[4];
 
     if (mostRequested?.children?.length) {
       this.applySectionDiffState(mostRequested.children, 'most');
     }
     if (doormatsCategory?.children?.length) {
       this.applySectionDiffState(doormatsCategory.children, 'doormats');
+    }
+    if (focus?.children?.length) {
+      this.applySectionDiffState(focus.children, 'focus');
     }
     if (feature?.children?.length) {
       this.applySectionDiffState(feature.children, 'feature');
@@ -1469,6 +1511,8 @@ export class TopicIaJsonComponent implements OnInit {
         return 'Most requested';
       case 'doormats':
         return 'Doormats';
+      case 'focus':
+        return 'Focus on';
       case 'feature':
       default:
         return 'Features';
@@ -2085,6 +2129,391 @@ export class TopicIaJsonComponent implements OnInit {
   //Placeholder for export function
   exportTable() {}
 
+  async generateTopicHtml(): Promise<void> {
+    if (!this.topicPageTree?.length) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'No topic tree available',
+        detail: 'Run the IA crawl to build suggested topic page sections first.',
+        life: 4000,
+      });
+      return;
+    }
+
+    const template = await this.loadTopicTemplate();
+    if (!template) return;
+
+    const root = this.topicPageTree[0];
+    const categories = root?.children ?? [];
+    const mostRequested = this.getCategoryByLabel(categories, 'Most requested');
+    const doormats = this.getCategoryByLabel(categories, 'Doormats');
+    const focus = this.getCategoryByLabel(categories, 'Focus on');
+    const features = this.getCategoryByLabel(categories, 'Features');
+
+    const mostRequestedItems = this.buildMostRequestedItems(
+      mostRequested?.children ?? [],
+    );
+    const mostRequestedSection = this.buildMostRequestedSection(
+      mostRequestedItems,
+    );
+    const servicesItems = this.buildServicesItems(doormats?.children ?? []);
+    const focusItems = this.buildFocusItems(focus?.children ?? []);
+    const hasFocus = focusItems.trim().length > 0;
+    const focusSectionStart = hasFocus ? '' : '<!--';
+    const focusSectionEnd = hasFocus ? '' : '-->';
+    const originalHtml = this.uploadState.getUploadData()?.originalHtml ?? '';
+    const featureImageMap = this.buildFeatureImageMap(originalHtml);
+    const featureItem = this.buildFeatureItem(
+      features?.children ?? [],
+      featureImageMap,
+    );
+    const featuresSection = this.buildFeaturesSection(featureItem);
+    const hasFeature = featureItem.trim().length > 0;
+    const featureRowStart = hasFeature ? '<div class="row mrgn-tp-xl">' : '';
+    const featureRowEnd = hasFeature ? '</div>' : '';
+    const socialColStart = hasFeature ? '<div class="col-md-4">' : '';
+    const socialColEnd = hasFeature ? '</div>' : '';
+
+    const sectionTitle = this.getSectionTitle();
+    const topicTitle = this.stripVisits(this.stripBadges(this.getCurrentPageLabel()));
+    const rescueLinkHtml = this.extractRescueLinkHtml(originalHtml);
+    const alertsBlockHtml = this.extractAlertsHtml(originalHtml);
+
+    const html = template
+      .replace('{{section_title}}', this.escapeHtml(sectionTitle))
+      .replace('{{topic_title}}', this.escapeHtml(topicTitle))
+      .replace('{{rescue_link}}', rescueLinkHtml)
+      .replace('{{alerts_block}}', alertsBlockHtml)
+      .replace('{{most_requested_section}}', mostRequestedSection)
+      .replace('{{services_items}}', servicesItems)
+      .replace('{{focus_items}}', focusItems)
+      .replace('{{focus_section_start}}', focusSectionStart)
+      .replace('{{focus_section_end}}', focusSectionEnd)
+      .replace('{{features_section}}', featuresSection)
+      .replace('{{feature_row_start}}', featureRowStart)
+      .replace('{{feature_row_end}}', featureRowEnd)
+      .replace('{{social_col_start}}', socialColStart)
+      .replace('{{social_col_end}}', socialColEnd);
+
+    const formattedHtml = await this.urlDataService.formatHtml(html, 'ai');
+
+    this.uploadState.savePreviousUploadData();
+    this.uploadState.mergeModifiedData({
+      modifiedUrl: 'Generated topic template',
+      modifiedHtml: formattedHtml,
+    });
+
+    try {
+      await navigator.clipboard.writeText(formattedHtml);
+      this.messageService.add({
+        severity: 'success',
+        summary: 'Topic HTML generated',
+        detail: 'HTML copied to clipboard and applied to comparison view.',
+        life: 4000,
+      });
+    } catch (err) {
+      console.error('Clipboard write failed:', err);
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Generated',
+        detail: 'HTML applied to comparison view but could not be copied to clipboard.',
+        life: 4000,
+      });
+    }
+  }
+
+  private async loadTopicTemplate(): Promise<string | null> {
+    if (this.topicTemplateCache) return this.topicTemplateCache;
+    try {
+      const response = await fetch(this.topicTemplateUrl, { cache: 'no-store' });
+      if (!response.ok) {
+        throw new Error(`Template fetch failed: ${response.status}`);
+      }
+      const text = await response.text();
+      this.topicTemplateCache = text;
+      return text;
+    } catch (err) {
+      console.error('Template load failed:', err);
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Template load failed',
+        detail: 'Unable to load topic HTML template.',
+        life: 4000,
+      });
+      return null;
+    }
+  }
+
+  private getCategoryByLabel(
+    categories: TreeNode[],
+    label: string,
+  ): TreeNode | null {
+    return (
+      categories.find((node) => node?.label === label && node?.data?.isCategory) ??
+      null
+    );
+  }
+
+  private buildMostRequestedItems(nodes: TreeNode[]): string {
+    const items = nodes
+      .filter((node) => !node?.data?.isCategory)
+      .slice(0, 6)
+      .map((node) => this.renderListItem(node));
+    return items.join('\n');
+  }
+
+  private buildMostRequestedSection(items: string): string {
+    if (!items.trim()) return '';
+    return [
+      '<section class="gc-most-requested">',
+      '  <div class="container">',
+      '    <h2 class="h3">Most requested</h2>',
+      '    <ul>',
+      `      ${items}`,
+      '    </ul>',
+      '  </div>',
+      '</section>',
+    ].join('\n');
+  }
+
+  private buildServicesItems(nodes: TreeNode[]): string {
+    const items = nodes
+      .filter((node) => !node?.data?.isCategory)
+      .slice(0, 9)
+      .map((node) => this.renderServiceItem(node));
+    if (items.length === 0) {
+      return (
+        '<div class="col-lg-4 col-md-6">' +
+        '<h3><a href="#">[No services available]</a></h3>' +
+        '<p>Use action verbs, or list keywords to describe this item.</p>' +
+        '</div>'
+      );
+    }
+    return items.join('\n');
+  }
+
+  private buildFocusItems(nodes: TreeNode[]): string {
+    const items = nodes
+      .filter((node) => !node?.data?.isCategory)
+      .slice(0, 6)
+      .map((node) => this.renderListItem(node));
+    return items.join('\n');
+  }
+
+
+  private buildFeatureItem(
+    nodes: TreeNode[],
+    featureImageMap: Map<string, string>,
+  ): string {
+    const first = nodes.find((node) => !node?.data?.isCategory);
+    if (!first) {
+      return '';
+    }
+
+    const label = this.getNodeLabel(first);
+    const url = this.getNodeUrl(first);
+    const imageSrc = this.getFeatureImageSrc(url, featureImageMap);
+    const imageTag = imageSrc
+      ? `<img src="${imageSrc}" alt="" class="thumbnail">`
+      : '<img src="https://dummyimage.com/360x203/000000/FFFFFF.png" alt="" class="thumbnail">';
+    return (
+      '<div class="col-sm-6">' +
+      imageTag +
+      '</div>' +
+      '<div class="col-sm-6">' +
+      `<h3><a class="stretched-link" href="${url}">${label}</a></h3>` +
+      '<p>Brief description of the feature being promoted.</p>' +
+      '</div>'
+    );
+  }
+
+  private renderListItem(node: TreeNode): string {
+    const label = this.getNodeLabel(node);
+    const url = this.getNodeUrl(node);
+    return `<li><a href="${url}">${label}</a></li>`;
+  }
+
+  private renderServiceItem(node: TreeNode): string {
+    const label = this.getNodeLabel(node);
+    const url = this.getNodeUrl(node);
+    return (
+      '<div class="col-lg-4 col-md-6">' +
+      `<h3><a href="${url}">${label}</a></h3>` +
+      '<p>Use action verbs, or simply list keywords to summarize the information or tasks that can be accomplished on the page it links to</p>' +
+      '</div>'
+    );
+  }
+
+  private getNodeLabel(node: TreeNode): string {
+    const raw =
+      typeof node?.data?.originalLabel === 'string' &&
+      node.data.originalLabel.trim().length
+        ? node.data.originalLabel
+        : (node?.label ?? '').toString();
+    const withoutBadges = this.stripBadges(raw);
+    const bottomLine = this.selectBottomLine(withoutBadges);
+    const cleaned = bottomLine.replace(/<[^>]+>/g, '').trim();
+    const truncated = this.trimAfterDash(cleaned);
+    return this.escapeHtml(truncated || 'Untitled');
+  }
+
+  private getNodeUrl(node: TreeNode): string {
+    const url = typeof node?.data?.url === 'string' ? node.data.url.trim() : '';
+    return this.escapeHtml(url || '#');
+  }
+
+  private getSectionTitle(): string {
+    const crumbs = this.breadcrumb ?? [];
+    if (!crumbs.length) return 'Section title';
+
+    const sanitize = (value: string): string =>
+      this.normalizeLabel(
+        this.stripVisits(this.stripBadges(value)).replace(/<[^>]+>/g, '').trim(),
+      );
+
+    const currentLabel = sanitize(this.getCurrentPageLabel());
+    const last = crumbs[crumbs.length - 1];
+    const lastLabel =
+      typeof last?.label === 'string' ? last.label.trim() : '';
+    const lastNorm = lastLabel ? sanitize(lastLabel) : '';
+
+    // If breadcrumbs include the current page as the last item, use its parent.
+    if (lastNorm && currentLabel && lastNorm === currentLabel) {
+      const parent = crumbs[crumbs.length - 2];
+      if (typeof parent?.label === 'string' && parent.label.trim().length) {
+        return parent.label.trim();
+      }
+    }
+
+    if (lastLabel) {
+      return lastLabel;
+    }
+
+    return 'Section title';
+  }
+
+  private escapeHtml(value: string): string {
+    return value
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
+
+  private extractRescueLinkHtml(sourceHtml: string): string {
+    if (!sourceHtml) return '';
+    const doc = new DOMParser().parseFromString(sourceHtml, 'text/html');
+    const needle = 'you may be looking for';
+    const paragraphs = Array.from(doc.body.querySelectorAll('p'));
+    const match = paragraphs.find((el) =>
+      (el.textContent || '').toLowerCase().includes(needle),
+    );
+    return match ? match.outerHTML : '';
+  }
+
+  private extractAlertsHtml(sourceHtml: string): string {
+    if (!sourceHtml) return '';
+    const doc = new DOMParser().parseFromString(sourceHtml, 'text/html');
+    const alerts = Array.from(doc.body.querySelectorAll('.alert'));
+    if (!alerts.length) return '';
+
+    const boundary = this.findAlertBoundary(doc);
+    const filtered = boundary
+      ? alerts.filter((alert) => this.isBefore(alert, boundary))
+      : alerts;
+
+    if (!filtered.length) return '';
+    return filtered.map((el) => el.outerHTML).join('\n');
+  }
+
+  private findAlertBoundary(doc: Document): Element | null {
+    return (
+      doc.body.querySelector('section.gc-most-requested') ||
+      doc.body.querySelector('section.gc-srvinfo') ||
+      doc.body.querySelector('section.gc-features') ||
+      doc.body.querySelector('h2')
+    );
+  }
+
+  private isBefore(a: Element, b: Element): boolean {
+    const pos = a.compareDocumentPosition(b);
+    return Boolean(pos & Node.DOCUMENT_POSITION_FOLLOWING);
+  }
+
+  private stripVisits(label: string): string {
+    return label.replace(/\s*\(\s*[\d,]+\s+visits?\s*\)\s*$/i, '').trim();
+  }
+
+  private trimAfterDash(label: string): string {
+    const emIdx = label.indexOf('—');
+    if (emIdx !== -1) return label.slice(0, emIdx).trim();
+    const enIdx = label.indexOf('–');
+    if (enIdx !== -1) return label.slice(0, enIdx).trim();
+    const spaced = label.indexOf(' - ');
+    if (spaced !== -1) return label.slice(0, spaced).trim();
+    return label;
+  }
+
+  private selectBottomLine(label: string): string {
+    const withBreaks = label.replace(/<br\s*\/?>/gi, '\n');
+    if (!withBreaks.includes('\n')) return label;
+    const parts = withBreaks
+      .split('\n')
+      .map((part) => part.trim())
+      .filter((part) => part.length > 0);
+    return parts.length ? parts[parts.length - 1] : label;
+  }
+
+  private buildFeatureImageMap(sourceHtml: string): Map<string, string> {
+    const map = new Map<string, string>();
+    if (!sourceHtml) return map;
+    const doc = new DOMParser().parseFromString(sourceHtml, 'text/html');
+    const featuresSection = doc.body.querySelector('section.gc-features');
+    if (!featuresSection) return map;
+
+    const items = Array.from(featuresSection.querySelectorAll('a[href]'));
+    items.forEach((link) => {
+      const href = link.getAttribute('href') || '';
+      if (!href) return;
+      const normalized = this.normalizeUrl(href);
+      if (!normalized) return;
+
+      const container = link.closest('div');
+      const img =
+        container?.querySelector('img') ||
+        link.closest('section')?.querySelector('img');
+      const src = img?.getAttribute('src') || '';
+      if (src) {
+        map.set(normalized, src);
+      }
+    });
+    return map;
+  }
+
+  private getFeatureImageSrc(
+    url: string,
+    featureImageMap: Map<string, string>,
+  ): string {
+    const normalized = this.normalizeUrl(url);
+    if (!normalized) return '';
+    return featureImageMap.get(normalized) ?? '';
+  }
+
+  private buildFeaturesSection(featureItem: string): string {
+    if (!featureItem.trim()) return '';
+    return [
+      '<div class="col-md-8">',
+      '  <section class="gc-features">',
+      '    <h2 class="wb-inv">Featured</h2>',
+      '    <div class="row">',
+      `      ${featureItem}`,
+      '    </div>',
+      '  </section>',
+      '</div>',
+    ].join('\n');
+  }
+
   //Open link in new tab
   openNodeUrl() {
     window.open(this.selectedNode.data.url, '_blank');
@@ -2362,8 +2791,9 @@ export class TopicIaJsonComponent implements OnInit {
     const categories = root.children ?? [];
     const notOnTopicsCategory =
       categories.find(
-        (node) => node.data?.isCategory && node.label === 'Not suggested for topic page',
-      ) ?? categories[3];
+        (node) =>
+          node.data?.isCategory && node.label === 'Not suggested for topic page',
+      ) ?? categories[4];
     const children = notOnTopicsCategory?.children;
     if (!children?.length) return;
 

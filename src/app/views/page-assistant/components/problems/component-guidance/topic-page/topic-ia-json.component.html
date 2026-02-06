@@ -203,7 +203,15 @@
     @if (visitsByUrl.size > 0) {
       <div class="col-12 md:col-6">
         <p-contextMenu #cmTopic [model]="options"></p-contextMenu>
-        <h2>Suggested topic page sections</h2>
+        <div class="flex align-items-center justify-content-between gap-3">
+          <h2 class="m-0">Suggested topic page sections</h2>
+          <p-button
+            label="Generate topic HTML"
+            icon="pi pi-file-export"
+            severity="primary"
+            (click)="generateTopicHtml()"
+          />
+        </div>
         <p-tree
           [value]="topicPageTree"
           styleClass="w-full md:w-[30rem]"
