@@ -182,7 +182,7 @@ import {
   unblockBodyScroll,
   uuid,
   zindexutils
-} from "./chunk-VVFHCF3R.js";
+} from "./chunk-TCSHUAMJ.js";
 import {
   ANIMATION_MODULE_TYPE,
   BehaviorSubject,
@@ -42850,7 +42850,7 @@ var routes = [
       }
       return true;
     }],
-    loadComponent: () => import("./chunk-VFERCWLN.js").then((m) => m.PageAssistantCompareComponent)
+    loadComponent: () => import("./chunk-UGQYHCPE.js").then((m) => m.PageAssistantCompareComponent)
   },
   {
     path: "page-assistant/share",

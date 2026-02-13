@@ -38505,11 +38505,9 @@ var PromptKey;
 var AiModel;
 (function(AiModel2) {
   AiModel2["Nemotron"] = "nvidia/nemotron-3-nano-30b-a3b:free";
-  AiModel2["DeepSeek"] = "deepseek/deepseek-r1-0528:free";
-  AiModel2["Chimera"] = "tngtech/deepseek-r1t2-chimera:free";
-  AiModel2["Gemma"] = "google/gemma-3-27b-it:free";
   AiModel2["Arcee"] = "arcee-ai/trinity-large-preview:free";
-  AiModel2["zai"] = "z-ai/glm-4.5-air:free";
+  AiModel2["Zai"] = "z-ai/glm-4.5-air:free";
+  AiModel2["DeepSeek"] = "deepseek/deepseek-r1-0528:free";
   AiModel2["GptOSS"] = "openai/gpt-oss-120b";
   AiModel2["Gemini"] = "google/gemini-2.5-flash-lite";
   AiModel2["Gpt5Mini"] = "openai/gpt-5-mini";
@@ -100310,4 +100308,4 @@ export {
    * License: MIT
    *)
 */
-//# sourceMappingURL=chunk-VVFHCF3R.js.map
+//# sourceMappingURL=chunk-TCSHUAMJ.js.map

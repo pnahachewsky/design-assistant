@@ -137,7 +137,7 @@ import {
   unblockBodyScroll,
   uuid,
   zindexutils
-} from "./chunk-VVFHCF3R.js";
+} from "./chunk-TCSHUAMJ.js";
 import {
   ChangeDetectionStrategy,
   ChangeDetectorRef,
@@ -21238,167 +21238,40 @@ var ShadowDomService = class _ShadowDomService {
 })();
 
 // src/app/views/page-assistant/data/ai-prompts.constants.ts
-var PromptTemplates = {
-  [PromptKey.Headings]: `
-Role: You're an expert content designer with the government of Canada tasked with helping to organize content by task.
-Concept: 
-Structure content into clear, hierarchical headings at h1, h2, h3 and more rarely h4 and h5 levels to improve scannability of the tasks on the page.
-Reorganize content between sections and rewrite where necessary to fit the new semantic structure. Avoid rewriting where possible to keep text like the original.
-Guidelines: 
-Make sure the H1 accurately reflects the content of the whole page.
-Make sure other headings (for example, H2, H3, etc.) accurately describe the content of their section.
-If search terms are provided, try to reflect common terms in the H1 for best SEO practices.
-When writing a heading or subheading, make sure that it:
-\xB7 Gives a clear idea of what follows.
-\xB7 Is short and contains no unnecessary words.
-\xB7 Contains the most relevant terms at the beginning.
-Also ensure that you are meeting the following style requirements:
-\xB7 Do not include punctuation in headings.
-\xB7 Headings should not be questions \u2013 avoid the use of FAQ patterns.
-When thinking of the hierarchy of the headings, apply the following concepts of good information architecture:
-\xB7 Keep the page structure consistent, logical and straightforward.
-\xB7 Categorize the content into tasks the user of the page can complete or things they need to learn about.
-\xB7 Prioritize the content so the most important tasks are easiest to find.
-\xB7 Consider the logical order in which the user of the page will need information as they are learning how to complete the task, giving them information gradually.
-\xB7 If there are multiple tasks on the page, consider which tasks the user needs to complete or understand before they begin another task, and order the headings accordingly.
-\xB7 Do not duplicate sections.
-Tone: use an informative tone while addressing the user directly. Phrase headings where possible as tasks the user of the page can complete or learn about in that section.
-Return the full HTML input with only the headings structure updated. Do not remove, reorder, or rewrite unrelated sections or content. Preserve all non-heading content exactly as provided. Return only updated HTML code with no other commentary. 
-  `,
-  [PromptKey.Doormats]: `
-You are a web writer who specializes in writing clear and easy-to-differentiate navigation options for pages with links to different services or tasks.
-Write navigation links as "doormats", a convention that includes a link and description.
-You may be asked to create a single doormat, or to create a set of doormats based on supplied content, or to refine a set of supplied doormat links to meet best practices around style and length restrictions.
-Doormat style length and punctuation requirements:
-\xB7 Link Title: Ideally under 35 characters, maximum 75 characters, no punctuation at the end.
-\xB7 Short description: Ideally under 100 characters, maximum 120 characters, no punctuation, no period.
-Best Practices:
-\xB7 Link Title: Must be descriptive, unique, and distinguishable from other link titles on the page. Avoid vague terms, duplication, and unnecessary words.
-\xB7 Short description: The description should describe the linked page concisely, including what to expect when clicking on the link title. It should, however, avoid repeating text from the title. It can be:
-  o A list of short phrases indicating tasks that can be completed on the linked page.
-  o A list of keywords, separated by commas that would generally correspond to the link titles of doormats of the navigation page it links to, or h2s of a content page.
-If one of the 2 above styles is used for a doormat description, it should generally match the other doormats on that navigation page.
-In some exceptional cases a doormat can be written as a sentence if it is hard to describe in a set of phrases, but this would only apply to a specific doormat, not all doormats on the page. A sentence doormat should not have a period or other punctuation at the end.
-Avoid promotional language, introductory phrases, or redundant content.
-Maintain consistent capitalization, formatting, and style (e.g., Topics, Products/Services, Actions, Audience Groups).
-Prompt reminders:
-\xB7 Ask the user for the topic and purpose of the page if more context is needed.
-\xB7 If useful to the refinement of the navigation links, request additional details such as target audience, key keywords, or specific tone/style (e.g., formal, casual, technical).
-Remove Placeholders: Only include doormat(s) that have been fully customized based on user input. Do not include generic or placeholder text.
-Provide a Preview: Display the suggested doormat(s) in a clear, easy-to-read list for the user to review and adjust as needed.
-Doormat examples:
-1. Title: Tax-free savings accounts Description: Tax-free savings accounts, registered savings plans, pooled pension plans, plan administrators.
-2. Title: Apply for a clearance certificate Description: Required for final tax returns, legal representatives, estate executors, outstanding balances.
-3. Title: Renewable energy grants Description: Government grants, solar panel incentives, wind energy funding, green energy initiatives.
-Return the full HTML input with only the doormat section updated. Do not remove, reorder, or rewrite unrelated sections. Preserve page title, alerts, headings, and all other components exactly as provided. Return only updated HTML code with no other commentary. 
-`,
-  [PromptKey.PlainLanguage]: `
-You are an expert content designer with 10 years of experience in the public service. Your primary function is to help web publishers rewrite technical content to be easy to understand for the general public.
-Your task is to convert text into content which is aimed at improving:
-\xB7 Comprehension
-\xB7 Flow
-\xB7 Logical transitions
-Apply the Canada.ca Content Style Guide rules to the content and tailor it for a web page layout.
-Avoid the passive voice. Use active voice to inform the user in a direct manner.
-Use action verbs, preferably at the beginning of your sentences.
-Prioritize the use of positive constructions over negative ones whenever possible.
-Write in short sentences that do not run-on.
-Use simple, direct phrasing.
-Aim to structure the content to have a logical flow like a story would with a beginning, middle, and end, providing a task resolution.
-Lists must have a lead-in sentence.
-Bullet points should be short and convey one idea.
-When rewriting content do not remove important details or instructions.
-Reorganize ideas and arrange them in stepped processes, logical hierarchies or for clarity of cause and effect.
-Make sure to use the inverted pyramid concept when organizing information.
-Examples of using action verbs, preferably at the beginning of your sentences:
-\xB7 "Report your business income on line x of the form"
-\xB7 "Refer to the guide for more instructions on claiming a deduction"
-Return the full HTML input with only the rewritten text updated. Do not remove, reorder, or rewrite unrelated sections or components. Preserve headings and structure exactly as provided unless a change is required to implement the text edits. Return only updated HTML code with no other commentary. 
-`,
-  [PromptKey.AlertsIssues]: `
-Role: You are an expert in content design, Web Accessibility (WCAG 2.1), the Accessible Canada Act, and the Canada.ca Design System. Your primary function is to analyze web pages to identify issues with Alerts and general Content Accessibility.
-Objective: Scan the input content, clearly identify specific issues based on the provided categories, and output a structured report of pain points only.
-________________________________________
-1. Input Handling
-You must accept input in the form of URLs, copy/pasted content, or uploaded documents. You must distinguish between two specific input types to perform your analysis effectively:
- - The Alert: The specific HTML or text of the alert component being analyzed. An alert is the entire HTML element with class "alert" (the full container), including all of its children.
- - The Page Context: The surrounding content or page where the alert lives (to determine placement and relevance).
-________________________________________
-2. Analysis Logic
-Analyze the inputs using the following two steps. You must distinguish between "Simple Issues" (structural/pattern-based) and "Complex Issues" (requiring AI analysis/context).
-Step 1: Analyze for "Simple" Alert Issues (Rule-Based Checks)
- - Misuse: Do not use alerts for standard process steps, low-risk warnings, or emphasis.
- - Too wordy: Alerts must be short (1-2 sentences). If longer, recommend a summary with a link.
- - Generic titles: Flag headers like "Note," "Info," or "Important." Titles must be descriptive.
- - Unclear impact: The alert must explain the consequence to the user, not just state a fact.
- - Outdated: Flag past dates or resolved events. Alerts are temporary.
- - Missing heading: Alerts must contain a heading element.
- - Wrong type: Ensure color matches severity (e.g., Blue=Info, Red=Danger).
- - Hidden content: Do not use expand/collapse (accordions) in alerts; content must be visible.
- - Wrong component: Do not use alerts just to flag "New" items (use Labels instead).
- - Accessibility/code: Icons must have text alternatives; hierarchy must be correct.
- - Too many links: Limit to one primary link per alert.
- - Wrong placement: Alerts must be adjacent to the relevant section, not at the top of a general page if specific.
- - Alert overload: Flag pages with multiple stacked alerts (alert fatigue).
- - Low relevance: On Home/Landing pages, alerts must apply to >50% of the audience.
- - Incorrect hierarchy: Alert headings must fit the page outline (e.g., don't put an H4 after an H2).
- - Nothing actionable: If no action/consequence is listed, convert to plain text.
-Step 2: Analyze for "Complex" Issues (AI/LLM Analysis)
- - Focus order: Ensure the alert logical reading order is preserved and not skipped by screen readers.
- - Sensory/color reliance: Ensure importance is not conveyed by color alone (add text prefixes like "Warning:").
- - Content clarity: Ensure reading level is Grade 6-8 and plain language is used.
- - Non-text content: Ensure images/icons have descriptive Alt text.
-___________________________________
-3. Output Format (JSON Only)
-Return only JSON. Do not include HTML, Markdown, or commentary.
-JSON Structure:
-{
-  "issues": [
-    {
-      "alert_index": "[1-based position of the alert in the page, ordered by appearance of .alert elements]",
-      "issue_category": "[Name of the Category, e.g., Too Wordy]",
-      "description": "[Specific explanation of the problem found, citing the rule]",
-      "recommendation": "[Specific actionable fix]",
-      "severity": "[High | Medium | Low]"
-    }
-  ]
-}
-`,
-  [PromptKey.AlertsRecommendations]: `
-You are an expert in Canada.ca alerts + accessibility. Fix alert HTML only.
-Inputs: issues list, alerts list (alert_html + alert_index).
-Rules (must follow):
-- Edit only inside each .alert container; keep alerts in place unless they are incorrectly placed; no new alerts.
-- Return a replacements entry for every alert_index in the alerts list.
-- Apply each relevant issue to every alert it affects (e.g., if two alerts are "Too wordy", update both); each issue must cause at least one HTML change per affected alert.
-- Prefer original wording; edit text only when required (too wordy, multiple links, unclear/missing heading).
-- Use valid heading levels, include a heading, no hidden content, add text alternatives if needed.
-- updated_html must be the full alert wrapper with the correct alert-* class.
-- Keep to one primary link when possible; do not add new link text.
- - Output strict JSON only (no prose, no code fences).
- - Every alert_index must appear exactly once in replacements.
- - JSON schema: {"replacements":[{"alert_index":number,"updated_html":string}]}
-Output JSON only, with this structure:
-{
-  "replacements": [{ "alert_index": 1, "updated_html": "<div class=\\"alert alert-info\\">...</div>" }]
-}
-`
+var PROMPT_BASE_PATH = "/ai-prompts";
+var promptFiles = {
+  [PromptKey.Headings]: `${PROMPT_BASE_PATH}/headings.txt`,
+  [PromptKey.Doormats]: `${PROMPT_BASE_PATH}/doormats.txt`,
+  [PromptKey.PlainLanguage]: `${PROMPT_BASE_PATH}/plain-language.txt`,
+  [PromptKey.AlertsIssues]: `${PROMPT_BASE_PATH}/alerts-issues.txt`,
+  [PromptKey.AlertsRecommendations]: `${PROMPT_BASE_PATH}/alerts-recommendations.txt`
 };
-var CommsObjectivePrompt = `You are a CRA IA assistant. Match a communications objective to the best candidates from the provided list of pages.
-- The communications objective might be a page that has low or no visits but should be highlighted.
-- The objective may be a URL or a page title.
-- Compare the objective against the provided candidates list.
-- Use the suggested section (if present) to decide where the best match should live.
-- Choose up to 3 best matches from the candidates list.
-- If there is no reasonable match, return an empty list.
-
-Return ONLY compact JSON (no prose):
-{
-  "targetSection": "most|doormats|feature|notOnTopics",
-  "recommended": [
-    { "url": "string", "label": "string", "reason": "short reason", "currentSection": "most|doormats|feature|notOnTopics" }
-  ]
-}`;
+var commsObjectivePath = `${PROMPT_BASE_PATH}/comms-objective.txt`;
+var promptCache = /* @__PURE__ */ new Map();
+function loadPromptText(path) {
+  return __async(this, null, function* () {
+    const cached = promptCache.get(path);
+    if (cached)
+      return cached;
+    const resp = yield fetch(path);
+    if (!resp.ok) {
+      throw new Error(`Prompt file request failed (${resp.status}): ${path}`);
+    }
+    const text = yield resp.text();
+    promptCache.set(path, text);
+    return text;
+  });
+}
+function getPromptTemplate(key2) {
+  return __async(this, null, function* () {
+    return loadPromptText(promptFiles[key2]);
+  });
+}
+function getCommsObjectivePrompt() {
+  return __async(this, null, function* () {
+    return loadPromptText(commsObjectivePath);
+  });
+}
 
 // src/app/views/page-assistant/services/openrouter.service.ts
 var OpenRouterService = class _OpenRouterService {
@@ -21530,7 +21403,7 @@ var AlertAiService = class _AlertAiService {
         summary: this.translate.instant("common.ai.sending"),
         life: 2e3
       });
-      const systemPrompt = PromptTemplates[PromptKey.AlertsIssues];
+      const systemPrompt = yield getPromptTemplate(PromptKey.AlertsIssues);
       const userPayload = {
         alertHtml: this.trimText(alertHtml),
         pageContext: this.trimText(pageContext)
@@ -24101,7 +23974,7 @@ function AiOptionsComponent_Conditional_16_Conditional_10_ng_container_0_Templat
   if (rf & 1) {
     const _r5 = \u0275\u0275getCurrentView();
     \u0275\u0275elementContainerStart(0);
-    \u0275\u0275elementStart(1, "div", 13)(2, "p-radioButton", 22);
+    \u0275\u0275elementStart(1, "div", 13)(2, "p-radioButton", 20);
     \u0275\u0275twoWayListener("ngModelChange", function AiOptionsComponent_Conditional_16_Conditional_10_ng_container_0_Template_p_radioButton_ngModelChange_2_listener($event) {
       \u0275\u0275restoreView(_r5);
       const ctx_r1 = \u0275\u0275nextContext(3);
@@ -24146,7 +24019,7 @@ function AiOptionsComponent_Conditional_16_Conditional_11_ng_container_0_Templat
   if (rf & 1) {
     const _r7 = \u0275\u0275getCurrentView();
     \u0275\u0275elementContainerStart(0);
-    \u0275\u0275elementStart(1, "div", 23)(2, "p-checkbox", 24);
+    \u0275\u0275elementStart(1, "div", 21)(2, "p-checkbox", 22);
     \u0275\u0275twoWayListener("ngModelChange", function AiOptionsComponent_Conditional_16_Conditional_11_ng_container_0_Template_p_checkbox_ngModelChange_2_listener($event) {
       \u0275\u0275restoreView(_r7);
       const ctx_r1 = \u0275\u0275nextContext(3);
@@ -24185,7 +24058,7 @@ function AiOptionsComponent_Conditional_16_Conditional_11_Template(rf, ctx) {
 function AiOptionsComponent_Conditional_16_Conditional_17_Template(rf, ctx) {
   if (rf & 1) {
     const _r9 = \u0275\u0275getCurrentView();
-    \u0275\u0275elementStart(0, "p-iftalabel")(1, "textarea", 25);
+    \u0275\u0275elementStart(0, "p-iftalabel")(1, "textarea", 23);
     \u0275\u0275twoWayListener("ngModelChange", function AiOptionsComponent_Conditional_16_Conditional_17_Template_textarea_ngModelChange_1_listener($event) {
       \u0275\u0275restoreView(_r9);
       const ctx_r1 = \u0275\u0275nextContext(2);
@@ -24198,7 +24071,7 @@ function AiOptionsComponent_Conditional_16_Conditional_17_Template(rf, ctx) {
       return \u0275\u0275resetView(ctx_r1.emitCustomPrompt(ctx_r1.customInstruction));
     });
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(2, "label", 26);
+    \u0275\u0275elementStart(2, "label", 24);
     \u0275\u0275text(3);
     \u0275\u0275pipe(4, "translate");
     \u0275\u0275elementEnd()();
@@ -24210,6 +24083,64 @@ function AiOptionsComponent_Conditional_16_Conditional_17_Template(rf, ctx) {
     \u0275\u0275property("autoResize", true);
     \u0275\u0275advance(2);
     \u0275\u0275textInterpolate(\u0275\u0275pipeBind1(4, 3, "page.ai-options.prompt.textarea"));
+  }
+}
+function AiOptionsComponent_Conditional_16_Conditional_18_Template(rf, ctx) {
+  if (rf & 1) {
+    const _r10 = \u0275\u0275getCurrentView();
+    \u0275\u0275elementStart(0, "div", 19)(1, "p", 25);
+    \u0275\u0275text(2);
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(3, "p-slider", 26);
+    \u0275\u0275twoWayListener("ngModelChange", function AiOptionsComponent_Conditional_16_Conditional_18_Template_p_slider_ngModelChange_3_listener($event) {
+      \u0275\u0275restoreView(_r10);
+      const ctx_r1 = \u0275\u0275nextContext(2);
+      \u0275\u0275twoWayBindingSet(ctx_r1.languageEditLevel, $event) || (ctx_r1.languageEditLevel = $event);
+      return \u0275\u0275resetView($event);
+    });
+    \u0275\u0275listener("onChange", function AiOptionsComponent_Conditional_16_Conditional_18_Template_p_slider_onChange_3_listener() {
+      \u0275\u0275restoreView(_r10);
+      const ctx_r1 = \u0275\u0275nextContext(2);
+      return \u0275\u0275resetView(ctx_r1.emitEditPrompt(ctx_r1.currentLanguageEditLevel.prompt));
+    });
+    \u0275\u0275elementEnd()();
+  }
+  if (rf & 2) {
+    const ctx_r1 = \u0275\u0275nextContext(2);
+    \u0275\u0275advance(2);
+    \u0275\u0275textInterpolate(ctx_r1.currentLanguageEditLevel == null ? null : ctx_r1.currentLanguageEditLevel.label);
+    \u0275\u0275advance();
+    \u0275\u0275twoWayProperty("ngModel", ctx_r1.languageEditLevel);
+    \u0275\u0275property("step", 25);
+  }
+}
+function AiOptionsComponent_Conditional_16_Conditional_19_Template(rf, ctx) {
+  if (rf & 1) {
+    const _r11 = \u0275\u0275getCurrentView();
+    \u0275\u0275elementStart(0, "div", 19)(1, "p", 27);
+    \u0275\u0275text(2);
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(3, "p-slider", 28);
+    \u0275\u0275twoWayListener("ngModelChange", function AiOptionsComponent_Conditional_16_Conditional_19_Template_p_slider_ngModelChange_3_listener($event) {
+      \u0275\u0275restoreView(_r11);
+      const ctx_r1 = \u0275\u0275nextContext(2);
+      \u0275\u0275twoWayBindingSet(ctx_r1.alertEditLevel, $event) || (ctx_r1.alertEditLevel = $event);
+      return \u0275\u0275resetView($event);
+    });
+    \u0275\u0275listener("onChange", function AiOptionsComponent_Conditional_16_Conditional_19_Template_p_slider_onChange_3_listener() {
+      \u0275\u0275restoreView(_r11);
+      const ctx_r1 = \u0275\u0275nextContext(2);
+      return \u0275\u0275resetView(ctx_r1.emitEditPrompt(ctx_r1.currentAlertEditLevel.prompt));
+    });
+    \u0275\u0275elementEnd()();
+  }
+  if (rf & 2) {
+    const ctx_r1 = \u0275\u0275nextContext(2);
+    \u0275\u0275advance(2);
+    \u0275\u0275textInterpolate(ctx_r1.currentAlertEditLevel == null ? null : ctx_r1.currentAlertEditLevel.label);
+    \u0275\u0275advance();
+    \u0275\u0275twoWayProperty("ngModel", ctx_r1.alertEditLevel);
+    \u0275\u0275property("step", 50);
   }
 }
 function AiOptionsComponent_Conditional_16_Template(rf, ctx) {
@@ -24242,30 +24173,15 @@ function AiOptionsComponent_Conditional_16_Template(rf, ctx) {
     \u0275\u0275text(15);
     \u0275\u0275pipe(16, "translate");
     \u0275\u0275elementEnd()();
-    \u0275\u0275template(17, AiOptionsComponent_Conditional_16_Conditional_17_Template, 5, 5, "p-iftalabel");
-    \u0275\u0275elementStart(18, "div", 19)(19, "p", 20);
-    \u0275\u0275text(20);
-    \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(21, "p-slider", 21);
-    \u0275\u0275twoWayListener("ngModelChange", function AiOptionsComponent_Conditional_16_Template_p_slider_ngModelChange_21_listener($event) {
-      \u0275\u0275restoreView(_r4);
-      const ctx_r1 = \u0275\u0275nextContext();
-      \u0275\u0275twoWayBindingSet(ctx_r1.editLevel, $event) || (ctx_r1.editLevel = $event);
-      return \u0275\u0275resetView($event);
-    });
-    \u0275\u0275listener("onChange", function AiOptionsComponent_Conditional_16_Template_p_slider_onChange_21_listener() {
-      \u0275\u0275restoreView(_r4);
-      const ctx_r1 = \u0275\u0275nextContext();
-      return \u0275\u0275resetView(ctx_r1.emitEditPrompt(ctx_r1.currentEditLevel.prompt));
-    });
-    \u0275\u0275elementEnd()()()()()();
+    \u0275\u0275template(17, AiOptionsComponent_Conditional_16_Conditional_17_Template, 5, 5, "p-iftalabel")(18, AiOptionsComponent_Conditional_16_Conditional_18_Template, 4, 3, "div", 19)(19, AiOptionsComponent_Conditional_16_Conditional_19_Template, 4, 3, "div", 19);
+    \u0275\u0275elementEnd()()()();
   }
   if (rf & 2) {
     const ctx_r1 = \u0275\u0275nextContext();
     \u0275\u0275advance(2);
-    \u0275\u0275textInterpolate(\u0275\u0275pipeBind1(3, 11, "page.ai-options.prompt.header"));
+    \u0275\u0275textInterpolate(\u0275\u0275pipeBind1(3, 10, "page.ai-options.prompt.header"));
     \u0275\u0275advance(5);
-    \u0275\u0275textInterpolate(\u0275\u0275pipeBind1(8, 13, "page.ai-options.prompt.legend"));
+    \u0275\u0275textInterpolate(\u0275\u0275pipeBind1(8, 12, "page.ai-options.prompt.legend"));
     \u0275\u0275advance(3);
     \u0275\u0275conditional(!ctx_r1.isTwoPrompts ? 10 : -1);
     \u0275\u0275advance();
@@ -24274,64 +24190,27 @@ function AiOptionsComponent_Conditional_16_Template(rf, ctx) {
     \u0275\u0275twoWayProperty("ngModel", ctx_r1.addCustom);
     \u0275\u0275property("binary", true);
     \u0275\u0275advance(2);
-    \u0275\u0275textInterpolate(\u0275\u0275pipeBind1(16, 15, "page.ai-options.prompt.checkbox"));
+    \u0275\u0275textInterpolate(\u0275\u0275pipeBind1(16, 14, "page.ai-options.prompt.checkbox"));
     \u0275\u0275advance(2);
     \u0275\u0275conditional(ctx_r1.addCustom ? 17 : -1);
-    \u0275\u0275advance(3);
-    \u0275\u0275textInterpolate(ctx_r1.currentEditLevel == null ? null : ctx_r1.currentEditLevel.label);
     \u0275\u0275advance();
-    \u0275\u0275twoWayProperty("ngModel", ctx_r1.editLevel);
-    \u0275\u0275property("step", 25);
+    \u0275\u0275conditional(!ctx_r1.isAlertsRecommendationsSelected ? 18 : -1);
+    \u0275\u0275advance();
+    \u0275\u0275conditional(ctx_r1.isAlertsRecommendationsSelected ? 19 : -1);
   }
 }
 function AiOptionsComponent_Conditional_17_Conditional_10_ng_container_3_Template(rf, ctx) {
   if (rf & 1) {
-    const _r10 = \u0275\u0275getCurrentView();
+    const _r12 = \u0275\u0275getCurrentView();
     \u0275\u0275elementContainerStart(0);
-    \u0275\u0275elementStart(1, "div", 13)(2, "p-radioButton", 29);
+    \u0275\u0275elementStart(1, "div", 13)(2, "p-radioButton", 31);
     \u0275\u0275twoWayListener("ngModelChange", function AiOptionsComponent_Conditional_17_Conditional_10_ng_container_3_Template_p_radioButton_ngModelChange_2_listener($event) {
-      \u0275\u0275restoreView(_r10);
+      \u0275\u0275restoreView(_r12);
       const ctx_r1 = \u0275\u0275nextContext(3);
       \u0275\u0275twoWayBindingSet(ctx_r1.selectedAi, $event) || (ctx_r1.selectedAi = $event);
       return \u0275\u0275resetView($event);
     });
     \u0275\u0275listener("onClick", function AiOptionsComponent_Conditional_17_Conditional_10_ng_container_3_Template_p_radioButton_onClick_2_listener() {
-      \u0275\u0275restoreView(_r10);
-      const ctx_r1 = \u0275\u0275nextContext(3);
-      return \u0275\u0275resetView(ctx_r1.onAiSelect(ctx_r1.selectedAi));
-    });
-    \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(3, "label", 15);
-    \u0275\u0275text(4);
-    \u0275\u0275pipe(5, "translate");
-    \u0275\u0275elementEnd()();
-    \u0275\u0275elementContainerEnd();
-  }
-  if (rf & 2) {
-    const option_r11 = ctx.$implicit;
-    const ctx_r1 = \u0275\u0275nextContext(3);
-    \u0275\u0275advance(2);
-    \u0275\u0275property("value", option_r11.id);
-    \u0275\u0275twoWayProperty("ngModel", ctx_r1.selectedAi);
-    \u0275\u0275property("inputId", option_r11.id)("disabled", option_r11.disabled);
-    \u0275\u0275advance();
-    \u0275\u0275property("for", option_r11.id);
-    \u0275\u0275advance();
-    \u0275\u0275textInterpolate(\u0275\u0275pipeBind1(5, 6, option_r11.label));
-  }
-}
-function AiOptionsComponent_Conditional_17_Conditional_10_ng_container_7_Template(rf, ctx) {
-  if (rf & 1) {
-    const _r12 = \u0275\u0275getCurrentView();
-    \u0275\u0275elementContainerStart(0);
-    \u0275\u0275elementStart(1, "div", 13)(2, "p-radioButton", 29);
-    \u0275\u0275twoWayListener("ngModelChange", function AiOptionsComponent_Conditional_17_Conditional_10_ng_container_7_Template_p_radioButton_ngModelChange_2_listener($event) {
-      \u0275\u0275restoreView(_r12);
-      const ctx_r1 = \u0275\u0275nextContext(3);
-      \u0275\u0275twoWayBindingSet(ctx_r1.selectedAi, $event) || (ctx_r1.selectedAi = $event);
-      return \u0275\u0275resetView($event);
-    });
-    \u0275\u0275listener("onClick", function AiOptionsComponent_Conditional_17_Conditional_10_ng_container_7_Template_p_radioButton_onClick_2_listener() {
       \u0275\u0275restoreView(_r12);
       const ctx_r1 = \u0275\u0275nextContext(3);
       return \u0275\u0275resetView(ctx_r1.onAiSelect(ctx_r1.selectedAi));
@@ -24340,8 +24219,6 @@ function AiOptionsComponent_Conditional_17_Conditional_10_ng_container_7_Templat
     \u0275\u0275elementStart(3, "label", 15);
     \u0275\u0275text(4);
     \u0275\u0275pipe(5, "translate");
-    \u0275\u0275element(6, "p-chip", 30);
-    \u0275\u0275pipe(7, "translate");
     \u0275\u0275elementEnd()();
     \u0275\u0275elementContainerEnd();
   }
@@ -24355,19 +24232,57 @@ function AiOptionsComponent_Conditional_17_Conditional_10_ng_container_7_Templat
     \u0275\u0275advance();
     \u0275\u0275property("for", option_r13.id);
     \u0275\u0275advance();
-    \u0275\u0275textInterpolate1(" ", \u0275\u0275pipeBind1(5, 7, option_r13.label), " ");
+    \u0275\u0275textInterpolate(\u0275\u0275pipeBind1(5, 6, option_r13.label));
+  }
+}
+function AiOptionsComponent_Conditional_17_Conditional_10_ng_container_7_Template(rf, ctx) {
+  if (rf & 1) {
+    const _r14 = \u0275\u0275getCurrentView();
+    \u0275\u0275elementContainerStart(0);
+    \u0275\u0275elementStart(1, "div", 13)(2, "p-radioButton", 31);
+    \u0275\u0275twoWayListener("ngModelChange", function AiOptionsComponent_Conditional_17_Conditional_10_ng_container_7_Template_p_radioButton_ngModelChange_2_listener($event) {
+      \u0275\u0275restoreView(_r14);
+      const ctx_r1 = \u0275\u0275nextContext(3);
+      \u0275\u0275twoWayBindingSet(ctx_r1.selectedAi, $event) || (ctx_r1.selectedAi = $event);
+      return \u0275\u0275resetView($event);
+    });
+    \u0275\u0275listener("onClick", function AiOptionsComponent_Conditional_17_Conditional_10_ng_container_7_Template_p_radioButton_onClick_2_listener() {
+      \u0275\u0275restoreView(_r14);
+      const ctx_r1 = \u0275\u0275nextContext(3);
+      return \u0275\u0275resetView(ctx_r1.onAiSelect(ctx_r1.selectedAi));
+    });
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(3, "label", 15);
+    \u0275\u0275text(4);
+    \u0275\u0275pipe(5, "translate");
+    \u0275\u0275element(6, "p-chip", 32);
+    \u0275\u0275pipe(7, "translate");
+    \u0275\u0275elementEnd()();
+    \u0275\u0275elementContainerEnd();
+  }
+  if (rf & 2) {
+    const option_r15 = ctx.$implicit;
+    const ctx_r1 = \u0275\u0275nextContext(3);
+    \u0275\u0275advance(2);
+    \u0275\u0275property("value", option_r15.id);
+    \u0275\u0275twoWayProperty("ngModel", ctx_r1.selectedAi);
+    \u0275\u0275property("inputId", option_r15.id)("disabled", option_r15.disabled);
+    \u0275\u0275advance();
+    \u0275\u0275property("for", option_r15.id);
+    \u0275\u0275advance();
+    \u0275\u0275textInterpolate1(" ", \u0275\u0275pipeBind1(5, 7, option_r15.label), " ");
     \u0275\u0275advance(2);
     \u0275\u0275property("label", \u0275\u0275pipeBind1(7, 9, "page.ai-options.model.paidBadge"));
   }
 }
 function AiOptionsComponent_Conditional_17_Conditional_10_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275elementStart(0, "p", 27);
+    \u0275\u0275elementStart(0, "p", 29);
     \u0275\u0275text(1);
     \u0275\u0275pipe(2, "translate");
     \u0275\u0275elementEnd();
     \u0275\u0275template(3, AiOptionsComponent_Conditional_17_Conditional_10_ng_container_3_Template, 6, 8, "ng-container", 8);
-    \u0275\u0275elementStart(4, "p", 28);
+    \u0275\u0275elementStart(4, "p", 30);
     \u0275\u0275text(5);
     \u0275\u0275pipe(6, "translate");
     \u0275\u0275elementEnd();
@@ -24387,41 +24302,10 @@ function AiOptionsComponent_Conditional_17_Conditional_10_Template(rf, ctx) {
 }
 function AiOptionsComponent_Conditional_17_Conditional_11_ng_container_3_Template(rf, ctx) {
   if (rf & 1) {
-    const _r14 = \u0275\u0275getCurrentView();
-    \u0275\u0275elementContainerStart(0);
-    \u0275\u0275elementStart(1, "div", 23)(2, "p-checkbox", 24);
-    \u0275\u0275twoWayListener("ngModelChange", function AiOptionsComponent_Conditional_17_Conditional_11_ng_container_3_Template_p_checkbox_ngModelChange_2_listener($event) {
-      \u0275\u0275restoreView(_r14);
-      const ctx_r1 = \u0275\u0275nextContext(3);
-      \u0275\u0275twoWayBindingSet(ctx_r1.selectedAis, $event) || (ctx_r1.selectedAis = $event);
-      return \u0275\u0275resetView($event);
-    });
-    \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(3, "label", 15);
-    \u0275\u0275text(4);
-    \u0275\u0275pipe(5, "translate");
-    \u0275\u0275elementEnd()();
-    \u0275\u0275elementContainerEnd();
-  }
-  if (rf & 2) {
-    const option_r15 = ctx.$implicit;
-    const ctx_r1 = \u0275\u0275nextContext(3);
-    \u0275\u0275advance(2);
-    \u0275\u0275property("value", option_r15.id);
-    \u0275\u0275twoWayProperty("ngModel", ctx_r1.selectedAis);
-    \u0275\u0275property("inputId", option_r15.id)("disabled", option_r15.disabled || ctx_r1.isAiCheckboxDisabled(option_r15.id));
-    \u0275\u0275advance();
-    \u0275\u0275property("for", option_r15.id);
-    \u0275\u0275advance();
-    \u0275\u0275textInterpolate(\u0275\u0275pipeBind1(5, 6, option_r15.label));
-  }
-}
-function AiOptionsComponent_Conditional_17_Conditional_11_ng_container_7_Template(rf, ctx) {
-  if (rf & 1) {
     const _r16 = \u0275\u0275getCurrentView();
     \u0275\u0275elementContainerStart(0);
-    \u0275\u0275elementStart(1, "div", 23)(2, "p-checkbox", 24);
-    \u0275\u0275twoWayListener("ngModelChange", function AiOptionsComponent_Conditional_17_Conditional_11_ng_container_7_Template_p_checkbox_ngModelChange_2_listener($event) {
+    \u0275\u0275elementStart(1, "div", 21)(2, "p-checkbox", 22);
+    \u0275\u0275twoWayListener("ngModelChange", function AiOptionsComponent_Conditional_17_Conditional_11_ng_container_3_Template_p_checkbox_ngModelChange_2_listener($event) {
       \u0275\u0275restoreView(_r16);
       const ctx_r1 = \u0275\u0275nextContext(3);
       \u0275\u0275twoWayBindingSet(ctx_r1.selectedAis, $event) || (ctx_r1.selectedAis = $event);
@@ -24431,8 +24315,6 @@ function AiOptionsComponent_Conditional_17_Conditional_11_ng_container_7_Templat
     \u0275\u0275elementStart(3, "label", 15);
     \u0275\u0275text(4);
     \u0275\u0275pipe(5, "translate");
-    \u0275\u0275element(6, "p-chip", 30);
-    \u0275\u0275pipe(7, "translate");
     \u0275\u0275elementEnd()();
     \u0275\u0275elementContainerEnd();
   }
@@ -24446,19 +24328,52 @@ function AiOptionsComponent_Conditional_17_Conditional_11_ng_container_7_Templat
     \u0275\u0275advance();
     \u0275\u0275property("for", option_r17.id);
     \u0275\u0275advance();
-    \u0275\u0275textInterpolate1(" ", \u0275\u0275pipeBind1(5, 7, option_r17.label), " ");
+    \u0275\u0275textInterpolate(\u0275\u0275pipeBind1(5, 6, option_r17.label));
+  }
+}
+function AiOptionsComponent_Conditional_17_Conditional_11_ng_container_7_Template(rf, ctx) {
+  if (rf & 1) {
+    const _r18 = \u0275\u0275getCurrentView();
+    \u0275\u0275elementContainerStart(0);
+    \u0275\u0275elementStart(1, "div", 21)(2, "p-checkbox", 22);
+    \u0275\u0275twoWayListener("ngModelChange", function AiOptionsComponent_Conditional_17_Conditional_11_ng_container_7_Template_p_checkbox_ngModelChange_2_listener($event) {
+      \u0275\u0275restoreView(_r18);
+      const ctx_r1 = \u0275\u0275nextContext(3);
+      \u0275\u0275twoWayBindingSet(ctx_r1.selectedAis, $event) || (ctx_r1.selectedAis = $event);
+      return \u0275\u0275resetView($event);
+    });
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(3, "label", 15);
+    \u0275\u0275text(4);
+    \u0275\u0275pipe(5, "translate");
+    \u0275\u0275element(6, "p-chip", 32);
+    \u0275\u0275pipe(7, "translate");
+    \u0275\u0275elementEnd()();
+    \u0275\u0275elementContainerEnd();
+  }
+  if (rf & 2) {
+    const option_r19 = ctx.$implicit;
+    const ctx_r1 = \u0275\u0275nextContext(3);
+    \u0275\u0275advance(2);
+    \u0275\u0275property("value", option_r19.id);
+    \u0275\u0275twoWayProperty("ngModel", ctx_r1.selectedAis);
+    \u0275\u0275property("inputId", option_r19.id)("disabled", option_r19.disabled || ctx_r1.isAiCheckboxDisabled(option_r19.id));
+    \u0275\u0275advance();
+    \u0275\u0275property("for", option_r19.id);
+    \u0275\u0275advance();
+    \u0275\u0275textInterpolate1(" ", \u0275\u0275pipeBind1(5, 7, option_r19.label), " ");
     \u0275\u0275advance(2);
     \u0275\u0275property("label", \u0275\u0275pipeBind1(7, 9, "page.ai-options.model.paidBadge"));
   }
 }
 function AiOptionsComponent_Conditional_17_Conditional_11_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275elementStart(0, "p", 27);
+    \u0275\u0275elementStart(0, "p", 29);
     \u0275\u0275text(1);
     \u0275\u0275pipe(2, "translate");
     \u0275\u0275elementEnd();
     \u0275\u0275template(3, AiOptionsComponent_Conditional_17_Conditional_11_ng_container_3_Template, 6, 8, "ng-container", 8);
-    \u0275\u0275elementStart(4, "p", 28);
+    \u0275\u0275elementStart(4, "p", 30);
     \u0275\u0275text(5);
     \u0275\u0275pipe(6, "translate");
     \u0275\u0275elementEnd();
@@ -24504,11 +24419,11 @@ function AiOptionsComponent_Conditional_17_Template(rf, ctx) {
 }
 function AiOptionsComponent_Conditional_18_Template(rf, ctx) {
   if (rf & 1) {
-    const _r18 = \u0275\u0275getCurrentView();
-    \u0275\u0275elementStart(0, "p-button", 31);
+    const _r20 = \u0275\u0275getCurrentView();
+    \u0275\u0275elementStart(0, "p-button", 33);
     \u0275\u0275pipe(1, "translate");
     \u0275\u0275listener("click", function AiOptionsComponent_Conditional_18_Template_p_button_click_0_listener() {
-      \u0275\u0275restoreView(_r18);
+      \u0275\u0275restoreView(_r20);
       const ctx_r1 = \u0275\u0275nextContext();
       return \u0275\u0275resetView(ctx_r1.onSubmit());
     });
@@ -24520,7 +24435,7 @@ function AiOptionsComponent_Conditional_18_Template(rf, ctx) {
 }
 function AiOptionsComponent_Conditional_19_ca_upload_url_1_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275element(0, "ca-upload-url", 33);
+    \u0275\u0275element(0, "ca-upload-url", 35);
   }
   if (rf & 2) {
     \u0275\u0275property("showSampleDataButton", false);
@@ -24528,7 +24443,7 @@ function AiOptionsComponent_Conditional_19_ca_upload_url_1_Template(rf, ctx) {
 }
 function AiOptionsComponent_Conditional_19_ca_upload_paste_2_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275element(0, "ca-upload-paste", 33);
+    \u0275\u0275element(0, "ca-upload-paste", 35);
   }
   if (rf & 2) {
     \u0275\u0275property("showSampleDataButton", false);
@@ -24536,7 +24451,7 @@ function AiOptionsComponent_Conditional_19_ca_upload_paste_2_Template(rf, ctx) {
 }
 function AiOptionsComponent_Conditional_19_ca_upload_word_3_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275element(0, "ca-upload-word", 33);
+    \u0275\u0275element(0, "ca-upload-word", 35);
   }
   if (rf & 2) {
     \u0275\u0275property("showSampleDataButton", false);
@@ -24545,7 +24460,7 @@ function AiOptionsComponent_Conditional_19_ca_upload_word_3_Template(rf, ctx) {
 function AiOptionsComponent_Conditional_19_Template(rf, ctx) {
   if (rf & 1) {
     \u0275\u0275elementContainerStart(0, 12);
-    \u0275\u0275template(1, AiOptionsComponent_Conditional_19_ca_upload_url_1_Template, 1, 1, "ca-upload-url", 32)(2, AiOptionsComponent_Conditional_19_ca_upload_paste_2_Template, 1, 1, "ca-upload-paste", 32)(3, AiOptionsComponent_Conditional_19_ca_upload_word_3_Template, 1, 1, "ca-upload-word", 32);
+    \u0275\u0275template(1, AiOptionsComponent_Conditional_19_ca_upload_url_1_Template, 1, 1, "ca-upload-url", 34)(2, AiOptionsComponent_Conditional_19_ca_upload_paste_2_Template, 1, 1, "ca-upload-paste", 34)(3, AiOptionsComponent_Conditional_19_ca_upload_word_3_Template, 1, 1, "ca-upload-word", 34);
     \u0275\u0275elementContainerEnd();
   }
   if (rf & 2) {
@@ -24601,7 +24516,7 @@ var AiOptionsComponent = class _AiOptionsComponent {
     { id: PromptKey.Headings, label: "page.ai-options.prompt.Headings", disabled: false },
     { id: PromptKey.Doormats, label: "page.ai-options.prompt.Doormats", disabled: false },
     { id: PromptKey.PlainLanguage, label: "page.ai-options.prompt.PlainLanguage", disabled: false },
-    { id: PromptKey.AlertsIssues, label: "page.ai-options.prompt.Alerts", disabled: false }
+    { id: PromptKey.AlertsRecommendations, label: "page.ai-options.prompt.Alerts", disabled: false }
   ];
   isPromptCheckboxDisabled(id) {
     return !this.selectedPrompts.includes(id) && this.selectedPrompts.length >= 2;
@@ -24614,13 +24529,9 @@ var AiOptionsComponent = class _AiOptionsComponent {
   selectedAis = [];
   freeAiOptions = [
     { id: AiModel.Nemotron, label: "page.ai-options.model.Nemotron", disabled: false },
-    { id: AiModel.Chimera, label: "page.ai-options.model.Chimera", disabled: false },
-    { id: AiModel.DeepSeek, label: "page.ai-options.model.DeepSeek", disabled: false },
-    //{ id: AiModel.Mistral, label: 'page.ai-options.model.Mistral', disabled: false },
     { id: AiModel.Arcee, label: "page.ai-options.model.Arcee", disabled: false },
-    //{ id: AiModel.Llama33, label: 'page.ai-options.model.Llama33', disabled: false },
-    { id: AiModel.zai, label: "page.ai-options.model.zai", disabled: false },
-    { id: AiModel.Gemma, label: "page.ai-options.model.Gemma", disabled: false }
+    { id: AiModel.Zai, label: "page.ai-options.model.Zai", disabled: false },
+    { id: AiModel.DeepSeek, label: "page.ai-options.model.DeepSeek", disabled: false }
   ];
   paidAiOptions = [
     { id: AiModel.GptOSS, label: "page.ai-options.model.GptOSS", disabled: false },
@@ -24657,17 +24568,30 @@ var AiOptionsComponent = class _AiOptionsComponent {
       this.emitCustomPrompt("");
     }
   }
-  //Number of changes for AI to make
-  editLevel = 50;
-  editLevels = [
+  //Number of changes for AI to make (language slider)
+  languageEditLevel = 50;
+  languageEditLevels = [
     { value: 0, label: "Grammar and spelling only", prompt: "Make minor edits to correct spelling or grammar errors only. Mostly ignore the other instructions provided." },
     { value: 25, label: "Minor edits", prompt: "Make minor edits only to improve readability. Loosely follow the other instructions provided without making unnecessary changes." },
-    { value: 50, label: "Normal edits", prompt: "" },
+    { value: 50, label: "Normal language edits", prompt: "" },
     { value: 75, label: "Extensive edits", prompt: "Heavily rewrite and reorganize the content to follow the instructions provided." },
     { value: 100, label: "Complete rewrite", prompt: "Aggressively rewrite the content. If there is a clear task on the page, feel free to remove unrelated content." }
   ];
-  get currentEditLevel() {
-    return this.editLevels.find((level) => level.value === this.editLevel);
+  //Alert recommendations slider
+  alertEditLevel = 50;
+  alertEditLevels = [
+    { value: 0, label: "Headings only", prompt: "Only assess the heading of the alert. Make sure a heading exists, it is succint, clearly describes the alert content. Make sure the heading is not duplicated in the content unless it is necessary." },
+    { value: 50, label: "Normal alerts edits", prompt: "Make sure that any link text in the alert is not duplicated in the content." },
+    { value: 100, label: "Fix all pain points", prompt: "Fix all identified pain points in the content." }
+  ];
+  get isAlertsRecommendationsSelected() {
+    return this.isTwoPrompts ? this.selectedPrompts.includes(PromptKey.AlertsRecommendations) : this.selectedPrompt === PromptKey.AlertsRecommendations;
+  }
+  get currentLanguageEditLevel() {
+    return this.languageEditLevels.find((level) => level.value === this.languageEditLevel);
+  }
+  get currentAlertEditLevel() {
+    return this.alertEditLevels.find((level) => level.value === this.alertEditLevel);
   }
   emitEditPrompt(prompt) {
     this.customPrompt.emit(prompt);
@@ -24675,7 +24599,7 @@ var AiOptionsComponent = class _AiOptionsComponent {
   static \u0275fac = function AiOptionsComponent_Factory(__ngFactoryType__) {
     return new (__ngFactoryType__ || _AiOptionsComponent)();
   };
-  static \u0275cmp = /* @__PURE__ */ \u0275\u0275defineComponent({ type: _AiOptionsComponent, selectors: [["ca-ai-options"]], outputs: { promptChange: "promptChange", customPrompt: "customPrompt", editPrompt: "editPrompt", aiChange: "aiChange", aiSubmit: "aiSubmit" }, decls: 20, vars: 19, consts: [["label", "Options", "icon", "pi pi-bars", "severity", "info", 3, "click"], ["position", "right", 3, "visibleChange", "visible", "header"], [1, "flex", "flex-column", "gap-3"], ["value", "1", 1, "flex", "flex-column", "gap-3"], ["value", "0", 1, "border-1", "border-round-md", "border-surface"], [1, "border-none"], [1, "font-bold", "mb-2"], [1, "flex", "flex-column", "gap-2"], [4, "ngFor", "ngForOf", "ngForTrackBy"], ["value", "1", 1, "border-1", "border-round-md", "border-surface"], ["value", "2", 1, "border-1", "border-round-md", "border-surface"], ["icon", "pi pi-comments", "severity", "primary", 3, "label"], [3, "ngSwitch"], [1, "p-field-radiobutton"], ["name", "taskOptions", 3, "ngModelChange", "value", "ngModel", "inputId", "disabled"], [1, "pl-2", 3, "for"], [1, "p-field-checkbox", "mt-3"], ["inputId", "appendCustom", 3, "ngModelChange", "onChange", "ngModel", "binary"], ["for", "appendCustom", 1, "pl-2"], [1, "flex", "flex-column", "gap-3", "mt-3"], ["id", "ai-changes"], ["ariaLabelledBy", "ai-changes", "fluid", "", 3, "ngModelChange", "onChange", "ngModel", "step"], ["name", "promptOptions", 3, "ngModelChange", "onClick", "value", "ngModel", "inputId", "disabled"], [1, "p-field-checkbox"], [3, "ngModelChange", "value", "ngModel", "inputId", "disabled"], ["pTextarea", "", "id", "customPrompt", "fluid", "", 3, "ngModelChange", "blur", "ngModel", "autoResize"], ["for", "customPrompt"], [1, "text-xs", "text-500"], [1, "text-xs", "text-500", "mt-3"], ["name", "aiOptions", 3, "ngModelChange", "onClick", "value", "ngModel", "inputId", "disabled"], ["styleClass", "chip chip-severe ml-2", 3, "label"], ["icon", "pi pi-comments", "severity", "primary", 3, "click", "label"], ["mode", "prototype", 3, "showSampleDataButton", 4, "ngSwitchCase"], ["mode", "prototype", 3, "showSampleDataButton"]], template: function AiOptionsComponent_Template(rf, ctx) {
+  static \u0275cmp = /* @__PURE__ */ \u0275\u0275defineComponent({ type: _AiOptionsComponent, selectors: [["ca-ai-options"]], outputs: { promptChange: "promptChange", customPrompt: "customPrompt", editPrompt: "editPrompt", aiChange: "aiChange", aiSubmit: "aiSubmit" }, decls: 20, vars: 19, consts: [["label", "Options", "icon", "pi pi-bars", "severity", "info", 3, "click"], ["position", "right", 3, "visibleChange", "visible", "header"], [1, "flex", "flex-column", "gap-3"], ["value", "1", 1, "flex", "flex-column", "gap-3"], ["value", "0", 1, "border-1", "border-round-md", "border-surface"], [1, "border-none"], [1, "font-bold", "mb-2"], [1, "flex", "flex-column", "gap-2"], [4, "ngFor", "ngForOf", "ngForTrackBy"], ["value", "1", 1, "border-1", "border-round-md", "border-surface"], ["value", "2", 1, "border-1", "border-round-md", "border-surface"], ["icon", "pi pi-comments", "severity", "primary", 3, "label"], [3, "ngSwitch"], [1, "p-field-radiobutton"], ["name", "taskOptions", 3, "ngModelChange", "value", "ngModel", "inputId", "disabled"], [1, "pl-2", 3, "for"], [1, "p-field-checkbox", "mt-3"], ["inputId", "appendCustom", 3, "ngModelChange", "onChange", "ngModel", "binary"], ["for", "appendCustom", 1, "pl-2"], [1, "flex", "flex-column", "gap-3", "mt-3"], ["name", "promptOptions", 3, "ngModelChange", "onClick", "value", "ngModel", "inputId", "disabled"], [1, "p-field-checkbox"], [3, "ngModelChange", "value", "ngModel", "inputId", "disabled"], ["pTextarea", "", "id", "customPrompt", "fluid", "", 3, "ngModelChange", "blur", "ngModel", "autoResize"], ["for", "customPrompt"], ["id", "ai-changes-language"], ["ariaLabelledBy", "ai-changes-language", "fluid", "", 3, "ngModelChange", "onChange", "ngModel", "step"], ["id", "ai-changes-alerts"], ["ariaLabelledBy", "ai-changes-alerts", "fluid", "", 3, "ngModelChange", "onChange", "ngModel", "step"], [1, "text-xs", "text-500"], [1, "text-xs", "text-500", "mt-3"], ["name", "aiOptions", 3, "ngModelChange", "onClick", "value", "ngModel", "inputId", "disabled"], ["styleClass", "chip chip-severe ml-2", 3, "label"], ["icon", "pi pi-comments", "severity", "primary", 3, "click", "label"], ["mode", "prototype", 3, "showSampleDataButton", 4, "ngSwitchCase"], ["mode", "prototype", 3, "showSampleDataButton"]], template: function AiOptionsComponent_Template(rf, ctx) {
     if (rf & 1) {
       \u0275\u0275elementStart(0, "p-button", 0);
       \u0275\u0275listener("click", function AiOptionsComponent_Template_p_button_click_0_listener() {
@@ -24699,7 +24623,7 @@ var AiOptionsComponent = class _AiOptionsComponent {
       \u0275\u0275elementStart(14, "div", 7);
       \u0275\u0275template(15, AiOptionsComponent_ng_container_15_Template, 6, 8, "ng-container", 8);
       \u0275\u0275elementEnd()()()();
-      \u0275\u0275template(16, AiOptionsComponent_Conditional_16_Template, 22, 17, "p-accordion-panel", 9)(17, AiOptionsComponent_Conditional_17_Template, 12, 8, "p-accordion-panel", 10);
+      \u0275\u0275template(16, AiOptionsComponent_Conditional_16_Template, 20, 16, "p-accordion-panel", 9)(17, AiOptionsComponent_Conditional_17_Template, 12, 8, "p-accordion-panel", 10);
       \u0275\u0275elementEnd();
       \u0275\u0275template(18, AiOptionsComponent_Conditional_18_Template, 2, 3, "p-button", 11)(19, AiOptionsComponent_Conditional_19_Template, 4, 4, "ng-container", 12);
       \u0275\u0275elementEnd()();
@@ -24810,10 +24734,21 @@ var AiOptionsComponent = class _AiOptionsComponent {
                   </p-iftalabel>
                 }
                 <!--Slider for number of AI changes-->
-                <div class="flex flex-column gap-3 mt-3">
-                  <p id="ai-changes">{{ currentEditLevel?.label }}</p>
-                  <p-slider [(ngModel)]="editLevel" [step]="25" ariaLabelledBy="ai-changes" (onChange)="emitEditPrompt(currentEditLevel!.prompt)" fluid />
-                </div>
+                @if (!isAlertsRecommendationsSelected) {
+                  <div class="flex flex-column gap-3 mt-3">
+                    <p id="ai-changes-language">{{ currentLanguageEditLevel?.label }}</p>
+                    <p-slider [(ngModel)]="languageEditLevel" [step]="25" ariaLabelledBy="ai-changes-language"
+                              (onChange)="emitEditPrompt(currentLanguageEditLevel!.prompt)" fluid />
+                  </div>
+                }
+
+                @if (isAlertsRecommendationsSelected) {
+                  <div class="flex flex-column gap-3 mt-3">
+                    <p id="ai-changes-alerts">{{ currentAlertEditLevel?.label }}</p>
+                    <p-slider [(ngModel)]="alertEditLevel" [step]="50" ariaLabelledBy="ai-changes-alerts"
+                              (onChange)="emitEditPrompt(currentAlertEditLevel!.prompt)" fluid />
+                  </div>
+                }
               </div>
             </fieldset>
 
@@ -35420,7 +35355,7 @@ var TopicIaJsonComponent = class _TopicIaJsonComponent {
         });
         return { recommendations: [] };
       }
-      const system = CommsObjectivePrompt;
+      const system = yield getCommsObjectivePrompt();
       const payload = {
         objective: input,
         targetSectionHint,
@@ -39293,16 +39228,18 @@ var PageAssistantCompareComponent = class _PageAssistantCompareComponent {
   onPrependLevel(prompt) {
     this.customEditText = prompt;
   }
-  get combinedPrompt() {
-    const base = PromptTemplates[this.selectedPromptKey];
-    const custom = this.customPromptText.trim();
-    return custom ? `${this.customEditText}
+  getPromptForKey(key2) {
+    return __async(this, null, function* () {
+      const base = yield getPromptTemplate(key2);
+      const custom = this.customPromptText.trim();
+      return custom ? `${this.customEditText}
 
 ${base}
 
 ${custom}` : `${this.customEditText}
 
 ${base}`;
+    });
   }
   parseRecommendationsFromAi(text) {
     const cleaned = this.alertAi.stripCodeFences(text);
@@ -39356,7 +39293,7 @@ ${base}`;
       const shortModel = this.getShortModelName(model);
       const recStart = performance.now();
       this.statusMessage = "Generating alert recommendations.";
-      const recPrompt = PromptTemplates[PromptKey.AlertsRecommendations];
+      const recPrompt = yield getPromptTemplate(PromptKey.AlertsRecommendations);
       const alertDoc = new DOMParser().parseFromString(html, "text/html");
       const alertEls = Array.from(alertDoc.querySelectorAll(".alert"));
       const alerts = alertEls.map((el, idx) => ({
@@ -39449,7 +39386,7 @@ ${base}`;
     return key2 ? this.translate.instant(`page.ai-options.model.short.${key2}`) : model;
   }
   buildModelRotation(model) {
-    const fallbackOrder = [AiModel.Arcee, AiModel.Chimera];
+    const fallbackOrder = [AiModel.Arcee, AiModel.Zai];
     const available = new Set(this.openRouter.freeModels);
     const rotation = [model];
     for (const candidate of fallbackOrder) {
@@ -39479,7 +39416,11 @@ ${base}`;
         const html = uploadData?.originalHtml;
         if (!html)
           throw new Error("No HTML to send");
-        const prompt = this.combinedPrompt;
+        const isAlertsRecommendations = this.selectedPromptKey === PromptKey.AlertsRecommendations;
+        const isAlertsIssues = this.selectedPromptKey === PromptKey.AlertsIssues;
+        const isAlertFlow = isAlertsRecommendations || isAlertsIssues;
+        const promptKeyForRequest = isAlertsRecommendations ? PromptKey.AlertsIssues : this.selectedPromptKey;
+        const prompt = yield this.getPromptForKey(promptKeyForRequest);
         const model = this.selectedAiModel;
         const requestedModelShort = this.getShortModelName(model);
         const url = "https://openrouter.ai/api/v1/chat/completions";
@@ -39499,7 +39440,7 @@ ${base}`;
             //"data_collection": "deny"
           }
         };
-        if (this.selectedPromptKey === PromptKey.AlertsIssues) {
+        if (isAlertFlow) {
           const cachedIssues = this.alertAi.getCachedIssues(html);
           const selectedIssues = (cachedIssues || []).filter((issue) => issue.include);
           if (selectedIssues.length) {
@@ -39626,7 +39567,7 @@ ${base}`;
             life: 1e4
           });
         }
-        if (this.selectedPromptKey === PromptKey.AlertsIssues) {
+        if (promptKeyForRequest === PromptKey.AlertsIssues) {
           const issues = this.alertAi.parseIssuesFromText(aiHtml);
           if (!issues.length) {
             throw new Error(`No alert issues returned by the AI (${usedModel}).`);
@@ -40417,4 +40358,4 @@ ${base}`;
 export {
   PageAssistantCompareComponent
 };
-//# sourceMappingURL=chunk-VFERCWLN.js.map
+//# sourceMappingURL=chunk-UGQYHCPE.js.map
