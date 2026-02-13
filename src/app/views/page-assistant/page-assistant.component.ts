@@ -48,7 +48,7 @@ import {
   PromptKey,
   AiModel,
 } from './data/data.model';
-import { PromptTemplates } from './data/ai-prompts.constants';
+import { getPromptTemplate } from './data/ai-prompts.constants';
 
 //Components
 import { AiOptionsComponent } from './components/ai-options.component';
@@ -523,8 +523,8 @@ export class PageAssistantCompareComponent
     this.customEditText = prompt;
   }
 
-  get combinedPrompt(): string {
-    const base = PromptTemplates[this.selectedPromptKey];
+  private async getPromptForKey(key: PromptKey): Promise<string> {
+    const base = await getPromptTemplate(key);
     const custom = this.customPromptText.trim();
 
     return custom
@@ -617,7 +617,7 @@ export class PageAssistantCompareComponent
     const shortModel = this.getShortModelName(model);
     const recStart = performance.now();
     this.statusMessage = 'Generating alert recommendations.';
-    const recPrompt = PromptTemplates[PromptKey.AlertsRecommendations];
+    const recPrompt = await getPromptTemplate(PromptKey.AlertsRecommendations);
     const alertDoc = new DOMParser().parseFromString(html, 'text/html');
     const alertEls = Array.from(alertDoc.querySelectorAll('.alert'));
     const alerts = alertEls.map((el, idx) => ({
@@ -746,7 +746,7 @@ export class PageAssistantCompareComponent
 
   private buildModelRotation(model: AiModel): string[] {
     // Fallback order after the user-selected model.
-    const fallbackOrder: AiModel[] = [AiModel.Arcee, AiModel.Chimera];
+    const fallbackOrder: AiModel[] = [AiModel.Arcee, AiModel.Zai];
     const available = new Set(this.openRouter.freeModels);
     const rotation: string[] = [model];
 
@@ -779,7 +779,14 @@ export class PageAssistantCompareComponent
       const html = uploadData?.originalHtml;
       if (!html) throw new Error('No HTML to send');
 
-      const prompt = this.combinedPrompt;
+      const isAlertsRecommendations =
+        this.selectedPromptKey === PromptKey.AlertsRecommendations;
+      const isAlertsIssues = this.selectedPromptKey === PromptKey.AlertsIssues;
+      const isAlertFlow = isAlertsRecommendations || isAlertsIssues;
+      const promptKeyForRequest = isAlertsRecommendations
+        ? PromptKey.AlertsIssues
+        : this.selectedPromptKey;
+      const prompt = await this.getPromptForKey(promptKeyForRequest);
       const model = this.selectedAiModel;
       const requestedModelShort = this.getShortModelName(model);
       const url = 'https://openrouter.ai/api/v1/chat/completions';
@@ -802,7 +809,7 @@ export class PageAssistantCompareComponent
         },
       };
 
-      if (this.selectedPromptKey === PromptKey.AlertsIssues) {
+      if (isAlertFlow) {
         const cachedIssues = this.alertAi.getCachedIssues(html);
         const selectedIssues = (cachedIssues || []).filter((issue) => issue.include);
         if (selectedIssues.length) {
@@ -974,12 +981,12 @@ export class PageAssistantCompareComponent
         });
       }
 
-      if (this.selectedPromptKey === PromptKey.AlertsIssues) {
-        // Step 1: parse issues from AlertsIssues (JSON-only).
-        const issues = this.alertAi.parseIssuesFromText(aiHtml);
-        if (!issues.length) {
-          throw new Error(`No alert issues returned by the AI (${usedModel}).`);
-        }
+        if (promptKeyForRequest === PromptKey.AlertsIssues) {
+          // Step 1: parse issues from AlertsIssues (JSON-only).
+          const issues = this.alertAi.parseIssuesFromText(aiHtml);
+          if (!issues.length) {
+            throw new Error(`No alert issues returned by the AI (${usedModel}).`);
+          }
         const cachedIssues = this.alertAi.getCachedIssues(html);
         let selectedIssues: Record<string, unknown>[] = [];
         if (cachedIssues?.length) {

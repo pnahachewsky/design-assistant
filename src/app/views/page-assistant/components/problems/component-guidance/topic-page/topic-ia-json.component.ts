@@ -35,7 +35,7 @@ import { IaStructureService } from '../../../../services/ia-structure.service';
 import { OpenRouterService, ChatMessage } from '../../../../services/openrouter.service';
 import { TranslateService, TranslateModule } from '@ngx-translate/core';
 import { ThemeService } from '../../../../../../services/theme.service';
-import { CommsObjectivePrompt } from '../../../../data/ai-prompts.constants';
+import { getCommsObjectivePrompt } from '../../../../data/ai-prompts.constants';
 import topicPageExceptionsJson from './topic-page-exceptions.json';
 import { UrlDataService } from '../../../../services/url-data.service';
 
@@ -453,7 +453,7 @@ export class TopicIaJsonComponent implements OnInit {
       return { recommendations: [] };
     }
 
-    const system = CommsObjectivePrompt;
+    const system = await getCommsObjectivePrompt();
 
     const payload = {
       objective: input,

@@ -90,14 +90,14 @@ export enum PromptKey {
 
 export enum AiModel {
   //Free models
-  Nemotron = 'nvidia/nemotron-3-nano-30b-a3b:free', //256k context, 13.5B weekly, 30B parameters
-  DeepSeek = 'deepseek/deepseek-r1-0528:free', //164k context, 14.4B weekly, 671B parameters, 37B active
-  Chimera = 'tngtech/deepseek-r1t2-chimera:free', //164k context, 124B weekly, 671B parameters, 37B active
-  Gemma = 'google/gemma-3-27b-it:free', //131k context, 2B weekly, 27B parameters
+  Nemotron = 'nvidia/nemotron-3-nano-30b-a3b:free', //256k context, 17B weekly, 30B parameters
+  //Chimera = 'tngtech/deepseek-r1t2-chimera:free', //164k context, 72B weekly, 671B parameters, 37B active
+  //Gemma = 'google/gemma-3-27b-it:free', //131k context, 2B weekly, 27B parameters
   //Mistral = 'mistralai/mistral-small-3.1-24b-instruct:free', //128k context, 178M weekly, 24B parameters
   //Llama33 = 'meta-llama/llama-3.3-70b-instruct:free', //262k context, 3.9B weekly, 70B parameters
-  Arcee = 'arcee-ai/trinity-large-preview:free', //131k context, 208B weekly, 13B parameters
-  zai = 'z-ai/glm-4.5-air:free', //262k context, 1.1B
+  Arcee = 'arcee-ai/trinity-large-preview:free', //131k context, 458B weekly, 13B parameters
+  Zai = 'z-ai/glm-4.5-air:free', //131k context, 57B
+  DeepSeek = 'deepseek/deepseek-r1-0528:free', //164k context, 20B weekly, 671B parameters, 37B active
   ///Paid models
   GptOSS = 'openai/gpt-oss-120b', //131k context paid - $0.039/M input tokens$0.19/M output tokens
   Gemini = 'google/gemini-2.5-flash-lite', // 1.05M context paid - $0.10/M input tokens, $0.40/M output tokens

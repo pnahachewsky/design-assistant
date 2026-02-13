@@ -80,7 +80,7 @@ export class AiOptionsComponent implements OnInit {
     { id: PromptKey.Headings, label: 'page.ai-options.prompt.Headings', disabled: false },
     { id: PromptKey.Doormats, label: 'page.ai-options.prompt.Doormats', disabled: false },
     { id: PromptKey.PlainLanguage, label: 'page.ai-options.prompt.PlainLanguage', disabled: false },
-    { id: PromptKey.AlertsIssues, label: 'page.ai-options.prompt.Alerts', disabled: false }
+    { id: PromptKey.AlertsRecommendations, label: 'page.ai-options.prompt.Alerts', disabled: false }
   ];
 
   isPromptCheckboxDisabled(id: PromptKey): boolean {
@@ -101,13 +101,9 @@ export class AiOptionsComponent implements OnInit {
 
   freeAiOptions = [
     { id: AiModel.Nemotron, label: 'page.ai-options.model.Nemotron', disabled: false },
-    { id: AiModel.Chimera, label: 'page.ai-options.model.Chimera', disabled: false },
-    { id: AiModel.DeepSeek, label: 'page.ai-options.model.DeepSeek', disabled: false },
-    //{ id: AiModel.Mistral, label: 'page.ai-options.model.Mistral', disabled: false },
     { id: AiModel.Arcee, label: 'page.ai-options.model.Arcee', disabled: false },
-    //{ id: AiModel.Llama33, label: 'page.ai-options.model.Llama33', disabled: false },
-    { id: AiModel.zai, label: 'page.ai-options.model.zai', disabled: false },
-    { id: AiModel.Gemma, label: 'page.ai-options.model.Gemma', disabled: false },
+    { id: AiModel.Zai, label: 'page.ai-options.model.Zai', disabled: false },
+    { id: AiModel.DeepSeek, label: 'page.ai-options.model.DeepSeek', disabled: false },
   ];
   paidAiOptions = [
     { id: AiModel.GptOSS, label: 'page.ai-options.model.GptOSS', disabled: false },
@@ -153,17 +149,36 @@ export class AiOptionsComponent implements OnInit {
     }
   }
 
-  //Number of changes for AI to make
-  editLevel = 50;
-  editLevels = [
+  //Number of changes for AI to make (language slider)
+  languageEditLevel = 50;
+  languageEditLevels = [
     { value: 0, label: 'Grammar and spelling only', prompt: 'Make minor edits to correct spelling or grammar errors only. Mostly ignore the other instructions provided.' },
     { value: 25, label: 'Minor edits', prompt: 'Make minor edits only to improve readability. Loosely follow the other instructions provided without making unnecessary changes.' },
-    { value: 50, label: 'Normal edits', prompt: '' },
+    { value: 50, label: 'Normal language edits', prompt: '' },
     { value: 75, label: 'Extensive edits', prompt: 'Heavily rewrite and reorganize the content to follow the instructions provided.' },
     { value: 100, label: 'Complete rewrite', prompt: 'Aggressively rewrite the content. If there is a clear task on the page, feel free to remove unrelated content.' }
   ];
-  get currentEditLevel() {
-    return this.editLevels.find(level => level.value === this.editLevel);
+
+  //Alert recommendations slider
+  alertEditLevel = 50;
+  alertEditLevels = [
+    { value: 0, label: 'Headings only', prompt: 'Only assess the heading of the alert. Make sure a heading exists, it is succint, clearly describes the alert content. Make sure the heading is not duplicated in the content unless it is necessary.' },
+    { value: 50, label: 'Normal alerts edits', prompt: 'Make sure that any link text in the alert is not duplicated in the content.' },
+    { value: 100, label: 'Fix all pain points', prompt: 'Fix all identified pain points in the content.' }
+  ];
+
+  get isAlertsRecommendationsSelected(): boolean {
+    return this.isTwoPrompts
+      ? this.selectedPrompts.includes(PromptKey.AlertsRecommendations)
+      : this.selectedPrompt === PromptKey.AlertsRecommendations;
+  }
+
+  get currentLanguageEditLevel() {
+    return this.languageEditLevels.find(level => level.value === this.languageEditLevel);
+  }
+
+  get currentAlertEditLevel() {
+    return this.alertEditLevels.find(level => level.value === this.alertEditLevel);
   }
   emitEditPrompt(prompt: string): void {
     this.customPrompt.emit(prompt);
