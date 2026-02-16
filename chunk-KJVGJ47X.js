@@ -38550,6 +38550,7 @@ var UploadStateService = class _UploadStateService {
   uploadDataKey = "pageAssistant.uploadData";
   uploadTypeKey = "pageAssistant.uploadType";
   aiModelKey = "pageAssistant.aiModel";
+  editPromptKey = "pageAssistant.editPrompt";
   //Upload type
   selectedUploadType = signal("url");
   getSelectedUploadType = computed(() => this.selectedUploadType());
@@ -38563,6 +38564,13 @@ var UploadStateService = class _UploadStateService {
   setSelectedAiModel(model2) {
     this.selectedAiModel.set(model2);
     this.storage.saveData(this.aiModelKey, model2);
+  }
+  //AI edit prompt prefix (slider)
+  editPromptText = signal("");
+  getEditPromptText = computed(() => this.editPromptText());
+  setEditPromptText(prompt) {
+    this.editPromptText.set(prompt ?? "");
+    this.storage.saveData(this.editPromptKey, prompt ?? "");
   }
   //Upload data
   uploadData = signal(null);
@@ -38637,10 +38645,12 @@ var UploadStateService = class _UploadStateService {
   resetUploadFlow() {
     this.selectedUploadType.set("url");
     this.selectedAiModel.set(AiModel.Nemotron);
+    this.editPromptText.set("");
     this.uploadData.set(null);
     this.prevUploadData = [];
     this.storage.removeData(this.uploadTypeKey);
     this.storage.removeData(this.aiModelKey);
+    this.storage.removeData(this.editPromptKey);
     this.storage.removeData(this.uploadDataKey);
   }
   persistUploadData() {
@@ -38663,6 +38673,10 @@ var UploadStateService = class _UploadStateService {
     const storedModel = this.storage.getData(this.aiModelKey);
     if (storedModel && Object.values(AiModel).includes(storedModel)) {
       this.selectedAiModel.set(storedModel);
+    }
+    const storedEditPrompt = this.storage.getData(this.editPromptKey);
+    if (typeof storedEditPrompt === "string") {
+      this.editPromptText.set(storedEditPrompt);
     }
     const storedData = this.storage.getData(this.uploadDataKey);
     if (!storedData)
@@ -100308,4 +100322,4 @@ export {
    * License: MIT
    *)
 */
-//# sourceMappingURL=chunk-TCSHUAMJ.js.map
+//# sourceMappingURL=chunk-KJVGJ47X.js.map
