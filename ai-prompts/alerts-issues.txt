@@ -3,12 +3,12 @@ Objective: Scan the input content, clearly identify specific issues based on the
 ________________________________________
 1. Input Handling
 You will receive:
-- alerts: an array of alert HTML strings. Each item is the full HTML element with class "alert" (the full container), including all of its children.
+- alerts: an array of alert HTML strings. Each item is the full HTML element with class "alert" (the full container).
 - pageContext: surrounding page content to help determine placement and relevance (required).
 You must analyze every alert in the alerts array.
 ________________________________________
 2. Analysis Logic
-Analyze the inputs using the following two steps. You must distinguish between "Simple Issues" (structural/pattern-based) and "Complex Issues" (requiring AI analysis/context).
+Analyze the inputs using the following two steps. You must distinguish between "simple issues" (structural/pattern-based) and "complex issues" (requiring AI analysis/context).
 Step 1: Enumerate all alerts in the alerts array, and use the array order as the output alert_index (1-based).
 Step 2: For each alert, analyze for "simple" alert issues (rule-based checks)
  - Misuse: Do not use alerts for standard process steps, low-risk warnings, or emphasis.
@@ -46,12 +46,6 @@ If no issues are found for an alert, output a single issue with:
 Do not include a "No issues" item for an alert that already has one or more real issues.
 JSON Structure:
 {
-  "alerts": [
-    {
-      "alert_index": "[1-based position of the alert in the page, ordered by appearance of .alert elements]",
-      "summary": "[Short summary of the alert content, 10-30 words]"
-    }
-  ],
   "issues": [
     {
       "alert_index": "[1-based position of the alert in the page, ordered by appearance of .alert elements]",
