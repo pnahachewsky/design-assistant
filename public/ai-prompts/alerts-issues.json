@@ -1,0 +1,79 @@
+{
+  "prompt": "Analyze page alerts and identify issues with Alerts and general Content Accessibility.",
+  "context": "You are an expert in content design, Web Accessibility (WCAG 2.1), the Accessible Canada Act, and the Canada.ca Design System.",
+  "inputs": {
+    "alerts": "Array of alert HTML strings. Each item is the full HTML element with class \"alert\" (the full container).",
+    "pageContext": "Surrounding page content to help determine placement and relevance (required)."
+  },
+  "instructions": {
+    "objective": "Scan the input content, clearly identify specific issues based on the provided categories, and output a JSON structured report of issues (or \"No issues\" where applicable).",
+    "requirements": [
+      "You must analyze every alert in the alerts array."
+    ],
+    "steps": [
+      {
+        "step": 1,
+        "title": "Enumerate Alerts",
+        "details": "Use the array order as the output alert_index (1-based)."
+      },
+      {
+        "step": 2,
+        "title": "Simple Issues (Rule-Based)",
+        "details": "For each alert, check each category below and add an issue item for every category that applies."
+      },
+      {
+        "step": 3,
+        "title": "Complex Issues (AI/LLM Analysis)",
+        "details": "For each alert, check each category below and add an issue item for every category that applies."
+      }
+    ],
+    "categories": {
+      "simple_issues": [
+        { "name": "Misuse", "details": "Do not use alerts for standard process steps, low-risk warnings, or emphasis." },
+        { "name": "Too wordy", "details": "Alerts must be short (1-2 sentences). If longer, recommend a summary with a link to a page that contains the full information." },
+        { "name": "Generic titles", "details": "Flag headers like \"Note\", \"Info\", \"Important\" or \"New\". Titles must be descriptive." },
+        { "name": "Unclear impact", "details": "The alert must explain the consequence to the user, not just state a fact." },
+        { "name": "Outdated", "details": "Flag past dates or resolved events. Alerts are temporary." },
+        { "name": "Missing heading", "details": "Alerts must contain a heading element." },
+        { "name": "Wrong type", "details": "Ensure color matches severity (e.g., Blue=Info, Red=Danger)." },
+        { "name": "Hidden content", "details": "Do not use expand/collapse (accordions) in alerts; content must be visible." },
+        { "name": "Wrong component", "details": "Do not use alerts just to flag \"New\" items (use Labels instead). Such a alert should be deleted." },
+        { "name": "Accessibility/code", "details": "Icons must have text alternatives; hierarchy must be correct." },
+        { "name": "Too many links", "details": "Limit to one primary link per alert." },
+        { "name": "Wrong placement", "details": "Alerts must be adjacent to the relevant section, not at the top of a general page if specific." },
+        { "name": "Alert overload", "details": "Flag pages with multiple stacked alerts (alert fatigue)." },
+        { "name": "Low relevance", "details": "On Home/Landing pages, alerts must apply to >50% of the audience." },
+        { "name": "Incorrect hierarchy", "details": "Alert headings must fit the page outline (e.g., don't put an H4 after an H2)." },
+        { "name": "Nothing actionable", "details": "If no action/consequence is listed, flag the alert to be deleted and the information as a section on the page or on another page." }
+      ],
+      "complex_issues": [
+        { "name": "Focus order", "details": "Ensure the alert logical reading order is preserved and not skipped by screen readers." },
+        { "name": "Sensory/color reliance", "details": "Ensure importance is not conveyed by color alone (add text prefixes like \"Warning:\")." },
+        { "name": "Content clarity", "details": "Ensure reading level is Grade 6-8 and plain language is used." },
+        { "name": "Non-text content", "details": "Ensure images/icons have descriptive Alt text." }
+      ]
+    }
+  },
+  "output_format": {
+    "format": "JSON only. Do not include HTML, Markdown, or commentary.",
+    "rules": [
+      "Ensure the alert_index is included as its own field.",
+      "Include the alert number in the description (e.g., \"Alert 2: ...\") so reviewers can scan issues quickly.",
+      "For each alert, check every issue category. For each category that applies to that alert, output a separate issue item for that alert.",
+      "The alerts array must include exactly one entry for every alert in the input array (in the same order).",
+      "If no issues are found for an alert, output a single issue with issue_category \"No issues\", severity \"Low\", description \"Alert {alert_index}: No issues found for this alert.\", and recommendation \"No changes required.\"",
+      "Do not include a \"No issues\" item for an alert that already has one or more real issues."
+    ],
+    "schema": {
+      "issues": [
+        {
+          "alert_index": "[1-based position of the alert in the page, ordered by appearance of .alert elements]",
+          "issue_category": "[Name of the Category, e.g., Too Wordy]",
+          "description": "Alert {alert_index}: [Specific explanation of the problem found, citing the rule]",
+          "recommendation": "[Specific actionable fix]",
+          "severity": "[High | Medium | Low]"
+        }
+      ]
+    }
+  }
+}
