@@ -814,11 +814,11 @@ export class PageAssistantCompareComponent
 
       if (isAlertFlow) {
         const cachedIssues = this.alertAi.getCachedIssues(html, editPrompt);
-        const selectedIssues = (cachedIssues || []).filter((issue) => issue.include);
+        const selectedIssues = (cachedIssues || []).filter((issue) => issue.include) as unknown as Record<string, unknown>[];
         if (selectedIssues.length) {
           await this.runAlertRecommendations(
             html,
-            selectedIssues as unknown as Record<string, unknown>[],
+            selectedIssues,
             model,
             headers,
             url,

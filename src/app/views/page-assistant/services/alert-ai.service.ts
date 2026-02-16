@@ -64,7 +64,7 @@ export class AlertAiService {
     const basePrompt = await getPromptTemplate(PromptKey.AlertsIssues);
     const editPrefix = this.normalizeEditPrompt(editPrompt);
     const systemPrompt = editPrefix ? `${editPrefix}\n\n${basePrompt}` : basePrompt;
-    console.log('[AlertAiService] AlertsIssues system prompt:', systemPrompt);
+    //console.log('[AlertAiService] AlertsIssues system prompt:', systemPrompt);
     const alerts = this.extractAlerts(alertHtml);
     const userPayload = {
       alerts,
