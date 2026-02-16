@@ -362,6 +362,7 @@ export class PageAssistantCompareComponent
   ngOnInit(): void {
     this.observeDarkMode();
     this.uploadState.setSelectedAiModel(this.selectedAiModel);
+    this.customEditText = this.uploadState.getEditPromptText();
 
     //Translations
     const undoText = this.translate.instant('page.compare.button.undo');
@@ -521,6 +522,7 @@ export class PageAssistantCompareComponent
   customEditText = '';
   onPrependLevel(prompt: string) {
     this.customEditText = prompt;
+    this.uploadState.setEditPromptText(prompt);
   }
 
   private async getPromptForKey(key: PromptKey): Promise<string> {
@@ -788,6 +790,7 @@ export class PageAssistantCompareComponent
         : this.selectedPromptKey;
       const prompt = await this.getPromptForKey(promptKeyForRequest);
       const model = this.selectedAiModel;
+      const editPrompt = this.customEditText;
       const requestedModelShort = this.getShortModelName(model);
       const url = 'https://openrouter.ai/api/v1/chat/completions';
 
@@ -810,7 +813,7 @@ export class PageAssistantCompareComponent
       };
 
       if (isAlertFlow) {
-        const cachedIssues = this.alertAi.getCachedIssues(html);
+        const cachedIssues = this.alertAi.getCachedIssues(html, editPrompt);
         const selectedIssues = (cachedIssues || []).filter((issue) => issue.include);
         if (selectedIssues.length) {
           await this.runAlertRecommendations(
@@ -987,7 +990,7 @@ export class PageAssistantCompareComponent
           if (!issues.length) {
             throw new Error(`No alert issues returned by the AI (${usedModel}).`);
           }
-        const cachedIssues = this.alertAi.getCachedIssues(html);
+        const cachedIssues = this.alertAi.getCachedIssues(html, editPrompt);
         let selectedIssues: Record<string, unknown>[] = [];
         if (cachedIssues?.length) {
           selectedIssues = cachedIssues.filter((issue) => issue.include) as unknown as Record<string, unknown>[];
@@ -995,7 +998,7 @@ export class PageAssistantCompareComponent
           const normalizedIssues = this.alertAi.normalizeAlertIssues(issues, {
             useIncludeFallback: false,
           });
-          this.alertAi.cacheIssues(html, normalizedIssues);
+          this.alertAi.cacheIssues(html, normalizedIssues, editPrompt);
           selectedIssues = normalizedIssues.filter((issue) => issue.include) as unknown as Record<string, unknown>[];
         }
         if (selectedIssues.length) {

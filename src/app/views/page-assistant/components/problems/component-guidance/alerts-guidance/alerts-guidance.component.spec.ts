@@ -9,6 +9,9 @@ class UploadStateServiceStub {
   getUploadData() {
     return { originalHtml: '<section class="alert">Test</section>' };
   }
+  getEditPromptText() {
+    return '';
+  }
 }
 
 class AlertAiServiceStub {

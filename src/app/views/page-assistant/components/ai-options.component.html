@@ -63,21 +63,11 @@
                   </p-iftalabel>
                 }
                 <!--Slider for number of AI changes-->
-                @if (!isAlertsRecommendationsSelected) {
-                  <div class="flex flex-column gap-3 mt-3">
-                    <p id="ai-changes-language">{{ currentLanguageEditLevel?.label }}</p>
-                    <p-slider [(ngModel)]="languageEditLevel" [step]="25" ariaLabelledBy="ai-changes-language"
-                              (onChange)="emitEditPrompt(currentLanguageEditLevel!.prompt)" fluid />
-                  </div>
-                }
-
-                @if (isAlertsRecommendationsSelected) {
-                  <div class="flex flex-column gap-3 mt-3">
-                    <p id="ai-changes-alerts">{{ currentAlertEditLevel?.label }}</p>
-                    <p-slider [(ngModel)]="alertEditLevel" [step]="50" ariaLabelledBy="ai-changes-alerts"
-                              (onChange)="emitEditPrompt(currentAlertEditLevel!.prompt)" fluid />
-                  </div>
-                }
+                <div class="flex flex-column gap-3 mt-3">
+                  <p id="ai-changes">{{ currentEditLevel?.label }}</p>
+                  <p-slider [(ngModel)]="editLevel" [step]="25" ariaLabelledBy="ai-changes"
+                            (onChange)="emitEditPrompt(currentEditLevel!.prompt)" fluid />
+                </div>
               </div>
             </fieldset>
 

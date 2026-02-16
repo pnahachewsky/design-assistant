@@ -149,38 +149,20 @@ export class AiOptionsComponent implements OnInit {
     }
   }
 
-  //Number of changes for AI to make (language slider)
-  languageEditLevel = 50;
-  languageEditLevels = [
+  //Number of changes for AI to make
+  editLevel = 50;
+  editLevels = [
     { value: 0, label: 'Grammar and spelling only', prompt: 'Make minor edits to correct spelling or grammar errors only. Mostly ignore the other instructions provided.' },
     { value: 25, label: 'Minor edits', prompt: 'Make minor edits only to improve readability. Loosely follow the other instructions provided without making unnecessary changes.' },
-    { value: 50, label: 'Normal language edits', prompt: '' },
+    { value: 50, label: 'Normal edits', prompt: '' },
     { value: 75, label: 'Extensive edits', prompt: 'Heavily rewrite and reorganize the content to follow the instructions provided.' },
     { value: 100, label: 'Complete rewrite', prompt: 'Aggressively rewrite the content. If there is a clear task on the page, feel free to remove unrelated content.' }
   ];
 
-  //Alert recommendations slider
-  alertEditLevel = 50;
-  alertEditLevels = [
-    { value: 0, label: 'Headings only', prompt: 'Only assess the heading of the alert. Make sure a heading exists, it is succint, clearly describes the alert content. Make sure the heading is not duplicated in the content unless it is necessary.' },
-    { value: 50, label: 'Normal alerts edits', prompt: 'Make sure that any link text in the alert is not duplicated in the content.' },
-    { value: 100, label: 'Fix all pain points', prompt: 'Fix all identified pain points in the content.' }
-  ];
-
-  get isAlertsRecommendationsSelected(): boolean {
-    return this.isTwoPrompts
-      ? this.selectedPrompts.includes(PromptKey.AlertsRecommendations)
-      : this.selectedPrompt === PromptKey.AlertsRecommendations;
-  }
-
-  get currentLanguageEditLevel() {
-    return this.languageEditLevels.find(level => level.value === this.languageEditLevel);
-  }
-
-  get currentAlertEditLevel() {
-    return this.alertEditLevels.find(level => level.value === this.alertEditLevel);
+  get currentEditLevel() {
+    return this.editLevels.find(level => level.value === this.editLevel);
   }
   emitEditPrompt(prompt: string): void {
-    this.customPrompt.emit(prompt);
+    this.editPrompt.emit(prompt);
   }
 }

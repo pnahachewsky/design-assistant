@@ -119,7 +119,7 @@ export class AlertsGuidanceComponent implements OnInit, OnChanges, OnDestroy {
     this.issuesUpdatedSub = this.alertAi.issuesUpdated$.subscribe(() => {
       const html = this.uploadState.getUploadData()?.originalHtml || '';
       if (!html) return;
-      const cached = this.alertAi.getCachedIssues(html);
+      const cached = this.alertAi.getCachedIssues(html, this.getEditPrompt());
       if (!cached?.length) return;
       this.issues = this.alertAi.normalizeAlertIssues(cached).map((issue) => ({
         ...issue,
@@ -195,7 +195,8 @@ export class AlertsGuidanceComponent implements OnInit, OnChanges, OnDestroy {
     const html = this.uploadState.getUploadData()?.originalHtml || '';
     if (!html || this.isLoading) return;
 
-    const cached = this.alertAi.getCachedIssues(html);
+    const editPrompt = this.getEditPrompt();
+    const cached = this.alertAi.getCachedIssues(html, editPrompt);
     if (cached?.length) {
       this.issues = this.alertAi.normalizeAlertIssues(cached).map((issue) => ({
         ...issue,
@@ -212,7 +213,12 @@ export class AlertsGuidanceComponent implements OnInit, OnChanges, OnDestroy {
     this.setError(false);
     try {
       const selectedModel = this.uploadState.getSelectedAiModel();
-      const aiIssues = await this.alertAi.analyze(html, undefined, selectedModel);
+      const aiIssues = await this.alertAi.analyze(
+        html,
+        undefined,
+        selectedModel,
+        editPrompt,
+      );
       if (!aiIssues?.length) {
         this.setError(true);
         return;
@@ -223,7 +229,7 @@ export class AlertsGuidanceComponent implements OnInit, OnChanges, OnDestroy {
         severity: issue.severity || 'Unknown',
         include: issue.include ?? true,
       }));
-      this.alertAi.cacheIssues(html, normalizedIssues);
+      this.alertAi.cacheIssues(html, normalizedIssues, editPrompt);
       this.issues = normalizedIssues;
       this.sortIssues();
       this.applySelectAll(this.selectAll);
@@ -251,6 +257,10 @@ export class AlertsGuidanceComponent implements OnInit, OnChanges, OnDestroy {
     // other flows can reuse the user's chosen pain points without re-calling AI.
     const html = this.uploadState.getUploadData()?.originalHtml || '';
     if (!html || !this.issues.length) return;
-    this.alertAi.cacheIssues(html, this.issues);
+    this.alertAi.cacheIssues(html, this.issues, this.getEditPrompt());
+  }
+
+  private getEditPrompt(): string {
+    return this.uploadState.getEditPromptText();
   }
 }

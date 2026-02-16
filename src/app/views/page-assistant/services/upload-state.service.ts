@@ -10,6 +10,7 @@ export class UploadStateService {
   private readonly uploadDataKey = 'pageAssistant.uploadData';
   private readonly uploadTypeKey = 'pageAssistant.uploadType';
   private readonly aiModelKey = 'pageAssistant.aiModel';
+  private readonly editPromptKey = 'pageAssistant.editPrompt';
 
   //Upload type
   private selectedUploadType = signal<'url' | 'paste' | 'word'>('url');
@@ -25,6 +26,14 @@ export class UploadStateService {
   setSelectedAiModel(model: AiModel) {
     this.selectedAiModel.set(model);
     this.storage.saveData(this.aiModelKey, model);
+  }
+
+  //AI edit prompt prefix (slider)
+  private editPromptText = signal<string>('');
+  getEditPromptText = computed(() => this.editPromptText());
+  setEditPromptText(prompt: string) {
+    this.editPromptText.set(prompt ?? '');
+    this.storage.saveData(this.editPromptKey, prompt ?? '');
   }
 
   //Upload data
@@ -111,10 +120,12 @@ export class UploadStateService {
   resetUploadFlow(): void {
     this.selectedUploadType.set('url'); // default to URL
     this.selectedAiModel.set(AiModel.Nemotron);
+    this.editPromptText.set('');
     this.uploadData.set(null);
     this.prevUploadData = [];
     this.storage.removeData(this.uploadTypeKey);
     this.storage.removeData(this.aiModelKey);
+    this.storage.removeData(this.editPromptKey);
     this.storage.removeData(this.uploadDataKey);
   }
 
@@ -140,6 +151,11 @@ export class UploadStateService {
     const storedModel = this.storage.getData(this.aiModelKey);
     if (storedModel && Object.values(AiModel).includes(storedModel as AiModel)) {
       this.selectedAiModel.set(storedModel as AiModel);
+    }
+
+    const storedEditPrompt = this.storage.getData(this.editPromptKey);
+    if (typeof storedEditPrompt === 'string') {
+      this.editPromptText.set(storedEditPrompt);
     }
 
     const storedData = this.storage.getData(this.uploadDataKey);
