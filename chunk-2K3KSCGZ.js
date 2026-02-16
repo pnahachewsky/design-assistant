@@ -21238,15 +21238,15 @@ var ShadowDomService = class _ShadowDomService {
 })();
 
 // src/app/views/page-assistant/data/ai-prompts.constants.ts
-var PROMPT_BASE_PATH = "/ai-prompts";
+var PROMPT_BASE_URL = new URL("ai-prompts/", document.baseURI);
 var promptFiles = {
-  [PromptKey.Headings]: `${PROMPT_BASE_PATH}/headings.txt`,
-  [PromptKey.Doormats]: `${PROMPT_BASE_PATH}/doormats.txt`,
-  [PromptKey.PlainLanguage]: `${PROMPT_BASE_PATH}/plain-language.txt`,
-  [PromptKey.AlertsIssues]: `${PROMPT_BASE_PATH}/alerts-issues.txt`,
-  [PromptKey.AlertsRecommendations]: `${PROMPT_BASE_PATH}/alerts-recommendations.txt`
+  [PromptKey.Headings]: new URL("headings.txt", PROMPT_BASE_URL).toString(),
+  [PromptKey.Doormats]: new URL("doormats.txt", PROMPT_BASE_URL).toString(),
+  [PromptKey.PlainLanguage]: new URL("plain-language.txt", PROMPT_BASE_URL).toString(),
+  [PromptKey.AlertsIssues]: new URL("alerts-issues.txt", PROMPT_BASE_URL).toString(),
+  [PromptKey.AlertsRecommendations]: new URL("alerts-recommendations.txt", PROMPT_BASE_URL).toString()
 };
-var commsObjectivePath = `${PROMPT_BASE_PATH}/comms-objective.txt`;
+var commsObjectivePath = new URL("comms-objective.txt", PROMPT_BASE_URL).toString();
 var promptCache = /* @__PURE__ */ new Map();
 function loadPromptText(path) {
   return __async(this, null, function* () {
@@ -40327,4 +40327,4 @@ ${base}`;
 export {
   PageAssistantCompareComponent
 };
-//# sourceMappingURL=chunk-Z3AS6PBE.js.map
+//# sourceMappingURL=chunk-2K3KSCGZ.js.map
