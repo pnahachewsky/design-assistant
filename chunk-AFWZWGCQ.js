@@ -21408,7 +21408,6 @@ var AlertAiService = class _AlertAiService {
       const systemPrompt = editPrefix ? `${editPrefix}
 
 ${basePrompt}` : basePrompt;
-      console.log("[AlertAiService] AlertsIssues system prompt:", systemPrompt);
       const alerts = this.extractAlerts(alertHtml);
       const userPayload = {
         alerts,
@@ -40327,4 +40326,4 @@ ${base}`;
 export {
   PageAssistantCompareComponent
 };
-//# sourceMappingURL=chunk-2K3KSCGZ.js.map
+//# sourceMappingURL=chunk-AFWZWGCQ.js.map
