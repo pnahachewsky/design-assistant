@@ -1,15 +1,15 @@
 import { PromptKey } from './data.model';
 
-const PROMPT_BASE_PATH = '/ai-prompts';
+const PROMPT_BASE_URL = new URL('ai-prompts/', document.baseURI);
 const promptFiles: Record<PromptKey, string> = {
-  [PromptKey.Headings]: `${PROMPT_BASE_PATH}/headings.txt`,
-  [PromptKey.Doormats]: `${PROMPT_BASE_PATH}/doormats.txt`,
-  [PromptKey.PlainLanguage]: `${PROMPT_BASE_PATH}/plain-language.txt`,
-  [PromptKey.AlertsIssues]: `${PROMPT_BASE_PATH}/alerts-issues.txt`,
-  [PromptKey.AlertsRecommendations]: `${PROMPT_BASE_PATH}/alerts-recommendations.txt`,
+  [PromptKey.Headings]: new URL('headings.txt', PROMPT_BASE_URL).toString(),
+  [PromptKey.Doormats]: new URL('doormats.txt', PROMPT_BASE_URL).toString(),
+  [PromptKey.PlainLanguage]: new URL('plain-language.txt', PROMPT_BASE_URL).toString(),
+  [PromptKey.AlertsIssues]: new URL('alerts-issues.txt', PROMPT_BASE_URL).toString(),
+  [PromptKey.AlertsRecommendations]: new URL('alerts-recommendations.txt', PROMPT_BASE_URL).toString(),
 };
 
-const commsObjectivePath = `${PROMPT_BASE_PATH}/comms-objective.txt`;
+const commsObjectivePath = new URL('comms-objective.txt', PROMPT_BASE_URL).toString();
 const promptCache = new Map<string, string>();
 
 async function loadPromptText(path: string): Promise<string> {
