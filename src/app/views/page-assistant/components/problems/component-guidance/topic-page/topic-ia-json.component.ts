@@ -2177,7 +2177,7 @@ export class TopicIaJsonComponent implements OnInit {
         severity: 'warn',
         summary: 'Feature limit reached',
         detail:
-          '3 features max can be added to HTML',
+          'First 3 (max) features are used',
         life: 4000,
       });
     }
@@ -2311,7 +2311,12 @@ export class TopicIaJsonComponent implements OnInit {
     label: string,
   ): TreeNode | null {
     return (
-      categories.find((node) => node?.label === label && node?.data?.isCategory) ??
+      categories.find(
+        (node) =>
+          node?.data?.isCategory &&
+          this.normalizeLabel(this.stripBadges(node.label ?? '')) ===
+            this.normalizeLabel(label),
+      ) ??
       null
     );
   }
@@ -2973,7 +2978,7 @@ export class TopicIaJsonComponent implements OnInit {
     ).length;
     const baseLabel = this.stripBadges(featureCategory.label ?? 'Features');
     if (featureCount > 3) {
-      featureCategory.label = `${baseLabel} <span class="chip chip-severe">3 features max can be added to HTML</span>`;
+      featureCategory.label = `${baseLabel} <span class="chip chip-severe">Only the first 3 features will be added to HTML</span>`;
     } else {
       featureCategory.label = baseLabel;
     }
