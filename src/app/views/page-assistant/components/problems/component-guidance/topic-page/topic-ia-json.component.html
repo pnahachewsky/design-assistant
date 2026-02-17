@@ -31,67 +31,6 @@
 
 <!--Breadcrumb-->
 @if (breadcrumb.length > 0) {
-  <h2>Contextual input (for Most requested or Features)</h2>
-  <div class="grid mt-3">
-    <div class="col-12 md:col-4">
-      <label
-        for="topic-ia-comm-objectives"
-        class="block text-md font-semibold mb-2"
-      >
-        Are there any communications objectives to consider?
-      </label>
-      <textarea
-        pTextarea
-        id="topic-ia-comm-objectives"
-        [(ngModel)]="commObjectivesInput"
-        rows="3"
-        class="w-full"
-        style="height: 6rem; overflow: auto;"
-      ></textarea>
-    </div>
-    <div class="col-12 md:col-4">
-      <label
-        for="topic-ia-feedback-insights"
-        class="block text-md font-semibold mb-2"
-      >
-        What insights do you have from feedback data?
-      </label>
-      <textarea
-        pTextarea
-        id="topic-ia-feedback-insights"
-        [(ngModel)]="feedbackInsightsInput"
-        rows="3"
-        class="w-full"
-        style="height: 6rem; overflow: auto;"
-      ></textarea>
-    </div>
-    <div class="col-12 md:col-4">
-      <label
-        for="topic-ia-call-trouble"
-        class="block text-md font-semibold mb-2"
-      >
-        What are people having trouble with when they call us?
-      </label>
-      <textarea
-        pTextarea
-        id="topic-ia-call-trouble"
-        [(ngModel)]="callTroubleInput"
-        rows="3"
-        class="w-full"
-        style="height: 6rem; overflow: auto;"
-      ></textarea>
-    </div>
-  </div>
-  <div class="flex justify-content-end mt-3">
-    <p-button
-      label="Send my input to GenAI"
-      [severity]="commObjectivesInput.trim() ? 'primary' : 'secondary'"
-      icon="pi pi-send"
-      [loading]="isAiLoading"
-      [disabled]="!commObjectivesInput.trim() || isAiLoading"
-      (click)="sendContextInputToGenAI()"
-    />
-  </div>
   <h2>Breadcrumb</h2>
   <div class="flex flex-row align-items-center gap-3">
     <p-breadcrumb class="max-w-full" styleClass="pl-1" [model]="breadcrumb" />
@@ -111,110 +50,89 @@
 <!--IA Tree-->
 
 @if (iaChart) {
+  <h2>Suggested topic page sections</h2>
   <div class="grid">
-    <div class="col-12" [class.md:col-6]="visitsByUrl.size > 0">
-      <p-contextMenu #cm [model]="options"></p-contextMenu>
-      <h2>Current IA structure tree</h2>
-      <p-tree
-        [value]="iaChart"
-        styleClass="w-full md:w-[30rem]"
-        [selectionMode]="selectable ? 'multiple' : null"
-        [(selection)]="selectedNode"
-        [draggableNodes]="draggable"
-        [droppableNodes]="true"
-        draggableScope="self"
-        droppableScope="self"
-        (onNodeDrop)="handleNodeDrop($event)"
-        [validateDrop]="true"
-        [contextMenu]="cm"
-        (onNodeContextMenuSelect)="onNodeContextMenu($event)"
-      >
-        <ng-template pTemplate="default" let-node>
-          <div class="flex flex-row align-items-center gap-2 w-full">
-            @if (node.children.length > 0 && !draggable && !node.data.editing) {
-              <i class="pi pi-folder"></i>
-            }
-            @if (
-              (node.children.length === 0 || !node.children) &&
-              !draggable &&
-              !node.data.editing
-            ) {
-              <i class="pi pi-file"></i>
-            }
-            @if (draggable) {
-              <i class="pi pi-arrows-alt cursor-move text-color-secondary"></i>
-            }
-            @if (node.data.editing) {
-              <i class="pi pi-pencil text-color-secondary"></i>
-            }
-            @if (!node.data.editing) {
-              <a
-                [href]="node.data.url"
-                target="_blank"
-                (click)="onNodeClick($event)"
-                [innerHTML]="node.label"
-                class="ia-label"
-              ></a>
-            }
-            @if (node.data.editing === 'label') {
-              <p-inputgroup>
-                <input
-                  type="text"
-                  pInputText
-                  [(ngModel)]="node.label"
-                  pSize="small"
-                  class="ia-label"
-                  (keydown)="onInputKeydown($event)"
-                />
-                <p-inputgroup-addon>
-                  <p-button
-                    icon="pi pi-check"
-                    severity="secondary"
-                    size="small"
-                    (onClick)="saveNode()"
-                  ></p-button>
-                </p-inputgroup-addon>
-              </p-inputgroup>
-            }
-            @if (node.data.editing === 'link') {
-              <p-inputgroup>
-                <input
-                  type="text"
-                  pInputText
-                  [(ngModel)]="node.data.url"
-                  pSize="small"
-                  class="ia-label"
-                  (keydown)="onInputKeydown($event)"
-                />
-                <p-inputgroup-addon>
-                  <p-button
-                    icon="pi pi-check"
-                    severity="secondary"
-                    size="small"
-                    (onClick)="saveNode()"
-                  ></p-button>
-                </p-inputgroup-addon>
-              </p-inputgroup>
-            }
-          </div>
-        </ng-template>
-      </p-tree>
-    </div>
     @if (visitsByUrl.size > 0) {
-      <div class="col-12 md:col-6">
-        <p-contextMenu #cmTopic [model]="options"></p-contextMenu>
-        <div class="flex align-items-center justify-content-between gap-3">
-          <h2 class="m-0">Suggested topic page sections</h2>
-          <p-button
-            label="Generate topic HTML"
-            icon="pi pi-file-export"
-            severity="primary"
-            (click)="generateTopicHtml()"
-          />
+      @if (breadcrumb.length > 0) {
+        <div class="col-12 xl:col-4">
+          <div class="surface-card shadow-2 border-round p-3 mt-3">
+            <h3 class="mt-0">Contextual input (for Most requested or Features)</h3>
+            <div class="flex flex-column gap-3">
+              <div>
+              <label
+                for="topic-ia-comm-objectives"
+                class="block text-md font-semibold mb-2"
+              >
+                Are there any communications objectives to consider?
+              </label>
+              <textarea
+                pTextarea
+                id="topic-ia-comm-objectives"
+                [(ngModel)]="commObjectivesInput"
+                rows="3"
+                class="w-full"
+                style="height: 7rem; overflow: auto;"
+              ></textarea>
+              </div>
+              <div>
+              <label
+                for="topic-ia-feedback-insights"
+                class="block text-md font-semibold mb-2"
+              >
+                What insights do you have from feedback data?
+              </label>
+              <textarea
+                pTextarea
+                id="topic-ia-feedback-insights"
+                [(ngModel)]="feedbackInsightsInput"
+                rows="3"
+                class="w-full"
+                style="height: 7rem; overflow: auto;"
+              ></textarea>
+              </div>
+              <div>
+              <label
+                for="topic-ia-call-trouble"
+                class="block text-md font-semibold mb-2"
+              >
+                What are people having trouble with when they call us?
+              </label>
+              <textarea
+                pTextarea
+                id="topic-ia-call-trouble"
+                [(ngModel)]="callTroubleInput"
+                rows="3"
+                class="w-full"
+                style="height: 7rem; overflow: auto;"
+              ></textarea>
+              </div>
+            </div>
+            <div class="flex justify-content-end mt-3">
+              <p-button
+                label="Send contextual input to GenAI"
+                [severity]="commObjectivesInput.trim() ? 'primary' : 'secondary'"
+                icon="pi pi-send"
+                [loading]="isAiLoading"
+                [disabled]="!commObjectivesInput.trim() || isAiLoading"
+                (click)="sendContextInputToGenAI()"
+              />
+            </div>
+          </div>
+          <div class="flex flex-wrap justify-content-end gap-2 mt-5">
+            <p-button
+              label="Generate topic HTML"
+              icon="pi pi-file-export"
+              severity="primary"
+              (click)="generateTopicHtml()"
+            />
+          </div>
         </div>
+      }
+      <div class="col-12 xl:col-8">
+        <p-contextMenu #cmTopic [model]="options"></p-contextMenu>
         <p-tree
           [value]="topicPageTree"
-          styleClass="w-full md:w-[30rem]"
+          styleClass="w-full md:w-[30rem] topic-page-tree"
           [selectionMode]="selectable ? 'multiple' : null"
           [(selection)]="selectedNode"
           [draggableNodes]="true"
@@ -315,47 +233,10 @@
   </div>
 }
 
-<!--IA Chart-->
-@if (iaChart) {
-  <h2>IA structure</h2>
-  @if (iaChart.length > 0) {
-    <p-button
-      label="Maximize IA chart"
-      severity="secondary"
-      (click)="maximize(chartContainer)"
-      icon="pi pi-window-maximize"
-      styleClass="mt-1 mb-3"
-    />
-  }
-  @if (iaChart.length === 0) {
-    <p>No child pages found.</p>
-  }
-  @if (iaChart.length > 0) {
-    <div
-      #chartContainer
-      class="overflow-auto max-h-75vh surface-ground surface-border border-1 py-3 mb-3 ia-chart-container"
-    >
-      <p-organization-chart [value]="iaChart">
-        <ng-template let-node pTemplate="default">
-          <p>
-            <a
-              [href]="node.data.url"
-              target="_blank"
-              (click)="onNodeClick($event)"
-              [innerHTML]="node.label"
-              class="ia-label"
-            ></a>
-          </p>
-        </ng-template>
-      </p-organization-chart>
-    </div>
-  }
-}
-
 <!--Suggested Topic Page Chart-->
 @if (visitsByUrl.size > 0) {
   <h2>Suggested topic page sections (chart)</h2>
-  @if (topicPageTree.length > 0) {
+  @if (topicPageChartTree.length > 0) {
     <p-button
       label="Maximize suggested chart"
       severity="secondary"
@@ -367,7 +248,7 @@
       #topicChartContainer
       class="overflow-auto max-h-75vh surface-ground surface-border border-1 py-3 mb-3 topic-ia-chart-container"
     >
-      <p-organization-chart [value]="topicPageTree">
+      <p-organization-chart [value]="topicPageChartTree">
         <ng-template let-node pTemplate="default">
           <p>
             @if (node.data?.url) {

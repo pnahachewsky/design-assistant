@@ -107,6 +107,11 @@ interface TopicAiResult {
       background-color: unset !important;
     }
 
+    /* remove extra padding around the tree container */
+    :host ::ng-deep .topic-page-tree.p-tree {
+      padding: 0 !important;
+    }
+
     :host ::ng-deep .topic-ia-steps .topic-ia-step-list {
       display: grid;
       grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -279,6 +284,7 @@ export class TopicIaJsonComponent implements OnInit {
   processedUrls = 0;
   step1Complete = false;
   topicPageTree: TreeNode[] = [];
+  topicPageChartTree: TreeNode[] = [];
   visitsByUrl = new Map<string, number>();
   visitsByPath = new Map<string, number>();
   visitsLoaded = false;
@@ -982,7 +988,7 @@ export class TopicIaJsonComponent implements OnInit {
       {
         label: 'Not suggested for topic page',
         data: { url: '', isCategory: true },
-        expanded: true,
+        expanded: false,
         children: [],
       },
     ];
@@ -2782,6 +2788,34 @@ export class TopicIaJsonComponent implements OnInit {
         this.updateTopicPageTreeStyles(node.children, level + 1);
       }
     }
+
+    if (level === 0) {
+      this.updateTopicPageChartTree();
+    }
+  }
+
+  private updateTopicPageChartTree(): void {
+    this.topicPageChartTree = this.buildTopicPageChartTree(this.topicPageTree);
+  }
+
+  private buildTopicPageChartTree(nodes: TreeNode[] | null): TreeNode[] {
+    if (!nodes?.length) return [];
+
+    const cloneForChart = (node: TreeNode): TreeNode => {
+      const children = (node.children ?? [])
+        .filter((child) => child.label !== 'Not suggested for topic page')
+        .map(cloneForChart);
+
+      return {
+        ...node,
+        expanded: true,
+        children,
+      };
+    };
+
+    return nodes
+      .filter((node) => node.label !== 'Not suggested for topic page')
+      .map(cloneForChart);
   }
 
   topicTreeBgColorsLight: string[] = [
