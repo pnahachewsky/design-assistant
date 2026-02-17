@@ -172,6 +172,22 @@ export class WebDiffService {
         display: block;
       }
 
+      /* Equal-height fallback for preview (WET JS does not run in shadow DOM) */
+      .rendered-content .wb-eqht {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: stretch;
+      }
+
+      .rendered-content .wb-eqht > [class*="col-"] {
+        display: flex;
+      }
+
+      .rendered-content .wb-eqht .well {
+        height: 100%;
+        width: 100%;
+      }
+
       /* Optional connection type styling */
       .cnjnctn-type-or > [class*=cnjnctn-col]:not(:first-child):before {
         content: "or";

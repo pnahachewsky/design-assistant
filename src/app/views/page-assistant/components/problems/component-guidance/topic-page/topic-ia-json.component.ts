@@ -2169,16 +2169,51 @@ export class TopicIaJsonComponent implements OnInit {
     const focusSectionEnd = hasFocus ? '' : '-->';
     const originalHtml = this.uploadState.getUploadData()?.originalHtml ?? '';
     const featureImageMap = this.buildFeatureImageMap(originalHtml);
-    const featureItem = this.buildFeatureItem(
-      features?.children ?? [],
-      featureImageMap,
+    const featureNodesAll = (features?.children ?? []).filter(
+      (node) => !node?.data?.isCategory,
     );
-    const featuresSection = this.buildFeaturesSection(featureItem);
-    const hasFeature = featureItem.trim().length > 0;
-    const featureRowStart = hasFeature ? '<div class="row mrgn-tp-xl">' : '';
-    const featureRowEnd = hasFeature ? '</div>' : '';
-    const socialColStart = hasFeature ? '<div class="col-md-4">' : '';
-    const socialColEnd = hasFeature ? '</div>' : '';
+    if (featureNodesAll.length > 3) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Feature limit reached',
+        detail:
+          'Only the first 3 Features will be added to the topic page HTML.',
+        life: 4000,
+      });
+    }
+    const featureNodes = featureNodesAll.slice(0, 3);
+    const featureCount = featureNodes.length;
+    const hasFeature = featureCount > 0;
+    const socialBlock = hasFeature ? this.buildSocialBlock() : '';
+
+    let featuresSection = '';
+    let featureRowStart = '';
+    let featureRowEnd = '';
+    let socialColStart = '';
+    let socialColEnd = '';
+    let socialBlockPlacement = '';
+
+    if (featureCount === 1) {
+      const featureItem = this.buildFeatureItem(featureNodes, featureImageMap);
+      featuresSection = this.buildFeaturesSection(featureItem);
+      featureRowStart = '<div class="row mrgn-tp-xl">';
+      featureRowEnd = '</div>';
+      socialColStart = '<div class="col-md-4">';
+      socialColEnd = '</div>';
+      socialBlockPlacement = socialBlock;
+    } else if (featureCount === 2) {
+      featuresSection = this.buildFeaturesSectionTwo(
+        featureNodes,
+        featureImageMap,
+        socialBlock,
+      );
+    } else if (featureCount >= 3) {
+      featuresSection = this.buildFeaturesSectionThree(
+        featureNodes,
+        featureImageMap,
+      );
+      socialBlockPlacement = socialBlock;
+    }
 
     const titles = this.extractPageTitles(originalHtml);
     const sectionTitleBlock = titles.sectionTitle
@@ -2219,7 +2254,8 @@ export class TopicIaJsonComponent implements OnInit {
       .replace('{{feature_row_start}}', featureRowStart)
       .replace('{{feature_row_end}}', featureRowEnd)
       .replace('{{social_col_start}}', socialColStart)
-      .replace('{{social_col_end}}', socialColEnd);
+      .replace('{{social_col_end}}', socialColEnd)
+      .replace('{{social_block}}', socialBlockPlacement);
 
     const formattedHtml = await this.urlDataService.formatHtml(html, 'ai');
 
@@ -2341,7 +2377,7 @@ export class TopicIaJsonComponent implements OnInit {
     const imageSrc = this.getFeatureImageSrc(url, featureImageMap);
     const imageTag = imageSrc
       ? `<img src="${imageSrc}" alt="" class="thumbnail">`
-      : '<img src="https://dummyimage.com/360x203/000000/FFFFFF.png" alt="" class="thumbnail">';
+      : `<img src="${this.getAssetUrl('img/feature-360x203.png')}" alt="" class="thumbnail">`;
     return (
       '<div class="col-sm-6">' +
       imageTag +
@@ -2430,6 +2466,129 @@ export class TopicIaJsonComponent implements OnInit {
     }
 
     return { sectionTitle: '', topicTitle };
+  }
+
+  private buildFeaturesSectionTwo(
+    nodes: TreeNode[],
+    featureImageMap: Map<string, string>,
+    socialBlock: string,
+  ): string {
+    const items = nodes
+      .slice(0, 2)
+      .map((node) =>
+        this.buildFeatureCardItem(node, featureImageMap, 'col-sm-6'),
+      )
+      .join('\n');
+    if (!items.trim()) return '';
+    return [
+      '<div class="row mrgn-tp-xl">',
+      '  <div class="col-md-8">',
+      '    <section class="gc-features">',
+      '      <h2 class="wb-inv">Features</h2>',
+      '      <div class="row wb-eqht wb-eqht-grd">',
+      `        ${items}`,
+      '      </div>',
+      '    </section>',
+      '  </div>',
+      '  <div class="col-md-4">',
+      `    ${socialBlock}`,
+      '  </div>',
+      '</div>',
+    ].join('\n');
+  }
+
+  private buildFeaturesSectionThree(
+    nodes: TreeNode[],
+    featureImageMap: Map<string, string>,
+  ): string {
+    const items = nodes
+      .slice(0, 3)
+      .map((node) =>
+        this.buildFeatureCardItem(node, featureImageMap, 'col-lg-4 col-sm-6'),
+      )
+      .join('\n');
+    if (!items.trim()) return '';
+    return [
+      '<section class="gc-features">',
+      '  <h2>Features</h2>',
+      '  <div class="row wb-eqht wb-eqht-grd">',
+      `    ${items}`,
+      '  </div>',
+      '</section>',
+    ].join('\n');
+  }
+
+  private buildFeatureCardItem(
+    node: TreeNode,
+    featureImageMap: Map<string, string>,
+    columnClass: string,
+  ): string {
+    const label = this.getNodeLabel(node);
+    const url = this.getNodeUrl(node);
+    const imageSrc = this.getFeatureImageSrc(url, featureImageMap);
+    const imageTag = imageSrc
+      ? `<img src="${imageSrc}" alt="">`
+      : `<img src="${this.getAssetUrl('img/feature-360x203.png')}" alt="">`;
+    return [
+      `<div class="${columnClass}">`,
+      '  <div class="well well-sm eqht-trgt">',
+      `    ${imageTag}`,
+      `    <h3><a href="${url}" class="stretched-link">${label}</a></h3>`,
+      '    <p>Brief description of the feature being promoted.</p>',
+      '  </div>',
+      '</div>',
+    ].join('\n');
+  }
+
+  private buildSocialBlock(): string {
+    return [
+      '<section class="gc-followus">',
+      '  <h2>On social media</h2>',
+      '  <ul>',
+      '    <li>',
+      '      <a href="#facebook" class="facebook wb-lbx"><span class="wb-inv">Facebook: </span>FacebookPageName</a>',
+      '    </li>',
+      '    <li>',
+      '      <a href="#" rel="external" class="x-social"><span class="wb-inv">X: </span>@XAccount</a>',
+      '    </li>',
+      '    <li>',
+      '      <a href="#" rel="external" class="youtube"><span class="wb-inv">YouTube: </span>YouTubeName</a>',
+      '    </li>',
+      '    <li>',
+      '      <a href="#" rel="external" class="instagram"><span class="wb-inv">Instagram: </span>InstagramName</a>',
+      '    </li>',
+      '    <li>',
+      '      <a href="#" rel="external" class="linkedin"><span class="wb-inv">LinkedIn: </span>LinkedInName</a>',
+      '    </li>',
+      '  </ul>',
+      '</section>',
+      '<section id="facebook" class="modal-dialog modal-content overlay-def mfp-hide">',
+      '  <header class="modal-header">',
+      '    <h2 class="modal-title" id="lbx-title">Facebook</h2>',
+      '  </header>',
+      '  <div class="modal-body">',
+      '    <ul class="list-unstyled lst-spcd">',
+      '      <li>',
+      '        <a href="#" rel="external">[First Facebook account title]</a>',
+      '      </li>',
+      '      <li>',
+      '        <a href="#" rel="external">[Second Facebook account title]</a>',
+      '      </li>',
+      '    </ul>',
+      '  </div>',
+      '  <div class="modal-footer">',
+      '    <button type="button" class="btn btn-sm btn-primary pull-left popup-modal-dismiss">',
+      '      Close<span class="wb-inv">Close overlay</span>',
+      '    </button>',
+      '  </div>',
+      '</section>',
+    ].join('\n');
+  }
+
+  private getAssetUrl(path: string): string {
+    const baseHref = (this.baseHref || '/').replace(/\/+$/, '/');
+    const cleanPath = (path || '').replace(/^\/+/, '');
+    return `${baseHref}${cleanPath}`;
   }
 
   private pickTopicH1(
