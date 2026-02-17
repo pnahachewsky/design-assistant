@@ -36529,7 +36529,7 @@ var TopicIaJsonComponent = class _TopicIaJsonComponent {
         this.messageService.add({
           severity: "warn",
           summary: "Feature limit reached",
-          detail: "3 features max can be added to HTML",
+          detail: "First 3 (max) features are used",
           life: 4e3
         });
       }
@@ -36624,7 +36624,7 @@ var TopicIaJsonComponent = class _TopicIaJsonComponent {
     });
   }
   getCategoryByLabel(categories, label) {
-    return categories.find((node) => node?.label === label && node?.data?.isCategory) ?? null;
+    return categories.find((node) => node?.data?.isCategory && this.normalizeLabel(this.stripBadges(node.label ?? "")) === this.normalizeLabel(label)) ?? null;
   }
   buildMostRequestedItems(nodes) {
     const items = nodes.filter((node) => !node?.data?.isCategory).slice(0, 6).map((node) => this.renderListItem(node));
@@ -37057,7 +37057,7 @@ var TopicIaJsonComponent = class _TopicIaJsonComponent {
     const featureCount = (featureCategory.children ?? []).filter((node) => !node?.data?.isCategory).length;
     const baseLabel = this.stripBadges(featureCategory.label ?? "Features");
     if (featureCount > 3) {
-      featureCategory.label = `${baseLabel} <span class="chip chip-severe">3 features max can be added to HTML</span>`;
+      featureCategory.label = `${baseLabel} <span class="chip chip-severe">Only the first 3 features will be added to HTML</span>`;
     } else {
       featureCategory.label = baseLabel;
     }
@@ -40173,4 +40173,4 @@ ${base}`;
 export {
   PageAssistantCompareComponent
 };
-//# sourceMappingURL=chunk-LP6NCDUA.js.map
+//# sourceMappingURL=chunk-ZQD55HTP.js.map
