@@ -2177,7 +2177,7 @@ export class TopicIaJsonComponent implements OnInit {
         severity: 'warn',
         summary: 'Feature limit reached',
         detail:
-          'Only the first 3 Features will be added to the topic page HTML.',
+          '3 features max can be added to HTML',
         life: 4000,
       });
     }
@@ -2913,6 +2913,10 @@ export class TopicIaJsonComponent implements OnInit {
   private updateTopicPageTreeStyles(nodes: TreeNode[] | null, level = 0): void {
     if (!nodes) return;
 
+    if (level === 0) {
+      this.applyFeatureLimitBadge(nodes[0]);
+    }
+
     const bgColors = this.theme.darkMode()
       ? this.topicTreeBgColorsDark
       : this.topicTreeBgColorsLight;
@@ -2950,6 +2954,28 @@ export class TopicIaJsonComponent implements OnInit {
 
     if (level === 0) {
       this.updateTopicPageChartTree();
+    }
+  }
+
+  private applyFeatureLimitBadge(rootOverride?: TreeNode): void {
+    const root = rootOverride ?? this.topicPageTree[0];
+    if (!root) return;
+    const categories = root.children ?? [];
+    const featureCategory = categories.find(
+      (node) =>
+        node?.data?.isCategory &&
+        this.normalizeLabel(this.stripBadges(node.label ?? '')) === 'features',
+    );
+    if (!featureCategory) return;
+
+    const featureCount = (featureCategory.children ?? []).filter(
+      (node) => !node?.data?.isCategory,
+    ).length;
+    const baseLabel = this.stripBadges(featureCategory.label ?? 'Features');
+    if (featureCount > 3) {
+      featureCategory.label = `${baseLabel} <span class="chip chip-severe">3 features max can be added to HTML</span>`;
+    } else {
+      featureCategory.label = baseLabel;
     }
   }
 
