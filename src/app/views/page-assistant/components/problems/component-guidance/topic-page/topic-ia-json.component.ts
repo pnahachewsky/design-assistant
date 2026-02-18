@@ -1674,6 +1674,13 @@ export class TopicIaJsonComponent implements OnInit {
     return path.toLowerCase().replace(/\/+$/, '');
   }
 
+  private isHighLevelTopicPageFromBreadcrumb(
+    breadcrumbs: MenuItem[],
+  ): boolean {
+    if (!breadcrumbs?.length) return false;
+    return breadcrumbs.length <= 4;
+  }
+
   private findLangMarker(path: string): string | null {
     if (path.includes('/en/')) return '/en/';
     if (path.includes('/fr/')) return '/fr/';
@@ -2184,7 +2191,11 @@ export class TopicIaJsonComponent implements OnInit {
     const featureNodes = featureNodesAll.slice(0, 3);
     const featureCount = featureNodes.length;
     const hasFeature = featureCount > 0;
-    const socialBlock = hasFeature ? this.buildSocialBlock() : '';
+    const allowSocialBlock = this.isHighLevelTopicPageFromBreadcrumb(
+      this.breadcrumb,
+    );
+    const socialBlock =
+      hasFeature && allowSocialBlock ? this.buildSocialBlock() : '';
 
     let featuresSection = '';
     let featureRowStart = '';
@@ -2195,12 +2206,16 @@ export class TopicIaJsonComponent implements OnInit {
 
     if (featureCount === 1) {
       const featureItem = this.buildFeatureItem(featureNodes, featureImageMap);
-      featuresSection = this.buildFeaturesSection(featureItem);
       featureRowStart = '<div class="row mrgn-tp-xl">';
       featureRowEnd = '</div>';
-      socialColStart = '<div class="col-md-4">';
-      socialColEnd = '</div>';
-      socialBlockPlacement = socialBlock;
+      if (socialBlock.trim()) {
+        featuresSection = this.buildFeaturesSection(featureItem);
+        socialColStart = '<div class="col-md-4">';
+        socialColEnd = '</div>';
+        socialBlockPlacement = socialBlock;
+      } else {
+        featuresSection = this.buildFeaturesSectionFullWidth(featureItem);
+      }
     } else if (featureCount === 2) {
       featuresSection = this.buildFeaturesSectionTwo(
         featureNodes,
@@ -2485,6 +2500,16 @@ export class TopicIaJsonComponent implements OnInit {
       )
       .join('\n');
     if (!items.trim()) return '';
+    if (!socialBlock.trim()) {
+      return [
+        '<section class="gc-features mrgn-tp-xl">',
+        '  <h2 class="wb-inv">Features</h2>',
+        '  <div class="row wb-eqht wb-eqht-grd">',
+        `    ${items}`,
+        '  </div>',
+        '</section>',
+      ].join('\n');
+    }
     return [
       '<div class="row mrgn-tp-xl">',
       '  <div class="col-md-8">',
@@ -2498,6 +2523,20 @@ export class TopicIaJsonComponent implements OnInit {
       '  <div class="col-md-4">',
       `    ${socialBlock}`,
       '  </div>',
+      '</div>',
+    ].join('\n');
+  }
+
+  private buildFeaturesSectionFullWidth(featureItem: string): string {
+    if (!featureItem.trim()) return '';
+    return [
+      '<div class="col-md-12">',
+      '  <section class="gc-features">',
+      '    <h2 class="wb-inv">Featured</h2>',
+      '    <div class="row">',
+      `      ${featureItem}`,
+      '    </div>',
+      '  </section>',
       '</div>',
     ].join('\n');
   }
