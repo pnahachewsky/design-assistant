@@ -36,6 +36,8 @@ import { OpenRouterService, ChatMessage } from '../../../../services/openrouter.
 import { TranslateService, TranslateModule } from '@ngx-translate/core';
 import { ThemeService } from '../../../../../../services/theme.service';
 import { getCommsObjectivePrompt } from '../../../../data/ai-prompts.constants';
+import { TOPIC_PAGE_SNIPPETS } from '../../../../data/canada-ca-snippets.constants';
+import { SnippetService } from '../../../../services/snippet.service';
 import topicPageExceptionsJson from './topic-page-exceptions.json';
 import { UrlDataService } from '../../../../services/url-data.service';
 
@@ -245,6 +247,7 @@ export class TopicIaJsonComponent implements OnInit {
   private messageService = inject(MessageService);
   private openRouter = inject(OpenRouterService);
   private urlDataService = inject(UrlDataService);
+  private snippetService = inject(SnippetService);
 
   production: boolean = environment.production;
   activeStep = 1;
@@ -2173,8 +2176,12 @@ export class TopicIaJsonComponent implements OnInit {
     const servicesItems = this.buildServicesItems(doormats?.children ?? []);
     const focusItems = this.buildFocusItems(focus?.children ?? []);
     const hasFocus = focusItems.trim().length > 0;
-    const focusSectionStart = hasFocus ? '' : '<!--';
-    const focusSectionEnd = hasFocus ? '' : '-->';
+    const focusSectionStart = hasFocus
+      ? ''
+      : TOPIC_PAGE_SNIPPETS.focusSectionStartComment;
+    const focusSectionEnd = hasFocus
+      ? ''
+      : TOPIC_PAGE_SNIPPETS.focusSectionEndComment;
     const originalHtml = this.uploadState.getUploadData()?.originalHtml ?? '';
     const featureImageMap = this.buildFeatureImageMap(originalHtml);
     const featureNodesAll = (features?.children ?? []).filter(
@@ -2200,7 +2207,8 @@ export class TopicIaJsonComponent implements OnInit {
     const contributorBlock = allowSocialBlock
       ? this.buildContributorBlock()
       : '';
-    const socialBlock = allowSocialBlock ? socialMediaBlock : '';
+    const hasSocialBlock = socialMediaBlock.trim().length > 0;
+    const hasContributorBlock = contributorBlock.trim().length > 0;
 
     let featuresSection = '';
     let featureRowStart = '';
@@ -2211,58 +2219,73 @@ export class TopicIaJsonComponent implements OnInit {
     let contributorBlockPlacement = '';
 
     if (featureCount === 0) {
-      contributorBlockPlacement =
-        contributorBlock && socialMediaBlock
+      if (hasContributorBlock) {
+        contributorBlockPlacement = hasSocialBlock
           ? this.buildContributorsWithSocialRow(
               contributorBlock,
               socialMediaBlock,
             )
-          : contributorBlock
-            ? this.buildContributorsOnlyRow(contributorBlock)
-            : '';
+          : this.buildContributorsOnlyRow(contributorBlock);
+      }
     } else if (featureCount === 1) {
       const featureItem = this.buildFeatureItem(featureNodes, featureImageMap);
-      featureRowStart = '<div class="row mrgn-tp-xl">';
-      featureRowEnd = '</div>';
-      if (socialBlock.trim()) {
+      if (hasContributorBlock) {
+        featuresSection = this.buildFeaturesSectionFullWidth(featureItem);
+        contributorBlockPlacement = hasSocialBlock
+          ? this.buildContributorsWithSocialRow(
+              contributorBlock,
+              socialMediaBlock,
+            )
+          : this.buildContributorsOnlyRow(contributorBlock);
+      } else if (hasSocialBlock) {
         featuresSection = this.buildFeaturesSection(featureItem);
-        socialColStart = '<div class="col-md-4">';
-        socialColEnd = '</div>';
-        socialBlockPlacement = socialBlock;
+        featureRowStart = TOPIC_PAGE_SNIPPETS.featureRowStart;
+        featureRowEnd = TOPIC_PAGE_SNIPPETS.featureRowEnd;
+        socialColStart = TOPIC_PAGE_SNIPPETS.socialColStart;
+        socialColEnd = TOPIC_PAGE_SNIPPETS.socialColEnd;
+        socialBlockPlacement = socialMediaBlock;
       } else {
         featuresSection = this.buildFeaturesSectionFullWidth(featureItem);
       }
-      contributorBlockPlacement = contributorBlock
-        ? this.buildContributorsOnlyRow(contributorBlock)
-        : '';
     } else if (featureCount === 2) {
       featuresSection = this.buildFeaturesSectionTwo(
         featureNodes,
         featureImageMap,
-        socialBlock,
+        hasContributorBlock || !hasSocialBlock ? '' : socialMediaBlock,
       );
-      contributorBlockPlacement = contributorBlock
-        ? this.buildContributorsOnlyRow(contributorBlock)
-        : '';
+      if (hasContributorBlock) {
+        contributorBlockPlacement = hasSocialBlock
+          ? this.buildContributorsWithSocialRow(
+              contributorBlock,
+              socialMediaBlock,
+            )
+          : this.buildContributorsOnlyRow(contributorBlock);
+      }
     } else if (featureCount >= 3) {
       featuresSection = this.buildFeaturesSectionThree(
         featureNodes,
         featureImageMap,
       );
-      contributorBlockPlacement =
-        contributorBlock && socialMediaBlock
+      if (hasContributorBlock) {
+        contributorBlockPlacement = hasSocialBlock
           ? this.buildContributorsWithSocialRow(
               contributorBlock,
               socialMediaBlock,
             )
-          : contributorBlock
-            ? this.buildContributorsOnlyRow(contributorBlock)
-            : '';
+          : this.buildContributorsOnlyRow(contributorBlock);
+      } else if (hasSocialBlock) {
+        socialBlockPlacement = this.snippetService.applySnippet(
+          TOPIC_PAGE_SNIPPETS.socialBlockBelow,
+          { socialMediaBlock },
+        );
+      }
     }
 
     const titles = this.extractPageTitles(originalHtml);
     const sectionTitleBlock = titles.sectionTitle
-      ? `<p>${this.escapeHtml(titles.sectionTitle)}</p>`
+      ? this.snippetService.applySnippet(TOPIC_PAGE_SNIPPETS.sectionTitleBlock, {
+          sectionTitle: this.escapeHtml(titles.sectionTitle),
+        })
       : '';
     const topicTitle = this.cleanTopicTitle(
       titles.topicTitle || this.getCurrentPageLabel(),
@@ -2272,15 +2295,7 @@ export class TopicIaJsonComponent implements OnInit {
     const hasAlerts = alertsBlockHtml.trim().length > 0;
     const heroImageBlock = hasAlerts
       ? ''
-      : [
-          '<div class="col-md-6 hidden-sm hidden-xs">',
-          '  <img',
-          '    src="https://dummyimage.com/520x200/000000/FFFFFF.png"',
-          '    alt=""',
-          '    class="img-responsive pull-right mrgn-tp-lg"',
-          '  />',
-          '</div>',
-        ].join('\n');
+      : TOPIC_PAGE_SNIPPETS.heroImageBlock;
     const heroTextColClass = hasAlerts ? 'col-md-12' : 'col-md-6';
 
     const html = template
@@ -2377,16 +2392,9 @@ export class TopicIaJsonComponent implements OnInit {
 
   private buildMostRequestedSection(items: string): string {
     if (!items.trim()) return '';
-    return [
-      '<section class="gc-most-requested">',
-      '  <div class="container">',
-      '    <h2 class="h3">Most requested</h2>',
-      '    <ul>',
-      `      ${items}`,
-      '    </ul>',
-      '  </div>',
-      '</section>',
-    ].join('\n');
+    return this.snippetService.applySnippet(TOPIC_PAGE_SNIPPETS.mostRequestedSection, {
+      items,
+    });
   }
 
   private buildServicesItems(nodes: TreeNode[]): string {
@@ -2395,12 +2403,7 @@ export class TopicIaJsonComponent implements OnInit {
       .slice(0, 9)
       .map((node) => this.renderServiceItem(node));
     if (items.length === 0) {
-      return (
-        '<div class="col-lg-4 col-md-6">' +
-        '<h3><a href="#">[No services available]</a></h3>' +
-        '<p>Use action verbs, or list keywords to describe this item.</p>' +
-        '</div>'
-      );
+      return TOPIC_PAGE_SNIPPETS.noServicesItem;
     }
     return items.join('\n');
   }
@@ -2429,32 +2432,23 @@ export class TopicIaJsonComponent implements OnInit {
     const imageTag = imageSrc
       ? `<img src="${imageSrc}" alt="" class="thumbnail">`
       : `<img src="${this.getAssetUrl('img/feature-360x203.png')}" alt="" class="thumbnail">`;
-    return (
-      '<div class="col-sm-6">' +
-      imageTag +
-      '</div>' +
-      '<div class="col-sm-6">' +
-      `<h3><a class="stretched-link" href="${url}">${label}</a></h3>` +
-      '<p>Brief description of the feature being promoted.</p>' +
-      '</div>'
-    );
+    return this.snippetService.applySnippet(TOPIC_PAGE_SNIPPETS.featureItem, {
+      imageTag,
+      url,
+      label,
+    });
   }
 
   private renderListItem(node: TreeNode): string {
     const label = this.getNodeLabel(node);
     const url = this.getNodeUrl(node);
-    return `<li><a href="${url}">${label}</a></li>`;
+    return this.snippetService.applySnippet(TOPIC_PAGE_SNIPPETS.listItem, { url, label });
   }
 
   private renderServiceItem(node: TreeNode): string {
     const label = this.getNodeLabel(node);
     const url = this.getNodeUrl(node);
-    return (
-      '<div class="col-lg-4 col-md-6">' +
-      `<h3><a href="${url}">${label}</a></h3>` +
-      '<p>Use action verbs, or simply list keywords to summarize the information or tasks that can be accomplished on the page it links to</p>' +
-      '</div>'
-    );
+    return this.snippetService.applySnippet(TOPIC_PAGE_SNIPPETS.serviceItem, { url, label });
   }
 
   private getNodeLabel(node: TreeNode): string {
@@ -2524,52 +2518,31 @@ export class TopicIaJsonComponent implements OnInit {
     featureImageMap: Map<string, string>,
     socialBlock: string,
   ): string {
-    const items = nodes
-      .slice(0, 2)
-      .map((node) =>
-        this.buildFeatureCardItem(node, featureImageMap, 'col-sm-6'),
-      )
-      .join('\n');
+    const items = [
+      ...nodes
+        .slice(0, 2)
+        .map((node) =>
+          this.buildFeatureCardItem(node, featureImageMap, 'col-lg-4 col-sm-6'),
+        ),
+      TOPIC_PAGE_SNIPPETS.emptyFeatureColumn,
+    ].join('\n');
     if (!items.trim()) return '';
     if (!socialBlock.trim()) {
-      return [
-        '<section class="gc-features mrgn-tp-xl">',
-        '  <h2 class="wb-inv">Features</h2>',
-        '  <div class="row wb-eqht wb-eqht-grd">',
-        `    ${items}`,
-        '  </div>',
-        '</section>',
-      ].join('\n');
+      return this.snippetService.applySnippet(TOPIC_PAGE_SNIPPETS.featuresSectionTwoNoSocial, {
+        items,
+      });
     }
-    return [
-      '<div class="row mrgn-tp-xl">',
-      '  <div class="col-md-8">',
-      '    <section class="gc-features">',
-      '      <h2 class="wb-inv">Features</h2>',
-      '      <div class="row wb-eqht wb-eqht-grd">',
-      `        ${items}`,
-      '      </div>',
-      '    </section>',
-      '  </div>',
-      '  <div class="col-md-4">',
-      `    ${socialBlock}`,
-      '  </div>',
-      '</div>',
-    ].join('\n');
+    return this.snippetService.applySnippet(TOPIC_PAGE_SNIPPETS.featuresSectionTwoWithSocial, {
+      items,
+      socialBlock,
+    });
   }
 
   private buildFeaturesSectionFullWidth(featureItem: string): string {
     if (!featureItem.trim()) return '';
-    return [
-      '<div class="col-md-12">',
-      '  <section class="gc-features">',
-      '    <h2 class="wb-inv">Featured</h2>',
-      '    <div class="row">',
-      `      ${featureItem}`,
-      '    </div>',
-      '  </section>',
-      '</div>',
-    ].join('\n');
+    return this.snippetService.applySnippet(TOPIC_PAGE_SNIPPETS.featuresSectionFullWidth, {
+      featureItem,
+    });
   }
 
   private buildFeaturesSectionThree(
@@ -2583,14 +2556,9 @@ export class TopicIaJsonComponent implements OnInit {
       )
       .join('\n');
     if (!items.trim()) return '';
-    return [
-      '<section class="gc-features">',
-      '  <h2>Features</h2>',
-      '  <div class="row wb-eqht wb-eqht-grd">',
-      `    ${items}`,
-      '  </div>',
-      '</section>',
-    ].join('\n');
+    return this.snippetService.applySnippet(TOPIC_PAGE_SNIPPETS.featuresSectionThree, {
+      items,
+    });
   }
 
   private buildFeatureCardItem(
@@ -2604,52 +2572,20 @@ export class TopicIaJsonComponent implements OnInit {
     const imageTag = imageSrc
       ? `<img src="${imageSrc}" alt="">`
       : `<img src="${this.getAssetUrl('img/feature-360x203.png')}" alt="">`;
-    return [
-      `<div class="${columnClass}">`,
-      '  <div class="well well-sm eqht-trgt">',
-      `    ${imageTag}`,
-      `    <h3><a href="${url}" class="stretched-link">${label}</a></h3>`,
-      '    <p>Brief description of the feature being promoted.</p>',
-      '  </div>',
-      '</div>',
-    ].join('\n');
+    return this.snippetService.applySnippet(TOPIC_PAGE_SNIPPETS.featureCardItem, {
+      columnClass,
+      imageTag,
+      url,
+      label,
+    });
   }
 
   private buildSocialMediaBlock(): string {
-    return [
-      '<div id="social-media-en" class="gc-followus gc-followus-horizontal">',
-      '  <h2>On social media</h2>',
-      '  <ul class="list-inline">',
-      '    <li>',
-      '      <a href="https://www.facebook.com/canrevagency/" rel="external" class="social-lnk facebook"><span class="" style="border: 2px solid rgb(111, 159, 255);">Facebook</span></a>',
-      '    </li>',
-      '    <li>',
-      '      <a href="https://twitter.com/CanRevAgency" rel="external" class="x-social"><span class="" style="border: 2px solid rgb(111, 159, 255);">X</span></a>',
-      '    </li>',
-      '    <li>',
-      '      <a href="https://www.youtube.com/user/CanRevAgency" rel="external" class="social-lnk youtube"><span class="" style="border: 2px solid rgb(111, 159, 255);">YouTube</span></a>',
-      '    </li>',
-      '    <li>',
-      '      <a href="http://www.instagram.com/canrevagency" rel="external" class="social-lnk instagram"><span class="" style="border: 2px solid rgb(111, 159, 255);">Instagram</span></a>',
-      '    </li>',
-      '    <li>',
-      '      <a href="https://www.linkedin.com/company/cra-arc" rel="external" class="social-lnk linkedin"><span class="" style="border: 2px solid rgb(111, 159, 255);">LinkedIn</span></a>',
-      '    </li>',
-      '  </ul>',
-      '</div>',
-    ].join('\n');
+    return TOPIC_PAGE_SNIPPETS.socialMediaBlock;
   }
 
   private buildContributorBlock(): string {
-    return [
-      '<h2 class="wb-inv">Contributors</h2>',
-      '<section class="gc-contributors">',
-      '  <h3>From:</h3>',
-      '  <ul>',
-      '    <li><a href="/en/revenue-agency.html">Canada Revenue Agency</a></li>',
-      '  </ul>',
-      '</section>',
-    ].join('\n');
+    return TOPIC_PAGE_SNIPPETS.contributorBlock;
   }
 
   private buildContributorsWithSocialRow(
@@ -2657,31 +2593,17 @@ export class TopicIaJsonComponent implements OnInit {
     socialMediaBlock: string,
   ): string {
     if (!contributorBlock.trim() || !socialMediaBlock.trim()) return '';
-    return [
-      '<div class="container mrgn-tp-md">',
-      '  <div class="row">',
-      '    <section class="col-md-8">',
-      `      ${contributorBlock}`,
-      '    </section>',
-      '    <section class="col-md-4 mrgn-bttm-sm">',
-      `      ${socialMediaBlock}`,
-      '    </section>',
-      '  </div>',
-      '</div>',
-    ].join('\n');
+    return this.snippetService.applySnippet(TOPIC_PAGE_SNIPPETS.contributorsWithSocialRow, {
+      contributorBlock,
+      socialMediaBlock,
+    });
   }
 
   private buildContributorsOnlyRow(contributorBlock: string): string {
     if (!contributorBlock.trim()) return '';
-    return [
-      '<div class="container mrgn-tp-md">',
-      '  <div class="row">',
-      '    <section class="col-md-12">',
-      `      ${contributorBlock}`,
-      '    </section>',
-      '  </div>',
-      '</div>',
-    ].join('\n');
+    return this.snippetService.applySnippet(TOPIC_PAGE_SNIPPETS.contributorsOnlyRow, {
+      contributorBlock,
+    });
   }
 
   private getAssetUrl(path: string): string {
@@ -2865,16 +2787,9 @@ export class TopicIaJsonComponent implements OnInit {
 
   private buildFeaturesSection(featureItem: string): string {
     if (!featureItem.trim()) return '';
-    return [
-      '<div class="col-md-8">',
-      '  <section class="gc-features">',
-      '    <h2 class="wb-inv">Featured</h2>',
-      '    <div class="row">',
-      `      ${featureItem}`,
-      '    </div>',
-      '  </section>',
-      '</div>',
-    ].join('\n');
+    return this.snippetService.applySnippet(TOPIC_PAGE_SNIPPETS.featuresSection, {
+      featureItem,
+    });
   }
 
   //Open link in new tab
