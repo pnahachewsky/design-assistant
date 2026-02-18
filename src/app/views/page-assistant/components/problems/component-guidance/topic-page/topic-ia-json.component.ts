@@ -1678,7 +1678,8 @@ export class TopicIaJsonComponent implements OnInit {
     breadcrumbs: MenuItem[],
   ): boolean {
     if (!breadcrumbs?.length) return false;
-    return breadcrumbs.length <= 4;
+    const level = breadcrumbs.length + 1;
+    return level <= 5;
   }
 
   private findLangMarker(path: string): string | null {
@@ -2190,12 +2191,16 @@ export class TopicIaJsonComponent implements OnInit {
     }
     const featureNodes = featureNodesAll.slice(0, 3);
     const featureCount = featureNodes.length;
-    const hasFeature = featureCount > 0;
     const allowSocialBlock = this.isHighLevelTopicPageFromBreadcrumb(
       this.breadcrumb,
     );
-    const socialBlock =
-      hasFeature && allowSocialBlock ? this.buildSocialBlock() : '';
+    const socialMediaBlock = allowSocialBlock
+      ? this.buildSocialMediaBlock()
+      : '';
+    const contributorBlock = allowSocialBlock
+      ? this.buildContributorBlock()
+      : '';
+    const socialBlock = allowSocialBlock ? socialMediaBlock : '';
 
     let featuresSection = '';
     let featureRowStart = '';
@@ -2203,8 +2208,19 @@ export class TopicIaJsonComponent implements OnInit {
     let socialColStart = '';
     let socialColEnd = '';
     let socialBlockPlacement = '';
+    let contributorBlockPlacement = '';
 
-    if (featureCount === 1) {
+    if (featureCount === 0) {
+      contributorBlockPlacement =
+        contributorBlock && socialMediaBlock
+          ? this.buildContributorsWithSocialRow(
+              contributorBlock,
+              socialMediaBlock,
+            )
+          : contributorBlock
+            ? this.buildContributorsOnlyRow(contributorBlock)
+            : '';
+    } else if (featureCount === 1) {
       const featureItem = this.buildFeatureItem(featureNodes, featureImageMap);
       featureRowStart = '<div class="row mrgn-tp-xl">';
       featureRowEnd = '</div>';
@@ -2216,18 +2232,32 @@ export class TopicIaJsonComponent implements OnInit {
       } else {
         featuresSection = this.buildFeaturesSectionFullWidth(featureItem);
       }
+      contributorBlockPlacement = contributorBlock
+        ? this.buildContributorsOnlyRow(contributorBlock)
+        : '';
     } else if (featureCount === 2) {
       featuresSection = this.buildFeaturesSectionTwo(
         featureNodes,
         featureImageMap,
         socialBlock,
       );
+      contributorBlockPlacement = contributorBlock
+        ? this.buildContributorsOnlyRow(contributorBlock)
+        : '';
     } else if (featureCount >= 3) {
       featuresSection = this.buildFeaturesSectionThree(
         featureNodes,
         featureImageMap,
       );
-      socialBlockPlacement = socialBlock;
+      contributorBlockPlacement =
+        contributorBlock && socialMediaBlock
+          ? this.buildContributorsWithSocialRow(
+              contributorBlock,
+              socialMediaBlock,
+            )
+          : contributorBlock
+            ? this.buildContributorsOnlyRow(contributorBlock)
+            : '';
     }
 
     const titles = this.extractPageTitles(originalHtml);
@@ -2270,7 +2300,8 @@ export class TopicIaJsonComponent implements OnInit {
       .replace('{{feature_row_end}}', featureRowEnd)
       .replace('{{social_col_start}}', socialColStart)
       .replace('{{social_col_end}}', socialColEnd)
-      .replace('{{social_block}}', socialBlockPlacement);
+      .replace('{{social_block}}', socialBlockPlacement)
+      .replace('{{contributor_block}}', contributorBlockPlacement);
 
     const formattedHtml = await this.urlDataService.formatHtml(html, 'ai');
 
@@ -2584,48 +2615,72 @@ export class TopicIaJsonComponent implements OnInit {
     ].join('\n');
   }
 
-  private buildSocialBlock(): string {
+  private buildSocialMediaBlock(): string {
     return [
-      '<section class="gc-followus">',
+      '<div id="social-media-en" class="gc-followus gc-followus-horizontal">',
       '  <h2>On social media</h2>',
-      '  <ul>',
+      '  <ul class="list-inline">',
       '    <li>',
-      '      <a href="#facebook" class="facebook wb-lbx"><span class="wb-inv">Facebook: </span>FacebookPageName</a>',
+      '      <a href="https://www.facebook.com/canrevagency/" rel="external" class="social-lnk facebook"><span class="" style="border: 2px solid rgb(111, 159, 255);">Facebook</span></a>',
       '    </li>',
       '    <li>',
-      '      <a href="#" rel="external" class="x-social"><span class="wb-inv">X: </span>@XAccount</a>',
+      '      <a href="https://twitter.com/CanRevAgency" rel="external" class="x-social"><span class="" style="border: 2px solid rgb(111, 159, 255);">X</span></a>',
       '    </li>',
       '    <li>',
-      '      <a href="#" rel="external" class="youtube"><span class="wb-inv">YouTube: </span>YouTubeName</a>',
+      '      <a href="https://www.youtube.com/user/CanRevAgency" rel="external" class="social-lnk youtube"><span class="" style="border: 2px solid rgb(111, 159, 255);">YouTube</span></a>',
       '    </li>',
       '    <li>',
-      '      <a href="#" rel="external" class="instagram"><span class="wb-inv">Instagram: </span>InstagramName</a>',
+      '      <a href="http://www.instagram.com/canrevagency" rel="external" class="social-lnk instagram"><span class="" style="border: 2px solid rgb(111, 159, 255);">Instagram</span></a>',
       '    </li>',
       '    <li>',
-      '      <a href="#" rel="external" class="linkedin"><span class="wb-inv">LinkedIn: </span>LinkedInName</a>',
+      '      <a href="https://www.linkedin.com/company/cra-arc" rel="external" class="social-lnk linkedin"><span class="" style="border: 2px solid rgb(111, 159, 255);">LinkedIn</span></a>',
       '    </li>',
       '  </ul>',
+      '</div>',
+    ].join('\n');
+  }
+
+  private buildContributorBlock(): string {
+    return [
+      '<h2 class="wb-inv">Contributors</h2>',
+      '<section class="gc-contributors">',
+      '  <h3>From:</h3>',
+      '  <ul>',
+      '    <li><a href="/en/revenue-agency.html">Canada Revenue Agency</a></li>',
+      '  </ul>',
       '</section>',
-      '<section id="facebook" class="modal-dialog modal-content overlay-def mfp-hide">',
-      '  <header class="modal-header">',
-      '    <h2 class="modal-title" id="lbx-title">Facebook</h2>',
-      '  </header>',
-      '  <div class="modal-body">',
-      '    <ul class="list-unstyled lst-spcd">',
-      '      <li>',
-      '        <a href="#" rel="external">[First Facebook account title]</a>',
-      '      </li>',
-      '      <li>',
-      '        <a href="#" rel="external">[Second Facebook account title]</a>',
-      '      </li>',
-      '    </ul>',
+    ].join('\n');
+  }
+
+  private buildContributorsWithSocialRow(
+    contributorBlock: string,
+    socialMediaBlock: string,
+  ): string {
+    if (!contributorBlock.trim() || !socialMediaBlock.trim()) return '';
+    return [
+      '<div class="container mrgn-tp-md">',
+      '  <div class="row">',
+      '    <section class="col-md-8">',
+      `      ${contributorBlock}`,
+      '    </section>',
+      '    <section class="col-md-4 mrgn-bttm-sm">',
+      `      ${socialMediaBlock}`,
+      '    </section>',
       '  </div>',
-      '  <div class="modal-footer">',
-      '    <button type="button" class="btn btn-sm btn-primary pull-left popup-modal-dismiss">',
-      '      Close<span class="wb-inv">Close overlay</span>',
-      '    </button>',
+      '</div>',
+    ].join('\n');
+  }
+
+  private buildContributorsOnlyRow(contributorBlock: string): string {
+    if (!contributorBlock.trim()) return '';
+    return [
+      '<div class="container mrgn-tp-md">',
+      '  <div class="row">',
+      '    <section class="col-md-12">',
+      `      ${contributorBlock}`,
+      '    </section>',
       '  </div>',
-      '</section>',
+      '</div>',
     ].join('\n');
   }
 
