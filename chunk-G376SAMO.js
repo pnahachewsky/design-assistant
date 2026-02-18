@@ -36100,6 +36100,11 @@ var TopicIaJsonComponent = class _TopicIaJsonComponent {
   normalizePath(path) {
     return path.toLowerCase().replace(/\/+$/, "");
   }
+  isHighLevelTopicPageFromBreadcrumb(breadcrumbs) {
+    if (!breadcrumbs?.length)
+      return false;
+    return breadcrumbs.length <= 4;
+  }
   findLangMarker(path) {
     if (path.includes("/en/"))
       return "/en/";
@@ -36536,7 +36541,8 @@ var TopicIaJsonComponent = class _TopicIaJsonComponent {
       const featureNodes = featureNodesAll.slice(0, 3);
       const featureCount = featureNodes.length;
       const hasFeature = featureCount > 0;
-      const socialBlock = hasFeature ? this.buildSocialBlock() : "";
+      const allowSocialBlock = this.isHighLevelTopicPageFromBreadcrumb(this.breadcrumb);
+      const socialBlock = hasFeature && allowSocialBlock ? this.buildSocialBlock() : "";
       let featuresSection = "";
       let featureRowStart = "";
       let featureRowEnd = "";
@@ -36545,12 +36551,16 @@ var TopicIaJsonComponent = class _TopicIaJsonComponent {
       let socialBlockPlacement = "";
       if (featureCount === 1) {
         const featureItem = this.buildFeatureItem(featureNodes, featureImageMap);
-        featuresSection = this.buildFeaturesSection(featureItem);
         featureRowStart = '<div class="row mrgn-tp-xl">';
         featureRowEnd = "</div>";
-        socialColStart = '<div class="col-md-4">';
-        socialColEnd = "</div>";
-        socialBlockPlacement = socialBlock;
+        if (socialBlock.trim()) {
+          featuresSection = this.buildFeaturesSection(featureItem);
+          socialColStart = '<div class="col-md-4">';
+          socialColEnd = "</div>";
+          socialBlockPlacement = socialBlock;
+        } else {
+          featuresSection = this.buildFeaturesSectionFullWidth(featureItem);
+        }
       } else if (featureCount === 2) {
         featuresSection = this.buildFeaturesSectionTwo(featureNodes, featureImageMap, socialBlock);
       } else if (featureCount >= 3) {
@@ -36722,6 +36732,16 @@ var TopicIaJsonComponent = class _TopicIaJsonComponent {
     const items = nodes.slice(0, 2).map((node) => this.buildFeatureCardItem(node, featureImageMap, "col-sm-6")).join("\n");
     if (!items.trim())
       return "";
+    if (!socialBlock.trim()) {
+      return [
+        '<section class="gc-features mrgn-tp-xl">',
+        '  <h2 class="wb-inv">Features</h2>',
+        '  <div class="row wb-eqht wb-eqht-grd">',
+        `    ${items}`,
+        "  </div>",
+        "</section>"
+      ].join("\n");
+    }
     return [
       '<div class="row mrgn-tp-xl">',
       '  <div class="col-md-8">',
@@ -36735,6 +36755,20 @@ var TopicIaJsonComponent = class _TopicIaJsonComponent {
       '  <div class="col-md-4">',
       `    ${socialBlock}`,
       "  </div>",
+      "</div>"
+    ].join("\n");
+  }
+  buildFeaturesSectionFullWidth(featureItem) {
+    if (!featureItem.trim())
+      return "";
+    return [
+      '<div class="col-md-12">',
+      '  <section class="gc-features">',
+      '    <h2 class="wb-inv">Featured</h2>',
+      '    <div class="row">',
+      `      ${featureItem}`,
+      "    </div>",
+      "  </section>",
       "</div>"
     ].join("\n");
   }
@@ -40173,4 +40207,4 @@ ${base}`;
 export {
   PageAssistantCompareComponent
 };
-//# sourceMappingURL=chunk-ZQD55HTP.js.map
+//# sourceMappingURL=chunk-G376SAMO.js.map
