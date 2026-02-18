@@ -36287,6 +36287,10 @@ var TopicIaJsonComponent = class _TopicIaJsonComponent {
     const level = breadcrumbs.length + 1;
     return level <= 5;
   }
+  shouldSuggestContributorBlock(url) {
+    const normalized = (url || "").toLowerCase();
+    return normalized.includes("/en/services/taxes/") || normalized.includes("/fr/services/impots/");
+  }
   findLangMarker(path) {
     if (path.includes("/en/"))
       return "/en/";
@@ -36723,8 +36727,9 @@ var TopicIaJsonComponent = class _TopicIaJsonComponent {
       const featureNodes = featureNodesAll.slice(0, 3);
       const featureCount = featureNodes.length;
       const allowSocialBlock = this.isHighLevelTopicPageFromBreadcrumb(this.breadcrumb);
+      const allowContributorBlock = this.shouldSuggestContributorBlock(this.originalUrl);
       const socialMediaBlock = allowSocialBlock ? this.buildSocialMediaBlock() : "";
-      const contributorBlock = allowSocialBlock ? this.buildContributorBlock() : "";
+      const contributorBlock = allowContributorBlock ? this.buildContributorBlock() : "";
       const hasSocialBlock = socialMediaBlock.trim().length > 0;
       const hasContributorBlock = contributorBlock.trim().length > 0;
       let featuresSection = "";
@@ -40339,4 +40344,4 @@ ${base}`;
 export {
   PageAssistantCompareComponent
 };
-//# sourceMappingURL=chunk-NNXB4GYH.js.map
+//# sourceMappingURL=chunk-LLYOHJ6L.js.map
