@@ -1685,6 +1685,14 @@ export class TopicIaJsonComponent implements OnInit {
     return level <= 5;
   }
 
+  private shouldSuggestContributorBlock(url: string): boolean {
+    const normalized = (url || '').toLowerCase();
+    return (
+      normalized.includes('/en/services/taxes/') ||
+      normalized.includes('/fr/services/impots/')
+    );
+  }
+
   private findLangMarker(path: string): string | null {
     if (path.includes('/en/')) return '/en/';
     if (path.includes('/fr/')) return '/fr/';
@@ -2201,10 +2209,13 @@ export class TopicIaJsonComponent implements OnInit {
     const allowSocialBlock = this.isHighLevelTopicPageFromBreadcrumb(
       this.breadcrumb,
     );
+    const allowContributorBlock = this.shouldSuggestContributorBlock(
+      this.originalUrl,
+    );
     const socialMediaBlock = allowSocialBlock
       ? this.buildSocialMediaBlock()
       : '';
-    const contributorBlock = allowSocialBlock
+    const contributorBlock = allowContributorBlock
       ? this.buildContributorBlock()
       : '';
     const hasSocialBlock = socialMediaBlock.trim().length > 0;
