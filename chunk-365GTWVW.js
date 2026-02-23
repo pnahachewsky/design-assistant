@@ -21407,9 +21407,9 @@ var AlertAiService = class _AlertAiService {
     return available;
   }
   /** Call OpenRouter with the AlertsIssues prompt and return normalized issues. */
-  analyze(alertHtml, pageContext, model, editPrompt) {
+  analyze(alertHtml, pageContext, model) {
     return __async(this, null, function* () {
-      const cached = this.getCachedIssues(alertHtml, editPrompt);
+      const cached = this.getCachedIssues(alertHtml);
       if (cached?.length) {
         return cached;
       }
@@ -21420,10 +21420,7 @@ var AlertAiService = class _AlertAiService {
         life: 2e3
       });
       const basePrompt = yield getPromptTemplate(PromptKey.AlertsIssues);
-      const editPrefix = this.normalizeEditPrompt(editPrompt);
-      const systemPrompt = editPrefix ? `${editPrefix}
-
-${basePrompt}` : basePrompt;
+      const systemPrompt = basePrompt;
       const alerts = this.extractAlerts(alertHtml);
       const userPayload = {
         alerts,
@@ -21523,24 +21520,19 @@ ${basePrompt}` : basePrompt;
       }
     });
   }
-  getCachedIssues(alertHtml, editPrompt) {
+  getCachedIssues(alertHtml) {
     const normalized = this.trimText(alertHtml);
-    const normalizedPrompt = this.normalizeEditPrompt(editPrompt);
     if (!this.cachedAlertIssues)
       return null;
     if (this.cachedAlertIssues.html !== normalized)
       return null;
-    if (this.cachedAlertIssues.editPrompt !== normalizedPrompt)
-      return null;
     return this.cachedAlertIssues.issues;
   }
-  cacheIssues(alertHtml, issues, editPrompt) {
+  cacheIssues(alertHtml, issues) {
     const normalized = this.trimText(alertHtml);
-    const normalizedPrompt = this.normalizeEditPrompt(editPrompt);
     const copied = issues.map((issue) => __spreadValues({}, issue));
     this.cachedAlertIssues = {
       html: normalized,
-      editPrompt: normalizedPrompt,
       issues: copied
     };
     this.issuesUpdatedSubject.next({
@@ -21637,9 +21629,6 @@ ${basePrompt}` : basePrompt;
     return t.length > max ? t.slice(0, max) : t;
   }
   cleanString(v) {
-    return typeof v === "string" ? v.trim() : "";
-  }
-  normalizeEditPrompt(v) {
     return typeof v === "string" ? v.trim() : "";
   }
   extractAlerts(sourceHtml) {
@@ -25169,7 +25158,7 @@ var AlertsGuidanceComponent = class _AlertsGuidanceComponent {
       const html = this.uploadState.getUploadData()?.originalHtml || "";
       if (!html)
         return;
-      const cached = this.alertAi.getCachedIssues(html, this.getEditPrompt());
+      const cached = this.alertAi.getCachedIssues(html);
       if (!cached?.length)
         return;
       this.issues = this.alertAi.normalizeAlertIssues(cached).map((issue) => __spreadProps(__spreadValues({}, issue), {
@@ -25244,8 +25233,7 @@ var AlertsGuidanceComponent = class _AlertsGuidanceComponent {
       const html = this.uploadState.getUploadData()?.originalHtml || "";
       if (!html || this.isLoading)
         return;
-      const editPrompt = this.getEditPrompt();
-      const cached = this.alertAi.getCachedIssues(html, editPrompt);
+      const cached = this.alertAi.getCachedIssues(html);
       if (cached?.length) {
         this.issues = this.alertAi.normalizeAlertIssues(cached).map((issue) => __spreadProps(__spreadValues({}, issue), {
           category: this.normalizeCategoryLabel(issue.category)
@@ -25260,7 +25248,7 @@ var AlertsGuidanceComponent = class _AlertsGuidanceComponent {
       this.setError(false);
       try {
         const selectedModel = this.uploadState.getSelectedAiModel();
-        const aiIssues = yield this.alertAi.analyze(html, void 0, selectedModel, editPrompt);
+        const aiIssues = yield this.alertAi.analyze(html, void 0, selectedModel);
         if (!aiIssues?.length) {
           this.setError(true);
           return;
@@ -25270,7 +25258,7 @@ var AlertsGuidanceComponent = class _AlertsGuidanceComponent {
           severity: issue.severity || "Unknown",
           include: issue.include ?? true
         }));
-        this.alertAi.cacheIssues(html, normalizedIssues, editPrompt);
+        this.alertAi.cacheIssues(html, normalizedIssues);
         this.issues = normalizedIssues;
         this.sortIssues();
         this.applySelectAll(this.selectAll);
@@ -25295,10 +25283,7 @@ var AlertsGuidanceComponent = class _AlertsGuidanceComponent {
     const html = this.uploadState.getUploadData()?.originalHtml || "";
     if (!html || !this.issues.length)
       return;
-    this.alertAi.cacheIssues(html, this.issues, this.getEditPrompt());
-  }
-  getEditPrompt() {
-    return this.uploadState.getEditPromptText();
+    this.alertAi.cacheIssues(html, this.issues);
   }
   static \u0275fac = function AlertsGuidanceComponent_Factory(__ngFactoryType__) {
     return new (__ngFactoryType__ || _AlertsGuidanceComponent)();
@@ -26554,7 +26539,7 @@ var ComponentGuidanceComponent = class _ComponentGuidanceComponent {
     const html = this.uploadState.getUploadData()?.originalHtml || "";
     if (!html)
       return;
-    const cached = this.alertAi.getCachedIssues(html, this.uploadState.getEditPromptText());
+    const cached = this.alertAi.getCachedIssues(html);
     if (!cached?.length)
       return;
     const normalizedIssues = this.alertAi.normalizeAlertIssues(cached).map((issue) => __spreadProps(__spreadValues({}, issue), {
@@ -39217,13 +39202,14 @@ var PageAssistantCompareComponent = class _PageAssistantCompareComponent {
     return __async(this, null, function* () {
       const base = yield getPromptTemplate(key2);
       const custom = this.customPromptText.trim();
-      return custom ? `${this.customEditText}
+      const includeEditPrompt = key2 !== PromptKey.AlertsIssues && key2 !== PromptKey.AlertsRecommendations;
+      const editPrefix = includeEditPrompt ? this.customEditText : "";
+      const promptBody = editPrefix ? `${editPrefix}
 
-${base}
+${base}` : base;
+      return custom ? `${promptBody}
 
-${custom}` : `${this.customEditText}
-
-${base}`;
+${custom}` : promptBody;
     });
   }
   parseRecommendationsFromAi(text) {
@@ -39407,7 +39393,6 @@ ${base}`;
         const promptKeyForRequest = isAlertsRecommendations ? PromptKey.AlertsIssues : this.selectedPromptKey;
         const prompt = yield this.getPromptForKey(promptKeyForRequest);
         const model = this.selectedAiModel;
-        const editPrompt = this.customEditText;
         const requestedModelShort = this.getShortModelName(model);
         const url = "https://openrouter.ai/api/v1/chat/completions";
         const headers = {
@@ -39427,7 +39412,7 @@ ${base}`;
           }
         };
         if (isAlertFlow) {
-          const cachedIssues = this.alertAi.getCachedIssues(html, editPrompt);
+          const cachedIssues = this.alertAi.getCachedIssues(html);
           const selectedIssues = (cachedIssues || []).filter((issue) => issue.include);
           if (selectedIssues.length) {
             yield this.runAlertRecommendations(html, selectedIssues, model, headers, url);
@@ -39558,7 +39543,7 @@ ${base}`;
           if (!issues.length) {
             throw new Error(`No alert issues returned by the AI (${usedModel}).`);
           }
-          const cachedIssues = this.alertAi.getCachedIssues(html, editPrompt);
+          const cachedIssues = this.alertAi.getCachedIssues(html);
           let selectedIssues = [];
           if (cachedIssues?.length) {
             selectedIssues = cachedIssues.filter((issue) => issue.include);
@@ -39566,7 +39551,7 @@ ${base}`;
             const normalizedIssues = this.alertAi.normalizeAlertIssues(issues, {
               useIncludeFallback: false
             });
-            this.alertAi.cacheIssues(html, normalizedIssues, editPrompt);
+            this.alertAi.cacheIssues(html, normalizedIssues);
             selectedIssues = normalizedIssues.filter((issue) => issue.include);
           }
           if (selectedIssues.length) {
@@ -40344,4 +40329,4 @@ ${base}`;
 export {
   PageAssistantCompareComponent
 };
-//# sourceMappingURL=chunk-LLYOHJ6L.js.map
+//# sourceMappingURL=chunk-365GTWVW.js.map
