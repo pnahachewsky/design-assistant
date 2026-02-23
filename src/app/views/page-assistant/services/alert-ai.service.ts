@@ -18,7 +18,7 @@ export class AlertAiService {
     issues: AlertIssue[];
   }>();
   readonly issuesUpdated$ = this.issuesUpdatedSubject.asObservable();
-  private cachedAlertIssues: { html: string; editPrompt: string; issues: AlertIssue[] } | null = null;
+  private cachedAlertIssues: { html: string; issues: AlertIssue[] } | null = null;
   private readonly fallbackSeverities: Record<string, { severity: string; include?: boolean }> =
     Object.fromEntries(
       Object.entries(
@@ -49,9 +49,8 @@ export class AlertAiService {
     alertHtml: string,
     pageContext?: string,
     model?: AiModel,
-    editPrompt?: string,
   ): Promise<AlertIssue[]> {
-    const cached = this.getCachedIssues(alertHtml, editPrompt);
+    const cached = this.getCachedIssues(alertHtml);
     if (cached?.length) {
       return cached;
     }
@@ -62,8 +61,7 @@ export class AlertAiService {
       life: 2000,
     });
     const basePrompt = await getPromptTemplate(PromptKey.AlertsIssues);
-    const editPrefix = this.normalizeEditPrompt(editPrompt);
-    const systemPrompt = editPrefix ? `${editPrefix}\n\n${basePrompt}` : basePrompt;
+    const systemPrompt = basePrompt;
     //console.log('[AlertAiService] AlertsIssues system prompt:', systemPrompt);
     const alerts = this.extractAlerts(alertHtml);
     const userPayload = {
@@ -175,22 +173,18 @@ export class AlertAiService {
     }
   }
 
-  getCachedIssues(alertHtml: string, editPrompt?: string): AlertIssue[] | null {
+  getCachedIssues(alertHtml: string): AlertIssue[] | null {
     const normalized = this.trimText(alertHtml);
-    const normalizedPrompt = this.normalizeEditPrompt(editPrompt);
     if (!this.cachedAlertIssues) return null;
     if (this.cachedAlertIssues.html !== normalized) return null;
-    if (this.cachedAlertIssues.editPrompt !== normalizedPrompt) return null;
     return this.cachedAlertIssues.issues;
   }
 
-  cacheIssues(alertHtml: string, issues: AlertIssue[], editPrompt?: string): void {
+  cacheIssues(alertHtml: string, issues: AlertIssue[]): void {
     const normalized = this.trimText(alertHtml);
-    const normalizedPrompt = this.normalizeEditPrompt(editPrompt);
     const copied = issues.map((issue) => ({ ...issue }));
     this.cachedAlertIssues = {
       html: normalized,
-      editPrompt: normalizedPrompt,
       issues: copied,
     };
     this.issuesUpdatedSubject.next({
@@ -338,10 +332,6 @@ export class AlertAiService {
   }
 
   private cleanString(v: unknown): string {
-    return typeof v === 'string' ? v.trim() : '';
-  }
-
-  private normalizeEditPrompt(v?: string): string {
     return typeof v === 'string' ? v.trim() : '';
   }
 

@@ -528,10 +528,15 @@ export class PageAssistantCompareComponent
   private async getPromptForKey(key: PromptKey): Promise<string> {
     const base = await getPromptTemplate(key);
     const custom = this.customPromptText.trim();
+    const includeEditPrompt =
+      key !== PromptKey.AlertsIssues &&
+      key !== PromptKey.AlertsRecommendations;
+    const editPrefix = includeEditPrompt ? this.customEditText : '';
+    const promptBody = editPrefix ? `${editPrefix}\n\n${base}` : base;
 
     return custom
-      ? `${this.customEditText}\n\n${base}\n\n${custom}`
-      : `${this.customEditText}\n\n${base}`; //Note: a heading can be added to the custom instructions here, something like ${base}\n\nPrioritize the following:\n${custom}
+      ? `${promptBody}\n\n${custom}`
+      : promptBody; //Note: a heading can be added to the custom instructions here, something like ${base}\n\nPrioritize the following:\n${custom}
   }
 
   private parseRecommendationsFromAi(text: string): {
@@ -790,7 +795,6 @@ export class PageAssistantCompareComponent
         : this.selectedPromptKey;
       const prompt = await this.getPromptForKey(promptKeyForRequest);
       const model = this.selectedAiModel;
-      const editPrompt = this.customEditText;
       const requestedModelShort = this.getShortModelName(model);
       const url = 'https://openrouter.ai/api/v1/chat/completions';
 
@@ -813,7 +817,7 @@ export class PageAssistantCompareComponent
       };
 
       if (isAlertFlow) {
-        const cachedIssues = this.alertAi.getCachedIssues(html, editPrompt);
+        const cachedIssues = this.alertAi.getCachedIssues(html);
         const selectedIssues = (cachedIssues || []).filter((issue) => issue.include) as unknown as Record<string, unknown>[];
         if (selectedIssues.length) {
           await this.runAlertRecommendations(
@@ -990,7 +994,7 @@ export class PageAssistantCompareComponent
           if (!issues.length) {
             throw new Error(`No alert issues returned by the AI (${usedModel}).`);
           }
-        const cachedIssues = this.alertAi.getCachedIssues(html, editPrompt);
+        const cachedIssues = this.alertAi.getCachedIssues(html);
         let selectedIssues: Record<string, unknown>[] = [];
         if (cachedIssues?.length) {
           selectedIssues = cachedIssues.filter((issue) => issue.include) as unknown as Record<string, unknown>[];
@@ -998,7 +1002,7 @@ export class PageAssistantCompareComponent
           const normalizedIssues = this.alertAi.normalizeAlertIssues(issues, {
             useIncludeFallback: false,
           });
-          this.alertAi.cacheIssues(html, normalizedIssues, editPrompt);
+          this.alertAi.cacheIssues(html, normalizedIssues);
           selectedIssues = normalizedIssues.filter((issue) => issue.include) as unknown as Record<string, unknown>[];
         }
         if (selectedIssues.length) {

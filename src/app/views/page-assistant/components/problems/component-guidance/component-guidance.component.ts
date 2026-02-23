@@ -369,10 +369,7 @@ export class ComponentGuidanceComponent implements OnInit, OnDestroy {
   private applyCachedAlertIssues(): void {
     const html = this.uploadState.getUploadData()?.originalHtml || '';
     if (!html) return;
-    const cached = this.alertAi.getCachedIssues(
-      html,
-      this.uploadState.getEditPromptText(),
-    );
+    const cached = this.alertAi.getCachedIssues(html);
     if (!cached?.length) return;
 
       const normalizedIssues = this.alertAi.normalizeAlertIssues(cached).map(
