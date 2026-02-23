@@ -1685,12 +1685,23 @@ export class TopicIaJsonComponent implements OnInit {
     return level <= 5;
   }
 
-  private shouldSuggestContributorBlock(url: string): boolean {
-    const normalized = (url || '').toLowerCase();
+  private shouldSuggestContributorBlock(breadcrumbs: MenuItem[]): boolean {
+    if (!breadcrumbs?.length || breadcrumbs.length < 2) return false;
+
+    const levelOne = this.normalizeBreadcrumbLabel(breadcrumbs[0]?.label);
+    const levelTwo = this.normalizeBreadcrumbLabel(breadcrumbs[1]?.label);
+
     return (
-      normalized.includes('/en/services/taxes/') ||
-      normalized.includes('/fr/services/impots/')
+      levelOne === 'canada.ca' && (levelTwo === 'taxes' || levelTwo === 'impots')
     );
+  }
+
+  private normalizeBreadcrumbLabel(label: string | undefined): string {
+    return (label || '')
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .trim()
+      .toLowerCase();
   }
 
   private findLangMarker(path: string): string | null {
@@ -2210,7 +2221,7 @@ export class TopicIaJsonComponent implements OnInit {
       this.breadcrumb,
     );
     const allowContributorBlock = this.shouldSuggestContributorBlock(
-      this.originalUrl,
+      this.breadcrumb,
     );
     const socialMediaBlock = allowSocialBlock
       ? this.buildSocialMediaBlock()
@@ -2220,6 +2231,8 @@ export class TopicIaJsonComponent implements OnInit {
       : '';
     const hasSocialBlock = socialMediaBlock.trim().length > 0;
     const hasContributorBlock = contributorBlock.trim().length > 0;
+    const inlineSocialWithFeatures =
+      featureCount === 2 && !hasContributorBlock && hasSocialBlock;
 
     let featuresSection = '';
     let featureRowStart = '';
@@ -2230,66 +2243,35 @@ export class TopicIaJsonComponent implements OnInit {
     let contributorBlockPlacement = '';
 
     if (featureCount === 0) {
-      if (hasContributorBlock) {
-        contributorBlockPlacement = hasSocialBlock
-          ? this.buildContributorsWithSocialRow(
-              contributorBlock,
-              socialMediaBlock,
-            )
-          : this.buildContributorsOnlyRow(contributorBlock);
-      }
+      contributorBlockPlacement = this.buildTopicFooterRow(
+        contributorBlock,
+        socialMediaBlock,
+      );
     } else if (featureCount === 1) {
       const featureItem = this.buildFeatureItem(featureNodes, featureImageMap);
-      if (hasContributorBlock) {
-        featuresSection = this.buildFeaturesSectionFullWidth(featureItem);
-        contributorBlockPlacement = hasSocialBlock
-          ? this.buildContributorsWithSocialRow(
-              contributorBlock,
-              socialMediaBlock,
-            )
-          : this.buildContributorsOnlyRow(contributorBlock);
-      } else if (hasSocialBlock) {
-        featuresSection = this.buildFeaturesSection(featureItem);
-        featureRowStart = TOPIC_PAGE_SNIPPETS.featureRowStart;
-        featureRowEnd = TOPIC_PAGE_SNIPPETS.featureRowEnd;
-        socialColStart = TOPIC_PAGE_SNIPPETS.socialColStart;
-        socialColEnd = TOPIC_PAGE_SNIPPETS.socialColEnd;
-        socialBlockPlacement = socialMediaBlock;
-      } else {
-        featuresSection = this.buildFeaturesSectionFullWidth(featureItem);
-      }
+      featuresSection = this.buildFeaturesSectionFullWidth(featureItem);
+      contributorBlockPlacement = this.buildTopicFooterRow(
+        contributorBlock,
+        socialMediaBlock,
+      );
     } else if (featureCount === 2) {
       featuresSection = this.buildFeaturesSectionTwo(
         featureNodes,
         featureImageMap,
-        hasContributorBlock || !hasSocialBlock ? '' : socialMediaBlock,
+        inlineSocialWithFeatures ? socialMediaBlock : '',
       );
-      if (hasContributorBlock) {
-        contributorBlockPlacement = hasSocialBlock
-          ? this.buildContributorsWithSocialRow(
-              contributorBlock,
-              socialMediaBlock,
-            )
-          : this.buildContributorsOnlyRow(contributorBlock);
-      }
+      contributorBlockPlacement = inlineSocialWithFeatures
+        ? ''
+        : this.buildTopicFooterRow(contributorBlock, socialMediaBlock);
     } else if (featureCount >= 3) {
       featuresSection = this.buildFeaturesSectionThree(
         featureNodes,
         featureImageMap,
       );
-      if (hasContributorBlock) {
-        contributorBlockPlacement = hasSocialBlock
-          ? this.buildContributorsWithSocialRow(
-              contributorBlock,
-              socialMediaBlock,
-            )
-          : this.buildContributorsOnlyRow(contributorBlock);
-      } else if (hasSocialBlock) {
-        socialBlockPlacement = this.snippetService.applySnippet(
-          TOPIC_PAGE_SNIPPETS.socialBlockBelow,
-          { socialMediaBlock },
-        );
-      }
+      contributorBlockPlacement = this.buildTopicFooterRow(
+        contributorBlock,
+        socialMediaBlock,
+      );
     }
 
     const titles = this.extractPageTitles(originalHtml);
@@ -2529,14 +2511,21 @@ export class TopicIaJsonComponent implements OnInit {
     featureImageMap: Map<string, string>,
     socialBlock: string,
   ): string {
-    const items = [
-      ...nodes
-        .slice(0, 2)
-        .map((node) =>
-          this.buildFeatureCardItem(node, featureImageMap, 'col-lg-4 col-sm-6'),
-        ),
-      TOPIC_PAGE_SNIPPETS.emptyFeatureColumn,
-    ].join('\n');
+    const featureItems = nodes
+      .slice(0, 2)
+      .map((node) =>
+        this.buildFeatureCardItem(node, featureImageMap, 'col-lg-4 col-sm-6'),
+      );
+
+    const items = socialBlock.trim()
+      ? [
+          ...featureItems,
+          this.snippetService.applySnippet(TOPIC_PAGE_SNIPPETS.socialFeatureColumn, {
+            socialBlock,
+          }),
+        ].join('\n')
+      : [...featureItems, TOPIC_PAGE_SNIPPETS.emptyFeatureColumn].join('\n');
+
     if (!items.trim()) return '';
     if (!socialBlock.trim()) {
       return this.snippetService.applySnippet(TOPIC_PAGE_SNIPPETS.featuresSectionTwoNoSocial, {
@@ -2615,6 +2604,29 @@ export class TopicIaJsonComponent implements OnInit {
     return this.snippetService.applySnippet(TOPIC_PAGE_SNIPPETS.contributorsOnlyRow, {
       contributorBlock,
     });
+  }
+
+  private buildSocialOnlyRow(socialMediaBlock: string): string {
+    if (!socialMediaBlock.trim()) return '';
+    return this.snippetService.applySnippet(TOPIC_PAGE_SNIPPETS.socialOnlyRow, {
+      socialMediaBlock,
+    });
+  }
+
+  private buildTopicFooterRow(
+    contributorBlock: string,
+    socialMediaBlock: string,
+  ): string {
+    if (contributorBlock.trim() && socialMediaBlock.trim()) {
+      return this.buildContributorsWithSocialRow(contributorBlock, socialMediaBlock);
+    }
+    if (contributorBlock.trim()) {
+      return this.buildContributorsOnlyRow(contributorBlock);
+    }
+    if (socialMediaBlock.trim()) {
+      return this.buildSocialOnlyRow(socialMediaBlock);
+    }
+    return '';
   }
 
   private getAssetUrl(path: string): string {
