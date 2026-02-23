@@ -34501,18 +34501,16 @@ var TOPIC_PAGE_SNIPPETS = {
     "</section>"
   ].join("\n"),
   featuresSectionTwoWithSocial: [
-    '<div class="row mrgn-tp-xl">',
-    '  <div class="col-md-8">',
-    '    <section class="gc-features">',
-    '      <h2 class="wb-inv">Features</h2>',
-    '      <div class="row wb-eqht wb-eqht-grd">',
-    "        {{items}}",
-    "      </div>",
-    "    </section>",
+    '<section class="gc-features mrgn-tp-xl">',
+    '  <h2 class="wb-inv">Features</h2>',
+    '  <div class="row wb-eqht wb-eqht-grd">',
+    "    {{items}}",
     "  </div>",
-    '  <div class="col-md-4">',
-    "    {{socialBlock}}",
-    "  </div>",
+    "</section>"
+  ].join("\n"),
+  socialFeatureColumn: [
+    '<div class="col-lg-4 col-sm-6">',
+    "  {{socialBlock}}",
     "</div>"
   ].join("\n"),
   featuresSectionFullWidth: [
@@ -34591,6 +34589,15 @@ var TOPIC_PAGE_SNIPPETS = {
     '  <div class="row">',
     '    <section class="col-md-12">',
     "      {{contributorBlock}}",
+    "    </section>",
+    "  </div>",
+    "</div>"
+  ].join("\n"),
+  socialOnlyRow: [
+    '<div class="container mrgn-tp-md">',
+    '  <div class="row">',
+    '    <section class="col-md-4 mrgn-bttm-sm">',
+    "      {{socialMediaBlock}}",
     "    </section>",
     "  </div>",
     "</div>"
@@ -36272,9 +36279,15 @@ var TopicIaJsonComponent = class _TopicIaJsonComponent {
     const level = breadcrumbs.length + 1;
     return level <= 5;
   }
-  shouldSuggestContributorBlock(url) {
-    const normalized = (url || "").toLowerCase();
-    return normalized.includes("/en/services/taxes/") || normalized.includes("/fr/services/impots/");
+  shouldSuggestContributorBlock(breadcrumbs) {
+    if (!breadcrumbs?.length || breadcrumbs.length < 2)
+      return false;
+    const levelOne = this.normalizeBreadcrumbLabel(breadcrumbs[0]?.label);
+    const levelTwo = this.normalizeBreadcrumbLabel(breadcrumbs[1]?.label);
+    return levelOne === "canada.ca" && (levelTwo === "taxes" || levelTwo === "impots");
+  }
+  normalizeBreadcrumbLabel(label) {
+    return (label || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim().toLowerCase();
   }
   findLangMarker(path) {
     if (path.includes("/en/"))
@@ -36712,11 +36725,12 @@ var TopicIaJsonComponent = class _TopicIaJsonComponent {
       const featureNodes = featureNodesAll.slice(0, 3);
       const featureCount = featureNodes.length;
       const allowSocialBlock = this.isHighLevelTopicPageFromBreadcrumb(this.breadcrumb);
-      const allowContributorBlock = this.shouldSuggestContributorBlock(this.originalUrl);
+      const allowContributorBlock = this.shouldSuggestContributorBlock(this.breadcrumb);
       const socialMediaBlock = allowSocialBlock ? this.buildSocialMediaBlock() : "";
       const contributorBlock = allowContributorBlock ? this.buildContributorBlock() : "";
       const hasSocialBlock = socialMediaBlock.trim().length > 0;
       const hasContributorBlock = contributorBlock.trim().length > 0;
+      const inlineSocialWithFeatures = featureCount === 2 && !hasContributorBlock && hasSocialBlock;
       let featuresSection = "";
       let featureRowStart = "";
       let featureRowEnd = "";
@@ -36725,36 +36739,17 @@ var TopicIaJsonComponent = class _TopicIaJsonComponent {
       let socialBlockPlacement = "";
       let contributorBlockPlacement = "";
       if (featureCount === 0) {
-        if (hasContributorBlock) {
-          contributorBlockPlacement = hasSocialBlock ? this.buildContributorsWithSocialRow(contributorBlock, socialMediaBlock) : this.buildContributorsOnlyRow(contributorBlock);
-        }
+        contributorBlockPlacement = this.buildTopicFooterRow(contributorBlock, socialMediaBlock);
       } else if (featureCount === 1) {
         const featureItem = this.buildFeatureItem(featureNodes, featureImageMap);
-        if (hasContributorBlock) {
-          featuresSection = this.buildFeaturesSectionFullWidth(featureItem);
-          contributorBlockPlacement = hasSocialBlock ? this.buildContributorsWithSocialRow(contributorBlock, socialMediaBlock) : this.buildContributorsOnlyRow(contributorBlock);
-        } else if (hasSocialBlock) {
-          featuresSection = this.buildFeaturesSection(featureItem);
-          featureRowStart = TOPIC_PAGE_SNIPPETS.featureRowStart;
-          featureRowEnd = TOPIC_PAGE_SNIPPETS.featureRowEnd;
-          socialColStart = TOPIC_PAGE_SNIPPETS.socialColStart;
-          socialColEnd = TOPIC_PAGE_SNIPPETS.socialColEnd;
-          socialBlockPlacement = socialMediaBlock;
-        } else {
-          featuresSection = this.buildFeaturesSectionFullWidth(featureItem);
-        }
+        featuresSection = this.buildFeaturesSectionFullWidth(featureItem);
+        contributorBlockPlacement = this.buildTopicFooterRow(contributorBlock, socialMediaBlock);
       } else if (featureCount === 2) {
-        featuresSection = this.buildFeaturesSectionTwo(featureNodes, featureImageMap, hasContributorBlock || !hasSocialBlock ? "" : socialMediaBlock);
-        if (hasContributorBlock) {
-          contributorBlockPlacement = hasSocialBlock ? this.buildContributorsWithSocialRow(contributorBlock, socialMediaBlock) : this.buildContributorsOnlyRow(contributorBlock);
-        }
+        featuresSection = this.buildFeaturesSectionTwo(featureNodes, featureImageMap, inlineSocialWithFeatures ? socialMediaBlock : "");
+        contributorBlockPlacement = inlineSocialWithFeatures ? "" : this.buildTopicFooterRow(contributorBlock, socialMediaBlock);
       } else if (featureCount >= 3) {
         featuresSection = this.buildFeaturesSectionThree(featureNodes, featureImageMap);
-        if (hasContributorBlock) {
-          contributorBlockPlacement = hasSocialBlock ? this.buildContributorsWithSocialRow(contributorBlock, socialMediaBlock) : this.buildContributorsOnlyRow(contributorBlock);
-        } else if (hasSocialBlock) {
-          socialBlockPlacement = this.snippetService.applySnippet(TOPIC_PAGE_SNIPPETS.socialBlockBelow, { socialMediaBlock });
-        }
+        contributorBlockPlacement = this.buildTopicFooterRow(contributorBlock, socialMediaBlock);
       }
       const titles = this.extractPageTitles(originalHtml);
       const sectionTitleBlock = titles.sectionTitle ? this.snippetService.applySnippet(TOPIC_PAGE_SNIPPETS.sectionTitleBlock, {
@@ -36909,10 +36904,13 @@ var TopicIaJsonComponent = class _TopicIaJsonComponent {
     return { sectionTitle: "", topicTitle };
   }
   buildFeaturesSectionTwo(nodes, featureImageMap, socialBlock) {
-    const items = [
-      ...nodes.slice(0, 2).map((node) => this.buildFeatureCardItem(node, featureImageMap, "col-lg-4 col-sm-6")),
-      TOPIC_PAGE_SNIPPETS.emptyFeatureColumn
-    ].join("\n");
+    const featureItems = nodes.slice(0, 2).map((node) => this.buildFeatureCardItem(node, featureImageMap, "col-lg-4 col-sm-6"));
+    const items = socialBlock.trim() ? [
+      ...featureItems,
+      this.snippetService.applySnippet(TOPIC_PAGE_SNIPPETS.socialFeatureColumn, {
+        socialBlock
+      })
+    ].join("\n") : [...featureItems, TOPIC_PAGE_SNIPPETS.emptyFeatureColumn].join("\n");
     if (!items.trim())
       return "";
     if (!socialBlock.trim()) {
@@ -36972,6 +36970,25 @@ var TopicIaJsonComponent = class _TopicIaJsonComponent {
     return this.snippetService.applySnippet(TOPIC_PAGE_SNIPPETS.contributorsOnlyRow, {
       contributorBlock
     });
+  }
+  buildSocialOnlyRow(socialMediaBlock) {
+    if (!socialMediaBlock.trim())
+      return "";
+    return this.snippetService.applySnippet(TOPIC_PAGE_SNIPPETS.socialOnlyRow, {
+      socialMediaBlock
+    });
+  }
+  buildTopicFooterRow(contributorBlock, socialMediaBlock) {
+    if (contributorBlock.trim() && socialMediaBlock.trim()) {
+      return this.buildContributorsWithSocialRow(contributorBlock, socialMediaBlock);
+    }
+    if (contributorBlock.trim()) {
+      return this.buildContributorsOnlyRow(contributorBlock);
+    }
+    if (socialMediaBlock.trim()) {
+      return this.buildSocialOnlyRow(socialMediaBlock);
+    }
+    return "";
   }
   getAssetUrl(path) {
     const baseHref = (this.baseHref || "/").replace(/\/+$/, "/");
@@ -40329,4 +40346,4 @@ ${custom}` : promptBody;
 export {
   PageAssistantCompareComponent
 };
-//# sourceMappingURL=chunk-365GTWVW.js.map
+//# sourceMappingURL=chunk-RWSD2TR6.js.map
