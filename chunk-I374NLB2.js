@@ -38557,6 +38557,8 @@ var UploadStateService = class _UploadStateService {
   aiModelKey = "pageAssistant.aiModel";
   editPromptKey = "pageAssistant.editPrompt";
   alertRewriteModeKey = "pageAssistant.alertRewriteMode";
+  includeLinkWritingRulesKey = "pageAssistant.includeLinkWritingRules";
+  useJsonAlertsIssuesPromptKey = "pageAssistant.useJsonAlertsIssuesPrompt";
   //Upload type
   selectedUploadType = signal("url");
   getSelectedUploadType = computed(() => this.selectedUploadType());
@@ -38585,6 +38587,20 @@ var UploadStateService = class _UploadStateService {
     this.selectedAlertRewriteMode.set(mode);
     this.storage.saveData(this.alertRewriteModeKey, mode);
   }
+  //Alert rewrite link writing rules toggle
+  includeLinkWritingRules = signal(true);
+  getIncludeLinkWritingRules = computed(() => this.includeLinkWritingRules());
+  setIncludeLinkWritingRules(include) {
+    this.includeLinkWritingRules.set(!!include);
+    this.storage.saveData(this.includeLinkWritingRulesKey, String(!!include));
+  }
+  //Alerts issues prompt format toggle (JSON vs text)
+  useJsonAlertsIssuesPrompt = signal(false);
+  getUseJsonAlertsIssuesPrompt = computed(() => this.useJsonAlertsIssuesPrompt());
+  setUseJsonAlertsIssuesPrompt(useJson) {
+    this.useJsonAlertsIssuesPrompt.set(!!useJson);
+    this.storage.saveData(this.useJsonAlertsIssuesPromptKey, String(!!useJson));
+  }
   //Upload data
   uploadData = signal(null);
   originalUploadData = null;
@@ -38599,6 +38615,8 @@ var UploadStateService = class _UploadStateService {
       this.storage.removeData(this.uploadTypeKey);
       this.storage.removeData(this.aiModelKey);
       this.storage.removeData(this.uploadDataKey);
+      this.storage.removeData(this.includeLinkWritingRulesKey);
+      this.storage.removeData(this.useJsonAlertsIssuesPromptKey);
       return;
     }
     this.restoreState();
@@ -38660,12 +38678,16 @@ var UploadStateService = class _UploadStateService {
     this.selectedAiModel.set(AiModel.Nemotron);
     this.editPromptText.set("");
     this.selectedAlertRewriteMode.set(AlertRewriteMode.AB);
+    this.includeLinkWritingRules.set(true);
+    this.useJsonAlertsIssuesPrompt.set(false);
     this.uploadData.set(null);
     this.prevUploadData = [];
     this.storage.removeData(this.uploadTypeKey);
     this.storage.removeData(this.aiModelKey);
     this.storage.removeData(this.editPromptKey);
     this.storage.removeData(this.alertRewriteModeKey);
+    this.storage.removeData(this.includeLinkWritingRulesKey);
+    this.storage.removeData(this.useJsonAlertsIssuesPromptKey);
     this.storage.removeData(this.uploadDataKey);
   }
   persistUploadData() {
@@ -38696,6 +38718,14 @@ var UploadStateService = class _UploadStateService {
     const storedAlertRewriteMode = this.storage.getData(this.alertRewriteModeKey);
     if (storedAlertRewriteMode && Object.values(AlertRewriteMode).includes(storedAlertRewriteMode)) {
       this.selectedAlertRewriteMode.set(storedAlertRewriteMode);
+    }
+    const storedIncludeLinkRules = this.storage.getData(this.includeLinkWritingRulesKey);
+    if (storedIncludeLinkRules === "true" || storedIncludeLinkRules === "false") {
+      this.includeLinkWritingRules.set(storedIncludeLinkRules === "true");
+    }
+    const storedUseJsonAlertsIssuesPrompt = this.storage.getData(this.useJsonAlertsIssuesPromptKey);
+    if (storedUseJsonAlertsIssuesPrompt === "true" || storedUseJsonAlertsIssuesPrompt === "false") {
+      this.useJsonAlertsIssuesPrompt.set(storedUseJsonAlertsIssuesPrompt === "true");
     }
     const storedData = this.storage.getData(this.uploadDataKey);
     if (!storedData)
@@ -100342,4 +100372,4 @@ export {
    * License: MIT
    *)
 */
-//# sourceMappingURL=chunk-K4M53NKZ.js.map
+//# sourceMappingURL=chunk-I374NLB2.js.map

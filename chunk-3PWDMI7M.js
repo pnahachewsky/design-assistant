@@ -138,7 +138,7 @@ import {
   unblockBodyScroll,
   uuid,
   zindexutils
-} from "./chunk-K4M53NKZ.js";
+} from "./chunk-I374NLB2.js";
 import {
   ChangeDetectionStrategy,
   ChangeDetectorRef,
@@ -21256,11 +21256,13 @@ var ShadowDomService = class _ShadowDomService {
 
 // src/app/views/page-assistant/data/ai-prompts.constants.ts
 var PROMPT_BASE_URL = new URL("ai-prompts/", document.baseURI);
+var alertsIssuesTextPath = new URL("alerts-issues.txt", PROMPT_BASE_URL).toString();
+var alertsIssuesJsonPath = new URL("alerts-issues.json", PROMPT_BASE_URL).toString();
 var promptFiles = {
   [PromptKey.Headings]: new URL("headings.txt", PROMPT_BASE_URL).toString(),
   [PromptKey.Doormats]: new URL("doormats.txt", PROMPT_BASE_URL).toString(),
   [PromptKey.PlainLanguage]: new URL("plain-language.txt", PROMPT_BASE_URL).toString(),
-  [PromptKey.AlertsIssues]: new URL("alerts-issues.txt", PROMPT_BASE_URL).toString(),
+  [PromptKey.AlertsIssues]: alertsIssuesTextPath,
   [PromptKey.AlertsRecommendations]: new URL("alerts-recommendations.txt", PROMPT_BASE_URL).toString()
 };
 var commsObjectivePath = new URL("comms-objective.txt", PROMPT_BASE_URL).toString();
@@ -21279,8 +21281,11 @@ function loadPromptText(path) {
     return text;
   });
 }
-function getPromptTemplate(key2) {
+function getPromptTemplate(key2, options) {
   return __async(this, null, function* () {
+    if (key2 === PromptKey.AlertsIssues && options?.useJsonAlertsIssuesPrompt) {
+      return loadPromptText(alertsIssuesJsonPath);
+    }
     return loadPromptText(promptFiles[key2]);
   });
 }
@@ -21389,6 +21394,7 @@ var AlertAiService = class _AlertAiService {
   openRouter = inject(OpenRouterService);
   messageService = inject(MessageService);
   translate = inject(TranslateService);
+  uploadState = inject(UploadStateService);
   issuesUpdatedSubject = new Subject();
   issuesUpdated$ = this.issuesUpdatedSubject.asObservable();
   cachedAlertIssues = null;
@@ -21420,7 +21426,9 @@ var AlertAiService = class _AlertAiService {
         summary: this.translate.instant("common.ai.sending"),
         life: 2e3
       });
-      const basePrompt = yield getPromptTemplate(PromptKey.AlertsIssues);
+      const basePrompt = yield getPromptTemplate(PromptKey.AlertsIssues, {
+        useJsonAlertsIssuesPrompt: this.uploadState.getUseJsonAlertsIssuesPrompt()
+      });
       const systemPrompt = basePrompt;
       const alerts = this.extractAlerts(alertHtml);
       const userPayload = {
@@ -21689,6 +21697,82 @@ var AlertAiService = class _AlertAiService {
   }], null, null);
 })();
 
+// src/app/common/constants/link-writing.constants.ts
+var LINK_WRITING_RULES_PATH = new URL("ai-prompts/link-writing-rules.json", document.baseURI).toString();
+var LINK_WRITING_RULES_FALLBACK = {
+  version: "fallback-empty",
+  rules: []
+};
+var linkWritingRulesCache = null;
+function isRuleCondition(value) {
+  return value === "always" || value === "too_many_links" || value === "not_too_many_links";
+}
+function toValidatedRulesJson(raw) {
+  if (!raw || typeof raw !== "object")
+    return null;
+  const root = raw;
+  const version = typeof root["version"] === "string" ? root["version"].trim() : "";
+  const rulesRaw = Array.isArray(root["rules"]) ? root["rules"] : [];
+  const rules = [];
+  for (const item of rulesRaw) {
+    if (!item || typeof item !== "object")
+      continue;
+    const entry = item;
+    const id = typeof entry["id"] === "string" ? entry["id"].trim() : "";
+    const conditionRaw = typeof entry["condition"] === "string" ? entry["condition"].trim() : "";
+    const text = typeof entry["text"] === "string" ? entry["text"].trim() : "";
+    if (!id || !text || !isRuleCondition(conditionRaw))
+      continue;
+    rules.push({ id, condition: conditionRaw, text });
+  }
+  if (!version || !rules.length)
+    return null;
+  return { version, rules };
+}
+function loadRulesSource() {
+  return __async(this, null, function* () {
+    if (linkWritingRulesCache)
+      return linkWritingRulesCache;
+    try {
+      const response = yield fetch(LINK_WRITING_RULES_PATH);
+      if (!response.ok) {
+        throw new Error(`Failed to load link writing rules (${response.status}).`);
+      }
+      const payload = yield response.json();
+      const validated = toValidatedRulesJson(payload);
+      if (!validated) {
+        throw new Error("Invalid link writing rules JSON schema.");
+      }
+      linkWritingRulesCache = validated;
+    } catch (err) {
+      console.warn("Unable to load link writing rules JSON; using empty fallback.", err);
+      linkWritingRulesCache = LINK_WRITING_RULES_FALLBACK;
+    }
+    return linkWritingRulesCache;
+  });
+}
+function filterRules(source, options) {
+  return source.rules.filter((rule) => {
+    if (rule.condition === "always")
+      return true;
+    if (rule.condition === "too_many_links")
+      return options.hasTooManyLinksIssue;
+    return !options.hasTooManyLinksIssue;
+  });
+}
+function getLinkWritingRulesJson(options) {
+  return __async(this, null, function* () {
+    const source = yield loadRulesSource();
+    return filterRules(source, options);
+  });
+}
+function getLinkWritingRules(options) {
+  return __async(this, null, function* () {
+    const rules = yield getLinkWritingRulesJson(options);
+    return rules.map((rule) => rule.text);
+  });
+}
+
 // src/app/views/page-assistant/services/alert-rewrite.service.ts
 var AlertRewriteService = class _AlertRewriteService {
   examplesPath = new URL("ai-prompts/alerts-rewrite-examples.json", document.baseURI).toString();
@@ -21834,72 +21918,83 @@ var AlertRewriteService = class _AlertRewriteService {
     return selected;
   }
   buildPromptBMessages(params) {
-    const maxChars = this.getCharLimit(params.plan.directives);
-    const styleRules = [
-      "1 sentence preferred, 2 max if needed.",
-      "Every alert must have a short, descriptive heading.",
-      "Start with what happened, then what to do.",
-      "Use plain language, active voice, and no blame.",
-      "Include a next step when available.",
-      "When links are present, preserve a primary hyperlink; if there are too many links, remove non-primary links.",
-      "Link text can be rewritten to fit the sentence and tone.",
-      maxChars ? `Keep under ${maxChars} characters.` : "Keep concise for UI alerts.",
-      'Return full updated alert wrapper HTML in rewrittenAlertHtml (for example: <div class="alert alert-info">...</div>).'
-    ];
-    const examplesBlock = params.examples.map((example, index) => {
-      const linksBefore = this.linkListToString(example.linksBefore);
-      const linksAfter = this.linkListToString(example.linksAfter);
-      const linkEdits = this.linkEditsToString(example.linkEdits);
-      return [
-        `Example ${index + 1} (${example.id})`,
-        example.headingBefore ? `Heading before: ${example.headingBefore}` : "",
-        example.headingAfter ? `Heading after: ${example.headingAfter}` : "",
-        `Before: ${example.before}`,
-        `After: ${example.after}`,
-        linksBefore ? `Links before: ${linksBefore}` : "",
-        linksAfter ? `Links after: ${linksAfter}` : "",
-        linkEdits ? `Link edits: ${linkEdits}` : ""
+    return __async(this, null, function* () {
+      const maxChars = this.getCharLimit(params.plan.directives);
+      const hasTooManyLinksIssue = params.plan.criteriaMatched.includes("C3_too_many_links") || params.plan.directives.some((directive) => directive.op === "limit_links");
+      const shouldIncludeLinkWritingRules = params.includeLinkWritingRules !== false;
+      const linkRules = shouldIncludeLinkWritingRules ? yield getLinkWritingRules({
+        hasTooManyLinksIssue
+      }) : [];
+      const styleRules = [
+        "1 sentence preferred, 2 max if needed.",
+        "Every alert must have a short, descriptive heading.",
+        "Start with what happened, then what to do.",
+        "Use plain language, active voice, and no blame.",
+        "Include a next step when available.",
+        ...linkRules,
+        maxChars ? `Keep under ${maxChars} characters.` : "Keep concise for UI alerts.",
+        'Return full updated alert wrapper HTML in rewrittenAlertHtml (for example: <div class="alert alert-info">...</div>).',
+        "Never copy example wording directly. Keep wording specific to the input alert."
+      ];
+      if (params.retryInstruction) {
+        styleRules.push(params.retryInstruction);
+      }
+      const examplesBlock = params.examples.map((example, index) => {
+        const linksBefore = this.linkListToString(example.linksBefore);
+        const linksAfter = this.linkListToString(example.linksAfter);
+        const linkEdits = this.linkEditsToString(example.linkEdits);
+        return [
+          `Example ${index + 1} (${example.id})`,
+          example.headingBefore ? `Heading before: ${example.headingBefore}` : "",
+          example.headingAfter ? `Heading after: ${example.headingAfter}` : "",
+          `Before: ${example.before}`,
+          `After: ${example.after}`,
+          linksBefore ? `Links before: ${linksBefore}` : "",
+          linksAfter ? `Links after: ${linksAfter}` : "",
+          linkEdits ? `Link edits: ${linkEdits}` : ""
+        ].join("\n");
+      });
+      const planPayload = params.mode === AlertRewriteMode.AB ? params.plan : {
+        alertType: params.plan.alertType,
+        domainTags: params.plan.domainTags,
+        criteriaMatched: params.plan.criteriaMatched,
+        directives: []
+      };
+      const systemPrompt = [
+        "You are Prompt B for rewriting UI alerts.",
+        "Use examples as pattern guidance, not copy/paste text.",
+        "Keep the alert wrapper and classes valid.",
+        "Do not return any sentence copied from the examples.",
+        "Return JSON only. No extra text.",
+        "Output schema:",
+        '{"rewrittenAlertHtml":"string","rewrittenHeading":"string","rewrittenAlert":"string","appliedDirectives":["..."],"exampleIdsUsed":["ex-001"]}'
       ].join("\n");
+      const userPayload = {
+        mode: params.mode,
+        styleRules,
+        examples: params.examples.map((example) => ({
+          id: example.id,
+          headingBefore: example.headingBefore || "",
+          headingAfter: example.headingAfter || "",
+          before: example.before,
+          after: example.after,
+          criteria: example.criteria,
+          tags: example.tags,
+          linksBefore: example.linksBefore || [],
+          linksAfter: example.linksAfter || [],
+          linkEdits: example.linkEdits || []
+        })),
+        examplesText: examplesBlock.join("\n\n"),
+        plan: planPayload,
+        originalHeading: (params.originalHeading || "").trim(),
+        originalAlertText: (params.originalAlertText || "").trim(),
+        originalAlertHtml: (params.originalAlertHtml || "").trim()
+      };
+      return [
+        { role: "system", content: systemPrompt },
+        { role: "user", content: JSON.stringify(userPayload) }
+      ];
     });
-    const planPayload = params.mode === AlertRewriteMode.AB ? params.plan : {
-      alertType: params.plan.alertType,
-      domainTags: params.plan.domainTags,
-      criteriaMatched: params.plan.criteriaMatched,
-      directives: []
-    };
-    const systemPrompt = [
-      "You are Prompt B for rewriting UI alerts.",
-      "Use examples as pattern guidance, not copy/paste text.",
-      "Keep the alert wrapper and classes valid.",
-      "Return JSON only. No extra text.",
-      "Output schema:",
-      '{"rewrittenAlertHtml":"string","rewrittenHeading":"string","rewrittenAlert":"string","appliedDirectives":["..."],"exampleIdsUsed":["ex-001"]}'
-    ].join("\n");
-    const userPayload = {
-      mode: params.mode,
-      styleRules,
-      examples: params.examples.map((example) => ({
-        id: example.id,
-        headingBefore: example.headingBefore || "",
-        headingAfter: example.headingAfter || "",
-        before: example.before,
-        after: example.after,
-        criteria: example.criteria,
-        tags: example.tags,
-        linksBefore: example.linksBefore || [],
-        linksAfter: example.linksAfter || [],
-        linkEdits: example.linkEdits || []
-      })),
-      examplesText: examplesBlock.join("\n\n"),
-      plan: planPayload,
-      originalHeading: (params.originalHeading || "").trim(),
-      originalAlertText: (params.originalAlertText || "").trim(),
-      originalAlertHtml: (params.originalAlertHtml || "").trim()
-    };
-    return [
-      { role: "system", content: systemPrompt },
-      { role: "user", content: JSON.stringify(userPayload) }
-    ];
   }
   parseRewriteResponse(text, plan, selectedExamples) {
     const parsed = this.looseJsonParse(this.stripCodeFences(text));
@@ -21932,6 +22027,52 @@ var AlertRewriteService = class _AlertRewriteService {
       rewrittenAlert,
       appliedDirectives,
       exampleIdsUsed
+    };
+  }
+  detectExampleCopy(params) {
+    const rewrittenCombined = this.normalizeComparisonText(`${params.result.rewrittenHeading || ""} ${params.result.rewrittenAlert || ""}`);
+    const originalCombined = this.normalizeComparisonText(`${params.originalHeading || ""} ${params.originalAlertText || ""}`);
+    if (!rewrittenCombined) {
+      return { isCopy: false };
+    }
+    const rewrittenTokenCount = this.tokenizeComparisonText(rewrittenCombined).length;
+    for (const example of params.selectedExamples) {
+      const exampleCombined = this.normalizeComparisonText(`${example.headingAfter || ""} ${example.after || ""}`);
+      if (!exampleCombined)
+        continue;
+      if (rewrittenCombined === exampleCombined && rewrittenCombined !== originalCombined) {
+        return {
+          isCopy: true,
+          exampleId: example.id,
+          reason: "exact-example-match",
+          similarity: 1
+        };
+      }
+      if (rewrittenTokenCount < 8)
+        continue;
+      const similarity = this.calculateJaccardSimilarity(rewrittenCombined, exampleCombined);
+      const originalSimilarity = this.calculateJaccardSimilarity(originalCombined, exampleCombined);
+      if (similarity >= 0.92 && originalSimilarity < 0.8) {
+        return {
+          isCopy: true,
+          exampleId: example.id,
+          reason: "near-example-match",
+          similarity
+        };
+      }
+    }
+    return { isCopy: false };
+  }
+  buildPassthroughResult(params) {
+    const normalizedAlertHtml = this.normalizeAlertWrapperHtml(params.alertHtml) || params.alertHtml.trim();
+    const extractedHeading = this.extractHeadingFromAlertHtml(normalizedAlertHtml);
+    const rewrittenHeading = (params.originalHeading || "").trim() || extractedHeading;
+    return {
+      rewrittenAlertHtml: normalizedAlertHtml,
+      rewrittenHeading: rewrittenHeading || this.buildFallbackHeading("info"),
+      rewrittenAlert: (params.originalAlertText || "").trim(),
+      appliedDirectives: [],
+      exampleIdsUsed: []
     };
   }
   inferCriteriaFromIssues(issues) {
@@ -22077,6 +22218,26 @@ var AlertRewriteService = class _AlertRewriteService {
   }
   cleanString(value) {
     return typeof value === "string" ? value.trim() : "";
+  }
+  normalizeComparisonText(value) {
+    return (value || "").toLowerCase().replace(/<[^>]*>/g, " ").replace(/&nbsp;/g, " ").replace(/[^a-z0-9\s]/g, " ").replace(/\s+/g, " ").trim();
+  }
+  tokenizeComparisonText(value) {
+    const normalized = this.normalizeComparisonText(value);
+    return normalized ? normalized.split(" ") : [];
+  }
+  calculateJaccardSimilarity(a, b) {
+    const aTokens = new Set(this.tokenizeComparisonText(a));
+    const bTokens = new Set(this.tokenizeComparisonText(b));
+    if (!aTokens.size || !bTokens.size)
+      return 0;
+    let intersection = 0;
+    for (const token of aTokens) {
+      if (bTokens.has(token))
+        intersection += 1;
+    }
+    const union = aTokens.size + bTokens.size - intersection;
+    return union > 0 ? intersection / union : 0;
   }
   buildFallbackHeading(alertType) {
     const normalized = alertType.toLowerCase();
@@ -24620,11 +24781,11 @@ function AiOptionsComponent_Conditional_16_Conditional_17_Template(rf, ctx) {
 }
 function AiOptionsComponent_Conditional_16_Conditional_22_ng_container_3_Template(rf, ctx) {
   if (rf & 1) {
-    const _r10 = \u0275\u0275getCurrentView();
+    const _r11 = \u0275\u0275getCurrentView();
     \u0275\u0275elementContainerStart(0);
-    \u0275\u0275elementStart(1, "div", 13)(2, "p-radioButton", 29);
+    \u0275\u0275elementStart(1, "div", 13)(2, "p-radioButton", 34);
     \u0275\u0275twoWayListener("ngModelChange", function AiOptionsComponent_Conditional_16_Conditional_22_ng_container_3_Template_p_radioButton_ngModelChange_2_listener($event) {
-      \u0275\u0275restoreView(_r10);
+      \u0275\u0275restoreView(_r11);
       const ctx_r1 = \u0275\u0275nextContext(3);
       \u0275\u0275twoWayBindingSet(ctx_r1.alertRewriteModeModel, $event) || (ctx_r1.alertRewriteModeModel = $event);
       return \u0275\u0275resetView($event);
@@ -24636,30 +24797,68 @@ function AiOptionsComponent_Conditional_16_Conditional_22_ng_container_3_Templat
     \u0275\u0275elementContainerEnd();
   }
   if (rf & 2) {
-    const option_r11 = ctx.$implicit;
+    const option_r12 = ctx.$implicit;
     const ctx_r1 = \u0275\u0275nextContext(3);
     \u0275\u0275advance(2);
-    \u0275\u0275property("value", option_r11.id);
+    \u0275\u0275property("value", option_r12.id);
     \u0275\u0275twoWayProperty("ngModel", ctx_r1.alertRewriteModeModel);
-    \u0275\u0275property("inputId", option_r11.id)("disabled", option_r11.disabled);
+    \u0275\u0275property("inputId", option_r12.id)("disabled", option_r12.disabled);
     \u0275\u0275advance();
-    \u0275\u0275property("for", option_r11.id);
+    \u0275\u0275property("for", option_r12.id);
     \u0275\u0275advance();
-    \u0275\u0275textInterpolate(option_r11.label);
+    \u0275\u0275textInterpolate(option_r12.label);
   }
 }
 function AiOptionsComponent_Conditional_16_Conditional_22_Template(rf, ctx) {
   if (rf & 1) {
+    const _r10 = \u0275\u0275getCurrentView();
     \u0275\u0275elementStart(0, "div", 22)(1, "p", 28);
     \u0275\u0275text(2, "Alert rewrite mode");
     \u0275\u0275elementEnd();
     \u0275\u0275template(3, AiOptionsComponent_Conditional_16_Conditional_22_ng_container_3_Template, 5, 6, "ng-container", 8);
+    \u0275\u0275elementStart(4, "div", 29)(5, "p-checkbox", 30);
+    \u0275\u0275twoWayListener("ngModelChange", function AiOptionsComponent_Conditional_16_Conditional_22_Template_p_checkbox_ngModelChange_5_listener($event) {
+      \u0275\u0275restoreView(_r10);
+      const ctx_r1 = \u0275\u0275nextContext(2);
+      \u0275\u0275twoWayBindingSet(ctx_r1.includeLinkWritingRules, $event) || (ctx_r1.includeLinkWritingRules = $event);
+      return \u0275\u0275resetView($event);
+    });
+    \u0275\u0275listener("onChange", function AiOptionsComponent_Conditional_16_Conditional_22_Template_p_checkbox_onChange_5_listener() {
+      \u0275\u0275restoreView(_r10);
+      const ctx_r1 = \u0275\u0275nextContext(2);
+      return \u0275\u0275resetView(ctx_r1.onIncludeLinkWritingRulesSelect(ctx_r1.includeLinkWritingRules));
+    });
     \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(6, "label", 31);
+    \u0275\u0275text(7, " Include link writing rules ");
+    \u0275\u0275elementEnd()();
+    \u0275\u0275elementStart(8, "div", 29)(9, "p-checkbox", 32);
+    \u0275\u0275twoWayListener("ngModelChange", function AiOptionsComponent_Conditional_16_Conditional_22_Template_p_checkbox_ngModelChange_9_listener($event) {
+      \u0275\u0275restoreView(_r10);
+      const ctx_r1 = \u0275\u0275nextContext(2);
+      \u0275\u0275twoWayBindingSet(ctx_r1.useJsonAlertsIssuesPrompt, $event) || (ctx_r1.useJsonAlertsIssuesPrompt = $event);
+      return \u0275\u0275resetView($event);
+    });
+    \u0275\u0275listener("onChange", function AiOptionsComponent_Conditional_16_Conditional_22_Template_p_checkbox_onChange_9_listener() {
+      \u0275\u0275restoreView(_r10);
+      const ctx_r1 = \u0275\u0275nextContext(2);
+      return \u0275\u0275resetView(ctx_r1.onUseJsonAlertsIssuesPromptSelect(ctx_r1.useJsonAlertsIssuesPrompt));
+    });
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(10, "label", 33);
+    \u0275\u0275text(11, " Use JSON format for Alerts Issues prompt ");
+    \u0275\u0275elementEnd()()();
   }
   if (rf & 2) {
     const ctx_r1 = \u0275\u0275nextContext(2);
     \u0275\u0275advance(3);
     \u0275\u0275property("ngForOf", ctx_r1.alertRewriteModeOptions)("ngForTrackBy", ctx_r1.trackById);
+    \u0275\u0275advance(2);
+    \u0275\u0275twoWayProperty("ngModel", ctx_r1.includeLinkWritingRules);
+    \u0275\u0275property("binary", true);
+    \u0275\u0275advance(4);
+    \u0275\u0275twoWayProperty("ngModel", ctx_r1.useJsonAlertsIssuesPrompt);
+    \u0275\u0275property("binary", true);
   }
 }
 function AiOptionsComponent_Conditional_16_Template(rf, ctx) {
@@ -24709,7 +24908,7 @@ function AiOptionsComponent_Conditional_16_Template(rf, ctx) {
       return \u0275\u0275resetView(ctx_r1.emitEditPrompt(ctx_r1.currentEditLevel.prompt));
     });
     \u0275\u0275elementEnd()();
-    \u0275\u0275template(22, AiOptionsComponent_Conditional_16_Conditional_22_Template, 4, 2, "div", 22);
+    \u0275\u0275template(22, AiOptionsComponent_Conditional_16_Conditional_22_Template, 12, 6, "div", 22);
     \u0275\u0275elementEnd()()()();
   }
   if (rf & 2) {
@@ -24740,17 +24939,17 @@ function AiOptionsComponent_Conditional_16_Template(rf, ctx) {
 }
 function AiOptionsComponent_Conditional_17_Conditional_10_ng_container_3_Template(rf, ctx) {
   if (rf & 1) {
-    const _r12 = \u0275\u0275getCurrentView();
+    const _r13 = \u0275\u0275getCurrentView();
     \u0275\u0275elementContainerStart(0);
-    \u0275\u0275elementStart(1, "div", 13)(2, "p-radioButton", 32);
+    \u0275\u0275elementStart(1, "div", 13)(2, "p-radioButton", 37);
     \u0275\u0275twoWayListener("ngModelChange", function AiOptionsComponent_Conditional_17_Conditional_10_ng_container_3_Template_p_radioButton_ngModelChange_2_listener($event) {
-      \u0275\u0275restoreView(_r12);
+      \u0275\u0275restoreView(_r13);
       const ctx_r1 = \u0275\u0275nextContext(3);
       \u0275\u0275twoWayBindingSet(ctx_r1.selectedAi, $event) || (ctx_r1.selectedAi = $event);
       return \u0275\u0275resetView($event);
     });
     \u0275\u0275listener("onClick", function AiOptionsComponent_Conditional_17_Conditional_10_ng_container_3_Template_p_radioButton_onClick_2_listener() {
-      \u0275\u0275restoreView(_r12);
+      \u0275\u0275restoreView(_r13);
       const ctx_r1 = \u0275\u0275nextContext(3);
       return \u0275\u0275resetView(ctx_r1.onAiSelect(ctx_r1.selectedAi));
     });
@@ -24762,31 +24961,31 @@ function AiOptionsComponent_Conditional_17_Conditional_10_ng_container_3_Templat
     \u0275\u0275elementContainerEnd();
   }
   if (rf & 2) {
-    const option_r13 = ctx.$implicit;
+    const option_r14 = ctx.$implicit;
     const ctx_r1 = \u0275\u0275nextContext(3);
     \u0275\u0275advance(2);
-    \u0275\u0275property("value", option_r13.id);
+    \u0275\u0275property("value", option_r14.id);
     \u0275\u0275twoWayProperty("ngModel", ctx_r1.selectedAi);
-    \u0275\u0275property("inputId", option_r13.id)("disabled", option_r13.disabled);
+    \u0275\u0275property("inputId", option_r14.id)("disabled", option_r14.disabled);
     \u0275\u0275advance();
-    \u0275\u0275property("for", option_r13.id);
+    \u0275\u0275property("for", option_r14.id);
     \u0275\u0275advance();
-    \u0275\u0275textInterpolate(\u0275\u0275pipeBind1(5, 6, option_r13.label));
+    \u0275\u0275textInterpolate(\u0275\u0275pipeBind1(5, 6, option_r14.label));
   }
 }
 function AiOptionsComponent_Conditional_17_Conditional_10_ng_container_7_Template(rf, ctx) {
   if (rf & 1) {
-    const _r14 = \u0275\u0275getCurrentView();
+    const _r15 = \u0275\u0275getCurrentView();
     \u0275\u0275elementContainerStart(0);
-    \u0275\u0275elementStart(1, "div", 13)(2, "p-radioButton", 32);
+    \u0275\u0275elementStart(1, "div", 13)(2, "p-radioButton", 37);
     \u0275\u0275twoWayListener("ngModelChange", function AiOptionsComponent_Conditional_17_Conditional_10_ng_container_7_Template_p_radioButton_ngModelChange_2_listener($event) {
-      \u0275\u0275restoreView(_r14);
+      \u0275\u0275restoreView(_r15);
       const ctx_r1 = \u0275\u0275nextContext(3);
       \u0275\u0275twoWayBindingSet(ctx_r1.selectedAi, $event) || (ctx_r1.selectedAi = $event);
       return \u0275\u0275resetView($event);
     });
     \u0275\u0275listener("onClick", function AiOptionsComponent_Conditional_17_Conditional_10_ng_container_7_Template_p_radioButton_onClick_2_listener() {
-      \u0275\u0275restoreView(_r14);
+      \u0275\u0275restoreView(_r15);
       const ctx_r1 = \u0275\u0275nextContext(3);
       return \u0275\u0275resetView(ctx_r1.onAiSelect(ctx_r1.selectedAi));
     });
@@ -24794,34 +24993,34 @@ function AiOptionsComponent_Conditional_17_Conditional_10_ng_container_7_Templat
     \u0275\u0275elementStart(3, "label", 15);
     \u0275\u0275text(4);
     \u0275\u0275pipe(5, "translate");
-    \u0275\u0275element(6, "p-chip", 33);
+    \u0275\u0275element(6, "p-chip", 38);
     \u0275\u0275pipe(7, "translate");
     \u0275\u0275elementEnd()();
     \u0275\u0275elementContainerEnd();
   }
   if (rf & 2) {
-    const option_r15 = ctx.$implicit;
+    const option_r16 = ctx.$implicit;
     const ctx_r1 = \u0275\u0275nextContext(3);
     \u0275\u0275advance(2);
-    \u0275\u0275property("value", option_r15.id);
+    \u0275\u0275property("value", option_r16.id);
     \u0275\u0275twoWayProperty("ngModel", ctx_r1.selectedAi);
-    \u0275\u0275property("inputId", option_r15.id)("disabled", option_r15.disabled);
+    \u0275\u0275property("inputId", option_r16.id)("disabled", option_r16.disabled);
     \u0275\u0275advance();
-    \u0275\u0275property("for", option_r15.id);
+    \u0275\u0275property("for", option_r16.id);
     \u0275\u0275advance();
-    \u0275\u0275textInterpolate1(" ", \u0275\u0275pipeBind1(5, 7, option_r15.label), " ");
+    \u0275\u0275textInterpolate1(" ", \u0275\u0275pipeBind1(5, 7, option_r16.label), " ");
     \u0275\u0275advance(2);
     \u0275\u0275property("label", \u0275\u0275pipeBind1(7, 9, "page.ai-options.model.paidBadge"));
   }
 }
 function AiOptionsComponent_Conditional_17_Conditional_10_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275elementStart(0, "p", 30);
+    \u0275\u0275elementStart(0, "p", 35);
     \u0275\u0275text(1);
     \u0275\u0275pipe(2, "translate");
     \u0275\u0275elementEnd();
     \u0275\u0275template(3, AiOptionsComponent_Conditional_17_Conditional_10_ng_container_3_Template, 6, 8, "ng-container", 8);
-    \u0275\u0275elementStart(4, "p", 31);
+    \u0275\u0275elementStart(4, "p", 36);
     \u0275\u0275text(5);
     \u0275\u0275pipe(6, "translate");
     \u0275\u0275elementEnd();
@@ -24841,11 +25040,11 @@ function AiOptionsComponent_Conditional_17_Conditional_10_Template(rf, ctx) {
 }
 function AiOptionsComponent_Conditional_17_Conditional_11_ng_container_3_Template(rf, ctx) {
   if (rf & 1) {
-    const _r16 = \u0275\u0275getCurrentView();
+    const _r17 = \u0275\u0275getCurrentView();
     \u0275\u0275elementContainerStart(0);
     \u0275\u0275elementStart(1, "div", 24)(2, "p-checkbox", 25);
     \u0275\u0275twoWayListener("ngModelChange", function AiOptionsComponent_Conditional_17_Conditional_11_ng_container_3_Template_p_checkbox_ngModelChange_2_listener($event) {
-      \u0275\u0275restoreView(_r16);
+      \u0275\u0275restoreView(_r17);
       const ctx_r1 = \u0275\u0275nextContext(3);
       \u0275\u0275twoWayBindingSet(ctx_r1.selectedAis, $event) || (ctx_r1.selectedAis = $event);
       return \u0275\u0275resetView($event);
@@ -24858,25 +25057,25 @@ function AiOptionsComponent_Conditional_17_Conditional_11_ng_container_3_Templat
     \u0275\u0275elementContainerEnd();
   }
   if (rf & 2) {
-    const option_r17 = ctx.$implicit;
+    const option_r18 = ctx.$implicit;
     const ctx_r1 = \u0275\u0275nextContext(3);
     \u0275\u0275advance(2);
-    \u0275\u0275property("value", option_r17.id);
+    \u0275\u0275property("value", option_r18.id);
     \u0275\u0275twoWayProperty("ngModel", ctx_r1.selectedAis);
-    \u0275\u0275property("inputId", option_r17.id)("disabled", option_r17.disabled || ctx_r1.isAiCheckboxDisabled(option_r17.id));
+    \u0275\u0275property("inputId", option_r18.id)("disabled", option_r18.disabled || ctx_r1.isAiCheckboxDisabled(option_r18.id));
     \u0275\u0275advance();
-    \u0275\u0275property("for", option_r17.id);
+    \u0275\u0275property("for", option_r18.id);
     \u0275\u0275advance();
-    \u0275\u0275textInterpolate(\u0275\u0275pipeBind1(5, 6, option_r17.label));
+    \u0275\u0275textInterpolate(\u0275\u0275pipeBind1(5, 6, option_r18.label));
   }
 }
 function AiOptionsComponent_Conditional_17_Conditional_11_ng_container_7_Template(rf, ctx) {
   if (rf & 1) {
-    const _r18 = \u0275\u0275getCurrentView();
+    const _r19 = \u0275\u0275getCurrentView();
     \u0275\u0275elementContainerStart(0);
     \u0275\u0275elementStart(1, "div", 24)(2, "p-checkbox", 25);
     \u0275\u0275twoWayListener("ngModelChange", function AiOptionsComponent_Conditional_17_Conditional_11_ng_container_7_Template_p_checkbox_ngModelChange_2_listener($event) {
-      \u0275\u0275restoreView(_r18);
+      \u0275\u0275restoreView(_r19);
       const ctx_r1 = \u0275\u0275nextContext(3);
       \u0275\u0275twoWayBindingSet(ctx_r1.selectedAis, $event) || (ctx_r1.selectedAis = $event);
       return \u0275\u0275resetView($event);
@@ -24885,34 +25084,34 @@ function AiOptionsComponent_Conditional_17_Conditional_11_ng_container_7_Templat
     \u0275\u0275elementStart(3, "label", 15);
     \u0275\u0275text(4);
     \u0275\u0275pipe(5, "translate");
-    \u0275\u0275element(6, "p-chip", 33);
+    \u0275\u0275element(6, "p-chip", 38);
     \u0275\u0275pipe(7, "translate");
     \u0275\u0275elementEnd()();
     \u0275\u0275elementContainerEnd();
   }
   if (rf & 2) {
-    const option_r19 = ctx.$implicit;
+    const option_r20 = ctx.$implicit;
     const ctx_r1 = \u0275\u0275nextContext(3);
     \u0275\u0275advance(2);
-    \u0275\u0275property("value", option_r19.id);
+    \u0275\u0275property("value", option_r20.id);
     \u0275\u0275twoWayProperty("ngModel", ctx_r1.selectedAis);
-    \u0275\u0275property("inputId", option_r19.id)("disabled", option_r19.disabled || ctx_r1.isAiCheckboxDisabled(option_r19.id));
+    \u0275\u0275property("inputId", option_r20.id)("disabled", option_r20.disabled || ctx_r1.isAiCheckboxDisabled(option_r20.id));
     \u0275\u0275advance();
-    \u0275\u0275property("for", option_r19.id);
+    \u0275\u0275property("for", option_r20.id);
     \u0275\u0275advance();
-    \u0275\u0275textInterpolate1(" ", \u0275\u0275pipeBind1(5, 7, option_r19.label), " ");
+    \u0275\u0275textInterpolate1(" ", \u0275\u0275pipeBind1(5, 7, option_r20.label), " ");
     \u0275\u0275advance(2);
     \u0275\u0275property("label", \u0275\u0275pipeBind1(7, 9, "page.ai-options.model.paidBadge"));
   }
 }
 function AiOptionsComponent_Conditional_17_Conditional_11_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275elementStart(0, "p", 30);
+    \u0275\u0275elementStart(0, "p", 35);
     \u0275\u0275text(1);
     \u0275\u0275pipe(2, "translate");
     \u0275\u0275elementEnd();
     \u0275\u0275template(3, AiOptionsComponent_Conditional_17_Conditional_11_ng_container_3_Template, 6, 8, "ng-container", 8);
-    \u0275\u0275elementStart(4, "p", 31);
+    \u0275\u0275elementStart(4, "p", 36);
     \u0275\u0275text(5);
     \u0275\u0275pipe(6, "translate");
     \u0275\u0275elementEnd();
@@ -24958,11 +25157,11 @@ function AiOptionsComponent_Conditional_17_Template(rf, ctx) {
 }
 function AiOptionsComponent_Conditional_18_Template(rf, ctx) {
   if (rf & 1) {
-    const _r20 = \u0275\u0275getCurrentView();
-    \u0275\u0275elementStart(0, "p-button", 34);
+    const _r21 = \u0275\u0275getCurrentView();
+    \u0275\u0275elementStart(0, "p-button", 39);
     \u0275\u0275pipe(1, "translate");
     \u0275\u0275listener("click", function AiOptionsComponent_Conditional_18_Template_p_button_click_0_listener() {
-      \u0275\u0275restoreView(_r20);
+      \u0275\u0275restoreView(_r21);
       const ctx_r1 = \u0275\u0275nextContext();
       return \u0275\u0275resetView(ctx_r1.onSubmit());
     });
@@ -24974,7 +25173,7 @@ function AiOptionsComponent_Conditional_18_Template(rf, ctx) {
 }
 function AiOptionsComponent_Conditional_19_ca_upload_url_1_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275element(0, "ca-upload-url", 36);
+    \u0275\u0275element(0, "ca-upload-url", 41);
   }
   if (rf & 2) {
     \u0275\u0275property("showSampleDataButton", false);
@@ -24982,7 +25181,7 @@ function AiOptionsComponent_Conditional_19_ca_upload_url_1_Template(rf, ctx) {
 }
 function AiOptionsComponent_Conditional_19_ca_upload_paste_2_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275element(0, "ca-upload-paste", 36);
+    \u0275\u0275element(0, "ca-upload-paste", 41);
   }
   if (rf & 2) {
     \u0275\u0275property("showSampleDataButton", false);
@@ -24990,7 +25189,7 @@ function AiOptionsComponent_Conditional_19_ca_upload_paste_2_Template(rf, ctx) {
 }
 function AiOptionsComponent_Conditional_19_ca_upload_word_3_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275element(0, "ca-upload-word", 36);
+    \u0275\u0275element(0, "ca-upload-word", 41);
   }
   if (rf & 2) {
     \u0275\u0275property("showSampleDataButton", false);
@@ -24999,7 +25198,7 @@ function AiOptionsComponent_Conditional_19_ca_upload_word_3_Template(rf, ctx) {
 function AiOptionsComponent_Conditional_19_Template(rf, ctx) {
   if (rf & 1) {
     \u0275\u0275elementContainerStart(0, 12);
-    \u0275\u0275template(1, AiOptionsComponent_Conditional_19_ca_upload_url_1_Template, 1, 1, "ca-upload-url", 35)(2, AiOptionsComponent_Conditional_19_ca_upload_paste_2_Template, 1, 1, "ca-upload-paste", 35)(3, AiOptionsComponent_Conditional_19_ca_upload_word_3_Template, 1, 1, "ca-upload-word", 35);
+    \u0275\u0275template(1, AiOptionsComponent_Conditional_19_ca_upload_url_1_Template, 1, 1, "ca-upload-url", 40)(2, AiOptionsComponent_Conditional_19_ca_upload_paste_2_Template, 1, 1, "ca-upload-paste", 40)(3, AiOptionsComponent_Conditional_19_ca_upload_word_3_Template, 1, 1, "ca-upload-word", 40);
     \u0275\u0275elementContainerEnd();
   }
   if (rf & 2) {
@@ -25068,6 +25267,8 @@ var AiOptionsComponent = class _AiOptionsComponent {
   selectedAi = AiModel.Nemotron;
   selectedAis = [];
   selectedAlertRewriteMode = AlertRewriteMode.AB;
+  includeLinkWritingRules = true;
+  useJsonAlertsIssuesPrompt = false;
   get alertRewriteModeModel() {
     return this.selectedAlertRewriteMode;
   }
@@ -25104,6 +25305,8 @@ var AiOptionsComponent = class _AiOptionsComponent {
     }
     this.selectedAis = this.selectedAis.filter((id) => freeIds.has(id));
     this.selectedAlertRewriteMode = this.uploadState.getAlertRewriteMode();
+    this.includeLinkWritingRules = this.uploadState.getIncludeLinkWritingRules();
+    this.useJsonAlertsIssuesPrompt = this.uploadState.getUseJsonAlertsIssuesPrompt();
   }
   isAiCheckboxDisabled(id) {
     return !this.selectedAis.includes(id) && this.selectedAis.length >= 2;
@@ -25115,6 +25318,14 @@ var AiOptionsComponent = class _AiOptionsComponent {
     this.selectedAlertRewriteMode = mode;
     this.uploadState.setAlertRewriteMode(mode);
     this.alertRewriteModeChange.emit(mode);
+  }
+  onIncludeLinkWritingRulesSelect(include) {
+    this.includeLinkWritingRules = include;
+    this.uploadState.setIncludeLinkWritingRules(include);
+  }
+  onUseJsonAlertsIssuesPromptSelect(useJson) {
+    this.useJsonAlertsIssuesPrompt = useJson;
+    this.uploadState.setUseJsonAlertsIssuesPrompt(useJson);
   }
   //submit selected prompt and model to AI
   onSubmit() {
@@ -25151,7 +25362,7 @@ var AiOptionsComponent = class _AiOptionsComponent {
   static \u0275fac = function AiOptionsComponent_Factory(__ngFactoryType__) {
     return new (__ngFactoryType__ || _AiOptionsComponent)();
   };
-  static \u0275cmp = /* @__PURE__ */ \u0275\u0275defineComponent({ type: _AiOptionsComponent, selectors: [["ca-ai-options"]], outputs: { promptChange: "promptChange", customPrompt: "customPrompt", editPrompt: "editPrompt", aiChange: "aiChange", alertRewriteModeChange: "alertRewriteModeChange", aiSubmit: "aiSubmit" }, decls: 20, vars: 19, consts: [["label", "Options", "icon", "pi pi-bars", "severity", "info", 3, "click"], ["position", "right", 3, "visibleChange", "visible", "header"], [1, "flex", "flex-column", "gap-3"], ["value", "1", 1, "flex", "flex-column", "gap-3"], ["value", "0", 1, "border-1", "border-round-md", "border-surface"], [1, "border-none"], [1, "font-bold", "mb-2"], [1, "flex", "flex-column", "gap-2"], [4, "ngFor", "ngForOf", "ngForTrackBy"], ["value", "1", 1, "border-1", "border-round-md", "border-surface"], ["value", "2", 1, "border-1", "border-round-md", "border-surface"], ["icon", "pi pi-comments", "severity", "primary", 3, "label"], [3, "ngSwitch"], [1, "p-field-radiobutton"], ["name", "taskOptions", 3, "ngModelChange", "value", "ngModel", "inputId", "disabled"], [1, "pl-2", 3, "for"], [1, "p-field-checkbox", "mt-3"], ["inputId", "appendCustom", 3, "ngModelChange", "onChange", "ngModel", "binary"], ["for", "appendCustom", 1, "pl-2"], [1, "flex", "flex-column", "gap-3", "mt-3"], ["id", "ai-changes"], ["ariaLabelledBy", "ai-changes", "fluid", "", 3, "ngModelChange", "onChange", "ngModel", "step"], [1, "flex", "flex-column", "gap-2", "mt-3"], ["name", "promptOptions", 3, "ngModelChange", "onClick", "value", "ngModel", "inputId", "disabled"], [1, "p-field-checkbox"], [3, "ngModelChange", "value", "ngModel", "inputId", "disabled"], ["pTextarea", "", "id", "customPrompt", "fluid", "", 3, "ngModelChange", "blur", "ngModel", "autoResize"], ["for", "customPrompt"], [1, "font-bold", "m-0"], ["name", "alertRewriteMode", 3, "ngModelChange", "value", "ngModel", "inputId", "disabled"], [1, "text-xs", "text-500"], [1, "text-xs", "text-500", "mt-3"], ["name", "aiOptions", 3, "ngModelChange", "onClick", "value", "ngModel", "inputId", "disabled"], ["styleClass", "chip chip-severe ml-2", 3, "label"], ["icon", "pi pi-comments", "severity", "primary", 3, "click", "label"], ["mode", "prototype", 3, "showSampleDataButton", 4, "ngSwitchCase"], ["mode", "prototype", 3, "showSampleDataButton"]], template: function AiOptionsComponent_Template(rf, ctx) {
+  static \u0275cmp = /* @__PURE__ */ \u0275\u0275defineComponent({ type: _AiOptionsComponent, selectors: [["ca-ai-options"]], outputs: { promptChange: "promptChange", customPrompt: "customPrompt", editPrompt: "editPrompt", aiChange: "aiChange", alertRewriteModeChange: "alertRewriteModeChange", aiSubmit: "aiSubmit" }, decls: 20, vars: 19, consts: [["label", "Options", "icon", "pi pi-bars", "severity", "info", 3, "click"], ["position", "right", 3, "visibleChange", "visible", "header"], [1, "flex", "flex-column", "gap-3"], ["value", "1", 1, "flex", "flex-column", "gap-3"], ["value", "0", 1, "border-1", "border-round-md", "border-surface"], [1, "border-none"], [1, "font-bold", "mb-2"], [1, "flex", "flex-column", "gap-2"], [4, "ngFor", "ngForOf", "ngForTrackBy"], ["value", "1", 1, "border-1", "border-round-md", "border-surface"], ["value", "2", 1, "border-1", "border-round-md", "border-surface"], ["icon", "pi pi-comments", "severity", "primary", 3, "label"], [3, "ngSwitch"], [1, "p-field-radiobutton"], ["name", "taskOptions", 3, "ngModelChange", "value", "ngModel", "inputId", "disabled"], [1, "pl-2", 3, "for"], [1, "p-field-checkbox", "mt-3"], ["inputId", "appendCustom", 3, "ngModelChange", "onChange", "ngModel", "binary"], ["for", "appendCustom", 1, "pl-2"], [1, "flex", "flex-column", "gap-3", "mt-3"], ["id", "ai-changes"], ["ariaLabelledBy", "ai-changes", "fluid", "", 3, "ngModelChange", "onChange", "ngModel", "step"], [1, "flex", "flex-column", "gap-2", "mt-3"], ["name", "promptOptions", 3, "ngModelChange", "onClick", "value", "ngModel", "inputId", "disabled"], [1, "p-field-checkbox"], [3, "ngModelChange", "value", "ngModel", "inputId", "disabled"], ["pTextarea", "", "id", "customPrompt", "fluid", "", 3, "ngModelChange", "blur", "ngModel", "autoResize"], ["for", "customPrompt"], [1, "font-bold", "m-0"], [1, "p-field-checkbox", "mt-2"], ["inputId", "includeLinkWritingRules", 3, "ngModelChange", "onChange", "ngModel", "binary"], ["for", "includeLinkWritingRules", 1, "pl-2"], ["inputId", "useJsonAlertsIssuesPrompt", 3, "ngModelChange", "onChange", "ngModel", "binary"], ["for", "useJsonAlertsIssuesPrompt", 1, "pl-2"], ["name", "alertRewriteMode", 3, "ngModelChange", "value", "ngModel", "inputId", "disabled"], [1, "text-xs", "text-500"], [1, "text-xs", "text-500", "mt-3"], ["name", "aiOptions", 3, "ngModelChange", "onClick", "value", "ngModel", "inputId", "disabled"], ["styleClass", "chip chip-severe ml-2", 3, "label"], ["icon", "pi pi-comments", "severity", "primary", 3, "click", "label"], ["mode", "prototype", 3, "showSampleDataButton", 4, "ngSwitchCase"], ["mode", "prototype", 3, "showSampleDataButton"]], template: function AiOptionsComponent_Template(rf, ctx) {
     if (rf & 1) {
       \u0275\u0275elementStart(0, "p-button", 0);
       \u0275\u0275listener("click", function AiOptionsComponent_Template_p_button_click_0_listener() {
@@ -25307,6 +25518,28 @@ var AiOptionsComponent = class _AiOptionsComponent {
                         <label [for]="option.id" class="pl-2">{{ option.label }}</label>
                       </div>
                     </ng-container>
+                    <div class="p-field-checkbox mt-2">
+                      <p-checkbox
+                        [(ngModel)]="includeLinkWritingRules"
+                        [binary]="true"
+                        inputId="includeLinkWritingRules"
+                        (onChange)="onIncludeLinkWritingRulesSelect(includeLinkWritingRules)"
+                      />
+                      <label for="includeLinkWritingRules" class="pl-2">
+                        Include link writing rules
+                      </label>
+                    </div>
+                    <div class="p-field-checkbox mt-2">
+                      <p-checkbox
+                        [(ngModel)]="useJsonAlertsIssuesPrompt"
+                        [binary]="true"
+                        inputId="useJsonAlertsIssuesPrompt"
+                        (onChange)="onUseJsonAlertsIssuesPromptSelect(useJsonAlertsIssuesPrompt)"
+                      />
+                      <label for="useJsonAlertsIssuesPrompt" class="pl-2">
+                        Use JSON format for Alerts Issues prompt
+                      </label>
+                    </div>
                   </div>
                 }
               </div>
@@ -39819,7 +40052,9 @@ var PageAssistantCompareComponent = class _PageAssistantCompareComponent {
   }
   getPromptForKey(key2) {
     return __async(this, null, function* () {
-      const base = yield getPromptTemplate(key2);
+      const base = yield getPromptTemplate(key2, {
+        useJsonAlertsIssuesPrompt: this.uploadState.getUseJsonAlertsIssuesPrompt()
+      });
       const custom = this.customPromptText.trim();
       const includeEditPrompt = key2 !== PromptKey.AlertsIssues && key2 !== PromptKey.AlertsRecommendations;
       const editPrefix = includeEditPrompt ? this.customEditText : "";
@@ -39966,21 +40201,73 @@ ${custom}` : promptBody;
           planModelName = this.getShortModelName(planResponse.usedModel);
         }
         const selectedExamples = this.alertRewrite.selectExamples(plan, examples, 4);
-        const rewriteResponse = yield this.callOpenRouterForMessages(model, headers, url, this.alertRewrite.buildPromptBMessages({
-          mode,
-          originalHeading,
-          originalAlertText: alertText,
-          originalAlertHtml: alertHtml,
-          plan,
-          examples: selectedExamples
-        }), `Alert ${alertIndex} Prompt B`);
-        const rewriteResult = this.alertRewrite.parseRewriteResponse(rewriteResponse.text, plan, selectedExamples);
-        if (!rewriteResult?.rewrittenAlertHtml) {
-          throw new Error(`Alert rewrite returned empty HTML for alert ${alertIndex}.`);
+        let rewriteResult = null;
+        let rewriteModelName = "unknown";
+        let copyGuardTriggered = false;
+        let blockedExampleId = null;
+        for (let attempt = 0; attempt < 2; attempt += 1) {
+          const retryInstruction = attempt === 0 ? void 0 : "Your previous output matched example wording. Rewrite using alert-specific wording and facts only.";
+          const promptBMessages = yield this.alertRewrite.buildPromptBMessages({
+            mode,
+            originalHeading,
+            originalAlertText: alertText,
+            originalAlertHtml: alertHtml,
+            plan,
+            examples: selectedExamples,
+            includeLinkWritingRules: this.uploadState.getIncludeLinkWritingRules(),
+            retryInstruction
+          });
+          const rewriteResponse = yield this.callOpenRouterForMessages(model, headers, url, promptBMessages, `Alert ${alertIndex} Prompt B`);
+          rewriteModelName = this.getShortModelName(rewriteResponse.usedModel);
+          const parsedResult = this.alertRewrite.parseRewriteResponse(rewriteResponse.text, plan, selectedExamples);
+          if (!parsedResult?.rewrittenAlertHtml) {
+            throw new Error(`Alert rewrite returned empty HTML for alert ${alertIndex}.`);
+          }
+          const copyCheck = this.alertRewrite.detectExampleCopy({
+            result: parsedResult,
+            selectedExamples,
+            originalHeading,
+            originalAlertText: alertText
+          });
+          if (!copyCheck.isCopy) {
+            rewriteResult = parsedResult;
+            break;
+          }
+          copyGuardTriggered = true;
+          blockedExampleId = copyCheck.exampleId || null;
+          console.warn("Alert rewrite copy guard triggered", {
+            alertIndex,
+            attempt: attempt + 1,
+            reason: copyCheck.reason,
+            exampleId: copyCheck.exampleId,
+            similarity: copyCheck.similarity
+          });
+        }
+        if (!rewriteResult) {
+          rewriteResult = this.alertRewrite.buildPassthroughResult({
+            alertHtml,
+            originalHeading,
+            originalAlertText: alertText
+          });
         }
         rewrites.push({
           alert_index: alertIndex,
           rewritten_alert_html: rewriteResult.rewrittenAlertHtml
+        });
+        const examplesUsedDetails = (rewriteResult.exampleIdsUsed.length ? rewriteResult.exampleIdsUsed.map((id) => selectedExamples.find((example) => example.id === id)).filter((example) => !!example) : selectedExamples).map((example) => ({
+          id: example.id,
+          alertType: example.alertType,
+          criteria: example.criteria,
+          tags: example.tags,
+          headingBefore: example.headingBefore || "",
+          headingAfter: example.headingAfter || "",
+          before: example.before,
+          after: example.after
+        }));
+        console.log("Alert rewrite examples used", {
+          alertIndex,
+          exampleIdsUsed: rewriteResult.exampleIdsUsed,
+          examplesUsedDetails
         });
         console.log("Alert rewrite iteration", {
           mode,
@@ -39994,7 +40281,9 @@ ${custom}` : promptBody;
           appliedDirectives: rewriteResult.appliedDirectives,
           exampleIdsUsed: rewriteResult.exampleIdsUsed,
           planModel: planModelName,
-          rewriteModel: this.getShortModelName(rewriteResponse.usedModel),
+          rewriteModel: rewriteModelName,
+          copyGuardTriggered,
+          blockedExampleId,
           humanRating: null
         });
       }
@@ -40995,9 +41284,9 @@ ${custom}` : promptBody;
   }] });
 })();
 (() => {
-  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(PageAssistantCompareComponent, { className: "PageAssistantCompareComponent", filePath: "src/app/views/page-assistant/page-assistant.component.ts", lineNumber: 92 });
+  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(PageAssistantCompareComponent, { className: "PageAssistantCompareComponent", filePath: "src/app/views/page-assistant/page-assistant.component.ts", lineNumber: 93 });
 })();
 export {
   PageAssistantCompareComponent
 };
-//# sourceMappingURL=chunk-DLR3M74X.js.map
+//# sourceMappingURL=chunk-3PWDMI7M.js.map
