@@ -38502,6 +38502,11 @@ var PromptKey;
   PromptKey2["AlertsIssues"] = "alertsIssues";
   PromptKey2["AlertsRecommendations"] = "alertsRecommendations";
 })(PromptKey || (PromptKey = {}));
+var AlertRewriteMode;
+(function(AlertRewriteMode2) {
+  AlertRewriteMode2["AB"] = "ab";
+  AlertRewriteMode2["GoodResultsOnly"] = "good-results-only";
+})(AlertRewriteMode || (AlertRewriteMode = {}));
 var AiModel;
 (function(AiModel2) {
   AiModel2["Nemotron"] = "nvidia/nemotron-3-nano-30b-a3b:free";
@@ -38551,6 +38556,7 @@ var UploadStateService = class _UploadStateService {
   uploadTypeKey = "pageAssistant.uploadType";
   aiModelKey = "pageAssistant.aiModel";
   editPromptKey = "pageAssistant.editPrompt";
+  alertRewriteModeKey = "pageAssistant.alertRewriteMode";
   //Upload type
   selectedUploadType = signal("url");
   getSelectedUploadType = computed(() => this.selectedUploadType());
@@ -38571,6 +38577,13 @@ var UploadStateService = class _UploadStateService {
   setEditPromptText(prompt) {
     this.editPromptText.set(prompt ?? "");
     this.storage.saveData(this.editPromptKey, prompt ?? "");
+  }
+  //Alert rewrite mode (A->B vs good-results-only)
+  selectedAlertRewriteMode = signal(AlertRewriteMode.AB);
+  getAlertRewriteMode = computed(() => this.selectedAlertRewriteMode());
+  setAlertRewriteMode(mode) {
+    this.selectedAlertRewriteMode.set(mode);
+    this.storage.saveData(this.alertRewriteModeKey, mode);
   }
   //Upload data
   uploadData = signal(null);
@@ -38646,11 +38659,13 @@ var UploadStateService = class _UploadStateService {
     this.selectedUploadType.set("url");
     this.selectedAiModel.set(AiModel.Nemotron);
     this.editPromptText.set("");
+    this.selectedAlertRewriteMode.set(AlertRewriteMode.AB);
     this.uploadData.set(null);
     this.prevUploadData = [];
     this.storage.removeData(this.uploadTypeKey);
     this.storage.removeData(this.aiModelKey);
     this.storage.removeData(this.editPromptKey);
+    this.storage.removeData(this.alertRewriteModeKey);
     this.storage.removeData(this.uploadDataKey);
   }
   persistUploadData() {
@@ -38677,6 +38692,10 @@ var UploadStateService = class _UploadStateService {
     const storedEditPrompt = this.storage.getData(this.editPromptKey);
     if (typeof storedEditPrompt === "string") {
       this.editPromptText.set(storedEditPrompt);
+    }
+    const storedAlertRewriteMode = this.storage.getData(this.alertRewriteModeKey);
+    if (storedAlertRewriteMode && Object.values(AlertRewriteMode).includes(storedAlertRewriteMode)) {
+      this.selectedAlertRewriteMode.set(storedAlertRewriteMode);
     }
     const storedData = this.storage.getData(this.uploadDataKey);
     if (!storedData)
@@ -100212,6 +100231,7 @@ export {
   SourceViewType,
   CompareTask,
   PromptKey,
+  AlertRewriteMode,
   AiModel,
   LocalStorageService,
   UploadStateService,
@@ -100322,4 +100342,4 @@ export {
    * License: MIT
    *)
 */
-//# sourceMappingURL=chunk-KJVGJ47X.js.map
+//# sourceMappingURL=chunk-K4M53NKZ.js.map

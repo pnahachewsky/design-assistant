@@ -5,6 +5,7 @@ import {
   AccordionModule,
   AccordionPanel,
   AiModel,
+  AlertRewriteMode,
   ApiKeyService,
   AutoFocus,
   BaseComponent,
@@ -137,7 +138,7 @@ import {
   unblockBodyScroll,
   uuid,
   zindexutils
-} from "./chunk-KJVGJ47X.js";
+} from "./chunk-K4M53NKZ.js";
 import {
   ChangeDetectionStrategy,
   ChangeDetectorRef,
@@ -21688,6 +21689,507 @@ var AlertAiService = class _AlertAiService {
   }], null, null);
 })();
 
+// src/app/views/page-assistant/services/alert-rewrite.service.ts
+var AlertRewriteService = class _AlertRewriteService {
+  examplesPath = new URL("ai-prompts/alerts-rewrite-examples.json", document.baseURI).toString();
+  examplesCache = null;
+  loadExamples() {
+    return __async(this, null, function* () {
+      if (this.examplesCache) {
+        return this.examplesCache;
+      }
+      try {
+        const response = yield fetch(this.examplesPath);
+        if (!response.ok) {
+          throw new Error(`Failed to load alert examples (${response.status}).`);
+        }
+        const payload = yield response.json();
+        const rawExamples = Array.isArray(payload) ? payload : payload && typeof payload === "object" && Array.isArray(payload["examples"]) ? payload["examples"] : [];
+        const parsed = rawExamples.map((raw) => this.toExample(raw)).filter((example) => !!example);
+        this.examplesCache = parsed;
+        return parsed;
+      } catch (err) {
+        console.warn("Unable to load alert rewrite examples:", err);
+        this.examplesCache = [];
+        return [];
+      }
+    });
+  }
+  inferAlertType(alertHtml) {
+    const lower = alertHtml.toLowerCase();
+    if (lower.includes("alert-danger") || lower.includes("alert-error"))
+      return "error";
+    if (lower.includes("alert-warning"))
+      return "warning";
+    if (lower.includes("alert-success"))
+      return "success";
+    return "info";
+  }
+  buildHeuristicPlan(input) {
+    const criteriaMatched = this.inferCriteriaFromIssues(input.issues);
+    const domainTags = this.inferDomainTags(input.alertText, input.issues);
+    const directives = [];
+    if (criteriaMatched.includes("C1_missing_next_step")) {
+      directives.push({ op: "add_next_step" });
+    }
+    if (criteriaMatched.includes("C7_too_vague")) {
+      directives.push({ op: "specify_subject" });
+    }
+    if (criteriaMatched.includes("C2_too_wordy")) {
+      directives.push({ op: "keep_under_chars", value: 140 });
+    }
+    directives.push({ op: "add_heading" });
+    directives.push({ op: "avoid_jargon" });
+    return {
+      alertType: input.alertType || "info",
+      domainTags,
+      criteriaMatched,
+      directives: this.uniqueDirectives(directives)
+    };
+  }
+  buildPromptAMessages(input) {
+    const systemPrompt = [
+      "You are Prompt A for UI alert rewriting.",
+      "Classify the alert and produce a deterministic rewrite plan.",
+      "Return JSON only and follow this exact schema:",
+      '{"alertType":"error|warning|info|success","domainTags":["..."],"criteriaMatched":["C..."],"directives":[{"op":"string","value":"optional"}]}',
+      "Allowed directive ops:",
+      "specify_subject, add_next_step, add_fallback, add_heading, avoid_jargon, keep_under_chars, limit_links, preserve_tone.",
+      "Rules:",
+      "- Keep domainTags short and specific.",
+      "- criteriaMatched should be stable identifiers (e.g., C1_missing_next_step).",
+      "- Directives must be concrete operations.",
+      "- If no max length is needed, do not include keep_under_chars.",
+      "- Return JSON only. No prose."
+    ].join("\n");
+    const userPayload = {
+      alertHtml: input.alertHtml,
+      alertText: input.alertText,
+      alertType: input.alertType,
+      issues: input.issues.map((issue) => ({
+        category: (issue.category || "").trim(),
+        severity: (issue.severity || "").trim(),
+        description: (issue.description || "").trim(),
+        recommendation: (issue.recommendation || "").trim()
+      }))
+    };
+    return [
+      { role: "system", content: systemPrompt },
+      { role: "user", content: JSON.stringify(userPayload) }
+    ];
+  }
+  parsePlanResponse(text, fallback) {
+    const parsed = this.looseJsonParse(this.stripCodeFences(text));
+    if (!parsed || typeof parsed !== "object") {
+      return null;
+    }
+    const root = parsed;
+    const alertType = this.cleanString(root["alertType"]) || fallback.alertType;
+    const domainTags = this.toStringArray(root["domainTags"]);
+    const criteriaMatched = this.toStringArray(root["criteriaMatched"]);
+    const rawDirectives = Array.isArray(root["directives"]) ? root["directives"] : [];
+    const directives = rawDirectives.map((raw) => this.toDirective(raw)).filter((directive) => !!directive);
+    return {
+      alertType,
+      domainTags: domainTags.length ? domainTags : fallback.domainTags,
+      criteriaMatched: criteriaMatched.length ? criteriaMatched : fallback.criteriaMatched,
+      directives: directives.length ? this.uniqueDirectives(directives) : fallback.directives
+    };
+  }
+  selectExamples(plan, examples, count = 4) {
+    const requestedCount = Math.max(1, count);
+    const criteria = new Set(plan.criteriaMatched || []);
+    const tags = new Set(plan.domainTags || []);
+    const scored = examples.map((example) => {
+      let score = 0;
+      if (example.alertType === plan.alertType) {
+        score += 3;
+      } else {
+        score -= 2;
+      }
+      for (const criterion of example.criteria || []) {
+        if (criteria.has(criterion))
+          score += 2;
+      }
+      for (const tag of example.tags || []) {
+        if (tags.has(tag))
+          score += 1;
+      }
+      return { example, score };
+    });
+    scored.sort((a, b) => b.score - a.score);
+    const selected = [];
+    const seenCriteriaSignatures = /* @__PURE__ */ new Set();
+    for (const item of scored) {
+      if (selected.length >= requestedCount)
+        break;
+      const signature = JSON.stringify((item.example.criteria || []).slice().sort());
+      const isDuplicateSignature = seenCriteriaSignatures.has(signature);
+      if (isDuplicateSignature && selected.length < requestedCount - 1) {
+        continue;
+      }
+      selected.push(item.example);
+      seenCriteriaSignatures.add(signature);
+    }
+    return selected;
+  }
+  buildPromptBMessages(params) {
+    const maxChars = this.getCharLimit(params.plan.directives);
+    const styleRules = [
+      "1 sentence preferred, 2 max if needed.",
+      "Every alert must have a short, descriptive heading.",
+      "Start with what happened, then what to do.",
+      "Use plain language, active voice, and no blame.",
+      "Include a next step when available.",
+      "When links are present, preserve a primary hyperlink; if there are too many links, remove non-primary links.",
+      "Link text can be rewritten to fit the sentence and tone.",
+      maxChars ? `Keep under ${maxChars} characters.` : "Keep concise for UI alerts.",
+      'Return full updated alert wrapper HTML in rewrittenAlertHtml (for example: <div class="alert alert-info">...</div>).'
+    ];
+    const examplesBlock = params.examples.map((example, index) => {
+      const linksBefore = this.linkListToString(example.linksBefore);
+      const linksAfter = this.linkListToString(example.linksAfter);
+      const linkEdits = this.linkEditsToString(example.linkEdits);
+      return [
+        `Example ${index + 1} (${example.id})`,
+        example.headingBefore ? `Heading before: ${example.headingBefore}` : "",
+        example.headingAfter ? `Heading after: ${example.headingAfter}` : "",
+        `Before: ${example.before}`,
+        `After: ${example.after}`,
+        linksBefore ? `Links before: ${linksBefore}` : "",
+        linksAfter ? `Links after: ${linksAfter}` : "",
+        linkEdits ? `Link edits: ${linkEdits}` : ""
+      ].join("\n");
+    });
+    const planPayload = params.mode === AlertRewriteMode.AB ? params.plan : {
+      alertType: params.plan.alertType,
+      domainTags: params.plan.domainTags,
+      criteriaMatched: params.plan.criteriaMatched,
+      directives: []
+    };
+    const systemPrompt = [
+      "You are Prompt B for rewriting UI alerts.",
+      "Use examples as pattern guidance, not copy/paste text.",
+      "Keep the alert wrapper and classes valid.",
+      "Return JSON only. No extra text.",
+      "Output schema:",
+      '{"rewrittenAlertHtml":"string","rewrittenHeading":"string","rewrittenAlert":"string","appliedDirectives":["..."],"exampleIdsUsed":["ex-001"]}'
+    ].join("\n");
+    const userPayload = {
+      mode: params.mode,
+      styleRules,
+      examples: params.examples.map((example) => ({
+        id: example.id,
+        headingBefore: example.headingBefore || "",
+        headingAfter: example.headingAfter || "",
+        before: example.before,
+        after: example.after,
+        criteria: example.criteria,
+        tags: example.tags,
+        linksBefore: example.linksBefore || [],
+        linksAfter: example.linksAfter || [],
+        linkEdits: example.linkEdits || []
+      })),
+      examplesText: examplesBlock.join("\n\n"),
+      plan: planPayload,
+      originalHeading: (params.originalHeading || "").trim(),
+      originalAlertText: (params.originalAlertText || "").trim(),
+      originalAlertHtml: (params.originalAlertHtml || "").trim()
+    };
+    return [
+      { role: "system", content: systemPrompt },
+      { role: "user", content: JSON.stringify(userPayload) }
+    ];
+  }
+  parseRewriteResponse(text, plan, selectedExamples) {
+    const parsed = this.looseJsonParse(this.stripCodeFences(text));
+    if (!parsed || typeof parsed !== "object") {
+      return null;
+    }
+    const root = parsed;
+    const rawAlertHtml = this.cleanString(root["rewrittenAlertHtml"]);
+    const normalizedAlertHtml = this.normalizeAlertWrapperHtml(rawAlertHtml);
+    if (!normalizedAlertHtml) {
+      return null;
+    }
+    const parsedHeading = this.cleanString(root["rewrittenHeading"]);
+    const rawAlert = this.cleanString(root["rewrittenAlert"]);
+    const extractedHeading = this.extractHeadingFromAlertHtml(normalizedAlertHtml);
+    const extractedBodyText = this.extractBodyTextFromAlertHtml(normalizedAlertHtml);
+    const rewrittenHeading = parsedHeading || extractedHeading || this.buildFallbackHeading(plan.alertType);
+    const baseBodyText = rawAlert || extractedBodyText;
+    if (!baseBodyText)
+      return null;
+    const maxChars = this.getCharLimit(plan.directives);
+    const rewrittenAlert = this.applyCharLimit(baseBodyText, maxChars);
+    const appliedDirectives = this.toStringArray(root["appliedDirectives"]);
+    const exampleIdsUsedRaw = this.toStringArray(root["exampleIdsUsed"]);
+    const fallbackExampleIds = selectedExamples.map((example) => example.id);
+    const exampleIdsUsed = exampleIdsUsedRaw.length ? exampleIdsUsedRaw : fallbackExampleIds;
+    return {
+      rewrittenAlertHtml: normalizedAlertHtml,
+      rewrittenHeading,
+      rewrittenAlert,
+      appliedDirectives,
+      exampleIdsUsed
+    };
+  }
+  inferCriteriaFromIssues(issues) {
+    const criteria = /* @__PURE__ */ new Set();
+    for (const issue of issues) {
+      const category = (issue.category || "").toLowerCase();
+      if (!category)
+        continue;
+      if (category.includes("nothing actionable") || category.includes("unclear impact")) {
+        criteria.add("C1_missing_next_step");
+      }
+      if (category.includes("too wordy")) {
+        criteria.add("C2_too_wordy");
+      }
+      if (category.includes("too many links")) {
+        criteria.add("C3_too_many_links");
+      }
+      if (category.includes("missing heading")) {
+        criteria.add("C4_missing_heading");
+      }
+      if (category.includes("focus order")) {
+        criteria.add("C5_focus_order");
+      }
+      if (category.includes("misuse") || category.includes("wrong component")) {
+        criteria.add("C6_component_misuse");
+      }
+      if (category.includes("vague")) {
+        criteria.add("C7_too_vague");
+      }
+    }
+    if (!criteria.size) {
+      criteria.add("C7_too_vague");
+    }
+    return Array.from(criteria);
+  }
+  inferDomainTags(alertText, issues) {
+    const tags = /* @__PURE__ */ new Set();
+    const lower = (alertText || "").toLowerCase();
+    const issueText = issues.map((issue) => `${issue.category || ""} ${issue.description || ""}`).join(" ").toLowerCase();
+    const maybeAdd = (tag, pattern) => {
+      if (pattern.test(lower) || pattern.test(issueText)) {
+        tags.add(tag);
+      }
+    };
+    maybeAdd("form", /\bform\b/);
+    maybeAdd("submission", /\bsubmit|submission\b/);
+    maybeAdd("login", /\blog ?in|sign ?in|account\b/);
+    maybeAdd("payment", /\bpayment|pay|billing|invoice\b/);
+    maybeAdd("deadline", /\bdue|deadline|date\b/);
+    maybeAdd("support", /\bsupport|contact|help\b/);
+    maybeAdd("missing-action", /\bnothing actionable|next step|action\b/);
+    maybeAdd("vague", /\bvague|unclear\b/);
+    return Array.from(tags).slice(0, 6);
+  }
+  toExample(raw) {
+    if (!raw || typeof raw !== "object")
+      return null;
+    const root = raw;
+    const id = this.cleanString(root["id"]);
+    const alertType = this.cleanString(root["alertType"]);
+    const before = this.cleanString(root["before"]);
+    const after = this.cleanString(root["after"]);
+    if (!id || !alertType || !before || !after)
+      return null;
+    return {
+      id,
+      alertType,
+      tags: this.toStringArray(root["tags"]),
+      criteria: this.toStringArray(root["criteria"]),
+      before,
+      after,
+      headingBefore: this.cleanString(root["headingBefore"]) || void 0,
+      headingAfter: this.cleanString(root["headingAfter"]) || void 0,
+      linksBefore: this.toExampleLinkArray(root["linksBefore"]),
+      linksAfter: this.toExampleLinkArray(root["linksAfter"]),
+      linkEdits: this.toExampleLinkEditArray(root["linkEdits"]),
+      notes: this.cleanString(root["notes"]) || void 0
+    };
+  }
+  toDirective(raw) {
+    if (!raw || typeof raw !== "object")
+      return null;
+    const root = raw;
+    const op = this.cleanString(root["op"]);
+    if (!op)
+      return null;
+    const valueRaw = root["value"];
+    const value = typeof valueRaw === "number" || typeof valueRaw === "string" ? valueRaw : void 0;
+    return value !== void 0 ? { op, value } : { op };
+  }
+  uniqueDirectives(directives) {
+    const seen = /* @__PURE__ */ new Set();
+    const output = [];
+    for (const directive of directives) {
+      const key2 = `${directive.op}::${directive.value ?? ""}`;
+      if (seen.has(key2))
+        continue;
+      seen.add(key2);
+      output.push(directive);
+    }
+    return output;
+  }
+  getCharLimit(directives) {
+    for (const directive of directives) {
+      if (directive.op !== "keep_under_chars")
+        continue;
+      const value = typeof directive.value === "number" ? directive.value : typeof directive.value === "string" ? Number.parseInt(directive.value, 10) : NaN;
+      if (Number.isFinite(value) && value > 0) {
+        return value;
+      }
+    }
+    return null;
+  }
+  applyCharLimit(text, maxChars) {
+    const trimmed = text.trim();
+    if (!maxChars || trimmed.length <= maxChars) {
+      return trimmed;
+    }
+    const shortened = trimmed.slice(0, maxChars).trim();
+    return shortened.endsWith(".") ? shortened : `${shortened}.`;
+  }
+  stripCodeFences(input) {
+    return input.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/i, "").trim();
+  }
+  looseJsonParse(input) {
+    try {
+      return JSON.parse(input);
+    } catch {
+    }
+    const match = input.match(/\{[\s\S]*\}/);
+    if (!match)
+      return null;
+    try {
+      return JSON.parse(match[0]);
+    } catch {
+      return null;
+    }
+  }
+  toStringArray(raw) {
+    if (!Array.isArray(raw))
+      return [];
+    return raw.filter((value) => typeof value === "string").map((value) => value.trim()).filter((value) => !!value);
+  }
+  cleanString(value) {
+    return typeof value === "string" ? value.trim() : "";
+  }
+  buildFallbackHeading(alertType) {
+    const normalized = alertType.toLowerCase();
+    if (normalized === "error")
+      return "Error";
+    if (normalized === "warning")
+      return "Important";
+    if (normalized === "success")
+      return "Success";
+    return "Information";
+  }
+  normalizeAlertWrapperHtml(rawHtml) {
+    if (!rawHtml)
+      return null;
+    try {
+      const doc = new DOMParser().parseFromString(rawHtml, "text/html");
+      const alertEl = doc.body.firstElementChild;
+      if (!alertEl || !alertEl.classList.contains("alert"))
+        return null;
+      return alertEl.outerHTML.trim();
+    } catch {
+      return null;
+    }
+  }
+  extractHeadingFromAlertHtml(alertHtml) {
+    try {
+      const doc = new DOMParser().parseFromString(alertHtml, "text/html");
+      const heading = doc.body.querySelector("h1, h2, h3, h4, h5, h6");
+      return (heading?.textContent || "").trim();
+    } catch {
+      return "";
+    }
+  }
+  extractBodyTextFromAlertHtml(alertHtml) {
+    try {
+      const doc = new DOMParser().parseFromString(alertHtml, "text/html");
+      const alertEl = doc.body.firstElementChild;
+      if (!alertEl)
+        return "";
+      const clone = alertEl.cloneNode(true);
+      clone.querySelectorAll("h1, h2, h3, h4, h5, h6").forEach((el) => el.remove());
+      return (clone.textContent || "").trim();
+    } catch {
+      return "";
+    }
+  }
+  toExampleLinkArray(raw) {
+    if (!Array.isArray(raw))
+      return [];
+    const links = [];
+    for (const item of raw) {
+      if (!item || typeof item !== "object")
+        continue;
+      const root = item;
+      const id = this.cleanString(root["id"]);
+      const text = this.cleanString(root["text"]);
+      const href = this.cleanString(root["href"]) || void 0;
+      if (!id || !text)
+        continue;
+      links.push(href ? { id, text, href } : { id, text });
+    }
+    return links;
+  }
+  toExampleLinkEditArray(raw) {
+    if (!Array.isArray(raw))
+      return [];
+    const edits = [];
+    for (const item of raw) {
+      if (!item || typeof item !== "object")
+        continue;
+      const root = item;
+      const id = this.cleanString(root["id"]);
+      const actionRaw = this.cleanString(root["action"]).toLowerCase();
+      const action = actionRaw === "keep" || actionRaw === "rename" || actionRaw === "remove" || actionRaw === "add" ? actionRaw : null;
+      if (!id || !action)
+        continue;
+      const beforeText = this.cleanString(root["beforeText"]) || void 0;
+      const afterText = this.cleanString(root["afterText"]) || void 0;
+      const note = this.cleanString(root["note"]) || void 0;
+      edits.push(__spreadValues(__spreadValues(__spreadValues({
+        id,
+        action
+      }, beforeText ? { beforeText } : {}), afterText ? { afterText } : {}), note ? { note } : {}));
+    }
+    return edits;
+  }
+  linkListToString(links) {
+    if (!links?.length)
+      return "";
+    return links.map((link) => link.href ? `${link.id}: "${link.text}" (${link.href})` : `${link.id}: "${link.text}"`).join("; ");
+  }
+  linkEditsToString(edits) {
+    if (!edits?.length)
+      return "";
+    return edits.map((edit) => {
+      const before = edit.beforeText ? ` before="${edit.beforeText}"` : "";
+      const after = edit.afterText ? ` after="${edit.afterText}"` : "";
+      const note = edit.note ? ` note="${edit.note}"` : "";
+      return `${edit.id}:${edit.action}${before}${after}${note}`;
+    }).join("; ");
+  }
+  static \u0275fac = function AlertRewriteService_Factory(__ngFactoryType__) {
+    return new (__ngFactoryType__ || _AlertRewriteService)();
+  };
+  static \u0275prov = /* @__PURE__ */ \u0275\u0275defineInjectable({ token: _AlertRewriteService, factory: _AlertRewriteService.\u0275fac, providedIn: "root" });
+};
+(() => {
+  (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(AlertRewriteService, [{
+    type: Injectable,
+    args: [{ providedIn: "root" }]
+  }], null, null);
+})();
+
 // node_modules/primeng/fesm2022/primeng-drawer.mjs
 var _c02 = ["header"];
 var _c12 = ["footer"];
@@ -24005,7 +24507,7 @@ function AiOptionsComponent_Conditional_16_Conditional_10_ng_container_0_Templat
   if (rf & 1) {
     const _r5 = \u0275\u0275getCurrentView();
     \u0275\u0275elementContainerStart(0);
-    \u0275\u0275elementStart(1, "div", 13)(2, "p-radioButton", 22);
+    \u0275\u0275elementStart(1, "div", 13)(2, "p-radioButton", 23);
     \u0275\u0275twoWayListener("ngModelChange", function AiOptionsComponent_Conditional_16_Conditional_10_ng_container_0_Template_p_radioButton_ngModelChange_2_listener($event) {
       \u0275\u0275restoreView(_r5);
       const ctx_r1 = \u0275\u0275nextContext(3);
@@ -24050,7 +24552,7 @@ function AiOptionsComponent_Conditional_16_Conditional_11_ng_container_0_Templat
   if (rf & 1) {
     const _r7 = \u0275\u0275getCurrentView();
     \u0275\u0275elementContainerStart(0);
-    \u0275\u0275elementStart(1, "div", 23)(2, "p-checkbox", 24);
+    \u0275\u0275elementStart(1, "div", 24)(2, "p-checkbox", 25);
     \u0275\u0275twoWayListener("ngModelChange", function AiOptionsComponent_Conditional_16_Conditional_11_ng_container_0_Template_p_checkbox_ngModelChange_2_listener($event) {
       \u0275\u0275restoreView(_r7);
       const ctx_r1 = \u0275\u0275nextContext(3);
@@ -24089,7 +24591,7 @@ function AiOptionsComponent_Conditional_16_Conditional_11_Template(rf, ctx) {
 function AiOptionsComponent_Conditional_16_Conditional_17_Template(rf, ctx) {
   if (rf & 1) {
     const _r9 = \u0275\u0275getCurrentView();
-    \u0275\u0275elementStart(0, "p-iftalabel")(1, "textarea", 25);
+    \u0275\u0275elementStart(0, "p-iftalabel")(1, "textarea", 26);
     \u0275\u0275twoWayListener("ngModelChange", function AiOptionsComponent_Conditional_16_Conditional_17_Template_textarea_ngModelChange_1_listener($event) {
       \u0275\u0275restoreView(_r9);
       const ctx_r1 = \u0275\u0275nextContext(2);
@@ -24102,7 +24604,7 @@ function AiOptionsComponent_Conditional_16_Conditional_17_Template(rf, ctx) {
       return \u0275\u0275resetView(ctx_r1.emitCustomPrompt(ctx_r1.customInstruction));
     });
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(2, "label", 26);
+    \u0275\u0275elementStart(2, "label", 27);
     \u0275\u0275text(3);
     \u0275\u0275pipe(4, "translate");
     \u0275\u0275elementEnd()();
@@ -24114,6 +24616,50 @@ function AiOptionsComponent_Conditional_16_Conditional_17_Template(rf, ctx) {
     \u0275\u0275property("autoResize", true);
     \u0275\u0275advance(2);
     \u0275\u0275textInterpolate(\u0275\u0275pipeBind1(4, 3, "page.ai-options.prompt.textarea"));
+  }
+}
+function AiOptionsComponent_Conditional_16_Conditional_22_ng_container_3_Template(rf, ctx) {
+  if (rf & 1) {
+    const _r10 = \u0275\u0275getCurrentView();
+    \u0275\u0275elementContainerStart(0);
+    \u0275\u0275elementStart(1, "div", 13)(2, "p-radioButton", 29);
+    \u0275\u0275twoWayListener("ngModelChange", function AiOptionsComponent_Conditional_16_Conditional_22_ng_container_3_Template_p_radioButton_ngModelChange_2_listener($event) {
+      \u0275\u0275restoreView(_r10);
+      const ctx_r1 = \u0275\u0275nextContext(3);
+      \u0275\u0275twoWayBindingSet(ctx_r1.alertRewriteModeModel, $event) || (ctx_r1.alertRewriteModeModel = $event);
+      return \u0275\u0275resetView($event);
+    });
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(3, "label", 15);
+    \u0275\u0275text(4);
+    \u0275\u0275elementEnd()();
+    \u0275\u0275elementContainerEnd();
+  }
+  if (rf & 2) {
+    const option_r11 = ctx.$implicit;
+    const ctx_r1 = \u0275\u0275nextContext(3);
+    \u0275\u0275advance(2);
+    \u0275\u0275property("value", option_r11.id);
+    \u0275\u0275twoWayProperty("ngModel", ctx_r1.alertRewriteModeModel);
+    \u0275\u0275property("inputId", option_r11.id)("disabled", option_r11.disabled);
+    \u0275\u0275advance();
+    \u0275\u0275property("for", option_r11.id);
+    \u0275\u0275advance();
+    \u0275\u0275textInterpolate(option_r11.label);
+  }
+}
+function AiOptionsComponent_Conditional_16_Conditional_22_Template(rf, ctx) {
+  if (rf & 1) {
+    \u0275\u0275elementStart(0, "div", 22)(1, "p", 28);
+    \u0275\u0275text(2, "Alert rewrite mode");
+    \u0275\u0275elementEnd();
+    \u0275\u0275template(3, AiOptionsComponent_Conditional_16_Conditional_22_ng_container_3_Template, 5, 6, "ng-container", 8);
+    \u0275\u0275elementEnd();
+  }
+  if (rf & 2) {
+    const ctx_r1 = \u0275\u0275nextContext(2);
+    \u0275\u0275advance(3);
+    \u0275\u0275property("ngForOf", ctx_r1.alertRewriteModeOptions)("ngForTrackBy", ctx_r1.trackById);
   }
 }
 function AiOptionsComponent_Conditional_16_Template(rf, ctx) {
@@ -24162,14 +24708,16 @@ function AiOptionsComponent_Conditional_16_Template(rf, ctx) {
       const ctx_r1 = \u0275\u0275nextContext();
       return \u0275\u0275resetView(ctx_r1.emitEditPrompt(ctx_r1.currentEditLevel.prompt));
     });
-    \u0275\u0275elementEnd()()()()()();
+    \u0275\u0275elementEnd()();
+    \u0275\u0275template(22, AiOptionsComponent_Conditional_16_Conditional_22_Template, 4, 2, "div", 22);
+    \u0275\u0275elementEnd()()()();
   }
   if (rf & 2) {
     const ctx_r1 = \u0275\u0275nextContext();
     \u0275\u0275advance(2);
-    \u0275\u0275textInterpolate(\u0275\u0275pipeBind1(3, 11, "page.ai-options.prompt.header"));
+    \u0275\u0275textInterpolate(\u0275\u0275pipeBind1(3, 12, "page.ai-options.prompt.header"));
     \u0275\u0275advance(5);
-    \u0275\u0275textInterpolate(\u0275\u0275pipeBind1(8, 13, "page.ai-options.prompt.legend"));
+    \u0275\u0275textInterpolate(\u0275\u0275pipeBind1(8, 14, "page.ai-options.prompt.legend"));
     \u0275\u0275advance(3);
     \u0275\u0275conditional(!ctx_r1.isTwoPrompts ? 10 : -1);
     \u0275\u0275advance();
@@ -24178,7 +24726,7 @@ function AiOptionsComponent_Conditional_16_Template(rf, ctx) {
     \u0275\u0275twoWayProperty("ngModel", ctx_r1.addCustom);
     \u0275\u0275property("binary", true);
     \u0275\u0275advance(2);
-    \u0275\u0275textInterpolate(\u0275\u0275pipeBind1(16, 15, "page.ai-options.prompt.checkbox"));
+    \u0275\u0275textInterpolate(\u0275\u0275pipeBind1(16, 16, "page.ai-options.prompt.checkbox"));
     \u0275\u0275advance(2);
     \u0275\u0275conditional(ctx_r1.addCustom ? 17 : -1);
     \u0275\u0275advance(3);
@@ -24186,56 +24734,22 @@ function AiOptionsComponent_Conditional_16_Template(rf, ctx) {
     \u0275\u0275advance();
     \u0275\u0275twoWayProperty("ngModel", ctx_r1.editLevel);
     \u0275\u0275property("step", 25);
+    \u0275\u0275advance();
+    \u0275\u0275conditional(ctx_r1.selectedPrompt === "alertsRecommendations" ? 22 : -1);
   }
 }
 function AiOptionsComponent_Conditional_17_Conditional_10_ng_container_3_Template(rf, ctx) {
   if (rf & 1) {
-    const _r10 = \u0275\u0275getCurrentView();
+    const _r12 = \u0275\u0275getCurrentView();
     \u0275\u0275elementContainerStart(0);
-    \u0275\u0275elementStart(1, "div", 13)(2, "p-radioButton", 29);
+    \u0275\u0275elementStart(1, "div", 13)(2, "p-radioButton", 32);
     \u0275\u0275twoWayListener("ngModelChange", function AiOptionsComponent_Conditional_17_Conditional_10_ng_container_3_Template_p_radioButton_ngModelChange_2_listener($event) {
-      \u0275\u0275restoreView(_r10);
+      \u0275\u0275restoreView(_r12);
       const ctx_r1 = \u0275\u0275nextContext(3);
       \u0275\u0275twoWayBindingSet(ctx_r1.selectedAi, $event) || (ctx_r1.selectedAi = $event);
       return \u0275\u0275resetView($event);
     });
     \u0275\u0275listener("onClick", function AiOptionsComponent_Conditional_17_Conditional_10_ng_container_3_Template_p_radioButton_onClick_2_listener() {
-      \u0275\u0275restoreView(_r10);
-      const ctx_r1 = \u0275\u0275nextContext(3);
-      return \u0275\u0275resetView(ctx_r1.onAiSelect(ctx_r1.selectedAi));
-    });
-    \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(3, "label", 15);
-    \u0275\u0275text(4);
-    \u0275\u0275pipe(5, "translate");
-    \u0275\u0275elementEnd()();
-    \u0275\u0275elementContainerEnd();
-  }
-  if (rf & 2) {
-    const option_r11 = ctx.$implicit;
-    const ctx_r1 = \u0275\u0275nextContext(3);
-    \u0275\u0275advance(2);
-    \u0275\u0275property("value", option_r11.id);
-    \u0275\u0275twoWayProperty("ngModel", ctx_r1.selectedAi);
-    \u0275\u0275property("inputId", option_r11.id)("disabled", option_r11.disabled);
-    \u0275\u0275advance();
-    \u0275\u0275property("for", option_r11.id);
-    \u0275\u0275advance();
-    \u0275\u0275textInterpolate(\u0275\u0275pipeBind1(5, 6, option_r11.label));
-  }
-}
-function AiOptionsComponent_Conditional_17_Conditional_10_ng_container_7_Template(rf, ctx) {
-  if (rf & 1) {
-    const _r12 = \u0275\u0275getCurrentView();
-    \u0275\u0275elementContainerStart(0);
-    \u0275\u0275elementStart(1, "div", 13)(2, "p-radioButton", 29);
-    \u0275\u0275twoWayListener("ngModelChange", function AiOptionsComponent_Conditional_17_Conditional_10_ng_container_7_Template_p_radioButton_ngModelChange_2_listener($event) {
-      \u0275\u0275restoreView(_r12);
-      const ctx_r1 = \u0275\u0275nextContext(3);
-      \u0275\u0275twoWayBindingSet(ctx_r1.selectedAi, $event) || (ctx_r1.selectedAi = $event);
-      return \u0275\u0275resetView($event);
-    });
-    \u0275\u0275listener("onClick", function AiOptionsComponent_Conditional_17_Conditional_10_ng_container_7_Template_p_radioButton_onClick_2_listener() {
       \u0275\u0275restoreView(_r12);
       const ctx_r1 = \u0275\u0275nextContext(3);
       return \u0275\u0275resetView(ctx_r1.onAiSelect(ctx_r1.selectedAi));
@@ -24244,8 +24758,6 @@ function AiOptionsComponent_Conditional_17_Conditional_10_ng_container_7_Templat
     \u0275\u0275elementStart(3, "label", 15);
     \u0275\u0275text(4);
     \u0275\u0275pipe(5, "translate");
-    \u0275\u0275element(6, "p-chip", 30);
-    \u0275\u0275pipe(7, "translate");
     \u0275\u0275elementEnd()();
     \u0275\u0275elementContainerEnd();
   }
@@ -24259,19 +24771,57 @@ function AiOptionsComponent_Conditional_17_Conditional_10_ng_container_7_Templat
     \u0275\u0275advance();
     \u0275\u0275property("for", option_r13.id);
     \u0275\u0275advance();
-    \u0275\u0275textInterpolate1(" ", \u0275\u0275pipeBind1(5, 7, option_r13.label), " ");
+    \u0275\u0275textInterpolate(\u0275\u0275pipeBind1(5, 6, option_r13.label));
+  }
+}
+function AiOptionsComponent_Conditional_17_Conditional_10_ng_container_7_Template(rf, ctx) {
+  if (rf & 1) {
+    const _r14 = \u0275\u0275getCurrentView();
+    \u0275\u0275elementContainerStart(0);
+    \u0275\u0275elementStart(1, "div", 13)(2, "p-radioButton", 32);
+    \u0275\u0275twoWayListener("ngModelChange", function AiOptionsComponent_Conditional_17_Conditional_10_ng_container_7_Template_p_radioButton_ngModelChange_2_listener($event) {
+      \u0275\u0275restoreView(_r14);
+      const ctx_r1 = \u0275\u0275nextContext(3);
+      \u0275\u0275twoWayBindingSet(ctx_r1.selectedAi, $event) || (ctx_r1.selectedAi = $event);
+      return \u0275\u0275resetView($event);
+    });
+    \u0275\u0275listener("onClick", function AiOptionsComponent_Conditional_17_Conditional_10_ng_container_7_Template_p_radioButton_onClick_2_listener() {
+      \u0275\u0275restoreView(_r14);
+      const ctx_r1 = \u0275\u0275nextContext(3);
+      return \u0275\u0275resetView(ctx_r1.onAiSelect(ctx_r1.selectedAi));
+    });
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(3, "label", 15);
+    \u0275\u0275text(4);
+    \u0275\u0275pipe(5, "translate");
+    \u0275\u0275element(6, "p-chip", 33);
+    \u0275\u0275pipe(7, "translate");
+    \u0275\u0275elementEnd()();
+    \u0275\u0275elementContainerEnd();
+  }
+  if (rf & 2) {
+    const option_r15 = ctx.$implicit;
+    const ctx_r1 = \u0275\u0275nextContext(3);
+    \u0275\u0275advance(2);
+    \u0275\u0275property("value", option_r15.id);
+    \u0275\u0275twoWayProperty("ngModel", ctx_r1.selectedAi);
+    \u0275\u0275property("inputId", option_r15.id)("disabled", option_r15.disabled);
+    \u0275\u0275advance();
+    \u0275\u0275property("for", option_r15.id);
+    \u0275\u0275advance();
+    \u0275\u0275textInterpolate1(" ", \u0275\u0275pipeBind1(5, 7, option_r15.label), " ");
     \u0275\u0275advance(2);
     \u0275\u0275property("label", \u0275\u0275pipeBind1(7, 9, "page.ai-options.model.paidBadge"));
   }
 }
 function AiOptionsComponent_Conditional_17_Conditional_10_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275elementStart(0, "p", 27);
+    \u0275\u0275elementStart(0, "p", 30);
     \u0275\u0275text(1);
     \u0275\u0275pipe(2, "translate");
     \u0275\u0275elementEnd();
     \u0275\u0275template(3, AiOptionsComponent_Conditional_17_Conditional_10_ng_container_3_Template, 6, 8, "ng-container", 8);
-    \u0275\u0275elementStart(4, "p", 28);
+    \u0275\u0275elementStart(4, "p", 31);
     \u0275\u0275text(5);
     \u0275\u0275pipe(6, "translate");
     \u0275\u0275elementEnd();
@@ -24291,41 +24841,10 @@ function AiOptionsComponent_Conditional_17_Conditional_10_Template(rf, ctx) {
 }
 function AiOptionsComponent_Conditional_17_Conditional_11_ng_container_3_Template(rf, ctx) {
   if (rf & 1) {
-    const _r14 = \u0275\u0275getCurrentView();
-    \u0275\u0275elementContainerStart(0);
-    \u0275\u0275elementStart(1, "div", 23)(2, "p-checkbox", 24);
-    \u0275\u0275twoWayListener("ngModelChange", function AiOptionsComponent_Conditional_17_Conditional_11_ng_container_3_Template_p_checkbox_ngModelChange_2_listener($event) {
-      \u0275\u0275restoreView(_r14);
-      const ctx_r1 = \u0275\u0275nextContext(3);
-      \u0275\u0275twoWayBindingSet(ctx_r1.selectedAis, $event) || (ctx_r1.selectedAis = $event);
-      return \u0275\u0275resetView($event);
-    });
-    \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(3, "label", 15);
-    \u0275\u0275text(4);
-    \u0275\u0275pipe(5, "translate");
-    \u0275\u0275elementEnd()();
-    \u0275\u0275elementContainerEnd();
-  }
-  if (rf & 2) {
-    const option_r15 = ctx.$implicit;
-    const ctx_r1 = \u0275\u0275nextContext(3);
-    \u0275\u0275advance(2);
-    \u0275\u0275property("value", option_r15.id);
-    \u0275\u0275twoWayProperty("ngModel", ctx_r1.selectedAis);
-    \u0275\u0275property("inputId", option_r15.id)("disabled", option_r15.disabled || ctx_r1.isAiCheckboxDisabled(option_r15.id));
-    \u0275\u0275advance();
-    \u0275\u0275property("for", option_r15.id);
-    \u0275\u0275advance();
-    \u0275\u0275textInterpolate(\u0275\u0275pipeBind1(5, 6, option_r15.label));
-  }
-}
-function AiOptionsComponent_Conditional_17_Conditional_11_ng_container_7_Template(rf, ctx) {
-  if (rf & 1) {
     const _r16 = \u0275\u0275getCurrentView();
     \u0275\u0275elementContainerStart(0);
-    \u0275\u0275elementStart(1, "div", 23)(2, "p-checkbox", 24);
-    \u0275\u0275twoWayListener("ngModelChange", function AiOptionsComponent_Conditional_17_Conditional_11_ng_container_7_Template_p_checkbox_ngModelChange_2_listener($event) {
+    \u0275\u0275elementStart(1, "div", 24)(2, "p-checkbox", 25);
+    \u0275\u0275twoWayListener("ngModelChange", function AiOptionsComponent_Conditional_17_Conditional_11_ng_container_3_Template_p_checkbox_ngModelChange_2_listener($event) {
       \u0275\u0275restoreView(_r16);
       const ctx_r1 = \u0275\u0275nextContext(3);
       \u0275\u0275twoWayBindingSet(ctx_r1.selectedAis, $event) || (ctx_r1.selectedAis = $event);
@@ -24335,8 +24854,6 @@ function AiOptionsComponent_Conditional_17_Conditional_11_ng_container_7_Templat
     \u0275\u0275elementStart(3, "label", 15);
     \u0275\u0275text(4);
     \u0275\u0275pipe(5, "translate");
-    \u0275\u0275element(6, "p-chip", 30);
-    \u0275\u0275pipe(7, "translate");
     \u0275\u0275elementEnd()();
     \u0275\u0275elementContainerEnd();
   }
@@ -24350,19 +24867,52 @@ function AiOptionsComponent_Conditional_17_Conditional_11_ng_container_7_Templat
     \u0275\u0275advance();
     \u0275\u0275property("for", option_r17.id);
     \u0275\u0275advance();
-    \u0275\u0275textInterpolate1(" ", \u0275\u0275pipeBind1(5, 7, option_r17.label), " ");
+    \u0275\u0275textInterpolate(\u0275\u0275pipeBind1(5, 6, option_r17.label));
+  }
+}
+function AiOptionsComponent_Conditional_17_Conditional_11_ng_container_7_Template(rf, ctx) {
+  if (rf & 1) {
+    const _r18 = \u0275\u0275getCurrentView();
+    \u0275\u0275elementContainerStart(0);
+    \u0275\u0275elementStart(1, "div", 24)(2, "p-checkbox", 25);
+    \u0275\u0275twoWayListener("ngModelChange", function AiOptionsComponent_Conditional_17_Conditional_11_ng_container_7_Template_p_checkbox_ngModelChange_2_listener($event) {
+      \u0275\u0275restoreView(_r18);
+      const ctx_r1 = \u0275\u0275nextContext(3);
+      \u0275\u0275twoWayBindingSet(ctx_r1.selectedAis, $event) || (ctx_r1.selectedAis = $event);
+      return \u0275\u0275resetView($event);
+    });
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(3, "label", 15);
+    \u0275\u0275text(4);
+    \u0275\u0275pipe(5, "translate");
+    \u0275\u0275element(6, "p-chip", 33);
+    \u0275\u0275pipe(7, "translate");
+    \u0275\u0275elementEnd()();
+    \u0275\u0275elementContainerEnd();
+  }
+  if (rf & 2) {
+    const option_r19 = ctx.$implicit;
+    const ctx_r1 = \u0275\u0275nextContext(3);
+    \u0275\u0275advance(2);
+    \u0275\u0275property("value", option_r19.id);
+    \u0275\u0275twoWayProperty("ngModel", ctx_r1.selectedAis);
+    \u0275\u0275property("inputId", option_r19.id)("disabled", option_r19.disabled || ctx_r1.isAiCheckboxDisabled(option_r19.id));
+    \u0275\u0275advance();
+    \u0275\u0275property("for", option_r19.id);
+    \u0275\u0275advance();
+    \u0275\u0275textInterpolate1(" ", \u0275\u0275pipeBind1(5, 7, option_r19.label), " ");
     \u0275\u0275advance(2);
     \u0275\u0275property("label", \u0275\u0275pipeBind1(7, 9, "page.ai-options.model.paidBadge"));
   }
 }
 function AiOptionsComponent_Conditional_17_Conditional_11_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275elementStart(0, "p", 27);
+    \u0275\u0275elementStart(0, "p", 30);
     \u0275\u0275text(1);
     \u0275\u0275pipe(2, "translate");
     \u0275\u0275elementEnd();
     \u0275\u0275template(3, AiOptionsComponent_Conditional_17_Conditional_11_ng_container_3_Template, 6, 8, "ng-container", 8);
-    \u0275\u0275elementStart(4, "p", 28);
+    \u0275\u0275elementStart(4, "p", 31);
     \u0275\u0275text(5);
     \u0275\u0275pipe(6, "translate");
     \u0275\u0275elementEnd();
@@ -24408,11 +24958,11 @@ function AiOptionsComponent_Conditional_17_Template(rf, ctx) {
 }
 function AiOptionsComponent_Conditional_18_Template(rf, ctx) {
   if (rf & 1) {
-    const _r18 = \u0275\u0275getCurrentView();
-    \u0275\u0275elementStart(0, "p-button", 31);
+    const _r20 = \u0275\u0275getCurrentView();
+    \u0275\u0275elementStart(0, "p-button", 34);
     \u0275\u0275pipe(1, "translate");
     \u0275\u0275listener("click", function AiOptionsComponent_Conditional_18_Template_p_button_click_0_listener() {
-      \u0275\u0275restoreView(_r18);
+      \u0275\u0275restoreView(_r20);
       const ctx_r1 = \u0275\u0275nextContext();
       return \u0275\u0275resetView(ctx_r1.onSubmit());
     });
@@ -24424,7 +24974,7 @@ function AiOptionsComponent_Conditional_18_Template(rf, ctx) {
 }
 function AiOptionsComponent_Conditional_19_ca_upload_url_1_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275element(0, "ca-upload-url", 33);
+    \u0275\u0275element(0, "ca-upload-url", 36);
   }
   if (rf & 2) {
     \u0275\u0275property("showSampleDataButton", false);
@@ -24432,7 +24982,7 @@ function AiOptionsComponent_Conditional_19_ca_upload_url_1_Template(rf, ctx) {
 }
 function AiOptionsComponent_Conditional_19_ca_upload_paste_2_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275element(0, "ca-upload-paste", 33);
+    \u0275\u0275element(0, "ca-upload-paste", 36);
   }
   if (rf & 2) {
     \u0275\u0275property("showSampleDataButton", false);
@@ -24440,7 +24990,7 @@ function AiOptionsComponent_Conditional_19_ca_upload_paste_2_Template(rf, ctx) {
 }
 function AiOptionsComponent_Conditional_19_ca_upload_word_3_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275element(0, "ca-upload-word", 33);
+    \u0275\u0275element(0, "ca-upload-word", 36);
   }
   if (rf & 2) {
     \u0275\u0275property("showSampleDataButton", false);
@@ -24449,7 +24999,7 @@ function AiOptionsComponent_Conditional_19_ca_upload_word_3_Template(rf, ctx) {
 function AiOptionsComponent_Conditional_19_Template(rf, ctx) {
   if (rf & 1) {
     \u0275\u0275elementContainerStart(0, 12);
-    \u0275\u0275template(1, AiOptionsComponent_Conditional_19_ca_upload_url_1_Template, 1, 1, "ca-upload-url", 32)(2, AiOptionsComponent_Conditional_19_ca_upload_paste_2_Template, 1, 1, "ca-upload-paste", 32)(3, AiOptionsComponent_Conditional_19_ca_upload_word_3_Template, 1, 1, "ca-upload-word", 32);
+    \u0275\u0275template(1, AiOptionsComponent_Conditional_19_ca_upload_url_1_Template, 1, 1, "ca-upload-url", 35)(2, AiOptionsComponent_Conditional_19_ca_upload_paste_2_Template, 1, 1, "ca-upload-paste", 35)(3, AiOptionsComponent_Conditional_19_ca_upload_word_3_Template, 1, 1, "ca-upload-word", 35);
     \u0275\u0275elementContainerEnd();
   }
   if (rf & 2) {
@@ -24469,6 +25019,7 @@ var AiOptionsComponent = class _AiOptionsComponent {
   customPrompt = new EventEmitter();
   editPrompt = new EventEmitter();
   aiChange = new EventEmitter();
+  alertRewriteModeChange = new EventEmitter();
   aiSubmit = new EventEmitter();
   visible = false;
   //Gets upload type for task = compare with prototype
@@ -24516,6 +25067,25 @@ var AiOptionsComponent = class _AiOptionsComponent {
   //AI model
   selectedAi = AiModel.Nemotron;
   selectedAis = [];
+  selectedAlertRewriteMode = AlertRewriteMode.AB;
+  get alertRewriteModeModel() {
+    return this.selectedAlertRewriteMode;
+  }
+  set alertRewriteModeModel(mode) {
+    this.onAlertRewriteModeSelect(mode);
+  }
+  alertRewriteModeOptions = [
+    {
+      id: AlertRewriteMode.AB,
+      label: "A->B mode (plan + rewrite)",
+      disabled: false
+    },
+    {
+      id: AlertRewriteMode.GoodResultsOnly,
+      label: "Good-results-only mode",
+      disabled: false
+    }
+  ];
   freeAiOptions = [
     { id: AiModel.Nemotron, label: "page.ai-options.model.Nemotron", disabled: false },
     { id: AiModel.Arcee, label: "page.ai-options.model.Arcee", disabled: false },
@@ -24533,12 +25103,18 @@ var AiOptionsComponent = class _AiOptionsComponent {
       this.selectedAi = this.freeAiOptions[0]?.id ?? this.selectedAi;
     }
     this.selectedAis = this.selectedAis.filter((id) => freeIds.has(id));
+    this.selectedAlertRewriteMode = this.uploadState.getAlertRewriteMode();
   }
   isAiCheckboxDisabled(id) {
     return !this.selectedAis.includes(id) && this.selectedAis.length >= 2;
   }
   onAiSelect(key2) {
     this.aiChange.emit(key2);
+  }
+  onAlertRewriteModeSelect(mode) {
+    this.selectedAlertRewriteMode = mode;
+    this.uploadState.setAlertRewriteMode(mode);
+    this.alertRewriteModeChange.emit(mode);
   }
   //submit selected prompt and model to AI
   onSubmit() {
@@ -24575,7 +25151,7 @@ var AiOptionsComponent = class _AiOptionsComponent {
   static \u0275fac = function AiOptionsComponent_Factory(__ngFactoryType__) {
     return new (__ngFactoryType__ || _AiOptionsComponent)();
   };
-  static \u0275cmp = /* @__PURE__ */ \u0275\u0275defineComponent({ type: _AiOptionsComponent, selectors: [["ca-ai-options"]], outputs: { promptChange: "promptChange", customPrompt: "customPrompt", editPrompt: "editPrompt", aiChange: "aiChange", aiSubmit: "aiSubmit" }, decls: 20, vars: 19, consts: [["label", "Options", "icon", "pi pi-bars", "severity", "info", 3, "click"], ["position", "right", 3, "visibleChange", "visible", "header"], [1, "flex", "flex-column", "gap-3"], ["value", "1", 1, "flex", "flex-column", "gap-3"], ["value", "0", 1, "border-1", "border-round-md", "border-surface"], [1, "border-none"], [1, "font-bold", "mb-2"], [1, "flex", "flex-column", "gap-2"], [4, "ngFor", "ngForOf", "ngForTrackBy"], ["value", "1", 1, "border-1", "border-round-md", "border-surface"], ["value", "2", 1, "border-1", "border-round-md", "border-surface"], ["icon", "pi pi-comments", "severity", "primary", 3, "label"], [3, "ngSwitch"], [1, "p-field-radiobutton"], ["name", "taskOptions", 3, "ngModelChange", "value", "ngModel", "inputId", "disabled"], [1, "pl-2", 3, "for"], [1, "p-field-checkbox", "mt-3"], ["inputId", "appendCustom", 3, "ngModelChange", "onChange", "ngModel", "binary"], ["for", "appendCustom", 1, "pl-2"], [1, "flex", "flex-column", "gap-3", "mt-3"], ["id", "ai-changes"], ["ariaLabelledBy", "ai-changes", "fluid", "", 3, "ngModelChange", "onChange", "ngModel", "step"], ["name", "promptOptions", 3, "ngModelChange", "onClick", "value", "ngModel", "inputId", "disabled"], [1, "p-field-checkbox"], [3, "ngModelChange", "value", "ngModel", "inputId", "disabled"], ["pTextarea", "", "id", "customPrompt", "fluid", "", 3, "ngModelChange", "blur", "ngModel", "autoResize"], ["for", "customPrompt"], [1, "text-xs", "text-500"], [1, "text-xs", "text-500", "mt-3"], ["name", "aiOptions", 3, "ngModelChange", "onClick", "value", "ngModel", "inputId", "disabled"], ["styleClass", "chip chip-severe ml-2", 3, "label"], ["icon", "pi pi-comments", "severity", "primary", 3, "click", "label"], ["mode", "prototype", 3, "showSampleDataButton", 4, "ngSwitchCase"], ["mode", "prototype", 3, "showSampleDataButton"]], template: function AiOptionsComponent_Template(rf, ctx) {
+  static \u0275cmp = /* @__PURE__ */ \u0275\u0275defineComponent({ type: _AiOptionsComponent, selectors: [["ca-ai-options"]], outputs: { promptChange: "promptChange", customPrompt: "customPrompt", editPrompt: "editPrompt", aiChange: "aiChange", alertRewriteModeChange: "alertRewriteModeChange", aiSubmit: "aiSubmit" }, decls: 20, vars: 19, consts: [["label", "Options", "icon", "pi pi-bars", "severity", "info", 3, "click"], ["position", "right", 3, "visibleChange", "visible", "header"], [1, "flex", "flex-column", "gap-3"], ["value", "1", 1, "flex", "flex-column", "gap-3"], ["value", "0", 1, "border-1", "border-round-md", "border-surface"], [1, "border-none"], [1, "font-bold", "mb-2"], [1, "flex", "flex-column", "gap-2"], [4, "ngFor", "ngForOf", "ngForTrackBy"], ["value", "1", 1, "border-1", "border-round-md", "border-surface"], ["value", "2", 1, "border-1", "border-round-md", "border-surface"], ["icon", "pi pi-comments", "severity", "primary", 3, "label"], [3, "ngSwitch"], [1, "p-field-radiobutton"], ["name", "taskOptions", 3, "ngModelChange", "value", "ngModel", "inputId", "disabled"], [1, "pl-2", 3, "for"], [1, "p-field-checkbox", "mt-3"], ["inputId", "appendCustom", 3, "ngModelChange", "onChange", "ngModel", "binary"], ["for", "appendCustom", 1, "pl-2"], [1, "flex", "flex-column", "gap-3", "mt-3"], ["id", "ai-changes"], ["ariaLabelledBy", "ai-changes", "fluid", "", 3, "ngModelChange", "onChange", "ngModel", "step"], [1, "flex", "flex-column", "gap-2", "mt-3"], ["name", "promptOptions", 3, "ngModelChange", "onClick", "value", "ngModel", "inputId", "disabled"], [1, "p-field-checkbox"], [3, "ngModelChange", "value", "ngModel", "inputId", "disabled"], ["pTextarea", "", "id", "customPrompt", "fluid", "", 3, "ngModelChange", "blur", "ngModel", "autoResize"], ["for", "customPrompt"], [1, "font-bold", "m-0"], ["name", "alertRewriteMode", 3, "ngModelChange", "value", "ngModel", "inputId", "disabled"], [1, "text-xs", "text-500"], [1, "text-xs", "text-500", "mt-3"], ["name", "aiOptions", 3, "ngModelChange", "onClick", "value", "ngModel", "inputId", "disabled"], ["styleClass", "chip chip-severe ml-2", 3, "label"], ["icon", "pi pi-comments", "severity", "primary", 3, "click", "label"], ["mode", "prototype", 3, "showSampleDataButton", 4, "ngSwitchCase"], ["mode", "prototype", 3, "showSampleDataButton"]], template: function AiOptionsComponent_Template(rf, ctx) {
     if (rf & 1) {
       \u0275\u0275elementStart(0, "p-button", 0);
       \u0275\u0275listener("click", function AiOptionsComponent_Template_p_button_click_0_listener() {
@@ -24599,7 +25175,7 @@ var AiOptionsComponent = class _AiOptionsComponent {
       \u0275\u0275elementStart(14, "div", 7);
       \u0275\u0275template(15, AiOptionsComponent_ng_container_15_Template, 6, 8, "ng-container", 8);
       \u0275\u0275elementEnd()()()();
-      \u0275\u0275template(16, AiOptionsComponent_Conditional_16_Template, 22, 17, "p-accordion-panel", 9)(17, AiOptionsComponent_Conditional_17_Template, 12, 8, "p-accordion-panel", 10);
+      \u0275\u0275template(16, AiOptionsComponent_Conditional_16_Template, 23, 18, "p-accordion-panel", 9)(17, AiOptionsComponent_Conditional_17_Template, 12, 8, "p-accordion-panel", 10);
       \u0275\u0275elementEnd();
       \u0275\u0275template(18, AiOptionsComponent_Conditional_18_Template, 2, 3, "p-button", 11)(19, AiOptionsComponent_Conditional_19_Template, 4, 4, "ng-container", 12);
       \u0275\u0275elementEnd()();
@@ -24715,6 +25291,24 @@ var AiOptionsComponent = class _AiOptionsComponent {
                   <p-slider [(ngModel)]="editLevel" [step]="25" ariaLabelledBy="ai-changes"
                             (onChange)="emitEditPrompt(currentEditLevel!.prompt)" fluid />
                 </div>
+
+                @if (selectedPrompt === 'alertsRecommendations') {
+                  <div class="flex flex-column gap-2 mt-3">
+                    <p class="font-bold m-0">Alert rewrite mode</p>
+                    <ng-container *ngFor="let option of alertRewriteModeOptions; trackBy: trackById">
+                      <div class="p-field-radiobutton">
+                        <p-radioButton
+                          name="alertRewriteMode"
+                          [value]="option.id"
+                          [(ngModel)]="alertRewriteModeModel"
+                          [inputId]="option.id"
+                          [disabled]="option.disabled"
+                        />
+                        <label [for]="option.id" class="pl-2">{{ option.label }}</label>
+                      </div>
+                    </ng-container>
+                  </div>
+                }
               </div>
             </fieldset>
 
@@ -24810,6 +25404,8 @@ var AiOptionsComponent = class _AiOptionsComponent {
   }], editPrompt: [{
     type: Output
   }], aiChange: [{
+    type: Output
+  }], alertRewriteModeChange: [{
     type: Output
   }], aiSubmit: [{
     type: Output
@@ -38876,6 +39472,7 @@ var PageAssistantCompareComponent = class _PageAssistantCompareComponent {
   sourceDiffService = inject(SourceDiffService);
   shadowDomService = inject(ShadowDomService);
   alertAi = inject(AlertAiService);
+  alertRewrite = inject(AlertRewriteService);
   openRouter = inject(OpenRouterService);
   urlDataService = inject(UrlDataService);
   router = inject(Router);
@@ -39070,6 +39667,7 @@ var PageAssistantCompareComponent = class _PageAssistantCompareComponent {
     this.observeDarkMode();
     this.uploadState.setSelectedAiModel(this.selectedAiModel);
     this.customEditText = this.uploadState.getEditPromptText();
+    this.selectedAlertRewriteMode = this.uploadState.getAlertRewriteMode();
     const undoText = this.translate.instant("page.compare.button.undo");
     this.acceptItems = [
       {
@@ -39206,6 +39804,10 @@ var PageAssistantCompareComponent = class _PageAssistantCompareComponent {
   onPromptChange(key2) {
     this.selectedPromptKey = key2;
   }
+  selectedAlertRewriteMode = AlertRewriteMode.AB;
+  onAlertRewriteModeChange() {
+    this.selectedAlertRewriteMode = this.uploadState.getAlertRewriteMode();
+  }
   customPromptText = "";
   onAppendCustom(prompt) {
     this.customPromptText = prompt;
@@ -39229,46 +39831,42 @@ ${base}` : base;
 ${custom}` : promptBody;
     });
   }
-  parseRecommendationsFromAi(text) {
-    const cleaned = this.alertAi.stripCodeFences(text);
-    const parsed = this.alertAi.looseJsonParse(cleaned);
-    if (!parsed || typeof parsed !== "object")
-      return null;
-    const root = parsed;
-    const fullHtml = typeof root["full_html"] === "string" ? root["full_html"] : "";
-    const recommendations = Array.isArray(root["recommendations"]) ? root["recommendations"] : [];
-    const replacements = Array.isArray(root["replacements"]) ? root["replacements"] : [];
-    const filteredReplacements = replacements.filter((x) => x && typeof x === "object");
-    const filteredRecommendations = recommendations.filter((x) => x && typeof x === "object");
-    const normalizedReplacements = filteredReplacements.length ? filteredReplacements : filteredRecommendations.map((rec) => {
-      const alertIndex = rec["alert_index"];
-      const updatedHtml = rec["updated_html"] ?? rec["recommended_html"];
-      return { alert_index: alertIndex, updated_html: updatedHtml };
-    }).filter((rec) => rec["alert_index"] != null && typeof rec["updated_html"] === "string");
-    return {
-      fullHtml,
-      recommendations: filteredRecommendations,
-      replacements: normalizedReplacements
-    };
+  getAlertTextForRewrite(alertElement) {
+    const firstParagraph = alertElement.querySelector("p");
+    const paragraphText = firstParagraph?.textContent?.trim() || "";
+    if (paragraphText)
+      return paragraphText;
+    return (alertElement.textContent || "").trim();
   }
-  applyAlertReplacements(originalHtml, replacements) {
-    if (!replacements.length)
+  getAlertHeadingForRewrite(alertElement) {
+    const headingEl = alertElement.querySelector("h1, h2, h3, h4, h5, h6");
+    return (headingEl?.textContent || "").trim();
+  }
+  getIssuesForAlertIndex(issues, alertIndex) {
+    const hasIndexedIssues = issues.some((issue) => Number.isFinite(issue.alertIndex));
+    const globalIssues = issues.filter((issue) => !Number.isFinite(issue.alertIndex));
+    const specificIssues = issues.filter((issue) => issue.alertIndex === alertIndex);
+    if (!hasIndexedIssues) {
+      return issues;
+    }
+    if (specificIssues.length) {
+      return [...globalIssues, ...specificIssues];
+    }
+    return globalIssues;
+  }
+  applyAlertHtmlRewrites(originalHtml, rewrites) {
+    if (!rewrites.length)
       return null;
     const parser = new DOMParser();
     const doc = parser.parseFromString(originalHtml, "text/html");
     const alerts = Array.from(doc.querySelectorAll(".alert"));
     if (!alerts.length)
       return null;
-    for (const raw of replacements) {
-      const indexRaw = raw["alert_index"];
-      const updatedHtml = raw["updated_html"];
-      const index = typeof indexRaw === "number" ? indexRaw : typeof indexRaw === "string" ? Number.parseInt(indexRaw, 10) : NaN;
-      if (!Number.isFinite(index) || !updatedHtml || typeof updatedHtml !== "string")
-        continue;
-      const target = alerts[index - 1];
+    for (const rewrite of rewrites) {
+      const target = alerts[rewrite.alert_index - 1];
       if (!target)
         continue;
-      const updatedDoc = parser.parseFromString(updatedHtml, "text/html");
+      const updatedDoc = parser.parseFromString(rewrite.rewritten_alert_html, "text/html");
       const updatedEl = updatedDoc.body.firstElementChild;
       if (!updatedEl || !updatedEl.classList.contains("alert"))
         continue;
@@ -39276,83 +39874,140 @@ ${custom}` : promptBody;
     }
     return doc.body.outerHTML;
   }
-  runAlertRecommendations(html, issues, model, headers, url) {
+  callOpenRouterForMessages(model, headers, url, messages, contextLabel) {
     return __async(this, null, function* () {
-      const shortModel = this.getShortModelName(model);
-      const recStart = performance.now();
-      this.statusMessage = "Generating alert recommendations.";
-      const recPrompt = yield getPromptTemplate(PromptKey.AlertsRecommendations);
-      const alertDoc = new DOMParser().parseFromString(html, "text/html");
-      const alertEls = Array.from(alertDoc.querySelectorAll(".alert"));
-      const alerts = alertEls.map((el, idx) => ({
-        alert_index: idx + 1,
-        alert_html: el.outerHTML,
-        alert_text: (el.textContent || "").trim()
-      }));
-      const recPayload = JSON.stringify({ issues, alerts });
-      const recPayloadBytes = new TextEncoder().encode(recPayload).length;
-      console.log("Alert rec payload", {
-        alerts: alerts.length,
-        issues: issues.length,
-        bytes: recPayloadBytes
-      });
       const candidates = this.buildModelRotation(model);
-      let recText;
-      let usedModel;
       let lastError;
       for (const candidate of candidates) {
-        const recResponse = yield fetch(url, {
+        const response = yield fetch(url, {
           method: "POST",
           headers,
           body: JSON.stringify({
             models: [candidate],
-            messages: [
-              { role: "system", content: recPrompt },
-              { role: "user", content: recPayload }
-            ],
+            messages,
             temperature: 0,
             provider: { allow_fallbacks: false }
           })
         });
-        if (recResponse.status !== 200) {
+        if (response.status !== 200) {
           const shortName = this.getShortModelName(candidate);
-          if (recResponse.status === 429) {
-            const retryAfter = Number.parseInt(recResponse.headers.get("retry-after") || "", 10);
+          if (response.status === 429) {
+            const retryAfter = Number.parseInt(response.headers.get("retry-after") || "", 10);
             const delayMs = Number.isFinite(retryAfter) ? retryAfter * 1e3 : 600;
-            console.warn(`Alert recommendations rate-limited (${shortName}); retrying next model in ${delayMs}ms.`);
+            console.warn(`${contextLabel} rate-limited (${shortName}); retrying next model in ${delayMs}ms.`);
             yield new Promise((resolve) => setTimeout(resolve, delayMs));
           }
-          lastError = new Error(`Alert recommendations failed (${recResponse.status}) for ${shortName}.`);
+          lastError = new Error(`${contextLabel} failed (${response.status}) for ${shortName}.`);
           continue;
         }
-        const recJson = yield recResponse.json();
-        if (recJson.error) {
-          lastError = new Error(`Alert recommendations error (${this.getShortModelName(candidate)}): ${recJson.error?.message || "Unknown error"}`);
+        const rawJson = (yield response.json().catch(() => ({}))) || {};
+        const errorObj = rawJson["error"];
+        if (errorObj && typeof errorObj === "object") {
+          const errorMessage = errorObj["message"];
+          lastError = new Error(`${contextLabel} error (${this.getShortModelName(candidate)}): ${typeof errorMessage === "string" ? errorMessage : "Unknown error"}`);
           continue;
         }
-        recText = recJson.choices?.[0].message?.content;
-        usedModel = recJson?.model || candidate;
-        if (!recText) {
-          lastError = new Error(`Alert recommendations response was empty (${this.getShortModelName(candidate)}).`);
-          console.warn(lastError.message);
+        const choices = Array.isArray(rawJson["choices"]) ? rawJson["choices"] : [];
+        const firstChoice = choices[0];
+        const message = firstChoice && typeof firstChoice["message"] === "object" ? firstChoice["message"] : null;
+        const text = message && typeof message["content"] === "string" ? message["content"] : "";
+        const usedModel = typeof rawJson["model"] === "string" ? rawJson["model"] : candidate;
+        if (!text) {
+          lastError = new Error(`${contextLabel} response was empty (${this.getShortModelName(candidate)}).`);
           continue;
         }
-        break;
+        return { text, usedModel };
       }
-      if (!recText) {
-        throw lastError ?? new Error(`Alert recommendations response was empty (${shortModel}).`);
+      throw lastError ?? new Error(`${contextLabel} response was empty.`);
+    });
+  }
+  runAlertRecommendations(html, issues, model, headers, url) {
+    return __async(this, null, function* () {
+      const start = performance.now();
+      const mode = this.selectedAlertRewriteMode;
+      this.statusMessage = mode === AlertRewriteMode.AB ? "Generating alert rewrites (A->B mode)." : "Generating alert rewrites (good-results-only mode).";
+      const alertDoc = new DOMParser().parseFromString(html, "text/html");
+      const alertEls = Array.from(alertDoc.querySelectorAll(".alert"));
+      if (!alertEls.length) {
+        throw new Error("No .alert elements found in the page.");
       }
-      console.log("Alert rec model + time", {
-        requestedModel: model,
-        usedModel,
-        ms: Math.round(performance.now() - recStart)
-      });
-      const parsed = this.parseRecommendationsFromAi(recText);
-      const replacedHtml = parsed ? this.applyAlertReplacements(html, parsed.replacements) : null;
-      const finalHtml = replacedHtml;
+      const examples = yield this.alertRewrite.loadExamples();
+      const rewrites = [];
+      for (let i = 0; i < alertEls.length; i += 1) {
+        const alertElement = alertEls[i];
+        if (!alertElement)
+          continue;
+        const alertIndex = i + 1;
+        const relevantIssues = this.getIssuesForAlertIndex(issues, alertIndex);
+        const alertHtml = alertElement.outerHTML;
+        const originalHeading = this.getAlertHeadingForRewrite(alertElement);
+        const alertText = this.getAlertTextForRewrite(alertElement);
+        if (!alertText)
+          continue;
+        const initialPlan = this.alertRewrite.buildHeuristicPlan({
+          alertHtml,
+          alertText,
+          alertType: this.alertRewrite.inferAlertType(alertHtml),
+          issues: relevantIssues
+        });
+        let plan = initialPlan;
+        let planModelName = "heuristic";
+        if (mode === AlertRewriteMode.AB) {
+          const planResponse = yield this.callOpenRouterForMessages(model, headers, url, this.alertRewrite.buildPromptAMessages({
+            alertHtml,
+            alertText,
+            alertType: initialPlan.alertType,
+            issues: relevantIssues
+          }), `Alert ${alertIndex} Prompt A`);
+          const parsedPlan = this.alertRewrite.parsePlanResponse(planResponse.text, initialPlan);
+          if (parsedPlan) {
+            plan = parsedPlan;
+          }
+          planModelName = this.getShortModelName(planResponse.usedModel);
+        }
+        const selectedExamples = this.alertRewrite.selectExamples(plan, examples, 4);
+        const rewriteResponse = yield this.callOpenRouterForMessages(model, headers, url, this.alertRewrite.buildPromptBMessages({
+          mode,
+          originalHeading,
+          originalAlertText: alertText,
+          originalAlertHtml: alertHtml,
+          plan,
+          examples: selectedExamples
+        }), `Alert ${alertIndex} Prompt B`);
+        const rewriteResult = this.alertRewrite.parseRewriteResponse(rewriteResponse.text, plan, selectedExamples);
+        if (!rewriteResult?.rewrittenAlertHtml) {
+          throw new Error(`Alert rewrite returned empty HTML for alert ${alertIndex}.`);
+        }
+        rewrites.push({
+          alert_index: alertIndex,
+          rewritten_alert_html: rewriteResult.rewrittenAlertHtml
+        });
+        console.log("Alert rewrite iteration", {
+          mode,
+          alertIndex,
+          plan,
+          selectedExampleIds: selectedExamples.map((example) => example.id),
+          originalHeading,
+          finalHeading: rewriteResult.rewrittenHeading,
+          finalRewrite: rewriteResult.rewrittenAlert,
+          finalRewriteHtml: rewriteResult.rewrittenAlertHtml,
+          appliedDirectives: rewriteResult.appliedDirectives,
+          exampleIdsUsed: rewriteResult.exampleIdsUsed,
+          planModel: planModelName,
+          rewriteModel: this.getShortModelName(rewriteResponse.usedModel),
+          humanRating: null
+        });
+      }
+      const finalHtml = this.applyAlertHtmlRewrites(html, rewrites);
       if (!finalHtml) {
-        throw new Error(`Alert recommendations missing updated HTML (${shortModel}).`);
+        throw new Error("No alert rewrites were generated.");
       }
+      console.log("Alert rewrite model + time", {
+        requestedModel: model,
+        mode,
+        rewrites: rewrites.length,
+        ms: Math.round(performance.now() - start)
+      });
       const formattedHtml = yield this.urlDataService.formatHtml(finalHtml, "ai");
       this.uploadState.mergeModifiedData({
         modifiedUrl: "AI generated",
@@ -39430,8 +40085,15 @@ ${custom}` : promptBody;
         };
         if (isAlertFlow) {
           const cachedIssues = this.alertAi.getCachedIssues(html);
-          const selectedIssues = (cachedIssues || []).filter((issue) => issue.include);
-          if (selectedIssues.length) {
+          if (cachedIssues) {
+            const selectedIssues = cachedIssues.filter((issue) => issue.include).map((issue) => __spreadValues({}, issue));
+            if (!selectedIssues.length) {
+              this.messageService.add({
+                severity: "info",
+                summary: this.translate.instant("common.ai.alertIssuesNotIdentified"),
+                life: 3e3
+              });
+            }
             yield this.runAlertRecommendations(html, selectedIssues, model, headers, url);
             this.statusSeverity = "success";
             this.statusMessage = this.translate.instant("common.ai.alertRecommendationsGenerated");
@@ -39440,15 +40102,6 @@ ${custom}` : promptBody;
               summary: this.translate.instant("common.ai.responseReceived.summary"),
               detail: this.translate.instant("common.ai.alertRecommendationsGenerated"),
               life: 5e3
-            });
-            return;
-          } else if (cachedIssues?.length) {
-            this.statusSeverity = "warn";
-            this.statusMessage = this.translate.instant("common.ai.alertRecommendationsSkipped");
-            this.messageService.add({
-              severity: "warn",
-              summary: this.translate.instant("common.ai.alertRecommendationsSkipped"),
-              life: 4e3
             });
             return;
           }
@@ -39557,19 +40210,16 @@ ${custom}` : promptBody;
         }
         if (promptKeyForRequest === PromptKey.AlertsIssues) {
           const issues = this.alertAi.parseIssuesFromText(aiHtml);
-          if (!issues.length) {
-            throw new Error(`No alert issues returned by the AI (${usedModel}).`);
-          }
           const cachedIssues = this.alertAi.getCachedIssues(html);
           let selectedIssues = [];
-          if (cachedIssues?.length) {
-            selectedIssues = cachedIssues.filter((issue) => issue.include);
+          if (cachedIssues) {
+            selectedIssues = cachedIssues.filter((issue) => issue.include).map((issue) => __spreadValues({}, issue));
           } else {
-            const normalizedIssues = this.alertAi.normalizeAlertIssues(issues, {
+            const normalizedIssues = issues.length ? this.alertAi.normalizeAlertIssues(issues, {
               useIncludeFallback: false
-            });
+            }) : [];
             this.alertAi.cacheIssues(html, normalizedIssues);
-            selectedIssues = normalizedIssues.filter((issue) => issue.include);
+            selectedIssues = normalizedIssues.filter((issue) => issue.include).map((issue) => __spreadValues({}, issue));
           }
           if (selectedIssues.length) {
             this.messageService.add({
@@ -39579,14 +40229,14 @@ ${custom}` : promptBody;
               }),
               life: 3e3
             });
-            yield this.runAlertRecommendations(html, selectedIssues, model, headers, url);
           } else {
             this.messageService.add({
-              severity: "warn",
-              summary: this.translate.instant("common.ai.alertRecommendationsSkipped"),
-              life: 4e3
+              severity: "info",
+              summary: this.translate.instant("common.ai.alertIssuesNotIdentified"),
+              life: 3e3
             });
           }
+          yield this.runAlertRecommendations(html, selectedIssues, model, headers, url);
         } else {
           const formattedHtml = yield this.urlDataService.formatHtml(aiHtml, "ai");
           this.uploadState.mergeModifiedData({
@@ -39881,7 +40531,7 @@ ${custom}` : promptBody;
       \u0275\u0275queryRefresh(_t = \u0275\u0275loadQuery()) && (ctx.liveContainer = _t.first);
       \u0275\u0275queryRefresh(_t = \u0275\u0275loadQuery()) && (ctx.sourceContainer = _t.first);
     }
-  }, decls: 60, vars: 23, consts: [["message", ""], ["start", ""], ["center", ""], ["end", ""], ["liveContainer", ""], ["sourceContainer", ""], ["id", "wb-cont"], [1, "flex", "flex-wrap", "justify-content-between", "mb-3"], [1, "flex", "gap-2"], ["severity", "primary", "showDelay", "1000", "hideDelay", "300", 3, "onClick", "label", "icon", "pTooltip", "disabled"], [3, "promptChange", "aiChange", "aiSubmit", "customPrompt", "editPrompt"], ["label", "Share", "icon", "pi pi-share-alt", "severity", "secondary", 3, "onClick", 4, "ngIf"], ["label", "Reset", "icon", "pi pi-trash", "severity", "danger", 3, "onClick"], ["closable", "", 3, "severity", "text", 4, "ngIf"], ["value", "0", 1, "mt-3"], ["value", "0"], [1, "pi", "pi-eye", "mr-1"], ["value", "1"], [1, "pi", "pi-code", "mr-1"], ["value", "2"], [1, "pi", "pi-exclamation-triangle", "mr-1"], ["class", "tab-badge", 4, "ngIf"], ["value", "3"], [1, "pi", "pi-chart-bar", "mr-1"], ["value", "4"], [1, "pi", "pi-wrench", "mr-1"], [1, "shadow-1"], ["label", "page.compare.view", 3, "selectedChange", "name", "options", "selected"], [1, "sticky", "top-0", "z-5", "bg-primary-reverse", "p-0"], [1, "live-container", "p-0", 3, "ngClass"], [1, "source-container", "p-0", 3, "ngClass"], [3, "summary"], ["label", "Share", "icon", "pi pi-share-alt", "severity", "secondary", 3, "onClick"], [1, "flex", "flex-row", "align-items-center", "gap-3"], [1, "text-6xl", "text-red-500", 3, "ngClass"], [3, "innerHTML"], ["closable", "", 3, "severity", "text"], [1, "tab-badge"], [4, "ngIf"], [1, "flex", "flex-row", "align-items-center", "gap-2"], ["icon", "pi pi-chevron-left", "text", "", "severity", "primary", "ariaLabel", "Previous change", "pTooltip", "Previous change", "showDelay", "1000", "hideDelay", "300", 3, "onClick"], ["icon", "pi pi-chevron-right", "text", "", "severity", "primary", "ariaLabel", "Next change", "pTooltip", "Next change", "showDelay", "1000", "hideDelay", "300", 3, "onClick"], ["label", "Accept", "icon", "pi pi-check", "severity", "success", "outlined", "", "size", "small", "pTooltip", "Accept selected changes", "tooltipPosition", "top", "showDelay", "1000", "hideDelay", "300", 1, "secondary-outline", 3, "onClick", "model", "buttonProps", "menuButtonProps"], ["label", "Reject", "icon", "pi pi-times", "severity", "danger", "outlined", "", "size", "small", "pTooltip", "Reject selected changes", "tooltipPosition", "top", "showDelay", "1000", "hideDelay", "300", 1, "secondary-outline", 3, "onClick", "model", "buttonProps", "menuButtonProps"], ["class", "text-color-secondary pl-1", 4, "ngIf"], [1, "text-color-secondary", "pl-1"], ["offLabel", "Edit", "onLabel", "Save", "ariaLabel", "Edit/Save", "styleClass", "font-bold border-none w-6rem", 3, "ngModelChange", "onChange", "ngModel", "offIcon", "onIcon"], ["offLabel", "Copy code", "onLabel", "Copied", "offIcon", "pi pi-clipboard", "onIcon", "", "ariaLabel", "Copy code", "styleClass", "font-bold border-none w-9rem", 3, "ngModelChange", "onChange", "ngModel"], [1, "group-legend"], ["class", "legend-item", 4, "ngFor", "ngForOf"], [1, "legend-item"], [1, "legend-box", 3, "ngStyle"], [1, "legend-text"]], template: function PageAssistantCompareComponent_Template(rf, ctx) {
+  }, decls: 60, vars: 23, consts: [["message", ""], ["start", ""], ["center", ""], ["end", ""], ["liveContainer", ""], ["sourceContainer", ""], ["id", "wb-cont"], [1, "flex", "flex-wrap", "justify-content-between", "mb-3"], [1, "flex", "gap-2"], ["severity", "primary", "showDelay", "1000", "hideDelay", "300", 3, "onClick", "label", "icon", "pTooltip", "disabled"], [3, "promptChange", "aiChange", "alertRewriteModeChange", "aiSubmit", "customPrompt", "editPrompt"], ["label", "Share", "icon", "pi pi-share-alt", "severity", "secondary", 3, "onClick", 4, "ngIf"], ["label", "Reset", "icon", "pi pi-trash", "severity", "danger", 3, "onClick"], ["closable", "", 3, "severity", "text", 4, "ngIf"], ["value", "0", 1, "mt-3"], ["value", "0"], [1, "pi", "pi-eye", "mr-1"], ["value", "1"], [1, "pi", "pi-code", "mr-1"], ["value", "2"], [1, "pi", "pi-exclamation-triangle", "mr-1"], ["class", "tab-badge", 4, "ngIf"], ["value", "3"], [1, "pi", "pi-chart-bar", "mr-1"], ["value", "4"], [1, "pi", "pi-wrench", "mr-1"], [1, "shadow-1"], ["label", "page.compare.view", 3, "selectedChange", "name", "options", "selected"], [1, "sticky", "top-0", "z-5", "bg-primary-reverse", "p-0"], [1, "live-container", "p-0", 3, "ngClass"], [1, "source-container", "p-0", 3, "ngClass"], [3, "summary"], ["label", "Share", "icon", "pi pi-share-alt", "severity", "secondary", 3, "onClick"], [1, "flex", "flex-row", "align-items-center", "gap-3"], [1, "text-6xl", "text-red-500", 3, "ngClass"], [3, "innerHTML"], ["closable", "", 3, "severity", "text"], [1, "tab-badge"], [4, "ngIf"], [1, "flex", "flex-row", "align-items-center", "gap-2"], ["icon", "pi pi-chevron-left", "text", "", "severity", "primary", "ariaLabel", "Previous change", "pTooltip", "Previous change", "showDelay", "1000", "hideDelay", "300", 3, "onClick"], ["icon", "pi pi-chevron-right", "text", "", "severity", "primary", "ariaLabel", "Next change", "pTooltip", "Next change", "showDelay", "1000", "hideDelay", "300", 3, "onClick"], ["label", "Accept", "icon", "pi pi-check", "severity", "success", "outlined", "", "size", "small", "pTooltip", "Accept selected changes", "tooltipPosition", "top", "showDelay", "1000", "hideDelay", "300", 1, "secondary-outline", 3, "onClick", "model", "buttonProps", "menuButtonProps"], ["label", "Reject", "icon", "pi pi-times", "severity", "danger", "outlined", "", "size", "small", "pTooltip", "Reject selected changes", "tooltipPosition", "top", "showDelay", "1000", "hideDelay", "300", 1, "secondary-outline", 3, "onClick", "model", "buttonProps", "menuButtonProps"], ["class", "text-color-secondary pl-1", 4, "ngIf"], [1, "text-color-secondary", "pl-1"], ["offLabel", "Edit", "onLabel", "Save", "ariaLabel", "Edit/Save", "styleClass", "font-bold border-none w-6rem", 3, "ngModelChange", "onChange", "ngModel", "offIcon", "onIcon"], ["offLabel", "Copy code", "onLabel", "Copied", "offIcon", "pi pi-clipboard", "onIcon", "", "ariaLabel", "Copy code", "styleClass", "font-bold border-none w-9rem", 3, "ngModelChange", "onChange", "ngModel"], [1, "group-legend"], ["class", "legend-item", 4, "ngFor", "ngForOf"], [1, "legend-item"], [1, "legend-box", 3, "ngStyle"], [1, "legend-text"]], template: function PageAssistantCompareComponent_Template(rf, ctx) {
     if (rf & 1) {
       const _r1 = \u0275\u0275getCurrentView();
       \u0275\u0275elementStart(0, "h1", 6);
@@ -39906,6 +40556,9 @@ ${custom}` : promptBody;
       })("aiChange", function PageAssistantCompareComponent_Template_ca_ai_options_aiChange_10_listener($event) {
         \u0275\u0275restoreView(_r1);
         return \u0275\u0275resetView(ctx.onAiChange($event));
+      })("alertRewriteModeChange", function PageAssistantCompareComponent_Template_ca_ai_options_alertRewriteModeChange_10_listener() {
+        \u0275\u0275restoreView(_r1);
+        return \u0275\u0275resetView(ctx.onAlertRewriteModeChange());
       })("aiSubmit", function PageAssistantCompareComponent_Template_ca_ai_options_aiSubmit_10_listener() {
         \u0275\u0275restoreView(_r1);
         return \u0275\u0275resetView(ctx.sendToAI());
@@ -40098,13 +40751,14 @@ ${custom}` : promptBody;
       hideDelay="300"\r
       [disabled]="!uploadData?.originalHtml || isLoading || isDisabled"\r
     ></p-button>\r
-    <ca-ai-options\r
-      (promptChange)="onPromptChange($event)"\r
-      (aiChange)="onAiChange($event)"\r
-      (aiSubmit)="sendToAI()"\r
-      (customPrompt)="onAppendCustom($event)"\r
-      (editPrompt)="onPrependLevel($event)"\r
-    ></ca-ai-options>\r
+    <ca-ai-options
+      (promptChange)="onPromptChange($event)"
+      (aiChange)="onAiChange($event)"
+      (alertRewriteModeChange)="onAlertRewriteModeChange()"
+      (aiSubmit)="sendToAI()"
+      (customPrompt)="onAppendCustom($event)"
+      (editPrompt)="onPrependLevel($event)"
+    ></ca-ai-options>
   </div>\r
   <div class="flex gap-2">\r
     <p-button\r
@@ -40341,9 +40995,9 @@ ${custom}` : promptBody;
   }] });
 })();
 (() => {
-  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(PageAssistantCompareComponent, { className: "PageAssistantCompareComponent", filePath: "src/app/views/page-assistant/page-assistant.component.ts", lineNumber: 86 });
+  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(PageAssistantCompareComponent, { className: "PageAssistantCompareComponent", filePath: "src/app/views/page-assistant/page-assistant.component.ts", lineNumber: 92 });
 })();
 export {
   PageAssistantCompareComponent
 };
-//# sourceMappingURL=chunk-RWSD2TR6.js.map
+//# sourceMappingURL=chunk-DLR3M74X.js.map
