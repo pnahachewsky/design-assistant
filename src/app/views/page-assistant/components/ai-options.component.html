@@ -84,6 +84,17 @@
                         <label [for]="option.id" class="pl-2">{{ option.label }}</label>
                       </div>
                     </ng-container>
+                    <div class="p-field-checkbox mt-2">
+                      <p-checkbox
+                        [(ngModel)]="includeLinkWritingRules"
+                        [binary]="true"
+                        inputId="includeLinkWritingRules"
+                        (onChange)="onIncludeLinkWritingRulesSelect(includeLinkWritingRules)"
+                      />
+                      <label for="includeLinkWritingRules" class="pl-2">
+                        Include link writing rules
+                      </label>
+                    </div>
                   </div>
                 }
               </div>

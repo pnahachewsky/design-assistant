@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { ChatMessage } from './openrouter.service';
 import { AlertRewriteMode } from '../data/data.model';
+import { getLinkWritingRules } from '../../../common/constants/link-writing.constants';
 
 export interface AlertRewriteIssueInput {
   alertIndex?: number;
@@ -58,6 +59,13 @@ export interface AlertRewriteResult {
   rewrittenAlert: string;
   appliedDirectives: string[];
   exampleIdsUsed: string[];
+}
+
+export interface AlertRewriteCopyCheck {
+  isCopy: boolean;
+  exampleId?: string;
+  reason?: string;
+  similarity?: number;
 }
 
 export interface AlertRewriteInput {
@@ -237,26 +245,40 @@ export class AlertRewriteService {
     return selected;
   }
 
-  buildPromptBMessages(params: {
+  async buildPromptBMessages(params: {
     mode: AlertRewriteMode;
     originalAlertText: string;
     originalHeading?: string;
     originalAlertHtml: string;
     plan: AlertRewritePlan;
     examples: AlertRewriteExample[];
-  }): ChatMessage[] {
+    includeLinkWritingRules?: boolean;
+    retryInstruction?: string;
+  }): Promise<ChatMessage[]> {
     const maxChars = this.getCharLimit(params.plan.directives);
+    const hasTooManyLinksIssue =
+      params.plan.criteriaMatched.includes('C3_too_many_links') ||
+      params.plan.directives.some((directive) => directive.op === 'limit_links');
+    const shouldIncludeLinkWritingRules = params.includeLinkWritingRules !== false;
+    const linkRules = shouldIncludeLinkWritingRules
+      ? await getLinkWritingRules({
+          hasTooManyLinksIssue,
+        })
+      : [];
     const styleRules = [
       '1 sentence preferred, 2 max if needed.',
       'Every alert must have a short, descriptive heading.',
       'Start with what happened, then what to do.',
       'Use plain language, active voice, and no blame.',
       'Include a next step when available.',
-      'When links are present, preserve a primary hyperlink; if there are too many links, remove non-primary links.',
-      'Link text can be rewritten to fit the sentence and tone.',
+      ...linkRules,
       maxChars ? `Keep under ${maxChars} characters.` : 'Keep concise for UI alerts.',
       'Return full updated alert wrapper HTML in rewrittenAlertHtml (for example: <div class="alert alert-info">...</div>).',
+      'Never copy example wording directly. Keep wording specific to the input alert.',
     ];
+    if (params.retryInstruction) {
+      styleRules.push(params.retryInstruction);
+    }
 
     const examplesBlock = params.examples.map((example, index) => {
       const linksBefore = this.linkListToString(example.linksBefore);
@@ -288,6 +310,7 @@ export class AlertRewriteService {
       'You are Prompt B for rewriting UI alerts.',
       'Use examples as pattern guidance, not copy/paste text.',
       'Keep the alert wrapper and classes valid.',
+      'Do not return any sentence copied from the examples.',
       'Return JSON only. No extra text.',
       'Output schema:',
       '{"rewrittenAlertHtml":"string","rewrittenHeading":"string","rewrittenAlert":"string","appliedDirectives":["..."],"exampleIdsUsed":["ex-001"]}',
@@ -359,6 +382,81 @@ export class AlertRewriteService {
       rewrittenAlert,
       appliedDirectives,
       exampleIdsUsed,
+    };
+  }
+
+  detectExampleCopy(params: {
+    result: AlertRewriteResult;
+    selectedExamples: AlertRewriteExample[];
+    originalHeading?: string;
+    originalAlertText: string;
+  }): AlertRewriteCopyCheck {
+    const rewrittenCombined = this.normalizeComparisonText(
+      `${params.result.rewrittenHeading || ''} ${params.result.rewrittenAlert || ''}`,
+    );
+    const originalCombined = this.normalizeComparisonText(
+      `${params.originalHeading || ''} ${params.originalAlertText || ''}`,
+    );
+    if (!rewrittenCombined) {
+      return { isCopy: false };
+    }
+
+    const rewrittenTokenCount = this.tokenizeComparisonText(rewrittenCombined).length;
+
+    for (const example of params.selectedExamples) {
+      const exampleCombined = this.normalizeComparisonText(
+        `${example.headingAfter || ''} ${example.after || ''}`,
+      );
+      if (!exampleCombined) continue;
+
+      if (rewrittenCombined === exampleCombined && rewrittenCombined !== originalCombined) {
+        return {
+          isCopy: true,
+          exampleId: example.id,
+          reason: 'exact-example-match',
+          similarity: 1,
+        };
+      }
+
+      if (rewrittenTokenCount < 8) continue;
+      const similarity = this.calculateJaccardSimilarity(
+        rewrittenCombined,
+        exampleCombined,
+      );
+      const originalSimilarity = this.calculateJaccardSimilarity(
+        originalCombined,
+        exampleCombined,
+      );
+
+      if (similarity >= 0.92 && originalSimilarity < 0.8) {
+        return {
+          isCopy: true,
+          exampleId: example.id,
+          reason: 'near-example-match',
+          similarity,
+        };
+      }
+    }
+
+    return { isCopy: false };
+  }
+
+  buildPassthroughResult(params: {
+    alertHtml: string;
+    originalHeading?: string;
+    originalAlertText: string;
+  }): AlertRewriteResult {
+    const normalizedAlertHtml =
+      this.normalizeAlertWrapperHtml(params.alertHtml) || params.alertHtml.trim();
+    const extractedHeading = this.extractHeadingFromAlertHtml(normalizedAlertHtml);
+    const rewrittenHeading = (params.originalHeading || '').trim() || extractedHeading;
+
+    return {
+      rewrittenAlertHtml: normalizedAlertHtml,
+      rewrittenHeading: rewrittenHeading || this.buildFallbackHeading('info'),
+      rewrittenAlert: (params.originalAlertText || '').trim(),
+      appliedDirectives: [],
+      exampleIdsUsed: [],
     };
   }
 
@@ -530,6 +628,34 @@ export class AlertRewriteService {
 
   private cleanString(value: unknown): string {
     return typeof value === 'string' ? value.trim() : '';
+  }
+
+  private normalizeComparisonText(value: string): string {
+    return (value || '')
+      .toLowerCase()
+      .replace(/<[^>]*>/g, ' ')
+      .replace(/&nbsp;/g, ' ')
+      .replace(/[^a-z0-9\s]/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+  }
+
+  private tokenizeComparisonText(value: string): string[] {
+    const normalized = this.normalizeComparisonText(value);
+    return normalized ? normalized.split(' ') : [];
+  }
+
+  private calculateJaccardSimilarity(a: string, b: string): number {
+    const aTokens = new Set(this.tokenizeComparisonText(a));
+    const bTokens = new Set(this.tokenizeComparisonText(b));
+    if (!aTokens.size || !bTokens.size) return 0;
+
+    let intersection = 0;
+    for (const token of aTokens) {
+      if (bTokens.has(token)) intersection += 1;
+    }
+    const union = aTokens.size + bTokens.size - intersection;
+    return union > 0 ? intersection / union : 0;
   }
 
   private buildFallbackHeading(alertType: string): string {

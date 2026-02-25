@@ -12,6 +12,8 @@ export class UploadStateService {
   private readonly aiModelKey = 'pageAssistant.aiModel';
   private readonly editPromptKey = 'pageAssistant.editPrompt';
   private readonly alertRewriteModeKey = 'pageAssistant.alertRewriteMode';
+  private readonly includeLinkWritingRulesKey =
+    'pageAssistant.includeLinkWritingRules';
 
   //Upload type
   private selectedUploadType = signal<'url' | 'paste' | 'word'>('url');
@@ -45,6 +47,14 @@ export class UploadStateService {
     this.storage.saveData(this.alertRewriteModeKey, mode);
   }
 
+  //Alert rewrite link writing rules toggle
+  private includeLinkWritingRules = signal<boolean>(true);
+  getIncludeLinkWritingRules = computed(() => this.includeLinkWritingRules());
+  setIncludeLinkWritingRules(include: boolean) {
+    this.includeLinkWritingRules.set(!!include);
+    this.storage.saveData(this.includeLinkWritingRulesKey, String(!!include));
+  }
+
   //Upload data
   private uploadData = signal<Partial<UploadData> | null>(null);
   private originalUploadData: Partial<UploadData> | null = null; //for the compare with original button (not implemented yet)
@@ -57,6 +67,7 @@ export class UploadStateService {
       this.storage.removeData(this.uploadTypeKey);
       this.storage.removeData(this.aiModelKey);
       this.storage.removeData(this.uploadDataKey);
+      this.storage.removeData(this.includeLinkWritingRulesKey);
       return;
     }
     this.restoreState();
@@ -131,12 +142,14 @@ export class UploadStateService {
     this.selectedAiModel.set(AiModel.Nemotron);
     this.editPromptText.set('');
     this.selectedAlertRewriteMode.set(AlertRewriteMode.AB);
+    this.includeLinkWritingRules.set(true);
     this.uploadData.set(null);
     this.prevUploadData = [];
     this.storage.removeData(this.uploadTypeKey);
     this.storage.removeData(this.aiModelKey);
     this.storage.removeData(this.editPromptKey);
     this.storage.removeData(this.alertRewriteModeKey);
+    this.storage.removeData(this.includeLinkWritingRulesKey);
     this.storage.removeData(this.uploadDataKey);
   }
 
@@ -177,6 +190,13 @@ export class UploadStateService {
       )
     ) {
       this.selectedAlertRewriteMode.set(storedAlertRewriteMode as AlertRewriteMode);
+    }
+
+    const storedIncludeLinkRules = this.storage.getData(
+      this.includeLinkWritingRulesKey,
+    );
+    if (storedIncludeLinkRules === 'true' || storedIncludeLinkRules === 'false') {
+      this.includeLinkWritingRules.set(storedIncludeLinkRules === 'true');
     }
 
     const storedData = this.storage.getData(this.uploadDataKey);

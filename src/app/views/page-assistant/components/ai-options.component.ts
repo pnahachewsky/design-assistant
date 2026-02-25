@@ -101,6 +101,7 @@ export class AiOptionsComponent implements OnInit {
   selectedAis: AiModel[] = [];
 
   selectedAlertRewriteMode: AlertRewriteMode = AlertRewriteMode.AB;
+  includeLinkWritingRules = true;
   get alertRewriteModeModel(): AlertRewriteMode {
     return this.selectedAlertRewriteMode;
   }
@@ -139,6 +140,7 @@ export class AiOptionsComponent implements OnInit {
     }
     this.selectedAis = this.selectedAis.filter((id) => freeIds.has(id));
     this.selectedAlertRewriteMode = this.uploadState.getAlertRewriteMode();
+    this.includeLinkWritingRules = this.uploadState.getIncludeLinkWritingRules();
   }
 
   isAiCheckboxDisabled(id: AiModel): boolean {
@@ -156,6 +158,11 @@ export class AiOptionsComponent implements OnInit {
     this.selectedAlertRewriteMode = mode;
     this.uploadState.setAlertRewriteMode(mode);
     this.alertRewriteModeChange.emit(mode);
+  }
+
+  onIncludeLinkWritingRulesSelect(include: boolean): void {
+    this.includeLinkWritingRules = include;
+    this.uploadState.setIncludeLinkWritingRules(include);
   }
 
   //submit selected prompt and model to AI

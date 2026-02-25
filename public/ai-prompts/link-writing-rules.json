@@ -1,0 +1,55 @@
+{
+  "version": "1.0.0",
+  "rules": [
+    {
+      "id": "L1_keep_links_default",
+      "condition": "always",
+      "text": "Keep links in the content by default."
+    },
+    {
+      "id": "L2_keep_url_change_text",
+      "condition": "always",
+      "text": "Link text can be changed, but the URL for a kept link must remain the same."
+    },
+    {
+      "id": "L3_descriptive_text",
+      "condition": "always",
+      "text": "Link text must clearly describe the destination page both on its own and in sentence context."
+    },
+    {
+      "id": "L4_avoid_duplicate_link_text",
+      "condition": "always",
+      "text": "Avoid duplicating link text elsewhere in the content when meaning is preserved."
+    },
+    {
+      "id": "L5_no_vague_anchor_text",
+      "condition": "always",
+      "text": "Never use vague link text like \"click here\", \"here\", \"learn more\", or similar."
+    },
+    {
+      "id": "L6_sentence_end_preferred",
+      "condition": "always",
+      "text": "If possible, place a link at the end of its sentence."
+    },
+    {
+      "id": "L7_learn_more_fallback",
+      "condition": "always",
+      "text": "If in-sentence placement is awkward, use a final paragraph like: Learn more: [LINK]Descriptive link text[END LINK]."
+    },
+    {
+      "id": "L8_remove_only_when_too_many",
+      "condition": "too_many_links",
+      "text": "Only remove links when there is more than one link and a too-many-links issue is identified; keep one primary link."
+    },
+    {
+      "id": "L9_do_not_remove_without_issue",
+      "condition": "not_too_many_links",
+      "text": "Do not remove links unless a too-many-links issue is identified and multiple links are present."
+    },
+    {
+      "id": "L10_concise_link_text",
+      "condition": "always",
+      "text": "Link text must be concise when possible. Remove information already present in the alert or page context; for example, \" - Canada.ca\" is not needed."
+    }
+  ]
+}

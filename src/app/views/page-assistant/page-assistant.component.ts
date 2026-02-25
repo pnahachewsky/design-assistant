@@ -41,6 +41,7 @@ import {
   AlertRewriteService,
   AlertRewriteIssueInput,
   AlertRewritePlan,
+  AlertRewriteResult,
 } from './services/alert-rewrite.service';
 import { OpenRouterService } from './services/openrouter.service';
 
@@ -760,33 +761,98 @@ export class PageAssistantCompareComponent
       }
 
       const selectedExamples = this.alertRewrite.selectExamples(plan, examples, 4);
-      const rewriteResponse = await this.callOpenRouterForMessages(
-        model,
-        headers,
-        url,
-        this.alertRewrite.buildPromptBMessages({
+      let rewriteResult: AlertRewriteResult | null = null;
+      let rewriteModelName = 'unknown';
+      let copyGuardTriggered = false;
+      let blockedExampleId: string | null = null;
+
+      for (let attempt = 0; attempt < 2; attempt += 1) {
+        const retryInstruction =
+          attempt === 0
+            ? undefined
+            : 'Your previous output matched example wording. Rewrite using alert-specific wording and facts only.';
+        const promptBMessages = await this.alertRewrite.buildPromptBMessages({
           mode,
           originalHeading,
-          originalAlertText: alertText,
-          originalAlertHtml: alertHtml,
+            originalAlertText: alertText,
+            originalAlertHtml: alertHtml,
+            plan,
+            examples: selectedExamples,
+            includeLinkWritingRules: this.uploadState.getIncludeLinkWritingRules(),
+            retryInstruction,
+          });
+        const rewriteResponse = await this.callOpenRouterForMessages(
+          model,
+          headers,
+          url,
+          promptBMessages,
+          `Alert ${alertIndex} Prompt B`,
+        );
+        rewriteModelName = this.getShortModelName(rewriteResponse.usedModel);
+        const parsedResult = this.alertRewrite.parseRewriteResponse(
+          rewriteResponse.text,
           plan,
-          examples: selectedExamples,
-        }),
-        `Alert ${alertIndex} Prompt B`,
-      );
-      const rewriteResult = this.alertRewrite.parseRewriteResponse(
-        rewriteResponse.text,
-        plan,
-        selectedExamples,
-      );
+          selectedExamples,
+        );
+        if (!parsedResult?.rewrittenAlertHtml) {
+          throw new Error(`Alert rewrite returned empty HTML for alert ${alertIndex}.`);
+        }
 
-      if (!rewriteResult?.rewrittenAlertHtml) {
-        throw new Error(`Alert rewrite returned empty HTML for alert ${alertIndex}.`);
+        const copyCheck = this.alertRewrite.detectExampleCopy({
+          result: parsedResult,
+          selectedExamples,
+          originalHeading,
+          originalAlertText: alertText,
+        });
+        if (!copyCheck.isCopy) {
+          rewriteResult = parsedResult;
+          break;
+        }
+
+        copyGuardTriggered = true;
+        blockedExampleId = copyCheck.exampleId || null;
+        console.warn('Alert rewrite copy guard triggered', {
+          alertIndex,
+          attempt: attempt + 1,
+          reason: copyCheck.reason,
+          exampleId: copyCheck.exampleId,
+          similarity: copyCheck.similarity,
+        });
+      }
+
+      if (!rewriteResult) {
+        rewriteResult = this.alertRewrite.buildPassthroughResult({
+          alertHtml,
+          originalHeading,
+          originalAlertText: alertText,
+        });
       }
 
       rewrites.push({
         alert_index: alertIndex,
         rewritten_alert_html: rewriteResult.rewrittenAlertHtml,
+      });
+
+      const examplesUsedDetails = (rewriteResult.exampleIdsUsed.length
+        ? rewriteResult.exampleIdsUsed
+            .map((id) => selectedExamples.find((example) => example.id === id))
+            .filter((example): example is NonNullable<typeof example> => !!example)
+        : selectedExamples
+      ).map((example) => ({
+        id: example.id,
+        alertType: example.alertType,
+        criteria: example.criteria,
+        tags: example.tags,
+        headingBefore: example.headingBefore || '',
+        headingAfter: example.headingAfter || '',
+        before: example.before,
+        after: example.after,
+      }));
+
+      console.log('Alert rewrite examples used', {
+        alertIndex,
+        exampleIdsUsed: rewriteResult.exampleIdsUsed,
+        examplesUsedDetails,
       });
 
       console.log('Alert rewrite iteration', {
@@ -801,7 +867,9 @@ export class PageAssistantCompareComponent
         appliedDirectives: rewriteResult.appliedDirectives,
         exampleIdsUsed: rewriteResult.exampleIdsUsed,
         planModel: planModelName,
-        rewriteModel: this.getShortModelName(rewriteResponse.usedModel),
+        rewriteModel: rewriteModelName,
+        copyGuardTriggered,
+        blockedExampleId,
         humanRating: null,
       });
     }
