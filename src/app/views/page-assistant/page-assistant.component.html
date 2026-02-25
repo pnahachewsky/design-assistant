@@ -17,6 +17,7 @@
     <ca-ai-options
       (promptChange)="onPromptChange($event)"
       (aiChange)="onAiChange($event)"
+      (alertRewriteModeChange)="onAlertRewriteModeChange()"
       (aiSubmit)="sendToAI()"
       (customPrompt)="onAppendCustom($event)"
       (editPrompt)="onPrependLevel($event)"

@@ -15,7 +15,7 @@ import { SliderModule } from 'primeng/slider';
 import { TranslateModule } from "@ngx-translate/core";
 
 //Services
-import { CompareTask, PromptKey, AiModel } from '../data/data.model'
+import { CompareTask, PromptKey, AiModel, AlertRewriteMode } from '../data/data.model'
 import { UploadStateService } from '../services/upload-state.service';
 import { UploadUrlComponent } from './upload/upload-url.component';
 import { UploadPasteComponent } from './upload/upload-paste.component';
@@ -36,6 +36,7 @@ export class AiOptionsComponent implements OnInit {
   @Output() customPrompt = new EventEmitter<string>();
   @Output() editPrompt = new EventEmitter<string>();
   @Output() aiChange = new EventEmitter<AiModel>();
+  @Output() alertRewriteModeChange = new EventEmitter<AlertRewriteMode>();
   @Output() aiSubmit = new EventEmitter<void>();
 
   visible = false;
@@ -99,6 +100,26 @@ export class AiOptionsComponent implements OnInit {
   selectedAi: AiModel = AiModel.Nemotron;
   selectedAis: AiModel[] = [];
 
+  selectedAlertRewriteMode: AlertRewriteMode = AlertRewriteMode.AB;
+  get alertRewriteModeModel(): AlertRewriteMode {
+    return this.selectedAlertRewriteMode;
+  }
+  set alertRewriteModeModel(mode: AlertRewriteMode) {
+    this.onAlertRewriteModeSelect(mode);
+  }
+  alertRewriteModeOptions = [
+    {
+      id: AlertRewriteMode.AB,
+      label: 'A->B mode (plan + rewrite)',
+      disabled: false,
+    },
+    {
+      id: AlertRewriteMode.GoodResultsOnly,
+      label: 'Good-results-only mode',
+      disabled: false,
+    },
+  ];
+
   freeAiOptions = [
     { id: AiModel.Nemotron, label: 'page.ai-options.model.Nemotron', disabled: false },
     { id: AiModel.Arcee, label: 'page.ai-options.model.Arcee', disabled: false },
@@ -117,6 +138,7 @@ export class AiOptionsComponent implements OnInit {
       this.selectedAi = this.freeAiOptions[0]?.id ?? this.selectedAi;
     }
     this.selectedAis = this.selectedAis.filter((id) => freeIds.has(id));
+    this.selectedAlertRewriteMode = this.uploadState.getAlertRewriteMode();
   }
 
   isAiCheckboxDisabled(id: AiModel): boolean {
@@ -128,6 +150,12 @@ export class AiOptionsComponent implements OnInit {
 
   onAiSelect(key: AiModel) {
     this.aiChange.emit(key);
+  }
+
+  onAlertRewriteModeSelect(mode: AlertRewriteMode): void {
+    this.selectedAlertRewriteMode = mode;
+    this.uploadState.setAlertRewriteMode(mode);
+    this.alertRewriteModeChange.emit(mode);
   }
 
   //submit selected prompt and model to AI

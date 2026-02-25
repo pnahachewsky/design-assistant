@@ -68,6 +68,24 @@
                   <p-slider [(ngModel)]="editLevel" [step]="25" ariaLabelledBy="ai-changes"
                             (onChange)="emitEditPrompt(currentEditLevel!.prompt)" fluid />
                 </div>
+
+                @if (selectedPrompt === 'alertsRecommendations') {
+                  <div class="flex flex-column gap-2 mt-3">
+                    <p class="font-bold m-0">Alert rewrite mode</p>
+                    <ng-container *ngFor="let option of alertRewriteModeOptions; trackBy: trackById">
+                      <div class="p-field-radiobutton">
+                        <p-radioButton
+                          name="alertRewriteMode"
+                          [value]="option.id"
+                          [(ngModel)]="alertRewriteModeModel"
+                          [inputId]="option.id"
+                          [disabled]="option.disabled"
+                        />
+                        <label [for]="option.id" class="pl-2">{{ option.label }}</label>
+                      </div>
+                    </ng-container>
+                  </div>
+                }
               </div>
             </fieldset>
 

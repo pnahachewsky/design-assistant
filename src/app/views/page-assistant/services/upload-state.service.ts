@@ -1,5 +1,5 @@
 import { Injectable, signal, computed, inject } from '@angular/core';
-import { UploadData, ModifiedData, OriginalData, AiModel } from '../data/data.model'
+import { UploadData, ModifiedData, OriginalData, AiModel, AlertRewriteMode } from '../data/data.model'
 import { LocalStorageService } from '../../../services/local-storage.service';
 
 @Injectable({
@@ -11,6 +11,7 @@ export class UploadStateService {
   private readonly uploadTypeKey = 'pageAssistant.uploadType';
   private readonly aiModelKey = 'pageAssistant.aiModel';
   private readonly editPromptKey = 'pageAssistant.editPrompt';
+  private readonly alertRewriteModeKey = 'pageAssistant.alertRewriteMode';
 
   //Upload type
   private selectedUploadType = signal<'url' | 'paste' | 'word'>('url');
@@ -34,6 +35,14 @@ export class UploadStateService {
   setEditPromptText(prompt: string) {
     this.editPromptText.set(prompt ?? '');
     this.storage.saveData(this.editPromptKey, prompt ?? '');
+  }
+
+  //Alert rewrite mode (A->B vs good-results-only)
+  private selectedAlertRewriteMode = signal<AlertRewriteMode>(AlertRewriteMode.AB);
+  getAlertRewriteMode = computed(() => this.selectedAlertRewriteMode());
+  setAlertRewriteMode(mode: AlertRewriteMode) {
+    this.selectedAlertRewriteMode.set(mode);
+    this.storage.saveData(this.alertRewriteModeKey, mode);
   }
 
   //Upload data
@@ -121,11 +130,13 @@ export class UploadStateService {
     this.selectedUploadType.set('url'); // default to URL
     this.selectedAiModel.set(AiModel.Nemotron);
     this.editPromptText.set('');
+    this.selectedAlertRewriteMode.set(AlertRewriteMode.AB);
     this.uploadData.set(null);
     this.prevUploadData = [];
     this.storage.removeData(this.uploadTypeKey);
     this.storage.removeData(this.aiModelKey);
     this.storage.removeData(this.editPromptKey);
+    this.storage.removeData(this.alertRewriteModeKey);
     this.storage.removeData(this.uploadDataKey);
   }
 
@@ -156,6 +167,16 @@ export class UploadStateService {
     const storedEditPrompt = this.storage.getData(this.editPromptKey);
     if (typeof storedEditPrompt === 'string') {
       this.editPromptText.set(storedEditPrompt);
+    }
+
+    const storedAlertRewriteMode = this.storage.getData(this.alertRewriteModeKey);
+    if (
+      storedAlertRewriteMode &&
+      Object.values(AlertRewriteMode).includes(
+        storedAlertRewriteMode as AlertRewriteMode,
+      )
+    ) {
+      this.selectedAlertRewriteMode.set(storedAlertRewriteMode as AlertRewriteMode);
     }
 
     const storedData = this.storage.getData(this.uploadDataKey);

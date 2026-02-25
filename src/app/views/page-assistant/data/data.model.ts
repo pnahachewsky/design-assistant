@@ -88,6 +88,11 @@ export enum PromptKey {
   AlertsRecommendations = 'alertsRecommendations'
 }
 
+export enum AlertRewriteMode {
+  AB = 'ab',
+  GoodResultsOnly = 'good-results-only',
+}
+
 export enum AiModel {
   //Free models
   Nemotron = 'nvidia/nemotron-3-nano-30b-a3b:free', //256k context, 17B weekly, 30B parameters

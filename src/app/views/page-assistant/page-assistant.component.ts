@@ -37,6 +37,11 @@ import { UrlDataService } from './services/url-data.service';
 import { SourceDiffService } from './services/source-diff.service';
 import { ShadowDomService } from './services/shadowdom.service';
 import { AlertAiService } from './services/alert-ai.service';
+import {
+  AlertRewriteService,
+  AlertRewriteIssueInput,
+  AlertRewritePlan,
+} from './services/alert-rewrite.service';
 import { OpenRouterService } from './services/openrouter.service';
 
 //Data
@@ -47,6 +52,7 @@ import {
   SourceViewType,
   PromptKey,
   AiModel,
+  AlertRewriteMode,
 } from './data/data.model';
 import { getPromptTemplate } from './data/ai-prompts.constants';
 
@@ -98,6 +104,7 @@ export class PageAssistantCompareComponent
   private sourceDiffService = inject(SourceDiffService);
   private shadowDomService = inject(ShadowDomService);
   private alertAi = inject(AlertAiService);
+  private alertRewrite = inject(AlertRewriteService);
   private openRouter = inject(OpenRouterService);
   private urlDataService = inject(UrlDataService);
   private router = inject(Router);
@@ -363,6 +370,7 @@ export class PageAssistantCompareComponent
     this.observeDarkMode();
     this.uploadState.setSelectedAiModel(this.selectedAiModel);
     this.customEditText = this.uploadState.getEditPromptText();
+    this.selectedAlertRewriteMode = this.uploadState.getAlertRewriteMode();
 
     //Translations
     const undoText = this.translate.instant('page.compare.button.undo');
@@ -514,6 +522,11 @@ export class PageAssistantCompareComponent
     this.selectedPromptKey = key;
   }
 
+  selectedAlertRewriteMode: AlertRewriteMode = AlertRewriteMode.AB;
+  onAlertRewriteModeChange(): void {
+    this.selectedAlertRewriteMode = this.uploadState.getAlertRewriteMode();
+  }
+
   customPromptText = '';
   onAppendCustom(prompt: string) {
     this.customPromptText = prompt;
@@ -539,73 +552,53 @@ export class PageAssistantCompareComponent
       : promptBody; //Note: a heading can be added to the custom instructions here, something like ${base}\n\nPrioritize the following:\n${custom}
   }
 
-  private parseRecommendationsFromAi(text: string): {
-    fullHtml: string;
-    recommendations: Record<string, unknown>[];
-    replacements: Record<string, unknown>[];
-  } | null {
-    const cleaned = this.alertAi.stripCodeFences(text);
-    const parsed = this.alertAi.looseJsonParse(cleaned);
-    if (!parsed || typeof parsed !== 'object') return null;
-    const root = parsed as Record<string, unknown>;
-    const fullHtml = typeof root['full_html'] === 'string' ? root['full_html'] : '';
-    const recommendations = Array.isArray(root['recommendations'])
-      ? (root['recommendations'] as unknown[])
-      : [];
-    const replacements = Array.isArray(root['replacements'])
-      ? (root['replacements'] as unknown[])
-      : [];
-    const filteredReplacements = replacements.filter(
-      (x) => x && typeof x === 'object',
-    ) as Record<string, unknown>[];
-    const filteredRecommendations = recommendations.filter(
-      (x) => x && typeof x === 'object',
-    ) as Record<string, unknown>[];
-    const normalizedReplacements =
-      filteredReplacements.length
-        ? filteredReplacements
-        : filteredRecommendations
-            .map((rec) => {
-              const alertIndex = rec['alert_index'];
-              const updatedHtml = rec['updated_html'] ?? rec['recommended_html'];
-              return { alert_index: alertIndex, updated_html: updatedHtml };
-            })
-            .filter(
-              (rec) =>
-                rec['alert_index'] != null &&
-                typeof rec['updated_html'] === 'string',
-            );
-    return {
-      fullHtml,
-      recommendations: filteredRecommendations,
-      replacements: normalizedReplacements,
-    };
+  private getAlertTextForRewrite(alertElement: Element): string {
+    const firstParagraph = alertElement.querySelector('p');
+    const paragraphText = firstParagraph?.textContent?.trim() || '';
+    if (paragraphText) return paragraphText;
+    return (alertElement.textContent || '').trim();
   }
 
-  private applyAlertReplacements(
+  private getAlertHeadingForRewrite(alertElement: Element): string {
+    const headingEl = alertElement.querySelector<HTMLElement>('h1, h2, h3, h4, h5, h6');
+    return (headingEl?.textContent || '').trim();
+  }
+
+  private getIssuesForAlertIndex(
+    issues: AlertRewriteIssueInput[],
+    alertIndex: number,
+  ): AlertRewriteIssueInput[] {
+    const hasIndexedIssues = issues.some((issue) => Number.isFinite(issue.alertIndex));
+    const globalIssues = issues.filter((issue) => !Number.isFinite(issue.alertIndex));
+    const specificIssues = issues.filter((issue) => issue.alertIndex === alertIndex);
+
+    if (!hasIndexedIssues) {
+      return issues;
+    }
+    if (specificIssues.length) {
+      return [...globalIssues, ...specificIssues];
+    }
+    return globalIssues;
+  }
+
+  private applyAlertHtmlRewrites(
     originalHtml: string,
-    replacements: Record<string, unknown>[],
+    rewrites: Array<{
+      alert_index: number;
+      rewritten_alert_html: string;
+    }>,
   ): string | null {
-    if (!replacements.length) return null;
+    if (!rewrites.length) return null;
+
     const parser = new DOMParser();
     const doc = parser.parseFromString(originalHtml, 'text/html');
     const alerts = Array.from(doc.querySelectorAll('.alert'));
     if (!alerts.length) return null;
 
-    for (const raw of replacements) {
-      const indexRaw = raw['alert_index'];
-      const updatedHtml = raw['updated_html'];
-      const index =
-        typeof indexRaw === 'number'
-          ? indexRaw
-          : typeof indexRaw === 'string'
-            ? Number.parseInt(indexRaw, 10)
-            : NaN;
-      if (!Number.isFinite(index) || !updatedHtml || typeof updatedHtml !== 'string')
-        continue;
-      const target = alerts[index - 1];
+    for (const rewrite of rewrites) {
+      const target = alerts[rewrite.alert_index - 1];
       if (!target) continue;
-      const updatedDoc = parser.parseFromString(updatedHtml, 'text/html');
+      const updatedDoc = parser.parseFromString(rewrite.rewritten_alert_html, 'text/html');
       const updatedEl = updatedDoc.body.firstElementChild;
       if (!updatedEl || !updatedEl.classList.contains('alert')) continue;
       target.replaceWith(updatedEl);
@@ -614,115 +607,218 @@ export class PageAssistantCompareComponent
     return doc.body.outerHTML;
   }
 
-  private async runAlertRecommendations(
-    html: string,
-    issues: Record<string, unknown>[],
+  private async callOpenRouterForMessages(
     model: AiModel,
     headers: Record<string, string>,
     url: string,
-  ): Promise<void> {
-    const shortModel = this.getShortModelName(model);
-    const recStart = performance.now();
-    this.statusMessage = 'Generating alert recommendations.';
-    const recPrompt = await getPromptTemplate(PromptKey.AlertsRecommendations);
-    const alertDoc = new DOMParser().parseFromString(html, 'text/html');
-    const alertEls = Array.from(alertDoc.querySelectorAll('.alert'));
-    const alerts = alertEls.map((el, idx) => ({
-      alert_index: idx + 1,
-      alert_html: el.outerHTML,
-      alert_text: (el.textContent || '').trim(),
-    }));
-    const recPayload = JSON.stringify({ issues, alerts });
-    const recPayloadBytes = new TextEncoder().encode(recPayload).length;
-    console.log('Alert rec payload', {
-      alerts: alerts.length,
-      issues: issues.length,
-      bytes: recPayloadBytes,
-    });
-
+    messages: Array<{ role: string; content: string }>,
+    contextLabel: string,
+  ): Promise<{ text: string; usedModel: string }> {
     const candidates = this.buildModelRotation(model);
-    let recText: string | undefined;
-    let usedModel: string | undefined;
     let lastError: Error | undefined;
 
     for (const candidate of candidates) {
-      const recResponse = await fetch(url, {
+      const response = await fetch(url, {
         method: 'POST',
         headers,
         body: JSON.stringify({
           models: [candidate],
-          messages: [
-            { role: 'system', content: recPrompt },
-            { role: 'user', content: recPayload },
-          ],
+          messages,
           temperature: 0,
           provider: { allow_fallbacks: false },
         }),
       });
 
-      if (recResponse.status !== 200) {
+      if (response.status !== 200) {
         const shortName = this.getShortModelName(candidate);
-        if (recResponse.status === 429) {
+        if (response.status === 429) {
           const retryAfter = Number.parseInt(
-            recResponse.headers.get('retry-after') || '',
+            response.headers.get('retry-after') || '',
             10,
           );
           const delayMs = Number.isFinite(retryAfter) ? retryAfter * 1000 : 600;
-          console.warn(`Alert recommendations rate-limited (${shortName}); retrying next model in ${delayMs}ms.`);
+          console.warn(
+            `${contextLabel} rate-limited (${shortName}); retrying next model in ${delayMs}ms.`,
+          );
           await new Promise((resolve) => setTimeout(resolve, delayMs));
         }
         lastError = new Error(
-          `Alert recommendations failed (${recResponse.status}) for ${shortName}.`,
+          `${contextLabel} failed (${response.status}) for ${shortName}.`,
         );
         continue;
       }
 
-      const recJson = await recResponse.json();
-      if (recJson.error) {
+      const rawJson = ((await response.json().catch(() => ({}))) || {}) as Record<
+        string,
+        unknown
+      >;
+      const errorObj = rawJson['error'];
+      if (errorObj && typeof errorObj === 'object') {
+        const errorMessage = (errorObj as Record<string, unknown>)['message'];
         lastError = new Error(
-          `Alert recommendations error (${this.getShortModelName(candidate)}): ${
-            recJson.error?.message || 'Unknown error'
+          `${contextLabel} error (${this.getShortModelName(candidate)}): ${
+            typeof errorMessage === 'string' ? errorMessage : 'Unknown error'
           }`,
         );
         continue;
       }
 
-      recText = recJson.choices?.[0].message?.content;
-      usedModel = recJson?.model || candidate;
-      if (!recText) {
+      const choices = Array.isArray(rawJson['choices'])
+        ? (rawJson['choices'] as Array<Record<string, unknown>>)
+        : [];
+      const firstChoice = choices[0];
+      const message =
+        firstChoice && typeof firstChoice['message'] === 'object'
+          ? (firstChoice['message'] as Record<string, unknown>)
+          : null;
+      const text = message && typeof message['content'] === 'string'
+        ? message['content']
+        : '';
+      const usedModel =
+        typeof rawJson['model'] === 'string' ? rawJson['model'] : candidate;
+
+      if (!text) {
         lastError = new Error(
-          `Alert recommendations response was empty (${this.getShortModelName(candidate)}).`,
+          `${contextLabel} response was empty (${this.getShortModelName(candidate)}).`,
         );
-        console.warn(lastError.message);
         continue;
       }
-      break;
+
+      return { text, usedModel };
     }
 
-    if (!recText) {
-      throw lastError ?? new Error(`Alert recommendations response was empty (${shortModel}).`);
+    throw lastError ?? new Error(`${contextLabel} response was empty.`);
+  }
+
+  private async runAlertRecommendations(
+    html: string,
+    issues: AlertRewriteIssueInput[],
+    model: AiModel,
+    headers: Record<string, string>,
+    url: string,
+  ): Promise<void> {
+    const start = performance.now();
+    const mode = this.selectedAlertRewriteMode;
+    this.statusMessage =
+      mode === AlertRewriteMode.AB
+        ? 'Generating alert rewrites (A->B mode).'
+        : 'Generating alert rewrites (good-results-only mode).';
+
+    const alertDoc = new DOMParser().parseFromString(html, 'text/html');
+    const alertEls = Array.from(alertDoc.querySelectorAll('.alert'));
+    if (!alertEls.length) {
+      throw new Error('No .alert elements found in the page.');
     }
 
-    console.log('Alert rec model + time', {
+    const examples = await this.alertRewrite.loadExamples();
+    const rewrites: Array<{
+      alert_index: number;
+      rewritten_alert_html: string;
+    }> = [];
+
+    for (let i = 0; i < alertEls.length; i += 1) {
+      const alertElement = alertEls[i];
+      if (!alertElement) continue;
+      const alertIndex = i + 1;
+      const relevantIssues = this.getIssuesForAlertIndex(issues, alertIndex);
+
+      const alertHtml = alertElement.outerHTML;
+      const originalHeading = this.getAlertHeadingForRewrite(alertElement);
+      const alertText = this.getAlertTextForRewrite(alertElement);
+      if (!alertText) continue;
+
+      const initialPlan = this.alertRewrite.buildHeuristicPlan({
+        alertHtml,
+        alertText,
+        alertType: this.alertRewrite.inferAlertType(alertHtml),
+        issues: relevantIssues,
+      });
+      let plan: AlertRewritePlan = initialPlan;
+      let planModelName = 'heuristic';
+
+      if (mode === AlertRewriteMode.AB) {
+        const planResponse = await this.callOpenRouterForMessages(
+          model,
+          headers,
+          url,
+          this.alertRewrite.buildPromptAMessages({
+            alertHtml,
+            alertText,
+            alertType: initialPlan.alertType,
+            issues: relevantIssues,
+          }),
+          `Alert ${alertIndex} Prompt A`,
+        );
+        const parsedPlan = this.alertRewrite.parsePlanResponse(
+          planResponse.text,
+          initialPlan,
+        );
+        if (parsedPlan) {
+          plan = parsedPlan;
+        }
+        planModelName = this.getShortModelName(planResponse.usedModel);
+      }
+
+      const selectedExamples = this.alertRewrite.selectExamples(plan, examples, 4);
+      const rewriteResponse = await this.callOpenRouterForMessages(
+        model,
+        headers,
+        url,
+        this.alertRewrite.buildPromptBMessages({
+          mode,
+          originalHeading,
+          originalAlertText: alertText,
+          originalAlertHtml: alertHtml,
+          plan,
+          examples: selectedExamples,
+        }),
+        `Alert ${alertIndex} Prompt B`,
+      );
+      const rewriteResult = this.alertRewrite.parseRewriteResponse(
+        rewriteResponse.text,
+        plan,
+        selectedExamples,
+      );
+
+      if (!rewriteResult?.rewrittenAlertHtml) {
+        throw new Error(`Alert rewrite returned empty HTML for alert ${alertIndex}.`);
+      }
+
+      rewrites.push({
+        alert_index: alertIndex,
+        rewritten_alert_html: rewriteResult.rewrittenAlertHtml,
+      });
+
+      console.log('Alert rewrite iteration', {
+        mode,
+        alertIndex,
+        plan,
+        selectedExampleIds: selectedExamples.map((example) => example.id),
+        originalHeading,
+        finalHeading: rewriteResult.rewrittenHeading,
+        finalRewrite: rewriteResult.rewrittenAlert,
+        finalRewriteHtml: rewriteResult.rewrittenAlertHtml,
+        appliedDirectives: rewriteResult.appliedDirectives,
+        exampleIdsUsed: rewriteResult.exampleIdsUsed,
+        planModel: planModelName,
+        rewriteModel: this.getShortModelName(rewriteResponse.usedModel),
+        humanRating: null,
+      });
+    }
+
+    const finalHtml = this.applyAlertHtmlRewrites(html, rewrites);
+    if (!finalHtml) {
+      throw new Error('No alert rewrites were generated.');
+    }
+
+    console.log('Alert rewrite model + time', {
       requestedModel: model,
-      usedModel,
-      ms: Math.round(performance.now() - recStart),
+      mode,
+      rewrites: rewrites.length,
+      ms: Math.round(performance.now() - start),
     });
 
-    // Prefer in-place replacements by alert_index.
-    const parsed = this.parseRecommendationsFromAi(recText);
-    const replacedHtml = parsed
-      ? this.applyAlertReplacements(html, parsed.replacements)
-      : null;
-    const finalHtml = replacedHtml;
-    if (!finalHtml) {
-      throw new Error(
-        `Alert recommendations missing updated HTML (${shortModel}).`,
-      );
-    }
-
     const formattedHtml = await this.urlDataService.formatHtml(finalHtml, 'ai');
-
     this.uploadState.mergeModifiedData({
       modifiedUrl: 'AI generated',
       modifiedHtml: formattedHtml,
@@ -818,8 +914,17 @@ export class PageAssistantCompareComponent
 
       if (isAlertFlow) {
         const cachedIssues = this.alertAi.getCachedIssues(html);
-        const selectedIssues = (cachedIssues || []).filter((issue) => issue.include) as unknown as Record<string, unknown>[];
-        if (selectedIssues.length) {
+        if (cachedIssues) {
+          const selectedIssues: AlertRewriteIssueInput[] = cachedIssues
+            .filter((issue) => issue.include)
+            .map((issue) => ({ ...issue }));
+          if (!selectedIssues.length) {
+            this.messageService.add({
+              severity: 'info',
+              summary: this.translate.instant('common.ai.alertIssuesNotIdentified'),
+              life: 3000,
+            });
+          }
           await this.runAlertRecommendations(
             html,
             selectedIssues,
@@ -838,17 +943,6 @@ export class PageAssistantCompareComponent
               'common.ai.alertRecommendationsGenerated',
             ),
             life: 5000,
-          });
-          return;
-        } else if (cachedIssues?.length) {
-          this.statusSeverity = 'warn';
-          this.statusMessage = this.translate.instant(
-            'common.ai.alertRecommendationsSkipped',
-          );
-          this.messageService.add({
-            severity: 'warn',
-            summary: this.translate.instant('common.ai.alertRecommendationsSkipped'),
-            life: 4000,
           });
           return;
         }
@@ -988,47 +1082,50 @@ export class PageAssistantCompareComponent
         });
       }
 
-        if (promptKeyForRequest === PromptKey.AlertsIssues) {
+      if (promptKeyForRequest === PromptKey.AlertsIssues) {
           // Step 1: parse issues from AlertsIssues (JSON-only).
           const issues = this.alertAi.parseIssuesFromText(aiHtml);
-          if (!issues.length) {
-            throw new Error(`No alert issues returned by the AI (${usedModel}).`);
+          const cachedIssues = this.alertAi.getCachedIssues(html);
+          let selectedIssues: AlertRewriteIssueInput[] = [];
+          if (cachedIssues) {
+            selectedIssues = cachedIssues
+              .filter((issue) => issue.include)
+              .map((issue) => ({ ...issue }));
+          } else {
+            const normalizedIssues = issues.length
+              ? this.alertAi.normalizeAlertIssues(issues, {
+                  useIncludeFallback: false,
+                })
+              : [];
+            this.alertAi.cacheIssues(html, normalizedIssues);
+            selectedIssues = normalizedIssues
+              .filter((issue) => issue.include)
+              .map((issue) => ({ ...issue }));
           }
-        const cachedIssues = this.alertAi.getCachedIssues(html);
-        let selectedIssues: Record<string, unknown>[] = [];
-        if (cachedIssues?.length) {
-          selectedIssues = cachedIssues.filter((issue) => issue.include) as unknown as Record<string, unknown>[];
-        } else {
-          const normalizedIssues = this.alertAi.normalizeAlertIssues(issues, {
-            useIncludeFallback: false,
-          });
-          this.alertAi.cacheIssues(html, normalizedIssues);
-          selectedIssues = normalizedIssues.filter((issue) => issue.include) as unknown as Record<string, unknown>[];
-        }
-        if (selectedIssues.length) {
-          this.messageService.add({
-            severity: 'info',
-            summary: this.translate.instant('common.ai.alertIssuesReceived', {
-              model: usedModel,
-            }),
-            life: 3000,
-          });
-          // Step 2: call AlertsRecommendations with issues + page HTML + extracted alert snippets.
+          if (selectedIssues.length) {
+            this.messageService.add({
+              severity: 'info',
+              summary: this.translate.instant('common.ai.alertIssuesReceived', {
+                model: usedModel,
+              }),
+              life: 3000,
+            });
+          } else {
+            this.messageService.add({
+              severity: 'info',
+              summary: this.translate.instant('common.ai.alertIssuesNotIdentified'),
+              life: 3000,
+            });
+          }
+          // Step 2: run alert rewrite flow with selected issues, or example-only when none are selected.
           await this.runAlertRecommendations(
             html,
-            selectedIssues as unknown as Record<string, unknown>[],
+            selectedIssues,
             model,
             headers,
             url,
           );
         } else {
-          this.messageService.add({
-            severity: 'warn',
-            summary: this.translate.instant('common.ai.alertRecommendationsSkipped'),
-            life: 4000,
-          });
-        }
-      } else {
         const formattedHtml = await this.urlDataService.formatHtml(aiHtml, 'ai');
 
         this.uploadState.mergeModifiedData({
