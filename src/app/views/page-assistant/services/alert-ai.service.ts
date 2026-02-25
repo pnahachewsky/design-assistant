@@ -5,6 +5,7 @@ import { TranslateService } from '@ngx-translate/core';
 import { getPromptTemplate } from '../data/ai-prompts.constants';
 import { PromptKey, AiModel } from '../data/data.model';
 import { OpenRouterService, ChatMessage } from './openrouter.service';
+import { UploadStateService } from './upload-state.service';
 import type { AlertIssue } from '../components/problems/component-guidance/alerts-guidance/alerts-guidance.component';
 import fallbackSeverityJson from '../components/problems/component-guidance/alerts-guidance/severity-include-fallback.json';
 
@@ -13,6 +14,7 @@ export class AlertAiService {
   private readonly openRouter = inject(OpenRouterService);
   private readonly messageService = inject(MessageService);
   private readonly translate = inject(TranslateService);
+  private readonly uploadState = inject(UploadStateService);
   private readonly issuesUpdatedSubject = new Subject<{
     html: string;
     issues: AlertIssue[];
@@ -60,7 +62,10 @@ export class AlertAiService {
       summary: this.translate.instant('common.ai.sending'),
       life: 2000,
     });
-    const basePrompt = await getPromptTemplate(PromptKey.AlertsIssues);
+    const basePrompt = await getPromptTemplate(PromptKey.AlertsIssues, {
+      useJsonAlertsIssuesPrompt:
+        this.uploadState.getUseJsonAlertsIssuesPrompt(),
+    });
     const systemPrompt = basePrompt;
     //console.log('[AlertAiService] AlertsIssues system prompt:', systemPrompt);
     const alerts = this.extractAlerts(alertHtml);

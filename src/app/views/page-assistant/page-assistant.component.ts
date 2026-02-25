@@ -540,7 +540,9 @@ export class PageAssistantCompareComponent
   }
 
   private async getPromptForKey(key: PromptKey): Promise<string> {
-    const base = await getPromptTemplate(key);
+    const base = await getPromptTemplate(key, {
+      useJsonAlertsIssuesPrompt: this.uploadState.getUseJsonAlertsIssuesPrompt(),
+    });
     const custom = this.customPromptText.trim();
     const includeEditPrompt =
       key !== PromptKey.AlertsIssues &&
@@ -1151,7 +1153,7 @@ export class PageAssistantCompareComponent
       }
 
       if (promptKeyForRequest === PromptKey.AlertsIssues) {
-          // Step 1: parse issues from AlertsIssues (JSON-only).
+          // Step 1: parse issues from AlertsIssues output (JSON response expected).
           const issues = this.alertAi.parseIssuesFromText(aiHtml);
           const cachedIssues = this.alertAi.getCachedIssues(html);
           let selectedIssues: AlertRewriteIssueInput[] = [];

@@ -95,6 +95,17 @@
                         Include link writing rules
                       </label>
                     </div>
+                    <div class="p-field-checkbox mt-2">
+                      <p-checkbox
+                        [(ngModel)]="useJsonAlertsIssuesPrompt"
+                        [binary]="true"
+                        inputId="useJsonAlertsIssuesPrompt"
+                        (onChange)="onUseJsonAlertsIssuesPromptSelect(useJsonAlertsIssuesPrompt)"
+                      />
+                      <label for="useJsonAlertsIssuesPrompt" class="pl-2">
+                        Use JSON format for Alerts Issues prompt
+                      </label>
+                    </div>
                   </div>
                 }
               </div>

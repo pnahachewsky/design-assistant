@@ -14,6 +14,8 @@ export class UploadStateService {
   private readonly alertRewriteModeKey = 'pageAssistant.alertRewriteMode';
   private readonly includeLinkWritingRulesKey =
     'pageAssistant.includeLinkWritingRules';
+  private readonly useJsonAlertsIssuesPromptKey =
+    'pageAssistant.useJsonAlertsIssuesPrompt';
 
   //Upload type
   private selectedUploadType = signal<'url' | 'paste' | 'word'>('url');
@@ -55,6 +57,16 @@ export class UploadStateService {
     this.storage.saveData(this.includeLinkWritingRulesKey, String(!!include));
   }
 
+  //Alerts issues prompt format toggle (JSON vs text)
+  private useJsonAlertsIssuesPrompt = signal<boolean>(false);
+  getUseJsonAlertsIssuesPrompt = computed(() =>
+    this.useJsonAlertsIssuesPrompt(),
+  );
+  setUseJsonAlertsIssuesPrompt(useJson: boolean) {
+    this.useJsonAlertsIssuesPrompt.set(!!useJson);
+    this.storage.saveData(this.useJsonAlertsIssuesPromptKey, String(!!useJson));
+  }
+
   //Upload data
   private uploadData = signal<Partial<UploadData> | null>(null);
   private originalUploadData: Partial<UploadData> | null = null; //for the compare with original button (not implemented yet)
@@ -68,6 +80,7 @@ export class UploadStateService {
       this.storage.removeData(this.aiModelKey);
       this.storage.removeData(this.uploadDataKey);
       this.storage.removeData(this.includeLinkWritingRulesKey);
+      this.storage.removeData(this.useJsonAlertsIssuesPromptKey);
       return;
     }
     this.restoreState();
@@ -143,6 +156,7 @@ export class UploadStateService {
     this.editPromptText.set('');
     this.selectedAlertRewriteMode.set(AlertRewriteMode.AB);
     this.includeLinkWritingRules.set(true);
+    this.useJsonAlertsIssuesPrompt.set(false);
     this.uploadData.set(null);
     this.prevUploadData = [];
     this.storage.removeData(this.uploadTypeKey);
@@ -150,6 +164,7 @@ export class UploadStateService {
     this.storage.removeData(this.editPromptKey);
     this.storage.removeData(this.alertRewriteModeKey);
     this.storage.removeData(this.includeLinkWritingRulesKey);
+    this.storage.removeData(this.useJsonAlertsIssuesPromptKey);
     this.storage.removeData(this.uploadDataKey);
   }
 
@@ -197,6 +212,18 @@ export class UploadStateService {
     );
     if (storedIncludeLinkRules === 'true' || storedIncludeLinkRules === 'false') {
       this.includeLinkWritingRules.set(storedIncludeLinkRules === 'true');
+    }
+
+    const storedUseJsonAlertsIssuesPrompt = this.storage.getData(
+      this.useJsonAlertsIssuesPromptKey,
+    );
+    if (
+      storedUseJsonAlertsIssuesPrompt === 'true' ||
+      storedUseJsonAlertsIssuesPrompt === 'false'
+    ) {
+      this.useJsonAlertsIssuesPrompt.set(
+        storedUseJsonAlertsIssuesPrompt === 'true',
+      );
     }
 
     const storedData = this.storage.getData(this.uploadDataKey);
