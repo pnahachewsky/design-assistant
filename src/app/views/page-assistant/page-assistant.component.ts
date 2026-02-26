@@ -584,6 +584,24 @@ export class PageAssistantCompareComponent
     return globalIssues;
   }
 
+  private containsLinkPlaceholderSyntax(value: string): boolean {
+    return /\[(?:\/?\s*LINK|END\s+LINK)\]/i.test(value || '');
+  }
+
+  private shouldAllowAlertLinkRemoval(
+    issues: AlertRewriteIssueInput[],
+    plan: AlertRewritePlan,
+  ): boolean {
+    const hasTooManyLinksIssue = issues.some((issue) =>
+      (issue.category || '').toLowerCase().includes('too many links'),
+    );
+    return (
+      hasTooManyLinksIssue ||
+      plan.criteriaMatched.includes('C3_too_many_links') ||
+      plan.directives.some((directive) => directive.op === 'limit_links')
+    );
+  }
+
   private applyAlertHtmlRewrites(
     originalHtml: string,
     rewrites: Array<{
@@ -768,21 +786,18 @@ export class PageAssistantCompareComponent
       let copyGuardTriggered = false;
       let blockedExampleId: string | null = null;
 
-      for (let attempt = 0; attempt < 2; attempt += 1) {
-        const retryInstruction =
-          attempt === 0
-            ? undefined
-            : 'Your previous output matched example wording. Rewrite using alert-specific wording and facts only.';
+      let retryInstruction: string | undefined;
+      for (let attempt = 0; attempt < 3; attempt += 1) {
         const promptBMessages = await this.alertRewrite.buildPromptBMessages({
           mode,
           originalHeading,
-            originalAlertText: alertText,
-            originalAlertHtml: alertHtml,
-            plan,
-            examples: selectedExamples,
-            includeLinkWritingRules: this.uploadState.getIncludeLinkWritingRules(),
-            retryInstruction,
-          });
+          originalAlertText: alertText,
+          originalAlertHtml: alertHtml,
+          plan,
+          examples: selectedExamples,
+          includeLinkWritingRules: this.uploadState.getIncludeLinkWritingRules(),
+          retryInstruction,
+        });
         const rewriteResponse = await this.callOpenRouterForMessages(
           model,
           headers,
@@ -797,7 +812,35 @@ export class PageAssistantCompareComponent
           selectedExamples,
         );
         if (!parsedResult?.rewrittenAlertHtml) {
-          throw new Error(`Alert rewrite returned empty HTML for alert ${alertIndex}.`);
+          retryInstruction =
+            'Return valid rewrittenAlertHtml as a full .alert wrapper element.';
+          continue;
+        }
+
+        const hasLinkPlaceholders =
+          this.containsLinkPlaceholderSyntax(parsedResult.rewrittenAlertHtml) ||
+          this.containsLinkPlaceholderSyntax(parsedResult.rewrittenAlert);
+        if (hasLinkPlaceholders) {
+          retryInstruction =
+            'Do not output [LINK] or [END LINK]. Use real HTML anchors (<a href="...">text</a>) in rewrittenAlertHtml.';
+          continue;
+        }
+
+        const originalHasAnchor = /<a\b/i.test(alertHtml);
+        const rewrittenHasAnchor = /<a\b/i.test(parsedResult.rewrittenAlertHtml);
+        if (!originalHasAnchor && rewrittenHasAnchor) {
+          retryInstruction =
+            'The original alert has no links. Do not add hyperlinks. Return rewrittenAlertHtml without any <a> tags.';
+          continue;
+        }
+        const allowLinkRemoval = this.shouldAllowAlertLinkRemoval(
+          relevantIssues,
+          plan,
+        );
+        if (originalHasAnchor && !rewrittenHasAnchor && !allowLinkRemoval) {
+          retryInstruction =
+            'The original alert has a link. Keep at least one real hyperlink in rewrittenAlertHtml unless there is a too-many-links issue.';
+          continue;
         }
 
         const copyCheck = this.alertRewrite.detectExampleCopy({
@@ -813,6 +856,8 @@ export class PageAssistantCompareComponent
 
         copyGuardTriggered = true;
         blockedExampleId = copyCheck.exampleId || null;
+        retryInstruction =
+          'Your previous output matched example wording. Rewrite using alert-specific wording and facts only.';
         console.warn('Alert rewrite copy guard triggered', {
           alertIndex,
           attempt: attempt + 1,

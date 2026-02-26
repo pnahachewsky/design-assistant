@@ -91,14 +91,14 @@ export class UrlDataService {
       //  import('prettier/standalone'),
       //  import('prettier/parser-html'),
       //]);
-      const formatted = prettier.format(html, {
+      const formatted = await prettier.format(html, {
         parser: 'html',
         plugins: [parserHtml],
         htmlWhitespaceSensitivity: 'ignore', // default is css which treats <span> as inline and <div> as block
         printWidth: 200,
         singleAttributePerLine: false,
       });
-      return formatted;
+      return this.cleanupFormattedSpacing(formatted);
     } catch (error) {
       console.error('Error formatting HTML:', error);
       return html; // returns unformatted HTML
@@ -136,6 +136,16 @@ export class UrlDataService {
 
     // Return the cleaned-up HTML as a string
     return doc.body.outerHTML;
+  }
+
+  private cleanupFormattedSpacing(html: string): string {
+    // Keep pretty formatting intact; only remove specific newline/indent blocks
+    // that create punctuation/link and inline-tag spacing artifacts.
+    return html
+      .replace(/(?:\r?\n[ \t\u00A0\u202F\u2007]*)+(?=\.)/g, '')
+      .replace(/(?:\r?\n[ \t\u00A0\u202F\u2007]*)+(?=<\/a>)/gi, '')
+      .replace(/(<p\b[^>]*>)(?:\r?\n[ \t\u00A0\u202F\u2007]*)+/gi, '$1')
+      .replace(/(?:\r?\n[ \t\u00A0\u202F\u2007]*)+(<\/p>)/gi, '$1');
   }
 
   //Get text or json content for AJAX or JSON calls
