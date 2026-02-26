@@ -40507,7 +40507,7 @@ var UrlDataService = class _UrlDataService {
         if (source === "ai") {
           html = this.aiCleanup(html);
         }
-        const formatted = prettier.format(html, {
+        const formatted = yield prettier.format(html, {
           parser: "html",
           plugins: [parserHtml],
           htmlWhitespaceSensitivity: "ignore",
@@ -40515,7 +40515,7 @@ var UrlDataService = class _UrlDataService {
           printWidth: 200,
           singleAttributePerLine: false
         });
-        return formatted;
+        return this.cleanupFormattedSpacing(formatted);
       } catch (error) {
         console.error("Error formatting HTML:", error);
         return html;
@@ -40546,6 +40546,9 @@ var UrlDataService = class _UrlDataService {
       think.remove();
     });
     return doc.body.outerHTML;
+  }
+  cleanupFormattedSpacing(html) {
+    return html.replace(/(?:\r?\n[ \t\u00A0\u202F\u2007]*)+(?=\.)/g, "").replace(/(?:\r?\n[ \t\u00A0\u202F\u2007]*)+(?=<\/a>)/gi, "").replace(/(<p\b[^>]*>)(?:\r?\n[ \t\u00A0\u202F\u2007]*)+/gi, "$1").replace(/(?:\r?\n[ \t\u00A0\u202F\u2007]*)+(<\/p>)/gi, "$1");
   }
   fetchUrl(url, type) {
     return __async(this, null, function* () {
@@ -100372,4 +100375,4 @@ export {
    * License: MIT
    *)
 */
-//# sourceMappingURL=chunk-I374NLB2.js.map
+//# sourceMappingURL=chunk-A5CJIC42.js.map

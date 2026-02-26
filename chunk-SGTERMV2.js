@@ -138,7 +138,7 @@ import {
   unblockBodyScroll,
   uuid,
   zindexutils
-} from "./chunk-I374NLB2.js";
+} from "./chunk-A5CJIC42.js";
 import {
   ChangeDetectionStrategy,
   ChangeDetectorRef,
@@ -21819,9 +21819,6 @@ var AlertRewriteService = class _AlertRewriteService {
     if (criteriaMatched.includes("C7_too_vague")) {
       directives.push({ op: "specify_subject" });
     }
-    if (criteriaMatched.includes("C2_too_wordy")) {
-      directives.push({ op: "keep_under_chars", value: 140 });
-    }
     directives.push({ op: "add_heading" });
     directives.push({ op: "avoid_jargon" });
     return {
@@ -21838,12 +21835,11 @@ var AlertRewriteService = class _AlertRewriteService {
       "Return JSON only and follow this exact schema:",
       '{"alertType":"error|warning|info|success","domainTags":["..."],"criteriaMatched":["C..."],"directives":[{"op":"string","value":"optional"}]}',
       "Allowed directive ops:",
-      "specify_subject, add_next_step, add_fallback, add_heading, avoid_jargon, keep_under_chars, limit_links, preserve_tone.",
+      "specify_subject, add_next_step, add_fallback, add_heading, avoid_jargon, limit_links, preserve_tone.",
       "Rules:",
       "- Keep domainTags short and specific.",
       "- criteriaMatched should be stable identifiers (e.g., C1_missing_next_step).",
       "- Directives must be concrete operations.",
-      "- If no max length is needed, do not include keep_under_chars.",
       "- Return JSON only. No prose."
     ].join("\n");
     const userPayload = {
@@ -21919,7 +21915,6 @@ var AlertRewriteService = class _AlertRewriteService {
   }
   buildPromptBMessages(params) {
     return __async(this, null, function* () {
-      const maxChars = this.getCharLimit(params.plan.directives);
       const hasTooManyLinksIssue = params.plan.criteriaMatched.includes("C3_too_many_links") || params.plan.directives.some((directive) => directive.op === "limit_links");
       const shouldIncludeLinkWritingRules = params.includeLinkWritingRules !== false;
       const linkRules = shouldIncludeLinkWritingRules ? yield getLinkWritingRules({
@@ -21931,8 +21926,10 @@ var AlertRewriteService = class _AlertRewriteService {
         "Start with what happened, then what to do.",
         "Use plain language, active voice, and no blame.",
         "Include a next step when available.",
+        "Do not introduce new hyperlinks; only keep, rename, or remove links that already exist in the original alert HTML.",
+        'Never output placeholder markers like [LINK] or [END LINK]; always use real HTML anchors such as <a href="...">...</a>.',
         ...linkRules,
-        maxChars ? `Keep under ${maxChars} characters.` : "Keep concise for UI alerts.",
+        "Keep concise for UI alerts.",
         'Return full updated alert wrapper HTML in rewrittenAlertHtml (for example: <div class="alert alert-info">...</div>).',
         "Never copy example wording directly. Keep wording specific to the input alert."
       ];
@@ -22003,7 +22000,7 @@ var AlertRewriteService = class _AlertRewriteService {
     }
     const root = parsed;
     const rawAlertHtml = this.cleanString(root["rewrittenAlertHtml"]);
-    const normalizedAlertHtml = this.normalizeAlertWrapperHtml(rawAlertHtml);
+    let normalizedAlertHtml = this.normalizeAlertWrapperHtml(rawAlertHtml);
     if (!normalizedAlertHtml) {
       return null;
     }
@@ -22015,8 +22012,7 @@ var AlertRewriteService = class _AlertRewriteService {
     const baseBodyText = rawAlert || extractedBodyText;
     if (!baseBodyText)
       return null;
-    const maxChars = this.getCharLimit(plan.directives);
-    const rewrittenAlert = this.applyCharLimit(baseBodyText, maxChars);
+    const rewrittenAlert = baseBodyText.trim();
     const appliedDirectives = this.toStringArray(root["appliedDirectives"]);
     const exampleIdsUsedRaw = this.toStringArray(root["exampleIdsUsed"]);
     const fallbackExampleIds = selectedExamples.map((example) => example.id);
@@ -22174,25 +22170,6 @@ var AlertRewriteService = class _AlertRewriteService {
       output.push(directive);
     }
     return output;
-  }
-  getCharLimit(directives) {
-    for (const directive of directives) {
-      if (directive.op !== "keep_under_chars")
-        continue;
-      const value = typeof directive.value === "number" ? directive.value : typeof directive.value === "string" ? Number.parseInt(directive.value, 10) : NaN;
-      if (Number.isFinite(value) && value > 0) {
-        return value;
-      }
-    }
-    return null;
-  }
-  applyCharLimit(text, maxChars) {
-    const trimmed = text.trim();
-    if (!maxChars || trimmed.length <= maxChars) {
-      return trimmed;
-    }
-    const shortened = trimmed.slice(0, maxChars).trim();
-    return shortened.endsWith(".") ? shortened : `${shortened}.`;
   }
   stripCodeFences(input) {
     return input.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/i, "").trim();
@@ -40089,6 +40066,13 @@ ${custom}` : promptBody;
     }
     return globalIssues;
   }
+  containsLinkPlaceholderSyntax(value) {
+    return /\[(?:\/?\s*LINK|END\s+LINK)\]/i.test(value || "");
+  }
+  shouldAllowAlertLinkRemoval(issues, plan) {
+    const hasTooManyLinksIssue = issues.some((issue) => (issue.category || "").toLowerCase().includes("too many links"));
+    return hasTooManyLinksIssue || plan.criteriaMatched.includes("C3_too_many_links") || plan.directives.some((directive) => directive.op === "limit_links");
+  }
   applyAlertHtmlRewrites(originalHtml, rewrites) {
     if (!rewrites.length)
       return null;
@@ -40205,8 +40189,8 @@ ${custom}` : promptBody;
         let rewriteModelName = "unknown";
         let copyGuardTriggered = false;
         let blockedExampleId = null;
-        for (let attempt = 0; attempt < 2; attempt += 1) {
-          const retryInstruction = attempt === 0 ? void 0 : "Your previous output matched example wording. Rewrite using alert-specific wording and facts only.";
+        let retryInstruction;
+        for (let attempt = 0; attempt < 3; attempt += 1) {
           const promptBMessages = yield this.alertRewrite.buildPromptBMessages({
             mode,
             originalHeading,
@@ -40221,7 +40205,24 @@ ${custom}` : promptBody;
           rewriteModelName = this.getShortModelName(rewriteResponse.usedModel);
           const parsedResult = this.alertRewrite.parseRewriteResponse(rewriteResponse.text, plan, selectedExamples);
           if (!parsedResult?.rewrittenAlertHtml) {
-            throw new Error(`Alert rewrite returned empty HTML for alert ${alertIndex}.`);
+            retryInstruction = "Return valid rewrittenAlertHtml as a full .alert wrapper element.";
+            continue;
+          }
+          const hasLinkPlaceholders = this.containsLinkPlaceholderSyntax(parsedResult.rewrittenAlertHtml) || this.containsLinkPlaceholderSyntax(parsedResult.rewrittenAlert);
+          if (hasLinkPlaceholders) {
+            retryInstruction = 'Do not output [LINK] or [END LINK]. Use real HTML anchors (<a href="...">text</a>) in rewrittenAlertHtml.';
+            continue;
+          }
+          const originalHasAnchor = /<a\b/i.test(alertHtml);
+          const rewrittenHasAnchor = /<a\b/i.test(parsedResult.rewrittenAlertHtml);
+          if (!originalHasAnchor && rewrittenHasAnchor) {
+            retryInstruction = "The original alert has no links. Do not add hyperlinks. Return rewrittenAlertHtml without any <a> tags.";
+            continue;
+          }
+          const allowLinkRemoval = this.shouldAllowAlertLinkRemoval(relevantIssues, plan);
+          if (originalHasAnchor && !rewrittenHasAnchor && !allowLinkRemoval) {
+            retryInstruction = "The original alert has a link. Keep at least one real hyperlink in rewrittenAlertHtml unless there is a too-many-links issue.";
+            continue;
           }
           const copyCheck = this.alertRewrite.detectExampleCopy({
             result: parsedResult,
@@ -40235,6 +40236,7 @@ ${custom}` : promptBody;
           }
           copyGuardTriggered = true;
           blockedExampleId = copyCheck.exampleId || null;
+          retryInstruction = "Your previous output matched example wording. Rewrite using alert-specific wording and facts only.";
           console.warn("Alert rewrite copy guard triggered", {
             alertIndex,
             attempt: attempt + 1,
@@ -41289,4 +41291,4 @@ ${custom}` : promptBody;
 export {
   PageAssistantCompareComponent
 };
-//# sourceMappingURL=chunk-3PWDMI7M.js.map
+//# sourceMappingURL=chunk-SGTERMV2.js.map

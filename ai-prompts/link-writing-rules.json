@@ -19,7 +19,7 @@
     {
       "id": "L4_avoid_duplicate_link_text",
       "condition": "always",
-      "text": "Avoid duplicating link text elsewhere in the content when meaning is preserved."
+      "text": "Avoid duplicate link wording. Do not repeat the linked phrase in surrounding sentence text or elsewhere in the alert when meaning is preserved. Keep the destination phrase inside the link only (for example: Find out: <a href=\"...\">Get an access code</a>, not Find out how to get an access code: <a href=\"...\">Get an access code</a>). Avoid the phrase \"see\" before links; use inclusive alternatives such as \"refer to\" or \"visit\". When a link is present, prefer a short lead-in (for example: Find out: or Learn more:) plus unique link text, with no repeated wording outside the anchor."
     },
     {
       "id": "L5_no_vague_anchor_text",
@@ -34,7 +34,7 @@
     {
       "id": "L7_learn_more_fallback",
       "condition": "always",
-      "text": "If in-sentence placement is awkward, use a final paragraph like: Learn more: [LINK]Descriptive link text[END LINK]."
+      "text": "If a link makes up an entire sentence, move it to a new paragraph and precede it with plain text: Learn more: <a href=\"...\">Descriptive link text</a>. This format can also be used when in-sentence placement is awkward."
     },
     {
       "id": "L8_remove_only_when_too_many",
