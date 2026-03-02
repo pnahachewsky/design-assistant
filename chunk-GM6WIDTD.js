@@ -38557,6 +38557,8 @@ var UploadStateService = class _UploadStateService {
   aiModelKey = "pageAssistant.aiModel";
   editPromptKey = "pageAssistant.editPrompt";
   alertRewriteModeKey = "pageAssistant.alertRewriteMode";
+  includeAlertRewriteExamplesKey = "pageAssistant.includeAlertRewriteExamples";
+  includeBeforeTextInAlertRewriteExamplesKey = "pageAssistant.includeBeforeTextInAlertRewriteExamples";
   includeLinkWritingRulesKey = "pageAssistant.includeLinkWritingRules";
   useJsonAlertsIssuesPromptKey = "pageAssistant.useJsonAlertsIssuesPrompt";
   //Upload type
@@ -38581,11 +38583,25 @@ var UploadStateService = class _UploadStateService {
     this.storage.saveData(this.editPromptKey, prompt ?? "");
   }
   //Alert rewrite mode (A->B vs good-results-only)
-  selectedAlertRewriteMode = signal(AlertRewriteMode.AB);
+  selectedAlertRewriteMode = signal(AlertRewriteMode.GoodResultsOnly);
   getAlertRewriteMode = computed(() => this.selectedAlertRewriteMode());
   setAlertRewriteMode(mode) {
     this.selectedAlertRewriteMode.set(mode);
     this.storage.saveData(this.alertRewriteModeKey, mode);
+  }
+  //Alert rewrite examples toggle
+  includeAlertRewriteExamples = signal(false);
+  getIncludeAlertRewriteExamples = computed(() => this.includeAlertRewriteExamples());
+  setIncludeAlertRewriteExamples(include) {
+    this.includeAlertRewriteExamples.set(!!include);
+    this.storage.saveData(this.includeAlertRewriteExamplesKey, String(!!include));
+  }
+  //Alert rewrite "before" text in examples toggle
+  includeBeforeTextInAlertRewriteExamples = signal(false);
+  getIncludeBeforeTextInAlertRewriteExamples = computed(() => this.includeBeforeTextInAlertRewriteExamples());
+  setIncludeBeforeTextInAlertRewriteExamples(include) {
+    this.includeBeforeTextInAlertRewriteExamples.set(!!include);
+    this.storage.saveData(this.includeBeforeTextInAlertRewriteExamplesKey, String(!!include));
   }
   //Alert rewrite link writing rules toggle
   includeLinkWritingRules = signal(true);
@@ -38615,6 +38631,8 @@ var UploadStateService = class _UploadStateService {
       this.storage.removeData(this.uploadTypeKey);
       this.storage.removeData(this.aiModelKey);
       this.storage.removeData(this.uploadDataKey);
+      this.storage.removeData(this.includeAlertRewriteExamplesKey);
+      this.storage.removeData(this.includeBeforeTextInAlertRewriteExamplesKey);
       this.storage.removeData(this.includeLinkWritingRulesKey);
       this.storage.removeData(this.useJsonAlertsIssuesPromptKey);
       return;
@@ -38677,7 +38695,9 @@ var UploadStateService = class _UploadStateService {
     this.selectedUploadType.set("url");
     this.selectedAiModel.set(AiModel.Nemotron);
     this.editPromptText.set("");
-    this.selectedAlertRewriteMode.set(AlertRewriteMode.AB);
+    this.selectedAlertRewriteMode.set(AlertRewriteMode.GoodResultsOnly);
+    this.includeAlertRewriteExamples.set(false);
+    this.includeBeforeTextInAlertRewriteExamples.set(false);
     this.includeLinkWritingRules.set(true);
     this.useJsonAlertsIssuesPrompt.set(false);
     this.uploadData.set(null);
@@ -38686,6 +38706,8 @@ var UploadStateService = class _UploadStateService {
     this.storage.removeData(this.aiModelKey);
     this.storage.removeData(this.editPromptKey);
     this.storage.removeData(this.alertRewriteModeKey);
+    this.storage.removeData(this.includeAlertRewriteExamplesKey);
+    this.storage.removeData(this.includeBeforeTextInAlertRewriteExamplesKey);
     this.storage.removeData(this.includeLinkWritingRulesKey);
     this.storage.removeData(this.useJsonAlertsIssuesPromptKey);
     this.storage.removeData(this.uploadDataKey);
@@ -38718,6 +38740,14 @@ var UploadStateService = class _UploadStateService {
     const storedAlertRewriteMode = this.storage.getData(this.alertRewriteModeKey);
     if (storedAlertRewriteMode && Object.values(AlertRewriteMode).includes(storedAlertRewriteMode)) {
       this.selectedAlertRewriteMode.set(storedAlertRewriteMode);
+    }
+    const storedIncludeAlertRewriteExamples = this.storage.getData(this.includeAlertRewriteExamplesKey);
+    if (storedIncludeAlertRewriteExamples === "true" || storedIncludeAlertRewriteExamples === "false") {
+      this.includeAlertRewriteExamples.set(storedIncludeAlertRewriteExamples === "true");
+    }
+    const storedIncludeBeforeTextInExamples = this.storage.getData(this.includeBeforeTextInAlertRewriteExamplesKey);
+    if (storedIncludeBeforeTextInExamples === "true" || storedIncludeBeforeTextInExamples === "false") {
+      this.includeBeforeTextInAlertRewriteExamples.set(storedIncludeBeforeTextInExamples === "true");
     }
     const storedIncludeLinkRules = this.storage.getData(this.includeLinkWritingRulesKey);
     if (storedIncludeLinkRules === "true" || storedIncludeLinkRules === "false") {
@@ -100375,4 +100405,4 @@ export {
    * License: MIT
    *)
 */
-//# sourceMappingURL=chunk-A5CJIC42.js.map
+//# sourceMappingURL=chunk-GM6WIDTD.js.map
