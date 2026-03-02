@@ -36,7 +36,7 @@ export class AiOptionsComponent implements OnInit {
   @Output() customPrompt = new EventEmitter<string>();
   @Output() editPrompt = new EventEmitter<string>();
   @Output() aiChange = new EventEmitter<AiModel>();
-  @Output() alertRewriteModeChange = new EventEmitter<AlertRewriteMode>();
+  @Output() alertRewriteModeChange = new EventEmitter<void>();
   @Output() aiSubmit = new EventEmitter<void>();
 
   visible = false;
@@ -100,27 +100,17 @@ export class AiOptionsComponent implements OnInit {
   selectedAi: AiModel = AiModel.Nemotron;
   selectedAis: AiModel[] = [];
 
-  selectedAlertRewriteMode: AlertRewriteMode = AlertRewriteMode.AB;
+  selectedAlertRewriteMode: AlertRewriteMode = AlertRewriteMode.GoodResultsOnly;
+  includeAlertRewriteExamples = false;
+  includeBeforeTextInAlertRewriteExamples = false;
   includeLinkWritingRules = true;
   useJsonAlertsIssuesPrompt = false;
-  get alertRewriteModeModel(): AlertRewriteMode {
-    return this.selectedAlertRewriteMode;
+  get usePromptAPlan(): boolean {
+    return this.selectedAlertRewriteMode === AlertRewriteMode.AB;
   }
-  set alertRewriteModeModel(mode: AlertRewriteMode) {
-    this.onAlertRewriteModeSelect(mode);
+  set usePromptAPlan(usePromptA: boolean) {
+    this.onUsePromptAPlanSelect(usePromptA);
   }
-  alertRewriteModeOptions = [
-    {
-      id: AlertRewriteMode.AB,
-      label: 'A->B mode (plan + rewrite)',
-      disabled: false,
-    },
-    {
-      id: AlertRewriteMode.GoodResultsOnly,
-      label: 'Good-results-only mode',
-      disabled: false,
-    },
-  ];
 
   freeAiOptions = [
     { id: AiModel.Nemotron, label: 'page.ai-options.model.Nemotron', disabled: false },
@@ -141,6 +131,14 @@ export class AiOptionsComponent implements OnInit {
     }
     this.selectedAis = this.selectedAis.filter((id) => freeIds.has(id));
     this.selectedAlertRewriteMode = this.uploadState.getAlertRewriteMode();
+    this.includeAlertRewriteExamples =
+      this.uploadState.getIncludeAlertRewriteExamples();
+    this.includeBeforeTextInAlertRewriteExamples =
+      this.uploadState.getIncludeBeforeTextInAlertRewriteExamples();
+    if (!this.includeAlertRewriteExamples && this.includeBeforeTextInAlertRewriteExamples) {
+      this.includeBeforeTextInAlertRewriteExamples = false;
+      this.uploadState.setIncludeBeforeTextInAlertRewriteExamples(false);
+    }
     this.includeLinkWritingRules = this.uploadState.getIncludeLinkWritingRules();
     this.useJsonAlertsIssuesPrompt =
       this.uploadState.getUseJsonAlertsIssuesPrompt();
@@ -157,10 +155,27 @@ export class AiOptionsComponent implements OnInit {
     this.aiChange.emit(key);
   }
 
-  onAlertRewriteModeSelect(mode: AlertRewriteMode): void {
+  onUsePromptAPlanSelect(usePromptA: boolean): void {
+    const mode = usePromptA
+      ? AlertRewriteMode.AB
+      : AlertRewriteMode.GoodResultsOnly;
     this.selectedAlertRewriteMode = mode;
     this.uploadState.setAlertRewriteMode(mode);
-    this.alertRewriteModeChange.emit(mode);
+    this.alertRewriteModeChange.emit();
+  }
+
+  onIncludeAlertRewriteExamplesSelect(include: boolean): void {
+    this.includeAlertRewriteExamples = include;
+    this.uploadState.setIncludeAlertRewriteExamples(include);
+    if (!include) {
+      this.includeBeforeTextInAlertRewriteExamples = false;
+      this.uploadState.setIncludeBeforeTextInAlertRewriteExamples(false);
+    }
+  }
+
+  onIncludeBeforeTextInAlertRewriteExamplesSelect(include: boolean): void {
+    this.includeBeforeTextInAlertRewriteExamples = include;
+    this.uploadState.setIncludeBeforeTextInAlertRewriteExamples(include);
   }
 
   onIncludeLinkWritingRulesSelect(include: boolean): void {

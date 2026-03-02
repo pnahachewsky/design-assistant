@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { ChatMessage } from './openrouter.service';
 import { AlertRewriteMode } from '../data/data.model';
 import { getLinkWritingRules } from '../../../common/constants/link-writing.constants';
+import { getAlertRewriteRules } from '../../../common/constants/alert-rewrite-rules.constants';
 
 export interface AlertRewriteIssueInput {
   alertIndex?: number;
@@ -142,31 +143,40 @@ export class AlertRewriteService {
     };
   }
 
-  buildPromptAMessages(input: AlertRewriteInput): ChatMessage[] {
-    const systemPrompt = [
-      'You are Prompt A for UI alert rewriting.',
-      'Classify the alert and produce a deterministic rewrite plan.',
-      'Return JSON only and follow this exact schema:',
-      '{"alertType":"error|warning|info|success","domainTags":["..."],"criteriaMatched":["C..."],"directives":[{"op":"string","value":"optional"}]}',
-      'Allowed directive ops:',
-      'specify_subject, add_next_step, add_fallback, add_heading, avoid_jargon, limit_links, preserve_tone.',
-      'Rules:',
-      '- Keep domainTags short and specific.',
-      '- criteriaMatched should be stable identifiers (e.g., C1_missing_next_step).',
-      '- Directives must be concrete operations.',
-      '- Return JSON only. No prose.',
-    ].join('\n');
+  async buildAlertPlanningMessages(
+    input: AlertRewriteInput,
+  ): Promise<ChatMessage[]> {
+    const rules = await getAlertRewriteRules();
+    const systemPrompt = rules.alertPlanning.systemPromptLines.join('\n');
+    const compactAlertText = this.toDescriptionSnippet(input.alertText, 500);
+    const linkCount = (input.alertHtml.match(/<a\b/gi) || []).length;
+    const issues = input.issues
+      .map((issue) => {
+        const category = this.cleanString(issue.category);
+        const severity = this.cleanString(issue.severity);
+        const description = this.cleanString(issue.description);
+        const descriptionSnippet =
+          category && this.shouldIncludePlanningDescriptionSnippet(category)
+            ? this.toDescriptionSnippet(description, 140)
+            : '';
+        return {
+          category,
+          severity,
+          ...(descriptionSnippet ? { descriptionSnippet } : {}),
+        };
+      })
+      .filter((issue) => issue.category || issue.severity || issue.descriptionSnippet);
 
     const userPayload = {
-      alertHtml: input.alertHtml,
-      alertText: input.alertText,
+      alertText: compactAlertText,
       alertType: input.alertType,
-      issues: input.issues.map((issue) => ({
-        category: (issue.category || '').trim(),
-        severity: (issue.severity || '').trim(),
-        description: (issue.description || '').trim(),
-        recommendation: (issue.recommendation || '').trim(),
-      })),
+      signals: {
+        hasHeading: /<h[1-6]\b/i.test(input.alertHtml || ''),
+        hasLink: linkCount > 0,
+        linkCount,
+        wordCount: this.tokenizeComparisonText(input.alertText || '').length,
+      },
+      issues,
     };
 
     return [
@@ -175,7 +185,10 @@ export class AlertRewriteService {
     ];
   }
 
-  parsePlanResponse(text: string, fallback: AlertRewritePlan): AlertRewritePlan | null {
+  parseAlertPlanningResponse(
+    text: string,
+    fallback: AlertRewritePlan,
+  ): AlertRewritePlan | null {
     const parsed = this.looseJsonParse(this.stripCodeFences(text));
     if (!parsed || typeof parsed !== 'object') {
       return null;
@@ -200,7 +213,7 @@ export class AlertRewriteService {
   selectExamples(
     plan: AlertRewritePlan,
     examples: AlertRewriteExample[],
-    count = 4,
+    count = 2,
   ): AlertRewriteExample[] {
     const requestedCount = Math.max(1, count);
     const criteria = new Set(plan.criteriaMatched || []);
@@ -241,57 +254,38 @@ export class AlertRewriteService {
     return selected;
   }
 
-  async buildPromptBMessages(params: {
+  async buildAlertRewriteMessages(params: {
     mode: AlertRewriteMode;
     originalAlertText: string;
     originalHeading?: string;
     originalAlertHtml: string;
     plan: AlertRewritePlan;
     examples: AlertRewriteExample[];
+    includeBeforeTextInExamples?: boolean;
     includeLinkWritingRules?: boolean;
     retryInstruction?: string;
   }): Promise<ChatMessage[]> {
     const hasTooManyLinksIssue =
       params.plan.criteriaMatched.includes('C3_too_many_links') ||
       params.plan.directives.some((directive) => directive.op === 'limit_links');
-    const shouldIncludeLinkWritingRules = params.includeLinkWritingRules !== false;
+    const originalHasLink = /<a\b/i.test(params.originalAlertHtml || '');
+    const shouldIncludeLinkWritingRules =
+      params.includeLinkWritingRules !== false && originalHasLink;
     const linkRules = shouldIncludeLinkWritingRules
       ? await getLinkWritingRules({
           hasTooManyLinksIssue,
         })
       : [];
+    const rules = await getAlertRewriteRules();
     const styleRules = [
-      '1 sentence preferred, 2 max if needed.',
-      'Every alert must have a short, descriptive heading.',
-      'Start with what happened, then what to do.',
-      'Use plain language, active voice, and no blame.',
-      'Include a next step when available.',
-      'Do not introduce new hyperlinks; only keep, rename, or remove links that already exist in the original alert HTML.',
-      'Never output placeholder markers like [LINK] or [END LINK]; always use real HTML anchors such as <a href="...">...</a>.',
+      ...rules.alertRewrite.styleRulesBase,
       ...linkRules,
-      'Keep concise for UI alerts.',
-      'Return full updated alert wrapper HTML in rewrittenAlertHtml (for example: <div class="alert alert-info">...</div>).',
-      'Never copy example wording directly. Keep wording specific to the input alert.',
+      ...(params.examples.length ? rules.alertRewrite.styleRulesWithExamples : []),
     ];
     if (params.retryInstruction) {
       styleRules.push(params.retryInstruction);
     }
-
-    const examplesBlock = params.examples.map((example, index) => {
-      const linksBefore = this.linkListToString(example.linksBefore);
-      const linksAfter = this.linkListToString(example.linksAfter);
-      const linkEdits = this.linkEditsToString(example.linkEdits);
-      return [
-        `Example ${index + 1} (${example.id})`,
-        example.headingBefore ? `Heading before: ${example.headingBefore}` : '',
-        example.headingAfter ? `Heading after: ${example.headingAfter}` : '',
-        `Before: ${example.before}`,
-        `After: ${example.after}`,
-        linksBefore ? `Links before: ${linksBefore}` : '',
-        linksAfter ? `Links after: ${linksAfter}` : '',
-        linkEdits ? `Link edits: ${linkEdits}` : '',
-      ].join('\n');
-    });
+    const includeBeforeText = params.includeBeforeTextInExamples === true;
 
     const planPayload =
       params.mode === AlertRewriteMode.AB
@@ -303,32 +297,31 @@ export class AlertRewriteService {
             directives: [],
           };
 
-    const systemPrompt = [
-      'You are Prompt B for rewriting UI alerts.',
-      'Use examples as pattern guidance, not copy/paste text.',
-      'Keep the alert wrapper and classes valid.',
-      'Do not return any sentence copied from the examples.',
-      'Return JSON only. No extra text.',
-      'Output schema:',
-      '{"rewrittenAlertHtml":"string","rewrittenHeading":"string","rewrittenAlert":"string","appliedDirectives":["..."],"exampleIdsUsed":["ex-001"]}',
-    ].join('\n');
+    const systemPrompt = (
+      params.examples.length
+        ? rules.alertRewrite.systemPromptWithExamplesLines
+        : rules.alertRewrite.systemPromptWithoutExamplesLines
+    ).join('\n');
 
     const userPayload = {
       mode: params.mode,
       styleRules,
       examples: params.examples.map((example) => ({
         id: example.id,
-        headingBefore: example.headingBefore || '',
+        ...(includeBeforeText
+          ? {
+              headingBefore: example.headingBefore || '',
+              before: example.before,
+              linksBefore: example.linksBefore || [],
+            }
+          : {}),
         headingAfter: example.headingAfter || '',
-        before: example.before,
         after: example.after,
         criteria: example.criteria,
         tags: example.tags,
-        linksBefore: example.linksBefore || [],
         linksAfter: example.linksAfter || [],
         linkEdits: example.linkEdits || [],
       })),
-      examplesText: examplesBlock.join('\n\n'),
       plan: planPayload,
       originalHeading: (params.originalHeading || '').trim(),
       originalAlertText: (params.originalAlertText || '').trim(),
@@ -341,7 +334,7 @@ export class AlertRewriteService {
     ];
   }
 
-  parseRewriteResponse(
+  parseAlertRewriteResponse(
     text: string,
     plan: AlertRewritePlan,
     selectedExamples: AlertRewriteExample[],
@@ -601,6 +594,44 @@ export class AlertRewriteService {
     return typeof value === 'string' ? value.trim() : '';
   }
 
+  private shouldIncludePlanningDescriptionSnippet(category: string): boolean {
+    const lower = (category || '').toLowerCase();
+    if (!lower) return false;
+    return (
+      lower.includes('misuse') ||
+      lower.includes('wrong component') ||
+      lower.includes('wrong type') ||
+      lower.includes('wrong placement') ||
+      lower.includes('low relevance') ||
+      lower.includes('focus order') ||
+      lower.includes('sensory') ||
+      lower.includes('content clarity') ||
+      lower.includes('non-text') ||
+      lower.includes('accessibility/code') ||
+      lower.includes('outdated') ||
+      lower.includes('incorrect hierarchy')
+    );
+  }
+
+  private toDescriptionSnippet(value: string, maxLength: number): string {
+    const normalized = this.cleanString(value).replace(/\s+/g, ' ');
+    if (!normalized) return '';
+    if (normalized.length <= maxLength) return normalized;
+
+    const truncated = normalized.slice(0, maxLength);
+    const boundary = Math.max(
+      truncated.lastIndexOf('. '),
+      truncated.lastIndexOf('; '),
+      truncated.lastIndexOf(', '),
+      truncated.lastIndexOf(' '),
+    );
+    const clipped =
+      boundary > Math.floor(maxLength * 0.6)
+        ? truncated.slice(0, boundary).trim()
+        : truncated.trim();
+    return `${clipped}...`;
+  }
+
   private normalizeComparisonText(value: string): string {
     return (value || '')
       .toLowerCase()
@@ -717,28 +748,4 @@ export class AlertRewriteService {
     return edits;
   }
 
-  private linkListToString(links: AlertRewriteExampleLink[] | undefined): string {
-    if (!links?.length) return '';
-    return links
-      .map((link) =>
-        link.href
-          ? `${link.id}: "${link.text}" (${link.href})`
-          : `${link.id}: "${link.text}"`,
-      )
-      .join('; ');
-  }
-
-  private linkEditsToString(
-    edits: AlertRewriteExampleLinkEdit[] | undefined,
-  ): string {
-    if (!edits?.length) return '';
-    return edits
-      .map((edit) => {
-        const before = edit.beforeText ? ` before="${edit.beforeText}"` : '';
-        const after = edit.afterText ? ` after="${edit.afterText}"` : '';
-        const note = edit.note ? ` note="${edit.note}"` : '';
-        return `${edit.id}:${edit.action}${before}${after}${note}`;
-      })
-      .join('; ');
-  }
 }

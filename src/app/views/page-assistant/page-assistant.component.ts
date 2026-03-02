@@ -39,6 +39,7 @@ import { ShadowDomService } from './services/shadowdom.service';
 import { AlertAiService } from './services/alert-ai.service';
 import {
   AlertRewriteService,
+  AlertRewriteExample,
   AlertRewriteIssueInput,
   AlertRewritePlan,
   AlertRewriteResult,
@@ -56,6 +57,7 @@ import {
   AlertRewriteMode,
 } from './data/data.model';
 import { getPromptTemplate } from './data/ai-prompts.constants';
+import { getAlertRewriteRules } from '../../common/constants/alert-rewrite-rules.constants';
 
 //Components
 import { AiOptionsComponent } from './components/ai-options.component';
@@ -523,7 +525,7 @@ export class PageAssistantCompareComponent
     this.selectedPromptKey = key;
   }
 
-  selectedAlertRewriteMode: AlertRewriteMode = AlertRewriteMode.AB;
+  selectedAlertRewriteMode: AlertRewriteMode = AlertRewriteMode.GoodResultsOnly;
   onAlertRewriteModeChange(): void {
     this.selectedAlertRewriteMode = this.uploadState.getAlertRewriteMode();
   }
@@ -586,6 +588,200 @@ export class PageAssistantCompareComponent
 
   private containsLinkPlaceholderSyntax(value: string): boolean {
     return /\[(?:\/?\s*LINK|END\s+LINK)\]/i.test(value || '');
+  }
+
+  private shouldForceLocalRepairForTesting(): boolean {
+    try {
+      return localStorage.getItem('pageAssistant.forceLocalRepair') === 'true';
+    } catch {
+      return false;
+    }
+  }
+
+  private tryLocalAlertRewriteRepair(params: {
+    result: AlertRewriteResult;
+    originalAlertHtml: string;
+    originalHeading?: string;
+    originalAlertText: string;
+    plan: AlertRewritePlan;
+    selectedExamples: AlertRewriteExample[];
+    allowLinkRemoval: boolean;
+  }): AlertRewriteResult | null {
+    const originalHasAnchor = /<a\b/i.test(params.originalAlertHtml);
+
+    const initialCandidate = this.alertRewrite.parseAlertRewriteResponse(
+      JSON.stringify({
+        rewrittenAlertHtml: this.stripLinkPlaceholders(
+          params.result.rewrittenAlertHtml || '',
+        ),
+        rewrittenHeading: this.stripLinkPlaceholders(
+          params.result.rewrittenHeading || '',
+        ),
+        rewrittenAlert: this.stripLinkPlaceholders(params.result.rewrittenAlert || ''),
+        appliedDirectives: params.result.appliedDirectives,
+        exampleIdsUsed: params.result.exampleIdsUsed,
+      }),
+      params.plan,
+      params.selectedExamples,
+    );
+
+    const wrapperFallbackHtml =
+      this.buildAlertWrapperFromOriginal({
+        originalAlertHtml: params.originalAlertHtml,
+        heading:
+          this.stripLinkPlaceholders(params.result.rewrittenHeading || '') ||
+          params.originalHeading ||
+          '',
+        text:
+          this.stripLinkPlaceholders(params.result.rewrittenAlert || '') ||
+          params.originalAlertText,
+      }) || '';
+
+    let candidate = initialCandidate;
+    if (!candidate?.rewrittenAlertHtml && wrapperFallbackHtml) {
+      candidate = this.alertRewrite.parseAlertRewriteResponse(
+        JSON.stringify({
+          rewrittenAlertHtml: wrapperFallbackHtml,
+          rewrittenHeading:
+            this.stripLinkPlaceholders(params.result.rewrittenHeading || '') ||
+            params.originalHeading ||
+            '',
+          rewrittenAlert:
+            this.stripLinkPlaceholders(params.result.rewrittenAlert || '') ||
+            params.originalAlertText,
+          appliedDirectives: params.result.appliedDirectives,
+          exampleIdsUsed: params.result.exampleIdsUsed,
+        }),
+        params.plan,
+        params.selectedExamples,
+      );
+    }
+
+    if (!candidate?.rewrittenAlertHtml) return null;
+
+    let repairedHtml = candidate.rewrittenAlertHtml;
+    if (!originalHasAnchor) {
+      repairedHtml = this.removeAnchorsPreservingText(repairedHtml);
+    } else if (!params.allowLinkRemoval && !/<a\b/i.test(repairedHtml)) {
+      repairedHtml = this.ensureAtLeastOneOriginalLink(
+        repairedHtml,
+        params.originalAlertHtml,
+      );
+    }
+
+    const repaired = this.alertRewrite.parseAlertRewriteResponse(
+      JSON.stringify({
+        rewrittenAlertHtml: repairedHtml,
+        rewrittenHeading: candidate.rewrittenHeading,
+        rewrittenAlert: candidate.rewrittenAlert,
+        appliedDirectives: candidate.appliedDirectives,
+        exampleIdsUsed: candidate.exampleIdsUsed,
+      }),
+      params.plan,
+      params.selectedExamples,
+    );
+    if (!repaired?.rewrittenAlertHtml) return null;
+
+    if (
+      this.containsLinkPlaceholderSyntax(repaired.rewrittenAlertHtml) ||
+      this.containsLinkPlaceholderSyntax(repaired.rewrittenAlert)
+    ) {
+      return null;
+    }
+
+    const repairedHasAnchor = /<a\b/i.test(repaired.rewrittenAlertHtml);
+    if (!originalHasAnchor && repairedHasAnchor) return null;
+    if (originalHasAnchor && !repairedHasAnchor && !params.allowLinkRemoval) {
+      return null;
+    }
+
+    const copyCheck = this.alertRewrite.detectExampleCopy({
+      result: repaired,
+      selectedExamples: params.selectedExamples,
+      originalHeading: params.originalHeading,
+      originalAlertText: params.originalAlertText,
+    });
+    if (copyCheck.isCopy) return null;
+
+    return repaired;
+  }
+
+  private stripLinkPlaceholders(value: string): string {
+    return (value || '').replace(/\[(?:\/?\s*LINK|END\s+LINK)\]/gi, '').trim();
+  }
+
+  private removeAnchorsPreservingText(alertHtml: string): string {
+    try {
+      const doc = new DOMParser().parseFromString(alertHtml, 'text/html');
+      const root = doc.body.firstElementChild as HTMLElement | null;
+      if (!root) return alertHtml;
+      root.querySelectorAll('a').forEach((anchor) => {
+        const textNode = doc.createTextNode(anchor.textContent || '');
+        anchor.replaceWith(textNode);
+      });
+      return root.outerHTML.trim();
+    } catch {
+      return alertHtml;
+    }
+  }
+
+  private ensureAtLeastOneOriginalLink(
+    rewrittenHtml: string,
+    originalAlertHtml: string,
+  ): string {
+    try {
+      const sourceDoc = new DOMParser().parseFromString(originalAlertHtml, 'text/html');
+      const sourceAnchor = sourceDoc.body.querySelector('a');
+      if (!sourceAnchor) return rewrittenHtml;
+
+      const rewrittenDoc = new DOMParser().parseFromString(rewrittenHtml, 'text/html');
+      const root = rewrittenDoc.body.firstElementChild as HTMLElement | null;
+      if (!root) return rewrittenHtml;
+      if (root.querySelector('a')) return root.outerHTML.trim();
+
+      const target = (root.querySelector('p, li, div, span') || root) as HTMLElement;
+      target.insertAdjacentHTML('beforeend', ` ${sourceAnchor.outerHTML}`);
+      return root.outerHTML.trim();
+    } catch {
+      return rewrittenHtml;
+    }
+  }
+
+  private buildAlertWrapperFromOriginal(params: {
+    originalAlertHtml: string;
+    heading: string;
+    text: string;
+  }): string | null {
+    try {
+      const sourceDoc = new DOMParser().parseFromString(
+        params.originalAlertHtml,
+        'text/html',
+      );
+      const sourceRoot = sourceDoc.body.firstElementChild as HTMLElement | null;
+
+      const doc = document.implementation.createHTMLDocument('');
+      const wrapperTag = sourceRoot?.tagName?.toLowerCase() || 'div';
+      const wrapper = doc.createElement(wrapperTag);
+      wrapper.setAttribute('class', sourceRoot?.getAttribute('class') || 'alert alert-info');
+
+      const headingText = (params.heading || '').trim();
+      if (headingText) {
+        const headingEl = doc.createElement('h3');
+        headingEl.textContent = headingText;
+        wrapper.appendChild(headingEl);
+      }
+
+      const bodyText = (params.text || '').trim();
+      if (bodyText) {
+        const bodyEl = doc.createElement('p');
+        bodyEl.textContent = bodyText;
+        wrapper.appendChild(bodyEl);
+      }
+
+      return wrapper.outerHTML.trim();
+    } catch {
+      return null;
+    }
   }
 
   private shouldAllowAlertLinkRemoval(
@@ -720,10 +916,13 @@ export class PageAssistantCompareComponent
   ): Promise<void> {
     const start = performance.now();
     const mode = this.selectedAlertRewriteMode;
-    this.statusMessage =
-      mode === AlertRewriteMode.AB
-        ? 'Generating alert rewrites (A->B mode).'
-        : 'Generating alert rewrites (good-results-only mode).';
+    const includeExamples = this.uploadState.getIncludeAlertRewriteExamples();
+    const includeBeforeTextInExamples =
+      includeExamples &&
+      this.uploadState.getIncludeBeforeTextInAlertRewriteExamples();
+    const rewriteRules = await getAlertRewriteRules();
+    const retryInstructions = rewriteRules.alertRewrite.retryInstructions;
+    this.statusMessage = `Generating alert rewrites (${mode === AlertRewriteMode.AB ? 'planning on' : 'planning off'}, ${includeExamples ? 'good examples on' : 'good examples off'}, ${includeBeforeTextInExamples ? 'before text on' : 'before text off'}).`;
 
     const alertDoc = new DOMParser().parseFromString(html, 'text/html');
     const alertEls = Array.from(alertDoc.querySelectorAll('.alert'));
@@ -731,7 +930,7 @@ export class PageAssistantCompareComponent
       throw new Error('No .alert elements found in the page.');
     }
 
-    const examples = await this.alertRewrite.loadExamples();
+    const examples = includeExamples ? await this.alertRewrite.loadExamples() : [];
     const rewrites: Array<{
       alert_index: number;
       rewritten_alert_html: string;
@@ -758,43 +957,54 @@ export class PageAssistantCompareComponent
       let planModelName = 'heuristic';
 
       if (mode === AlertRewriteMode.AB) {
-        const planResponse = await this.callOpenRouterForMessages(
+        const alertPlanningMessages =
+          await this.alertRewrite.buildAlertPlanningMessages({
+          alertHtml,
+          alertText,
+          alertType: initialPlan.alertType,
+          issues: relevantIssues,
+        });
+        const alertPlanningResponse = await this.callOpenRouterForMessages(
           model,
           headers,
           url,
-          this.alertRewrite.buildPromptAMessages({
-            alertHtml,
-            alertText,
-            alertType: initialPlan.alertType,
-            issues: relevantIssues,
-          }),
-          `Alert ${alertIndex} Prompt A`,
+          alertPlanningMessages,
+          `Alert ${alertIndex} alertPlanning`,
         );
-        const parsedPlan = this.alertRewrite.parsePlanResponse(
-          planResponse.text,
+        const parsedPlan = this.alertRewrite.parseAlertPlanningResponse(
+          alertPlanningResponse.text,
           initialPlan,
         );
         if (parsedPlan) {
           plan = parsedPlan;
         }
-        planModelName = this.getShortModelName(planResponse.usedModel);
+        planModelName = this.getShortModelName(alertPlanningResponse.usedModel);
       }
 
-      const selectedExamples = this.alertRewrite.selectExamples(plan, examples, 4);
+      const selectedExamples = includeExamples
+        ? this.alertRewrite.selectExamples(plan, examples, 2)
+        : [];
       let rewriteResult: AlertRewriteResult | null = null;
       let rewriteModelName = 'unknown';
       let copyGuardTriggered = false;
       let blockedExampleId: string | null = null;
+      let lastParsedResult: AlertRewriteResult | null = null;
+      const originalHasAnchor = /<a\b/i.test(alertHtml);
+      const allowLinkRemoval = this.shouldAllowAlertLinkRemoval(
+        relevantIssues,
+        plan,
+      );
 
       let retryInstruction: string | undefined;
-      for (let attempt = 0; attempt < 3; attempt += 1) {
-        const promptBMessages = await this.alertRewrite.buildPromptBMessages({
+      for (let attempt = 0; attempt < 2; attempt += 1) {
+        const alertRewriteMessages = await this.alertRewrite.buildAlertRewriteMessages({
           mode,
           originalHeading,
           originalAlertText: alertText,
           originalAlertHtml: alertHtml,
           plan,
           examples: selectedExamples,
+          includeBeforeTextInExamples,
           includeLinkWritingRules: this.uploadState.getIncludeLinkWritingRules(),
           retryInstruction,
         });
@@ -802,44 +1012,36 @@ export class PageAssistantCompareComponent
           model,
           headers,
           url,
-          promptBMessages,
-          `Alert ${alertIndex} Prompt B`,
+          alertRewriteMessages,
+          `Alert ${alertIndex} alertRewrite`,
         );
         rewriteModelName = this.getShortModelName(rewriteResponse.usedModel);
-        const parsedResult = this.alertRewrite.parseRewriteResponse(
+        const parsedResult = this.alertRewrite.parseAlertRewriteResponse(
           rewriteResponse.text,
           plan,
           selectedExamples,
         );
         if (!parsedResult?.rewrittenAlertHtml) {
-          retryInstruction =
-            'Return valid rewrittenAlertHtml as a full .alert wrapper element.';
+          retryInstruction = retryInstructions.invalidWrapperHtml;
           continue;
         }
+        lastParsedResult = parsedResult;
 
         const hasLinkPlaceholders =
           this.containsLinkPlaceholderSyntax(parsedResult.rewrittenAlertHtml) ||
           this.containsLinkPlaceholderSyntax(parsedResult.rewrittenAlert);
         if (hasLinkPlaceholders) {
-          retryInstruction =
-            'Do not output [LINK] or [END LINK]. Use real HTML anchors (<a href="...">text</a>) in rewrittenAlertHtml.';
+          retryInstruction = retryInstructions.placeholderLinks;
           continue;
         }
 
-        const originalHasAnchor = /<a\b/i.test(alertHtml);
         const rewrittenHasAnchor = /<a\b/i.test(parsedResult.rewrittenAlertHtml);
         if (!originalHasAnchor && rewrittenHasAnchor) {
-          retryInstruction =
-            'The original alert has no links. Do not add hyperlinks. Return rewrittenAlertHtml without any <a> tags.';
+          retryInstruction = retryInstructions.noLinksAllowed;
           continue;
         }
-        const allowLinkRemoval = this.shouldAllowAlertLinkRemoval(
-          relevantIssues,
-          plan,
-        );
         if (originalHasAnchor && !rewrittenHasAnchor && !allowLinkRemoval) {
-          retryInstruction =
-            'The original alert has a link. Keep at least one real hyperlink in rewrittenAlertHtml unless there is a too-many-links issue.';
+          retryInstruction = retryInstructions.mustKeepLink;
           continue;
         }
 
@@ -850,20 +1052,35 @@ export class PageAssistantCompareComponent
           originalAlertText: alertText,
         });
         if (!copyCheck.isCopy) {
+          if (this.shouldForceLocalRepairForTesting()) {
+            console.warn('Forcing local repair for testing', { alertIndex });
+            break;
+          }
           rewriteResult = parsedResult;
           break;
         }
 
         copyGuardTriggered = true;
         blockedExampleId = copyCheck.exampleId || null;
-        retryInstruction =
-          'Your previous output matched example wording. Rewrite using alert-specific wording and facts only.';
+        retryInstruction = retryInstructions.avoidExampleCopy;
         console.warn('Alert rewrite copy guard triggered', {
           alertIndex,
           attempt: attempt + 1,
           reason: copyCheck.reason,
           exampleId: copyCheck.exampleId,
           similarity: copyCheck.similarity,
+        });
+      }
+
+      if (!rewriteResult && lastParsedResult) {
+        rewriteResult = this.tryLocalAlertRewriteRepair({
+          result: lastParsedResult,
+          originalAlertHtml: alertHtml,
+          originalHeading,
+          originalAlertText: alertText,
+          plan,
+          selectedExamples,
+          allowLinkRemoval,
         });
       }
 

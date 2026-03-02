@@ -12,6 +12,10 @@ export class UploadStateService {
   private readonly aiModelKey = 'pageAssistant.aiModel';
   private readonly editPromptKey = 'pageAssistant.editPrompt';
   private readonly alertRewriteModeKey = 'pageAssistant.alertRewriteMode';
+  private readonly includeAlertRewriteExamplesKey =
+    'pageAssistant.includeAlertRewriteExamples';
+  private readonly includeBeforeTextInAlertRewriteExamplesKey =
+    'pageAssistant.includeBeforeTextInAlertRewriteExamples';
   private readonly includeLinkWritingRulesKey =
     'pageAssistant.includeLinkWritingRules';
   private readonly useJsonAlertsIssuesPromptKey =
@@ -42,11 +46,36 @@ export class UploadStateService {
   }
 
   //Alert rewrite mode (A->B vs good-results-only)
-  private selectedAlertRewriteMode = signal<AlertRewriteMode>(AlertRewriteMode.AB);
+  private selectedAlertRewriteMode = signal<AlertRewriteMode>(
+    AlertRewriteMode.GoodResultsOnly,
+  );
   getAlertRewriteMode = computed(() => this.selectedAlertRewriteMode());
   setAlertRewriteMode(mode: AlertRewriteMode) {
     this.selectedAlertRewriteMode.set(mode);
     this.storage.saveData(this.alertRewriteModeKey, mode);
+  }
+
+  //Alert rewrite examples toggle
+  private includeAlertRewriteExamples = signal<boolean>(false);
+  getIncludeAlertRewriteExamples = computed(() =>
+    this.includeAlertRewriteExamples(),
+  );
+  setIncludeAlertRewriteExamples(include: boolean) {
+    this.includeAlertRewriteExamples.set(!!include);
+    this.storage.saveData(this.includeAlertRewriteExamplesKey, String(!!include));
+  }
+
+  //Alert rewrite "before" text in examples toggle
+  private includeBeforeTextInAlertRewriteExamples = signal<boolean>(false);
+  getIncludeBeforeTextInAlertRewriteExamples = computed(() =>
+    this.includeBeforeTextInAlertRewriteExamples(),
+  );
+  setIncludeBeforeTextInAlertRewriteExamples(include: boolean) {
+    this.includeBeforeTextInAlertRewriteExamples.set(!!include);
+    this.storage.saveData(
+      this.includeBeforeTextInAlertRewriteExamplesKey,
+      String(!!include),
+    );
   }
 
   //Alert rewrite link writing rules toggle
@@ -79,6 +108,8 @@ export class UploadStateService {
       this.storage.removeData(this.uploadTypeKey);
       this.storage.removeData(this.aiModelKey);
       this.storage.removeData(this.uploadDataKey);
+      this.storage.removeData(this.includeAlertRewriteExamplesKey);
+      this.storage.removeData(this.includeBeforeTextInAlertRewriteExamplesKey);
       this.storage.removeData(this.includeLinkWritingRulesKey);
       this.storage.removeData(this.useJsonAlertsIssuesPromptKey);
       return;
@@ -154,7 +185,9 @@ export class UploadStateService {
     this.selectedUploadType.set('url'); // default to URL
     this.selectedAiModel.set(AiModel.Nemotron);
     this.editPromptText.set('');
-    this.selectedAlertRewriteMode.set(AlertRewriteMode.AB);
+    this.selectedAlertRewriteMode.set(AlertRewriteMode.GoodResultsOnly);
+    this.includeAlertRewriteExamples.set(false);
+    this.includeBeforeTextInAlertRewriteExamples.set(false);
     this.includeLinkWritingRules.set(true);
     this.useJsonAlertsIssuesPrompt.set(false);
     this.uploadData.set(null);
@@ -163,6 +196,8 @@ export class UploadStateService {
     this.storage.removeData(this.aiModelKey);
     this.storage.removeData(this.editPromptKey);
     this.storage.removeData(this.alertRewriteModeKey);
+    this.storage.removeData(this.includeAlertRewriteExamplesKey);
+    this.storage.removeData(this.includeBeforeTextInAlertRewriteExamplesKey);
     this.storage.removeData(this.includeLinkWritingRulesKey);
     this.storage.removeData(this.useJsonAlertsIssuesPromptKey);
     this.storage.removeData(this.uploadDataKey);
@@ -205,6 +240,30 @@ export class UploadStateService {
       )
     ) {
       this.selectedAlertRewriteMode.set(storedAlertRewriteMode as AlertRewriteMode);
+    }
+
+    const storedIncludeAlertRewriteExamples = this.storage.getData(
+      this.includeAlertRewriteExamplesKey,
+    );
+    if (
+      storedIncludeAlertRewriteExamples === 'true' ||
+      storedIncludeAlertRewriteExamples === 'false'
+    ) {
+      this.includeAlertRewriteExamples.set(
+        storedIncludeAlertRewriteExamples === 'true',
+      );
+    }
+
+    const storedIncludeBeforeTextInExamples = this.storage.getData(
+      this.includeBeforeTextInAlertRewriteExamplesKey,
+    );
+    if (
+      storedIncludeBeforeTextInExamples === 'true' ||
+      storedIncludeBeforeTextInExamples === 'false'
+    ) {
+      this.includeBeforeTextInAlertRewriteExamples.set(
+        storedIncludeBeforeTextInExamples === 'true',
+      );
     }
 
     const storedIncludeLinkRules = this.storage.getData(
