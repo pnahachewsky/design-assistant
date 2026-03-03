@@ -38561,6 +38561,7 @@ var UploadStateService = class _UploadStateService {
   includeBeforeTextInAlertRewriteExamplesKey = "pageAssistant.includeBeforeTextInAlertRewriteExamples";
   includeLinkWritingRulesKey = "pageAssistant.includeLinkWritingRules";
   useJsonAlertsIssuesPromptKey = "pageAssistant.useJsonAlertsIssuesPrompt";
+  useCompactAlertsPageContextKey = "pageAssistant.useCompactAlertsPageContext";
   //Upload type
   selectedUploadType = signal("url");
   getSelectedUploadType = computed(() => this.selectedUploadType());
@@ -38617,6 +38618,13 @@ var UploadStateService = class _UploadStateService {
     this.useJsonAlertsIssuesPrompt.set(!!useJson);
     this.storage.saveData(this.useJsonAlertsIssuesPromptKey, String(!!useJson));
   }
+  //Alerts issues compact page context toggle
+  useCompactAlertsPageContext = signal(false);
+  getUseCompactAlertsPageContext = computed(() => this.useCompactAlertsPageContext());
+  setUseCompactAlertsPageContext(useCompact) {
+    this.useCompactAlertsPageContext.set(!!useCompact);
+    this.storage.saveData(this.useCompactAlertsPageContextKey, String(!!useCompact));
+  }
   //Upload data
   uploadData = signal(null);
   originalUploadData = null;
@@ -38635,6 +38643,7 @@ var UploadStateService = class _UploadStateService {
       this.storage.removeData(this.includeBeforeTextInAlertRewriteExamplesKey);
       this.storage.removeData(this.includeLinkWritingRulesKey);
       this.storage.removeData(this.useJsonAlertsIssuesPromptKey);
+      this.storage.removeData(this.useCompactAlertsPageContextKey);
       return;
     }
     this.restoreState();
@@ -38700,6 +38709,7 @@ var UploadStateService = class _UploadStateService {
     this.includeBeforeTextInAlertRewriteExamples.set(false);
     this.includeLinkWritingRules.set(true);
     this.useJsonAlertsIssuesPrompt.set(false);
+    this.useCompactAlertsPageContext.set(false);
     this.uploadData.set(null);
     this.prevUploadData = [];
     this.storage.removeData(this.uploadTypeKey);
@@ -38710,6 +38720,7 @@ var UploadStateService = class _UploadStateService {
     this.storage.removeData(this.includeBeforeTextInAlertRewriteExamplesKey);
     this.storage.removeData(this.includeLinkWritingRulesKey);
     this.storage.removeData(this.useJsonAlertsIssuesPromptKey);
+    this.storage.removeData(this.useCompactAlertsPageContextKey);
     this.storage.removeData(this.uploadDataKey);
   }
   persistUploadData() {
@@ -38756,6 +38767,10 @@ var UploadStateService = class _UploadStateService {
     const storedUseJsonAlertsIssuesPrompt = this.storage.getData(this.useJsonAlertsIssuesPromptKey);
     if (storedUseJsonAlertsIssuesPrompt === "true" || storedUseJsonAlertsIssuesPrompt === "false") {
       this.useJsonAlertsIssuesPrompt.set(storedUseJsonAlertsIssuesPrompt === "true");
+    }
+    const storedUseCompactAlertsPageContext = this.storage.getData(this.useCompactAlertsPageContextKey);
+    if (storedUseCompactAlertsPageContext === "true" || storedUseCompactAlertsPageContext === "false") {
+      this.useCompactAlertsPageContext.set(storedUseCompactAlertsPageContext === "true");
     }
     const storedData = this.storage.getData(this.uploadDataKey);
     if (!storedData)
@@ -100405,4 +100420,4 @@ export {
    * License: MIT
    *)
 */
-//# sourceMappingURL=chunk-GM6WIDTD.js.map
+//# sourceMappingURL=chunk-RU6DUDPD.js.map
