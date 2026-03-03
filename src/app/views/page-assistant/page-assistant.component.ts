@@ -557,6 +557,141 @@ export class PageAssistantCompareComponent
       : promptBody; //Note: a heading can be added to the custom instructions here, something like ${base}\n\nPrioritize the following:\n${custom}
   }
 
+  private truncateContextText(value: string | null | undefined, maxChars: number): string {
+    const normalized = (value || '').replace(/\s+/g, ' ').trim();
+    if (!normalized) return '';
+    return normalized.length > maxChars
+      ? normalized.slice(0, maxChars).trim()
+      : normalized;
+  }
+
+  private collectSiblingTextSnippet(
+    alertEl: Element,
+    direction: 'before' | 'after',
+    maxChars: number,
+  ): string {
+    const collected: string[] = [];
+    let node =
+      direction === 'before'
+        ? alertEl.previousElementSibling
+        : alertEl.nextElementSibling;
+    let hops = 0;
+
+    while (node && hops < 4) {
+      const lowerTag = node.tagName.toLowerCase();
+      if (
+        lowerTag !== 'script' &&
+        lowerTag !== 'style' &&
+        !node.classList.contains('alert')
+      ) {
+        const text = this.truncateContextText(node.textContent || '', maxChars);
+        if (text) {
+          if (direction === 'before') {
+            collected.unshift(text);
+          } else {
+            collected.push(text);
+          }
+          const joined = this.truncateContextText(collected.join(' '), maxChars);
+          if (joined.length >= maxChars) {
+            return joined;
+          }
+        }
+      }
+      node =
+        direction === 'before'
+          ? node.previousElementSibling
+          : node.nextElementSibling;
+      hops += 1;
+    }
+
+    return this.truncateContextText(collected.join(' '), maxChars);
+  }
+
+  private inferPageTypeSignal(title: string, h1: string): string {
+    const context = `${title} ${h1}`.toLowerCase();
+    if (!context.trim()) return 'content';
+    if (/\b(home|welcome|overview|what'?s new|landing)\b/.test(context)) {
+      return 'landing';
+    }
+    if (/\b(apply|submit|file|register|sign in|log in|payment|pay|request)\b/.test(context)) {
+      return 'task';
+    }
+    return 'content';
+  }
+
+  private buildCompactAlertsIssuesPayload(sourceHtml: string): Record<string, unknown> {
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(sourceHtml, 'text/html');
+    const alerts = Array.from(doc.querySelectorAll('.alert'));
+    const main = (doc.querySelector('main') as HTMLElement | null) || doc.body;
+    const h2Elements = Array.from(main.querySelectorAll('h2'));
+    const h2Headings = h2Elements
+      .map((h2) => this.truncateContextText(h2.textContent || '', 120))
+      .filter((value) => !!value)
+      .slice(0, 20);
+
+    const mainElements = Array.from(main.querySelectorAll('*'));
+    const mainIndexMap = new Map<Element, number>(
+      mainElements.map((el, idx) => [el, idx]),
+    );
+    const h2IndexPairs = h2Elements
+      .map((h2) => ({ text: this.truncateContextText(h2.textContent || '', 120), idx: mainIndexMap.get(h2) }))
+      .filter((item) => Number.isFinite(item.idx)) as { text: string; idx: number }[];
+    const firstH2Index = h2IndexPairs.length ? h2IndexPairs[0].idx : -1;
+
+    const title = this.truncateContextText(doc.querySelector('title')?.textContent || '', 120);
+    const h1 = this.truncateContextText(main.querySelector('h1')?.textContent || '', 120);
+    const introSnippet = this.truncateContextText(
+      main.querySelector('p')?.textContent || '',
+      280,
+    );
+
+    const alertPlacementContext = alerts.map((alertEl, index) => {
+      const mainIndex = mainIndexMap.get(alertEl);
+      const positionPercentInMain =
+        typeof mainIndex === 'number' && mainElements.length > 1
+          ? Math.round((mainIndex / (mainElements.length - 1)) * 100)
+          : null;
+
+      const beforeCandidates = h2IndexPairs.filter(
+        (item) => typeof mainIndex === 'number' && item.idx < mainIndex,
+      );
+      const afterCandidates = h2IndexPairs.filter(
+        (item) => typeof mainIndex === 'number' && item.idx > mainIndex,
+      );
+      const nearestH2Above = beforeCandidates.length
+        ? beforeCandidates[beforeCandidates.length - 1].text
+        : '';
+      const nearestH2Below = afterCandidates.length ? afterCandidates[0].text : '';
+
+      return {
+        alert_index: index + 1,
+        is_before_first_h2:
+          typeof mainIndex === 'number' && firstH2Index >= 0
+            ? mainIndex < firstH2Index
+            : false,
+        position_percent_in_main: positionPercentInMain,
+        nearest_h2_above: nearestH2Above,
+        nearest_h2_below: nearestH2Below,
+        section_snippet_before: this.collectSiblingTextSnippet(alertEl, 'before', 220),
+        section_snippet_after: this.collectSiblingTextSnippet(alertEl, 'after', 220),
+      };
+    });
+
+    return {
+      alerts: alerts.map((alertEl) => alertEl.outerHTML),
+      alertCount: alerts.length,
+      pageContext: `Title: ${title || 'N/A'}\nH1: ${h1 || 'N/A'}\nPage type signal: ${this.inferPageTypeSignal(title, h1)}\nMain intro: ${introSnippet || 'N/A'}\nH2 headings (${h2Headings.length}): ${h2Headings.join(' | ') || 'N/A'}`,
+      pageSignals: {
+        title,
+        h1,
+        pageTypeSignal: this.inferPageTypeSignal(title, h1),
+        h2Headings,
+      },
+      alertPlacementContext,
+    };
+  }
+
   private getAlertTextForRewrite(alertElement: Element): string {
     const firstParagraph = alertElement.querySelector('p');
     const paragraphText = firstParagraph?.textContent?.trim() || '';
@@ -1230,12 +1365,18 @@ export class PageAssistantCompareComponent
         Authorization: `Bearer ${apiKey}`,
         'Content-Type': 'application/json',
       };
+      const useCompactAlertsPageContext =
+        promptKeyForRequest === PromptKey.AlertsIssues &&
+        this.uploadState.getUseCompactAlertsPageContext();
+      const alertsIssuesUserContent = useCompactAlertsPageContext
+        ? JSON.stringify(this.buildCompactAlertsIssuesPayload(html))
+        : html;
 
       const payload = {
         models: this.buildModelRotation(model),
         messages: [
           { role: 'system', content: prompt },
-          { role: 'user', content: html },
+          { role: 'user', content: alertsIssuesUserContent },
         ],
         temperature: 0,
         provider: {

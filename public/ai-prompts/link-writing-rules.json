@@ -4,42 +4,42 @@
     {
       "id": "L1_keep_links_default",
       "condition": "always",
-      "text": "Keep links in the content by default."
+      "text": "Keep links by default."
     },
     {
       "id": "L2_keep_url_change_text",
       "condition": "always",
-      "text": "Link text can be changed, but the URL for a kept link must remain the same."
+      "text": "Link text may be rewritten, but any kept link must keep its original URL."
     },
     {
       "id": "L3_descriptive_text",
       "condition": "always",
-      "text": "Link text must clearly describe the destination page both on its own and in sentence context."
+      "text": "Link text must clearly describe the intended destination using available context (URL path/slug, current link text, and surrounding sentence), and avoid inventing destination details not supported by that context."
     },
     {
       "id": "L4_avoid_duplicate_link_text",
       "condition": "always",
-      "text": "Avoid duplicate link wording. Do not repeat the linked phrase in surrounding sentence text or elsewhere in the alert when meaning is preserved. Keep the destination phrase inside the link only (for example: Find out: <a href=\"...\">Get an access code</a>, not Find out how to get an access code: <a href=\"...\">Get an access code</a>). Avoid the phrase \"see\" before links; use inclusive alternatives such as \"refer to\" or \"visit\". When a link is present, prefer a short lead-in (for example: Find out: or Learn more:) plus unique link text, with no repeated wording outside the anchor."
+      "text": "Avoid duplicate wording. Do not repeat the linked phrase outside the anchor when meaning is preserved. Keep the destination phrase in the link (for example: Find out: <a href=\"...\">Get an access code</a>, not Find out how to get an access code: <a href=\"...\">Get an access code</a>). Avoid using \"see\" before links; use inclusive alternatives like \"refer to\" or \"visit\". When a link is present, prefer a short plain-text lead-in (for example: \"Find out:\", \"Learn more:\", \"Learn about \") plus unique link text, with minimal repeated wording outside the anchor."
     },
     {
       "id": "L5_no_vague_anchor_text",
       "condition": "always",
-      "text": "Never use vague link text like \"click here\", \"here\", \"learn more\", or similar."
+      "text": "Never use vague anchor text (for example: \"click here\", \"here\", \"learn more\", or similar)."
     },
     {
       "id": "L6_sentence_end_preferred",
       "condition": "always",
-      "text": "If possible, place a link at the end of its sentence."
+      "text": "Prefer placing links at the end of their sentence."
     },
     {
       "id": "L7_learn_more_fallback",
       "condition": "always",
-      "text": "If a link makes up an entire sentence, move it to a new paragraph and precede it with plain text: Learn more: <a href=\"...\">Descriptive link text</a>. This format can also be used when in-sentence placement is awkward."
+      "text": "If a link is an entire sentence, move it to a new paragraph and add plain-text lead-in text: \"Learn more:\" or \"Refer to:\" <a href=\"...\">Descriptive link text</a>. Use this fallback when in-sentence placement is awkward."
     },
     {
       "id": "L8_remove_only_when_too_many",
       "condition": "too_many_links",
-      "text": "Only remove links when there is more than one link and a too-many-links issue is identified; keep one primary link."
+      "text": "Only remove links when there are multiple links and a too-many-links issue is identified; keep one primary link."
     },
     {
       "id": "L9_do_not_remove_without_issue",
@@ -49,7 +49,7 @@
     {
       "id": "L10_concise_link_text",
       "condition": "always",
-      "text": "Link text must be concise when possible. Remove information already present in the alert or page context; for example, \" - Canada.ca\" is not needed."
+      "text": "Keep link text concise when possible. Remove details already present in the alert or page context (for example, \" - Canada.ca\" is not needed)."
     }
   ]
 }
