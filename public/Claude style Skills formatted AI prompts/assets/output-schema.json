@@ -1,0 +1,27 @@
+{
+  "type": "object",
+  "properties": {
+    "issues_found": {
+      "type": "array",
+      "items": {
+         "type": "object",
+         "properties": {
+           "issue_category": {"type": "string"},
+           "description": {"type": "string"}
+         }
+      }
+    },
+    "replacements": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "alert_index": {"type": "integer"},
+          "rewritten_heading": {"type": "string"},
+          "updated_html": {"type": "string", "description": "Must be the full <section> wrapper."}
+        },
+        "required": ["alert_index", "rewritten_heading", "updated_html"]
+      }
+    }
+  }
+}
