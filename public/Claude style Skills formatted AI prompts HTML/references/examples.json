@@ -1,0 +1,18 @@
+[
+  {
+    "id": "ex-001",
+    "alertType": "info",
+    "tags": ["housing", "gst", "rebate", "legislation", "policy-update"],
+    "issues_identified": ["Too wordy", "Missing heading", "Unclear impact"],
+    "html_before": "<div class=\"alert alert-info\">\n  <p>This webpage has been updated to include details about the First-time home buyers' GST rebate. Please see GST/HST new housing rebates you can claim for more information. The details provided on this rebate are based on legislative proposals, which are currently subject to parliamentary approval and may change.</p>\n</div>",
+    "html_after": "<section class=\"alert alert-info\">\n  <p class=\"h3 mrgn-tp-0\">Details provided may change</p>\n  <p>The details provided on this rebate are based on proposed legislation and may change.</p>\n</section>"
+  },
+  {
+    "id": "ex-002",
+    "alertType": "info",
+    "tags": ["tax", "slips", "filing", "cra-account", "action-required"],
+    "issues_identified": ["Missing actionable step", "Too wordy"],
+    "html_before": "<div class=\"alert alert-info\">\n  <h3>Availability of tax information</h3>\n  <p>While the CRA works to process tax slips and make them available as they are received, it is possible that your slips may not currently be available in your CRA account or through the Auto-fill my return service. If you have not yet filed your 2024 tax return and do not see a slip in your CRA account, we recommend using the slip provided by the issuer (e.g. your financial institution or employer).</p>\n</div>",
+    "html_after": "<section class=\"alert alert-info\">\n  <p class=\"h3 mrgn-tp-0\">Availability of tax information</p>\n  <p>If you do not see a tax slip in your CRA account when you are filing your 2024 tax return, use the slip provided by the issuer (for example, your financial institution or employer). TFSA information is now available in your CRA account, but it is important to keep your own records to avoid overcontributing.</p>\n</section>"
+  }
+]
