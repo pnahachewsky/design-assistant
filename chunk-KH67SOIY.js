@@ -138,7 +138,7 @@ import {
   unblockBodyScroll,
   uuid,
   zindexutils
-} from "./chunk-RU6DUDPD.js";
+} from "./chunk-LDY7LDPC.js";
 import {
   ChangeDetectionStrategy,
   ChangeDetectorRef,
@@ -221,11 +221,13 @@ import {
   ɵɵtext,
   ɵɵtextInterpolate,
   ɵɵtextInterpolate1,
+  ɵɵtextInterpolate2,
+  ɵɵtextInterpolate3,
   ɵɵtwoWayBindingSet,
   ɵɵtwoWayListener,
   ɵɵtwoWayProperty,
   ɵɵviewQuery
-} from "./chunk-7QCF5G4D.js";
+} from "./chunk-52Z2BYQO.js";
 import {
   __async,
   __commonJS,
@@ -24680,13 +24682,401 @@ var SliderModule = class _SliderModule {
   }], null, null);
 })();
 
+// src/app/views/page-assistant/data/skill-registry.ts
+var PAGE_ASSISTANT_SKILLS = [
+  {
+    id: "plain-language",
+    name: "Plain language rewrite",
+    description: "Simplify wording, shorten sentences, and keep critical meaning unchanged.",
+    triggers: [
+      "plain language",
+      "simplify",
+      "rewrite for clarity",
+      "make this easier",
+      "reduce reading level"
+    ],
+    antiTriggers: ["technical spec only", "do not rewrite", "verbatim only"],
+    priority: 2,
+    systemInstructions: "Rewrite content in clear plain language. Keep facts and legal meaning intact. Use direct verbs and short sentences.",
+    outputContract: "Return revised content only; avoid implementation commentary unless requested.",
+    outputChecklist: ["clear", "short", "direct"]
+  },
+  {
+    id: "headings",
+    name: "Heading structure cleanup",
+    description: "Improve heading hierarchy and scanability while preserving section intent.",
+    triggers: [
+      "heading",
+      "headings",
+      "h1",
+      "h2",
+      "hierarchy",
+      "outline",
+      "scanability"
+    ],
+    antiTriggers: ["links only", "url audit only"],
+    priority: 1,
+    systemInstructions: "Fix heading hierarchy and wording for scanability. Keep only one H1 and ensure nesting is logical.",
+    outputContract: "Return ordered heading suggestions with the proposed text and hierarchy level.",
+    outputChecklist: ["h1", "h2", "hierarchy"]
+  },
+  {
+    id: "alerts-rewrite",
+    name: "Alerts rewrite",
+    description: "Rewrite alert banners and related links with clear action-oriented phrasing.",
+    triggers: [
+      "alert",
+      "alerts",
+      "warning",
+      "banner",
+      "recommendation",
+      "rewrite alert",
+      "link writing rules"
+    ],
+    antiTriggers: ["headings only", "grammar only"],
+    priority: 3,
+    systemInstructions: "Rewrite alerts for clarity and action. Keep severity intent and place key action early.",
+    outputContract: "Return per-alert before/after rewrites and include link-text recommendations when needed.",
+    outputChecklist: ["before", "after", "link"]
+  }
+];
+
+// src/app/views/page-assistant/data/rubric.types.ts
+var DEFAULT_RUBRIC_WEIGHTS = {
+  trigger_match: 3,
+  false_trigger_avoidance: 3,
+  instruction_following: 2,
+  output_quality: 2,
+  safety: 2
+};
+
+// src/app/views/page-assistant/services/skill-router.service.ts
+var SkillRouterService = class _SkillRouterService {
+  activationThreshold = 2;
+  veryCloseScoreDelta = 1;
+  getSkills() {
+    return PAGE_ASSISTANT_SKILLS;
+  }
+  routeSkills(userText, maxSkills = 2) {
+    const normalizedText = this.normalize(userText);
+    const limit = Math.max(1, maxSkills);
+    const routed = PAGE_ASSISTANT_SKILLS.map((skill) => {
+      const triggerHits = this.countPhraseHits(normalizedText, skill.triggers);
+      const antiTriggerHits = this.countPhraseHits(normalizedText, skill.antiTriggers);
+      const score = triggerHits * 2 - antiTriggerHits * 3 + skill.priority;
+      return { skill, score, triggerHits, antiTriggerHits };
+    }).filter((entry) => entry.score >= this.activationThreshold).sort((a, b) => b.score - a.score);
+    if (routed.length === 0) {
+      return [];
+    }
+    if (limit === 1 || routed.length === 1) {
+      return [routed[0]];
+    }
+    const [top, second] = routed;
+    const shouldIncludeSecond = top.score - second.score <= this.veryCloseScoreDelta;
+    return shouldIncludeSecond ? [top, second] : [top];
+  }
+  buildSystemPrompt(basePrompt, userText, maxSkills = 2) {
+    const selected = this.routeSkills(userText, maxSkills);
+    const skillBlock = selected.map((entry) => `## Skill: ${entry.skill.name}
+${entry.skill.systemInstructions}
+Output contract: ${entry.skill.outputContract}`).join("\n\n");
+    return skillBlock ? `${basePrompt}
+
+${skillBlock}` : basePrompt;
+  }
+  evaluateRubric(input) {
+    const userText = input.userText ?? "";
+    const selectedSkills = input.selectedSkills ?? [];
+    const generatedOutput = input.generatedOutput ?? "";
+    const normalizedText = this.normalize(userText);
+    const normalizedOutput = this.normalize(generatedOutput);
+    const selectedIds = selectedSkills.map((skill) => skill.id);
+    const expectedIds = this.routeSkills(userText, selectedSkills.length || 2).map((entry) => entry.skill.id);
+    const expectedSet = new Set(expectedIds);
+    const selectedSet = new Set(selectedIds);
+    const overlap = selectedIds.filter((id) => expectedSet.has(id)).length;
+    const hasBlockingAntiTrigger = selectedSkills.some((skill) => this.countPhraseHits(normalizedText, skill.antiTriggers) > 0 && this.countPhraseHits(normalizedText, skill.triggers) === 0);
+    const requiredOutputTerms = selectedSkills.flatMap((skill) => skill.outputChecklist);
+    const matchedOutputTerms = requiredOutputTerms.filter((term) => normalizedOutput.includes(this.normalize(term))).length;
+    const triggerMatch = this.scoreTriggerMatch(expectedSet.size, selectedSet.size, overlap);
+    const falseTriggerAvoidance = hasBlockingAntiTrigger ? 0 : 2;
+    const instructionFollowing = this.scoreInstructionFollowing(generatedOutput, requiredOutputTerms.length, matchedOutputTerms);
+    const outputQuality = this.scoreOutputQuality(generatedOutput);
+    const safety = this.scoreSafety(normalizedOutput);
+    const dimensions = [
+      this.createDimension("trigger_match", triggerMatch),
+      this.createDimension("false_trigger_avoidance", falseTriggerAvoidance),
+      this.createDimension("instruction_following", instructionFollowing),
+      this.createDimension("output_quality", outputQuality),
+      this.createDimension("safety", safety)
+    ];
+    const total = dimensions.reduce((sum, dim) => sum + dim.weight * dim.score, 0);
+    const maxTotal = dimensions.reduce((sum, dim) => sum + dim.weight * 2, 0);
+    const ratio = maxTotal === 0 ? 0 : total / maxTotal;
+    return {
+      skillIds: selectedIds,
+      total,
+      maxTotal,
+      passed: ratio >= 0.75 && safety > 0 && falseTriggerAvoidance > 0,
+      dimensions
+    };
+  }
+  createDimension(id, score) {
+    return {
+      id,
+      score,
+      weight: DEFAULT_RUBRIC_WEIGHTS[id]
+    };
+  }
+  scoreTriggerMatch(expectedCount, selectedCount, overlapCount) {
+    if (expectedCount === 0 && selectedCount === 0) {
+      return 2;
+    }
+    if (expectedCount > 0 && selectedCount === expectedCount && overlapCount === expectedCount) {
+      return 2;
+    }
+    if (overlapCount > 0) {
+      return 1;
+    }
+    return 0;
+  }
+  scoreInstructionFollowing(output, requiredCount, matchedCount) {
+    if (!output.trim()) {
+      return 1;
+    }
+    if (requiredCount === 0) {
+      return 2;
+    }
+    if (matchedCount >= requiredCount) {
+      return 2;
+    }
+    if (matchedCount > 0) {
+      return 1;
+    }
+    return 0;
+  }
+  scoreOutputQuality(output) {
+    const trimmed = output.trim();
+    if (!trimmed) {
+      return 1;
+    }
+    if (trimmed.length >= 160 && /[.!?]/.test(trimmed)) {
+      return 2;
+    }
+    return 1;
+  }
+  scoreSafety(normalizedOutput) {
+    if (!normalizedOutput) {
+      return 2;
+    }
+    const unsafePatterns = [
+      "ignore previous instructions",
+      "<script",
+      "drop table",
+      "delete all"
+    ];
+    return unsafePatterns.some((pattern) => normalizedOutput.includes(pattern)) ? 0 : 2;
+  }
+  normalize(value) {
+    return value.toLowerCase().trim();
+  }
+  countPhraseHits(text, phrases) {
+    return phrases.reduce((count, phrase) => {
+      const token = this.normalize(phrase);
+      return token && text.includes(token) ? count + 1 : count;
+    }, 0);
+  }
+  static \u0275fac = function SkillRouterService_Factory(__ngFactoryType__) {
+    return new (__ngFactoryType__ || _SkillRouterService)();
+  };
+  static \u0275prov = /* @__PURE__ */ \u0275\u0275defineInjectable({ token: _SkillRouterService, factory: _SkillRouterService.\u0275fac, providedIn: "root" });
+};
+(() => {
+  (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(SkillRouterService, [{
+    type: Injectable,
+    args: [{
+      providedIn: "root"
+    }]
+  }], null, null);
+})();
+
+// src/app/views/page-assistant/data/prompt-fragments.ts
+var PROMPT_LEVEL_ORDER = {
+  base: 0,
+  task: 1,
+  mode: 2,
+  output: 3
+};
+var PAGE_ASSISTANT_PROMPT_FRAGMENTS = [
+  {
+    id: "base-preserve-intent",
+    level: "base",
+    priority: 10,
+    text: "Preserve factual meaning, legal intent, and key actions unless explicitly asked to change them."
+  },
+  {
+    id: "base-concise",
+    level: "base",
+    priority: 9,
+    text: "Be concise and avoid unnecessary commentary in the final response."
+  },
+  {
+    id: "task-plain-language",
+    level: "task",
+    priority: 8,
+    skillIds: ["plain-language"],
+    text: "Use plain language with short sentences, common words, and direct verbs."
+  },
+  {
+    id: "task-heading-hierarchy",
+    level: "task",
+    priority: 8,
+    skillIds: ["headings"],
+    text: "Enforce logical heading hierarchy with one H1 and clear H2/H3 nesting."
+  },
+  {
+    id: "task-alerts",
+    level: "task",
+    priority: 8,
+    skillIds: ["alerts-rewrite"],
+    text: "Rewrite alerts to lead with the key action and keep severity intent clear."
+  },
+  {
+    id: "mode-balanced",
+    level: "mode",
+    priority: 7,
+    mode: "balanced",
+    conflictsWith: ["mode-light-edit", "mode-strict-rewrite"],
+    text: "Make normal edits that improve clarity without over-rewriting."
+  },
+  {
+    id: "mode-light-edit",
+    level: "mode",
+    priority: 7,
+    mode: "light-edit",
+    conflictsWith: ["mode-balanced", "mode-strict-rewrite"],
+    text: "Make minor edits only and leave most wording unchanged."
+  },
+  {
+    id: "mode-strict-rewrite",
+    level: "mode",
+    priority: 7,
+    mode: "strict-rewrite",
+    conflictsWith: ["mode-balanced", "mode-light-edit"],
+    text: "Rewrite aggressively for clarity and task completion while preserving facts."
+  },
+  {
+    id: "output-text",
+    level: "output",
+    priority: 6,
+    outputFormat: "text",
+    conflictsWith: ["output-json"],
+    text: "Return plain text output suitable for direct copy and review."
+  },
+  {
+    id: "output-json",
+    level: "output",
+    priority: 6,
+    outputFormat: "json",
+    conflictsWith: ["output-text"],
+    text: "Return strict JSON with deterministic keys and no prose outside JSON."
+  }
+];
+
+// src/app/views/page-assistant/services/prompt-composer.service.ts
+var PromptComposerService = class _PromptComposerService {
+  compose(input) {
+    const mode = input.mode ?? "balanced";
+    const outputFormat = input.outputFormat ?? "text";
+    const selectedSkillIds = new Set(input.selectedSkillIds ?? []);
+    let selected = PAGE_ASSISTANT_PROMPT_FRAGMENTS.filter((fragment) => {
+      if (fragment.level === "base") {
+        return true;
+      }
+      if (fragment.level === "task") {
+        return !!fragment.skillIds && fragment.skillIds.some((skillId) => selectedSkillIds.has(skillId));
+      }
+      if (fragment.level === "mode") {
+        return fragment.mode === mode;
+      }
+      if (fragment.level === "output") {
+        return fragment.outputFormat === outputFormat;
+      }
+      return false;
+    });
+    selected = this.applyRequirements(selected);
+    selected = this.applyConflictResolution(selected);
+    selected = this.deduplicateByText(selected);
+    selected = this.sortForAssembly(selected);
+    const promptParts = [
+      input.basePrompt.trim(),
+      ...selected.map((fragment) => fragment.text.trim())
+    ].filter(Boolean);
+    return {
+      prompt: promptParts.join("\n\n"),
+      fragmentIds: selected.map((fragment) => fragment.id),
+      fragments: selected
+    };
+  }
+  applyRequirements(fragments) {
+    const ids = new Set(fragments.map((fragment) => fragment.id));
+    return fragments.filter((fragment) => !fragment.requires || fragment.requires.every((requiredId) => ids.has(requiredId)));
+  }
+  applyConflictResolution(fragments) {
+    const sorted = [...fragments].sort((a, b) => b.priority - a.priority);
+    const kept = [];
+    for (const fragment of sorted) {
+      const conflictsWithKept = kept.some((keptFragment) => (fragment.conflictsWith ?? []).includes(keptFragment.id) || (keptFragment.conflictsWith ?? []).includes(fragment.id));
+      if (!conflictsWithKept) {
+        kept.push(fragment);
+      }
+    }
+    return kept;
+  }
+  deduplicateByText(fragments) {
+    const seen = /* @__PURE__ */ new Set();
+    const deduplicated = [];
+    for (const fragment of fragments) {
+      const normalizedText = fragment.text.toLowerCase().trim();
+      if (seen.has(normalizedText)) {
+        continue;
+      }
+      seen.add(normalizedText);
+      deduplicated.push(fragment);
+    }
+    return deduplicated;
+  }
+  sortForAssembly(fragments) {
+    return [...fragments].sort((a, b) => {
+      const levelDiff = PROMPT_LEVEL_ORDER[a.level] - PROMPT_LEVEL_ORDER[b.level];
+      if (levelDiff !== 0) {
+        return levelDiff;
+      }
+      return b.priority - a.priority;
+    });
+  }
+  static \u0275fac = function PromptComposerService_Factory(__ngFactoryType__) {
+    return new (__ngFactoryType__ || _PromptComposerService)();
+  };
+  static \u0275prov = /* @__PURE__ */ \u0275\u0275defineInjectable({ token: _PromptComposerService, factory: _PromptComposerService.\u0275fac, providedIn: "root" });
+};
+(() => {
+  (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(PromptComposerService, [{
+    type: Injectable,
+    args: [{
+      providedIn: "root"
+    }]
+  }], null, null);
+})();
+
 // src/app/views/page-assistant/components/ai-options.component.ts
 var _c04 = () => ({ width: "30rem" });
 function AiOptionsComponent_ng_container_15_Template(rf, ctx) {
   if (rf & 1) {
     const _r1 = \u0275\u0275getCurrentView();
     \u0275\u0275elementContainerStart(0);
-    \u0275\u0275elementStart(1, "div", 13)(2, "p-radioButton", 14);
+    \u0275\u0275elementStart(1, "div", 14)(2, "p-radioButton", 15);
     \u0275\u0275twoWayListener("ngModelChange", function AiOptionsComponent_ng_container_15_Template_p_radioButton_ngModelChange_2_listener($event) {
       \u0275\u0275restoreView(_r1);
       const ctx_r1 = \u0275\u0275nextContext();
@@ -24694,7 +25084,7 @@ function AiOptionsComponent_ng_container_15_Template(rf, ctx) {
       return \u0275\u0275resetView($event);
     });
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(3, "label", 15);
+    \u0275\u0275elementStart(3, "label", 16);
     \u0275\u0275text(4);
     \u0275\u0275pipe(5, "translate");
     \u0275\u0275elementEnd()();
@@ -24717,7 +25107,7 @@ function AiOptionsComponent_Conditional_16_Conditional_10_ng_container_0_Templat
   if (rf & 1) {
     const _r5 = \u0275\u0275getCurrentView();
     \u0275\u0275elementContainerStart(0);
-    \u0275\u0275elementStart(1, "div", 13)(2, "p-radioButton", 23);
+    \u0275\u0275elementStart(1, "div", 14)(2, "p-radioButton", 24);
     \u0275\u0275twoWayListener("ngModelChange", function AiOptionsComponent_Conditional_16_Conditional_10_ng_container_0_Template_p_radioButton_ngModelChange_2_listener($event) {
       \u0275\u0275restoreView(_r5);
       const ctx_r1 = \u0275\u0275nextContext(3);
@@ -24730,7 +25120,7 @@ function AiOptionsComponent_Conditional_16_Conditional_10_ng_container_0_Templat
       return \u0275\u0275resetView(ctx_r1.onPromptSelect(ctx_r1.selectedPrompt));
     });
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(3, "label", 15);
+    \u0275\u0275elementStart(3, "label", 16);
     \u0275\u0275text(4);
     \u0275\u0275pipe(5, "translate");
     \u0275\u0275elementEnd()();
@@ -24762,7 +25152,7 @@ function AiOptionsComponent_Conditional_16_Conditional_11_ng_container_0_Templat
   if (rf & 1) {
     const _r7 = \u0275\u0275getCurrentView();
     \u0275\u0275elementContainerStart(0);
-    \u0275\u0275elementStart(1, "div", 24)(2, "p-checkbox", 25);
+    \u0275\u0275elementStart(1, "div", 25)(2, "p-checkbox", 26);
     \u0275\u0275twoWayListener("ngModelChange", function AiOptionsComponent_Conditional_16_Conditional_11_ng_container_0_Template_p_checkbox_ngModelChange_2_listener($event) {
       \u0275\u0275restoreView(_r7);
       const ctx_r1 = \u0275\u0275nextContext(3);
@@ -24770,7 +25160,7 @@ function AiOptionsComponent_Conditional_16_Conditional_11_ng_container_0_Templat
       return \u0275\u0275resetView($event);
     });
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(3, "label", 15);
+    \u0275\u0275elementStart(3, "label", 16);
     \u0275\u0275text(4);
     \u0275\u0275pipe(5, "translate");
     \u0275\u0275elementEnd()();
@@ -24801,7 +25191,7 @@ function AiOptionsComponent_Conditional_16_Conditional_11_Template(rf, ctx) {
 function AiOptionsComponent_Conditional_16_Conditional_17_Template(rf, ctx) {
   if (rf & 1) {
     const _r9 = \u0275\u0275getCurrentView();
-    \u0275\u0275elementStart(0, "p-iftalabel")(1, "textarea", 26);
+    \u0275\u0275elementStart(0, "p-iftalabel")(1, "textarea", 27);
     \u0275\u0275twoWayListener("ngModelChange", function AiOptionsComponent_Conditional_16_Conditional_17_Template_textarea_ngModelChange_1_listener($event) {
       \u0275\u0275restoreView(_r9);
       const ctx_r1 = \u0275\u0275nextContext(2);
@@ -24814,7 +25204,7 @@ function AiOptionsComponent_Conditional_16_Conditional_17_Template(rf, ctx) {
       return \u0275\u0275resetView(ctx_r1.emitCustomPrompt(ctx_r1.customInstruction));
     });
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(2, "label", 27);
+    \u0275\u0275elementStart(2, "label", 28);
     \u0275\u0275text(3);
     \u0275\u0275pipe(4, "translate");
     \u0275\u0275elementEnd()();
@@ -24831,10 +25221,10 @@ function AiOptionsComponent_Conditional_16_Conditional_17_Template(rf, ctx) {
 function AiOptionsComponent_Conditional_16_Conditional_22_Template(rf, ctx) {
   if (rf & 1) {
     const _r10 = \u0275\u0275getCurrentView();
-    \u0275\u0275elementStart(0, "div", 22)(1, "p", 28);
+    \u0275\u0275elementStart(0, "div", 23)(1, "p", 29);
     \u0275\u0275text(2, "Alert rewrite options");
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(3, "div", 24)(4, "p-checkbox", 29);
+    \u0275\u0275elementStart(3, "div", 25)(4, "p-checkbox", 30);
     \u0275\u0275twoWayListener("ngModelChange", function AiOptionsComponent_Conditional_16_Conditional_22_Template_p_checkbox_ngModelChange_4_listener($event) {
       \u0275\u0275restoreView(_r10);
       const ctx_r1 = \u0275\u0275nextContext(2);
@@ -24847,10 +25237,10 @@ function AiOptionsComponent_Conditional_16_Conditional_22_Template(rf, ctx) {
       return \u0275\u0275resetView(ctx_r1.onIncludeAlertRewriteExamplesSelect(ctx_r1.includeAlertRewriteExamples));
     });
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(5, "label", 30);
+    \u0275\u0275elementStart(5, "label", 31);
     \u0275\u0275text(6, ' Use "good" examples ');
     \u0275\u0275elementEnd()();
-    \u0275\u0275elementStart(7, "div", 24)(8, "p-checkbox", 31);
+    \u0275\u0275elementStart(7, "div", 25)(8, "p-checkbox", 32);
     \u0275\u0275twoWayListener("ngModelChange", function AiOptionsComponent_Conditional_16_Conditional_22_Template_p_checkbox_ngModelChange_8_listener($event) {
       \u0275\u0275restoreView(_r10);
       const ctx_r1 = \u0275\u0275nextContext(2);
@@ -24863,11 +25253,11 @@ function AiOptionsComponent_Conditional_16_Conditional_22_Template(rf, ctx) {
       return \u0275\u0275resetView(ctx_r1.onIncludeBeforeTextInAlertRewriteExamplesSelect(ctx_r1.includeBeforeTextInAlertRewriteExamples));
     });
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(9, "label", 32);
+    \u0275\u0275elementStart(9, "label", 33);
     \u0275\u0275text(10, ' Include "before" text in examples ');
     \u0275\u0275elementEnd()();
-    \u0275\u0275element(11, "div", 33);
-    \u0275\u0275elementStart(12, "div", 34)(13, "p-checkbox", 35);
+    \u0275\u0275element(11, "div", 34);
+    \u0275\u0275elementStart(12, "div", 35)(13, "p-checkbox", 36);
     \u0275\u0275twoWayListener("ngModelChange", function AiOptionsComponent_Conditional_16_Conditional_22_Template_p_checkbox_ngModelChange_13_listener($event) {
       \u0275\u0275restoreView(_r10);
       const ctx_r1 = \u0275\u0275nextContext(2);
@@ -24880,10 +25270,10 @@ function AiOptionsComponent_Conditional_16_Conditional_22_Template(rf, ctx) {
       return \u0275\u0275resetView(ctx_r1.onIncludeLinkWritingRulesSelect(ctx_r1.includeLinkWritingRules));
     });
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(14, "label", 36);
+    \u0275\u0275elementStart(14, "label", 37);
     \u0275\u0275text(15, " Include link writing rules ");
     \u0275\u0275elementEnd()();
-    \u0275\u0275elementStart(16, "div", 34)(17, "p-checkbox", 37);
+    \u0275\u0275elementStart(16, "div", 35)(17, "p-checkbox", 38);
     \u0275\u0275twoWayListener("ngModelChange", function AiOptionsComponent_Conditional_16_Conditional_22_Template_p_checkbox_ngModelChange_17_listener($event) {
       \u0275\u0275restoreView(_r10);
       const ctx_r1 = \u0275\u0275nextContext(2);
@@ -24891,10 +25281,10 @@ function AiOptionsComponent_Conditional_16_Conditional_22_Template(rf, ctx) {
       return \u0275\u0275resetView($event);
     });
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(18, "label", 38);
+    \u0275\u0275elementStart(18, "label", 39);
     \u0275\u0275text(19, " Advanced AI planning before rewrite ");
     \u0275\u0275elementEnd()();
-    \u0275\u0275elementStart(20, "div", 34)(21, "p-checkbox", 39);
+    \u0275\u0275elementStart(20, "div", 35)(21, "p-checkbox", 40);
     \u0275\u0275twoWayListener("ngModelChange", function AiOptionsComponent_Conditional_16_Conditional_22_Template_p_checkbox_ngModelChange_21_listener($event) {
       \u0275\u0275restoreView(_r10);
       const ctx_r1 = \u0275\u0275nextContext(2);
@@ -24907,10 +25297,10 @@ function AiOptionsComponent_Conditional_16_Conditional_22_Template(rf, ctx) {
       return \u0275\u0275resetView(ctx_r1.onUseJsonAlertsIssuesPromptSelect(ctx_r1.useJsonAlertsIssuesPrompt));
     });
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(22, "label", 40);
+    \u0275\u0275elementStart(22, "label", 41);
     \u0275\u0275text(23, " Use JSON format for Alerts Issues prompt ");
     \u0275\u0275elementEnd()();
-    \u0275\u0275elementStart(24, "div", 34)(25, "p-checkbox", 41);
+    \u0275\u0275elementStart(24, "div", 35)(25, "p-checkbox", 42);
     \u0275\u0275twoWayListener("ngModelChange", function AiOptionsComponent_Conditional_16_Conditional_22_Template_p_checkbox_ngModelChange_25_listener($event) {
       \u0275\u0275restoreView(_r10);
       const ctx_r1 = \u0275\u0275nextContext(2);
@@ -24923,7 +25313,7 @@ function AiOptionsComponent_Conditional_16_Conditional_22_Template(rf, ctx) {
       return \u0275\u0275resetView(ctx_r1.onUseCompactAlertsPageContextSelect(ctx_r1.useCompactAlertsPageContext));
     });
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(26, "label", 42);
+    \u0275\u0275elementStart(26, "label", 43);
     \u0275\u0275text(27, " Send compact page context to AI for alerts ");
     \u0275\u0275elementEnd()()();
   }
@@ -24962,7 +25352,7 @@ function AiOptionsComponent_Conditional_16_Template(rf, ctx) {
     \u0275\u0275elementEnd();
     \u0275\u0275elementStart(9, "div", 7);
     \u0275\u0275template(10, AiOptionsComponent_Conditional_16_Conditional_10_Template, 1, 2, "ng-container")(11, AiOptionsComponent_Conditional_16_Conditional_11_Template, 1, 2, "ng-container");
-    \u0275\u0275elementStart(12, "div", 16)(13, "p-checkbox", 17);
+    \u0275\u0275elementStart(12, "div", 17)(13, "p-checkbox", 18);
     \u0275\u0275twoWayListener("ngModelChange", function AiOptionsComponent_Conditional_16_Template_p_checkbox_ngModelChange_13_listener($event) {
       \u0275\u0275restoreView(_r4);
       const ctx_r1 = \u0275\u0275nextContext();
@@ -24975,15 +25365,15 @@ function AiOptionsComponent_Conditional_16_Template(rf, ctx) {
       return \u0275\u0275resetView(ctx_r1.resetCustom());
     });
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(14, "label", 18);
+    \u0275\u0275elementStart(14, "label", 19);
     \u0275\u0275text(15);
     \u0275\u0275pipe(16, "translate");
     \u0275\u0275elementEnd()();
     \u0275\u0275template(17, AiOptionsComponent_Conditional_16_Conditional_17_Template, 5, 5, "p-iftalabel");
-    \u0275\u0275elementStart(18, "div", 19)(19, "p", 20);
+    \u0275\u0275elementStart(18, "div", 20)(19, "p", 21);
     \u0275\u0275text(20);
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(21, "p-slider", 21);
+    \u0275\u0275elementStart(21, "p-slider", 22);
     \u0275\u0275twoWayListener("ngModelChange", function AiOptionsComponent_Conditional_16_Template_p_slider_ngModelChange_21_listener($event) {
       \u0275\u0275restoreView(_r4);
       const ctx_r1 = \u0275\u0275nextContext();
@@ -24996,7 +25386,7 @@ function AiOptionsComponent_Conditional_16_Template(rf, ctx) {
       return \u0275\u0275resetView(ctx_r1.emitEditPrompt(ctx_r1.currentEditLevel.prompt));
     });
     \u0275\u0275elementEnd()();
-    \u0275\u0275template(22, AiOptionsComponent_Conditional_16_Conditional_22_Template, 28, 13, "div", 22);
+    \u0275\u0275template(22, AiOptionsComponent_Conditional_16_Conditional_22_Template, 28, 13, "div", 23);
     \u0275\u0275elementEnd()()()();
   }
   if (rf & 2) {
@@ -25029,7 +25419,7 @@ function AiOptionsComponent_Conditional_17_Conditional_10_ng_container_3_Templat
   if (rf & 1) {
     const _r11 = \u0275\u0275getCurrentView();
     \u0275\u0275elementContainerStart(0);
-    \u0275\u0275elementStart(1, "div", 13)(2, "p-radioButton", 45);
+    \u0275\u0275elementStart(1, "div", 14)(2, "p-radioButton", 46);
     \u0275\u0275twoWayListener("ngModelChange", function AiOptionsComponent_Conditional_17_Conditional_10_ng_container_3_Template_p_radioButton_ngModelChange_2_listener($event) {
       \u0275\u0275restoreView(_r11);
       const ctx_r1 = \u0275\u0275nextContext(3);
@@ -25042,7 +25432,7 @@ function AiOptionsComponent_Conditional_17_Conditional_10_ng_container_3_Templat
       return \u0275\u0275resetView(ctx_r1.onAiSelect(ctx_r1.selectedAi));
     });
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(3, "label", 15);
+    \u0275\u0275elementStart(3, "label", 16);
     \u0275\u0275text(4);
     \u0275\u0275pipe(5, "translate");
     \u0275\u0275elementEnd()();
@@ -25065,7 +25455,7 @@ function AiOptionsComponent_Conditional_17_Conditional_10_ng_container_7_Templat
   if (rf & 1) {
     const _r13 = \u0275\u0275getCurrentView();
     \u0275\u0275elementContainerStart(0);
-    \u0275\u0275elementStart(1, "div", 13)(2, "p-radioButton", 45);
+    \u0275\u0275elementStart(1, "div", 14)(2, "p-radioButton", 46);
     \u0275\u0275twoWayListener("ngModelChange", function AiOptionsComponent_Conditional_17_Conditional_10_ng_container_7_Template_p_radioButton_ngModelChange_2_listener($event) {
       \u0275\u0275restoreView(_r13);
       const ctx_r1 = \u0275\u0275nextContext(3);
@@ -25078,10 +25468,10 @@ function AiOptionsComponent_Conditional_17_Conditional_10_ng_container_7_Templat
       return \u0275\u0275resetView(ctx_r1.onAiSelect(ctx_r1.selectedAi));
     });
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(3, "label", 15);
+    \u0275\u0275elementStart(3, "label", 16);
     \u0275\u0275text(4);
     \u0275\u0275pipe(5, "translate");
-    \u0275\u0275element(6, "p-chip", 46);
+    \u0275\u0275element(6, "p-chip", 47);
     \u0275\u0275pipe(7, "translate");
     \u0275\u0275elementEnd()();
     \u0275\u0275elementContainerEnd();
@@ -25103,12 +25493,12 @@ function AiOptionsComponent_Conditional_17_Conditional_10_ng_container_7_Templat
 }
 function AiOptionsComponent_Conditional_17_Conditional_10_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275elementStart(0, "p", 43);
+    \u0275\u0275elementStart(0, "p", 44);
     \u0275\u0275text(1);
     \u0275\u0275pipe(2, "translate");
     \u0275\u0275elementEnd();
     \u0275\u0275template(3, AiOptionsComponent_Conditional_17_Conditional_10_ng_container_3_Template, 6, 8, "ng-container", 8);
-    \u0275\u0275elementStart(4, "p", 44);
+    \u0275\u0275elementStart(4, "p", 45);
     \u0275\u0275text(5);
     \u0275\u0275pipe(6, "translate");
     \u0275\u0275elementEnd();
@@ -25130,7 +25520,7 @@ function AiOptionsComponent_Conditional_17_Conditional_11_ng_container_3_Templat
   if (rf & 1) {
     const _r15 = \u0275\u0275getCurrentView();
     \u0275\u0275elementContainerStart(0);
-    \u0275\u0275elementStart(1, "div", 24)(2, "p-checkbox", 25);
+    \u0275\u0275elementStart(1, "div", 25)(2, "p-checkbox", 26);
     \u0275\u0275twoWayListener("ngModelChange", function AiOptionsComponent_Conditional_17_Conditional_11_ng_container_3_Template_p_checkbox_ngModelChange_2_listener($event) {
       \u0275\u0275restoreView(_r15);
       const ctx_r1 = \u0275\u0275nextContext(3);
@@ -25138,7 +25528,7 @@ function AiOptionsComponent_Conditional_17_Conditional_11_ng_container_3_Templat
       return \u0275\u0275resetView($event);
     });
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(3, "label", 15);
+    \u0275\u0275elementStart(3, "label", 16);
     \u0275\u0275text(4);
     \u0275\u0275pipe(5, "translate");
     \u0275\u0275elementEnd()();
@@ -25161,7 +25551,7 @@ function AiOptionsComponent_Conditional_17_Conditional_11_ng_container_7_Templat
   if (rf & 1) {
     const _r17 = \u0275\u0275getCurrentView();
     \u0275\u0275elementContainerStart(0);
-    \u0275\u0275elementStart(1, "div", 24)(2, "p-checkbox", 25);
+    \u0275\u0275elementStart(1, "div", 25)(2, "p-checkbox", 26);
     \u0275\u0275twoWayListener("ngModelChange", function AiOptionsComponent_Conditional_17_Conditional_11_ng_container_7_Template_p_checkbox_ngModelChange_2_listener($event) {
       \u0275\u0275restoreView(_r17);
       const ctx_r1 = \u0275\u0275nextContext(3);
@@ -25169,10 +25559,10 @@ function AiOptionsComponent_Conditional_17_Conditional_11_ng_container_7_Templat
       return \u0275\u0275resetView($event);
     });
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(3, "label", 15);
+    \u0275\u0275elementStart(3, "label", 16);
     \u0275\u0275text(4);
     \u0275\u0275pipe(5, "translate");
-    \u0275\u0275element(6, "p-chip", 46);
+    \u0275\u0275element(6, "p-chip", 47);
     \u0275\u0275pipe(7, "translate");
     \u0275\u0275elementEnd()();
     \u0275\u0275elementContainerEnd();
@@ -25194,12 +25584,12 @@ function AiOptionsComponent_Conditional_17_Conditional_11_ng_container_7_Templat
 }
 function AiOptionsComponent_Conditional_17_Conditional_11_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275elementStart(0, "p", 43);
+    \u0275\u0275elementStart(0, "p", 44);
     \u0275\u0275text(1);
     \u0275\u0275pipe(2, "translate");
     \u0275\u0275elementEnd();
     \u0275\u0275template(3, AiOptionsComponent_Conditional_17_Conditional_11_ng_container_3_Template, 6, 8, "ng-container", 8);
-    \u0275\u0275elementStart(4, "p", 44);
+    \u0275\u0275elementStart(4, "p", 45);
     \u0275\u0275text(5);
     \u0275\u0275pipe(6, "translate");
     \u0275\u0275elementEnd();
@@ -25243,13 +25633,247 @@ function AiOptionsComponent_Conditional_17_Template(rf, ctx) {
     \u0275\u0275conditional(ctx_r1.isTwoAis ? 11 : -1);
   }
 }
+function AiOptionsComponent_Conditional_18_ng_container_14_Template(rf, ctx) {
+  if (rf & 1) {
+    const _r20 = \u0275\u0275getCurrentView();
+    \u0275\u0275elementContainerStart(0);
+    \u0275\u0275elementStart(1, "div", 14)(2, "p-radioButton", 58);
+    \u0275\u0275twoWayListener("ngModelChange", function AiOptionsComponent_Conditional_18_ng_container_14_Template_p_radioButton_ngModelChange_2_listener($event) {
+      \u0275\u0275restoreView(_r20);
+      const ctx_r1 = \u0275\u0275nextContext(2);
+      \u0275\u0275twoWayBindingSet(ctx_r1.selectedPromptMode, $event) || (ctx_r1.selectedPromptMode = $event);
+      return \u0275\u0275resetView($event);
+    });
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(3, "label", 16);
+    \u0275\u0275text(4);
+    \u0275\u0275elementEnd()();
+    \u0275\u0275elementContainerEnd();
+  }
+  if (rf & 2) {
+    const option_r21 = ctx.$implicit;
+    const ctx_r1 = \u0275\u0275nextContext(2);
+    \u0275\u0275advance(2);
+    \u0275\u0275property("value", option_r21.id);
+    \u0275\u0275twoWayProperty("ngModel", ctx_r1.selectedPromptMode);
+    \u0275\u0275property("inputId", option_r21.id);
+    \u0275\u0275advance();
+    \u0275\u0275property("for", option_r21.id);
+    \u0275\u0275advance();
+    \u0275\u0275textInterpolate(option_r21.label);
+  }
+}
+function AiOptionsComponent_Conditional_18_ng_container_18_Template(rf, ctx) {
+  if (rf & 1) {
+    const _r22 = \u0275\u0275getCurrentView();
+    \u0275\u0275elementContainerStart(0);
+    \u0275\u0275elementStart(1, "div", 14)(2, "p-radioButton", 59);
+    \u0275\u0275twoWayListener("ngModelChange", function AiOptionsComponent_Conditional_18_ng_container_18_Template_p_radioButton_ngModelChange_2_listener($event) {
+      \u0275\u0275restoreView(_r22);
+      const ctx_r1 = \u0275\u0275nextContext(2);
+      \u0275\u0275twoWayBindingSet(ctx_r1.selectedOutputFormat, $event) || (ctx_r1.selectedOutputFormat = $event);
+      return \u0275\u0275resetView($event);
+    });
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(3, "label", 16);
+    \u0275\u0275text(4);
+    \u0275\u0275elementEnd()();
+    \u0275\u0275elementContainerEnd();
+  }
+  if (rf & 2) {
+    const option_r23 = ctx.$implicit;
+    const ctx_r1 = \u0275\u0275nextContext(2);
+    \u0275\u0275advance(2);
+    \u0275\u0275property("value", option_r23.id);
+    \u0275\u0275twoWayProperty("ngModel", ctx_r1.selectedOutputFormat);
+    \u0275\u0275property("inputId", option_r23.id);
+    \u0275\u0275advance();
+    \u0275\u0275property("for", option_r23.id);
+    \u0275\u0275advance();
+    \u0275\u0275textInterpolate(option_r23.label);
+  }
+}
+function AiOptionsComponent_Conditional_18_Conditional_22_div_4_Template(rf, ctx) {
+  if (rf & 1) {
+    \u0275\u0275elementStart(0, "div", 61)(1, "p", 52);
+    \u0275\u0275text(2);
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(3, "p", 48);
+    \u0275\u0275text(4);
+    \u0275\u0275elementEnd()();
+  }
+  if (rf & 2) {
+    const route_r24 = ctx.$implicit;
+    \u0275\u0275advance(2);
+    \u0275\u0275textInterpolate2("", route_r24.skill.name, " (score: ", route_r24.score, ")");
+    \u0275\u0275advance(2);
+    \u0275\u0275textInterpolate(route_r24.skill.description);
+  }
+}
+function AiOptionsComponent_Conditional_18_Conditional_22_Template(rf, ctx) {
+  if (rf & 1) {
+    \u0275\u0275elementStart(0, "div", 56)(1, "p", 6);
+    \u0275\u0275text(2, "Selected skills");
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(3, "div", 7);
+    \u0275\u0275template(4, AiOptionsComponent_Conditional_18_Conditional_22_div_4_Template, 5, 3, "div", 60);
+    \u0275\u0275elementEnd()();
+  }
+  if (rf & 2) {
+    const ctx_r1 = \u0275\u0275nextContext(2);
+    \u0275\u0275advance(4);
+    \u0275\u0275property("ngForOf", ctx_r1.routedSkillsPreview);
+  }
+}
+function AiOptionsComponent_Conditional_18_Conditional_23_p_6_Template(rf, ctx) {
+  if (rf & 1) {
+    \u0275\u0275elementStart(0, "p", 66);
+    \u0275\u0275text(1);
+    \u0275\u0275elementEnd();
+  }
+  if (rf & 2) {
+    const dim_r25 = ctx.$implicit;
+    \u0275\u0275advance();
+    \u0275\u0275textInterpolate3(" ", dim_r25.id, ": ", dim_r25.score, "/2 (weight ", dim_r25.weight, ") ");
+  }
+}
+function AiOptionsComponent_Conditional_18_Conditional_23_Template(rf, ctx) {
+  if (rf & 1) {
+    \u0275\u0275elementStart(0, "div", 57)(1, "p", 62);
+    \u0275\u0275text(2);
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(3, "p", 63);
+    \u0275\u0275text(4);
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(5, "div", 64);
+    \u0275\u0275template(6, AiOptionsComponent_Conditional_18_Conditional_23_p_6_Template, 2, 3, "p", 65);
+    \u0275\u0275elementEnd()();
+  }
+  if (rf & 2) {
+    const ctx_r1 = \u0275\u0275nextContext(2);
+    \u0275\u0275advance(2);
+    \u0275\u0275textInterpolate3(" Rubric: ", ctx_r1.rubricPreview.total, "/", ctx_r1.rubricPreview.maxTotal, " (", ctx_r1.rubricPercent, "%) ");
+    \u0275\u0275advance();
+    \u0275\u0275property("ngClass", ctx_r1.rubricPreview.passed ? "text-green-600" : "text-red-600");
+    \u0275\u0275advance();
+    \u0275\u0275textInterpolate1(" ", ctx_r1.rubricPreview.passed ? "Pass" : "Needs work", " ");
+    \u0275\u0275advance(2);
+    \u0275\u0275property("ngForOf", ctx_r1.rubricPreview.dimensions);
+  }
+}
+function AiOptionsComponent_Conditional_18_Conditional_24_p_3_Template(rf, ctx) {
+  if (rf & 1) {
+    \u0275\u0275elementStart(0, "p", 66);
+    \u0275\u0275text(1);
+    \u0275\u0275elementEnd();
+  }
+  if (rf & 2) {
+    const id_r26 = ctx.$implicit;
+    \u0275\u0275advance();
+    \u0275\u0275textInterpolate(id_r26);
+  }
+}
+function AiOptionsComponent_Conditional_18_Conditional_24_Template(rf, ctx) {
+  if (rf & 1) {
+    \u0275\u0275elementStart(0, "div", 57)(1, "p", 6);
+    \u0275\u0275text(2, "Included prompt fragments");
+    \u0275\u0275elementEnd();
+    \u0275\u0275template(3, AiOptionsComponent_Conditional_18_Conditional_24_p_3_Template, 2, 1, "p", 65);
+    \u0275\u0275elementEnd();
+  }
+  if (rf & 2) {
+    const ctx_r1 = \u0275\u0275nextContext(2);
+    \u0275\u0275advance(3);
+    \u0275\u0275property("ngForOf", ctx_r1.previewFragmentIds);
+  }
+}
+function AiOptionsComponent_Conditional_18_Conditional_25_Template(rf, ctx) {
+  if (rf & 1) {
+    \u0275\u0275elementStart(0, "div", 57)(1, "p", 6);
+    \u0275\u0275text(2, "Assembled system prompt (preview)");
+    \u0275\u0275elementEnd();
+    \u0275\u0275element(3, "textarea", 67);
+    \u0275\u0275elementEnd();
+  }
+  if (rf & 2) {
+    const ctx_r1 = \u0275\u0275nextContext(2);
+    \u0275\u0275advance(3);
+    \u0275\u0275property("value", ctx_r1.previewSystemPrompt)("autoResize", true);
+  }
+}
 function AiOptionsComponent_Conditional_18_Template(rf, ctx) {
   if (rf & 1) {
     const _r19 = \u0275\u0275getCurrentView();
-    \u0275\u0275elementStart(0, "p-button", 47);
-    \u0275\u0275pipe(1, "translate");
-    \u0275\u0275listener("click", function AiOptionsComponent_Conditional_18_Template_p_button_click_0_listener() {
+    \u0275\u0275elementStart(0, "p-accordion-panel", 11)(1, "p-accordion-header");
+    \u0275\u0275text(2, "Skills + rubric preview");
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(3, "p-accordion-content")(4, "div", 7)(5, "p", 48);
+    \u0275\u0275text(6, "Test routing against a sample user request.");
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(7, "p-iftalabel")(8, "textarea", 49);
+    \u0275\u0275twoWayListener("ngModelChange", function AiOptionsComponent_Conditional_18_Template_textarea_ngModelChange_8_listener($event) {
       \u0275\u0275restoreView(_r19);
+      const ctx_r1 = \u0275\u0275nextContext();
+      \u0275\u0275twoWayBindingSet(ctx_r1.skillRoutingInput, $event) || (ctx_r1.skillRoutingInput = $event);
+      return \u0275\u0275resetView($event);
+    });
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(9, "label", 50);
+    \u0275\u0275text(10, "User request");
+    \u0275\u0275elementEnd()();
+    \u0275\u0275elementStart(11, "div", 51)(12, "p", 52);
+    \u0275\u0275text(13, "Prompt mode");
+    \u0275\u0275elementEnd();
+    \u0275\u0275template(14, AiOptionsComponent_Conditional_18_ng_container_14_Template, 5, 5, "ng-container", 8);
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(15, "div", 51)(16, "p", 52);
+    \u0275\u0275text(17, "Output format");
+    \u0275\u0275elementEnd();
+    \u0275\u0275template(18, AiOptionsComponent_Conditional_18_ng_container_18_Template, 5, 5, "ng-container", 8);
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(19, "div", 53)(20, "p-button", 54);
+    \u0275\u0275listener("click", function AiOptionsComponent_Conditional_18_Template_p_button_click_20_listener() {
+      \u0275\u0275restoreView(_r19);
+      const ctx_r1 = \u0275\u0275nextContext();
+      return \u0275\u0275resetView(ctx_r1.runSkillRoutingPreview());
+    });
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(21, "p-button", 55);
+    \u0275\u0275listener("click", function AiOptionsComponent_Conditional_18_Template_p_button_click_21_listener() {
+      \u0275\u0275restoreView(_r19);
+      const ctx_r1 = \u0275\u0275nextContext();
+      return \u0275\u0275resetView(ctx_r1.clearSkillRoutingPreview());
+    });
+    \u0275\u0275elementEnd()();
+    \u0275\u0275template(22, AiOptionsComponent_Conditional_18_Conditional_22_Template, 5, 1, "div", 56)(23, AiOptionsComponent_Conditional_18_Conditional_23_Template, 7, 6, "div", 57)(24, AiOptionsComponent_Conditional_18_Conditional_24_Template, 4, 1, "div", 57)(25, AiOptionsComponent_Conditional_18_Conditional_25_Template, 4, 2, "div", 57);
+    \u0275\u0275elementEnd()()();
+  }
+  if (rf & 2) {
+    const ctx_r1 = \u0275\u0275nextContext();
+    \u0275\u0275advance(8);
+    \u0275\u0275twoWayProperty("ngModel", ctx_r1.skillRoutingInput);
+    \u0275\u0275property("autoResize", true);
+    \u0275\u0275advance(6);
+    \u0275\u0275property("ngForOf", ctx_r1.promptModeOptions)("ngForTrackBy", ctx_r1.trackById);
+    \u0275\u0275advance(4);
+    \u0275\u0275property("ngForOf", ctx_r1.outputFormatOptions)("ngForTrackBy", ctx_r1.trackById);
+    \u0275\u0275advance(4);
+    \u0275\u0275conditional(ctx_r1.routedSkillsPreview.length > 0 ? 22 : -1);
+    \u0275\u0275advance();
+    \u0275\u0275conditional(ctx_r1.rubricPreview ? 23 : -1);
+    \u0275\u0275advance();
+    \u0275\u0275conditional(ctx_r1.previewFragmentIds.length > 0 ? 24 : -1);
+    \u0275\u0275advance();
+    \u0275\u0275conditional(ctx_r1.previewSystemPrompt ? 25 : -1);
+  }
+}
+function AiOptionsComponent_Conditional_19_Template(rf, ctx) {
+  if (rf & 1) {
+    const _r27 = \u0275\u0275getCurrentView();
+    \u0275\u0275elementStart(0, "p-button", 68);
+    \u0275\u0275pipe(1, "translate");
+    \u0275\u0275listener("click", function AiOptionsComponent_Conditional_19_Template_p_button_click_0_listener() {
+      \u0275\u0275restoreView(_r27);
       const ctx_r1 = \u0275\u0275nextContext();
       return \u0275\u0275resetView(ctx_r1.onSubmit());
     });
@@ -25259,34 +25883,34 @@ function AiOptionsComponent_Conditional_18_Template(rf, ctx) {
     \u0275\u0275property("label", \u0275\u0275pipeBind1(1, 1, "page.compare.button.genai"));
   }
 }
-function AiOptionsComponent_Conditional_19_ca_upload_url_1_Template(rf, ctx) {
+function AiOptionsComponent_Conditional_20_ca_upload_url_1_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275element(0, "ca-upload-url", 49);
+    \u0275\u0275element(0, "ca-upload-url", 70);
   }
   if (rf & 2) {
     \u0275\u0275property("showSampleDataButton", false);
   }
 }
-function AiOptionsComponent_Conditional_19_ca_upload_paste_2_Template(rf, ctx) {
+function AiOptionsComponent_Conditional_20_ca_upload_paste_2_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275element(0, "ca-upload-paste", 49);
+    \u0275\u0275element(0, "ca-upload-paste", 70);
   }
   if (rf & 2) {
     \u0275\u0275property("showSampleDataButton", false);
   }
 }
-function AiOptionsComponent_Conditional_19_ca_upload_word_3_Template(rf, ctx) {
+function AiOptionsComponent_Conditional_20_ca_upload_word_3_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275element(0, "ca-upload-word", 49);
+    \u0275\u0275element(0, "ca-upload-word", 70);
   }
   if (rf & 2) {
     \u0275\u0275property("showSampleDataButton", false);
   }
 }
-function AiOptionsComponent_Conditional_19_Template(rf, ctx) {
+function AiOptionsComponent_Conditional_20_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275elementContainerStart(0, 12);
-    \u0275\u0275template(1, AiOptionsComponent_Conditional_19_ca_upload_url_1_Template, 1, 1, "ca-upload-url", 48)(2, AiOptionsComponent_Conditional_19_ca_upload_paste_2_Template, 1, 1, "ca-upload-paste", 48)(3, AiOptionsComponent_Conditional_19_ca_upload_word_3_Template, 1, 1, "ca-upload-word", 48);
+    \u0275\u0275elementContainerStart(0, 13);
+    \u0275\u0275template(1, AiOptionsComponent_Conditional_20_ca_upload_url_1_Template, 1, 1, "ca-upload-url", 69)(2, AiOptionsComponent_Conditional_20_ca_upload_paste_2_Template, 1, 1, "ca-upload-paste", 69)(3, AiOptionsComponent_Conditional_20_ca_upload_word_3_Template, 1, 1, "ca-upload-word", 69);
     \u0275\u0275elementContainerEnd();
   }
   if (rf & 2) {
@@ -25302,6 +25926,8 @@ function AiOptionsComponent_Conditional_19_Template(rf, ctx) {
 }
 var AiOptionsComponent = class _AiOptionsComponent {
   uploadState = inject(UploadStateService);
+  skillRouter = inject(SkillRouterService);
+  promptComposer = inject(PromptComposerService);
   promptChange = new EventEmitter();
   customPrompt = new EventEmitter();
   editPrompt = new EventEmitter();
@@ -25309,12 +25935,34 @@ var AiOptionsComponent = class _AiOptionsComponent {
   alertRewriteModeChange = new EventEmitter();
   aiSubmit = new EventEmitter();
   visible = false;
+  skillRoutingInput = "";
+  routedSkillsPreview = [];
+  rubricPreview = null;
+  previewSystemPrompt = "";
+  previewFragmentIds = [];
+  selectedPromptMode = "balanced";
+  selectedOutputFormat = "text";
+  promptModeOptions = [
+    { id: "balanced", label: "Balanced edits" },
+    { id: "light-edit", label: "Light edits" },
+    { id: "strict-rewrite", label: "Strict rewrite" }
+  ];
+  outputFormatOptions = [
+    { id: "text", label: "Text output" },
+    { id: "json", label: "JSON output" }
+  ];
   //Gets upload type for task = compare with prototype
   get uploadType() {
     return this.uploadState.getSelectedUploadType();
   }
   trackById(index, item) {
     return item.id;
+  }
+  get rubricPercent() {
+    if (!this.rubricPreview || this.rubricPreview.maxTotal === 0) {
+      return 0;
+    }
+    return Math.round(this.rubricPreview.total / this.rubricPreview.maxTotal * 100);
   }
   //Comparison task
   _selectedTask = CompareTask.AiGenerated;
@@ -25430,6 +26078,29 @@ var AiOptionsComponent = class _AiOptionsComponent {
     this.useCompactAlertsPageContext = useCompact;
     this.uploadState.setUseCompactAlertsPageContext(useCompact);
   }
+  runSkillRoutingPreview() {
+    this.routedSkillsPreview = this.skillRouter.routeSkills(this.skillRoutingInput);
+    const selectedSkills = this.routedSkillsPreview.map((entry) => entry.skill);
+    this.rubricPreview = this.skillRouter.evaluateRubric({
+      userText: this.skillRoutingInput,
+      selectedSkills
+    });
+    const composed = this.promptComposer.compose({
+      basePrompt: "You are a page rewrite assistant.",
+      selectedSkillIds: selectedSkills.map((skill) => skill.id),
+      mode: this.selectedPromptMode,
+      outputFormat: this.selectedOutputFormat
+    });
+    this.previewSystemPrompt = composed.prompt;
+    this.previewFragmentIds = composed.fragmentIds;
+  }
+  clearSkillRoutingPreview() {
+    this.skillRoutingInput = "";
+    this.routedSkillsPreview = [];
+    this.rubricPreview = null;
+    this.previewSystemPrompt = "";
+    this.previewFragmentIds = [];
+  }
   //submit selected prompt and model to AI
   onSubmit() {
     this.visible = false;
@@ -25465,7 +26136,7 @@ var AiOptionsComponent = class _AiOptionsComponent {
   static \u0275fac = function AiOptionsComponent_Factory(__ngFactoryType__) {
     return new (__ngFactoryType__ || _AiOptionsComponent)();
   };
-  static \u0275cmp = /* @__PURE__ */ \u0275\u0275defineComponent({ type: _AiOptionsComponent, selectors: [["ca-ai-options"]], outputs: { promptChange: "promptChange", customPrompt: "customPrompt", editPrompt: "editPrompt", aiChange: "aiChange", alertRewriteModeChange: "alertRewriteModeChange", aiSubmit: "aiSubmit" }, decls: 20, vars: 19, consts: [["label", "Options", "icon", "pi pi-bars", "severity", "info", 3, "click"], ["position", "right", 3, "visibleChange", "visible", "header"], [1, "flex", "flex-column", "gap-3"], ["value", "1", 1, "flex", "flex-column", "gap-3"], ["value", "0", 1, "border-1", "border-round-md", "border-surface"], [1, "border-none"], [1, "font-bold", "mb-2"], [1, "flex", "flex-column", "gap-2"], [4, "ngFor", "ngForOf", "ngForTrackBy"], ["value", "1", 1, "border-1", "border-round-md", "border-surface"], ["value", "2", 1, "border-1", "border-round-md", "border-surface"], ["icon", "pi pi-comments", "severity", "primary", 3, "label"], [3, "ngSwitch"], [1, "p-field-radiobutton"], ["name", "taskOptions", 3, "ngModelChange", "value", "ngModel", "inputId", "disabled"], [1, "pl-2", 3, "for"], [1, "p-field-checkbox", "mt-3"], ["inputId", "appendCustom", 3, "ngModelChange", "onChange", "ngModel", "binary"], ["for", "appendCustom", 1, "pl-2"], [1, "flex", "flex-column", "gap-3", "mt-3"], ["id", "ai-changes"], ["ariaLabelledBy", "ai-changes", "fluid", "", 3, "ngModelChange", "onChange", "ngModel", "step"], [1, "flex", "flex-column", "gap-2", "mt-3"], ["name", "promptOptions", 3, "ngModelChange", "onClick", "value", "ngModel", "inputId", "disabled"], [1, "p-field-checkbox"], [3, "ngModelChange", "value", "ngModel", "inputId", "disabled"], ["pTextarea", "", "id", "customPrompt", "fluid", "", 3, "ngModelChange", "blur", "ngModel", "autoResize"], ["for", "customPrompt"], [1, "font-bold", "m-0"], ["inputId", "includeAlertRewriteExamples", 3, "ngModelChange", "onChange", "ngModel", "binary"], ["for", "includeAlertRewriteExamples", 1, "pl-2"], ["inputId", "includeBeforeTextInAlertRewriteExamples", 3, "ngModelChange", "onChange", "ngModel", "binary", "disabled"], ["for", "includeBeforeTextInAlertRewriteExamples", 1, "pl-2"], [1, "border-top-1", "mt-2", 2, "border-color", "#d3d3d3"], [1, "p-field-checkbox", "mt-2"], ["inputId", "includeLinkWritingRules", 3, "ngModelChange", "onChange", "ngModel", "binary"], ["for", "includeLinkWritingRules", 1, "pl-2"], ["inputId", "useAlertPlanning", 3, "ngModelChange", "ngModel", "binary"], ["for", "useAlertPlanning", 1, "pl-2"], ["inputId", "useJsonAlertsIssuesPrompt", 3, "ngModelChange", "onChange", "ngModel", "binary"], ["for", "useJsonAlertsIssuesPrompt", 1, "pl-2"], ["inputId", "useCompactAlertsPageContext", 3, "ngModelChange", "onChange", "ngModel", "binary"], ["for", "useCompactAlertsPageContext", 1, "pl-2"], [1, "text-xs", "text-500"], [1, "text-xs", "text-500", "mt-3"], ["name", "aiOptions", 3, "ngModelChange", "onClick", "value", "ngModel", "inputId", "disabled"], ["styleClass", "chip chip-severe ml-2", 3, "label"], ["icon", "pi pi-comments", "severity", "primary", 3, "click", "label"], ["mode", "prototype", 3, "showSampleDataButton", 4, "ngSwitchCase"], ["mode", "prototype", 3, "showSampleDataButton"]], template: function AiOptionsComponent_Template(rf, ctx) {
+  static \u0275cmp = /* @__PURE__ */ \u0275\u0275defineComponent({ type: _AiOptionsComponent, selectors: [["ca-ai-options"]], outputs: { promptChange: "promptChange", customPrompt: "customPrompt", editPrompt: "editPrompt", aiChange: "aiChange", alertRewriteModeChange: "alertRewriteModeChange", aiSubmit: "aiSubmit" }, decls: 21, vars: 20, consts: [["label", "Options", "icon", "pi pi-bars", "severity", "info", 3, "click"], ["position", "right", 3, "visibleChange", "visible", "header"], [1, "flex", "flex-column", "gap-3"], ["value", "1", 1, "flex", "flex-column", "gap-3"], ["value", "0", 1, "border-1", "border-round-md", "border-surface"], [1, "border-none"], [1, "font-bold", "mb-2"], [1, "flex", "flex-column", "gap-2"], [4, "ngFor", "ngForOf", "ngForTrackBy"], ["value", "1", 1, "border-1", "border-round-md", "border-surface"], ["value", "2", 1, "border-1", "border-round-md", "border-surface"], ["value", "3", 1, "border-1", "border-round-md", "border-surface"], ["icon", "pi pi-comments", "severity", "primary", 3, "label"], [3, "ngSwitch"], [1, "p-field-radiobutton"], ["name", "taskOptions", 3, "ngModelChange", "value", "ngModel", "inputId", "disabled"], [1, "pl-2", 3, "for"], [1, "p-field-checkbox", "mt-3"], ["inputId", "appendCustom", 3, "ngModelChange", "onChange", "ngModel", "binary"], ["for", "appendCustom", 1, "pl-2"], [1, "flex", "flex-column", "gap-3", "mt-3"], ["id", "ai-changes"], ["ariaLabelledBy", "ai-changes", "fluid", "", 3, "ngModelChange", "onChange", "ngModel", "step"], [1, "flex", "flex-column", "gap-2", "mt-3"], ["name", "promptOptions", 3, "ngModelChange", "onClick", "value", "ngModel", "inputId", "disabled"], [1, "p-field-checkbox"], [3, "ngModelChange", "value", "ngModel", "inputId", "disabled"], ["pTextarea", "", "id", "customPrompt", "fluid", "", 3, "ngModelChange", "blur", "ngModel", "autoResize"], ["for", "customPrompt"], [1, "font-bold", "m-0"], ["inputId", "includeAlertRewriteExamples", 3, "ngModelChange", "onChange", "ngModel", "binary"], ["for", "includeAlertRewriteExamples", 1, "pl-2"], ["inputId", "includeBeforeTextInAlertRewriteExamples", 3, "ngModelChange", "onChange", "ngModel", "binary", "disabled"], ["for", "includeBeforeTextInAlertRewriteExamples", 1, "pl-2"], [1, "border-top-1", "mt-2", 2, "border-color", "#d3d3d3"], [1, "p-field-checkbox", "mt-2"], ["inputId", "includeLinkWritingRules", 3, "ngModelChange", "onChange", "ngModel", "binary"], ["for", "includeLinkWritingRules", 1, "pl-2"], ["inputId", "useAlertPlanning", 3, "ngModelChange", "ngModel", "binary"], ["for", "useAlertPlanning", 1, "pl-2"], ["inputId", "useJsonAlertsIssuesPrompt", 3, "ngModelChange", "onChange", "ngModel", "binary"], ["for", "useJsonAlertsIssuesPrompt", 1, "pl-2"], ["inputId", "useCompactAlertsPageContext", 3, "ngModelChange", "onChange", "ngModel", "binary"], ["for", "useCompactAlertsPageContext", 1, "pl-2"], [1, "text-xs", "text-500"], [1, "text-xs", "text-500", "mt-3"], ["name", "aiOptions", 3, "ngModelChange", "onClick", "value", "ngModel", "inputId", "disabled"], ["styleClass", "chip chip-severe ml-2", 3, "label"], [1, "m-0", "text-sm", "text-600"], ["pTextarea", "", "id", "skillRoutingInput", "rows", "4", "fluid", "", 3, "ngModelChange", "ngModel", "autoResize"], ["for", "skillRoutingInput"], [1, "flex", "flex-column", "gap-2", "mt-2"], [1, "m-0", "font-semibold"], [1, "flex", "gap-2"], ["label", "Route skills", "severity", "primary", "size", "small", 3, "click"], ["label", "Clear", "severity", "secondary", "size", "small", 3, "click"], [1, "mt-2"], [1, "mt-2", "border-top-1", "pt-2", 2, "border-color", "#d9d9d9"], ["name", "promptModeOptions", 3, "ngModelChange", "value", "ngModel", "inputId"], ["name", "outputFormatOptions", 3, "ngModelChange", "value", "ngModel", "inputId"], ["class", "border-1 border-round-sm p-2", "style", "border-color: #d9d9d9;", 4, "ngFor", "ngForOf"], [1, "border-1", "border-round-sm", "p-2", 2, "border-color", "#d9d9d9"], [1, "m-0", "font-bold"], [1, "m-0", "text-sm", 3, "ngClass"], [1, "flex", "flex-column", "gap-1", "mt-2"], ["class", "m-0 text-sm", 4, "ngFor", "ngForOf"], [1, "m-0", "text-sm"], ["pTextarea", "", "rows", "8", "readonly", "", "fluid", "", 3, "value", "autoResize"], ["icon", "pi pi-comments", "severity", "primary", 3, "click", "label"], ["mode", "prototype", 3, "showSampleDataButton", 4, "ngSwitchCase"], ["mode", "prototype", 3, "showSampleDataButton"]], template: function AiOptionsComponent_Template(rf, ctx) {
     if (rf & 1) {
       \u0275\u0275elementStart(0, "p-button", 0);
       \u0275\u0275listener("click", function AiOptionsComponent_Template_p_button_click_0_listener() {
@@ -25489,20 +26160,20 @@ var AiOptionsComponent = class _AiOptionsComponent {
       \u0275\u0275elementStart(14, "div", 7);
       \u0275\u0275template(15, AiOptionsComponent_ng_container_15_Template, 6, 8, "ng-container", 8);
       \u0275\u0275elementEnd()()()();
-      \u0275\u0275template(16, AiOptionsComponent_Conditional_16_Template, 23, 18, "p-accordion-panel", 9)(17, AiOptionsComponent_Conditional_17_Template, 12, 8, "p-accordion-panel", 10);
+      \u0275\u0275template(16, AiOptionsComponent_Conditional_16_Template, 23, 18, "p-accordion-panel", 9)(17, AiOptionsComponent_Conditional_17_Template, 12, 8, "p-accordion-panel", 10)(18, AiOptionsComponent_Conditional_18_Template, 26, 10, "p-accordion-panel", 11);
       \u0275\u0275elementEnd();
-      \u0275\u0275template(18, AiOptionsComponent_Conditional_18_Template, 2, 3, "p-button", 11)(19, AiOptionsComponent_Conditional_19_Template, 4, 4, "ng-container", 12);
+      \u0275\u0275template(19, AiOptionsComponent_Conditional_19_Template, 2, 3, "p-button", 12)(20, AiOptionsComponent_Conditional_20_Template, 4, 4, "ng-container", 13);
       \u0275\u0275elementEnd()();
     }
     if (rf & 2) {
       \u0275\u0275advance();
-      \u0275\u0275styleMap(\u0275\u0275pureFunction0(18, _c04));
+      \u0275\u0275styleMap(\u0275\u0275pureFunction0(19, _c04));
       \u0275\u0275twoWayProperty("visible", ctx.visible);
-      \u0275\u0275property("header", \u0275\u0275pipeBind1(2, 12, "page.ai-options.header"));
+      \u0275\u0275property("header", \u0275\u0275pipeBind1(2, 13, "page.ai-options.header"));
       \u0275\u0275advance(6);
-      \u0275\u0275textInterpolate(\u0275\u0275pipeBind1(8, 14, "page.ai-options.task.header"));
+      \u0275\u0275textInterpolate(\u0275\u0275pipeBind1(8, 15, "page.ai-options.task.header"));
       \u0275\u0275advance(5);
-      \u0275\u0275textInterpolate(\u0275\u0275pipeBind1(13, 16, "page.ai-options.task.legend"));
+      \u0275\u0275textInterpolate(\u0275\u0275pipeBind1(13, 17, "page.ai-options.task.legend"));
       \u0275\u0275advance(3);
       \u0275\u0275property("ngForOf", ctx.taskOptions)("ngForTrackBy", ctx.trackById);
       \u0275\u0275advance();
@@ -25512,9 +26183,11 @@ var AiOptionsComponent = class _AiOptionsComponent {
       \u0275\u0275advance();
       \u0275\u0275conditional(!ctx.isPrototype ? 18 : -1);
       \u0275\u0275advance();
-      \u0275\u0275conditional(ctx.isPrototype ? 19 : -1);
+      \u0275\u0275conditional(!ctx.isPrototype ? 19 : -1);
+      \u0275\u0275advance();
+      \u0275\u0275conditional(ctx.isPrototype ? 20 : -1);
     }
-  }, dependencies: [TranslateModule, TranslatePipe, CommonModule, NgForOf, NgSwitch, NgSwitchCase, FormsModule, DefaultValueAccessor, NgControlStatus, NgModel, ButtonModule, Button, DrawerModule, Drawer, RadioButtonModule, RadioButton, CheckboxModule, Checkbox, AccordionModule, Accordion, AccordionPanel, AccordionHeader, AccordionContent, ChipModule, Chip, TextareaModule, Textarea, IftaLabelModule, IftaLabel, SliderModule, Slider, UploadUrlComponent, UploadPasteComponent, UploadWordComponent], encapsulation: 2 });
+  }, dependencies: [TranslateModule, TranslatePipe, CommonModule, NgClass, NgForOf, NgSwitch, NgSwitchCase, FormsModule, DefaultValueAccessor, NgControlStatus, NgModel, ButtonModule, Button, DrawerModule, Drawer, RadioButtonModule, RadioButton, CheckboxModule, Checkbox, AccordionModule, Accordion, AccordionPanel, AccordionHeader, AccordionContent, ChipModule, Chip, TextareaModule, Textarea, IftaLabelModule, IftaLabel, SliderModule, Slider, UploadUrlComponent, UploadPasteComponent, UploadWordComponent], encapsulation: 2 });
 };
 (() => {
   (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(AiOptionsComponent, [{
@@ -25747,6 +26420,115 @@ var AiOptionsComponent = class _AiOptionsComponent {
           </p-accordion-content>
         </p-accordion-panel>
       }
+      @if (!isPrototype) {
+        <p-accordion-panel value="3" class="border-1 border-round-md border-surface">
+          <p-accordion-header>Skills + rubric preview</p-accordion-header>
+          <p-accordion-content>
+            <div class="flex flex-column gap-2">
+              <p class="m-0 text-sm text-600">Test routing against a sample user request.</p>
+              <p-iftalabel>
+                <textarea
+                  pTextarea
+                  id="skillRoutingInput"
+                  [(ngModel)]="skillRoutingInput"
+                  [autoResize]="true"
+                  rows="4"
+                  fluid
+                ></textarea>
+                <label for="skillRoutingInput">User request</label>
+              </p-iftalabel>
+              <div class="flex flex-column gap-2 mt-2">
+                <p class="m-0 font-semibold">Prompt mode</p>
+                <ng-container *ngFor="let option of promptModeOptions; trackBy: trackById">
+                  <div class="p-field-radiobutton">
+                    <p-radioButton
+                      name="promptModeOptions"
+                      [value]="option.id"
+                      [(ngModel)]="selectedPromptMode"
+                      [inputId]="option.id"
+                    />
+                    <label [for]="option.id" class="pl-2">{{ option.label }}</label>
+                  </div>
+                </ng-container>
+              </div>
+              <div class="flex flex-column gap-2 mt-2">
+                <p class="m-0 font-semibold">Output format</p>
+                <ng-container *ngFor="let option of outputFormatOptions; trackBy: trackById">
+                  <div class="p-field-radiobutton">
+                    <p-radioButton
+                      name="outputFormatOptions"
+                      [value]="option.id"
+                      [(ngModel)]="selectedOutputFormat"
+                      [inputId]="option.id"
+                    />
+                    <label [for]="option.id" class="pl-2">{{ option.label }}</label>
+                  </div>
+                </ng-container>
+              </div>
+              <div class="flex gap-2">
+                <p-button
+                  label="Route skills"
+                  severity="primary"
+                  size="small"
+                  (click)="runSkillRoutingPreview()"
+                />
+                <p-button
+                  label="Clear"
+                  severity="secondary"
+                  size="small"
+                  (click)="clearSkillRoutingPreview()"
+                />
+              </div>
+
+              @if (routedSkillsPreview.length > 0) {
+                <div class="mt-2">
+                  <p class="font-bold mb-2">Selected skills</p>
+                  <div class="flex flex-column gap-2">
+                    <div
+                      class="border-1 border-round-sm p-2"
+                      style="border-color: #d9d9d9;"
+                      *ngFor="let route of routedSkillsPreview"
+                    >
+                      <p class="m-0 font-semibold">{{ route.skill.name }} (score: {{ route.score }})</p>
+                      <p class="m-0 text-sm text-600">{{ route.skill.description }}</p>
+                    </div>
+                  </div>
+                </div>
+              }
+
+              @if (rubricPreview) {
+                <div class="mt-2 border-top-1 pt-2" style="border-color: #d9d9d9;">
+                  <p class="m-0 font-bold">
+                    Rubric: {{ rubricPreview.total }}/{{ rubricPreview.maxTotal }} ({{ rubricPercent }}%)
+                  </p>
+                  <p class="m-0 text-sm" [ngClass]="rubricPreview.passed ? 'text-green-600' : 'text-red-600'">
+                    {{ rubricPreview.passed ? 'Pass' : 'Needs work' }}
+                  </p>
+                  <div class="flex flex-column gap-1 mt-2">
+                    <p class="m-0 text-sm" *ngFor="let dim of rubricPreview.dimensions">
+                      {{ dim.id }}: {{ dim.score }}/2 (weight {{ dim.weight }})
+                    </p>
+                  </div>
+                </div>
+              }
+
+              @if (previewFragmentIds.length > 0) {
+                <div class="mt-2 border-top-1 pt-2" style="border-color: #d9d9d9;">
+                  <p class="font-bold mb-2">Included prompt fragments</p>
+                  <p class="m-0 text-sm" *ngFor="let id of previewFragmentIds">{{ id }}</p>
+                </div>
+              }
+
+              @if (previewSystemPrompt) {
+                <div class="mt-2 border-top-1 pt-2" style="border-color: #d9d9d9;">
+                  <p class="font-bold mb-2">Assembled system prompt (preview)</p>
+                  <textarea pTextarea [value]="previewSystemPrompt" [autoResize]="true" rows="8" readonly fluid></textarea>
+                </div>
+              }
+            </div>
+          </p-accordion-content>
+        </p-accordion-panel>
+      }
     </p-accordion>
 
     <!--Close drawer and emit event-->
@@ -25781,7 +26563,7 @@ var AiOptionsComponent = class _AiOptionsComponent {
   }] });
 })();
 (() => {
-  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(AiOptionsComponent, { className: "AiOptionsComponent", filePath: "src/app/views/page-assistant/components/ai-options.component.ts", lineNumber: 32 });
+  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(AiOptionsComponent, { className: "AiOptionsComponent", filePath: "src/app/views/page-assistant/components/ai-options.component.ts", lineNumber: 36 });
 })();
 
 // src/app/views/page-assistant/components/problems/heading-structure.component.ts
@@ -41695,4 +42477,4 @@ H2 headings (${h2Headings.length}): ${h2Headings.join(" | ") || "N/A"}`,
 export {
   PageAssistantCompareComponent
 };
-//# sourceMappingURL=chunk-UPAGGSNG.js.map
+//# sourceMappingURL=chunk-KH67SOIY.js.map
