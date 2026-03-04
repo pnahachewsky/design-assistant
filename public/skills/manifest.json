@@ -1,0 +1,37 @@
+{
+  "skills": [
+    {
+      "id": "canada-alerts-json",
+      "name": "canada-alerts-json",
+      "description": "Analyzes and rewrites Canada.ca web alerts for content design, WCAG 2.1 accessibility, and HTML compliance.",
+      "skillMdPath": "skills/alerts/canada-alerts-json/SKILL.md",
+      "triggerPhrases": [
+        "alert",
+        "alerts",
+        "rewrite alert",
+        "canada.ca",
+        "wcag",
+        "issue",
+        "issues",
+        "json schema"
+      ],
+      "promptKeys": [
+        "alertsIssues",
+        "alertsRecommendations"
+      ],
+      "outputModes": [
+        "json",
+        "text"
+      ],
+      "defaultReferencePaths": [
+        "skills/alerts/canada-alerts-json/references/rubric-and-guidelines.md"
+      ],
+      "optionalReferencePaths": [
+        "skills/alerts/canada-alerts-json/references/examples.json"
+      ],
+      "defaultAssetPaths": [
+        "skills/alerts/canada-alerts-json/assets/output-schema.json"
+      ]
+    }
+  ]
+}

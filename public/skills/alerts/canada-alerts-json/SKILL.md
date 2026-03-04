@@ -1,5 +1,5 @@
 ---
-name: claude-skills-style-prompts
+name: canada-alerts-json
 description: Analyzes and rewrites Canada.ca web alerts for content design, WCAG 2.1 accessibility, and HTML compliance. Use when asked to evaluate, fix, or rewrite HTML alerts.
 ---
 
