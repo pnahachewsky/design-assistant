@@ -17,6 +17,10 @@ import { TranslateModule } from "@ngx-translate/core";
 //Services
 import { CompareTask, PromptKey, AiModel, AlertRewriteMode } from '../data/data.model'
 import { UploadStateService } from '../services/upload-state.service';
+import { SkillRouterService, RoutedSkillScore } from '../services/skill-router.service';
+import { RubricResult } from '../data/rubric.types';
+import { PromptComposerService } from '../services/prompt-composer.service';
+import { PromptMode, PromptOutputFormat } from '../data/prompt-fragments';
 import { UploadUrlComponent } from './upload/upload-url.component';
 import { UploadPasteComponent } from './upload/upload-paste.component';
 import { UploadWordComponent } from './upload/upload-word.component';
@@ -31,6 +35,8 @@ import { UploadWordComponent } from './upload/upload-word.component';
 })
 export class AiOptionsComponent implements OnInit {
   private uploadState = inject(UploadStateService);
+  private skillRouter = inject(SkillRouterService);
+  private promptComposer = inject(PromptComposerService);
 
   @Output() promptChange = new EventEmitter<PromptKey>();
   @Output() customPrompt = new EventEmitter<string>();
@@ -40,6 +46,22 @@ export class AiOptionsComponent implements OnInit {
   @Output() aiSubmit = new EventEmitter<void>();
 
   visible = false;
+  skillRoutingInput = '';
+  routedSkillsPreview: RoutedSkillScore[] = [];
+  rubricPreview: RubricResult | null = null;
+  previewSystemPrompt = '';
+  previewFragmentIds: string[] = [];
+  selectedPromptMode: PromptMode = 'balanced';
+  selectedOutputFormat: PromptOutputFormat = 'text';
+  promptModeOptions: { id: PromptMode; label: string }[] = [
+    { id: 'balanced', label: 'Balanced edits' },
+    { id: 'light-edit', label: 'Light edits' },
+    { id: 'strict-rewrite', label: 'Strict rewrite' },
+  ];
+  outputFormatOptions: { id: PromptOutputFormat; label: string }[] = [
+    { id: 'text', label: 'Text output' },
+    { id: 'json', label: 'JSON output' },
+  ];
 
   //Gets upload type for task = compare with prototype
   get uploadType(): 'url' | 'paste' | 'word' {
@@ -48,6 +70,13 @@ export class AiOptionsComponent implements OnInit {
 
   trackById(index: number, item: { id: string | number }): string | number {
     return item.id;
+  }
+
+  get rubricPercent(): number {
+    if (!this.rubricPreview || this.rubricPreview.maxTotal === 0) {
+      return 0;
+    }
+    return Math.round((this.rubricPreview.total / this.rubricPreview.maxTotal) * 100);
   }
 
   //Comparison task
@@ -194,6 +223,31 @@ export class AiOptionsComponent implements OnInit {
   onUseCompactAlertsPageContextSelect(useCompact: boolean): void {
     this.useCompactAlertsPageContext = useCompact;
     this.uploadState.setUseCompactAlertsPageContext(useCompact);
+  }
+
+  runSkillRoutingPreview(): void {
+    this.routedSkillsPreview = this.skillRouter.routeSkills(this.skillRoutingInput);
+    const selectedSkills = this.routedSkillsPreview.map((entry) => entry.skill);
+    this.rubricPreview = this.skillRouter.evaluateRubric({
+      userText: this.skillRoutingInput,
+      selectedSkills,
+    });
+    const composed = this.promptComposer.compose({
+      basePrompt: 'You are a page rewrite assistant.',
+      selectedSkillIds: selectedSkills.map((skill) => skill.id),
+      mode: this.selectedPromptMode,
+      outputFormat: this.selectedOutputFormat,
+    });
+    this.previewSystemPrompt = composed.prompt;
+    this.previewFragmentIds = composed.fragmentIds;
+  }
+
+  clearSkillRoutingPreview(): void {
+    this.skillRoutingInput = '';
+    this.routedSkillsPreview = [];
+    this.rubricPreview = null;
+    this.previewSystemPrompt = '';
+    this.previewFragmentIds = [];
   }
 
   //submit selected prompt and model to AI
