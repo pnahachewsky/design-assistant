@@ -14,7 +14,7 @@ const promptFiles: Record<PromptKey, string> = {
   [PromptKey.Doormats]: new URL('doormats.txt', PROMPT_BASE_URL).toString(),
   [PromptKey.PlainLanguage]: new URL('plain-language.txt', PROMPT_BASE_URL).toString(),
   [PromptKey.AlertsIssues]: alertsIssuesTextPath,
-  [PromptKey.AlertsRecommendations]: new URL('alerts-recommendations.txt', PROMPT_BASE_URL).toString(),
+  [PromptKey.AlertsRecommendations]: new URL('alerts-rewriting.txt', PROMPT_BASE_URL).toString(),
 };
 
 const commsObjectivePath = new URL('comms-objective.txt', PROMPT_BASE_URL).toString();
