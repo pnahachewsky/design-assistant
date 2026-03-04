@@ -16,3 +16,116 @@
     "html_after": "<section class=\"alert alert-info\">\n  <p class=\"h3 mrgn-tp-0\">Availability of tax information</p>\n  <p>If you do not see a tax slip in your CRA account when you are filing your 2024 tax return, use the slip provided by the issuer (for example, your financial institution or employer). TFSA information is now available in your CRA account, but it is important to keep your own records to avoid overcontributing.</p>\n</section>"
   }
 ]
+[
+  {
+    "id": "ex-001",
+    "alertType": "info",
+    "tags": ["housing", "gst", "rebate", "legislation", "policy-update", "missing-heading"],
+    "criteria": ["C2_too_wordy", "C4_missing_heading", "C7_too_vague"],
+    "before": "This webpage has been updated to include details about the First-time home buyers' GST rebate. Please see GST/HST new housing rebates you can claim for more information. The details provided on this rebate are based on legislative proposals, which are currently subject to parliamentary approval and may change.",
+    "after": "The details provided on this rebate are based on proposed legislation and may change.",
+    "headingBefore": "",
+    "headingAfter": "Details provided may change",
+    "notes": "Adds missing heading, removes update/link boilerplate, and keeps the core policy caveat.",
+    "linksBefore": [],
+    "linksAfter": []
+  },
+  {
+    "id": "ex-002",
+    "alertType": "info",
+    "tags": ["tax", "slips", "filing", "cra-account", "action-required"],
+    "criteria": ["C1_missing_next_step", "C2_too_wordy"],
+    "before": "While the CRA works to process tax slips and make them available as they are received, it is possible that your slips may not currently be available in your CRA account or through the Auto-fill my return service. If you have not yet filed your 2024 tax return and do not see a slip in your CRA account, we recommend using the slip provided by the issuer (e.g. your financial institution or employer).",
+    "after": "If you do not see a tax slip in your CRA account when you are filing your 2024 tax return, use the slip provided by the issuer (for example, your financial institution or employer). TFSA information is now available in your CRA account, but it is important to keep your own records to avoid overcontributing.",
+    "headingBefore": "Availability of tax information",
+    "headingAfter": "Availability of tax information",
+    "notes": "Keeps heading, makes next action explicit, and adds TFSA clarification.",
+    "linksBefore": [],
+    "linksAfter": []
+  },
+  {
+    "id": "ex-003",
+    "alertType": "info",
+    "tags": ["wildfire", "disaster-support", "benefits", "tax-affairs"],
+    "criteria": ["C0_no_change"],
+    "before": "If you've been impacted by wildfires, visit our [LINK] disaster support page [END LINK] for information on managing your tax affairs and accessing benefit and credit payments during and after a disaster.",
+    "after": "If you've been impacted by wildfires, visit our [LINK] disaster support page [END LINK] for information on managing your tax affairs and accessing benefit and credit payments during and after a disaster.",
+    "headingBefore": "Support for Canadians affected by wildfires",
+    "headingAfter": "Support for Canadians affected by wildfires",
+    "linksBefore": [
+      {
+        "id": "L1",
+        "text": "disaster support page"
+      }
+    ],
+    "linksAfter": [
+      {
+        "id": "L1",
+        "text": "disaster support page"
+      }
+    ],
+    "linkEdits": [
+      {
+        "id": "L1",
+        "action": "keep",
+        "note": "Link text and placement unchanged."
+      }
+    ],
+    "notes": "No edits were provided (long sentence retained)."
+  },
+  {
+    "id": "ex-004",
+    "alertType": "info",
+    "tags": ["business", "tariffs", "tax-relief", "support"],
+    "criteria": ["C4_missing_heading", "C7_too_vague"],
+    "before": "[Original text unavailable]",
+    "after": "Find the CRA's latest [LINK] tax relief measures and support for businesses in response to tariffs [END LINK].",
+    "headingAfter": "Support for businesses in response to tariffs",
+    "linksBefore": [],
+    "linksAfter": [
+      {
+        "id": "L1",
+        "text": "tax relief measures and support for businesses in response to tariffs"
+      }
+    ],
+    "linkEdits": [
+      {
+        "id": "L1",
+        "action": "add",
+        "afterText": "tax relief measures and support for businesses in response to tariffs",
+        "note": "Original text unavailable; link introduced in edited version."
+      }
+    ],
+    "notes": "Original not provided; placeholder before text used."
+  },
+  {
+    "id": "ex-005",
+    "alertType": "info",
+    "tags": ["luxury-tax", "aircraft", "vessels", "legislation", "date-sensitive"],
+    "criteria": ["C2_too_wordy", "C7_too_vague"],
+    "before": "On November 4, 2025, the Government of Canada announced, through Budget 2025, that the luxury tax would no longer be payable on subject aircraft and subject vessels starting on November 5, 2025. [NEW PARAGRAPH] For more information, refer to [LINK] Notice LTN5, Luxury tax not payable on subject aircraft and subject vessels [END LINK].",
+    "after": "The Government of Canada has tabled legislation proposing to remove the luxury tax on sales of aircraft and vessels effective November 5, 2025. [NEW PARAGRAPH] For more information: [LINK] Notice LTN5, Luxury tax not payable on subject aircraft and subject vessels [END LINK].",
+    "headingBefore": "Luxury tax not payable on subject aircraft and subject vessels",
+    "headingAfter": "Removal of the luxury tax on sales of aircraft and vessels",
+    "linksBefore": [
+      {
+        "id": "L1",
+        "text": "Notice LTN5, Luxury tax not payable on subject aircraft and subject vessels"
+      }
+    ],
+    "linksAfter": [
+      {
+        "id": "L1",
+        "text": "Notice LTN5, Luxury tax not payable on subject aircraft and subject vessels"
+      }
+    ],
+    "linkEdits": [
+      {
+        "id": "L1",
+        "action": "keep",
+        "note": "Primary reference link retained."
+      }
+    ],
+    "notes": "Reframes as proposed legislation and keeps reference link."
+  }
+]
