@@ -5,6 +5,6 @@
     "tags": ["luxury-tax", "legislation", "date-sensitive"],
     "issues_identified": ["Too wordy", "Missing heading"],
     "html_before": "<div class=\"alert alert-info\"><p>On November 4, 2025, the Government of Canada announced...</p></div>",
-    "html_after": "<section class=\"alert alert-info\">\n  <p class=\"h3 mrgn-tp-0\">Removal of the luxury tax on aircraft and vessels</p>\n  <p>The Government of Canada has tabled legislation proposing to remove the luxury tax on sales of aircraft and vessels effective November 5, 2025. For more information: <a href=\"/notice-ltn5\">Notice LTN5</a>.</p>\n</section>"
+    "html_after": "<section class=\"alert alert-info\">\n  <h2 class=\"h3 mrgn-tp-0\">Removal of the luxury tax on aircraft and vessels</p>\n  <p>The Government of Canada has tabled legislation proposing to remove the luxury tax on sales of aircraft and vessels effective November 5, 2025. For more information: <a href=\"/notice-ltn5\">Notice LTN5</a>.</p>\n</section>"
   }
 ]
