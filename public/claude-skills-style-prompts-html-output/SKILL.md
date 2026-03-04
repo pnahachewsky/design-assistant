@@ -1,5 +1,5 @@
 ---
-name: canada-alerts-writer-html
+name: claude-skills-style-prompts-html-output
 description: Analyzes and rewrites Canada.ca web alerts. Use when asked to evaluate, fix, or rewrite HTML alerts and return a pure HTML file.
 ---
 
