@@ -260,6 +260,7 @@ export class AlertRewriteService {
     originalHeading?: string;
     originalAlertHtml: string;
     plan: AlertRewritePlan;
+    issues: AlertRewriteIssueInput[];
     examples: AlertRewriteExample[];
     includeBeforeTextInExamples?: boolean;
     includeLinkWritingRules?: boolean;
@@ -286,6 +287,40 @@ export class AlertRewriteService {
       styleRules.push(params.retryInstruction);
     }
     const includeBeforeText = params.includeBeforeTextInExamples === true;
+    const rawIssues = params.issues
+      .map((issue) => {
+        const category = this.cleanString(issue.category);
+        const severity = this.cleanString(issue.severity);
+        const description = this.cleanString(issue.description);
+        const recommendation = this.cleanString(issue.recommendation);
+        const alertIndex =
+          typeof issue.alertIndex === 'number' && Number.isFinite(issue.alertIndex)
+            ? issue.alertIndex
+            : undefined;
+        const include =
+          typeof issue.include === 'boolean' ? issue.include : undefined;
+
+        if (
+          !category &&
+          !severity &&
+          !description &&
+          !recommendation &&
+          alertIndex === undefined &&
+          include === undefined
+        ) {
+          return null;
+        }
+
+        return {
+          ...(alertIndex !== undefined ? { alertIndex } : {}),
+          ...(category ? { category } : {}),
+          ...(severity ? { severity } : {}),
+          ...(description ? { description } : {}),
+          ...(recommendation ? { recommendation } : {}),
+          ...(include !== undefined ? { include } : {}),
+        };
+      })
+      .filter((issue): issue is NonNullable<typeof issue> => !!issue);
 
     const planPayload =
       params.mode === AlertRewriteMode.AB
@@ -323,6 +358,7 @@ export class AlertRewriteService {
         linkEdits: example.linkEdits || [],
       })),
       plan: planPayload,
+      issues: rawIssues,
       originalHeading: (params.originalHeading || '').trim(),
       originalAlertText: (params.originalAlertText || '').trim(),
       originalAlertHtml: (params.originalAlertHtml || '').trim(),

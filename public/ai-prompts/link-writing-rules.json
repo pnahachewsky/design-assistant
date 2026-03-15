@@ -19,7 +19,7 @@
     {
       "id": "L4_avoid_duplicate_link_text",
       "condition": "always",
-      "text": "Avoid duplicate wording. Do not repeat the linked phrase outside the anchor when meaning is preserved. Keep the destination phrase in the link (for example: Find out: <a href=\"...\">Get an access code</a>, not Find out how to get an access code: <a href=\"...\">Get an access code</a>). Avoid using \"see\" before links; use inclusive alternatives like \"refer to\" or \"visit\". When a link is present, prefer a short plain-text lead-in (for example: \"Find out:\", \"Learn more:\", \"Learn about \") plus unique link text, with minimal repeated wording outside the anchor."
+      "text": "Avoid duplicate wording. Do not repeat the linked phrase outside the anchor when meaning is preserved. Keep the destination phrase in the link. Avoid using \"see\" before links; use inclusive alternatives like \"refer to\" or \"visit\". When a link is present, prefer a short plain-text lead-in plus unique link text, with minimal repeated wording outside the anchor."
     },
     {
       "id": "L5_no_vague_anchor_text",
@@ -34,7 +34,17 @@
     {
       "id": "L7_learn_more_fallback",
       "condition": "always",
-      "text": "If a link is an entire sentence, move it to a new paragraph and add plain-text lead-in text: \"Learn more:\" or \"Refer to:\" <a href=\"...\">Descriptive link text</a>. Use this fallback when in-sentence placement is awkward."
+      "text": "If a link is an entire sentence, or if a sentence mainly directs the user to a link, move it to a new paragraph. Use one of these lead-ins before the anchor: \"Refer to:\", \"Learn more:\", or \"Learn about:\". Use \"Find out\" only without a colon and only when the link text naturally completes the phrase, such as \"how to...\", \"if...\", or \"whether...\"."
+    },
+    {
+      "id": "L11_find_out_usage",
+      "condition": "always",
+      "text": "Do not use \"Find out:\" with a colon. Use \"Find out\" only when the anchor text completes it naturally, for example \"Find out how to...\", \"Find out if...\", or \"Find out whether...\". Do not use \"Find out\" before imperative link text such as \"Get...\", \"Apply...\", or \"Register...\"."
+    },
+    {
+      "id": "L12_lead_in_selection",
+      "condition": "always",
+      "text": "Choose the lead-in that matches the destination and keep it in its own paragraph. Prefer \"Refer to:\" when the link is needed to complete a task, access a service, sign in, apply, register, submit, get a code, or take a required next step. Prefer \"Learn more:\" when the link is optional background, a status page, an update page, or supplemental information. Use \"Learn about:\" for explainer or topic pages. Do not append these lead-ins to the explanatory sentence."
     },
     {
       "id": "L8_remove_only_when_too_many",

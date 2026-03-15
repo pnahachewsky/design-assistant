@@ -1,0 +1,119 @@
+[
+  {
+    "id": "ex-001",
+    "alertType": "info",
+    "tags": ["housing", "gst", "rebate", "legislation", "policy-update", "missing-heading"],
+    "criteria": ["C2_too_wordy", "C4_missing_heading", "C7_too_vague"],
+    "headingBefore": "",
+    "headingAfter": "Details provided may change",
+    "before": "This webpage has been updated to include details about the First-time home buyers' GST rebate. Please see GST/HST new housing rebates you can claim for more information. The details provided on this rebate are based on legislative proposals, which are currently subject to parliamentary approval and may change.",
+    "after": "The details provided on this rebate are based on proposed legislation and may change.",
+    "linksBefore": [],
+    "linksAfter": [],
+    "updatedHtml": "<section class=\"alert alert-info\"><p class=\"h3 mrgn-tp-0\">Details provided may change</p><p>The details provided on this rebate are based on proposed legislation and may change.</p></section>",
+    "notes": "Adds a descriptive heading and removes non-essential text."
+  },
+  {
+    "id": "ex-002",
+    "alertType": "info",
+    "tags": ["tax", "slips", "filing", "cra-account", "action-required"],
+    "criteria": ["C1_missing_next_step", "C2_too_wordy"],
+    "headingBefore": "Availability of tax information",
+    "headingAfter": "Availability of tax information",
+    "before": "While the CRA works to process tax slips and make them available as they are received, it is possible that your slips may not currently be available in your CRA account or through the Auto-fill my return service. If you have not yet filed your 2024 tax return and do not see a slip in your CRA account, we recommend using the slip provided by the issuer (for example, your financial institution or employer).",
+    "after": "If you do not see a tax slip in your CRA account when filing your 2024 tax return, use the slip provided by the issuer, such as your financial institution or employer.",
+    "linksBefore": [],
+    "linksAfter": [],
+    "updatedHtml": "<section class=\"alert alert-info\"><p class=\"h3 mrgn-tp-0\">Availability of tax information</p><p>If you do not see a tax slip in your CRA account when filing your 2024 tax return, use the slip provided by the issuer, such as your financial institution or employer.</p></section>",
+    "notes": "Keeps the existing heading and adds a clearer next step."
+  },
+  {
+    "id": "ex-003",
+    "alertType": "info",
+    "tags": ["wildfire", "disaster-support", "benefits", "tax-affairs"],
+    "criteria": ["C0_no_change"],
+    "headingBefore": "Support for Canadians affected by wildfires",
+    "headingAfter": "Support for Canadians affected by wildfires",
+    "before": "If you've been impacted by wildfires, visit the disaster support page for information on managing your tax affairs and accessing benefit and credit payments during and after a disaster.",
+    "after": "If you've been impacted by wildfires, visit the disaster support page for information on managing your tax affairs and accessing benefit and credit payments during and after a disaster.",
+    "linksBefore": [
+      {
+        "id": "L1",
+        "text": "disaster support page",
+        "href": "/disaster-support"
+      }
+    ],
+    "linksAfter": [
+      {
+        "id": "L1",
+        "text": "disaster support page",
+        "href": "/disaster-support"
+      }
+    ],
+    "linkEdits": [
+      {
+        "id": "L1",
+        "action": "keep",
+        "note": "Link text and placement unchanged."
+      }
+    ],
+    "updatedHtml": "<section class=\"alert alert-info\"><p class=\"h3 mrgn-tp-0\">Support for Canadians affected by wildfires</p><p>If you've been impacted by wildfires, visit the <a href=\"/disaster-support\">disaster support page</a> for information on managing your tax affairs and accessing benefit and credit payments during and after a disaster.</p></section>",
+    "notes": "No rewrite required beyond preserving valid HTML link markup."
+  },
+  {
+    "id": "ex-004",
+    "alertType": "info",
+    "tags": ["business", "tariffs", "tax-relief", "support"],
+    "criteria": ["C4_missing_heading", "C7_too_vague"],
+    "headingBefore": "",
+    "headingAfter": "Support for businesses in response to tariffs",
+    "before": "[Original text unavailable]",
+    "after": "Find the CRA's latest tax relief measures and support for businesses in response to tariffs.",
+    "linksBefore": [],
+    "linksAfter": [
+      {
+        "id": "L1",
+        "text": "tax relief measures and support for businesses in response to tariffs"
+      }
+    ],
+    "linkEdits": [
+      {
+        "id": "L1",
+        "action": "add",
+        "afterText": "tax relief measures and support for businesses in response to tariffs",
+        "note": "Original text unavailable; use only for heading specificity and concise phrasing guidance."
+      }
+    ],
+    "notes": "Original source text was unavailable. Treat this as a style example, not a factual source."
+  },
+  {
+    "id": "ex-005",
+    "alertType": "info",
+    "tags": ["luxury-tax", "aircraft", "vessels", "legislation", "date-sensitive"],
+    "criteria": ["C2_too_wordy", "C7_too_vague"],
+    "headingBefore": "Luxury tax not payable on subject aircraft and subject vessels",
+    "headingAfter": "Removal of the luxury tax on sales of aircraft and vessels",
+    "before": "On November 4, 2025, the Government of Canada announced, through Budget 2025, that the luxury tax would no longer be payable on subject aircraft and subject vessels starting on November 5, 2025. For more information, refer to Notice LTN5, Luxury tax not payable on subject aircraft and subject vessels.",
+    "after": "The Government of Canada has tabled legislation proposing to remove the luxury tax on sales of aircraft and vessels effective November 5, 2025. For more information, refer to Notice LTN5, Luxury tax not payable on subject aircraft and subject vessels.",
+    "linksBefore": [
+      {
+        "id": "L1",
+        "text": "Notice LTN5, Luxury tax not payable on subject aircraft and subject vessels"
+      }
+    ],
+    "linksAfter": [
+      {
+        "id": "L1",
+        "text": "Notice LTN5, Luxury tax not payable on subject aircraft and subject vessels"
+      }
+    ],
+    "linkEdits": [
+      {
+        "id": "L1",
+        "action": "keep",
+        "note": "Primary reference link retained."
+      }
+    ],
+    "notes": "Reframes the message as proposed legislation and keeps the reference link."
+  }
+]

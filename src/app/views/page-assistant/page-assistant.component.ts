@@ -45,6 +45,7 @@ import {
   AlertRewriteResult,
 } from './services/alert-rewrite.service';
 import { OpenRouterService } from './services/openrouter.service';
+import { SkillManagerService, SkillOutputMode } from './services/skill-manager.service';
 
 //Data
 import {
@@ -109,6 +110,7 @@ export class PageAssistantCompareComponent
   private alertAi = inject(AlertAiService);
   private alertRewrite = inject(AlertRewriteService);
   private openRouter = inject(OpenRouterService);
+  private skillManager = inject(SkillManagerService);
   private urlDataService = inject(UrlDataService);
   private router = inject(Router);
   private locationStrategy = inject(LocationStrategy);
@@ -551,10 +553,47 @@ export class PageAssistantCompareComponent
       key !== PromptKey.AlertsRecommendations;
     const editPrefix = includeEditPrompt ? this.customEditText : '';
     const promptBody = editPrefix ? `${editPrefix}\n\n${base}` : base;
+    const useSkillPrompts = this.uploadState.getUseSkillPrompts();
+    if (!useSkillPrompts) {
+      return custom ? `${promptBody}\n\n${custom}` : promptBody;
+    }
+
+    const queryText = this.buildSkillQueryText(key, custom);
+    const outputMode = this.resolveSkillOutputMode(key);
+    const composed = await this.skillManager.composePrompt({
+      basePrompt: promptBody,
+      queryText,
+      promptKey: key,
+      outputMode,
+      includeReferences:
+        key === PromptKey.AlertsIssues || key === PromptKey.AlertsRecommendations,
+      includeOptionalReferences: key === PromptKey.AlertsRecommendations,
+      includeAssets:
+        key === PromptKey.AlertsIssues || key === PromptKey.AlertsRecommendations,
+    });
 
     return custom
-      ? `${promptBody}\n\n${custom}`
-      : promptBody; //Note: a heading can be added to the custom instructions here, something like ${base}\n\nPrioritize the following:\n${custom}
+      ? `${composed.prompt}\n\n${custom}`
+      : composed.prompt; //Note: a heading can be added to the custom instructions here, something like ${base}\n\nPrioritize the following:\n${custom}
+  }
+
+  private buildSkillQueryText(key: PromptKey, custom: string): string {
+    const promptIntents: Record<PromptKey, string> = {
+      [PromptKey.Headings]: 'heading hierarchy scanability h1 h2 h3',
+      [PromptKey.Doormats]: 'doormat overview list content design',
+      [PromptKey.PlainLanguage]: 'plain language simplify readability rewrite',
+      [PromptKey.AlertsIssues]: 'analyze alert issues wcag accessibility content design',
+      [PromptKey.AlertsRecommendations]:
+        'rewrite canada.ca alerts and provide corrected output',
+    };
+    return [promptIntents[key], custom].filter(Boolean).join('\n');
+  }
+
+  private resolveSkillOutputMode(key: PromptKey): SkillOutputMode {
+    if (key === PromptKey.AlertsIssues || key === PromptKey.AlertsRecommendations) {
+      return 'json';
+    }
+    return 'text';
   }
 
   private truncateContextText(value: string | null | undefined, maxChars: number): string {
@@ -619,6 +658,117 @@ export class PageAssistantCompareComponent
     return 'content';
   }
 
+  private getHeadingUtilityLevel(element: Element | null): number | null {
+    if (!element) return null;
+    for (let level = 1; level <= 6; level += 1) {
+      if (element.classList.contains(`h${level}`)) {
+        return level;
+      }
+    }
+    return null;
+  }
+
+  private getAlertHeadingMetadata(alertElement: Element): {
+    text: string;
+    level: number | null;
+    source: 'semantic' | 'utility-class' | 'none';
+    tag: string;
+  } {
+    const semanticHeading = alertElement.querySelector<HTMLElement>(
+      'h1, h2, h3, h4, h5, h6',
+    );
+    if (semanticHeading) {
+      const headingLevel = Number(semanticHeading.tagName.slice(1));
+      return {
+        text: this.truncateContextText(semanticHeading.textContent || '', 160),
+        level: Number.isFinite(headingLevel) ? headingLevel : null,
+        source: 'semantic',
+        tag: semanticHeading.tagName.toLowerCase(),
+      };
+    }
+
+    const utilityHeading = alertElement.querySelector<HTMLElement>(
+      '.h1, .h2, .h3, .h4, .h5, .h6',
+    );
+    const utilityLevel = this.getHeadingUtilityLevel(utilityHeading);
+    if (utilityHeading && utilityLevel) {
+      return {
+        text: this.truncateContextText(utilityHeading.textContent || '', 160),
+        level: utilityLevel,
+        source: 'utility-class',
+        tag: utilityHeading.tagName.toLowerCase(),
+      };
+    }
+
+    return {
+      text: '',
+      level: null,
+      source: 'none',
+      tag: '',
+    };
+  }
+
+  private getAlertTypeClass(alertElement: Element): string {
+    const classNames = Array.from(alertElement.classList).map((name) =>
+      name.toLowerCase(),
+    );
+    if (classNames.includes('alert-danger') || classNames.includes('alert-error')) {
+      return 'danger';
+    }
+    if (classNames.includes('alert-warning')) {
+      return 'warning';
+    }
+    if (classNames.includes('alert-success')) {
+      return 'success';
+    }
+    if (classNames.includes('alert-info')) {
+      return 'info';
+    }
+    return 'unknown';
+  }
+
+  private getAlertLinks(alertElement: Element): Array<{ text: string; href: string }> {
+    return Array.from(alertElement.querySelectorAll<HTMLAnchorElement>('a[href]'))
+      .map((anchor) => ({
+        text: this.truncateContextText(anchor.textContent || '', 120),
+        href: (anchor.getAttribute('href') || '').trim(),
+      }))
+      .filter((link) => !!link.href);
+  }
+
+  private hasHiddenAlertContent(alertElement: Element): boolean {
+    return Boolean(
+      alertElement.querySelector(
+        'details, [hidden], [aria-hidden="true"], [aria-expanded], .wb-toggle, .collapse, .collapsible, .accordion, [data-toggle]',
+      ),
+    );
+  }
+
+  private getAlertParagraphCount(alertElement: Element): number {
+    return Array.from(alertElement.querySelectorAll('p')).filter((paragraph) => {
+      const text = this.truncateContextText(paragraph.textContent || '', 80);
+      return !!text && !this.getHeadingUtilityLevel(paragraph);
+    }).length;
+  }
+
+  private getAdjacentAlertClusterSize(alertElement: Element): number {
+    let clusterSize = 1;
+
+    let previous = alertElement.previousElementSibling;
+    while (previous?.classList.contains('alert')) {
+      clusterSize += 1;
+      previous = previous.previousElementSibling;
+    }
+
+    let next = alertElement.nextElementSibling;
+    while (next?.classList.contains('alert')) {
+      clusterSize += 1;
+      next = next.nextElementSibling;
+    }
+
+    return clusterSize;
+  }
+
   private buildCompactAlertsIssuesPayload(sourceHtml: string): Record<string, unknown> {
     const parser = new DOMParser();
     const doc = parser.parseFromString(sourceHtml, 'text/html');
@@ -645,6 +795,7 @@ export class PageAssistantCompareComponent
       main.querySelector('p')?.textContent || '',
       280,
     );
+    const pageTypeSignal = this.inferPageTypeSignal(title, h1);
 
     const alertPlacementContext = alerts.map((alertEl, index) => {
       const mainIndex = mainIndexMap.get(alertEl);
@@ -678,17 +829,61 @@ export class PageAssistantCompareComponent
       };
     });
 
+    const alertSignals = alerts.map((alertEl, index) => {
+      const heading = this.getAlertHeadingMetadata(alertEl);
+      const links = this.getAlertLinks(alertEl);
+      const paragraphCount = this.getAlertParagraphCount(alertEl);
+      const visibleText = this.truncateContextText(alertEl.textContent || '', 400);
+      const previousSiblingIsAlert =
+        alertEl.previousElementSibling?.classList.contains('alert') ?? false;
+      const nextSiblingIsAlert =
+        alertEl.nextElementSibling?.classList.contains('alert') ?? false;
+
+      return {
+        alert_index: index + 1,
+        alert_type: this.getAlertTypeClass(alertEl),
+        heading_text: heading.text,
+        heading_level: heading.level,
+        heading_source: heading.source,
+        heading_tag: heading.tag,
+        has_heading: heading.source !== 'none',
+        paragraph_count: paragraphCount,
+        has_multiple_paragraphs: paragraphCount > 1,
+        text_length_chars: visibleText.length,
+        link_count: links.length,
+        has_multiple_links: links.length > 1,
+        links,
+        has_hidden_content: this.hasHiddenAlertContent(alertEl),
+        previous_sibling_is_alert: previousSiblingIsAlert,
+        next_sibling_is_alert: nextSiblingIsAlert,
+        adjacent_alert_cluster_size: this.getAdjacentAlertClusterSize(alertEl),
+      };
+    });
+
+    const alertsBeforeFirstH2Count = alertPlacementContext.filter(
+      (item) => item.is_before_first_h2,
+    ).length;
+    const adjacentAlertCount = alertSignals.filter(
+      (item) => item.previous_sibling_is_alert || item.next_sibling_is_alert,
+    ).length;
+
     return {
       alerts: alerts.map((alertEl) => alertEl.outerHTML),
       alertCount: alerts.length,
-      pageContext: `Title: ${title || 'N/A'}\nH1: ${h1 || 'N/A'}\nPage type signal: ${this.inferPageTypeSignal(title, h1)}\nMain intro: ${introSnippet || 'N/A'}\nH2 headings (${h2Headings.length}): ${h2Headings.join(' | ') || 'N/A'}`,
+      pageContext: `Title: ${title || 'N/A'}\nH1: ${h1 || 'N/A'}\nPage type signal: ${pageTypeSignal}\nMain intro: ${introSnippet || 'N/A'}\nH2 headings (${h2Headings.length}): ${h2Headings.join(' | ') || 'N/A'}`,
       pageSignals: {
         title,
         h1,
-        pageTypeSignal: this.inferPageTypeSignal(title, h1),
+        pageTypeSignal,
         h2Headings,
+        alertCount: alerts.length,
+        hasMultipleAlerts: alerts.length > 1,
+        alertsBeforeFirstH2Count,
+        adjacentAlertCount,
       },
       alertPlacementContext,
+      // Compact mode precomputes structural alert checks so the issues skill can spend more reasoning on judgment than HTML parsing.
+      alertSignals,
     };
   }
 
@@ -723,6 +918,115 @@ export class PageAssistantCompareComponent
 
   private containsLinkPlaceholderSyntax(value: string): boolean {
     return /\[(?:\/?\s*LINK|END\s+LINK)\]/i.test(value || '');
+  }
+
+  private normalizeLeadInText(value: string): string {
+    return (value || '')
+      .toLowerCase()
+      .replace(/\s+/g, ' ')
+      .trim();
+  }
+
+  private isValidStandaloneLinkLeadIn(leadInText: string): boolean {
+    const normalized = this.normalizeLeadInText(
+      leadInText.replace(/[.!?]\s*$/g, ''),
+    );
+    if (!normalized) return false;
+
+    if (
+      normalized === 'refer to:' ||
+      normalized === 'learn more:' ||
+      normalized === 'learn about:'
+    ) {
+      return true;
+    }
+
+    if (normalized.startsWith('find out:')) {
+      return false;
+    }
+
+    return /^find out\s+(how\b|if\b|whether\b)/.test(normalized);
+  }
+
+  private hasDirectionalLinkLeadIn(leadInText: string): boolean {
+    const normalized = this.normalizeLeadInText(
+      leadInText.replace(/[.!?]\s*$/g, ''),
+    );
+    if (!normalized) return false;
+
+    return /\b(refer to|learn more|learn about|find out)\b/.test(normalized);
+  }
+
+  private hasFullSentenceLinkWithoutAllowedLeadIn(alertHtml: string): boolean {
+    try {
+      const doc = new DOMParser().parseFromString(alertHtml, 'text/html');
+      const root = doc.body.firstElementChild as HTMLElement | null;
+      if (!root) return false;
+
+      const paragraphs = Array.from(root.querySelectorAll('p'));
+      return paragraphs.some((paragraph) => {
+        const anchors = Array.from(paragraph.querySelectorAll('a'));
+        if (!anchors.length) return false;
+
+        const markerPrefix = '[[link:';
+        const markerSuffix = ']]';
+        const paragraphWithMarkers = this.normalizeLeadInText(
+          Array.from(paragraph.childNodes)
+            .map((node) => {
+              if (
+                node.nodeType === Node.ELEMENT_NODE &&
+                (node as Element).tagName.toLowerCase() === 'a'
+              ) {
+                const anchorText = this.normalizeLeadInText(node.textContent || '');
+                return `${markerPrefix}${anchorText}${markerSuffix}`;
+              }
+              return node.textContent || '';
+            })
+            .join(' '),
+        );
+        if (!paragraphWithMarkers) return false;
+
+        const sentences = paragraphWithMarkers
+          .match(/[^.!?]+[.!?]?/g)
+          ?.map((sentence) => sentence.trim())
+          .filter((sentence) => !!sentence) ?? [];
+        if (!sentences.length) return false;
+
+        return sentences.some((sentence) => {
+          if (!sentence.includes(markerPrefix)) return false;
+
+          const sentenceWithoutLinks = this.normalizeLeadInText(
+            sentence.replace(/\[\[link:[^\]]+\]\]/g, ' '),
+          );
+          const leadInText = sentenceWithoutLinks
+            .replace(/[.!?]\s*$/g, '')
+            .trim();
+          const hasAllowedLeadIn = this.isValidStandaloneLinkLeadIn(leadInText);
+          const hasDirectionalLeadIn = this.hasDirectionalLinkLeadIn(leadInText);
+          const nonLinkText = sentenceWithoutLinks.replace(
+            /[:;,.!?()\-\u2013\u2014]/g,
+            '',
+          ).trim();
+          const linkSentenceOnly = !nonLinkText;
+
+          if (hasAllowedLeadIn && sentences.length > 1) {
+            return true;
+          }
+
+          if (hasAllowedLeadIn) {
+            return false;
+          }
+
+          if (hasDirectionalLeadIn) {
+            return true;
+          }
+
+          return linkSentenceOnly;
+        });
+      });
+    } catch {
+      return false;
+    }
   }
 
   private shouldForceLocalRepairForTesting(): boolean {
@@ -1138,6 +1442,7 @@ export class PageAssistantCompareComponent
           originalAlertText: alertText,
           originalAlertHtml: alertHtml,
           plan,
+          issues: relevantIssues,
           examples: selectedExamples,
           includeBeforeTextInExamples,
           includeLinkWritingRules: this.uploadState.getIncludeLinkWritingRules(),
@@ -1157,6 +1462,12 @@ export class PageAssistantCompareComponent
           selectedExamples,
         );
         if (!parsedResult?.rewrittenAlertHtml) {
+          console.warn('Alert rewrite retry triggered', {
+            alertIndex,
+            attempt: attempt + 1,
+            reason: 'invalidWrapperHtml',
+            willRetryWithNewModelCall: true,
+          });
           retryInstruction = retryInstructions.invalidWrapperHtml;
           continue;
         }
@@ -1166,17 +1477,50 @@ export class PageAssistantCompareComponent
           this.containsLinkPlaceholderSyntax(parsedResult.rewrittenAlertHtml) ||
           this.containsLinkPlaceholderSyntax(parsedResult.rewrittenAlert);
         if (hasLinkPlaceholders) {
+          console.warn('Alert rewrite retry triggered', {
+            alertIndex,
+            attempt: attempt + 1,
+            reason: 'placeholderLinks',
+            willRetryWithNewModelCall: true,
+          });
           retryInstruction = retryInstructions.placeholderLinks;
           continue;
         }
 
         const rewrittenHasAnchor = /<a\b/i.test(parsedResult.rewrittenAlertHtml);
         if (!originalHasAnchor && rewrittenHasAnchor) {
+          console.warn('Alert rewrite retry triggered', {
+            alertIndex,
+            attempt: attempt + 1,
+            reason: 'noLinksAllowed',
+            willRetryWithNewModelCall: true,
+          });
           retryInstruction = retryInstructions.noLinksAllowed;
           continue;
         }
         if (originalHasAnchor && !rewrittenHasAnchor && !allowLinkRemoval) {
+          console.warn('Alert rewrite retry triggered', {
+            alertIndex,
+            attempt: attempt + 1,
+            reason: 'mustKeepLink',
+            willRetryWithNewModelCall: true,
+          });
           retryInstruction = retryInstructions.mustKeepLink;
+          continue;
+        }
+        if (
+          rewrittenHasAnchor &&
+          this.hasFullSentenceLinkWithoutAllowedLeadIn(
+            parsedResult.rewrittenAlertHtml,
+          )
+        ) {
+          console.warn('Alert rewrite retry triggered', {
+            alertIndex,
+            attempt: attempt + 1,
+            reason: 'fullSentenceLinksNeedLeadIn',
+            willRetryWithNewModelCall: true,
+          });
+          retryInstruction = retryInstructions.fullSentenceLinksNeedLeadIn;
           continue;
         }
 
@@ -1208,6 +1552,11 @@ export class PageAssistantCompareComponent
       }
 
       if (!rewriteResult && lastParsedResult) {
+        console.warn('Alert rewrite attempting local repair', {
+          alertIndex,
+          hadModelOutput: true,
+          willRetryWithNewModelCall: false,
+        });
         rewriteResult = this.tryLocalAlertRewriteRepair({
           result: lastParsedResult,
           originalAlertHtml: alertHtml,
@@ -1220,6 +1569,10 @@ export class PageAssistantCompareComponent
       }
 
       if (!rewriteResult) {
+        console.warn('Alert rewrite falling back to passthrough result', {
+          alertIndex,
+          willRetryWithNewModelCall: false,
+        });
         rewriteResult = this.alertRewrite.buildPassthroughResult({
           alertHtml,
           originalHeading,

@@ -106,6 +106,7 @@ export class AiOptionsComponent implements OnInit {
   includeLinkWritingRules = true;
   useJsonAlertsIssuesPrompt = false;
   useCompactAlertsPageContext = false;
+  useSkillPrompts = false;
   get useAlertPlanning(): boolean {
     return this.selectedAlertRewriteMode === AlertRewriteMode.AB;
   }
@@ -145,6 +146,7 @@ export class AiOptionsComponent implements OnInit {
       this.uploadState.getUseJsonAlertsIssuesPrompt();
     this.useCompactAlertsPageContext =
       this.uploadState.getUseCompactAlertsPageContext();
+    this.useSkillPrompts = this.uploadState.getUseSkillPrompts();
   }
 
   isAiCheckboxDisabled(id: AiModel): boolean {
@@ -194,6 +196,11 @@ export class AiOptionsComponent implements OnInit {
   onUseCompactAlertsPageContextSelect(useCompact: boolean): void {
     this.useCompactAlertsPageContext = useCompact;
     this.uploadState.setUseCompactAlertsPageContext(useCompact);
+  }
+
+  onUseSkillPromptsSelect(useSkills: boolean): void {
+    this.useSkillPrompts = useSkills;
+    this.uploadState.setUseSkillPrompts(useSkills);
   }
 
   //submit selected prompt and model to AI

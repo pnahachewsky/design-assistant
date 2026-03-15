@@ -6,6 +6,7 @@ import { getPromptTemplate } from '../data/ai-prompts.constants';
 import { PromptKey, AiModel } from '../data/data.model';
 import { OpenRouterService, ChatMessage } from './openrouter.service';
 import { UploadStateService } from './upload-state.service';
+import { SkillManagerService } from './skill-manager.service';
 import type { AlertIssue } from '../components/problems/component-guidance/alerts-guidance/alerts-guidance.component';
 import fallbackSeverityJson from '../components/problems/component-guidance/alerts-guidance/severity-include-fallback.json';
 
@@ -15,6 +16,7 @@ export class AlertAiService {
   private readonly messageService = inject(MessageService);
   private readonly translate = inject(TranslateService);
   private readonly uploadState = inject(UploadStateService);
+  private readonly skillManager = inject(SkillManagerService);
   private readonly issuesUpdatedSubject = new Subject<{
     html: string;
     issues: AlertIssue[];
@@ -66,7 +68,18 @@ export class AlertAiService {
       useJsonAlertsIssuesPrompt:
         this.uploadState.getUseJsonAlertsIssuesPrompt(),
     });
-    const systemPrompt = basePrompt;
+    let systemPrompt = basePrompt;
+    if (this.uploadState.getUseSkillPrompts()) {
+      const composed = await this.skillManager.composePrompt({
+        basePrompt,
+        queryText: 'analyze canada.ca html alerts for issues and accessibility',
+        promptKey: PromptKey.AlertsIssues,
+        outputMode: 'json',
+        includeReferences: true,
+        includeAssets: true,
+      });
+      systemPrompt = composed.prompt;
+    }
     //console.log('[AlertAiService] AlertsIssues system prompt:', systemPrompt);
     const alerts = this.extractAlerts(alertHtml);
     const userPayload = {
