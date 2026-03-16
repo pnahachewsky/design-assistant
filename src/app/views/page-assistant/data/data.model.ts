@@ -1,6 +1,8 @@
 import { MenuItem } from 'primeng/api';
 
-// Upload data (from html, copy/paste, or word)
+// Shared types for the page assistant's upload, diff, prompt, and model flows.
+
+// Canonical page payload stored in state after a URL, paste, or Word import.
 export interface UploadData {
   originalHtml: string;
   modifiedHtml: string;
@@ -14,13 +16,13 @@ export interface UploadData {
   breadcrumb?: MenuItem[];
 }
 
-// Modified data (from upload or AI generated content)
+// Minimal patch used when only the modified side changes.
 export interface ModifiedData {
   modifiedUrl: string;
   modifiedHtml: string;
 }
 
-//Original data (from user edits or saving AI changes)
+// Minimal patch used when only the original side changes.
 export interface OriginalData {
   originalUrl: string;
   originalHtml: string;
@@ -31,7 +33,7 @@ export interface MetadataData {
   content: string | void;
 }
 
-//Data structure for extractContent fxn 
+// Result returned by URL/content extraction before it is normalized into UploadData.
 export interface htmlProcessingResult {
   html: string;
   found: {
@@ -43,7 +45,7 @@ export interface htmlProcessingResult {
   breadcrumb?: MenuItem[];
 }
 
-// Diff options to tweaks how sensitive HTML diff is to whitespace, word repitition, etc.
+// Diff tuning flags used by the source/web compare views.
 export interface DiffOptions {
   repeatingWordsAccuracy?: number;
   ignoreWhiteSpaceDifferences?: boolean;
@@ -52,13 +54,14 @@ export interface DiffOptions {
   combineWords?: boolean;
 }
 
-//View options for horizontal radio buttons
+// View modes for the rendered page preview.
 export enum WebViewType {
   Original = 'original',
   Modified = 'modified',
   Diff = 'diff'
 }
 
+// View modes for the source-code diff panel.
 export enum SourceViewType {
   Original = 'original',
   Modified = 'modified',
@@ -72,7 +75,7 @@ export interface ViewOption<T = string> {
   icon: string;
 }
 
-//Compare options for drawer radio buttons
+// Top-level compare workflows exposed in the AI options drawer.
 export enum CompareTask {
   AiGenerated = 'compareAI',
   PrototypeUrl = 'compareUrl',
@@ -80,6 +83,7 @@ export enum CompareTask {
   TwoPrompts = 'compare2Prompts'
 }
 
+// Prompt families supported by the page assistant.
 export enum PromptKey {
   Headings = 'headings',
   Doormats = 'doormats',
@@ -88,27 +92,27 @@ export enum PromptKey {
   AlertsRecommendations = 'alertsRecommendations'
 }
 
+// Alert rewrite flow variants: plan first or rewrite directly.
 export enum AlertRewriteMode {
   AB = 'ab',
   GoodResultsOnly = 'good-results-only',
 }
 
+// OpenRouter model ids supported by the assistant UI.
+// These values are also the canonical ids used for friendly-name resolution.
 export enum AiModel {
-  //Free models
-  Nemotron = 'nvidia/nemotron-3-nano-30b-a3b:free', //256k context, 17B weekly, 30B parameters
-  //Chimera = 'tngtech/deepseek-r1t2-chimera:free', //164k context, 72B weekly, 671B parameters, 37B active
-  //Gemma = 'google/gemma-3-27b-it:free', //131k context, 2B weekly, 27B parameters
-  //Mistral = 'mistralai/mistral-small-3.1-24b-instruct:free', //128k context, 178M weekly, 24B parameters
-  //Llama33 = 'meta-llama/llama-3.3-70b-instruct:free', //262k context, 3.9B weekly, 70B parameters
+  // Free models
+  NemotronNano = 'nvidia/nemotron-3-nano-30b-a3b:free', //256k context, 17B weekly, 30B parameters
+  NemotronSuper = 'nvidia/nemotron-3-super-120b-a12b:free', //262k context, 263B weekly, 120B parameters
   Arcee = 'arcee-ai/trinity-large-preview:free', //131k context, 458B weekly, 13B parameters
   Zai = 'z-ai/glm-4.5-air:free', //131k context, 57B
-  DeepSeek = 'deepseek/deepseek-r1-0528:free', //164k context, 20B weekly, 671B parameters, 37B active
-  ///Paid models
-  GptOSS = 'openai/gpt-oss-120b', //131k context paid - $0.039/M input tokens$0.19/M output tokens
-  Gemini = 'google/gemini-2.5-flash-lite', // 1.05M context paid - $0.10/M input tokens, $0.40/M output tokens
-  Gpt5Mini = 'openai/gpt-5-mini', // 400k context paid - $0.25/M input tokens, $2/M output tokens
+  // Paid models
+  GPT5Nano = 'openai/gpt-5-nano', // 400k context paid - $0.05/M input, $0.40/M output
+  GptOSS = 'openai/gpt-oss-120b', //131k context paid - $0.039/M input, $0.19/M output
+  Gemini = 'google/gemini-2.5-flash-lite', // 1.05M context paid - $0.10/M input, $0.40/M output
 }
 
+// Normalized link metadata used by rewrite/diff logic.
 export interface LinkData {
   text: string;
   href: string;
@@ -116,6 +120,7 @@ export interface LinkData {
   element: Element;
 }
 
+// Selection shape shared with the shadow DOM diff utilities.
 export interface SelectionTypes {
   count: number;
   startId: number | null;

@@ -1,0 +1,373 @@
+import { Injectable, inject } from '@angular/core';
+import { getAlertRewriteRules } from '../../../common/constants/alert-rewrite-rules.constants';
+import { AlertRewriteMode, AiModel } from '../data/data.model';
+import { UrlDataService } from './url-data.service';
+import {
+  AlertRewriteIssueInput,
+  AlertRewriteService,
+} from './alert-rewrite.service';
+import { AlertRewriteGuardService } from './alert-rewrite-guard.service';
+
+export interface OpenRouterMessageCaller {
+  (
+    model: AiModel,
+    headers: Record<string, string>,
+    url: string,
+    messages: Array<{ role: string; content: string }>,
+    contextLabel: string,
+  ): Promise<{ text: string; usedModel: string }>;
+}
+
+@Injectable({ providedIn: 'root' })
+export class AlertRewriteOrchestratorService {
+  private alertRewrite = inject(AlertRewriteService);
+  private alertRewriteGuard = inject(AlertRewriteGuardService);
+  private urlDataService = inject(UrlDataService);
+
+  // Runs the full alert-rewrite workflow:
+  // plan each alert, generate rewrites, apply retry/repair guards, then patch the page HTML.
+  async generateRecommendations(params: {
+    html: string;
+    issues: AlertRewriteIssueInput[];
+    model: AiModel;
+    headers: Record<string, string>;
+    url: string;
+    mode: AlertRewriteMode;
+    includeExamples: boolean;
+    includeBeforeTextInExamples: boolean;
+    includeLinkWritingRules: boolean;
+    forceLocalRepairForTesting: boolean;
+    callOpenRouterForMessages: OpenRouterMessageCaller;
+    getShortModelName: (model: string) => string;
+  }): Promise<{ formattedHtml: string }> {
+    const start = performance.now();
+    const rewriteRules = await getAlertRewriteRules();
+    const retryInstructions = rewriteRules.alertRewrite.retryInstructions;
+
+    const alertDoc = new DOMParser().parseFromString(params.html, 'text/html');
+    const alertEls = Array.from(alertDoc.querySelectorAll('.alert'));
+    if (!alertEls.length) {
+      throw new Error('No .alert elements found in the page.');
+    }
+
+    const examples = params.includeExamples
+      ? await this.alertRewrite.loadExamples()
+      : [];
+    const rewrites: Array<{
+      alert_index: number;
+      rewritten_alert_html: string;
+    }> = [];
+
+    // Each alert is planned and rewritten independently so a bad output for one
+    // alert does not block the others from being generated.
+    for (let i = 0; i < alertEls.length; i += 1) {
+      const alertElement = alertEls[i];
+      if (!alertElement) continue;
+      const alertIndex = i + 1;
+      const relevantIssues = this.alertRewriteGuard.getIssuesForAlertIndex(
+        params.issues,
+        alertIndex,
+      );
+
+      const alertHtml = alertElement.outerHTML;
+      const originalHeading =
+        this.alertRewriteGuard.getAlertHeadingForRewrite(alertElement);
+      const alertText = this.alertRewriteGuard.getAlertTextForRewrite(alertElement);
+      if (!alertText) continue;
+
+      const initialPlan = this.alertRewrite.buildHeuristicPlan({
+        alertHtml,
+        alertText,
+        alertType: this.alertRewrite.inferAlertType(alertHtml),
+        issues: relevantIssues,
+      });
+      let plan = initialPlan;
+      let planModelName = 'heuristic';
+
+      // Advanced-planning mode adds a model-generated plan on top of the local heuristic plan.
+      if (params.mode === AlertRewriteMode.AB) {
+        const alertPlanningMessages =
+          await this.alertRewrite.buildAlertPlanningMessages({
+            alertHtml,
+            alertText,
+            alertType: initialPlan.alertType,
+            issues: relevantIssues,
+          });
+        const alertPlanningResponse = await params.callOpenRouterForMessages(
+          params.model,
+          params.headers,
+          params.url,
+          alertPlanningMessages,
+          `Alert ${alertIndex} alertPlanning`,
+        );
+        const parsedPlan = this.alertRewrite.parseAlertPlanningResponse(
+          alertPlanningResponse.text,
+          initialPlan,
+        );
+        if (parsedPlan) {
+          plan = parsedPlan;
+        }
+        planModelName = params.getShortModelName(alertPlanningResponse.usedModel);
+      }
+
+      const selectedExamples = params.includeExamples
+        ? this.alertRewrite.selectExamples(plan, examples, 2)
+        : [];
+      let rewriteResult = null;
+      let rewriteModelName = 'unknown';
+      let copyGuardTriggered = false;
+      let blockedExampleId: string | null = null;
+      let lastParsedResult = null;
+      const originalHasAnchor = /<a\b/i.test(alertHtml);
+      const allowLinkRemoval = this.alertRewriteGuard.shouldAllowAlertLinkRemoval(
+        relevantIssues,
+        plan,
+      );
+
+      // We allow one retry with an additional corrective instruction before
+      // falling back to deterministic local repair.
+      let retryInstruction: string | undefined;
+      for (let attempt = 0; attempt < 2; attempt += 1) {
+        // Rebuild the rewrite prompt on each attempt so any retry instruction
+        // is appended to the style rules seen by the model.
+        const alertRewriteMessages = await this.alertRewrite.buildAlertRewriteMessages({
+          mode: params.mode,
+          originalHeading,
+          originalAlertText: alertText,
+          originalAlertHtml: alertHtml,
+          plan,
+          issues: relevantIssues,
+          examples: selectedExamples,
+          includeBeforeTextInExamples: params.includeBeforeTextInExamples,
+          includeLinkWritingRules: params.includeLinkWritingRules,
+          retryInstruction,
+        });
+        const rewriteResponse = await params.callOpenRouterForMessages(
+          params.model,
+          params.headers,
+          params.url,
+          alertRewriteMessages,
+          `Alert ${alertIndex} alertRewrite`,
+        );
+        rewriteModelName = params.getShortModelName(rewriteResponse.usedModel);
+
+        // Parse the model response back into the normalized rewrite contract
+        // used by the rest of the pipeline. If parsing fails we cannot safely
+        // patch the alert into the page, so we retry with a structure-specific instruction.
+        const parsedResult = this.alertRewrite.parseAlertRewriteResponse(
+          rewriteResponse.text,
+          plan,
+          selectedExamples,
+        );
+        if (!parsedResult?.rewrittenAlertHtml) {
+          console.warn('Alert rewrite retry triggered', {
+            alertIndex,
+            attempt: attempt + 1,
+            reason: 'invalidWrapperHtml',
+            willRetryWithNewModelCall: true,
+          });
+          retryInstruction = retryInstructions.invalidWrapperHtml;
+          continue;
+        }
+        lastParsedResult = parsedResult;
+
+        // Guard 1: placeholder tokens are never valid final output. This catches
+        // cases where the model copied a prompt convention instead of returning
+        // real HTML anchors or plain text.
+        const hasLinkPlaceholders =
+          this.alertRewriteGuard.containsLinkPlaceholderSyntax(
+            parsedResult.rewrittenAlertHtml,
+          ) ||
+          this.alertRewriteGuard.containsLinkPlaceholderSyntax(
+            parsedResult.rewrittenAlert,
+          );
+        if (hasLinkPlaceholders) {
+          console.warn('Alert rewrite retry triggered', {
+            alertIndex,
+            attempt: attempt + 1,
+            reason: 'placeholderLinks',
+            willRetryWithNewModelCall: true,
+          });
+          retryInstruction = retryInstructions.placeholderLinks;
+          continue;
+        }
+
+        // Guard 2: compare link presence before vs after rewrite so we do not
+        // accidentally add links that were never in the source alert.
+        const rewrittenHasAnchor = /<a\b/i.test(parsedResult.rewrittenAlertHtml);
+        if (!originalHasAnchor && rewrittenHasAnchor) {
+          console.warn('Alert rewrite retry triggered', {
+            alertIndex,
+            attempt: attempt + 1,
+            reason: 'noLinksAllowed',
+            willRetryWithNewModelCall: true,
+          });
+          retryInstruction = retryInstructions.noLinksAllowed;
+          continue;
+        }
+
+        // Guard 3: if the source alert had a required link, do not let the
+        // rewrite drop it unless the issues/plan explicitly allow link removal.
+        if (originalHasAnchor && !rewrittenHasAnchor && !allowLinkRemoval) {
+          console.warn('Alert rewrite retry triggered', {
+            alertIndex,
+            attempt: attempt + 1,
+            reason: 'mustKeepLink',
+            willRetryWithNewModelCall: true,
+          });
+          retryInstruction = retryInstructions.mustKeepLink;
+          continue;
+        }
+
+        // Guard 4: enforce the paragraph-level link-direction conventions
+        // handled by AlertRewriteGuardService. This is where malformed
+        // "refer to <link>" or link-only sentence patterns trigger a retry.
+        if (
+          rewrittenHasAnchor &&
+          this.alertRewriteGuard.hasFullSentenceLinkWithoutAllowedLeadIn(
+            parsedResult.rewrittenAlertHtml,
+          )
+        ) {
+          console.warn('Alert rewrite retry triggered', {
+            alertIndex,
+            attempt: attempt + 1,
+            reason: 'fullSentenceLinksNeedLeadIn',
+            willRetryWithNewModelCall: true,
+          });
+          retryInstruction = retryInstructions.fullSentenceLinksNeedLeadIn;
+          continue;
+        }
+
+        // Guard 5: if examples are enabled, reject outputs that are too close
+        // to an example rewrite instead of specific to the current alert.
+        const copyCheck = this.alertRewrite.detectExampleCopy({
+          result: parsedResult,
+          selectedExamples,
+          originalHeading,
+          originalAlertText: alertText,
+        });
+        if (!copyCheck.isCopy) {
+          if (params.forceLocalRepairForTesting) {
+            console.warn('Forcing local repair for testing', { alertIndex });
+            break;
+          }
+          rewriteResult = parsedResult;
+          break;
+        }
+
+        // Example-copy retries reuse the same model call path as the structural
+        // retries above; the only difference is the corrective instruction.
+        copyGuardTriggered = true;
+        blockedExampleId = copyCheck.exampleId || null;
+        retryInstruction = retryInstructions.avoidExampleCopy;
+        console.warn('Alert rewrite copy guard triggered', {
+          alertIndex,
+          attempt: attempt + 1,
+          reason: copyCheck.reason,
+          exampleId: copyCheck.exampleId,
+          similarity: copyCheck.similarity,
+        });
+      }
+
+      // If model retries still fail, attempt one deterministic repair pass locally.
+      if (!rewriteResult && lastParsedResult) {
+        console.warn('Alert rewrite attempting local repair', {
+          alertIndex,
+          hadModelOutput: true,
+          willRetryWithNewModelCall: false,
+        });
+        rewriteResult = this.alertRewriteGuard.tryLocalAlertRewriteRepair({
+          result: lastParsedResult,
+          originalAlertHtml: alertHtml,
+          originalHeading,
+          originalAlertText: alertText,
+          plan,
+          selectedExamples,
+          allowLinkRemoval,
+        });
+      }
+
+      // Final safety net: preserve the original alert rather than dropping it.
+      if (!rewriteResult) {
+        console.warn('Alert rewrite falling back to passthrough result', {
+          alertIndex,
+          willRetryWithNewModelCall: false,
+        });
+        rewriteResult = this.alertRewrite.buildPassthroughResult({
+          alertHtml,
+          originalHeading,
+          originalAlertText: alertText,
+        });
+      }
+
+      // At this point we have exactly one final rewrite for the current alert,
+      // whether it came from the model, local repair, or passthrough fallback.
+      rewrites.push({
+        alert_index: alertIndex,
+        rewritten_alert_html: rewriteResult.rewrittenAlertHtml,
+      });
+
+      // These debug logs make review easier when examples are enabled because
+      // they show which example patterns influenced the final rewrite.
+      const examplesUsedDetails = (rewriteResult.exampleIdsUsed.length
+        ? rewriteResult.exampleIdsUsed
+            .map((id) => selectedExamples.find((example) => example.id === id))
+            .filter((example): example is NonNullable<typeof example> => !!example)
+        : selectedExamples
+      ).map((example) => ({
+        id: example.id,
+        alertType: example.alertType,
+        criteria: example.criteria,
+        tags: example.tags,
+        headingBefore: example.headingBefore || '',
+        headingAfter: example.headingAfter || '',
+        before: example.before,
+        after: example.after,
+      }));
+
+      console.log('Alert rewrite examples used', {
+        alertIndex,
+        exampleIdsUsed: rewriteResult.exampleIdsUsed,
+        examplesUsedDetails,
+      });
+
+      console.log('Alert rewrite iteration', {
+        mode: params.mode,
+        alertIndex,
+        plan,
+        selectedExampleIds: selectedExamples.map((example) => example.id),
+        originalHeading,
+        finalHeading: rewriteResult.rewrittenHeading,
+        finalRewrite: rewriteResult.rewrittenAlert,
+        finalRewriteHtml: rewriteResult.rewrittenAlertHtml,
+        appliedDirectives: rewriteResult.appliedDirectives,
+        exampleIdsUsed: rewriteResult.exampleIdsUsed,
+        planModel: planModelName,
+        rewriteModel: rewriteModelName,
+        copyGuardTriggered,
+        blockedExampleId,
+        humanRating: null,
+      });
+    }
+
+    // Once each alert has a final rewrite, patch them back into the original page.
+    const finalHtml = this.alertRewriteGuard.applyAlertHtmlRewrites(
+      params.html,
+      rewrites,
+    );
+    if (!finalHtml) {
+      throw new Error('No alert rewrites were generated.');
+    }
+
+    console.log('Alert rewrite model + time', {
+      requestedModel: params.model,
+      mode: params.mode,
+      rewrites: rewrites.length,
+      ms: Math.round(performance.now() - start),
+    });
+
+    // Keep final output formatting consistent with the rest of the assistant flow.
+    const formattedHtml = await this.urlDataService.formatHtml(finalHtml, 'ai');
+    return { formattedHtml };
+  }
+}

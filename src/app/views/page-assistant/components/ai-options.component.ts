@@ -41,7 +41,7 @@ export class AiOptionsComponent implements OnInit {
 
   visible = false;
 
-  //Gets upload type for task = compare with prototype
+  // The upload picker changes when the workflow is "compare with prototype".
   get uploadType(): 'url' | 'paste' | 'word' {
     return this.uploadState.getSelectedUploadType(); // returns signal().value
   }
@@ -50,7 +50,7 @@ export class AiOptionsComponent implements OnInit {
     return item.id;
   }
 
-  //Comparison task
+  // Top-level compare workflow selection that drives which controls are shown.
   private _selectedTask: CompareTask = CompareTask.AiGenerated;
   isTwoPrompts = false;
   isTwoAis = false;
@@ -73,7 +73,7 @@ export class AiOptionsComponent implements OnInit {
     { id: CompareTask.TwoPrompts, label: 'page.ai-options.task.TwoPrompts', disabled: false }
   ];
 
-  //AI prompt
+  // Prompt family selection for single- and dual-prompt runs.
   selectedPrompt: PromptKey = PromptKey.PlainLanguage;
   selectedPrompts: PromptKey[] = [];
 
@@ -95,9 +95,8 @@ export class AiOptionsComponent implements OnInit {
     this.promptChange.emit(key);
   }
 
-  //AI model
-
-  selectedAi: AiModel = AiModel.Nemotron;
+  // Model and alert-specific options persisted through UploadStateService.
+  selectedAi: AiModel = AiModel.NemotronNano;
   selectedAis: AiModel[] = [];
 
   selectedAlertRewriteMode: AlertRewriteMode = AlertRewriteMode.GoodResultsOnly;
@@ -114,19 +113,21 @@ export class AiOptionsComponent implements OnInit {
     this.onUseAlertPlanningSelect(useAlertPlanning);
   }
 
+  // Free and paid model groups are rendered separately in the UI.
   freeAiOptions = [
-    { id: AiModel.Nemotron, label: 'page.ai-options.model.Nemotron', disabled: false },
+    { id: AiModel.NemotronNano, label: 'page.ai-options.model.NemotronNano', disabled: false },
+    { id: AiModel.NemotronSuper, label: 'page.ai-options.model.NemotronSuper', disabled: false },
     { id: AiModel.Arcee, label: 'page.ai-options.model.Arcee', disabled: false },
     { id: AiModel.Zai, label: 'page.ai-options.model.Zai', disabled: false },
-    { id: AiModel.DeepSeek, label: 'page.ai-options.model.DeepSeek', disabled: false },
   ];
   paidAiOptions = [
+    { id: AiModel.GPT5Nano, label: 'page.ai-options.model.GPT5Nano', disabled: false },
     { id: AiModel.GptOSS, label: 'page.ai-options.model.GptOSS', disabled: false },
     { id: AiModel.Gemini, label: 'page.ai-options.model.Gemini', disabled: false },
-    { id: AiModel.Gpt5Mini, label: 'page.ai-options.model.Gpt5Mini', disabled: false },
   ];
 
   ngOnInit(): void {
+    // Restore persisted toggles, but keep the selected model inside the currently rendered option set.
     const freeIds = new Set(this.freeAiOptions.map((option) => option.id));
     if (!freeIds.has(this.selectedAi)) {
       this.selectedAi = this.freeAiOptions[0]?.id ?? this.selectedAi;
@@ -161,6 +162,7 @@ export class AiOptionsComponent implements OnInit {
   }
 
   onUseAlertPlanningSelect(useAlertPlanning: boolean): void {
+    // The checkbox maps directly to the persisted enum mode used by the rewrite workflow.
     const mode = useAlertPlanning
       ? AlertRewriteMode.AB
       : AlertRewriteMode.GoodResultsOnly;
@@ -203,13 +205,13 @@ export class AiOptionsComponent implements OnInit {
     this.uploadState.setUseSkillPrompts(useSkills);
   }
 
-  //submit selected prompt and model to AI
+  // Close the drawer and let the parent component execute the request.
   onSubmit(): void {
     this.visible = false;
     this.aiSubmit.emit();
   }
 
-  //Append custom instructions to prompt
+  // Optional free-form instructions appended after the base/skill prompt.
   addCustom = false;
   customInstruction = '';
   emitCustomPrompt(prompt: string): void {
@@ -222,7 +224,7 @@ export class AiOptionsComponent implements OnInit {
     }
   }
 
-  //Number of changes for AI to make
+  // Slider presets that prepend an edit-strength instruction to non-alert prompts.
   editLevel = 50;
   editLevels = [
     { value: 0, label: 'Grammar and spelling only', prompt: 'Make minor edits to correct spelling or grammar errors only. Mostly ignore the other instructions provided.' },

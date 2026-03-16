@@ -22,7 +22,9 @@ export class AlertAiService {
     issues: AlertIssue[];
   }>();
   readonly issuesUpdated$ = this.issuesUpdatedSubject.asObservable();
+  // Cache the last analyzed alert HTML so repeat opens of the same page do not re-call the model.
   private cachedAlertIssues: { html: string; issues: AlertIssue[] } | null = null;
+  // Fallback metadata fills gaps when the model omits severity/include fields.
   private readonly fallbackSeverities: Record<string, { severity: string; include?: boolean }> =
     Object.fromEntries(
       Object.entries(
@@ -41,6 +43,7 @@ export class AlertAiService {
     );
 
   private buildModelRotation(requested?: string): string[] {
+    // Alerts issue analysis can try the requested model first, then fall through the configured model list.
     const available = this.openRouter.models;
     if (requested && available.includes(requested)) {
       return [requested, ...available.filter((candidate) => candidate !== requested)];
@@ -70,6 +73,7 @@ export class AlertAiService {
     });
     let systemPrompt = basePrompt;
     if (this.uploadState.getUseSkillPrompts()) {
+      // Skill composition is optional; when enabled it augments the base prompt with references/assets.
       const composed = await this.skillManager.composePrompt({
         basePrompt,
         queryText: 'analyze canada.ca html alerts for issues and accessibility',
@@ -81,6 +85,7 @@ export class AlertAiService {
       systemPrompt = composed.prompt;
     }
     //console.log('[AlertAiService] AlertsIssues system prompt:', systemPrompt);
+    // Only alert fragments are sent to the model; full-page context is trimmed separately.
     const alerts = this.extractAlerts(alertHtml);
     const userPayload = {
       alerts,
@@ -93,6 +98,7 @@ export class AlertAiService {
       { role: 'user', content: JSON.stringify(userPayload) },
     ];
 
+    // These flags let the service distinguish transport failure, empty output, and successful-but-unusable output.
     let sawResponse = false;
     let generatingNotified = false;
     let errorNotified = false;
@@ -133,6 +139,7 @@ export class AlertAiService {
               life: 3000,
             });
             if (i > 0 && primaryModel) {
+              // Surface model rotation explicitly so the caller can tell when the primary model did not serve the request.
               this.messageService.add({
                 severity: 'warn',
                 summary: this.translate.instant('common.ai.fallback.summary'),
@@ -199,6 +206,7 @@ export class AlertAiService {
   }
 
   cacheIssues(alertHtml: string, issues: AlertIssue[]): void {
+    // Cache and emit copied objects so downstream views cannot mutate the shared source array by reference.
     const normalized = this.trimText(alertHtml);
     const copied = issues.map((issue) => ({ ...issue }));
     this.cachedAlertIssues = {
@@ -233,6 +241,7 @@ export class AlertAiService {
     issues: AlertIssue[],
     options?: { useIncludeFallback?: boolean },
   ): AlertIssue[] {
+    // Normalization makes model output predictable before it reaches the guidance UI.
     const useIncludeFallback = options?.useIncludeFallback !== false;
     return issues.map((issue) => {
       const category = this.cleanString(issue.category);
@@ -264,8 +273,23 @@ export class AlertAiService {
   }
 
   private getShortModelName(model: string): string {
+    // OpenRouter may return version-stamped model ids; normalize them back to the configured model family for display.
+    const normalizedModel = (model || '')
+      .trim()
+      .toLowerCase()
+      .replace(/-\d{8,}(?=:[a-z0-9-]+$|$)/g, '');
     const modelKey = (Object.keys(AiModel) as Array<keyof typeof AiModel>).find(
-      (key) => AiModel[key] === model,
+      (key) => {
+        const enumValue = (AiModel[key] || '')
+          .trim()
+          .toLowerCase()
+          .replace(/-\d{8,}(?=:[a-z0-9-]+$|$)/g, '');
+        return (
+          normalizedModel === enumValue ||
+          normalizedModel.startsWith(enumValue) ||
+          enumValue.startsWith(normalizedModel)
+        );
+      },
     );
     return modelKey
       ? this.translate.instant(`page.ai-options.model.short.${modelKey}`)
@@ -273,6 +297,7 @@ export class AlertAiService {
   }
   
   private parseIssues(text: string): AlertIssue[] {
+    // The model is asked for JSON, but this parser stays defensive around code fences and loose wrappers.
     const cleaned = this.stripCodeFences(text);
     const parsed = this.looseJsonParse(cleaned);
     const root: Record<string, unknown> | null =
@@ -357,6 +382,7 @@ export class AlertAiService {
     if (!sourceHtml) return [];
     try {
       const doc = new DOMParser().parseFromString(sourceHtml, 'text/html');
+      // Issue analysis is intentionally scoped to elements already recognized as alerts.
       const alerts = Array.from(doc.body.querySelectorAll('.alert'));
       return alerts.map((el) => el.outerHTML);
     } catch (err) {

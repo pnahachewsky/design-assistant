@@ -7,6 +7,7 @@ import { LocalStorageService } from '../../../services/local-storage.service';
 })
 export class UploadStateService {
   private storage = inject(LocalStorageService);
+  // Local-storage keys are kept here so reset/restore logic stays in sync.
   private readonly uploadDataKey = 'pageAssistant.uploadData';
   private readonly uploadTypeKey = 'pageAssistant.uploadType';
   private readonly aiModelKey = 'pageAssistant.aiModel';
@@ -24,7 +25,7 @@ export class UploadStateService {
     'pageAssistant.useCompactAlertsPageContext';
   private readonly useSkillPromptsKey = 'pageAssistant.useSkillPrompts';
 
-  //Upload type
+  // Upload source chosen in the drawer.
   private selectedUploadType = signal<'url' | 'paste' | 'word'>('url');
   getSelectedUploadType = computed(() => this.selectedUploadType());
   setUploadType(type: 'url' | 'paste' | 'word') {
@@ -32,15 +33,15 @@ export class UploadStateService {
     this.storage.saveData(this.uploadTypeKey, type);
   }
 
-  //AI model
-  private selectedAiModel = signal<AiModel>(AiModel.Nemotron);
+  // Primary AI model selected for the current session.
+  private selectedAiModel = signal<AiModel>(AiModel.NemotronNano);
   getSelectedAiModel = computed(() => this.selectedAiModel());
   setSelectedAiModel(model: AiModel) {
     this.selectedAiModel.set(model);
     this.storage.saveData(this.aiModelKey, model);
   }
 
-  //AI edit prompt prefix (slider)
+  // Edit-strength prefix injected ahead of non-alert prompts.
   private editPromptText = signal<string>('');
   getEditPromptText = computed(() => this.editPromptText());
   setEditPromptText(prompt: string) {
@@ -48,7 +49,7 @@ export class UploadStateService {
     this.storage.saveData(this.editPromptKey, prompt ?? '');
   }
 
-  //Alert rewrite mode (A->B vs good-results-only)
+  // Alert rewrite mode (plan-first vs direct rewrite).
   private selectedAlertRewriteMode = signal<AlertRewriteMode>(
     AlertRewriteMode.GoodResultsOnly,
   );
@@ -58,7 +59,7 @@ export class UploadStateService {
     this.storage.saveData(this.alertRewriteModeKey, mode);
   }
 
-  //Alert rewrite examples toggle
+  // Whether rewrite prompts should include selected good examples.
   private includeAlertRewriteExamples = signal<boolean>(false);
   getIncludeAlertRewriteExamples = computed(() =>
     this.includeAlertRewriteExamples(),
@@ -68,7 +69,7 @@ export class UploadStateService {
     this.storage.saveData(this.includeAlertRewriteExamplesKey, String(!!include));
   }
 
-  //Alert rewrite "before" text in examples toggle
+  // Whether examples include the original "before" text as extra context.
   private includeBeforeTextInAlertRewriteExamples = signal<boolean>(false);
   getIncludeBeforeTextInAlertRewriteExamples = computed(() =>
     this.includeBeforeTextInAlertRewriteExamples(),
@@ -81,7 +82,7 @@ export class UploadStateService {
     );
   }
 
-  //Alert rewrite link writing rules toggle
+  // Whether alert rewrites include the standalone link-writing rules block.
   private includeLinkWritingRules = signal<boolean>(true);
   getIncludeLinkWritingRules = computed(() => this.includeLinkWritingRules());
   setIncludeLinkWritingRules(include: boolean) {
@@ -89,7 +90,7 @@ export class UploadStateService {
     this.storage.saveData(this.includeLinkWritingRulesKey, String(!!include));
   }
 
-  //Alerts issues prompt format toggle (JSON vs text)
+  // Whether alert issue analysis uses the JSON-oriented prompt variant.
   private useJsonAlertsIssuesPrompt = signal<boolean>(false);
   getUseJsonAlertsIssuesPrompt = computed(() =>
     this.useJsonAlertsIssuesPrompt(),
@@ -99,7 +100,7 @@ export class UploadStateService {
     this.storage.saveData(this.useJsonAlertsIssuesPromptKey, String(!!useJson));
   }
 
-  //Alerts issues compact page context toggle
+  // Whether alert issue analysis uses compact extracted page context instead of raw HTML.
   private useCompactAlertsPageContext = signal<boolean>(false);
   getUseCompactAlertsPageContext = computed(() =>
     this.useCompactAlertsPageContext(),
@@ -109,7 +110,7 @@ export class UploadStateService {
     this.storage.saveData(this.useCompactAlertsPageContextKey, String(!!useCompact));
   }
 
-  //Skill prompt composition toggle
+  // Whether prompt assembly uses the skill manager instead of legacy base prompts only.
   private useSkillPrompts = signal<boolean>(false);
   getUseSkillPrompts = computed(() => this.useSkillPrompts());
   setUseSkillPrompts(useSkills: boolean) {
@@ -117,14 +118,15 @@ export class UploadStateService {
     this.storage.saveData(this.useSkillPromptsKey, String(!!useSkills));
   }
 
-  //Upload data
+  // Working page data plus shallow history for undo.
   private uploadData = signal<Partial<UploadData> | null>(null);
-  private originalUploadData: Partial<UploadData> | null = null; //for the compare with original button (not implemented yet)
-  private prevUploadData: (Partial<UploadData> | null)[] = []; //for the undo button
-  private maxHistory = 20; //max size of undo array
+  private originalUploadData: Partial<UploadData> | null = null; // reserved for future compare-with-original behavior
+  private prevUploadData: (Partial<UploadData> | null)[] = []; // undo stack
+  private maxHistory = 20; // max undo depth
   getUploadData = computed(() => this.uploadData());
 
   constructor() {
+    // A hard reload should start a fresh assistant session rather than restoring stale page state.
     if (this.isPageReload()) {
       this.storage.removeData(this.uploadTypeKey);
       this.storage.removeData(this.aiModelKey);
@@ -184,7 +186,7 @@ export class UploadStateService {
     this.persistUploadData();
   }
 
-  // Restore the previous state (for undo button)
+  // Restore the most recent pre-edit snapshot.
   undoLastChange(): void {
     if (this.prevUploadData.length === 0) return;
     const lastState = this.prevUploadData.pop() ?? null;
@@ -193,20 +195,20 @@ export class UploadStateService {
 
   isUndoDisabled(): boolean { return this.prevUploadData.length === 0; }
 
-  // Save a copy of uploadData before overwriting
+  // Capture state before an accept/reject action mutates the working HTML.
   savePreviousUploadData(): void {
     const current = this.uploadData();
     this.prevUploadData.push(current ? structuredClone(current) : null);
-    // Remove oldest item if array gets too big
+    // Trim the oldest snapshot when the undo buffer exceeds its cap.
     if (this.prevUploadData.length > this.maxHistory) {
       this.prevUploadData.shift();
     }
   }
 
-  //Reset
+  // Clear both in-memory state and the persisted assistant session.
   resetUploadFlow(): void {
     this.selectedUploadType.set('url'); // default to URL
-    this.selectedAiModel.set(AiModel.Nemotron);
+    this.selectedAiModel.set(AiModel.NemotronNano);
     this.editPromptText.set('');
     this.selectedAlertRewriteMode.set(AlertRewriteMode.GoodResultsOnly);
     this.includeAlertRewriteExamples.set(false);
@@ -244,6 +246,7 @@ export class UploadStateService {
   }
 
   private restoreState(): void {
+    // Each setting is restored independently so invalid/stale entries can be ignored safely.
     const storedType = this.storage.getData(this.uploadTypeKey);
     if (storedType === 'url' || storedType === 'paste' || storedType === 'word') {
       this.selectedUploadType.set(storedType);
@@ -348,7 +351,7 @@ export class UploadStateService {
       if (nav?.type) {
         return nav.type === 'reload';
       }
-      // Fallback for older browsers
+      // Fallback for older browsers that still expose performance.navigation.
       const legacy = (performance as Performance & { navigation?: { type?: number } }).navigation;
       return legacy?.type === 1;
     } catch {

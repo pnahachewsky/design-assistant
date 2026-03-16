@@ -26,15 +26,18 @@ export class OpenRouterService {
   private readonly apiKeyService = inject(ApiKeyService);
 
   private readonly openRouterApiUrl = 'https://openrouter.ai/api/v1/chat/completions';
+  // Canonical model lists used by the assistant UI and fallback helpers.
   readonly models: string[] = Object.values(AiModel);
   readonly freeModels: string[] = this.models.filter(
-    (model) => model !== AiModel.Gpt5Mini,
+    (model) => model !== AiModel.GPT5Nano,
   );
 
   get hasApiKey(): boolean {
     return !!this.apiKeyService.getCurrentKey();
   }
 
+  // Minimal transport wrapper around OpenRouter chat completions.
+  // Callers own prompt construction, fallback policy, and response interpretation.
   async call(
     model: string,
     messages: ChatMessage[],
@@ -71,6 +74,7 @@ export class OpenRouterService {
       if (ct.includes('application/json') && typeof resp?.body === 'string') {
         return JSON.parse(resp.body) as OpenRouterResponse;
       }
+      // Some upstream/provider failures come back as plain text; keep the caller in control of retry behavior.
       const nonJsonMessage = `OpenRouter non-JSON (status ${resp?.status}, ${ct})`;
       console.error(
         `${nonJsonMessage}:\n`,
@@ -81,6 +85,7 @@ export class OpenRouterService {
       }
       return undefined;
     } catch (err: unknown) {
+      // Return undefined by default so higher-level flows can rotate models or surface custom messages.
       const httpErr = err as { status?: number; error?: unknown };
       const status = httpErr?.status;
       const bodySnippet =
