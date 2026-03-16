@@ -295,17 +295,11 @@ export class AlertRewriteGuardService {
 
     if (
       normalized === 'refer to:' ||
-      normalized === 'learn more:' ||
-      normalized === 'learn about:'
+      normalized === 'learn more:'
     ) {
       return true;
     }
-
-    if (normalized.startsWith('find out:')) {
-      return false;
-    }
-
-    return /^find out\s+(how\b|if\b|whether\b)/.test(normalized);
+    return normalized.startsWith('find out');
   }
 
   // Broader than the valid-lead-in check: used to catch malformed directional
@@ -316,7 +310,7 @@ export class AlertRewriteGuardService {
     );
     if (!normalized) return false;
 
-    return /\b(refer to|learn more|learn about|find out)\b/.test(normalized);
+    return /\blearn more\b/.test(normalized);
   }
 
   private stripLinkPlaceholders(value: string): string {

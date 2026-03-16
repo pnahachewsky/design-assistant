@@ -283,6 +283,11 @@ export class AlertRewriteService {
       ...linkRules,
       ...(params.examples.length ? rules.alertRewrite.styleRulesWithExamples : []),
     ];
+    if (this.hasAcceptableFinalStandaloneLinkSentence(params.originalAlertHtml)) {
+      styleRules.push(
+        'The original alert already ends with an acceptable standalone final link sentence or paragraph. Preserve that wording and placement unless a selected issue clearly requires a change.',
+      );
+    }
     if (params.retryInstruction) {
       styleRules.push(params.retryInstruction);
     }
@@ -368,6 +373,56 @@ export class AlertRewriteService {
       { role: 'system', content: systemPrompt },
       { role: 'user', content: JSON.stringify(userPayload) },
     ];
+  }
+
+  private hasAcceptableFinalStandaloneLinkSentence(alertHtml: string): boolean {
+    try {
+      const doc = new DOMParser().parseFromString(alertHtml || '', 'text/html');
+      const root = doc.body.firstElementChild as HTMLElement | null;
+      if (!root) return false;
+
+      const paragraphs = Array.from(root.querySelectorAll('p'));
+      const lastParagraph = paragraphs[paragraphs.length - 1];
+      if (!lastParagraph) return false;
+
+      const anchors = Array.from(lastParagraph.querySelectorAll('a'));
+      if (!anchors.length) return false;
+
+      const markerPrefix = '[[link:';
+      const markerSuffix = ']]';
+      const paragraphWithMarkers = Array.from(lastParagraph.childNodes)
+        .map((node) => {
+          if (
+            node.nodeType === Node.ELEMENT_NODE &&
+            (node as Element).tagName.toLowerCase() === 'a'
+          ) {
+            const anchorText = (node.textContent || '').trim();
+            return `${markerPrefix}${anchorText}${markerSuffix}`;
+          }
+          return node.textContent || '';
+        })
+        .join(' ')
+        .replace(/\s+/g, ' ')
+        .trim()
+        .toLowerCase();
+      if (!paragraphWithMarkers) return false;
+
+      const sentences =
+        paragraphWithMarkers
+          .match(/[^.!?]+[.!?]?/g)
+          ?.map((sentence) => sentence.trim())
+          .filter((sentence) => !!sentence) ?? [];
+      if (sentences.length !== 1) return false;
+
+      return (
+        /^find out\s+\[\[link:[^\]]+\]\][.!?]?$/.test(paragraphWithMarkers) ||
+        /^learn about\s+\[\[link:[^\]]+\]\][.!?]?$/.test(paragraphWithMarkers) ||
+        /^refer to:\s*\[\[link:[^\]]+\]\][.!?]?$/.test(paragraphWithMarkers) ||
+        /^learn more:\s*\[\[link:[^\]]+\]\][.!?]?$/.test(paragraphWithMarkers)
+      );
+    } catch {
+      return false;
+    }
   }
 
   parseAlertRewriteResponse(
