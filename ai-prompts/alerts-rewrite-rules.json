@@ -16,11 +16,14 @@
     ]
   },
   "alertRewrite": {
-    "styleRulesBase": [
-      "Prefer 1 sentence; use 2 only if needed.",
-      "Add a short, descriptive heading.",
-      "State what happened, then what to do.",
-      "Use plain, active, neutral language.",
+      "styleRulesBase": [
+        "Prefer 1 sentence; use 2 only if needed.",
+        "If the alert includes a standalone lead-in to a link, first include one substantive sentence that explains the alert. Do not output an alert whose only body text is a link-introduction sentence such as \"Learn about:\" or \"Refer to:\".",
+        "If a sentence mainly directs the user to a link, move that direction into its own paragraph. Do not append phrases such as \"refer to\" or \"learn more\" to the explanatory sentence.",
+        "When choosing a standalone link lead-in, prefer \"Refer to:\" for required task or service links and prefer \"Learn more:\" for optional background, status, or update links.",
+        "Add a short, descriptive heading.",
+        "State what happened, then what to do.",
+        "Use plain, active, neutral language.",
       "Include a next step when possible.",
       "Do not add new links. Only keep, rename, or remove links from the original alert HTML.",
       "Do not output [LINK] or [END LINK]. Use real anchors: <a href=\"...\">text</a>.",
@@ -52,7 +55,8 @@
       "placeholderLinks": "Do not output [LINK] or [END LINK]. Use real HTML anchors (<a href=\"...\">text</a>) in rewrittenAlertHtml.",
       "noLinksAllowed": "The original alert has no links. Do not add hyperlinks. Return rewrittenAlertHtml without any <a> tags.",
       "mustKeepLink": "The original alert has a link. Keep at least one real hyperlink in rewrittenAlertHtml unless there is a too-many-links issue.",
-      "avoidExampleCopy": "Your previous output matched example wording. Rewrite using alert-specific wording and facts only."
+      "avoidExampleCopy": "Your previous output matched example wording. Rewrite using alert-specific wording and facts only.",
+      "fullSentenceLinksNeedLeadIn": "If a link stands alone as its own sentence or paragraph, or if a sentence mainly directs the user to a link, place that link direction in its own paragraph. Use one of these lead-ins before the anchor: \"Refer to:\", \"Learn more:\", or \"Learn about:\". Prefer \"Refer to:\" for required task or service links. Prefer \"Learn more:\" for optional background, status, or update links. Use \"Learn about:\" for explainer or topic pages. Use \"Find out\" only without a colon and only when the linked text naturally completes the phrase, such as \"Find out how to...\" or \"Find out if...\". Do not write forms such as \"refer to <link>\" inside the explanatory sentence."
     }
   }
 }

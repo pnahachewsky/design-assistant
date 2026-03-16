@@ -138,7 +138,7 @@ import {
   unblockBodyScroll,
   uuid,
   zindexutils
-} from "./chunk-LDY7LDPC.js";
+} from "./chunk-UD35Z6K2.js";
 import {
   ChangeDetectionStrategy,
   ChangeDetectorRef,
@@ -221,13 +221,11 @@ import {
   ɵɵtext,
   ɵɵtextInterpolate,
   ɵɵtextInterpolate1,
-  ɵɵtextInterpolate2,
-  ɵɵtextInterpolate3,
   ɵɵtwoWayBindingSet,
   ɵɵtwoWayListener,
   ɵɵtwoWayProperty,
   ɵɵviewQuery
-} from "./chunk-52Z2BYQO.js";
+} from "./chunk-7QCF5G4D.js";
 import {
   __async,
   __commonJS,
@@ -21265,7 +21263,7 @@ var promptFiles = {
   [PromptKey.Doormats]: new URL("doormats.txt", PROMPT_BASE_URL).toString(),
   [PromptKey.PlainLanguage]: new URL("plain-language.txt", PROMPT_BASE_URL).toString(),
   [PromptKey.AlertsIssues]: alertsIssuesTextPath,
-  [PromptKey.AlertsRecommendations]: new URL("alerts-recommendations.txt", PROMPT_BASE_URL).toString()
+  [PromptKey.AlertsRecommendations]: new URL("alerts-rewriting.txt", PROMPT_BASE_URL).toString()
 };
 var commsObjectivePath = new URL("comms-objective.txt", PROMPT_BASE_URL).toString();
 var promptCache = /* @__PURE__ */ new Map();
@@ -21302,11 +21300,14 @@ var OpenRouterService = class _OpenRouterService {
   http = inject(HttpClient);
   apiKeyService = inject(ApiKeyService);
   openRouterApiUrl = "https://openrouter.ai/api/v1/chat/completions";
+  // Canonical model lists used by the assistant UI and fallback helpers.
   models = Object.values(AiModel);
-  freeModels = this.models.filter((model) => model !== AiModel.Gpt5Mini);
+  freeModels = this.models.filter((model) => model !== AiModel.GPT5Nano);
   get hasApiKey() {
     return !!this.apiKeyService.getCurrentKey();
   }
+  // Minimal transport wrapper around OpenRouter chat completions.
+  // Callers own prompt construction, fallback policy, and response interpretation.
   call(_0, _1) {
     return __async(this, arguments, function* (model, messages, options = {}) {
       const apiKey = this.apiKeyService.getCurrentKey();
@@ -21366,6 +21367,289 @@ var OpenRouterService = class _OpenRouterService {
   }], null, null);
 })();
 
+// src/app/views/page-assistant/services/skill-manager.service.ts
+var SkillManagerService = class _SkillManagerService {
+  manifestUrl = new URL("skills/manifest.json", document.baseURI).toString();
+  manifestPromise = null;
+  textCache = /* @__PURE__ */ new Map();
+  getSkillMetadata() {
+    return __async(this, null, function* () {
+      return this.loadManifest();
+    });
+  }
+  composePrompt(request) {
+    return __async(this, null, function* () {
+      const candidates = yield this.rankSkills(request);
+      const selectedCandidate = candidates[0];
+      const selectedSkill = selectedCandidate && selectedCandidate.score > 0 ? selectedCandidate.skill : null;
+      const loadedPaths = [];
+      const promptSections = [request.basePrompt.trim()].filter(Boolean);
+      if (selectedSkill) {
+        try {
+          const skills = yield this.loadManifest();
+          const skillMap = new Map(skills.map((skill) => [skill.id, skill]));
+          yield this.appendSkillSections({
+            skill: selectedSkill,
+            request,
+            loadedPaths,
+            promptSections,
+            skillMap,
+            loadedSkillIds: /* @__PURE__ */ new Set(),
+            sectionLabel: "Activated Skill"
+          });
+        } catch (err) {
+          console.warn("Skill composition failed, using base prompt fallback:", err);
+          promptSections.length = 0;
+          promptSections.push(request.basePrompt.trim());
+        }
+      }
+      const prompt = this.joinUniqueSections(promptSections);
+      const estimatedPromptTokens = Math.ceil(prompt.length / 4);
+      this.maybeLogDiagnostics({
+        request,
+        selectedSkill,
+        candidates,
+        loadedPaths,
+        estimatedPromptTokens
+      });
+      return {
+        prompt,
+        selectedSkill,
+        candidates,
+        loadedPaths,
+        estimatedPromptTokens
+      };
+    });
+  }
+  rankSkills(request) {
+    return __async(this, null, function* () {
+      const skills = yield this.loadManifest();
+      const normalizedQuery = this.normalize(request.queryText);
+      const queryTokens = this.getQueryTokens(normalizedQuery);
+      const scored = skills.filter((skill) => skill.selectable !== false).map((skill) => this.scoreSkill(skill, request, normalizedQuery, queryTokens));
+      return scored.sort((a, b) => b.score - a.score);
+    });
+  }
+  scoreSkill(skill, request, normalizedQuery, queryTokens) {
+    let score = 0;
+    const reasons = [];
+    if (request.promptKey && (skill.promptKeys ?? []).includes(request.promptKey)) {
+      score += 4;
+      reasons.push(`promptKey:${request.promptKey}`);
+    }
+    const requestedOutputMode = request.outputMode ?? "any";
+    if (requestedOutputMode !== "any") {
+      const supported = skill.outputModes ?? ["any"];
+      if (supported.includes(requestedOutputMode) || supported.includes("any")) {
+        score += 3;
+        reasons.push(`outputMode:${requestedOutputMode}`);
+      } else {
+        score -= 2;
+      }
+    }
+    const triggerHits = (skill.triggerPhrases ?? []).filter((phrase) => normalizedQuery.includes(this.normalize(phrase)));
+    if (triggerHits.length) {
+      score += Math.min(8, triggerHits.length * 2);
+      reasons.push(`triggers:${triggerHits.length}`);
+    }
+    const description = this.normalize(skill.description);
+    const overlap = queryTokens.filter((token) => description.includes(token)).length;
+    if (overlap > 0) {
+      score += Math.min(2, overlap * 0.25);
+      reasons.push(`descriptionOverlap:${overlap}`);
+    }
+    return { skill, score, reasons };
+  }
+  loadManifest() {
+    return __async(this, null, function* () {
+      if (!this.manifestPromise) {
+        this.manifestPromise = (() => __async(this, null, function* () {
+          try {
+            const response = yield fetch(this.manifestUrl);
+            if (!response.ok) {
+              throw new Error(`Skill manifest request failed (${response.status}).`);
+            }
+            const data = yield response.json();
+            const skills = Array.isArray(data.skills) ? data.skills : [];
+            return skills.filter((skill) => this.isValidSkill(skill));
+          } catch (err) {
+            console.warn("Failed to load skill manifest:", err);
+            return [];
+          }
+        }))();
+      }
+      return this.manifestPromise;
+    });
+  }
+  isValidSkill(skill) {
+    return Boolean(skill?.id && skill?.name && skill?.description && skill?.skillMdPath);
+  }
+  loadText(path) {
+    return __async(this, null, function* () {
+      const pathUrl = new URL(path, document.baseURI).toString();
+      if (!this.textCache.has(pathUrl)) {
+        this.textCache.set(pathUrl, (() => __async(this, null, function* () {
+          try {
+            const response = yield fetch(pathUrl);
+            if (!response.ok) {
+              throw new Error(`Skill resource request failed (${response.status}): ${path}`);
+            }
+            return response.text();
+          } catch (err) {
+            this.textCache.delete(pathUrl);
+            throw err;
+          }
+        }))());
+      }
+      return this.textCache.get(pathUrl);
+    });
+  }
+  stripFrontmatter(content) {
+    const frontmatterPattern = /^---\r?\n[\s\S]*?\r?\n---\r?\n?/;
+    return content.replace(frontmatterPattern, "").trim();
+  }
+  appendSkillSections(params) {
+    return __async(this, null, function* () {
+      const { skill, request, loadedPaths, promptSections, skillMap, loadedSkillIds, sectionLabel } = params;
+      if (loadedSkillIds.has(skill.id)) {
+        return;
+      }
+      loadedSkillIds.add(skill.id);
+      const skillRaw = yield this.loadText(skill.skillMdPath);
+      loadedPaths.push(skill.skillMdPath);
+      const skillBody = this.stripFrontmatter(skillRaw);
+      promptSections.push([
+        `### ${sectionLabel}`,
+        `Skill: ${skill.name}`,
+        `Description: ${skill.description}`
+      ].join("\n"));
+      promptSections.push(`### Skill Instructions
+${skillBody}`);
+      const includeReferences = request.includeReferences !== false;
+      if (includeReferences) {
+        const referencePaths = this.getReferencePathsForRequest(skill, request);
+        for (const path of referencePaths) {
+          const content = yield this.loadText(path);
+          loadedPaths.push(path);
+          promptSections.push(this.wrapResourceSection(path, "Reference", content));
+        }
+      }
+      const includeOptionalReferences = request.includeOptionalReferences === true;
+      if (includeOptionalReferences) {
+        const optionalPaths = this.getOptionalReferencePathsForRequest(skill, request);
+        for (const path of optionalPaths) {
+          const content = yield this.loadText(path);
+          loadedPaths.push(path);
+          promptSections.push(this.wrapResourceSection(path, "Optional Reference", content));
+        }
+      }
+      const includeAssets = request.includeAssets === true;
+      if (includeAssets) {
+        const assetPaths = this.getAssetPathsForRequest(skill, request);
+        for (const path of assetPaths) {
+          const content = yield this.loadText(path);
+          loadedPaths.push(path);
+          promptSections.push(this.wrapResourceSection(path, "Asset", content));
+        }
+      }
+      const includedSkillIds = skill.includedSkillIds ?? [];
+      for (const includedSkillId of includedSkillIds) {
+        const includedSkill = skillMap.get(includedSkillId);
+        if (!includedSkill) {
+          throw new Error(`Included skill not found: ${includedSkillId}`);
+        }
+        yield this.appendSkillSections({
+          skill: includedSkill,
+          request,
+          loadedPaths,
+          promptSections,
+          skillMap,
+          loadedSkillIds,
+          sectionLabel: "Included Skill"
+        });
+      }
+    });
+  }
+  wrapResourceSection(path, label, content) {
+    const fileName = path.split("/").pop() || path;
+    return `### ${label}: ${fileName}
+${content.trim()}`;
+  }
+  joinUniqueSections(sections) {
+    const unique = [];
+    const seen = /* @__PURE__ */ new Set();
+    for (const section of sections) {
+      const normalized = section.trim();
+      if (!normalized)
+        continue;
+      const dedupeKey = normalized.toLowerCase();
+      if (seen.has(dedupeKey))
+        continue;
+      seen.add(dedupeKey);
+      unique.push(normalized);
+    }
+    return unique.join("\n\n");
+  }
+  normalize(value) {
+    return (value || "").toLowerCase().replace(/\s+/g, " ").trim();
+  }
+  getQueryTokens(query) {
+    return query.split(/[^a-z0-9]+/g).map((token) => token.trim()).filter((token) => token.length >= 4);
+  }
+  getReferencePathsForRequest(skill, request) {
+    if (!request.promptKey) {
+      return skill.defaultReferencePaths ?? [];
+    }
+    return skill.referencePathsByPromptKey?.[request.promptKey] ?? skill.defaultReferencePaths ?? [];
+  }
+  getOptionalReferencePathsForRequest(skill, request) {
+    if (!request.promptKey) {
+      return skill.optionalReferencePaths ?? [];
+    }
+    return skill.optionalReferencePathsByPromptKey?.[request.promptKey] ?? skill.optionalReferencePaths ?? [];
+  }
+  getAssetPathsForRequest(skill, request) {
+    if (!request.promptKey) {
+      return skill.defaultAssetPaths ?? [];
+    }
+    return skill.assetPathsByPromptKey?.[request.promptKey] ?? skill.defaultAssetPaths ?? [];
+  }
+  maybeLogDiagnostics(params) {
+    const storageKey = params.request.debugStorageKey || "pageAssistant.skillDebug";
+    if (!this.isDebugEnabled(storageKey)) {
+      return;
+    }
+    const topCandidates = params.candidates.slice(0, 3).map((candidate) => ({
+      id: candidate.skill.id,
+      score: candidate.score,
+      reasons: candidate.reasons
+    }));
+    console.groupCollapsed("[SkillManager] prompt composition");
+    console.log("Selected skill:", params.selectedSkill?.id || "none");
+    console.log("Top candidates:", topCandidates);
+    console.log("Loaded resources:", params.loadedPaths);
+    console.log("Estimated prompt tokens:", params.estimatedPromptTokens);
+    console.groupEnd();
+  }
+  isDebugEnabled(storageKey) {
+    try {
+      return localStorage.getItem(storageKey) === "true";
+    } catch {
+      return false;
+    }
+  }
+  static \u0275fac = function SkillManagerService_Factory(__ngFactoryType__) {
+    return new (__ngFactoryType__ || _SkillManagerService)();
+  };
+  static \u0275prov = /* @__PURE__ */ \u0275\u0275defineInjectable({ token: _SkillManagerService, factory: _SkillManagerService.\u0275fac, providedIn: "root" });
+};
+(() => {
+  (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(SkillManagerService, [{
+    type: Injectable,
+    args: [{ providedIn: "root" }]
+  }], null, null);
+})();
+
 // src/app/views/page-assistant/components/problems/component-guidance/alerts-guidance/severity-include-fallback.json
 var severity_include_fallback_default = {
   Misuse: { severity: "Medium", include: true },
@@ -21397,9 +21681,12 @@ var AlertAiService = class _AlertAiService {
   messageService = inject(MessageService);
   translate = inject(TranslateService);
   uploadState = inject(UploadStateService);
+  skillManager = inject(SkillManagerService);
   issuesUpdatedSubject = new Subject();
   issuesUpdated$ = this.issuesUpdatedSubject.asObservable();
+  // Cache the last analyzed alert HTML so repeat opens of the same page do not re-call the model.
   cachedAlertIssues = null;
+  // Fallback metadata fills gaps when the model omits severity/include fields.
   fallbackSeverities = Object.fromEntries(Object.entries(severity_include_fallback_default).map(([k, v]) => {
     if (typeof v === "string") {
       return [k.toLowerCase(), { severity: String(v) }];
@@ -21431,7 +21718,18 @@ var AlertAiService = class _AlertAiService {
       const basePrompt = yield getPromptTemplate(PromptKey.AlertsIssues, {
         useJsonAlertsIssuesPrompt: this.uploadState.getUseJsonAlertsIssuesPrompt()
       });
-      const systemPrompt = basePrompt;
+      let systemPrompt = basePrompt;
+      if (this.uploadState.getUseSkillPrompts()) {
+        const composed = yield this.skillManager.composePrompt({
+          basePrompt,
+          queryText: "analyze canada.ca html alerts for issues and accessibility",
+          promptKey: PromptKey.AlertsIssues,
+          outputMode: "json",
+          includeReferences: true,
+          includeAssets: true
+        });
+        systemPrompt = composed.prompt;
+      }
       const alerts = this.extractAlerts(alertHtml);
       const userPayload = {
         alerts,
@@ -21584,7 +21882,11 @@ var AlertAiService = class _AlertAiService {
     });
   }
   getShortModelName(model) {
-    const modelKey = Object.keys(AiModel).find((key2) => AiModel[key2] === model);
+    const normalizedModel = (model || "").trim().toLowerCase().replace(/-\d{8,}(?=:[a-z0-9-]+$|$)/g, "");
+    const modelKey = Object.keys(AiModel).find((key2) => {
+      const enumValue = (AiModel[key2] || "").trim().toLowerCase().replace(/-\d{8,}(?=:[a-z0-9-]+$|$)/g, "");
+      return normalizedModel === enumValue || normalizedModel.startsWith(enumValue) || enumValue.startsWith(normalizedModel);
+    });
     return modelKey ? this.translate.instant(`page.ai-options.model.short.${modelKey}`) : model;
   }
   parseIssues(text) {
@@ -21699,6 +22001,344 @@ var AlertAiService = class _AlertAiService {
   }], null, null);
 })();
 
+// src/app/views/page-assistant/services/alert-issues-context.service.ts
+var AlertIssuesContextService = class _AlertIssuesContextService {
+  // Builds the compact alert-analysis payload used when we want the model to
+  // reason over structured page signals instead of parsing the full page HTML.
+  buildCompactAlertsIssuesPayload(sourceHtml) {
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(sourceHtml, "text/html");
+    const alerts = Array.from(doc.querySelectorAll(".alert"));
+    const main = doc.querySelector("main") || doc.body;
+    const h2Elements = Array.from(main.querySelectorAll("h2"));
+    const h2Headings = h2Elements.map((h2) => this.truncateContextText(h2.textContent || "", 120)).filter((value) => !!value).slice(0, 20);
+    const mainElements = Array.from(main.querySelectorAll("*"));
+    const mainIndexMap = new Map(mainElements.map((el, idx) => [el, idx]));
+    const h2IndexPairs = h2Elements.map((h2) => ({
+      text: this.truncateContextText(h2.textContent || "", 120),
+      idx: mainIndexMap.get(h2)
+    })).filter((item) => Number.isFinite(item.idx));
+    const firstH2Index = h2IndexPairs.length ? h2IndexPairs[0].idx : -1;
+    const title = this.truncateContextText(doc.querySelector("title")?.textContent || "", 120);
+    const h1 = this.truncateContextText(main.querySelector("h1")?.textContent || "", 120);
+    const introSnippet = this.truncateContextText(main.querySelector("p")?.textContent || "", 280);
+    const pageTypeSignal = this.inferPageTypeSignal(title, h1);
+    const alertPlacementContext = alerts.map((alertEl, index) => {
+      const mainIndex = mainIndexMap.get(alertEl);
+      const positionPercentInMain = typeof mainIndex === "number" && mainElements.length > 1 ? Math.round(mainIndex / (mainElements.length - 1) * 100) : null;
+      const beforeCandidates = h2IndexPairs.filter((item) => typeof mainIndex === "number" && item.idx < mainIndex);
+      const afterCandidates = h2IndexPairs.filter((item) => typeof mainIndex === "number" && item.idx > mainIndex);
+      const nearestH2Above = beforeCandidates.length ? beforeCandidates[beforeCandidates.length - 1].text : "";
+      const nearestH2Below = afterCandidates.length ? afterCandidates[0].text : "";
+      return {
+        alert_index: index + 1,
+        is_before_first_h2: typeof mainIndex === "number" && firstH2Index >= 0 ? mainIndex < firstH2Index : false,
+        position_percent_in_main: positionPercentInMain,
+        nearest_h2_above: nearestH2Above,
+        nearest_h2_below: nearestH2Below,
+        section_snippet_before: this.collectSiblingTextSnippet(alertEl, "before", 220),
+        section_snippet_after: this.collectSiblingTextSnippet(alertEl, "after", 220)
+      };
+    });
+    const alertSignals = alerts.map((alertEl, index) => {
+      const heading = this.getAlertHeadingMetadata(alertEl);
+      const links = this.getAlertLinks(alertEl);
+      const paragraphCount = this.getAlertParagraphCount(alertEl);
+      const visibleText = this.truncateContextText(alertEl.textContent || "", 400);
+      const previousSiblingIsAlert = alertEl.previousElementSibling?.classList.contains("alert") ?? false;
+      const nextSiblingIsAlert = alertEl.nextElementSibling?.classList.contains("alert") ?? false;
+      return {
+        alert_index: index + 1,
+        alert_type: this.getAlertTypeClass(alertEl),
+        heading_text: heading.text,
+        heading_level: heading.level,
+        heading_source: heading.source,
+        heading_tag: heading.tag,
+        has_heading: heading.source !== "none",
+        paragraph_count: paragraphCount,
+        has_multiple_paragraphs: paragraphCount > 1,
+        text_length_chars: visibleText.length,
+        link_count: links.length,
+        has_multiple_links: links.length > 1,
+        links,
+        has_hidden_content: this.hasHiddenAlertContent(alertEl),
+        previous_sibling_is_alert: previousSiblingIsAlert,
+        next_sibling_is_alert: nextSiblingIsAlert,
+        adjacent_alert_cluster_size: this.getAdjacentAlertClusterSize(alertEl)
+      };
+    });
+    const alertsBeforeFirstH2Count = alertPlacementContext.filter((item) => item.is_before_first_h2).length;
+    const adjacentAlertCount = alertSignals.filter((item) => item.previous_sibling_is_alert || item.next_sibling_is_alert).length;
+    return {
+      alerts: alerts.map((alertEl) => alertEl.outerHTML),
+      alertCount: alerts.length,
+      pageContext: `Title: ${title || "N/A"}
+H1: ${h1 || "N/A"}
+Page type signal: ${pageTypeSignal}
+Main intro: ${introSnippet || "N/A"}
+H2 headings (${h2Headings.length}): ${h2Headings.join(" | ") || "N/A"}`,
+      pageSignals: {
+        title,
+        h1,
+        pageTypeSignal,
+        h2Headings,
+        alertCount: alerts.length,
+        hasMultipleAlerts: alerts.length > 1,
+        alertsBeforeFirstH2Count,
+        adjacentAlertCount
+      },
+      alertPlacementContext,
+      // Compact mode precomputes structural alert checks so the issues skill can spend more reasoning on judgment than HTML parsing.
+      alertSignals
+    };
+  }
+  // Normalizes page text into short snippets so the compact payload stays cheap.
+  truncateContextText(value, maxChars) {
+    const normalized = (value || "").replace(/\s+/g, " ").trim();
+    if (!normalized)
+      return "";
+    return normalized.length > maxChars ? normalized.slice(0, maxChars).trim() : normalized;
+  }
+  // Pulls nearby sibling text so alerts carry a little surrounding context
+  // without shipping the whole DOM back to the model.
+  collectSiblingTextSnippet(alertEl, direction, maxChars) {
+    const collected = [];
+    let node = direction === "before" ? alertEl.previousElementSibling : alertEl.nextElementSibling;
+    let hops = 0;
+    while (node && hops < 4) {
+      const lowerTag = node.tagName.toLowerCase();
+      if (lowerTag !== "script" && lowerTag !== "style" && !node.classList.contains("alert")) {
+        const text = this.truncateContextText(node.textContent || "", maxChars);
+        if (text) {
+          if (direction === "before") {
+            collected.unshift(text);
+          } else {
+            collected.push(text);
+          }
+          const joined = this.truncateContextText(collected.join(" "), maxChars);
+          if (joined.length >= maxChars) {
+            return joined;
+          }
+        }
+      }
+      node = direction === "before" ? node.previousElementSibling : node.nextElementSibling;
+      hops += 1;
+    }
+    return this.truncateContextText(collected.join(" "), maxChars);
+  }
+  // A coarse page-type hint gives the issues prompt lightweight task-vs-content context.
+  inferPageTypeSignal(title, h1) {
+    const context = `${title} ${h1}`.toLowerCase();
+    if (!context.trim())
+      return "content";
+    if (/\b(home|welcome|overview|what'?s new|landing)\b/.test(context)) {
+      return "landing";
+    }
+    if (/\b(apply|submit|file|register|sign in|log in|payment|pay|request)\b/.test(context)) {
+      return "task";
+    }
+    return "content";
+  }
+  // Supports alert headings that use utility classes instead of semantic heading tags.
+  getHeadingUtilityLevel(element) {
+    if (!element)
+      return null;
+    for (let level = 1; level <= 6; level += 1) {
+      if (element.classList.contains(`h${level}`)) {
+        return level;
+      }
+    }
+    return null;
+  }
+  // Normalizes heading metadata so downstream prompts can reason over one shape
+  // regardless of whether the alert used semantic headings or utility classes.
+  getAlertHeadingMetadata(alertElement) {
+    const semanticHeading = alertElement.querySelector("h1, h2, h3, h4, h5, h6");
+    if (semanticHeading) {
+      const headingLevel = Number(semanticHeading.tagName.slice(1));
+      return {
+        text: this.truncateContextText(semanticHeading.textContent || "", 160),
+        level: Number.isFinite(headingLevel) ? headingLevel : null,
+        source: "semantic",
+        tag: semanticHeading.tagName.toLowerCase()
+      };
+    }
+    const utilityHeading = alertElement.querySelector(".h1, .h2, .h3, .h4, .h5, .h6");
+    const utilityLevel = this.getHeadingUtilityLevel(utilityHeading);
+    if (utilityHeading && utilityLevel) {
+      return {
+        text: this.truncateContextText(utilityHeading.textContent || "", 160),
+        level: utilityLevel,
+        source: "utility-class",
+        tag: utilityHeading.tagName.toLowerCase()
+      };
+    }
+    return {
+      text: "",
+      level: null,
+      source: "none",
+      tag: ""
+    };
+  }
+  // Reduces the alert class list to the alert type signal the prompt cares about.
+  getAlertTypeClass(alertElement) {
+    const classNames = Array.from(alertElement.classList).map((name) => name.toLowerCase());
+    if (classNames.includes("alert-danger") || classNames.includes("alert-error")) {
+      return "danger";
+    }
+    if (classNames.includes("alert-warning")) {
+      return "warning";
+    }
+    if (classNames.includes("alert-success")) {
+      return "success";
+    }
+    if (classNames.includes("alert-info")) {
+      return "info";
+    }
+    return "unknown";
+  }
+  // Extracts links in a compact form so prompts can reason over link count and intent.
+  getAlertLinks(alertElement) {
+    return Array.from(alertElement.querySelectorAll("a[href]")).map((anchor) => ({
+      text: this.truncateContextText(anchor.textContent || "", 120),
+      href: (anchor.getAttribute("href") || "").trim()
+    })).filter((link) => !!link.href);
+  }
+  // Hidden or collapsible content inside an alert is a useful accessibility signal.
+  hasHiddenAlertContent(alertElement) {
+    return Boolean(alertElement.querySelector('details, [hidden], [aria-hidden="true"], [aria-expanded], .wb-toggle, .collapse, .collapsible, .accordion, [data-toggle]'));
+  }
+  // Counts body paragraphs while ignoring utility-class heading wrappers.
+  getAlertParagraphCount(alertElement) {
+    return Array.from(alertElement.querySelectorAll("p")).filter((paragraph) => {
+      const text = this.truncateContextText(paragraph.textContent || "", 80);
+      return !!text && !this.getHeadingUtilityLevel(paragraph);
+    }).length;
+  }
+  // Adjacent alerts are a strong overload signal, so we calculate the whole cluster size.
+  getAdjacentAlertClusterSize(alertElement) {
+    let clusterSize = 1;
+    let previous = alertElement.previousElementSibling;
+    while (previous?.classList.contains("alert")) {
+      clusterSize += 1;
+      previous = previous.previousElementSibling;
+    }
+    let next = alertElement.nextElementSibling;
+    while (next?.classList.contains("alert")) {
+      clusterSize += 1;
+      next = next.nextElementSibling;
+    }
+    return clusterSize;
+  }
+  static \u0275fac = function AlertIssuesContextService_Factory(__ngFactoryType__) {
+    return new (__ngFactoryType__ || _AlertIssuesContextService)();
+  };
+  static \u0275prov = /* @__PURE__ */ \u0275\u0275defineInjectable({ token: _AlertIssuesContextService, factory: _AlertIssuesContextService.\u0275fac, providedIn: "root" });
+};
+(() => {
+  (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(AlertIssuesContextService, [{
+    type: Injectable,
+    args: [{ providedIn: "root" }]
+  }], null, null);
+})();
+
+// src/app/common/constants/alert-rewrite-rules.constants.ts
+var ALERT_REWRITE_RULES_PATH = new URL("ai-prompts/alerts-rewrite-rules.json", document.baseURI).toString();
+var ALERT_REWRITE_RULES_FALLBACK = {
+  version: "fallback-inline",
+  alertPlanning: {
+    systemPromptLines: []
+  },
+  alertRewrite: {
+    styleRulesBase: [],
+    styleRulesWithExamples: [],
+    systemPromptWithExamplesLines: [],
+    systemPromptWithoutExamplesLines: [],
+    retryInstructions: {
+      invalidWrapperHtml: "",
+      placeholderLinks: "",
+      noLinksAllowed: "",
+      mustKeepLink: "",
+      avoidExampleCopy: "",
+      fullSentenceLinksNeedLeadIn: ""
+    }
+  }
+};
+var alertRewriteRulesCache = null;
+function isStringArray(value) {
+  return Array.isArray(value) && value.every((item) => typeof item === "string" && item.trim().length > 0);
+}
+function toValidatedRules(raw) {
+  if (!raw || typeof raw !== "object")
+    return null;
+  const root = raw;
+  const version = typeof root["version"] === "string" ? root["version"].trim() : "";
+  const alertPlanning = root["alertPlanning"] && typeof root["alertPlanning"] === "object" ? root["alertPlanning"] : null;
+  const alertRewrite = root["alertRewrite"] && typeof root["alertRewrite"] === "object" ? root["alertRewrite"] : null;
+  if (!version || !alertPlanning || !alertRewrite)
+    return null;
+  const alertPlanningSystem = alertPlanning["systemPromptLines"];
+  const styleRulesBase = alertRewrite["styleRulesBase"];
+  const styleRulesWithExamples = alertRewrite["styleRulesWithExamples"];
+  const systemWithExamples = alertRewrite["systemPromptWithExamplesLines"];
+  const systemWithoutExamples = alertRewrite["systemPromptWithoutExamplesLines"];
+  const retryInstructionsRaw = alertRewrite["retryInstructions"] && typeof alertRewrite["retryInstructions"] === "object" ? alertRewrite["retryInstructions"] : null;
+  if (!isStringArray(alertPlanningSystem) || !isStringArray(styleRulesBase) || !isStringArray(styleRulesWithExamples) || !isStringArray(systemWithExamples) || !isStringArray(systemWithoutExamples) || !retryInstructionsRaw) {
+    return null;
+  }
+  const invalidWrapperHtml = retryInstructionsRaw["invalidWrapperHtml"];
+  const placeholderLinks = retryInstructionsRaw["placeholderLinks"];
+  const noLinksAllowed = retryInstructionsRaw["noLinksAllowed"];
+  const mustKeepLink = retryInstructionsRaw["mustKeepLink"];
+  const avoidExampleCopy = retryInstructionsRaw["avoidExampleCopy"];
+  const fullSentenceLinksNeedLeadIn = retryInstructionsRaw["fullSentenceLinksNeedLeadIn"];
+  if (typeof invalidWrapperHtml !== "string" || typeof placeholderLinks !== "string" || typeof noLinksAllowed !== "string" || typeof mustKeepLink !== "string" || typeof avoidExampleCopy !== "string" || typeof fullSentenceLinksNeedLeadIn !== "string" || !invalidWrapperHtml.trim() || !placeholderLinks.trim() || !noLinksAllowed.trim() || !mustKeepLink.trim() || !avoidExampleCopy.trim() || !fullSentenceLinksNeedLeadIn.trim()) {
+    return null;
+  }
+  return {
+    version,
+    alertPlanning: {
+      systemPromptLines: alertPlanningSystem
+    },
+    alertRewrite: {
+      styleRulesBase,
+      styleRulesWithExamples,
+      systemPromptWithExamplesLines: systemWithExamples,
+      systemPromptWithoutExamplesLines: systemWithoutExamples,
+      retryInstructions: {
+        invalidWrapperHtml,
+        placeholderLinks,
+        noLinksAllowed,
+        mustKeepLink,
+        avoidExampleCopy,
+        fullSentenceLinksNeedLeadIn
+      }
+    }
+  };
+}
+function getAlertRewriteRules() {
+  return __async(this, null, function* () {
+    if (alertRewriteRulesCache)
+      return alertRewriteRulesCache;
+    try {
+      const response = yield fetch(ALERT_REWRITE_RULES_PATH);
+      if (!response.ok) {
+        throw new Error(`Failed to load alert rewrite rules (${response.status}).`);
+      }
+      const payload = yield response.json();
+      const validated = toValidatedRules(payload);
+      if (!validated) {
+        throw new Error("Invalid alert rewrite rules JSON schema.");
+      }
+      alertRewriteRulesCache = validated;
+    } catch (err) {
+      console.warn("Unable to load alert rewrite rules JSON; using inline fallback.", err);
+      alertRewriteRulesCache = ALERT_REWRITE_RULES_FALLBACK;
+    }
+    return alertRewriteRulesCache;
+  });
+}
+
 // src/app/common/constants/link-writing.constants.ts
 var LINK_WRITING_RULES_PATH = new URL("ai-prompts/link-writing-rules.json", document.baseURI).toString();
 var LINK_WRITING_RULES_FALLBACK = {
@@ -21772,100 +22412,6 @@ function getLinkWritingRules(options) {
   return __async(this, null, function* () {
     const rules = yield getLinkWritingRulesJson(options);
     return rules.map((rule) => rule.text);
-  });
-}
-
-// src/app/common/constants/alert-rewrite-rules.constants.ts
-var ALERT_REWRITE_RULES_PATH = new URL("ai-prompts/alerts-rewrite-rules.json", document.baseURI).toString();
-var ALERT_REWRITE_RULES_FALLBACK = {
-  version: "fallback-inline",
-  alertPlanning: {
-    systemPromptLines: []
-  },
-  alertRewrite: {
-    styleRulesBase: [],
-    styleRulesWithExamples: [],
-    systemPromptWithExamplesLines: [],
-    systemPromptWithoutExamplesLines: [],
-    retryInstructions: {
-      invalidWrapperHtml: "",
-      placeholderLinks: "",
-      noLinksAllowed: "",
-      mustKeepLink: "",
-      avoidExampleCopy: ""
-    }
-  }
-};
-var alertRewriteRulesCache = null;
-function isStringArray(value) {
-  return Array.isArray(value) && value.every((item) => typeof item === "string" && item.trim().length > 0);
-}
-function toValidatedRules(raw) {
-  if (!raw || typeof raw !== "object")
-    return null;
-  const root = raw;
-  const version = typeof root["version"] === "string" ? root["version"].trim() : "";
-  const alertPlanning = root["alertPlanning"] && typeof root["alertPlanning"] === "object" ? root["alertPlanning"] : null;
-  const alertRewrite = root["alertRewrite"] && typeof root["alertRewrite"] === "object" ? root["alertRewrite"] : null;
-  if (!version || !alertPlanning || !alertRewrite)
-    return null;
-  const alertPlanningSystem = alertPlanning["systemPromptLines"];
-  const styleRulesBase = alertRewrite["styleRulesBase"];
-  const styleRulesWithExamples = alertRewrite["styleRulesWithExamples"];
-  const systemWithExamples = alertRewrite["systemPromptWithExamplesLines"];
-  const systemWithoutExamples = alertRewrite["systemPromptWithoutExamplesLines"];
-  const retryInstructionsRaw = alertRewrite["retryInstructions"] && typeof alertRewrite["retryInstructions"] === "object" ? alertRewrite["retryInstructions"] : null;
-  if (!isStringArray(alertPlanningSystem) || !isStringArray(styleRulesBase) || !isStringArray(styleRulesWithExamples) || !isStringArray(systemWithExamples) || !isStringArray(systemWithoutExamples) || !retryInstructionsRaw) {
-    return null;
-  }
-  const invalidWrapperHtml = retryInstructionsRaw["invalidWrapperHtml"];
-  const placeholderLinks = retryInstructionsRaw["placeholderLinks"];
-  const noLinksAllowed = retryInstructionsRaw["noLinksAllowed"];
-  const mustKeepLink = retryInstructionsRaw["mustKeepLink"];
-  const avoidExampleCopy = retryInstructionsRaw["avoidExampleCopy"];
-  if (typeof invalidWrapperHtml !== "string" || typeof placeholderLinks !== "string" || typeof noLinksAllowed !== "string" || typeof mustKeepLink !== "string" || typeof avoidExampleCopy !== "string" || !invalidWrapperHtml.trim() || !placeholderLinks.trim() || !noLinksAllowed.trim() || !mustKeepLink.trim() || !avoidExampleCopy.trim()) {
-    return null;
-  }
-  return {
-    version,
-    alertPlanning: {
-      systemPromptLines: alertPlanningSystem
-    },
-    alertRewrite: {
-      styleRulesBase,
-      styleRulesWithExamples,
-      systemPromptWithExamplesLines: systemWithExamples,
-      systemPromptWithoutExamplesLines: systemWithoutExamples,
-      retryInstructions: {
-        invalidWrapperHtml,
-        placeholderLinks,
-        noLinksAllowed,
-        mustKeepLink,
-        avoidExampleCopy
-      }
-    }
-  };
-}
-function getAlertRewriteRules() {
-  return __async(this, null, function* () {
-    if (alertRewriteRulesCache)
-      return alertRewriteRulesCache;
-    try {
-      const response = yield fetch(ALERT_REWRITE_RULES_PATH);
-      if (!response.ok) {
-        throw new Error(`Failed to load alert rewrite rules (${response.status}).`);
-      }
-      const payload = yield response.json();
-      const validated = toValidatedRules(payload);
-      if (!validated) {
-        throw new Error("Invalid alert rewrite rules JSON schema.");
-      }
-      alertRewriteRulesCache = validated;
-    } catch (err) {
-      console.warn("Unable to load alert rewrite rules JSON; using inline fallback.", err);
-      alertRewriteRulesCache = ALERT_REWRITE_RULES_FALLBACK;
-    }
-    return alertRewriteRulesCache;
   });
 }
 
@@ -22030,6 +22576,18 @@ var AlertRewriteService = class _AlertRewriteService {
         styleRules.push(params.retryInstruction);
       }
       const includeBeforeText = params.includeBeforeTextInExamples === true;
+      const rawIssues = params.issues.map((issue) => {
+        const category = this.cleanString(issue.category);
+        const severity = this.cleanString(issue.severity);
+        const description = this.cleanString(issue.description);
+        const recommendation = this.cleanString(issue.recommendation);
+        const alertIndex = typeof issue.alertIndex === "number" && Number.isFinite(issue.alertIndex) ? issue.alertIndex : void 0;
+        const include = typeof issue.include === "boolean" ? issue.include : void 0;
+        if (!category && !severity && !description && !recommendation && alertIndex === void 0 && include === void 0) {
+          return null;
+        }
+        return __spreadValues(__spreadValues(__spreadValues(__spreadValues(__spreadValues(__spreadValues({}, alertIndex !== void 0 ? { alertIndex } : {}), category ? { category } : {}), severity ? { severity } : {}), description ? { description } : {}), recommendation ? { recommendation } : {}), include !== void 0 ? { include } : {});
+      }).filter((issue) => !!issue);
       const planPayload = params.mode === AlertRewriteMode.AB ? params.plan : {
         alertType: params.plan.alertType,
         domainTags: params.plan.domainTags,
@@ -22055,6 +22613,7 @@ var AlertRewriteService = class _AlertRewriteService {
           linkEdits: example.linkEdits || []
         })),
         plan: planPayload,
+        issues: rawIssues,
         originalHeading: (params.originalHeading || "").trim(),
         originalAlertText: (params.originalAlertText || "").trim(),
         originalAlertHtml: (params.originalAlertHtml || "").trim()
@@ -22397,6 +22956,528 @@ var AlertRewriteService = class _AlertRewriteService {
 };
 (() => {
   (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(AlertRewriteService, [{
+    type: Injectable,
+    args: [{ providedIn: "root" }]
+  }], null, null);
+})();
+
+// src/app/views/page-assistant/services/alert-rewrite-guard.service.ts
+var AlertRewriteGuardService = class _AlertRewriteGuardService {
+  alertRewrite = inject(AlertRewriteService);
+  // Extracts the alert body text used by planning and copy-detection logic.
+  getAlertTextForRewrite(alertElement) {
+    const firstParagraph = alertElement.querySelector("p");
+    const paragraphText = firstParagraph?.textContent?.trim() || "";
+    if (paragraphText)
+      return paragraphText;
+    return (alertElement.textContent || "").trim();
+  }
+  // Pulls the alert heading so rewrite prompts and diagnostics can preserve it.
+  getAlertHeadingForRewrite(alertElement) {
+    const headingEl = alertElement.querySelector("h1, h2, h3, h4, h5, h6");
+    return (headingEl?.textContent || "").trim();
+  }
+  // Keeps per-alert issues aligned with the alert being rewritten while still
+  // preserving any global issues that apply to every alert.
+  getIssuesForAlertIndex(issues, alertIndex) {
+    const hasIndexedIssues = issues.some((issue) => Number.isFinite(issue.alertIndex));
+    const globalIssues = issues.filter((issue) => !Number.isFinite(issue.alertIndex));
+    const specificIssues = issues.filter((issue) => issue.alertIndex === alertIndex);
+    if (!hasIndexedIssues) {
+      return issues;
+    }
+    if (specificIssues.length) {
+      return [...globalIssues, ...specificIssues];
+    }
+    return globalIssues;
+  }
+  // Placeholder link tokens are always invalid at this stage because the final
+  // rewrite contract expects real anchors or plain text.
+  containsLinkPlaceholderSyntax(value) {
+    return /\[(?:\/?\s*LINK|END\s+LINK)\]/i.test(value || "");
+  }
+  // Rejects outputs where link-direction text is malformed:
+  // link-only sentences, embedded lead-ins, or lead-ins in the wrong paragraph shape.
+  hasFullSentenceLinkWithoutAllowedLeadIn(alertHtml) {
+    try {
+      const doc = new DOMParser().parseFromString(alertHtml, "text/html");
+      const root = doc.body.firstElementChild;
+      if (!root)
+        return false;
+      const paragraphs = Array.from(root.querySelectorAll("p"));
+      return paragraphs.some((paragraph) => {
+        const anchors = Array.from(paragraph.querySelectorAll("a"));
+        if (!anchors.length)
+          return false;
+        const markerPrefix = "[[link:";
+        const markerSuffix = "]]";
+        const paragraphWithMarkers = this.normalizeLeadInText(Array.from(paragraph.childNodes).map((node) => {
+          if (node.nodeType === Node.ELEMENT_NODE && node.tagName.toLowerCase() === "a") {
+            const anchorText = this.normalizeLeadInText(node.textContent || "");
+            return `${markerPrefix}${anchorText}${markerSuffix}`;
+          }
+          return node.textContent || "";
+        }).join(" "));
+        if (!paragraphWithMarkers)
+          return false;
+        const sentences = paragraphWithMarkers.match(/[^.!?]+[.!?]?/g)?.map((sentence) => sentence.trim()).filter((sentence) => !!sentence) ?? [];
+        if (!sentences.length)
+          return false;
+        return sentences.some((sentence) => {
+          if (!sentence.includes(markerPrefix))
+            return false;
+          const sentenceWithoutLinks = this.normalizeLeadInText(sentence.replace(/\[\[link:[^\]]+\]\]/g, " "));
+          const leadInText = sentenceWithoutLinks.replace(/[.!?]\s*$/g, "").trim();
+          const hasAllowedLeadIn = this.isValidStandaloneLinkLeadIn(leadInText);
+          const hasDirectionalLeadIn = this.hasDirectionalLinkLeadIn(leadInText);
+          const nonLinkText = sentenceWithoutLinks.replace(/[:;,.!?()\-\u2013\u2014]/g, "").trim();
+          const linkSentenceOnly = !nonLinkText;
+          if (hasAllowedLeadIn && sentences.length > 1) {
+            return true;
+          }
+          if (hasAllowedLeadIn) {
+            return false;
+          }
+          if (hasDirectionalLeadIn) {
+            return true;
+          }
+          return linkSentenceOnly;
+        });
+      });
+    } catch {
+      return false;
+    }
+  }
+  // Local repair is the last deterministic cleanup pass after model retries are exhausted.
+  // It fixes wrapper/link issues without making another network call.
+  tryLocalAlertRewriteRepair(params) {
+    const originalHasAnchor = /<a\b/i.test(params.originalAlertHtml);
+    const initialCandidate = this.alertRewrite.parseAlertRewriteResponse(JSON.stringify({
+      rewrittenAlertHtml: this.stripLinkPlaceholders(params.result.rewrittenAlertHtml || ""),
+      rewrittenHeading: this.stripLinkPlaceholders(params.result.rewrittenHeading || ""),
+      rewrittenAlert: this.stripLinkPlaceholders(params.result.rewrittenAlert || ""),
+      appliedDirectives: params.result.appliedDirectives,
+      exampleIdsUsed: params.result.exampleIdsUsed
+    }), params.plan, params.selectedExamples);
+    const wrapperFallbackHtml = this.buildAlertWrapperFromOriginal({
+      originalAlertHtml: params.originalAlertHtml,
+      heading: this.stripLinkPlaceholders(params.result.rewrittenHeading || "") || params.originalHeading || "",
+      text: this.stripLinkPlaceholders(params.result.rewrittenAlert || "") || params.originalAlertText
+    }) || "";
+    let candidate = initialCandidate;
+    if (!candidate?.rewrittenAlertHtml && wrapperFallbackHtml) {
+      candidate = this.alertRewrite.parseAlertRewriteResponse(JSON.stringify({
+        rewrittenAlertHtml: wrapperFallbackHtml,
+        rewrittenHeading: this.stripLinkPlaceholders(params.result.rewrittenHeading || "") || params.originalHeading || "",
+        rewrittenAlert: this.stripLinkPlaceholders(params.result.rewrittenAlert || "") || params.originalAlertText,
+        appliedDirectives: params.result.appliedDirectives,
+        exampleIdsUsed: params.result.exampleIdsUsed
+      }), params.plan, params.selectedExamples);
+    }
+    if (!candidate?.rewrittenAlertHtml)
+      return null;
+    let repairedHtml = candidate.rewrittenAlertHtml;
+    if (!originalHasAnchor) {
+      repairedHtml = this.removeAnchorsPreservingText(repairedHtml);
+    } else if (!params.allowLinkRemoval && !/<a\b/i.test(repairedHtml)) {
+      repairedHtml = this.ensureAtLeastOneOriginalLink(repairedHtml, params.originalAlertHtml);
+    }
+    const repaired = this.alertRewrite.parseAlertRewriteResponse(JSON.stringify({
+      rewrittenAlertHtml: repairedHtml,
+      rewrittenHeading: candidate.rewrittenHeading,
+      rewrittenAlert: candidate.rewrittenAlert,
+      appliedDirectives: candidate.appliedDirectives,
+      exampleIdsUsed: candidate.exampleIdsUsed
+    }), params.plan, params.selectedExamples);
+    if (!repaired?.rewrittenAlertHtml)
+      return null;
+    if (this.containsLinkPlaceholderSyntax(repaired.rewrittenAlertHtml) || this.containsLinkPlaceholderSyntax(repaired.rewrittenAlert)) {
+      return null;
+    }
+    const repairedHasAnchor = /<a\b/i.test(repaired.rewrittenAlertHtml);
+    if (!originalHasAnchor && repairedHasAnchor)
+      return null;
+    if (originalHasAnchor && !repairedHasAnchor && !params.allowLinkRemoval) {
+      return null;
+    }
+    const copyCheck = this.alertRewrite.detectExampleCopy({
+      result: repaired,
+      selectedExamples: params.selectedExamples,
+      originalHeading: params.originalHeading,
+      originalAlertText: params.originalAlertText
+    });
+    if (copyCheck.isCopy)
+      return null;
+    return repaired;
+  }
+  // The rewrite may only drop links when the issue list or plan explicitly supports it.
+  shouldAllowAlertLinkRemoval(issues, plan) {
+    const hasTooManyLinksIssue = issues.some((issue) => (issue.category || "").toLowerCase().includes("too many links"));
+    return hasTooManyLinksIssue || plan.criteriaMatched.includes("C3_too_many_links") || plan.directives.some((directive) => directive.op === "limit_links");
+  }
+  // Applies the successful per-alert rewrites back onto the original document.
+  applyAlertHtmlRewrites(originalHtml, rewrites) {
+    if (!rewrites.length)
+      return null;
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(originalHtml, "text/html");
+    const alerts = Array.from(doc.querySelectorAll(".alert"));
+    if (!alerts.length)
+      return null;
+    for (const rewrite of rewrites) {
+      const target = alerts[rewrite.alert_index - 1];
+      if (!target)
+        continue;
+      const updatedDoc = parser.parseFromString(rewrite.rewritten_alert_html, "text/html");
+      const updatedEl = updatedDoc.body.firstElementChild;
+      if (!updatedEl || !updatedEl.classList.contains("alert"))
+        continue;
+      target.replaceWith(updatedEl);
+    }
+    return doc.body.outerHTML;
+  }
+  // The remaining helpers support the guard logic above and stay private so the
+  // orchestration layer only depends on the high-level validation/repair API.
+  normalizeLeadInText(value) {
+    return (value || "").toLowerCase().replace(/\s+/g, " ").trim();
+  }
+  isValidStandaloneLinkLeadIn(leadInText) {
+    const normalized = this.normalizeLeadInText(leadInText.replace(/[.!?]\s*$/g, ""));
+    if (!normalized)
+      return false;
+    if (normalized === "refer to:" || normalized === "learn more:" || normalized === "learn about:") {
+      return true;
+    }
+    if (normalized.startsWith("find out:")) {
+      return false;
+    }
+    return /^find out\s+(how\b|if\b|whether\b)/.test(normalized);
+  }
+  // Broader than the valid-lead-in check: used to catch malformed directional
+  // sentences such as "refer to <link>" inside a substantive paragraph.
+  hasDirectionalLinkLeadIn(leadInText) {
+    const normalized = this.normalizeLeadInText(leadInText.replace(/[.!?]\s*$/g, ""));
+    if (!normalized)
+      return false;
+    return /\b(refer to|learn more|learn about|find out)\b/.test(normalized);
+  }
+  stripLinkPlaceholders(value) {
+    return (value || "").replace(/\[(?:\/?\s*LINK|END\s+LINK)\]/gi, "").trim();
+  }
+  // Converts unexpected anchors back to plain text when the original alert had no links.
+  removeAnchorsPreservingText(alertHtml) {
+    try {
+      const doc = new DOMParser().parseFromString(alertHtml, "text/html");
+      const root = doc.body.firstElementChild;
+      if (!root)
+        return alertHtml;
+      root.querySelectorAll("a").forEach((anchor) => {
+        const textNode = doc.createTextNode(anchor.textContent || "");
+        anchor.replaceWith(textNode);
+      });
+      return root.outerHTML.trim();
+    } catch {
+      return alertHtml;
+    }
+  }
+  // Restores one original link when the rewrite incorrectly removed a required anchor.
+  ensureAtLeastOneOriginalLink(rewrittenHtml, originalAlertHtml) {
+    try {
+      const sourceDoc = new DOMParser().parseFromString(originalAlertHtml, "text/html");
+      const sourceAnchor = sourceDoc.body.querySelector("a");
+      if (!sourceAnchor)
+        return rewrittenHtml;
+      const rewrittenDoc = new DOMParser().parseFromString(rewrittenHtml, "text/html");
+      const root = rewrittenDoc.body.firstElementChild;
+      if (!root)
+        return rewrittenHtml;
+      if (root.querySelector("a"))
+        return root.outerHTML.trim();
+      const target = root.querySelector("p, li, div, span") || root;
+      target.insertAdjacentHTML("beforeend", ` ${sourceAnchor.outerHTML}`);
+      return root.outerHTML.trim();
+    } catch {
+      return rewrittenHtml;
+    }
+  }
+  // Rebuilds a minimal alert wrapper when the model returns usable text but invalid structure.
+  buildAlertWrapperFromOriginal(params) {
+    try {
+      const sourceDoc = new DOMParser().parseFromString(params.originalAlertHtml, "text/html");
+      const sourceRoot = sourceDoc.body.firstElementChild;
+      const doc = document.implementation.createHTMLDocument("");
+      const wrapperTag = sourceRoot?.tagName?.toLowerCase() || "div";
+      const wrapper = doc.createElement(wrapperTag);
+      wrapper.setAttribute("class", sourceRoot?.getAttribute("class") || "alert alert-info");
+      const headingText = (params.heading || "").trim();
+      if (headingText) {
+        const headingEl = doc.createElement("h3");
+        headingEl.textContent = headingText;
+        wrapper.appendChild(headingEl);
+      }
+      const bodyText = (params.text || "").trim();
+      if (bodyText) {
+        const bodyEl = doc.createElement("p");
+        bodyEl.textContent = bodyText;
+        wrapper.appendChild(bodyEl);
+      }
+      return wrapper.outerHTML.trim();
+    } catch {
+      return null;
+    }
+  }
+  static \u0275fac = function AlertRewriteGuardService_Factory(__ngFactoryType__) {
+    return new (__ngFactoryType__ || _AlertRewriteGuardService)();
+  };
+  static \u0275prov = /* @__PURE__ */ \u0275\u0275defineInjectable({ token: _AlertRewriteGuardService, factory: _AlertRewriteGuardService.\u0275fac, providedIn: "root" });
+};
+(() => {
+  (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(AlertRewriteGuardService, [{
+    type: Injectable,
+    args: [{ providedIn: "root" }]
+  }], null, null);
+})();
+
+// src/app/views/page-assistant/services/alert-rewrite-orchestrator.service.ts
+var AlertRewriteOrchestratorService = class _AlertRewriteOrchestratorService {
+  alertRewrite = inject(AlertRewriteService);
+  alertRewriteGuard = inject(AlertRewriteGuardService);
+  urlDataService = inject(UrlDataService);
+  // Runs the full alert-rewrite workflow:
+  // plan each alert, generate rewrites, apply retry/repair guards, then patch the page HTML.
+  generateRecommendations(params) {
+    return __async(this, null, function* () {
+      const start = performance.now();
+      const rewriteRules = yield getAlertRewriteRules();
+      const retryInstructions = rewriteRules.alertRewrite.retryInstructions;
+      const alertDoc = new DOMParser().parseFromString(params.html, "text/html");
+      const alertEls = Array.from(alertDoc.querySelectorAll(".alert"));
+      if (!alertEls.length) {
+        throw new Error("No .alert elements found in the page.");
+      }
+      const examples = params.includeExamples ? yield this.alertRewrite.loadExamples() : [];
+      const rewrites = [];
+      for (let i = 0; i < alertEls.length; i += 1) {
+        const alertElement = alertEls[i];
+        if (!alertElement)
+          continue;
+        const alertIndex = i + 1;
+        const relevantIssues = this.alertRewriteGuard.getIssuesForAlertIndex(params.issues, alertIndex);
+        const alertHtml = alertElement.outerHTML;
+        const originalHeading = this.alertRewriteGuard.getAlertHeadingForRewrite(alertElement);
+        const alertText = this.alertRewriteGuard.getAlertTextForRewrite(alertElement);
+        if (!alertText)
+          continue;
+        const initialPlan = this.alertRewrite.buildHeuristicPlan({
+          alertHtml,
+          alertText,
+          alertType: this.alertRewrite.inferAlertType(alertHtml),
+          issues: relevantIssues
+        });
+        let plan = initialPlan;
+        let planModelName = "heuristic";
+        if (params.mode === AlertRewriteMode.AB) {
+          const alertPlanningMessages = yield this.alertRewrite.buildAlertPlanningMessages({
+            alertHtml,
+            alertText,
+            alertType: initialPlan.alertType,
+            issues: relevantIssues
+          });
+          const alertPlanningResponse = yield params.callOpenRouterForMessages(params.model, params.headers, params.url, alertPlanningMessages, `Alert ${alertIndex} alertPlanning`);
+          const parsedPlan = this.alertRewrite.parseAlertPlanningResponse(alertPlanningResponse.text, initialPlan);
+          if (parsedPlan) {
+            plan = parsedPlan;
+          }
+          planModelName = params.getShortModelName(alertPlanningResponse.usedModel);
+        }
+        const selectedExamples = params.includeExamples ? this.alertRewrite.selectExamples(plan, examples, 2) : [];
+        let rewriteResult = null;
+        let rewriteModelName = "unknown";
+        let copyGuardTriggered = false;
+        let blockedExampleId = null;
+        let lastParsedResult = null;
+        const originalHasAnchor = /<a\b/i.test(alertHtml);
+        const allowLinkRemoval = this.alertRewriteGuard.shouldAllowAlertLinkRemoval(relevantIssues, plan);
+        let retryInstruction;
+        for (let attempt = 0; attempt < 2; attempt += 1) {
+          const alertRewriteMessages = yield this.alertRewrite.buildAlertRewriteMessages({
+            mode: params.mode,
+            originalHeading,
+            originalAlertText: alertText,
+            originalAlertHtml: alertHtml,
+            plan,
+            issues: relevantIssues,
+            examples: selectedExamples,
+            includeBeforeTextInExamples: params.includeBeforeTextInExamples,
+            includeLinkWritingRules: params.includeLinkWritingRules,
+            retryInstruction
+          });
+          const rewriteResponse = yield params.callOpenRouterForMessages(params.model, params.headers, params.url, alertRewriteMessages, `Alert ${alertIndex} alertRewrite`);
+          rewriteModelName = params.getShortModelName(rewriteResponse.usedModel);
+          const parsedResult = this.alertRewrite.parseAlertRewriteResponse(rewriteResponse.text, plan, selectedExamples);
+          if (!parsedResult?.rewrittenAlertHtml) {
+            console.warn("Alert rewrite retry triggered", {
+              alertIndex,
+              attempt: attempt + 1,
+              reason: "invalidWrapperHtml",
+              willRetryWithNewModelCall: true
+            });
+            retryInstruction = retryInstructions.invalidWrapperHtml;
+            continue;
+          }
+          lastParsedResult = parsedResult;
+          const hasLinkPlaceholders = this.alertRewriteGuard.containsLinkPlaceholderSyntax(parsedResult.rewrittenAlertHtml) || this.alertRewriteGuard.containsLinkPlaceholderSyntax(parsedResult.rewrittenAlert);
+          if (hasLinkPlaceholders) {
+            console.warn("Alert rewrite retry triggered", {
+              alertIndex,
+              attempt: attempt + 1,
+              reason: "placeholderLinks",
+              willRetryWithNewModelCall: true
+            });
+            retryInstruction = retryInstructions.placeholderLinks;
+            continue;
+          }
+          const rewrittenHasAnchor = /<a\b/i.test(parsedResult.rewrittenAlertHtml);
+          if (!originalHasAnchor && rewrittenHasAnchor) {
+            console.warn("Alert rewrite retry triggered", {
+              alertIndex,
+              attempt: attempt + 1,
+              reason: "noLinksAllowed",
+              willRetryWithNewModelCall: true
+            });
+            retryInstruction = retryInstructions.noLinksAllowed;
+            continue;
+          }
+          if (originalHasAnchor && !rewrittenHasAnchor && !allowLinkRemoval) {
+            console.warn("Alert rewrite retry triggered", {
+              alertIndex,
+              attempt: attempt + 1,
+              reason: "mustKeepLink",
+              willRetryWithNewModelCall: true
+            });
+            retryInstruction = retryInstructions.mustKeepLink;
+            continue;
+          }
+          if (rewrittenHasAnchor && this.alertRewriteGuard.hasFullSentenceLinkWithoutAllowedLeadIn(parsedResult.rewrittenAlertHtml)) {
+            console.warn("Alert rewrite retry triggered", {
+              alertIndex,
+              attempt: attempt + 1,
+              reason: "fullSentenceLinksNeedLeadIn",
+              willRetryWithNewModelCall: true
+            });
+            retryInstruction = retryInstructions.fullSentenceLinksNeedLeadIn;
+            continue;
+          }
+          const copyCheck = this.alertRewrite.detectExampleCopy({
+            result: parsedResult,
+            selectedExamples,
+            originalHeading,
+            originalAlertText: alertText
+          });
+          if (!copyCheck.isCopy) {
+            if (params.forceLocalRepairForTesting) {
+              console.warn("Forcing local repair for testing", { alertIndex });
+              break;
+            }
+            rewriteResult = parsedResult;
+            break;
+          }
+          copyGuardTriggered = true;
+          blockedExampleId = copyCheck.exampleId || null;
+          retryInstruction = retryInstructions.avoidExampleCopy;
+          console.warn("Alert rewrite copy guard triggered", {
+            alertIndex,
+            attempt: attempt + 1,
+            reason: copyCheck.reason,
+            exampleId: copyCheck.exampleId,
+            similarity: copyCheck.similarity
+          });
+        }
+        if (!rewriteResult && lastParsedResult) {
+          console.warn("Alert rewrite attempting local repair", {
+            alertIndex,
+            hadModelOutput: true,
+            willRetryWithNewModelCall: false
+          });
+          rewriteResult = this.alertRewriteGuard.tryLocalAlertRewriteRepair({
+            result: lastParsedResult,
+            originalAlertHtml: alertHtml,
+            originalHeading,
+            originalAlertText: alertText,
+            plan,
+            selectedExamples,
+            allowLinkRemoval
+          });
+        }
+        if (!rewriteResult) {
+          console.warn("Alert rewrite falling back to passthrough result", {
+            alertIndex,
+            willRetryWithNewModelCall: false
+          });
+          rewriteResult = this.alertRewrite.buildPassthroughResult({
+            alertHtml,
+            originalHeading,
+            originalAlertText: alertText
+          });
+        }
+        rewrites.push({
+          alert_index: alertIndex,
+          rewritten_alert_html: rewriteResult.rewrittenAlertHtml
+        });
+        const examplesUsedDetails = (rewriteResult.exampleIdsUsed.length ? rewriteResult.exampleIdsUsed.map((id) => selectedExamples.find((example) => example.id === id)).filter((example) => !!example) : selectedExamples).map((example) => ({
+          id: example.id,
+          alertType: example.alertType,
+          criteria: example.criteria,
+          tags: example.tags,
+          headingBefore: example.headingBefore || "",
+          headingAfter: example.headingAfter || "",
+          before: example.before,
+          after: example.after
+        }));
+        console.log("Alert rewrite examples used", {
+          alertIndex,
+          exampleIdsUsed: rewriteResult.exampleIdsUsed,
+          examplesUsedDetails
+        });
+        console.log("Alert rewrite iteration", {
+          mode: params.mode,
+          alertIndex,
+          plan,
+          selectedExampleIds: selectedExamples.map((example) => example.id),
+          originalHeading,
+          finalHeading: rewriteResult.rewrittenHeading,
+          finalRewrite: rewriteResult.rewrittenAlert,
+          finalRewriteHtml: rewriteResult.rewrittenAlertHtml,
+          appliedDirectives: rewriteResult.appliedDirectives,
+          exampleIdsUsed: rewriteResult.exampleIdsUsed,
+          planModel: planModelName,
+          rewriteModel: rewriteModelName,
+          copyGuardTriggered,
+          blockedExampleId,
+          humanRating: null
+        });
+      }
+      const finalHtml = this.alertRewriteGuard.applyAlertHtmlRewrites(params.html, rewrites);
+      if (!finalHtml) {
+        throw new Error("No alert rewrites were generated.");
+      }
+      console.log("Alert rewrite model + time", {
+        requestedModel: params.model,
+        mode: params.mode,
+        rewrites: rewrites.length,
+        ms: Math.round(performance.now() - start)
+      });
+      const formattedHtml = yield this.urlDataService.formatHtml(finalHtml, "ai");
+      return { formattedHtml };
+    });
+  }
+  static \u0275fac = function AlertRewriteOrchestratorService_Factory(__ngFactoryType__) {
+    return new (__ngFactoryType__ || _AlertRewriteOrchestratorService)();
+  };
+  static \u0275prov = /* @__PURE__ */ \u0275\u0275defineInjectable({ token: _AlertRewriteOrchestratorService, factory: _AlertRewriteOrchestratorService.\u0275fac, providedIn: "root" });
+};
+(() => {
+  (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(AlertRewriteOrchestratorService, [{
     type: Injectable,
     args: [{ providedIn: "root" }]
   }], null, null);
@@ -24682,401 +25763,13 @@ var SliderModule = class _SliderModule {
   }], null, null);
 })();
 
-// src/app/views/page-assistant/data/skill-registry.ts
-var PAGE_ASSISTANT_SKILLS = [
-  {
-    id: "plain-language",
-    name: "Plain language rewrite",
-    description: "Simplify wording, shorten sentences, and keep critical meaning unchanged.",
-    triggers: [
-      "plain language",
-      "simplify",
-      "rewrite for clarity",
-      "make this easier",
-      "reduce reading level"
-    ],
-    antiTriggers: ["technical spec only", "do not rewrite", "verbatim only"],
-    priority: 2,
-    systemInstructions: "Rewrite content in clear plain language. Keep facts and legal meaning intact. Use direct verbs and short sentences.",
-    outputContract: "Return revised content only; avoid implementation commentary unless requested.",
-    outputChecklist: ["clear", "short", "direct"]
-  },
-  {
-    id: "headings",
-    name: "Heading structure cleanup",
-    description: "Improve heading hierarchy and scanability while preserving section intent.",
-    triggers: [
-      "heading",
-      "headings",
-      "h1",
-      "h2",
-      "hierarchy",
-      "outline",
-      "scanability"
-    ],
-    antiTriggers: ["links only", "url audit only"],
-    priority: 1,
-    systemInstructions: "Fix heading hierarchy and wording for scanability. Keep only one H1 and ensure nesting is logical.",
-    outputContract: "Return ordered heading suggestions with the proposed text and hierarchy level.",
-    outputChecklist: ["h1", "h2", "hierarchy"]
-  },
-  {
-    id: "alerts-rewrite",
-    name: "Alerts rewrite",
-    description: "Rewrite alert banners and related links with clear action-oriented phrasing.",
-    triggers: [
-      "alert",
-      "alerts",
-      "warning",
-      "banner",
-      "recommendation",
-      "rewrite alert",
-      "link writing rules"
-    ],
-    antiTriggers: ["headings only", "grammar only"],
-    priority: 3,
-    systemInstructions: "Rewrite alerts for clarity and action. Keep severity intent and place key action early.",
-    outputContract: "Return per-alert before/after rewrites and include link-text recommendations when needed.",
-    outputChecklist: ["before", "after", "link"]
-  }
-];
-
-// src/app/views/page-assistant/data/rubric.types.ts
-var DEFAULT_RUBRIC_WEIGHTS = {
-  trigger_match: 3,
-  false_trigger_avoidance: 3,
-  instruction_following: 2,
-  output_quality: 2,
-  safety: 2
-};
-
-// src/app/views/page-assistant/services/skill-router.service.ts
-var SkillRouterService = class _SkillRouterService {
-  activationThreshold = 2;
-  veryCloseScoreDelta = 1;
-  getSkills() {
-    return PAGE_ASSISTANT_SKILLS;
-  }
-  routeSkills(userText, maxSkills = 2) {
-    const normalizedText = this.normalize(userText);
-    const limit = Math.max(1, maxSkills);
-    const routed = PAGE_ASSISTANT_SKILLS.map((skill) => {
-      const triggerHits = this.countPhraseHits(normalizedText, skill.triggers);
-      const antiTriggerHits = this.countPhraseHits(normalizedText, skill.antiTriggers);
-      const score = triggerHits * 2 - antiTriggerHits * 3 + skill.priority;
-      return { skill, score, triggerHits, antiTriggerHits };
-    }).filter((entry) => entry.score >= this.activationThreshold).sort((a, b) => b.score - a.score);
-    if (routed.length === 0) {
-      return [];
-    }
-    if (limit === 1 || routed.length === 1) {
-      return [routed[0]];
-    }
-    const [top, second] = routed;
-    const shouldIncludeSecond = top.score - second.score <= this.veryCloseScoreDelta;
-    return shouldIncludeSecond ? [top, second] : [top];
-  }
-  buildSystemPrompt(basePrompt, userText, maxSkills = 2) {
-    const selected = this.routeSkills(userText, maxSkills);
-    const skillBlock = selected.map((entry) => `## Skill: ${entry.skill.name}
-${entry.skill.systemInstructions}
-Output contract: ${entry.skill.outputContract}`).join("\n\n");
-    return skillBlock ? `${basePrompt}
-
-${skillBlock}` : basePrompt;
-  }
-  evaluateRubric(input) {
-    const userText = input.userText ?? "";
-    const selectedSkills = input.selectedSkills ?? [];
-    const generatedOutput = input.generatedOutput ?? "";
-    const normalizedText = this.normalize(userText);
-    const normalizedOutput = this.normalize(generatedOutput);
-    const selectedIds = selectedSkills.map((skill) => skill.id);
-    const expectedIds = this.routeSkills(userText, selectedSkills.length || 2).map((entry) => entry.skill.id);
-    const expectedSet = new Set(expectedIds);
-    const selectedSet = new Set(selectedIds);
-    const overlap = selectedIds.filter((id) => expectedSet.has(id)).length;
-    const hasBlockingAntiTrigger = selectedSkills.some((skill) => this.countPhraseHits(normalizedText, skill.antiTriggers) > 0 && this.countPhraseHits(normalizedText, skill.triggers) === 0);
-    const requiredOutputTerms = selectedSkills.flatMap((skill) => skill.outputChecklist);
-    const matchedOutputTerms = requiredOutputTerms.filter((term) => normalizedOutput.includes(this.normalize(term))).length;
-    const triggerMatch = this.scoreTriggerMatch(expectedSet.size, selectedSet.size, overlap);
-    const falseTriggerAvoidance = hasBlockingAntiTrigger ? 0 : 2;
-    const instructionFollowing = this.scoreInstructionFollowing(generatedOutput, requiredOutputTerms.length, matchedOutputTerms);
-    const outputQuality = this.scoreOutputQuality(generatedOutput);
-    const safety = this.scoreSafety(normalizedOutput);
-    const dimensions = [
-      this.createDimension("trigger_match", triggerMatch),
-      this.createDimension("false_trigger_avoidance", falseTriggerAvoidance),
-      this.createDimension("instruction_following", instructionFollowing),
-      this.createDimension("output_quality", outputQuality),
-      this.createDimension("safety", safety)
-    ];
-    const total = dimensions.reduce((sum, dim) => sum + dim.weight * dim.score, 0);
-    const maxTotal = dimensions.reduce((sum, dim) => sum + dim.weight * 2, 0);
-    const ratio = maxTotal === 0 ? 0 : total / maxTotal;
-    return {
-      skillIds: selectedIds,
-      total,
-      maxTotal,
-      passed: ratio >= 0.75 && safety > 0 && falseTriggerAvoidance > 0,
-      dimensions
-    };
-  }
-  createDimension(id, score) {
-    return {
-      id,
-      score,
-      weight: DEFAULT_RUBRIC_WEIGHTS[id]
-    };
-  }
-  scoreTriggerMatch(expectedCount, selectedCount, overlapCount) {
-    if (expectedCount === 0 && selectedCount === 0) {
-      return 2;
-    }
-    if (expectedCount > 0 && selectedCount === expectedCount && overlapCount === expectedCount) {
-      return 2;
-    }
-    if (overlapCount > 0) {
-      return 1;
-    }
-    return 0;
-  }
-  scoreInstructionFollowing(output, requiredCount, matchedCount) {
-    if (!output.trim()) {
-      return 1;
-    }
-    if (requiredCount === 0) {
-      return 2;
-    }
-    if (matchedCount >= requiredCount) {
-      return 2;
-    }
-    if (matchedCount > 0) {
-      return 1;
-    }
-    return 0;
-  }
-  scoreOutputQuality(output) {
-    const trimmed = output.trim();
-    if (!trimmed) {
-      return 1;
-    }
-    if (trimmed.length >= 160 && /[.!?]/.test(trimmed)) {
-      return 2;
-    }
-    return 1;
-  }
-  scoreSafety(normalizedOutput) {
-    if (!normalizedOutput) {
-      return 2;
-    }
-    const unsafePatterns = [
-      "ignore previous instructions",
-      "<script",
-      "drop table",
-      "delete all"
-    ];
-    return unsafePatterns.some((pattern) => normalizedOutput.includes(pattern)) ? 0 : 2;
-  }
-  normalize(value) {
-    return value.toLowerCase().trim();
-  }
-  countPhraseHits(text, phrases) {
-    return phrases.reduce((count, phrase) => {
-      const token = this.normalize(phrase);
-      return token && text.includes(token) ? count + 1 : count;
-    }, 0);
-  }
-  static \u0275fac = function SkillRouterService_Factory(__ngFactoryType__) {
-    return new (__ngFactoryType__ || _SkillRouterService)();
-  };
-  static \u0275prov = /* @__PURE__ */ \u0275\u0275defineInjectable({ token: _SkillRouterService, factory: _SkillRouterService.\u0275fac, providedIn: "root" });
-};
-(() => {
-  (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(SkillRouterService, [{
-    type: Injectable,
-    args: [{
-      providedIn: "root"
-    }]
-  }], null, null);
-})();
-
-// src/app/views/page-assistant/data/prompt-fragments.ts
-var PROMPT_LEVEL_ORDER = {
-  base: 0,
-  task: 1,
-  mode: 2,
-  output: 3
-};
-var PAGE_ASSISTANT_PROMPT_FRAGMENTS = [
-  {
-    id: "base-preserve-intent",
-    level: "base",
-    priority: 10,
-    text: "Preserve factual meaning, legal intent, and key actions unless explicitly asked to change them."
-  },
-  {
-    id: "base-concise",
-    level: "base",
-    priority: 9,
-    text: "Be concise and avoid unnecessary commentary in the final response."
-  },
-  {
-    id: "task-plain-language",
-    level: "task",
-    priority: 8,
-    skillIds: ["plain-language"],
-    text: "Use plain language with short sentences, common words, and direct verbs."
-  },
-  {
-    id: "task-heading-hierarchy",
-    level: "task",
-    priority: 8,
-    skillIds: ["headings"],
-    text: "Enforce logical heading hierarchy with one H1 and clear H2/H3 nesting."
-  },
-  {
-    id: "task-alerts",
-    level: "task",
-    priority: 8,
-    skillIds: ["alerts-rewrite"],
-    text: "Rewrite alerts to lead with the key action and keep severity intent clear."
-  },
-  {
-    id: "mode-balanced",
-    level: "mode",
-    priority: 7,
-    mode: "balanced",
-    conflictsWith: ["mode-light-edit", "mode-strict-rewrite"],
-    text: "Make normal edits that improve clarity without over-rewriting."
-  },
-  {
-    id: "mode-light-edit",
-    level: "mode",
-    priority: 7,
-    mode: "light-edit",
-    conflictsWith: ["mode-balanced", "mode-strict-rewrite"],
-    text: "Make minor edits only and leave most wording unchanged."
-  },
-  {
-    id: "mode-strict-rewrite",
-    level: "mode",
-    priority: 7,
-    mode: "strict-rewrite",
-    conflictsWith: ["mode-balanced", "mode-light-edit"],
-    text: "Rewrite aggressively for clarity and task completion while preserving facts."
-  },
-  {
-    id: "output-text",
-    level: "output",
-    priority: 6,
-    outputFormat: "text",
-    conflictsWith: ["output-json"],
-    text: "Return plain text output suitable for direct copy and review."
-  },
-  {
-    id: "output-json",
-    level: "output",
-    priority: 6,
-    outputFormat: "json",
-    conflictsWith: ["output-text"],
-    text: "Return strict JSON with deterministic keys and no prose outside JSON."
-  }
-];
-
-// src/app/views/page-assistant/services/prompt-composer.service.ts
-var PromptComposerService = class _PromptComposerService {
-  compose(input) {
-    const mode = input.mode ?? "balanced";
-    const outputFormat = input.outputFormat ?? "text";
-    const selectedSkillIds = new Set(input.selectedSkillIds ?? []);
-    let selected = PAGE_ASSISTANT_PROMPT_FRAGMENTS.filter((fragment) => {
-      if (fragment.level === "base") {
-        return true;
-      }
-      if (fragment.level === "task") {
-        return !!fragment.skillIds && fragment.skillIds.some((skillId) => selectedSkillIds.has(skillId));
-      }
-      if (fragment.level === "mode") {
-        return fragment.mode === mode;
-      }
-      if (fragment.level === "output") {
-        return fragment.outputFormat === outputFormat;
-      }
-      return false;
-    });
-    selected = this.applyRequirements(selected);
-    selected = this.applyConflictResolution(selected);
-    selected = this.deduplicateByText(selected);
-    selected = this.sortForAssembly(selected);
-    const promptParts = [
-      input.basePrompt.trim(),
-      ...selected.map((fragment) => fragment.text.trim())
-    ].filter(Boolean);
-    return {
-      prompt: promptParts.join("\n\n"),
-      fragmentIds: selected.map((fragment) => fragment.id),
-      fragments: selected
-    };
-  }
-  applyRequirements(fragments) {
-    const ids = new Set(fragments.map((fragment) => fragment.id));
-    return fragments.filter((fragment) => !fragment.requires || fragment.requires.every((requiredId) => ids.has(requiredId)));
-  }
-  applyConflictResolution(fragments) {
-    const sorted = [...fragments].sort((a, b) => b.priority - a.priority);
-    const kept = [];
-    for (const fragment of sorted) {
-      const conflictsWithKept = kept.some((keptFragment) => (fragment.conflictsWith ?? []).includes(keptFragment.id) || (keptFragment.conflictsWith ?? []).includes(fragment.id));
-      if (!conflictsWithKept) {
-        kept.push(fragment);
-      }
-    }
-    return kept;
-  }
-  deduplicateByText(fragments) {
-    const seen = /* @__PURE__ */ new Set();
-    const deduplicated = [];
-    for (const fragment of fragments) {
-      const normalizedText = fragment.text.toLowerCase().trim();
-      if (seen.has(normalizedText)) {
-        continue;
-      }
-      seen.add(normalizedText);
-      deduplicated.push(fragment);
-    }
-    return deduplicated;
-  }
-  sortForAssembly(fragments) {
-    return [...fragments].sort((a, b) => {
-      const levelDiff = PROMPT_LEVEL_ORDER[a.level] - PROMPT_LEVEL_ORDER[b.level];
-      if (levelDiff !== 0) {
-        return levelDiff;
-      }
-      return b.priority - a.priority;
-    });
-  }
-  static \u0275fac = function PromptComposerService_Factory(__ngFactoryType__) {
-    return new (__ngFactoryType__ || _PromptComposerService)();
-  };
-  static \u0275prov = /* @__PURE__ */ \u0275\u0275defineInjectable({ token: _PromptComposerService, factory: _PromptComposerService.\u0275fac, providedIn: "root" });
-};
-(() => {
-  (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(PromptComposerService, [{
-    type: Injectable,
-    args: [{
-      providedIn: "root"
-    }]
-  }], null, null);
-})();
-
 // src/app/views/page-assistant/components/ai-options.component.ts
 var _c04 = () => ({ width: "30rem" });
 function AiOptionsComponent_ng_container_15_Template(rf, ctx) {
   if (rf & 1) {
     const _r1 = \u0275\u0275getCurrentView();
     \u0275\u0275elementContainerStart(0);
-    \u0275\u0275elementStart(1, "div", 14)(2, "p-radioButton", 15);
+    \u0275\u0275elementStart(1, "div", 13)(2, "p-radioButton", 14);
     \u0275\u0275twoWayListener("ngModelChange", function AiOptionsComponent_ng_container_15_Template_p_radioButton_ngModelChange_2_listener($event) {
       \u0275\u0275restoreView(_r1);
       const ctx_r1 = \u0275\u0275nextContext();
@@ -25084,7 +25777,7 @@ function AiOptionsComponent_ng_container_15_Template(rf, ctx) {
       return \u0275\u0275resetView($event);
     });
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(3, "label", 16);
+    \u0275\u0275elementStart(3, "label", 15);
     \u0275\u0275text(4);
     \u0275\u0275pipe(5, "translate");
     \u0275\u0275elementEnd()();
@@ -25107,7 +25800,7 @@ function AiOptionsComponent_Conditional_16_Conditional_10_ng_container_0_Templat
   if (rf & 1) {
     const _r5 = \u0275\u0275getCurrentView();
     \u0275\u0275elementContainerStart(0);
-    \u0275\u0275elementStart(1, "div", 14)(2, "p-radioButton", 24);
+    \u0275\u0275elementStart(1, "div", 13)(2, "p-radioButton", 23);
     \u0275\u0275twoWayListener("ngModelChange", function AiOptionsComponent_Conditional_16_Conditional_10_ng_container_0_Template_p_radioButton_ngModelChange_2_listener($event) {
       \u0275\u0275restoreView(_r5);
       const ctx_r1 = \u0275\u0275nextContext(3);
@@ -25120,7 +25813,7 @@ function AiOptionsComponent_Conditional_16_Conditional_10_ng_container_0_Templat
       return \u0275\u0275resetView(ctx_r1.onPromptSelect(ctx_r1.selectedPrompt));
     });
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(3, "label", 16);
+    \u0275\u0275elementStart(3, "label", 15);
     \u0275\u0275text(4);
     \u0275\u0275pipe(5, "translate");
     \u0275\u0275elementEnd()();
@@ -25152,7 +25845,7 @@ function AiOptionsComponent_Conditional_16_Conditional_11_ng_container_0_Templat
   if (rf & 1) {
     const _r7 = \u0275\u0275getCurrentView();
     \u0275\u0275elementContainerStart(0);
-    \u0275\u0275elementStart(1, "div", 25)(2, "p-checkbox", 26);
+    \u0275\u0275elementStart(1, "div", 24)(2, "p-checkbox", 25);
     \u0275\u0275twoWayListener("ngModelChange", function AiOptionsComponent_Conditional_16_Conditional_11_ng_container_0_Template_p_checkbox_ngModelChange_2_listener($event) {
       \u0275\u0275restoreView(_r7);
       const ctx_r1 = \u0275\u0275nextContext(3);
@@ -25160,7 +25853,7 @@ function AiOptionsComponent_Conditional_16_Conditional_11_ng_container_0_Templat
       return \u0275\u0275resetView($event);
     });
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(3, "label", 16);
+    \u0275\u0275elementStart(3, "label", 15);
     \u0275\u0275text(4);
     \u0275\u0275pipe(5, "translate");
     \u0275\u0275elementEnd()();
@@ -25191,7 +25884,7 @@ function AiOptionsComponent_Conditional_16_Conditional_11_Template(rf, ctx) {
 function AiOptionsComponent_Conditional_16_Conditional_17_Template(rf, ctx) {
   if (rf & 1) {
     const _r9 = \u0275\u0275getCurrentView();
-    \u0275\u0275elementStart(0, "p-iftalabel")(1, "textarea", 27);
+    \u0275\u0275elementStart(0, "p-iftalabel")(1, "textarea", 26);
     \u0275\u0275twoWayListener("ngModelChange", function AiOptionsComponent_Conditional_16_Conditional_17_Template_textarea_ngModelChange_1_listener($event) {
       \u0275\u0275restoreView(_r9);
       const ctx_r1 = \u0275\u0275nextContext(2);
@@ -25204,7 +25897,7 @@ function AiOptionsComponent_Conditional_16_Conditional_17_Template(rf, ctx) {
       return \u0275\u0275resetView(ctx_r1.emitCustomPrompt(ctx_r1.customInstruction));
     });
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(2, "label", 28);
+    \u0275\u0275elementStart(2, "label", 27);
     \u0275\u0275text(3);
     \u0275\u0275pipe(4, "translate");
     \u0275\u0275elementEnd()();
@@ -25221,10 +25914,10 @@ function AiOptionsComponent_Conditional_16_Conditional_17_Template(rf, ctx) {
 function AiOptionsComponent_Conditional_16_Conditional_22_Template(rf, ctx) {
   if (rf & 1) {
     const _r10 = \u0275\u0275getCurrentView();
-    \u0275\u0275elementStart(0, "div", 23)(1, "p", 29);
-    \u0275\u0275text(2, "Alert rewrite options");
+    \u0275\u0275elementStart(0, "div", 22)(1, "p", 28);
+    \u0275\u0275text(2, "Alert rewriting options");
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(3, "div", 25)(4, "p-checkbox", 30);
+    \u0275\u0275elementStart(3, "div", 24)(4, "p-checkbox", 29);
     \u0275\u0275twoWayListener("ngModelChange", function AiOptionsComponent_Conditional_16_Conditional_22_Template_p_checkbox_ngModelChange_4_listener($event) {
       \u0275\u0275restoreView(_r10);
       const ctx_r1 = \u0275\u0275nextContext(2);
@@ -25237,10 +25930,10 @@ function AiOptionsComponent_Conditional_16_Conditional_22_Template(rf, ctx) {
       return \u0275\u0275resetView(ctx_r1.onIncludeAlertRewriteExamplesSelect(ctx_r1.includeAlertRewriteExamples));
     });
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(5, "label", 31);
+    \u0275\u0275elementStart(5, "label", 30);
     \u0275\u0275text(6, ' Use "good" examples ');
     \u0275\u0275elementEnd()();
-    \u0275\u0275elementStart(7, "div", 25)(8, "p-checkbox", 32);
+    \u0275\u0275elementStart(7, "div", 24)(8, "p-checkbox", 31);
     \u0275\u0275twoWayListener("ngModelChange", function AiOptionsComponent_Conditional_16_Conditional_22_Template_p_checkbox_ngModelChange_8_listener($event) {
       \u0275\u0275restoreView(_r10);
       const ctx_r1 = \u0275\u0275nextContext(2);
@@ -25253,11 +25946,11 @@ function AiOptionsComponent_Conditional_16_Conditional_22_Template(rf, ctx) {
       return \u0275\u0275resetView(ctx_r1.onIncludeBeforeTextInAlertRewriteExamplesSelect(ctx_r1.includeBeforeTextInAlertRewriteExamples));
     });
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(9, "label", 33);
+    \u0275\u0275elementStart(9, "label", 32);
     \u0275\u0275text(10, ' Include "before" text in examples ');
     \u0275\u0275elementEnd()();
-    \u0275\u0275element(11, "div", 34);
-    \u0275\u0275elementStart(12, "div", 35)(13, "p-checkbox", 36);
+    \u0275\u0275element(11, "div", 33);
+    \u0275\u0275elementStart(12, "div", 34)(13, "p-checkbox", 35);
     \u0275\u0275twoWayListener("ngModelChange", function AiOptionsComponent_Conditional_16_Conditional_22_Template_p_checkbox_ngModelChange_13_listener($event) {
       \u0275\u0275restoreView(_r10);
       const ctx_r1 = \u0275\u0275nextContext(2);
@@ -25270,10 +25963,10 @@ function AiOptionsComponent_Conditional_16_Conditional_22_Template(rf, ctx) {
       return \u0275\u0275resetView(ctx_r1.onIncludeLinkWritingRulesSelect(ctx_r1.includeLinkWritingRules));
     });
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(14, "label", 37);
+    \u0275\u0275elementStart(14, "label", 36);
     \u0275\u0275text(15, " Include link writing rules ");
     \u0275\u0275elementEnd()();
-    \u0275\u0275elementStart(16, "div", 35)(17, "p-checkbox", 38);
+    \u0275\u0275elementStart(16, "div", 34)(17, "p-checkbox", 37);
     \u0275\u0275twoWayListener("ngModelChange", function AiOptionsComponent_Conditional_16_Conditional_22_Template_p_checkbox_ngModelChange_17_listener($event) {
       \u0275\u0275restoreView(_r10);
       const ctx_r1 = \u0275\u0275nextContext(2);
@@ -25281,10 +25974,10 @@ function AiOptionsComponent_Conditional_16_Conditional_22_Template(rf, ctx) {
       return \u0275\u0275resetView($event);
     });
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(18, "label", 39);
+    \u0275\u0275elementStart(18, "label", 38);
     \u0275\u0275text(19, " Advanced AI planning before rewrite ");
     \u0275\u0275elementEnd()();
-    \u0275\u0275elementStart(20, "div", 35)(21, "p-checkbox", 40);
+    \u0275\u0275elementStart(20, "div", 34)(21, "p-checkbox", 39);
     \u0275\u0275twoWayListener("ngModelChange", function AiOptionsComponent_Conditional_16_Conditional_22_Template_p_checkbox_ngModelChange_21_listener($event) {
       \u0275\u0275restoreView(_r10);
       const ctx_r1 = \u0275\u0275nextContext(2);
@@ -25297,10 +25990,10 @@ function AiOptionsComponent_Conditional_16_Conditional_22_Template(rf, ctx) {
       return \u0275\u0275resetView(ctx_r1.onUseJsonAlertsIssuesPromptSelect(ctx_r1.useJsonAlertsIssuesPrompt));
     });
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(22, "label", 41);
+    \u0275\u0275elementStart(22, "label", 40);
     \u0275\u0275text(23, " Use JSON format for Alerts Issues prompt ");
     \u0275\u0275elementEnd()();
-    \u0275\u0275elementStart(24, "div", 35)(25, "p-checkbox", 42);
+    \u0275\u0275elementStart(24, "div", 34)(25, "p-checkbox", 41);
     \u0275\u0275twoWayListener("ngModelChange", function AiOptionsComponent_Conditional_16_Conditional_22_Template_p_checkbox_ngModelChange_25_listener($event) {
       \u0275\u0275restoreView(_r10);
       const ctx_r1 = \u0275\u0275nextContext(2);
@@ -25313,8 +26006,24 @@ function AiOptionsComponent_Conditional_16_Conditional_22_Template(rf, ctx) {
       return \u0275\u0275resetView(ctx_r1.onUseCompactAlertsPageContextSelect(ctx_r1.useCompactAlertsPageContext));
     });
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(26, "label", 43);
+    \u0275\u0275elementStart(26, "label", 42);
     \u0275\u0275text(27, " Send compact page context to AI for alerts ");
+    \u0275\u0275elementEnd()();
+    \u0275\u0275elementStart(28, "div", 34)(29, "p-checkbox", 43);
+    \u0275\u0275twoWayListener("ngModelChange", function AiOptionsComponent_Conditional_16_Conditional_22_Template_p_checkbox_ngModelChange_29_listener($event) {
+      \u0275\u0275restoreView(_r10);
+      const ctx_r1 = \u0275\u0275nextContext(2);
+      \u0275\u0275twoWayBindingSet(ctx_r1.useSkillPrompts, $event) || (ctx_r1.useSkillPrompts = $event);
+      return \u0275\u0275resetView($event);
+    });
+    \u0275\u0275listener("onChange", function AiOptionsComponent_Conditional_16_Conditional_22_Template_p_checkbox_onChange_29_listener() {
+      \u0275\u0275restoreView(_r10);
+      const ctx_r1 = \u0275\u0275nextContext(2);
+      return \u0275\u0275resetView(ctx_r1.onUseSkillPromptsSelect(ctx_r1.useSkillPrompts));
+    });
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(30, "label", 44);
+    \u0275\u0275text(31, " Use skill-based prompt composition (issues) ");
     \u0275\u0275elementEnd()()();
   }
   if (rf & 2) {
@@ -25337,6 +26046,9 @@ function AiOptionsComponent_Conditional_16_Conditional_22_Template(rf, ctx) {
     \u0275\u0275advance(4);
     \u0275\u0275twoWayProperty("ngModel", ctx_r1.useCompactAlertsPageContext);
     \u0275\u0275property("binary", true);
+    \u0275\u0275advance(4);
+    \u0275\u0275twoWayProperty("ngModel", ctx_r1.useSkillPrompts);
+    \u0275\u0275property("binary", true);
   }
 }
 function AiOptionsComponent_Conditional_16_Template(rf, ctx) {
@@ -25352,7 +26064,7 @@ function AiOptionsComponent_Conditional_16_Template(rf, ctx) {
     \u0275\u0275elementEnd();
     \u0275\u0275elementStart(9, "div", 7);
     \u0275\u0275template(10, AiOptionsComponent_Conditional_16_Conditional_10_Template, 1, 2, "ng-container")(11, AiOptionsComponent_Conditional_16_Conditional_11_Template, 1, 2, "ng-container");
-    \u0275\u0275elementStart(12, "div", 17)(13, "p-checkbox", 18);
+    \u0275\u0275elementStart(12, "div", 16)(13, "p-checkbox", 17);
     \u0275\u0275twoWayListener("ngModelChange", function AiOptionsComponent_Conditional_16_Template_p_checkbox_ngModelChange_13_listener($event) {
       \u0275\u0275restoreView(_r4);
       const ctx_r1 = \u0275\u0275nextContext();
@@ -25365,15 +26077,15 @@ function AiOptionsComponent_Conditional_16_Template(rf, ctx) {
       return \u0275\u0275resetView(ctx_r1.resetCustom());
     });
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(14, "label", 19);
+    \u0275\u0275elementStart(14, "label", 18);
     \u0275\u0275text(15);
     \u0275\u0275pipe(16, "translate");
     \u0275\u0275elementEnd()();
     \u0275\u0275template(17, AiOptionsComponent_Conditional_16_Conditional_17_Template, 5, 5, "p-iftalabel");
-    \u0275\u0275elementStart(18, "div", 20)(19, "p", 21);
+    \u0275\u0275elementStart(18, "div", 19)(19, "p", 20);
     \u0275\u0275text(20);
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(21, "p-slider", 22);
+    \u0275\u0275elementStart(21, "p-slider", 21);
     \u0275\u0275twoWayListener("ngModelChange", function AiOptionsComponent_Conditional_16_Template_p_slider_ngModelChange_21_listener($event) {
       \u0275\u0275restoreView(_r4);
       const ctx_r1 = \u0275\u0275nextContext();
@@ -25386,7 +26098,7 @@ function AiOptionsComponent_Conditional_16_Template(rf, ctx) {
       return \u0275\u0275resetView(ctx_r1.emitEditPrompt(ctx_r1.currentEditLevel.prompt));
     });
     \u0275\u0275elementEnd()();
-    \u0275\u0275template(22, AiOptionsComponent_Conditional_16_Conditional_22_Template, 28, 13, "div", 23);
+    \u0275\u0275template(22, AiOptionsComponent_Conditional_16_Conditional_22_Template, 32, 15, "div", 22);
     \u0275\u0275elementEnd()()()();
   }
   if (rf & 2) {
@@ -25419,7 +26131,7 @@ function AiOptionsComponent_Conditional_17_Conditional_10_ng_container_3_Templat
   if (rf & 1) {
     const _r11 = \u0275\u0275getCurrentView();
     \u0275\u0275elementContainerStart(0);
-    \u0275\u0275elementStart(1, "div", 14)(2, "p-radioButton", 46);
+    \u0275\u0275elementStart(1, "div", 13)(2, "p-radioButton", 47);
     \u0275\u0275twoWayListener("ngModelChange", function AiOptionsComponent_Conditional_17_Conditional_10_ng_container_3_Template_p_radioButton_ngModelChange_2_listener($event) {
       \u0275\u0275restoreView(_r11);
       const ctx_r1 = \u0275\u0275nextContext(3);
@@ -25432,7 +26144,7 @@ function AiOptionsComponent_Conditional_17_Conditional_10_ng_container_3_Templat
       return \u0275\u0275resetView(ctx_r1.onAiSelect(ctx_r1.selectedAi));
     });
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(3, "label", 16);
+    \u0275\u0275elementStart(3, "label", 15);
     \u0275\u0275text(4);
     \u0275\u0275pipe(5, "translate");
     \u0275\u0275elementEnd()();
@@ -25455,7 +26167,7 @@ function AiOptionsComponent_Conditional_17_Conditional_10_ng_container_7_Templat
   if (rf & 1) {
     const _r13 = \u0275\u0275getCurrentView();
     \u0275\u0275elementContainerStart(0);
-    \u0275\u0275elementStart(1, "div", 14)(2, "p-radioButton", 46);
+    \u0275\u0275elementStart(1, "div", 13)(2, "p-radioButton", 47);
     \u0275\u0275twoWayListener("ngModelChange", function AiOptionsComponent_Conditional_17_Conditional_10_ng_container_7_Template_p_radioButton_ngModelChange_2_listener($event) {
       \u0275\u0275restoreView(_r13);
       const ctx_r1 = \u0275\u0275nextContext(3);
@@ -25468,10 +26180,10 @@ function AiOptionsComponent_Conditional_17_Conditional_10_ng_container_7_Templat
       return \u0275\u0275resetView(ctx_r1.onAiSelect(ctx_r1.selectedAi));
     });
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(3, "label", 16);
+    \u0275\u0275elementStart(3, "label", 15);
     \u0275\u0275text(4);
     \u0275\u0275pipe(5, "translate");
-    \u0275\u0275element(6, "p-chip", 47);
+    \u0275\u0275element(6, "p-chip", 48);
     \u0275\u0275pipe(7, "translate");
     \u0275\u0275elementEnd()();
     \u0275\u0275elementContainerEnd();
@@ -25493,12 +26205,12 @@ function AiOptionsComponent_Conditional_17_Conditional_10_ng_container_7_Templat
 }
 function AiOptionsComponent_Conditional_17_Conditional_10_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275elementStart(0, "p", 44);
+    \u0275\u0275elementStart(0, "p", 45);
     \u0275\u0275text(1);
     \u0275\u0275pipe(2, "translate");
     \u0275\u0275elementEnd();
     \u0275\u0275template(3, AiOptionsComponent_Conditional_17_Conditional_10_ng_container_3_Template, 6, 8, "ng-container", 8);
-    \u0275\u0275elementStart(4, "p", 45);
+    \u0275\u0275elementStart(4, "p", 46);
     \u0275\u0275text(5);
     \u0275\u0275pipe(6, "translate");
     \u0275\u0275elementEnd();
@@ -25520,7 +26232,7 @@ function AiOptionsComponent_Conditional_17_Conditional_11_ng_container_3_Templat
   if (rf & 1) {
     const _r15 = \u0275\u0275getCurrentView();
     \u0275\u0275elementContainerStart(0);
-    \u0275\u0275elementStart(1, "div", 25)(2, "p-checkbox", 26);
+    \u0275\u0275elementStart(1, "div", 24)(2, "p-checkbox", 25);
     \u0275\u0275twoWayListener("ngModelChange", function AiOptionsComponent_Conditional_17_Conditional_11_ng_container_3_Template_p_checkbox_ngModelChange_2_listener($event) {
       \u0275\u0275restoreView(_r15);
       const ctx_r1 = \u0275\u0275nextContext(3);
@@ -25528,7 +26240,7 @@ function AiOptionsComponent_Conditional_17_Conditional_11_ng_container_3_Templat
       return \u0275\u0275resetView($event);
     });
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(3, "label", 16);
+    \u0275\u0275elementStart(3, "label", 15);
     \u0275\u0275text(4);
     \u0275\u0275pipe(5, "translate");
     \u0275\u0275elementEnd()();
@@ -25551,7 +26263,7 @@ function AiOptionsComponent_Conditional_17_Conditional_11_ng_container_7_Templat
   if (rf & 1) {
     const _r17 = \u0275\u0275getCurrentView();
     \u0275\u0275elementContainerStart(0);
-    \u0275\u0275elementStart(1, "div", 25)(2, "p-checkbox", 26);
+    \u0275\u0275elementStart(1, "div", 24)(2, "p-checkbox", 25);
     \u0275\u0275twoWayListener("ngModelChange", function AiOptionsComponent_Conditional_17_Conditional_11_ng_container_7_Template_p_checkbox_ngModelChange_2_listener($event) {
       \u0275\u0275restoreView(_r17);
       const ctx_r1 = \u0275\u0275nextContext(3);
@@ -25559,10 +26271,10 @@ function AiOptionsComponent_Conditional_17_Conditional_11_ng_container_7_Templat
       return \u0275\u0275resetView($event);
     });
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(3, "label", 16);
+    \u0275\u0275elementStart(3, "label", 15);
     \u0275\u0275text(4);
     \u0275\u0275pipe(5, "translate");
-    \u0275\u0275element(6, "p-chip", 47);
+    \u0275\u0275element(6, "p-chip", 48);
     \u0275\u0275pipe(7, "translate");
     \u0275\u0275elementEnd()();
     \u0275\u0275elementContainerEnd();
@@ -25584,12 +26296,12 @@ function AiOptionsComponent_Conditional_17_Conditional_11_ng_container_7_Templat
 }
 function AiOptionsComponent_Conditional_17_Conditional_11_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275elementStart(0, "p", 44);
+    \u0275\u0275elementStart(0, "p", 45);
     \u0275\u0275text(1);
     \u0275\u0275pipe(2, "translate");
     \u0275\u0275elementEnd();
     \u0275\u0275template(3, AiOptionsComponent_Conditional_17_Conditional_11_ng_container_3_Template, 6, 8, "ng-container", 8);
-    \u0275\u0275elementStart(4, "p", 45);
+    \u0275\u0275elementStart(4, "p", 46);
     \u0275\u0275text(5);
     \u0275\u0275pipe(6, "translate");
     \u0275\u0275elementEnd();
@@ -25633,247 +26345,13 @@ function AiOptionsComponent_Conditional_17_Template(rf, ctx) {
     \u0275\u0275conditional(ctx_r1.isTwoAis ? 11 : -1);
   }
 }
-function AiOptionsComponent_Conditional_18_ng_container_14_Template(rf, ctx) {
-  if (rf & 1) {
-    const _r20 = \u0275\u0275getCurrentView();
-    \u0275\u0275elementContainerStart(0);
-    \u0275\u0275elementStart(1, "div", 14)(2, "p-radioButton", 58);
-    \u0275\u0275twoWayListener("ngModelChange", function AiOptionsComponent_Conditional_18_ng_container_14_Template_p_radioButton_ngModelChange_2_listener($event) {
-      \u0275\u0275restoreView(_r20);
-      const ctx_r1 = \u0275\u0275nextContext(2);
-      \u0275\u0275twoWayBindingSet(ctx_r1.selectedPromptMode, $event) || (ctx_r1.selectedPromptMode = $event);
-      return \u0275\u0275resetView($event);
-    });
-    \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(3, "label", 16);
-    \u0275\u0275text(4);
-    \u0275\u0275elementEnd()();
-    \u0275\u0275elementContainerEnd();
-  }
-  if (rf & 2) {
-    const option_r21 = ctx.$implicit;
-    const ctx_r1 = \u0275\u0275nextContext(2);
-    \u0275\u0275advance(2);
-    \u0275\u0275property("value", option_r21.id);
-    \u0275\u0275twoWayProperty("ngModel", ctx_r1.selectedPromptMode);
-    \u0275\u0275property("inputId", option_r21.id);
-    \u0275\u0275advance();
-    \u0275\u0275property("for", option_r21.id);
-    \u0275\u0275advance();
-    \u0275\u0275textInterpolate(option_r21.label);
-  }
-}
-function AiOptionsComponent_Conditional_18_ng_container_18_Template(rf, ctx) {
-  if (rf & 1) {
-    const _r22 = \u0275\u0275getCurrentView();
-    \u0275\u0275elementContainerStart(0);
-    \u0275\u0275elementStart(1, "div", 14)(2, "p-radioButton", 59);
-    \u0275\u0275twoWayListener("ngModelChange", function AiOptionsComponent_Conditional_18_ng_container_18_Template_p_radioButton_ngModelChange_2_listener($event) {
-      \u0275\u0275restoreView(_r22);
-      const ctx_r1 = \u0275\u0275nextContext(2);
-      \u0275\u0275twoWayBindingSet(ctx_r1.selectedOutputFormat, $event) || (ctx_r1.selectedOutputFormat = $event);
-      return \u0275\u0275resetView($event);
-    });
-    \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(3, "label", 16);
-    \u0275\u0275text(4);
-    \u0275\u0275elementEnd()();
-    \u0275\u0275elementContainerEnd();
-  }
-  if (rf & 2) {
-    const option_r23 = ctx.$implicit;
-    const ctx_r1 = \u0275\u0275nextContext(2);
-    \u0275\u0275advance(2);
-    \u0275\u0275property("value", option_r23.id);
-    \u0275\u0275twoWayProperty("ngModel", ctx_r1.selectedOutputFormat);
-    \u0275\u0275property("inputId", option_r23.id);
-    \u0275\u0275advance();
-    \u0275\u0275property("for", option_r23.id);
-    \u0275\u0275advance();
-    \u0275\u0275textInterpolate(option_r23.label);
-  }
-}
-function AiOptionsComponent_Conditional_18_Conditional_22_div_4_Template(rf, ctx) {
-  if (rf & 1) {
-    \u0275\u0275elementStart(0, "div", 61)(1, "p", 52);
-    \u0275\u0275text(2);
-    \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(3, "p", 48);
-    \u0275\u0275text(4);
-    \u0275\u0275elementEnd()();
-  }
-  if (rf & 2) {
-    const route_r24 = ctx.$implicit;
-    \u0275\u0275advance(2);
-    \u0275\u0275textInterpolate2("", route_r24.skill.name, " (score: ", route_r24.score, ")");
-    \u0275\u0275advance(2);
-    \u0275\u0275textInterpolate(route_r24.skill.description);
-  }
-}
-function AiOptionsComponent_Conditional_18_Conditional_22_Template(rf, ctx) {
-  if (rf & 1) {
-    \u0275\u0275elementStart(0, "div", 56)(1, "p", 6);
-    \u0275\u0275text(2, "Selected skills");
-    \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(3, "div", 7);
-    \u0275\u0275template(4, AiOptionsComponent_Conditional_18_Conditional_22_div_4_Template, 5, 3, "div", 60);
-    \u0275\u0275elementEnd()();
-  }
-  if (rf & 2) {
-    const ctx_r1 = \u0275\u0275nextContext(2);
-    \u0275\u0275advance(4);
-    \u0275\u0275property("ngForOf", ctx_r1.routedSkillsPreview);
-  }
-}
-function AiOptionsComponent_Conditional_18_Conditional_23_p_6_Template(rf, ctx) {
-  if (rf & 1) {
-    \u0275\u0275elementStart(0, "p", 66);
-    \u0275\u0275text(1);
-    \u0275\u0275elementEnd();
-  }
-  if (rf & 2) {
-    const dim_r25 = ctx.$implicit;
-    \u0275\u0275advance();
-    \u0275\u0275textInterpolate3(" ", dim_r25.id, ": ", dim_r25.score, "/2 (weight ", dim_r25.weight, ") ");
-  }
-}
-function AiOptionsComponent_Conditional_18_Conditional_23_Template(rf, ctx) {
-  if (rf & 1) {
-    \u0275\u0275elementStart(0, "div", 57)(1, "p", 62);
-    \u0275\u0275text(2);
-    \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(3, "p", 63);
-    \u0275\u0275text(4);
-    \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(5, "div", 64);
-    \u0275\u0275template(6, AiOptionsComponent_Conditional_18_Conditional_23_p_6_Template, 2, 3, "p", 65);
-    \u0275\u0275elementEnd()();
-  }
-  if (rf & 2) {
-    const ctx_r1 = \u0275\u0275nextContext(2);
-    \u0275\u0275advance(2);
-    \u0275\u0275textInterpolate3(" Rubric: ", ctx_r1.rubricPreview.total, "/", ctx_r1.rubricPreview.maxTotal, " (", ctx_r1.rubricPercent, "%) ");
-    \u0275\u0275advance();
-    \u0275\u0275property("ngClass", ctx_r1.rubricPreview.passed ? "text-green-600" : "text-red-600");
-    \u0275\u0275advance();
-    \u0275\u0275textInterpolate1(" ", ctx_r1.rubricPreview.passed ? "Pass" : "Needs work", " ");
-    \u0275\u0275advance(2);
-    \u0275\u0275property("ngForOf", ctx_r1.rubricPreview.dimensions);
-  }
-}
-function AiOptionsComponent_Conditional_18_Conditional_24_p_3_Template(rf, ctx) {
-  if (rf & 1) {
-    \u0275\u0275elementStart(0, "p", 66);
-    \u0275\u0275text(1);
-    \u0275\u0275elementEnd();
-  }
-  if (rf & 2) {
-    const id_r26 = ctx.$implicit;
-    \u0275\u0275advance();
-    \u0275\u0275textInterpolate(id_r26);
-  }
-}
-function AiOptionsComponent_Conditional_18_Conditional_24_Template(rf, ctx) {
-  if (rf & 1) {
-    \u0275\u0275elementStart(0, "div", 57)(1, "p", 6);
-    \u0275\u0275text(2, "Included prompt fragments");
-    \u0275\u0275elementEnd();
-    \u0275\u0275template(3, AiOptionsComponent_Conditional_18_Conditional_24_p_3_Template, 2, 1, "p", 65);
-    \u0275\u0275elementEnd();
-  }
-  if (rf & 2) {
-    const ctx_r1 = \u0275\u0275nextContext(2);
-    \u0275\u0275advance(3);
-    \u0275\u0275property("ngForOf", ctx_r1.previewFragmentIds);
-  }
-}
-function AiOptionsComponent_Conditional_18_Conditional_25_Template(rf, ctx) {
-  if (rf & 1) {
-    \u0275\u0275elementStart(0, "div", 57)(1, "p", 6);
-    \u0275\u0275text(2, "Assembled system prompt (preview)");
-    \u0275\u0275elementEnd();
-    \u0275\u0275element(3, "textarea", 67);
-    \u0275\u0275elementEnd();
-  }
-  if (rf & 2) {
-    const ctx_r1 = \u0275\u0275nextContext(2);
-    \u0275\u0275advance(3);
-    \u0275\u0275property("value", ctx_r1.previewSystemPrompt)("autoResize", true);
-  }
-}
 function AiOptionsComponent_Conditional_18_Template(rf, ctx) {
   if (rf & 1) {
     const _r19 = \u0275\u0275getCurrentView();
-    \u0275\u0275elementStart(0, "p-accordion-panel", 11)(1, "p-accordion-header");
-    \u0275\u0275text(2, "Skills + rubric preview");
-    \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(3, "p-accordion-content")(4, "div", 7)(5, "p", 48);
-    \u0275\u0275text(6, "Test routing against a sample user request.");
-    \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(7, "p-iftalabel")(8, "textarea", 49);
-    \u0275\u0275twoWayListener("ngModelChange", function AiOptionsComponent_Conditional_18_Template_textarea_ngModelChange_8_listener($event) {
-      \u0275\u0275restoreView(_r19);
-      const ctx_r1 = \u0275\u0275nextContext();
-      \u0275\u0275twoWayBindingSet(ctx_r1.skillRoutingInput, $event) || (ctx_r1.skillRoutingInput = $event);
-      return \u0275\u0275resetView($event);
-    });
-    \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(9, "label", 50);
-    \u0275\u0275text(10, "User request");
-    \u0275\u0275elementEnd()();
-    \u0275\u0275elementStart(11, "div", 51)(12, "p", 52);
-    \u0275\u0275text(13, "Prompt mode");
-    \u0275\u0275elementEnd();
-    \u0275\u0275template(14, AiOptionsComponent_Conditional_18_ng_container_14_Template, 5, 5, "ng-container", 8);
-    \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(15, "div", 51)(16, "p", 52);
-    \u0275\u0275text(17, "Output format");
-    \u0275\u0275elementEnd();
-    \u0275\u0275template(18, AiOptionsComponent_Conditional_18_ng_container_18_Template, 5, 5, "ng-container", 8);
-    \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(19, "div", 53)(20, "p-button", 54);
-    \u0275\u0275listener("click", function AiOptionsComponent_Conditional_18_Template_p_button_click_20_listener() {
-      \u0275\u0275restoreView(_r19);
-      const ctx_r1 = \u0275\u0275nextContext();
-      return \u0275\u0275resetView(ctx_r1.runSkillRoutingPreview());
-    });
-    \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(21, "p-button", 55);
-    \u0275\u0275listener("click", function AiOptionsComponent_Conditional_18_Template_p_button_click_21_listener() {
-      \u0275\u0275restoreView(_r19);
-      const ctx_r1 = \u0275\u0275nextContext();
-      return \u0275\u0275resetView(ctx_r1.clearSkillRoutingPreview());
-    });
-    \u0275\u0275elementEnd()();
-    \u0275\u0275template(22, AiOptionsComponent_Conditional_18_Conditional_22_Template, 5, 1, "div", 56)(23, AiOptionsComponent_Conditional_18_Conditional_23_Template, 7, 6, "div", 57)(24, AiOptionsComponent_Conditional_18_Conditional_24_Template, 4, 1, "div", 57)(25, AiOptionsComponent_Conditional_18_Conditional_25_Template, 4, 2, "div", 57);
-    \u0275\u0275elementEnd()()();
-  }
-  if (rf & 2) {
-    const ctx_r1 = \u0275\u0275nextContext();
-    \u0275\u0275advance(8);
-    \u0275\u0275twoWayProperty("ngModel", ctx_r1.skillRoutingInput);
-    \u0275\u0275property("autoResize", true);
-    \u0275\u0275advance(6);
-    \u0275\u0275property("ngForOf", ctx_r1.promptModeOptions)("ngForTrackBy", ctx_r1.trackById);
-    \u0275\u0275advance(4);
-    \u0275\u0275property("ngForOf", ctx_r1.outputFormatOptions)("ngForTrackBy", ctx_r1.trackById);
-    \u0275\u0275advance(4);
-    \u0275\u0275conditional(ctx_r1.routedSkillsPreview.length > 0 ? 22 : -1);
-    \u0275\u0275advance();
-    \u0275\u0275conditional(ctx_r1.rubricPreview ? 23 : -1);
-    \u0275\u0275advance();
-    \u0275\u0275conditional(ctx_r1.previewFragmentIds.length > 0 ? 24 : -1);
-    \u0275\u0275advance();
-    \u0275\u0275conditional(ctx_r1.previewSystemPrompt ? 25 : -1);
-  }
-}
-function AiOptionsComponent_Conditional_19_Template(rf, ctx) {
-  if (rf & 1) {
-    const _r27 = \u0275\u0275getCurrentView();
-    \u0275\u0275elementStart(0, "p-button", 68);
+    \u0275\u0275elementStart(0, "p-button", 49);
     \u0275\u0275pipe(1, "translate");
-    \u0275\u0275listener("click", function AiOptionsComponent_Conditional_19_Template_p_button_click_0_listener() {
-      \u0275\u0275restoreView(_r27);
+    \u0275\u0275listener("click", function AiOptionsComponent_Conditional_18_Template_p_button_click_0_listener() {
+      \u0275\u0275restoreView(_r19);
       const ctx_r1 = \u0275\u0275nextContext();
       return \u0275\u0275resetView(ctx_r1.onSubmit());
     });
@@ -25883,34 +26361,34 @@ function AiOptionsComponent_Conditional_19_Template(rf, ctx) {
     \u0275\u0275property("label", \u0275\u0275pipeBind1(1, 1, "page.compare.button.genai"));
   }
 }
-function AiOptionsComponent_Conditional_20_ca_upload_url_1_Template(rf, ctx) {
+function AiOptionsComponent_Conditional_19_ca_upload_url_1_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275element(0, "ca-upload-url", 70);
+    \u0275\u0275element(0, "ca-upload-url", 51);
   }
   if (rf & 2) {
     \u0275\u0275property("showSampleDataButton", false);
   }
 }
-function AiOptionsComponent_Conditional_20_ca_upload_paste_2_Template(rf, ctx) {
+function AiOptionsComponent_Conditional_19_ca_upload_paste_2_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275element(0, "ca-upload-paste", 70);
+    \u0275\u0275element(0, "ca-upload-paste", 51);
   }
   if (rf & 2) {
     \u0275\u0275property("showSampleDataButton", false);
   }
 }
-function AiOptionsComponent_Conditional_20_ca_upload_word_3_Template(rf, ctx) {
+function AiOptionsComponent_Conditional_19_ca_upload_word_3_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275element(0, "ca-upload-word", 70);
+    \u0275\u0275element(0, "ca-upload-word", 51);
   }
   if (rf & 2) {
     \u0275\u0275property("showSampleDataButton", false);
   }
 }
-function AiOptionsComponent_Conditional_20_Template(rf, ctx) {
+function AiOptionsComponent_Conditional_19_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275elementContainerStart(0, 13);
-    \u0275\u0275template(1, AiOptionsComponent_Conditional_20_ca_upload_url_1_Template, 1, 1, "ca-upload-url", 69)(2, AiOptionsComponent_Conditional_20_ca_upload_paste_2_Template, 1, 1, "ca-upload-paste", 69)(3, AiOptionsComponent_Conditional_20_ca_upload_word_3_Template, 1, 1, "ca-upload-word", 69);
+    \u0275\u0275elementContainerStart(0, 12);
+    \u0275\u0275template(1, AiOptionsComponent_Conditional_19_ca_upload_url_1_Template, 1, 1, "ca-upload-url", 50)(2, AiOptionsComponent_Conditional_19_ca_upload_paste_2_Template, 1, 1, "ca-upload-paste", 50)(3, AiOptionsComponent_Conditional_19_ca_upload_word_3_Template, 1, 1, "ca-upload-word", 50);
     \u0275\u0275elementContainerEnd();
   }
   if (rf & 2) {
@@ -25926,8 +26404,6 @@ function AiOptionsComponent_Conditional_20_Template(rf, ctx) {
 }
 var AiOptionsComponent = class _AiOptionsComponent {
   uploadState = inject(UploadStateService);
-  skillRouter = inject(SkillRouterService);
-  promptComposer = inject(PromptComposerService);
   promptChange = new EventEmitter();
   customPrompt = new EventEmitter();
   editPrompt = new EventEmitter();
@@ -25935,36 +26411,14 @@ var AiOptionsComponent = class _AiOptionsComponent {
   alertRewriteModeChange = new EventEmitter();
   aiSubmit = new EventEmitter();
   visible = false;
-  skillRoutingInput = "";
-  routedSkillsPreview = [];
-  rubricPreview = null;
-  previewSystemPrompt = "";
-  previewFragmentIds = [];
-  selectedPromptMode = "balanced";
-  selectedOutputFormat = "text";
-  promptModeOptions = [
-    { id: "balanced", label: "Balanced edits" },
-    { id: "light-edit", label: "Light edits" },
-    { id: "strict-rewrite", label: "Strict rewrite" }
-  ];
-  outputFormatOptions = [
-    { id: "text", label: "Text output" },
-    { id: "json", label: "JSON output" }
-  ];
-  //Gets upload type for task = compare with prototype
+  // The upload picker changes when the workflow is "compare with prototype".
   get uploadType() {
     return this.uploadState.getSelectedUploadType();
   }
   trackById(index, item) {
     return item.id;
   }
-  get rubricPercent() {
-    if (!this.rubricPreview || this.rubricPreview.maxTotal === 0) {
-      return 0;
-    }
-    return Math.round(this.rubricPreview.total / this.rubricPreview.maxTotal * 100);
-  }
-  //Comparison task
+  // Top-level compare workflow selection that drives which controls are shown.
   _selectedTask = CompareTask.AiGenerated;
   isTwoPrompts = false;
   isTwoAis = false;
@@ -25984,7 +26438,7 @@ var AiOptionsComponent = class _AiOptionsComponent {
     { id: CompareTask.TwoModels, label: "page.ai-options.task.TwoModels", disabled: false },
     { id: CompareTask.TwoPrompts, label: "page.ai-options.task.TwoPrompts", disabled: false }
   ];
-  //AI prompt
+  // Prompt family selection for single- and dual-prompt runs.
   selectedPrompt = PromptKey.PlainLanguage;
   selectedPrompts = [];
   promptOptions = [
@@ -25999,8 +26453,8 @@ var AiOptionsComponent = class _AiOptionsComponent {
   onPromptSelect(key2) {
     this.promptChange.emit(key2);
   }
-  //AI model
-  selectedAi = AiModel.Nemotron;
+  // Model and alert-specific options persisted through UploadStateService.
+  selectedAi = AiModel.NemotronNano;
   selectedAis = [];
   selectedAlertRewriteMode = AlertRewriteMode.GoodResultsOnly;
   includeAlertRewriteExamples = false;
@@ -26008,22 +26462,24 @@ var AiOptionsComponent = class _AiOptionsComponent {
   includeLinkWritingRules = true;
   useJsonAlertsIssuesPrompt = false;
   useCompactAlertsPageContext = false;
+  useSkillPrompts = false;
   get useAlertPlanning() {
     return this.selectedAlertRewriteMode === AlertRewriteMode.AB;
   }
   set useAlertPlanning(useAlertPlanning) {
     this.onUseAlertPlanningSelect(useAlertPlanning);
   }
+  // Free and paid model groups are rendered separately in the UI.
   freeAiOptions = [
-    { id: AiModel.Nemotron, label: "page.ai-options.model.Nemotron", disabled: false },
+    { id: AiModel.NemotronNano, label: "page.ai-options.model.NemotronNano", disabled: false },
+    { id: AiModel.NemotronSuper, label: "page.ai-options.model.NemotronSuper", disabled: false },
     { id: AiModel.Arcee, label: "page.ai-options.model.Arcee", disabled: false },
-    { id: AiModel.Zai, label: "page.ai-options.model.Zai", disabled: false },
-    { id: AiModel.DeepSeek, label: "page.ai-options.model.DeepSeek", disabled: false }
+    { id: AiModel.Zai, label: "page.ai-options.model.Zai", disabled: false }
   ];
   paidAiOptions = [
+    { id: AiModel.GPT5Nano, label: "page.ai-options.model.GPT5Nano", disabled: false },
     { id: AiModel.GptOSS, label: "page.ai-options.model.GptOSS", disabled: false },
-    { id: AiModel.Gemini, label: "page.ai-options.model.Gemini", disabled: false },
-    { id: AiModel.Gpt5Mini, label: "page.ai-options.model.Gpt5Mini", disabled: false }
+    { id: AiModel.Gemini, label: "page.ai-options.model.Gemini", disabled: false }
   ];
   ngOnInit() {
     const freeIds = new Set(this.freeAiOptions.map((option) => option.id));
@@ -26041,6 +26497,7 @@ var AiOptionsComponent = class _AiOptionsComponent {
     this.includeLinkWritingRules = this.uploadState.getIncludeLinkWritingRules();
     this.useJsonAlertsIssuesPrompt = this.uploadState.getUseJsonAlertsIssuesPrompt();
     this.useCompactAlertsPageContext = this.uploadState.getUseCompactAlertsPageContext();
+    this.useSkillPrompts = this.uploadState.getUseSkillPrompts();
   }
   isAiCheckboxDisabled(id) {
     return !this.selectedAis.includes(id) && this.selectedAis.length >= 2;
@@ -26078,35 +26535,16 @@ var AiOptionsComponent = class _AiOptionsComponent {
     this.useCompactAlertsPageContext = useCompact;
     this.uploadState.setUseCompactAlertsPageContext(useCompact);
   }
-  runSkillRoutingPreview() {
-    this.routedSkillsPreview = this.skillRouter.routeSkills(this.skillRoutingInput);
-    const selectedSkills = this.routedSkillsPreview.map((entry) => entry.skill);
-    this.rubricPreview = this.skillRouter.evaluateRubric({
-      userText: this.skillRoutingInput,
-      selectedSkills
-    });
-    const composed = this.promptComposer.compose({
-      basePrompt: "You are a page rewrite assistant.",
-      selectedSkillIds: selectedSkills.map((skill) => skill.id),
-      mode: this.selectedPromptMode,
-      outputFormat: this.selectedOutputFormat
-    });
-    this.previewSystemPrompt = composed.prompt;
-    this.previewFragmentIds = composed.fragmentIds;
+  onUseSkillPromptsSelect(useSkills) {
+    this.useSkillPrompts = useSkills;
+    this.uploadState.setUseSkillPrompts(useSkills);
   }
-  clearSkillRoutingPreview() {
-    this.skillRoutingInput = "";
-    this.routedSkillsPreview = [];
-    this.rubricPreview = null;
-    this.previewSystemPrompt = "";
-    this.previewFragmentIds = [];
-  }
-  //submit selected prompt and model to AI
+  // Close the drawer and let the parent component execute the request.
   onSubmit() {
     this.visible = false;
     this.aiSubmit.emit();
   }
-  //Append custom instructions to prompt
+  // Optional free-form instructions appended after the base/skill prompt.
   addCustom = false;
   customInstruction = "";
   emitCustomPrompt(prompt) {
@@ -26118,7 +26556,7 @@ var AiOptionsComponent = class _AiOptionsComponent {
       this.emitCustomPrompt("");
     }
   }
-  //Number of changes for AI to make
+  // Slider presets that prepend an edit-strength instruction to non-alert prompts.
   editLevel = 50;
   editLevels = [
     { value: 0, label: "Grammar and spelling only", prompt: "Make minor edits to correct spelling or grammar errors only. Mostly ignore the other instructions provided." },
@@ -26136,7 +26574,7 @@ var AiOptionsComponent = class _AiOptionsComponent {
   static \u0275fac = function AiOptionsComponent_Factory(__ngFactoryType__) {
     return new (__ngFactoryType__ || _AiOptionsComponent)();
   };
-  static \u0275cmp = /* @__PURE__ */ \u0275\u0275defineComponent({ type: _AiOptionsComponent, selectors: [["ca-ai-options"]], outputs: { promptChange: "promptChange", customPrompt: "customPrompt", editPrompt: "editPrompt", aiChange: "aiChange", alertRewriteModeChange: "alertRewriteModeChange", aiSubmit: "aiSubmit" }, decls: 21, vars: 20, consts: [["label", "Options", "icon", "pi pi-bars", "severity", "info", 3, "click"], ["position", "right", 3, "visibleChange", "visible", "header"], [1, "flex", "flex-column", "gap-3"], ["value", "1", 1, "flex", "flex-column", "gap-3"], ["value", "0", 1, "border-1", "border-round-md", "border-surface"], [1, "border-none"], [1, "font-bold", "mb-2"], [1, "flex", "flex-column", "gap-2"], [4, "ngFor", "ngForOf", "ngForTrackBy"], ["value", "1", 1, "border-1", "border-round-md", "border-surface"], ["value", "2", 1, "border-1", "border-round-md", "border-surface"], ["value", "3", 1, "border-1", "border-round-md", "border-surface"], ["icon", "pi pi-comments", "severity", "primary", 3, "label"], [3, "ngSwitch"], [1, "p-field-radiobutton"], ["name", "taskOptions", 3, "ngModelChange", "value", "ngModel", "inputId", "disabled"], [1, "pl-2", 3, "for"], [1, "p-field-checkbox", "mt-3"], ["inputId", "appendCustom", 3, "ngModelChange", "onChange", "ngModel", "binary"], ["for", "appendCustom", 1, "pl-2"], [1, "flex", "flex-column", "gap-3", "mt-3"], ["id", "ai-changes"], ["ariaLabelledBy", "ai-changes", "fluid", "", 3, "ngModelChange", "onChange", "ngModel", "step"], [1, "flex", "flex-column", "gap-2", "mt-3"], ["name", "promptOptions", 3, "ngModelChange", "onClick", "value", "ngModel", "inputId", "disabled"], [1, "p-field-checkbox"], [3, "ngModelChange", "value", "ngModel", "inputId", "disabled"], ["pTextarea", "", "id", "customPrompt", "fluid", "", 3, "ngModelChange", "blur", "ngModel", "autoResize"], ["for", "customPrompt"], [1, "font-bold", "m-0"], ["inputId", "includeAlertRewriteExamples", 3, "ngModelChange", "onChange", "ngModel", "binary"], ["for", "includeAlertRewriteExamples", 1, "pl-2"], ["inputId", "includeBeforeTextInAlertRewriteExamples", 3, "ngModelChange", "onChange", "ngModel", "binary", "disabled"], ["for", "includeBeforeTextInAlertRewriteExamples", 1, "pl-2"], [1, "border-top-1", "mt-2", 2, "border-color", "#d3d3d3"], [1, "p-field-checkbox", "mt-2"], ["inputId", "includeLinkWritingRules", 3, "ngModelChange", "onChange", "ngModel", "binary"], ["for", "includeLinkWritingRules", 1, "pl-2"], ["inputId", "useAlertPlanning", 3, "ngModelChange", "ngModel", "binary"], ["for", "useAlertPlanning", 1, "pl-2"], ["inputId", "useJsonAlertsIssuesPrompt", 3, "ngModelChange", "onChange", "ngModel", "binary"], ["for", "useJsonAlertsIssuesPrompt", 1, "pl-2"], ["inputId", "useCompactAlertsPageContext", 3, "ngModelChange", "onChange", "ngModel", "binary"], ["for", "useCompactAlertsPageContext", 1, "pl-2"], [1, "text-xs", "text-500"], [1, "text-xs", "text-500", "mt-3"], ["name", "aiOptions", 3, "ngModelChange", "onClick", "value", "ngModel", "inputId", "disabled"], ["styleClass", "chip chip-severe ml-2", 3, "label"], [1, "m-0", "text-sm", "text-600"], ["pTextarea", "", "id", "skillRoutingInput", "rows", "4", "fluid", "", 3, "ngModelChange", "ngModel", "autoResize"], ["for", "skillRoutingInput"], [1, "flex", "flex-column", "gap-2", "mt-2"], [1, "m-0", "font-semibold"], [1, "flex", "gap-2"], ["label", "Route skills", "severity", "primary", "size", "small", 3, "click"], ["label", "Clear", "severity", "secondary", "size", "small", 3, "click"], [1, "mt-2"], [1, "mt-2", "border-top-1", "pt-2", 2, "border-color", "#d9d9d9"], ["name", "promptModeOptions", 3, "ngModelChange", "value", "ngModel", "inputId"], ["name", "outputFormatOptions", 3, "ngModelChange", "value", "ngModel", "inputId"], ["class", "border-1 border-round-sm p-2", "style", "border-color: #d9d9d9;", 4, "ngFor", "ngForOf"], [1, "border-1", "border-round-sm", "p-2", 2, "border-color", "#d9d9d9"], [1, "m-0", "font-bold"], [1, "m-0", "text-sm", 3, "ngClass"], [1, "flex", "flex-column", "gap-1", "mt-2"], ["class", "m-0 text-sm", 4, "ngFor", "ngForOf"], [1, "m-0", "text-sm"], ["pTextarea", "", "rows", "8", "readonly", "", "fluid", "", 3, "value", "autoResize"], ["icon", "pi pi-comments", "severity", "primary", 3, "click", "label"], ["mode", "prototype", 3, "showSampleDataButton", 4, "ngSwitchCase"], ["mode", "prototype", 3, "showSampleDataButton"]], template: function AiOptionsComponent_Template(rf, ctx) {
+  static \u0275cmp = /* @__PURE__ */ \u0275\u0275defineComponent({ type: _AiOptionsComponent, selectors: [["ca-ai-options"]], outputs: { promptChange: "promptChange", customPrompt: "customPrompt", editPrompt: "editPrompt", aiChange: "aiChange", alertRewriteModeChange: "alertRewriteModeChange", aiSubmit: "aiSubmit" }, decls: 20, vars: 19, consts: [["label", "Options", "icon", "pi pi-bars", "severity", "info", 3, "click"], ["position", "right", 3, "visibleChange", "visible", "header"], [1, "flex", "flex-column", "gap-3"], ["value", "1", 1, "flex", "flex-column", "gap-3"], ["value", "0", 1, "border-1", "border-round-md", "border-surface"], [1, "border-none"], [1, "font-bold", "mb-2"], [1, "flex", "flex-column", "gap-2"], [4, "ngFor", "ngForOf", "ngForTrackBy"], ["value", "1", 1, "border-1", "border-round-md", "border-surface"], ["value", "2", 1, "border-1", "border-round-md", "border-surface"], ["icon", "pi pi-comments", "severity", "primary", 3, "label"], [3, "ngSwitch"], [1, "p-field-radiobutton"], ["name", "taskOptions", 3, "ngModelChange", "value", "ngModel", "inputId", "disabled"], [1, "pl-2", 3, "for"], [1, "p-field-checkbox", "mt-3"], ["inputId", "appendCustom", 3, "ngModelChange", "onChange", "ngModel", "binary"], ["for", "appendCustom", 1, "pl-2"], [1, "flex", "flex-column", "gap-3", "mt-3"], ["id", "ai-changes"], ["ariaLabelledBy", "ai-changes", "fluid", "", 3, "ngModelChange", "onChange", "ngModel", "step"], [1, "flex", "flex-column", "gap-2", "mt-3"], ["name", "promptOptions", 3, "ngModelChange", "onClick", "value", "ngModel", "inputId", "disabled"], [1, "p-field-checkbox"], [3, "ngModelChange", "value", "ngModel", "inputId", "disabled"], ["pTextarea", "", "id", "customPrompt", "fluid", "", 3, "ngModelChange", "blur", "ngModel", "autoResize"], ["for", "customPrompt"], [1, "font-bold", "m-0"], ["inputId", "includeAlertRewriteExamples", 3, "ngModelChange", "onChange", "ngModel", "binary"], ["for", "includeAlertRewriteExamples", 1, "pl-2"], ["inputId", "includeBeforeTextInAlertRewriteExamples", 3, "ngModelChange", "onChange", "ngModel", "binary", "disabled"], ["for", "includeBeforeTextInAlertRewriteExamples", 1, "pl-2"], [1, "border-top-1", "mt-2", 2, "border-color", "#d3d3d3"], [1, "p-field-checkbox", "mt-2"], ["inputId", "includeLinkWritingRules", 3, "ngModelChange", "onChange", "ngModel", "binary"], ["for", "includeLinkWritingRules", 1, "pl-2"], ["inputId", "useAlertPlanning", 3, "ngModelChange", "ngModel", "binary"], ["for", "useAlertPlanning", 1, "pl-2"], ["inputId", "useJsonAlertsIssuesPrompt", 3, "ngModelChange", "onChange", "ngModel", "binary"], ["for", "useJsonAlertsIssuesPrompt", 1, "pl-2"], ["inputId", "useCompactAlertsPageContext", 3, "ngModelChange", "onChange", "ngModel", "binary"], ["for", "useCompactAlertsPageContext", 1, "pl-2"], ["inputId", "useSkillPrompts", 3, "ngModelChange", "onChange", "ngModel", "binary"], ["for", "useSkillPrompts", 1, "pl-2"], [1, "text-xs", "text-500"], [1, "text-xs", "text-500", "mt-3"], ["name", "aiOptions", 3, "ngModelChange", "onClick", "value", "ngModel", "inputId", "disabled"], ["styleClass", "chip chip-severe ml-2", 3, "label"], ["icon", "pi pi-comments", "severity", "primary", 3, "click", "label"], ["mode", "prototype", 3, "showSampleDataButton", 4, "ngSwitchCase"], ["mode", "prototype", 3, "showSampleDataButton"]], template: function AiOptionsComponent_Template(rf, ctx) {
     if (rf & 1) {
       \u0275\u0275elementStart(0, "p-button", 0);
       \u0275\u0275listener("click", function AiOptionsComponent_Template_p_button_click_0_listener() {
@@ -26160,20 +26598,20 @@ var AiOptionsComponent = class _AiOptionsComponent {
       \u0275\u0275elementStart(14, "div", 7);
       \u0275\u0275template(15, AiOptionsComponent_ng_container_15_Template, 6, 8, "ng-container", 8);
       \u0275\u0275elementEnd()()()();
-      \u0275\u0275template(16, AiOptionsComponent_Conditional_16_Template, 23, 18, "p-accordion-panel", 9)(17, AiOptionsComponent_Conditional_17_Template, 12, 8, "p-accordion-panel", 10)(18, AiOptionsComponent_Conditional_18_Template, 26, 10, "p-accordion-panel", 11);
+      \u0275\u0275template(16, AiOptionsComponent_Conditional_16_Template, 23, 18, "p-accordion-panel", 9)(17, AiOptionsComponent_Conditional_17_Template, 12, 8, "p-accordion-panel", 10);
       \u0275\u0275elementEnd();
-      \u0275\u0275template(19, AiOptionsComponent_Conditional_19_Template, 2, 3, "p-button", 12)(20, AiOptionsComponent_Conditional_20_Template, 4, 4, "ng-container", 13);
+      \u0275\u0275template(18, AiOptionsComponent_Conditional_18_Template, 2, 3, "p-button", 11)(19, AiOptionsComponent_Conditional_19_Template, 4, 4, "ng-container", 12);
       \u0275\u0275elementEnd()();
     }
     if (rf & 2) {
       \u0275\u0275advance();
-      \u0275\u0275styleMap(\u0275\u0275pureFunction0(19, _c04));
+      \u0275\u0275styleMap(\u0275\u0275pureFunction0(18, _c04));
       \u0275\u0275twoWayProperty("visible", ctx.visible);
-      \u0275\u0275property("header", \u0275\u0275pipeBind1(2, 13, "page.ai-options.header"));
+      \u0275\u0275property("header", \u0275\u0275pipeBind1(2, 12, "page.ai-options.header"));
       \u0275\u0275advance(6);
-      \u0275\u0275textInterpolate(\u0275\u0275pipeBind1(8, 15, "page.ai-options.task.header"));
+      \u0275\u0275textInterpolate(\u0275\u0275pipeBind1(8, 14, "page.ai-options.task.header"));
       \u0275\u0275advance(5);
-      \u0275\u0275textInterpolate(\u0275\u0275pipeBind1(13, 17, "page.ai-options.task.legend"));
+      \u0275\u0275textInterpolate(\u0275\u0275pipeBind1(13, 16, "page.ai-options.task.legend"));
       \u0275\u0275advance(3);
       \u0275\u0275property("ngForOf", ctx.taskOptions)("ngForTrackBy", ctx.trackById);
       \u0275\u0275advance();
@@ -26183,11 +26621,9 @@ var AiOptionsComponent = class _AiOptionsComponent {
       \u0275\u0275advance();
       \u0275\u0275conditional(!ctx.isPrototype ? 18 : -1);
       \u0275\u0275advance();
-      \u0275\u0275conditional(!ctx.isPrototype ? 19 : -1);
-      \u0275\u0275advance();
-      \u0275\u0275conditional(ctx.isPrototype ? 20 : -1);
+      \u0275\u0275conditional(ctx.isPrototype ? 19 : -1);
     }
-  }, dependencies: [TranslateModule, TranslatePipe, CommonModule, NgClass, NgForOf, NgSwitch, NgSwitchCase, FormsModule, DefaultValueAccessor, NgControlStatus, NgModel, ButtonModule, Button, DrawerModule, Drawer, RadioButtonModule, RadioButton, CheckboxModule, Checkbox, AccordionModule, Accordion, AccordionPanel, AccordionHeader, AccordionContent, ChipModule, Chip, TextareaModule, Textarea, IftaLabelModule, IftaLabel, SliderModule, Slider, UploadUrlComponent, UploadPasteComponent, UploadWordComponent], encapsulation: 2 });
+  }, dependencies: [TranslateModule, TranslatePipe, CommonModule, NgForOf, NgSwitch, NgSwitchCase, FormsModule, DefaultValueAccessor, NgControlStatus, NgModel, ButtonModule, Button, DrawerModule, Drawer, RadioButtonModule, RadioButton, CheckboxModule, Checkbox, AccordionModule, Accordion, AccordionPanel, AccordionHeader, AccordionContent, ChipModule, Chip, TextareaModule, Textarea, IftaLabelModule, IftaLabel, SliderModule, Slider, UploadUrlComponent, UploadPasteComponent, UploadWordComponent], encapsulation: 2 });
 };
 (() => {
   (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(AiOptionsComponent, [{
@@ -26208,345 +26644,247 @@ var AiOptionsComponent = class _AiOptionsComponent {
       UploadUrlComponent,
       UploadPasteComponent,
       UploadWordComponent
-    ], template: `<p-button label="Options" icon="pi pi-bars" (click)="visible=true" severity="info" />
-<p-drawer [(visible)]="visible" [header]="'page.ai-options.header' | translate" position="right"
-          [style]="{ width: '30rem'}">
-  <div class="flex flex-column gap-3">
-    <p-accordion value="1" class="flex flex-column gap-3">
-      <!--TASK OPTIONS-->
-      <p-accordion-panel value="0" class="border-1 border-round-md border-surface">
-        <p-accordion-header>{{ 'page.ai-options.task.header' | translate }}</p-accordion-header>
-        <p-accordion-content>
-
-          <fieldset class="border-none">
-            <legend class="font-bold mb-2">{{ 'page.ai-options.task.legend' | translate }}</legend>
-            <div class="flex flex-column gap-2">
-              <ng-container *ngFor="let option of taskOptions; trackBy: trackById">
-                <div class="p-field-radiobutton">
-                  <p-radioButton name="taskOptions" [value]="option.id" [(ngModel)]="selectedTask" [inputId]="option.id"
-                                 [disabled]="option.disabled" />
-                  <label [for]="option.id" class="pl-2">{{ option.label | translate }}</label>
-                </div>
-              </ng-container>
-            </div>
-          </fieldset>
-
-        </p-accordion-content>
-      </p-accordion-panel>
-      <!--PROMPT OPTIONS-->
-      @if (!isPrototype) {
-        <p-accordion-panel value="1" class="border-1 border-round-md border-surface">
-          <p-accordion-header>{{ 'page.ai-options.prompt.header' | translate }}</p-accordion-header>
-          <p-accordion-content>
-
-            <fieldset class="border-none">
-              <legend class="font-bold mb-2">{{ 'page.ai-options.prompt.legend' | translate }}</legend>
-              <div class="flex flex-column gap-2">
-                @if (!isTwoPrompts) {
-                  <ng-container *ngFor="let option of promptOptions; trackBy: trackById">
-                    <div class="p-field-radiobutton">
-                      <p-radioButton name="promptOptions" [value]="option.id" [(ngModel)]="selectedPrompt"
-                                     [inputId]="option.id" [disabled]="option.disabled" (onClick)="onPromptSelect(selectedPrompt)" />
-                      <label [for]="option.id" class="pl-2">{{ option.label | translate }}</label>
-                    </div>
-                  </ng-container>
-                }
-                @if (isTwoPrompts) {
-                  <ng-container *ngFor="let option of promptOptions; trackBy: trackById">
-                    <div class="p-field-checkbox">
-                      <p-checkbox [value]="option.id" [(ngModel)]="selectedPrompts" [inputId]="option.id"
-                                  [disabled]="option.disabled || isPromptCheckboxDisabled(option.id)" />
-                      <label [for]="option.id" class="pl-2">{{ option.label | translate }}</label>
-                    </div>
-                  </ng-container>
-                }
-                <!--Append custom prompt-->
-                <div class="p-field-checkbox mt-3">
-                  <p-checkbox [(ngModel)]="addCustom" [binary]="true" inputId="appendCustom" (onChange)="resetCustom()" />
-                  <label for="appendCustom" class="pl-2">{{ "page.ai-options.prompt.checkbox" | translate }}</label>
-                </div>
-                @if (addCustom) {
-                  <p-iftalabel>
-                    <textarea pTextarea id="customPrompt" [(ngModel)]="customInstruction" [autoResize]="true"
-                              (blur)="emitCustomPrompt(customInstruction)" fluid></textarea>
-                    <label for="customPrompt">{{ 'page.ai-options.prompt.textarea' | translate }}</label>
-                  </p-iftalabel>
-                }
-                <!--Slider for number of AI changes-->
-                <div class="flex flex-column gap-3 mt-3">
-                  <p id="ai-changes">{{ currentEditLevel?.label }}</p>
-                  <p-slider [(ngModel)]="editLevel" [step]="25" ariaLabelledBy="ai-changes"
-                            (onChange)="emitEditPrompt(currentEditLevel!.prompt)" fluid />
-                </div>
-
-                @if (selectedPrompt === 'alertsRecommendations') {
-                  <div class="flex flex-column gap-2 mt-3">
-                    <p class="font-bold m-0">Alert rewrite options</p>
-                    <div class="p-field-checkbox">
-                      <p-checkbox
-                        [(ngModel)]="includeAlertRewriteExamples"
-                        [binary]="true"
-                        inputId="includeAlertRewriteExamples"
-                        (onChange)="onIncludeAlertRewriteExamplesSelect(includeAlertRewriteExamples)"
-                      />
-                      <label for="includeAlertRewriteExamples" class="pl-2">
-                        Use "good" examples
-                      </label>
-                    </div>
-                    <div class="p-field-checkbox">
-                      <p-checkbox
-                        [(ngModel)]="includeBeforeTextInAlertRewriteExamples"
-                        [binary]="true"
-                        inputId="includeBeforeTextInAlertRewriteExamples"
-                        [disabled]="!includeAlertRewriteExamples"
-                        (onChange)="onIncludeBeforeTextInAlertRewriteExamplesSelect(includeBeforeTextInAlertRewriteExamples)"
-                      />
-                      <label for="includeBeforeTextInAlertRewriteExamples" class="pl-2">
-                        Include "before" text in examples
-                      </label>
-                    </div>
-                    <div class="border-top-1 mt-2" style="border-color: #d3d3d3;"></div>
-                    <div class="p-field-checkbox mt-2">
-                      <p-checkbox
-                        [(ngModel)]="includeLinkWritingRules"
-                        [binary]="true"
-                        inputId="includeLinkWritingRules"
-                        (onChange)="onIncludeLinkWritingRulesSelect(includeLinkWritingRules)"
-                      />
-                      <label for="includeLinkWritingRules" class="pl-2">
-                        Include link writing rules
-                      </label>
-                    </div>
-                    <div class="p-field-checkbox mt-2">
-                      <p-checkbox
-                        [(ngModel)]="useAlertPlanning"
-                        [binary]="true"
-                        inputId="useAlertPlanning"
-                      />
-                      <label for="useAlertPlanning" class="pl-2">
-                        Advanced AI planning before rewrite
-                      </label>
-                    </div>
-                    <div class="p-field-checkbox mt-2">
-                      <p-checkbox
-                        [(ngModel)]="useJsonAlertsIssuesPrompt"
-                        [binary]="true"
-                        inputId="useJsonAlertsIssuesPrompt"
-                        (onChange)="onUseJsonAlertsIssuesPromptSelect(useJsonAlertsIssuesPrompt)"
-                      />
-                      <label for="useJsonAlertsIssuesPrompt" class="pl-2">
-                        Use JSON format for Alerts Issues prompt
-                      </label>
-                    </div>
-                    <div class="p-field-checkbox mt-2">
-                      <p-checkbox
-                        [(ngModel)]="useCompactAlertsPageContext"
-                        [binary]="true"
-                        inputId="useCompactAlertsPageContext"
-                        (onChange)="onUseCompactAlertsPageContextSelect(useCompactAlertsPageContext)"
-                      />
-                      <label for="useCompactAlertsPageContext" class="pl-2">
-                        Send compact page context to AI for alerts
-                      </label>
-                    </div>
-                  </div>
-                }
-              </div>
-            </fieldset>
-
-          </p-accordion-content>
-        </p-accordion-panel>
-      }
-      <!--AI OPTIONS-->
-      @if (!isPrototype) {
-        <p-accordion-panel value="2" class="border-1 border-round-md border-surface">
-          <p-accordion-header>{{ 'page.ai-options.model.header' | translate }}</p-accordion-header>
-          <p-accordion-content>
-
-            <fieldset class="border-none">
-              <legend class="font-bold mb-2">{{ 'page.ai-options.model.legend' | translate }}</legend>
-              <div class="flex flex-column gap-2">
-                @if (!isTwoAis) {
-                  <p class="text-xs text-500">{{ 'page.ai-options.model.free' | translate }}</p>
-                  <ng-container *ngFor="let option of freeAiOptions; trackBy: trackById">
-                    <div class="p-field-radiobutton">
-                      <p-radioButton name="aiOptions" [value]="option.id" [(ngModel)]="selectedAi" [inputId]="option.id"
-                                     [disabled]="option.disabled" (onClick)="onAiSelect(selectedAi)" />
-                      <label [for]="option.id" class="pl-2">{{ option.label | translate }}</label>
-                    </div>
-                  </ng-container>
-                  <p class="text-xs text-500 mt-3">{{ 'page.ai-options.model.paid' | translate }}</p>
-                  <ng-container *ngFor="let option of paidAiOptions; trackBy: trackById">
-                    <div class="p-field-radiobutton">
-                      <p-radioButton name="aiOptions" [value]="option.id" [(ngModel)]="selectedAi" [inputId]="option.id"
-                                     [disabled]="option.disabled" (onClick)="onAiSelect(selectedAi)" />
-                      <label [for]="option.id" class="pl-2">
-                        {{ option.label | translate }}
-                        <p-chip
-                          [label]="'page.ai-options.model.paidBadge' | translate"
-                          styleClass="chip chip-severe ml-2">
-                        </p-chip>
-                      </label>
-                    </div>
-                  </ng-container>
-                }
-                @if (isTwoAis) {
-                  <p class="text-xs text-500">{{ 'page.ai-options.model.free' | translate }}</p>
-                  <ng-container *ngFor="let option of freeAiOptions; trackBy: trackById">
-                    <div class="p-field-checkbox">
-                      <p-checkbox [value]="option.id" [(ngModel)]="selectedAis" [inputId]="option.id"
-                                  [disabled]="option.disabled || isAiCheckboxDisabled(option.id)" />
-                      <label [for]="option.id" class="pl-2">{{ option.label | translate }}</label>
-                    </div>
-                  </ng-container>
-                  <p class="text-xs text-500 mt-3">{{ 'page.ai-options.model.paid' | translate }}</p>
-                  <ng-container *ngFor="let option of paidAiOptions; trackBy: trackById">
-                    <div class="p-field-checkbox">
-                      <p-checkbox [value]="option.id" [(ngModel)]="selectedAis" [inputId]="option.id"
-                                  [disabled]="option.disabled || isAiCheckboxDisabled(option.id)" />
-                      <label [for]="option.id" class="pl-2">
-                        {{ option.label | translate }}
-                        <p-chip
-                          [label]="'page.ai-options.model.paidBadge' | translate"
-                          styleClass="chip chip-severe ml-2">
-                        </p-chip>
-                      </label>
-                    </div>
-                  </ng-container>
-                }
-              </div>
-            </fieldset>
-
-          </p-accordion-content>
-        </p-accordion-panel>
-      }
-      @if (!isPrototype) {
-        <p-accordion-panel value="3" class="border-1 border-round-md border-surface">
-          <p-accordion-header>Skills + rubric preview</p-accordion-header>
-          <p-accordion-content>
-            <div class="flex flex-column gap-2">
-              <p class="m-0 text-sm text-600">Test routing against a sample user request.</p>
-              <p-iftalabel>
-                <textarea
-                  pTextarea
-                  id="skillRoutingInput"
-                  [(ngModel)]="skillRoutingInput"
-                  [autoResize]="true"
-                  rows="4"
-                  fluid
-                ></textarea>
-                <label for="skillRoutingInput">User request</label>
-              </p-iftalabel>
-              <div class="flex flex-column gap-2 mt-2">
-                <p class="m-0 font-semibold">Prompt mode</p>
-                <ng-container *ngFor="let option of promptModeOptions; trackBy: trackById">
-                  <div class="p-field-radiobutton">
-                    <p-radioButton
-                      name="promptModeOptions"
-                      [value]="option.id"
-                      [(ngModel)]="selectedPromptMode"
-                      [inputId]="option.id"
-                    />
-                    <label [for]="option.id" class="pl-2">{{ option.label }}</label>
-                  </div>
-                </ng-container>
-              </div>
-              <div class="flex flex-column gap-2 mt-2">
-                <p class="m-0 font-semibold">Output format</p>
-                <ng-container *ngFor="let option of outputFormatOptions; trackBy: trackById">
-                  <div class="p-field-radiobutton">
-                    <p-radioButton
-                      name="outputFormatOptions"
-                      [value]="option.id"
-                      [(ngModel)]="selectedOutputFormat"
-                      [inputId]="option.id"
-                    />
-                    <label [for]="option.id" class="pl-2">{{ option.label }}</label>
-                  </div>
-                </ng-container>
-              </div>
-              <div class="flex gap-2">
-                <p-button
-                  label="Route skills"
-                  severity="primary"
-                  size="small"
-                  (click)="runSkillRoutingPreview()"
-                />
-                <p-button
-                  label="Clear"
-                  severity="secondary"
-                  size="small"
-                  (click)="clearSkillRoutingPreview()"
-                />
-              </div>
-
-              @if (routedSkillsPreview.length > 0) {
-                <div class="mt-2">
-                  <p class="font-bold mb-2">Selected skills</p>
-                  <div class="flex flex-column gap-2">
-                    <div
-                      class="border-1 border-round-sm p-2"
-                      style="border-color: #d9d9d9;"
-                      *ngFor="let route of routedSkillsPreview"
-                    >
-                      <p class="m-0 font-semibold">{{ route.skill.name }} (score: {{ route.score }})</p>
-                      <p class="m-0 text-sm text-600">{{ route.skill.description }}</p>
-                    </div>
-                  </div>
-                </div>
-              }
-
-              @if (rubricPreview) {
-                <div class="mt-2 border-top-1 pt-2" style="border-color: #d9d9d9;">
-                  <p class="m-0 font-bold">
-                    Rubric: {{ rubricPreview.total }}/{{ rubricPreview.maxTotal }} ({{ rubricPercent }}%)
-                  </p>
-                  <p class="m-0 text-sm" [ngClass]="rubricPreview.passed ? 'text-green-600' : 'text-red-600'">
-                    {{ rubricPreview.passed ? 'Pass' : 'Needs work' }}
-                  </p>
-                  <div class="flex flex-column gap-1 mt-2">
-                    <p class="m-0 text-sm" *ngFor="let dim of rubricPreview.dimensions">
-                      {{ dim.id }}: {{ dim.score }}/2 (weight {{ dim.weight }})
-                    </p>
-                  </div>
-                </div>
-              }
-
-              @if (previewFragmentIds.length > 0) {
-                <div class="mt-2 border-top-1 pt-2" style="border-color: #d9d9d9;">
-                  <p class="font-bold mb-2">Included prompt fragments</p>
-                  <p class="m-0 text-sm" *ngFor="let id of previewFragmentIds">{{ id }}</p>
-                </div>
-              }
-
-              @if (previewSystemPrompt) {
-                <div class="mt-2 border-top-1 pt-2" style="border-color: #d9d9d9;">
-                  <p class="font-bold mb-2">Assembled system prompt (preview)</p>
-                  <textarea pTextarea [value]="previewSystemPrompt" [autoResize]="true" rows="8" readonly fluid></textarea>
-                </div>
-              }
-            </div>
-          </p-accordion-content>
-        </p-accordion-panel>
-      }
-    </p-accordion>
-
-    <!--Close drawer and emit event-->
-    @if (!isPrototype) {
-      <p-button [label]="'page.compare.button.genai' | translate" icon="pi pi-comments"
-                severity="primary" (click)="onSubmit()"></p-button>
-    }
-
-    <!--Upload options if task = compare with prototype-->
-    @if (isPrototype) {
-      <ng-container [ngSwitch]="uploadType">
-        <ca-upload-url *ngSwitchCase="'url'" mode="prototype" [showSampleDataButton]="false" />
-        <ca-upload-paste *ngSwitchCase="'paste'" mode="prototype" [showSampleDataButton]="false" />
-        <ca-upload-word *ngSwitchCase="'word'" mode="prototype" [showSampleDataButton]="false" />
-      </ng-container>
-    }
-  </div>
-</p-drawer>
+    ], template: `<p-button label="Options" icon="pi pi-bars" (click)="visible=true" severity="info" />\r
+<p-drawer [(visible)]="visible" [header]="'page.ai-options.header' | translate" position="right"\r
+          [style]="{ width: '30rem'}">\r
+  <div class="flex flex-column gap-3">\r
+    <p-accordion value="1" class="flex flex-column gap-3">\r
+      <!--TASK OPTIONS-->\r
+      <p-accordion-panel value="0" class="border-1 border-round-md border-surface">\r
+        <p-accordion-header>{{ 'page.ai-options.task.header' | translate }}</p-accordion-header>\r
+        <p-accordion-content>\r
+\r
+          <fieldset class="border-none">\r
+            <legend class="font-bold mb-2">{{ 'page.ai-options.task.legend' | translate }}</legend>\r
+            <div class="flex flex-column gap-2">\r
+              <ng-container *ngFor="let option of taskOptions; trackBy: trackById">\r
+                <div class="p-field-radiobutton">\r
+                  <p-radioButton name="taskOptions" [value]="option.id" [(ngModel)]="selectedTask" [inputId]="option.id"\r
+                                 [disabled]="option.disabled" />\r
+                  <label [for]="option.id" class="pl-2">{{ option.label | translate }}</label>\r
+                </div>\r
+              </ng-container>\r
+            </div>\r
+          </fieldset>\r
+\r
+        </p-accordion-content>\r
+      </p-accordion-panel>\r
+      <!--PROMPT OPTIONS-->\r
+      @if (!isPrototype) {\r
+        <p-accordion-panel value="1" class="border-1 border-round-md border-surface">\r
+          <p-accordion-header>{{ 'page.ai-options.prompt.header' | translate }}</p-accordion-header>\r
+          <p-accordion-content>\r
+\r
+            <fieldset class="border-none">\r
+              <legend class="font-bold mb-2">{{ 'page.ai-options.prompt.legend' | translate }}</legend>\r
+              <div class="flex flex-column gap-2">\r
+                @if (!isTwoPrompts) {\r
+                  <ng-container *ngFor="let option of promptOptions; trackBy: trackById">\r
+                    <div class="p-field-radiobutton">\r
+                      <p-radioButton name="promptOptions" [value]="option.id" [(ngModel)]="selectedPrompt"\r
+                                     [inputId]="option.id" [disabled]="option.disabled" (onClick)="onPromptSelect(selectedPrompt)" />\r
+                      <label [for]="option.id" class="pl-2">{{ option.label | translate }}</label>\r
+                    </div>\r
+                  </ng-container>\r
+                }\r
+                @if (isTwoPrompts) {\r
+                  <ng-container *ngFor="let option of promptOptions; trackBy: trackById">\r
+                    <div class="p-field-checkbox">\r
+                      <p-checkbox [value]="option.id" [(ngModel)]="selectedPrompts" [inputId]="option.id"\r
+                                  [disabled]="option.disabled || isPromptCheckboxDisabled(option.id)" />\r
+                      <label [for]="option.id" class="pl-2">{{ option.label | translate }}</label>\r
+                    </div>\r
+                  </ng-container>\r
+                }\r
+                <!--Append custom prompt-->\r
+                <div class="p-field-checkbox mt-3">\r
+                  <p-checkbox [(ngModel)]="addCustom" [binary]="true" inputId="appendCustom" (onChange)="resetCustom()" />\r
+                  <label for="appendCustom" class="pl-2">{{ "page.ai-options.prompt.checkbox" | translate }}</label>\r
+                </div>\r
+                @if (addCustom) {\r
+                  <p-iftalabel>\r
+                    <textarea pTextarea id="customPrompt" [(ngModel)]="customInstruction" [autoResize]="true"\r
+                              (blur)="emitCustomPrompt(customInstruction)" fluid></textarea>\r
+                    <label for="customPrompt">{{ 'page.ai-options.prompt.textarea' | translate }}</label>\r
+                  </p-iftalabel>\r
+                }\r
+                <!--Slider for number of AI changes-->\r
+                <div class="flex flex-column gap-3 mt-3">\r
+                  <p id="ai-changes">{{ currentEditLevel?.label }}</p>\r
+                  <p-slider [(ngModel)]="editLevel" [step]="25" ariaLabelledBy="ai-changes"\r
+                            (onChange)="emitEditPrompt(currentEditLevel!.prompt)" fluid />\r
+                </div>\r
+\r
+                @if (selectedPrompt === 'alertsRecommendations') {\r
+                  <div class="flex flex-column gap-2 mt-3">\r
+                    <p class="font-bold m-0">Alert rewriting options</p>\r
+                    <div class="p-field-checkbox">\r
+                      <p-checkbox\r
+                        [(ngModel)]="includeAlertRewriteExamples"\r
+                        [binary]="true"\r
+                        inputId="includeAlertRewriteExamples"\r
+                        (onChange)="onIncludeAlertRewriteExamplesSelect(includeAlertRewriteExamples)"\r
+                      />\r
+                      <label for="includeAlertRewriteExamples" class="pl-2">\r
+                        Use "good" examples\r
+                      </label>\r
+                    </div>\r
+                    <div class="p-field-checkbox">\r
+                      <p-checkbox\r
+                        [(ngModel)]="includeBeforeTextInAlertRewriteExamples"\r
+                        [binary]="true"\r
+                        inputId="includeBeforeTextInAlertRewriteExamples"\r
+                        [disabled]="!includeAlertRewriteExamples"\r
+                        (onChange)="onIncludeBeforeTextInAlertRewriteExamplesSelect(includeBeforeTextInAlertRewriteExamples)"\r
+                      />\r
+                      <label for="includeBeforeTextInAlertRewriteExamples" class="pl-2">\r
+                        Include "before" text in examples\r
+                      </label>\r
+                    </div>\r
+                    <div class="border-top-1 mt-2" style="border-color: #d3d3d3;"></div>\r
+                    <div class="p-field-checkbox mt-2">\r
+                      <p-checkbox\r
+                        [(ngModel)]="includeLinkWritingRules"\r
+                        [binary]="true"\r
+                        inputId="includeLinkWritingRules"\r
+                        (onChange)="onIncludeLinkWritingRulesSelect(includeLinkWritingRules)"\r
+                      />\r
+                      <label for="includeLinkWritingRules" class="pl-2">\r
+                        Include link writing rules\r
+                      </label>\r
+                    </div>\r
+                    <div class="p-field-checkbox mt-2">\r
+                      <p-checkbox\r
+                        [(ngModel)]="useAlertPlanning"\r
+                        [binary]="true"\r
+                        inputId="useAlertPlanning"\r
+                      />\r
+                      <label for="useAlertPlanning" class="pl-2">\r
+                        Advanced AI planning before rewrite\r
+                      </label>\r
+                    </div>\r
+                    <div class="p-field-checkbox mt-2">\r
+                      <p-checkbox\r
+                        [(ngModel)]="useJsonAlertsIssuesPrompt"\r
+                        [binary]="true"\r
+                        inputId="useJsonAlertsIssuesPrompt"\r
+                        (onChange)="onUseJsonAlertsIssuesPromptSelect(useJsonAlertsIssuesPrompt)"\r
+                      />\r
+                      <label for="useJsonAlertsIssuesPrompt" class="pl-2">\r
+                        Use JSON format for Alerts Issues prompt\r
+                      </label>\r
+                    </div>\r
+                    <div class="p-field-checkbox mt-2">\r
+                      <p-checkbox\r
+                        [(ngModel)]="useCompactAlertsPageContext"\r
+                        [binary]="true"\r
+                        inputId="useCompactAlertsPageContext"\r
+                        (onChange)="onUseCompactAlertsPageContextSelect(useCompactAlertsPageContext)"\r
+                      />\r
+                      <label for="useCompactAlertsPageContext" class="pl-2">\r
+                        Send compact page context to AI for alerts\r
+                      </label>\r
+                    </div>\r
+                    <div class="p-field-checkbox mt-2">\r
+                      <p-checkbox\r
+                        [(ngModel)]="useSkillPrompts"\r
+                        [binary]="true"\r
+                        inputId="useSkillPrompts"\r
+                        (onChange)="onUseSkillPromptsSelect(useSkillPrompts)"\r
+                      />\r
+                      <label for="useSkillPrompts" class="pl-2">\r
+                        Use skill-based prompt composition (issues)\r
+                      </label>\r
+                    </div>\r
+                  </div>\r
+                }\r
+              </div>\r
+            </fieldset>\r
+\r
+          </p-accordion-content>\r
+        </p-accordion-panel>\r
+      }\r
+      <!--AI OPTIONS-->\r
+      @if (!isPrototype) {\r
+        <p-accordion-panel value="2" class="border-1 border-round-md border-surface">\r
+          <p-accordion-header>{{ 'page.ai-options.model.header' | translate }}</p-accordion-header>\r
+          <p-accordion-content>\r
+\r
+            <fieldset class="border-none">\r
+              <legend class="font-bold mb-2">{{ 'page.ai-options.model.legend' | translate }}</legend>\r
+              <div class="flex flex-column gap-2">\r
+                @if (!isTwoAis) {\r
+                  <p class="text-xs text-500">{{ 'page.ai-options.model.free' | translate }}</p>\r
+                  <ng-container *ngFor="let option of freeAiOptions; trackBy: trackById">\r
+                    <div class="p-field-radiobutton">\r
+                      <p-radioButton name="aiOptions" [value]="option.id" [(ngModel)]="selectedAi" [inputId]="option.id"\r
+                                     [disabled]="option.disabled" (onClick)="onAiSelect(selectedAi)" />\r
+                      <label [for]="option.id" class="pl-2">{{ option.label | translate }}</label>\r
+                    </div>\r
+                  </ng-container>\r
+                  <p class="text-xs text-500 mt-3">{{ 'page.ai-options.model.paid' | translate }}</p>\r
+                  <ng-container *ngFor="let option of paidAiOptions; trackBy: trackById">\r
+                    <div class="p-field-radiobutton">\r
+                      <p-radioButton name="aiOptions" [value]="option.id" [(ngModel)]="selectedAi" [inputId]="option.id"\r
+                                     [disabled]="option.disabled" (onClick)="onAiSelect(selectedAi)" />\r
+                      <label [for]="option.id" class="pl-2">\r
+                        {{ option.label | translate }}\r
+                        <p-chip\r
+                          [label]="'page.ai-options.model.paidBadge' | translate"\r
+                          styleClass="chip chip-severe ml-2">\r
+                        </p-chip>\r
+                      </label>\r
+                    </div>\r
+                  </ng-container>\r
+                }\r
+                @if (isTwoAis) {\r
+                  <p class="text-xs text-500">{{ 'page.ai-options.model.free' | translate }}</p>\r
+                  <ng-container *ngFor="let option of freeAiOptions; trackBy: trackById">\r
+                    <div class="p-field-checkbox">\r
+                      <p-checkbox [value]="option.id" [(ngModel)]="selectedAis" [inputId]="option.id"\r
+                                  [disabled]="option.disabled || isAiCheckboxDisabled(option.id)" />\r
+                      <label [for]="option.id" class="pl-2">{{ option.label | translate }}</label>\r
+                    </div>\r
+                  </ng-container>\r
+                  <p class="text-xs text-500 mt-3">{{ 'page.ai-options.model.paid' | translate }}</p>\r
+                  <ng-container *ngFor="let option of paidAiOptions; trackBy: trackById">\r
+                    <div class="p-field-checkbox">\r
+                      <p-checkbox [value]="option.id" [(ngModel)]="selectedAis" [inputId]="option.id"\r
+                                  [disabled]="option.disabled || isAiCheckboxDisabled(option.id)" />\r
+                      <label [for]="option.id" class="pl-2">\r
+                        {{ option.label | translate }}\r
+                        <p-chip\r
+                          [label]="'page.ai-options.model.paidBadge' | translate"\r
+                          styleClass="chip chip-severe ml-2">\r
+                        </p-chip>\r
+                      </label>\r
+                    </div>\r
+                  </ng-container>\r
+                }\r
+              </div>\r
+            </fieldset>\r
+\r
+          </p-accordion-content>\r
+        </p-accordion-panel>\r
+      }\r
+    </p-accordion>\r
+\r
+    <!--Close drawer and emit event-->\r
+    @if (!isPrototype) {\r
+      <p-button [label]="'page.compare.button.genai' | translate" icon="pi pi-comments"\r
+                severity="primary" (click)="onSubmit()"></p-button>\r
+    }\r
+\r
+    <!--Upload options if task = compare with prototype-->\r
+    @if (isPrototype) {\r
+      <ng-container [ngSwitch]="uploadType">\r
+        <ca-upload-url *ngSwitchCase="'url'" mode="prototype" [showSampleDataButton]="false" />\r
+        <ca-upload-paste *ngSwitchCase="'paste'" mode="prototype" [showSampleDataButton]="false" />\r
+        <ca-upload-word *ngSwitchCase="'word'" mode="prototype" [showSampleDataButton]="false" />\r
+      </ng-container>\r
+    }\r
+  </div>\r
+</p-drawer>\r
 ` }]
   }], null, { promptChange: [{
     type: Output
@@ -26563,7 +26901,7 @@ var AiOptionsComponent = class _AiOptionsComponent {
   }] });
 })();
 (() => {
-  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(AiOptionsComponent, { className: "AiOptionsComponent", filePath: "src/app/views/page-assistant/components/ai-options.component.ts", lineNumber: 36 });
+  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(AiOptionsComponent, { className: "AiOptionsComponent", filePath: "src/app/views/page-assistant/components/ai-options.component.ts", lineNumber: 32 });
 })();
 
 // src/app/views/page-assistant/components/problems/heading-structure.component.ts
@@ -40623,8 +40961,10 @@ var PageAssistantCompareComponent = class _PageAssistantCompareComponent {
   sourceDiffService = inject(SourceDiffService);
   shadowDomService = inject(ShadowDomService);
   alertAi = inject(AlertAiService);
-  alertRewrite = inject(AlertRewriteService);
+  alertIssuesContext = inject(AlertIssuesContextService);
+  alertRewriteOrchestrator = inject(AlertRewriteOrchestratorService);
   openRouter = inject(OpenRouterService);
+  skillManager = inject(SkillManagerService);
   urlDataService = inject(UrlDataService);
   router = inject(Router);
   locationStrategy = inject(LocationStrategy);
@@ -40979,127 +41319,43 @@ var PageAssistantCompareComponent = class _PageAssistantCompareComponent {
       const promptBody = editPrefix ? `${editPrefix}
 
 ${base}` : base;
-      return custom ? `${promptBody}
+      const useSkillPrompts = this.uploadState.getUseSkillPrompts();
+      if (!useSkillPrompts) {
+        return custom ? `${promptBody}
 
 ${custom}` : promptBody;
-    });
-  }
-  truncateContextText(value, maxChars) {
-    const normalized = (value || "").replace(/\s+/g, " ").trim();
-    if (!normalized)
-      return "";
-    return normalized.length > maxChars ? normalized.slice(0, maxChars).trim() : normalized;
-  }
-  collectSiblingTextSnippet(alertEl, direction, maxChars) {
-    const collected = [];
-    let node = direction === "before" ? alertEl.previousElementSibling : alertEl.nextElementSibling;
-    let hops = 0;
-    while (node && hops < 4) {
-      const lowerTag = node.tagName.toLowerCase();
-      if (lowerTag !== "script" && lowerTag !== "style" && !node.classList.contains("alert")) {
-        const text = this.truncateContextText(node.textContent || "", maxChars);
-        if (text) {
-          if (direction === "before") {
-            collected.unshift(text);
-          } else {
-            collected.push(text);
-          }
-          const joined = this.truncateContextText(collected.join(" "), maxChars);
-          if (joined.length >= maxChars) {
-            return joined;
-          }
-        }
       }
-      node = direction === "before" ? node.previousElementSibling : node.nextElementSibling;
-      hops += 1;
-    }
-    return this.truncateContextText(collected.join(" "), maxChars);
-  }
-  inferPageTypeSignal(title, h1) {
-    const context = `${title} ${h1}`.toLowerCase();
-    if (!context.trim())
-      return "content";
-    if (/\b(home|welcome|overview|what'?s new|landing)\b/.test(context)) {
-      return "landing";
-    }
-    if (/\b(apply|submit|file|register|sign in|log in|payment|pay|request)\b/.test(context)) {
-      return "task";
-    }
-    return "content";
-  }
-  buildCompactAlertsIssuesPayload(sourceHtml) {
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(sourceHtml, "text/html");
-    const alerts = Array.from(doc.querySelectorAll(".alert"));
-    const main = doc.querySelector("main") || doc.body;
-    const h2Elements = Array.from(main.querySelectorAll("h2"));
-    const h2Headings = h2Elements.map((h2) => this.truncateContextText(h2.textContent || "", 120)).filter((value) => !!value).slice(0, 20);
-    const mainElements = Array.from(main.querySelectorAll("*"));
-    const mainIndexMap = new Map(mainElements.map((el, idx) => [el, idx]));
-    const h2IndexPairs = h2Elements.map((h2) => ({ text: this.truncateContextText(h2.textContent || "", 120), idx: mainIndexMap.get(h2) })).filter((item) => Number.isFinite(item.idx));
-    const firstH2Index = h2IndexPairs.length ? h2IndexPairs[0].idx : -1;
-    const title = this.truncateContextText(doc.querySelector("title")?.textContent || "", 120);
-    const h1 = this.truncateContextText(main.querySelector("h1")?.textContent || "", 120);
-    const introSnippet = this.truncateContextText(main.querySelector("p")?.textContent || "", 280);
-    const alertPlacementContext = alerts.map((alertEl, index) => {
-      const mainIndex = mainIndexMap.get(alertEl);
-      const positionPercentInMain = typeof mainIndex === "number" && mainElements.length > 1 ? Math.round(mainIndex / (mainElements.length - 1) * 100) : null;
-      const beforeCandidates = h2IndexPairs.filter((item) => typeof mainIndex === "number" && item.idx < mainIndex);
-      const afterCandidates = h2IndexPairs.filter((item) => typeof mainIndex === "number" && item.idx > mainIndex);
-      const nearestH2Above = beforeCandidates.length ? beforeCandidates[beforeCandidates.length - 1].text : "";
-      const nearestH2Below = afterCandidates.length ? afterCandidates[0].text : "";
-      return {
-        alert_index: index + 1,
-        is_before_first_h2: typeof mainIndex === "number" && firstH2Index >= 0 ? mainIndex < firstH2Index : false,
-        position_percent_in_main: positionPercentInMain,
-        nearest_h2_above: nearestH2Above,
-        nearest_h2_below: nearestH2Below,
-        section_snippet_before: this.collectSiblingTextSnippet(alertEl, "before", 220),
-        section_snippet_after: this.collectSiblingTextSnippet(alertEl, "after", 220)
-      };
+      const queryText = this.buildSkillQueryText(key2, custom);
+      const outputMode = this.resolveSkillOutputMode(key2);
+      const composed = yield this.skillManager.composePrompt({
+        basePrompt: promptBody,
+        queryText,
+        promptKey: key2,
+        outputMode,
+        includeReferences: key2 === PromptKey.AlertsIssues || key2 === PromptKey.AlertsRecommendations,
+        includeOptionalReferences: key2 === PromptKey.AlertsRecommendations,
+        includeAssets: key2 === PromptKey.AlertsIssues || key2 === PromptKey.AlertsRecommendations
+      });
+      return custom ? `${composed.prompt}
+
+${custom}` : composed.prompt;
     });
-    return {
-      alerts: alerts.map((alertEl) => alertEl.outerHTML),
-      alertCount: alerts.length,
-      pageContext: `Title: ${title || "N/A"}
-H1: ${h1 || "N/A"}
-Page type signal: ${this.inferPageTypeSignal(title, h1)}
-Main intro: ${introSnippet || "N/A"}
-H2 headings (${h2Headings.length}): ${h2Headings.join(" | ") || "N/A"}`,
-      pageSignals: {
-        title,
-        h1,
-        pageTypeSignal: this.inferPageTypeSignal(title, h1),
-        h2Headings
-      },
-      alertPlacementContext
+  }
+  buildSkillQueryText(key2, custom) {
+    const promptIntents = {
+      [PromptKey.Headings]: "heading hierarchy scanability h1 h2 h3",
+      [PromptKey.Doormats]: "doormat overview list content design",
+      [PromptKey.PlainLanguage]: "plain language simplify readability rewrite",
+      [PromptKey.AlertsIssues]: "analyze alert issues wcag accessibility content design",
+      [PromptKey.AlertsRecommendations]: "rewrite canada.ca alerts and provide corrected output"
     };
+    return [promptIntents[key2], custom].filter(Boolean).join("\n");
   }
-  getAlertTextForRewrite(alertElement) {
-    const firstParagraph = alertElement.querySelector("p");
-    const paragraphText = firstParagraph?.textContent?.trim() || "";
-    if (paragraphText)
-      return paragraphText;
-    return (alertElement.textContent || "").trim();
-  }
-  getAlertHeadingForRewrite(alertElement) {
-    const headingEl = alertElement.querySelector("h1, h2, h3, h4, h5, h6");
-    return (headingEl?.textContent || "").trim();
-  }
-  getIssuesForAlertIndex(issues, alertIndex) {
-    const hasIndexedIssues = issues.some((issue) => Number.isFinite(issue.alertIndex));
-    const globalIssues = issues.filter((issue) => !Number.isFinite(issue.alertIndex));
-    const specificIssues = issues.filter((issue) => issue.alertIndex === alertIndex);
-    if (!hasIndexedIssues) {
-      return issues;
+  resolveSkillOutputMode(key2) {
+    if (key2 === PromptKey.AlertsIssues || key2 === PromptKey.AlertsRecommendations) {
+      return "json";
     }
-    if (specificIssues.length) {
-      return [...globalIssues, ...specificIssues];
-    }
-    return globalIssues;
-  }
-  containsLinkPlaceholderSyntax(value) {
-    return /\[(?:\/?\s*LINK|END\s+LINK)\]/i.test(value || "");
+    return "text";
   }
   shouldForceLocalRepairForTesting() {
     try {
@@ -41107,152 +41363,6 @@ H2 headings (${h2Headings.length}): ${h2Headings.join(" | ") || "N/A"}`,
     } catch {
       return false;
     }
-  }
-  tryLocalAlertRewriteRepair(params) {
-    const originalHasAnchor = /<a\b/i.test(params.originalAlertHtml);
-    const initialCandidate = this.alertRewrite.parseAlertRewriteResponse(JSON.stringify({
-      rewrittenAlertHtml: this.stripLinkPlaceholders(params.result.rewrittenAlertHtml || ""),
-      rewrittenHeading: this.stripLinkPlaceholders(params.result.rewrittenHeading || ""),
-      rewrittenAlert: this.stripLinkPlaceholders(params.result.rewrittenAlert || ""),
-      appliedDirectives: params.result.appliedDirectives,
-      exampleIdsUsed: params.result.exampleIdsUsed
-    }), params.plan, params.selectedExamples);
-    const wrapperFallbackHtml = this.buildAlertWrapperFromOriginal({
-      originalAlertHtml: params.originalAlertHtml,
-      heading: this.stripLinkPlaceholders(params.result.rewrittenHeading || "") || params.originalHeading || "",
-      text: this.stripLinkPlaceholders(params.result.rewrittenAlert || "") || params.originalAlertText
-    }) || "";
-    let candidate = initialCandidate;
-    if (!candidate?.rewrittenAlertHtml && wrapperFallbackHtml) {
-      candidate = this.alertRewrite.parseAlertRewriteResponse(JSON.stringify({
-        rewrittenAlertHtml: wrapperFallbackHtml,
-        rewrittenHeading: this.stripLinkPlaceholders(params.result.rewrittenHeading || "") || params.originalHeading || "",
-        rewrittenAlert: this.stripLinkPlaceholders(params.result.rewrittenAlert || "") || params.originalAlertText,
-        appliedDirectives: params.result.appliedDirectives,
-        exampleIdsUsed: params.result.exampleIdsUsed
-      }), params.plan, params.selectedExamples);
-    }
-    if (!candidate?.rewrittenAlertHtml)
-      return null;
-    let repairedHtml = candidate.rewrittenAlertHtml;
-    if (!originalHasAnchor) {
-      repairedHtml = this.removeAnchorsPreservingText(repairedHtml);
-    } else if (!params.allowLinkRemoval && !/<a\b/i.test(repairedHtml)) {
-      repairedHtml = this.ensureAtLeastOneOriginalLink(repairedHtml, params.originalAlertHtml);
-    }
-    const repaired = this.alertRewrite.parseAlertRewriteResponse(JSON.stringify({
-      rewrittenAlertHtml: repairedHtml,
-      rewrittenHeading: candidate.rewrittenHeading,
-      rewrittenAlert: candidate.rewrittenAlert,
-      appliedDirectives: candidate.appliedDirectives,
-      exampleIdsUsed: candidate.exampleIdsUsed
-    }), params.plan, params.selectedExamples);
-    if (!repaired?.rewrittenAlertHtml)
-      return null;
-    if (this.containsLinkPlaceholderSyntax(repaired.rewrittenAlertHtml) || this.containsLinkPlaceholderSyntax(repaired.rewrittenAlert)) {
-      return null;
-    }
-    const repairedHasAnchor = /<a\b/i.test(repaired.rewrittenAlertHtml);
-    if (!originalHasAnchor && repairedHasAnchor)
-      return null;
-    if (originalHasAnchor && !repairedHasAnchor && !params.allowLinkRemoval) {
-      return null;
-    }
-    const copyCheck = this.alertRewrite.detectExampleCopy({
-      result: repaired,
-      selectedExamples: params.selectedExamples,
-      originalHeading: params.originalHeading,
-      originalAlertText: params.originalAlertText
-    });
-    if (copyCheck.isCopy)
-      return null;
-    return repaired;
-  }
-  stripLinkPlaceholders(value) {
-    return (value || "").replace(/\[(?:\/?\s*LINK|END\s+LINK)\]/gi, "").trim();
-  }
-  removeAnchorsPreservingText(alertHtml) {
-    try {
-      const doc = new DOMParser().parseFromString(alertHtml, "text/html");
-      const root = doc.body.firstElementChild;
-      if (!root)
-        return alertHtml;
-      root.querySelectorAll("a").forEach((anchor) => {
-        const textNode = doc.createTextNode(anchor.textContent || "");
-        anchor.replaceWith(textNode);
-      });
-      return root.outerHTML.trim();
-    } catch {
-      return alertHtml;
-    }
-  }
-  ensureAtLeastOneOriginalLink(rewrittenHtml, originalAlertHtml) {
-    try {
-      const sourceDoc = new DOMParser().parseFromString(originalAlertHtml, "text/html");
-      const sourceAnchor = sourceDoc.body.querySelector("a");
-      if (!sourceAnchor)
-        return rewrittenHtml;
-      const rewrittenDoc = new DOMParser().parseFromString(rewrittenHtml, "text/html");
-      const root = rewrittenDoc.body.firstElementChild;
-      if (!root)
-        return rewrittenHtml;
-      if (root.querySelector("a"))
-        return root.outerHTML.trim();
-      const target = root.querySelector("p, li, div, span") || root;
-      target.insertAdjacentHTML("beforeend", ` ${sourceAnchor.outerHTML}`);
-      return root.outerHTML.trim();
-    } catch {
-      return rewrittenHtml;
-    }
-  }
-  buildAlertWrapperFromOriginal(params) {
-    try {
-      const sourceDoc = new DOMParser().parseFromString(params.originalAlertHtml, "text/html");
-      const sourceRoot = sourceDoc.body.firstElementChild;
-      const doc = document.implementation.createHTMLDocument("");
-      const wrapperTag = sourceRoot?.tagName?.toLowerCase() || "div";
-      const wrapper = doc.createElement(wrapperTag);
-      wrapper.setAttribute("class", sourceRoot?.getAttribute("class") || "alert alert-info");
-      const headingText = (params.heading || "").trim();
-      if (headingText) {
-        const headingEl = doc.createElement("h3");
-        headingEl.textContent = headingText;
-        wrapper.appendChild(headingEl);
-      }
-      const bodyText = (params.text || "").trim();
-      if (bodyText) {
-        const bodyEl = doc.createElement("p");
-        bodyEl.textContent = bodyText;
-        wrapper.appendChild(bodyEl);
-      }
-      return wrapper.outerHTML.trim();
-    } catch {
-      return null;
-    }
-  }
-  shouldAllowAlertLinkRemoval(issues, plan) {
-    const hasTooManyLinksIssue = issues.some((issue) => (issue.category || "").toLowerCase().includes("too many links"));
-    return hasTooManyLinksIssue || plan.criteriaMatched.includes("C3_too_many_links") || plan.directives.some((directive) => directive.op === "limit_links");
-  }
-  applyAlertHtmlRewrites(originalHtml, rewrites) {
-    if (!rewrites.length)
-      return null;
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(originalHtml, "text/html");
-    const alerts = Array.from(doc.querySelectorAll(".alert"));
-    if (!alerts.length)
-      return null;
-    for (const rewrite of rewrites) {
-      const target = alerts[rewrite.alert_index - 1];
-      if (!target)
-        continue;
-      const updatedDoc = parser.parseFromString(rewrite.rewritten_alert_html, "text/html");
-      const updatedEl = updatedDoc.body.firstElementChild;
-      if (!updatedEl || !updatedEl.classList.contains("alert"))
-        continue;
-      target.replaceWith(updatedEl);
-    }
-    return doc.body.outerHTML;
   }
   callOpenRouterForMessages(model, headers, url, messages, contextLabel) {
     return __async(this, null, function* () {
@@ -41301,197 +41411,42 @@ H2 headings (${h2Headings.length}): ${h2Headings.join(" | ") || "N/A"}`,
       throw lastError ?? new Error(`${contextLabel} response was empty.`);
     });
   }
-  runAlertRecommendations(html, issues, model, headers, url) {
+  // UI-facing summary of the alert rewrite options currently active.
+  buildAlertRewriteStatusMessage() {
+    const includeExamples = this.uploadState.getIncludeAlertRewriteExamples();
+    const includeBeforeTextInExamples = includeExamples && this.uploadState.getIncludeBeforeTextInAlertRewriteExamples();
+    return `Generating alert rewrites (${this.selectedAlertRewriteMode === AlertRewriteMode.AB ? "planning on" : "planning off"}, ${includeExamples ? "good examples on" : "good examples off"}, ${includeBeforeTextInExamples ? "before text on" : "before text off"}).`;
+  }
+  // Thin component-level handoff into the extracted alert rewrite workflow.
+  // The component keeps status updates and final state writes, while the service
+  // owns planning, retries, guards, and HTML rewrite orchestration.
+  applyAlertRecommendations(params) {
     return __async(this, null, function* () {
-      const start = performance.now();
-      const mode = this.selectedAlertRewriteMode;
       const includeExamples = this.uploadState.getIncludeAlertRewriteExamples();
       const includeBeforeTextInExamples = includeExamples && this.uploadState.getIncludeBeforeTextInAlertRewriteExamples();
-      const rewriteRules = yield getAlertRewriteRules();
-      const retryInstructions = rewriteRules.alertRewrite.retryInstructions;
-      this.statusMessage = `Generating alert rewrites (${mode === AlertRewriteMode.AB ? "planning on" : "planning off"}, ${includeExamples ? "good examples on" : "good examples off"}, ${includeBeforeTextInExamples ? "before text on" : "before text off"}).`;
-      const alertDoc = new DOMParser().parseFromString(html, "text/html");
-      const alertEls = Array.from(alertDoc.querySelectorAll(".alert"));
-      if (!alertEls.length) {
-        throw new Error("No .alert elements found in the page.");
-      }
-      const examples = includeExamples ? yield this.alertRewrite.loadExamples() : [];
-      const rewrites = [];
-      for (let i = 0; i < alertEls.length; i += 1) {
-        const alertElement = alertEls[i];
-        if (!alertElement)
-          continue;
-        const alertIndex = i + 1;
-        const relevantIssues = this.getIssuesForAlertIndex(issues, alertIndex);
-        const alertHtml = alertElement.outerHTML;
-        const originalHeading = this.getAlertHeadingForRewrite(alertElement);
-        const alertText = this.getAlertTextForRewrite(alertElement);
-        if (!alertText)
-          continue;
-        const initialPlan = this.alertRewrite.buildHeuristicPlan({
-          alertHtml,
-          alertText,
-          alertType: this.alertRewrite.inferAlertType(alertHtml),
-          issues: relevantIssues
-        });
-        let plan = initialPlan;
-        let planModelName = "heuristic";
-        if (mode === AlertRewriteMode.AB) {
-          const alertPlanningMessages = yield this.alertRewrite.buildAlertPlanningMessages({
-            alertHtml,
-            alertText,
-            alertType: initialPlan.alertType,
-            issues: relevantIssues
-          });
-          const alertPlanningResponse = yield this.callOpenRouterForMessages(model, headers, url, alertPlanningMessages, `Alert ${alertIndex} alertPlanning`);
-          const parsedPlan = this.alertRewrite.parseAlertPlanningResponse(alertPlanningResponse.text, initialPlan);
-          if (parsedPlan) {
-            plan = parsedPlan;
-          }
-          planModelName = this.getShortModelName(alertPlanningResponse.usedModel);
-        }
-        const selectedExamples = includeExamples ? this.alertRewrite.selectExamples(plan, examples, 2) : [];
-        let rewriteResult = null;
-        let rewriteModelName = "unknown";
-        let copyGuardTriggered = false;
-        let blockedExampleId = null;
-        let lastParsedResult = null;
-        const originalHasAnchor = /<a\b/i.test(alertHtml);
-        const allowLinkRemoval = this.shouldAllowAlertLinkRemoval(relevantIssues, plan);
-        let retryInstruction;
-        for (let attempt = 0; attempt < 2; attempt += 1) {
-          const alertRewriteMessages = yield this.alertRewrite.buildAlertRewriteMessages({
-            mode,
-            originalHeading,
-            originalAlertText: alertText,
-            originalAlertHtml: alertHtml,
-            plan,
-            examples: selectedExamples,
-            includeBeforeTextInExamples,
-            includeLinkWritingRules: this.uploadState.getIncludeLinkWritingRules(),
-            retryInstruction
-          });
-          const rewriteResponse = yield this.callOpenRouterForMessages(model, headers, url, alertRewriteMessages, `Alert ${alertIndex} alertRewrite`);
-          rewriteModelName = this.getShortModelName(rewriteResponse.usedModel);
-          const parsedResult = this.alertRewrite.parseAlertRewriteResponse(rewriteResponse.text, plan, selectedExamples);
-          if (!parsedResult?.rewrittenAlertHtml) {
-            retryInstruction = retryInstructions.invalidWrapperHtml;
-            continue;
-          }
-          lastParsedResult = parsedResult;
-          const hasLinkPlaceholders = this.containsLinkPlaceholderSyntax(parsedResult.rewrittenAlertHtml) || this.containsLinkPlaceholderSyntax(parsedResult.rewrittenAlert);
-          if (hasLinkPlaceholders) {
-            retryInstruction = retryInstructions.placeholderLinks;
-            continue;
-          }
-          const rewrittenHasAnchor = /<a\b/i.test(parsedResult.rewrittenAlertHtml);
-          if (!originalHasAnchor && rewrittenHasAnchor) {
-            retryInstruction = retryInstructions.noLinksAllowed;
-            continue;
-          }
-          if (originalHasAnchor && !rewrittenHasAnchor && !allowLinkRemoval) {
-            retryInstruction = retryInstructions.mustKeepLink;
-            continue;
-          }
-          const copyCheck = this.alertRewrite.detectExampleCopy({
-            result: parsedResult,
-            selectedExamples,
-            originalHeading,
-            originalAlertText: alertText
-          });
-          if (!copyCheck.isCopy) {
-            if (this.shouldForceLocalRepairForTesting()) {
-              console.warn("Forcing local repair for testing", { alertIndex });
-              break;
-            }
-            rewriteResult = parsedResult;
-            break;
-          }
-          copyGuardTriggered = true;
-          blockedExampleId = copyCheck.exampleId || null;
-          retryInstruction = retryInstructions.avoidExampleCopy;
-          console.warn("Alert rewrite copy guard triggered", {
-            alertIndex,
-            attempt: attempt + 1,
-            reason: copyCheck.reason,
-            exampleId: copyCheck.exampleId,
-            similarity: copyCheck.similarity
-          });
-        }
-        if (!rewriteResult && lastParsedResult) {
-          rewriteResult = this.tryLocalAlertRewriteRepair({
-            result: lastParsedResult,
-            originalAlertHtml: alertHtml,
-            originalHeading,
-            originalAlertText: alertText,
-            plan,
-            selectedExamples,
-            allowLinkRemoval
-          });
-        }
-        if (!rewriteResult) {
-          rewriteResult = this.alertRewrite.buildPassthroughResult({
-            alertHtml,
-            originalHeading,
-            originalAlertText: alertText
-          });
-        }
-        rewrites.push({
-          alert_index: alertIndex,
-          rewritten_alert_html: rewriteResult.rewrittenAlertHtml
-        });
-        const examplesUsedDetails = (rewriteResult.exampleIdsUsed.length ? rewriteResult.exampleIdsUsed.map((id) => selectedExamples.find((example) => example.id === id)).filter((example) => !!example) : selectedExamples).map((example) => ({
-          id: example.id,
-          alertType: example.alertType,
-          criteria: example.criteria,
-          tags: example.tags,
-          headingBefore: example.headingBefore || "",
-          headingAfter: example.headingAfter || "",
-          before: example.before,
-          after: example.after
-        }));
-        console.log("Alert rewrite examples used", {
-          alertIndex,
-          exampleIdsUsed: rewriteResult.exampleIdsUsed,
-          examplesUsedDetails
-        });
-        console.log("Alert rewrite iteration", {
-          mode,
-          alertIndex,
-          plan,
-          selectedExampleIds: selectedExamples.map((example) => example.id),
-          originalHeading,
-          finalHeading: rewriteResult.rewrittenHeading,
-          finalRewrite: rewriteResult.rewrittenAlert,
-          finalRewriteHtml: rewriteResult.rewrittenAlertHtml,
-          appliedDirectives: rewriteResult.appliedDirectives,
-          exampleIdsUsed: rewriteResult.exampleIdsUsed,
-          planModel: planModelName,
-          rewriteModel: rewriteModelName,
-          copyGuardTriggered,
-          blockedExampleId,
-          humanRating: null
-        });
-      }
-      const finalHtml = this.applyAlertHtmlRewrites(html, rewrites);
-      if (!finalHtml) {
-        throw new Error("No alert rewrites were generated.");
-      }
-      console.log("Alert rewrite model + time", {
-        requestedModel: model,
-        mode,
-        rewrites: rewrites.length,
-        ms: Math.round(performance.now() - start)
+      this.statusMessage = this.buildAlertRewriteStatusMessage();
+      const recommendationResult = yield this.alertRewriteOrchestrator.generateRecommendations({
+        html: params.html,
+        issues: params.issues,
+        model: params.model,
+        headers: params.headers,
+        url: params.url,
+        mode: this.selectedAlertRewriteMode,
+        includeExamples,
+        includeBeforeTextInExamples,
+        includeLinkWritingRules: this.uploadState.getIncludeLinkWritingRules(),
+        forceLocalRepairForTesting: this.shouldForceLocalRepairForTesting(),
+        callOpenRouterForMessages: this.callOpenRouterForMessages.bind(this),
+        getShortModelName: this.getShortModelName.bind(this)
       });
-      const formattedHtml = yield this.urlDataService.formatHtml(finalHtml, "ai");
       this.uploadState.mergeModifiedData({
         modifiedUrl: "AI generated",
-        modifiedHtml: formattedHtml
+        modifiedHtml: recommendationResult.formattedHtml
       });
     });
   }
   //AI Model
-  selectedAiModel = AiModel.Nemotron;
+  selectedAiModel = AiModel.NemotronNano;
   onAiChange(key2) {
     this.selectedAiModel = key2;
     this.uploadState.setSelectedAiModel(key2);
@@ -41499,8 +41454,29 @@ H2 headings (${h2Headings.length}): ${h2Headings.join(" | ") || "N/A"}`,
   getEnumKeyByValue(enumObj, value) {
     return Object.keys(enumObj).find((k) => enumObj[k] === value);
   }
+  normalizeModelId(value) {
+    return (value || "").trim().toLowerCase().replace(/-\d{8,}(?=:[a-z0-9-]+$|$)/g, "");
+  }
+  resolveAiModelKey(model) {
+    const exactMatch = this.getEnumKeyByValue(AiModel, model);
+    if (exactMatch)
+      return exactMatch;
+    const normalizedModel = this.normalizeModelId(model);
+    return Object.keys(AiModel).find((key2) => {
+      const enumValue = this.normalizeModelId(AiModel[key2]);
+      return normalizedModel === enumValue || normalizedModel.startsWith(enumValue) || enumValue.startsWith(normalizedModel);
+    });
+  }
+  isSameAiModelFamily(requested, used) {
+    const requestedKey = this.resolveAiModelKey(requested);
+    const usedKey = this.resolveAiModelKey(used);
+    if (requestedKey && usedKey) {
+      return requestedKey === usedKey;
+    }
+    return this.normalizeModelId(requested) === this.normalizeModelId(used);
+  }
   getShortModelName(model) {
-    const key2 = this.getEnumKeyByValue(AiModel, model);
+    const key2 = this.resolveAiModelKey(model);
     return key2 ? this.translate.instant(`page.ai-options.model.short.${key2}`) : model;
   }
   buildModelRotation(model) {
@@ -41547,7 +41523,7 @@ H2 headings (${h2Headings.length}): ${h2Headings.join(" | ") || "N/A"}`,
           "Content-Type": "application/json"
         };
         const useCompactAlertsPageContext = promptKeyForRequest === PromptKey.AlertsIssues && this.uploadState.getUseCompactAlertsPageContext();
-        const alertsIssuesUserContent = useCompactAlertsPageContext ? JSON.stringify(this.buildCompactAlertsIssuesPayload(html)) : html;
+        const alertsIssuesUserContent = useCompactAlertsPageContext ? JSON.stringify(this.alertIssuesContext.buildCompactAlertsIssuesPayload(html)) : html;
         const payload = {
           models: this.buildModelRotation(model),
           messages: [
@@ -41571,7 +41547,13 @@ H2 headings (${h2Headings.length}): ${h2Headings.join(" | ") || "N/A"}`,
                 life: 3e3
               });
             }
-            yield this.runAlertRecommendations(html, selectedIssues, model, headers, url);
+            yield this.applyAlertRecommendations({
+              html,
+              issues: selectedIssues,
+              model,
+              headers,
+              url
+            });
             this.statusSeverity = "success";
             this.statusMessage = this.translate.instant("common.ai.alertRecommendationsGenerated");
             this.messageService.add({
@@ -41658,11 +41640,9 @@ H2 headings (${h2Headings.length}): ${h2Headings.join(" | ") || "N/A"}`,
         console.log(`Total tokens: `, aiResponse.usage.total_tokens);
         console.dir(aiResponse);
         console.groupEnd();
-        const requestedModelKey = this.getEnumKeyByValue(AiModel, model);
-        const usedModelKey = this.getEnumKeyByValue(AiModel, aiResponse.model);
-        const requestedModel = this.translate.instant(`page.ai-options.model.short.${requestedModelKey}`);
-        const usedModel = this.translate.instant(`page.ai-options.model.short.${usedModelKey}`);
-        if (model != aiResponse.model) {
+        const requestedModel = this.getShortModelName(model);
+        const usedModel = this.getShortModelName(aiResponse.model);
+        if (!this.isSameAiModelFamily(model, aiResponse.model)) {
           const fallbackOrder = this.buildModelRotation(model).map((candidate) => this.getShortModelName(candidate)).join(" -> ");
           console.warn("A FALLBACK MODEL WAS USED");
           console.groupCollapsed("Fallback model info");
@@ -41713,7 +41693,13 @@ H2 headings (${h2Headings.length}): ${h2Headings.join(" | ") || "N/A"}`,
               life: 3e3
             });
           }
-          yield this.runAlertRecommendations(html, selectedIssues, model, headers, url);
+          yield this.applyAlertRecommendations({
+            html,
+            issues: selectedIssues,
+            model,
+            headers,
+            url
+          });
         } else {
           const formattedHtml = yield this.urlDataService.formatHtml(aiHtml, "ai");
           this.uploadState.mergeModifiedData({
@@ -42472,9 +42458,9 @@ H2 headings (${h2Headings.length}): ${h2Headings.join(" | ") || "N/A"}`,
   }] });
 })();
 (() => {
-  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(PageAssistantCompareComponent, { className: "PageAssistantCompareComponent", filePath: "src/app/views/page-assistant/page-assistant.component.ts", lineNumber: 95 });
+  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(PageAssistantCompareComponent, { className: "PageAssistantCompareComponent", filePath: "src/app/views/page-assistant/page-assistant.component.ts", lineNumber: 93 });
 })();
 export {
   PageAssistantCompareComponent
 };
-//# sourceMappingURL=chunk-KH67SOIY.js.map
+//# sourceMappingURL=chunk-LKYOE72A.js.map

@@ -1,0 +1,79 @@
+{
+  "skills": [
+    {
+      "id": "canada-alerts-issues",
+      "name": "canada-alerts-issues",
+      "description": "Analyzes Canada.ca web alerts for content design, WCAG 2.1 accessibility, and HTML compliance issues. Use for diagnosis and issue reporting only.",
+      "skillMdPath": "skills/alerts/canada-alerts-issues/SKILL.md",
+      "triggerPhrases": [
+        "alert",
+        "alerts",
+        "analyze alert",
+        "alert issues",
+        "canada.ca",
+        "wcag",
+        "issue",
+        "issues",
+        "json schema",
+        "content design"
+      ],
+      "promptKeys": [
+        "alertsIssues"
+      ],
+      "outputModes": [
+        "json"
+      ],
+      "defaultReferencePaths": [
+        "skills/alerts/canada-alerts-issues/references/rubric-and-guidelines.md"
+      ],
+      "defaultAssetPaths": [
+        "skills/alerts/canada-alerts-issues/assets/issues-output-schema.json"
+      ]
+    },
+    {
+      "id": "canada-alerts-rewriting",
+      "name": "canada-alerts-rewriting",
+      "description": "Rewrites Canada.ca web alerts into corrected HTML output using alert issues as input. Use for rewrite generation only.",
+      "skillMdPath": "skills/alerts/canada-alerts-rewriting/SKILL.md",
+      "includedSkillIds": [
+        "link-writing"
+      ],
+      "triggerPhrases": [
+        "alert",
+        "alerts",
+        "rewrite alert",
+        "rewrite",
+        "canada.ca",
+        "corrected output",
+        "updated html",
+        "replacement"
+      ],
+      "promptKeys": [
+        "alertsRecommendations"
+      ],
+      "outputModes": [
+        "json"
+      ],
+      "defaultReferencePaths": [
+        "skills/alerts/canada-alerts-rewriting/references/rubric-and-guidelines.md"
+      ],
+      "optionalReferencePaths": [
+        "skills/alerts/canada-alerts-rewriting/references/examples.json"
+      ],
+      "defaultAssetPaths": [
+        "skills/alerts/canada-alerts-rewriting/assets/rewriting-output-schema.json"
+      ]
+    },
+    {
+      "id": "link-writing",
+      "name": "link-writing",
+      "description": "Applies reusable Canada.ca link-writing rules for descriptive, accessible, non-redundant links while preserving valid destination URLs.",
+      "skillMdPath": "skills/link-writing/SKILL.md",
+      "selectable": false,
+      "triggerPhrases": [],
+      "defaultReferencePaths": [
+        "skills/link-writing/references/link-writing-rules.json"
+      ]
+    }
+  ]
+}

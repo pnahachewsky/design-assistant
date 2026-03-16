@@ -1,0 +1,65 @@
+{
+  "version": "1.0.0",
+  "rules": [
+    {
+      "id": "L1_keep_links_default",
+      "condition": "always",
+      "text": "Keep links by default."
+    },
+    {
+      "id": "L2_keep_url_change_text",
+      "condition": "always",
+      "text": "Link text may be rewritten, but any kept link must keep its original URL."
+    },
+    {
+      "id": "L3_descriptive_text",
+      "condition": "always",
+      "text": "Link text must clearly describe the intended destination using available context such as URL path, current link text, and surrounding sentence, and must avoid inventing destination details not supported by that context."
+    },
+    {
+      "id": "L4_avoid_duplicate_link_text",
+      "condition": "always",
+      "text": "Avoid duplicate wording. Do not repeat the linked phrase outside the anchor when meaning is preserved. Keep the destination phrase in the link. Avoid using \"see\" before links; use inclusive alternatives such as \"refer to\" or \"visit\". When a link is present, prefer a short plain-text lead-in plus unique link text, with minimal repeated wording outside the anchor."
+    },
+    {
+      "id": "L5_no_vague_anchor_text",
+      "condition": "always",
+      "text": "Never use vague anchor text such as \"click here\", \"here\", or \"learn more\"."
+    },
+    {
+      "id": "L6_sentence_end_preferred",
+      "condition": "always",
+      "text": "Prefer placing links at the end of their sentence."
+    },
+    {
+      "id": "L7_learn_more_fallback",
+      "condition": "always",
+      "text": "If a link is an entire sentence, or if a sentence mainly directs the user to a link, move it to a new paragraph. Use one of these lead-ins before the anchor: \"Refer to:\", \"Learn more:\", or \"Learn about:\". Use \"Find out\" only without a colon and only when the link text naturally completes the phrase, such as \"how to...\", \"if...\", or \"whether...\"."
+    },
+    {
+      "id": "L8_remove_only_when_too_many",
+      "condition": "too_many_links",
+      "text": "Only remove links when there are multiple links and a too-many-links issue is identified. Keep one primary link."
+    },
+    {
+      "id": "L9_do_not_remove_without_issue",
+      "condition": "not_too_many_links",
+      "text": "Do not remove links unless a too-many-links issue is identified and multiple links are present."
+    },
+    {
+      "id": "L10_concise_link_text",
+      "condition": "always",
+      "text": "Keep link text concise when possible. Remove details already present in the alert or page context."
+    },
+    {
+      "id": "L11_find_out_usage",
+      "condition": "always",
+      "text": "Do not use \"Find out:\" with a colon. Use \"Find out\" only when the anchor text completes it naturally, for example \"Find out how to...\", \"Find out if...\", or \"Find out whether...\". Do not use \"Find out\" before imperative link text such as \"Get...\", \"Apply...\", or \"Register...\"."
+    },
+    {
+      "id": "L12_lead_in_selection",
+      "condition": "always",
+      "text": "Choose the lead-in that matches the destination and keep it in its own paragraph. Prefer \"Refer to:\" when the link is needed to complete a task, access a service, sign in, apply, register, submit, get a code, or take a required next step. Prefer \"Learn more:\" when the link is optional background, a status page, an update page, or supplemental information. Use \"Learn about:\" for explainer or topic pages. Do not append these lead-ins to the explanatory sentence."
+    }
+  ]
+}
