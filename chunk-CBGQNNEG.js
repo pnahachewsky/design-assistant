@@ -23145,13 +23145,10 @@ var AlertRewriteGuardService = class _AlertRewriteGuardService {
     const normalized = this.normalizeLeadInText(leadInText.replace(/[.!?]\s*$/g, ""));
     if (!normalized)
       return false;
-    if (normalized === "refer to:" || normalized === "learn more:" || normalized === "learn about:") {
+    if (normalized === "refer to:" || normalized === "learn more:") {
       return true;
     }
-    if (normalized.startsWith("find out:")) {
-      return false;
-    }
-    return /^find out\s+(how\b|if\b|whether\b)/.test(normalized);
+    return normalized.startsWith("find out");
   }
   // Broader than the valid-lead-in check: used to catch malformed directional
   // sentences such as "refer to <link>" inside a substantive paragraph.
@@ -23159,7 +23156,7 @@ var AlertRewriteGuardService = class _AlertRewriteGuardService {
     const normalized = this.normalizeLeadInText(leadInText.replace(/[.!?]\s*$/g, ""));
     if (!normalized)
       return false;
-    return /\b(refer to|learn more|learn about|find out)\b/.test(normalized);
+    return /\b(refer to|learn more)\b/.test(normalized);
   }
   stripLinkPlaceholders(value) {
     return (value || "").replace(/\[(?:\/?\s*LINK|END\s+LINK)\]/gi, "").trim();
@@ -42463,4 +42460,4 @@ ${custom}` : composed.prompt;
 export {
   PageAssistantCompareComponent
 };
-//# sourceMappingURL=chunk-LKYOE72A.js.map
+//# sourceMappingURL=chunk-CBGQNNEG.js.map

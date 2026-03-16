@@ -42850,7 +42850,7 @@ var routes = [
       }
       return true;
     }],
-    loadComponent: () => import("./chunk-LKYOE72A.js").then((m) => m.PageAssistantCompareComponent)
+    loadComponent: () => import("./chunk-CBGQNNEG.js").then((m) => m.PageAssistantCompareComponent)
   },
   {
     path: "page-assistant/share",
