@@ -9,6 +9,8 @@ export class AlertIssuesContextService {
     const doc = parser.parseFromString(sourceHtml, 'text/html');
     const alerts = Array.from(doc.querySelectorAll('.alert'));
     const main = (doc.querySelector('main') as HTMLElement | null) || doc.body;
+    // Extract the page's H2 list so compact mode can pass section-level context
+    // without sending the full page HTML back to the model.
     const h2Elements = Array.from(main.querySelectorAll('h2'));
     const h2Headings = h2Elements
       .map((h2) => this.truncateContextText(h2.textContent || '', 120))
