@@ -63,15 +63,15 @@ export class AlertRewriteGuardService {
       const root = doc.body.firstElementChild as HTMLElement | null;
       if (!root) return false;
 
-      const paragraphs = Array.from(root.querySelectorAll('p'));
-      return paragraphs.some((paragraph) => {
-        const anchors = Array.from(paragraph.querySelectorAll('a'));
+      const blocks = this.getLeadInCheckBlocks(root, doc);
+      return blocks.some((block) => {
+        const anchors = Array.from(block.querySelectorAll('a'));
         if (!anchors.length) return false;
 
         const markerPrefix = '[[link:';
         const markerSuffix = ']]';
         const paragraphWithMarkers = this.normalizeLeadInText(
-          Array.from(paragraph.childNodes)
+          Array.from(block.childNodes)
             .map((node) => {
               if (
                 node.nodeType === Node.ELEMENT_NODE &&
@@ -227,6 +227,12 @@ export class AlertRewriteGuardService {
     if (originalHasAnchor && !repairedHasAnchor && !params.allowLinkRemoval) {
       return null;
     }
+    if (
+      repairedHasAnchor &&
+      this.hasFullSentenceLinkWithoutAllowedLeadIn(repaired.rewrittenAlertHtml)
+    ) {
+      return null;
+    }
 
     const copyCheck = this.alertRewrite.detectExampleCopy({
       result: repaired,
@@ -287,6 +293,34 @@ export class AlertRewriteGuardService {
       .trim();
   }
 
+  // Reuses paragraph validation when present, and falls back to direct alert-body
+  // nodes when the model omits paragraph wrappers entirely.
+  private getLeadInCheckBlocks(root: HTMLElement, doc: Document): HTMLElement[] {
+    const blocks = Array.from(root.querySelectorAll('p'));
+    const fallback = doc.createElement('div');
+
+    Array.from(root.childNodes).forEach((node) => {
+      if (node.nodeType === Node.TEXT_NODE) {
+        if ((node.textContent || '').trim()) {
+          fallback.appendChild(node.cloneNode(true));
+        }
+        return;
+      }
+      if (node.nodeType !== Node.ELEMENT_NODE) return;
+
+      const element = node as HTMLElement;
+      const tagName = element.tagName.toLowerCase();
+      if (/^h[1-6]$/.test(tagName) || tagName === 'p') return;
+      fallback.appendChild(element.cloneNode(true));
+    });
+
+    if (fallback.querySelector('a')) {
+      blocks.push(fallback);
+    }
+
+    return blocks;
+  }
+
   private isValidStandaloneLinkLeadIn(leadInText: string): boolean {
     const normalized = this.normalizeLeadInText(
       leadInText.replace(/[.!?]\s*$/g, ''),
@@ -295,7 +329,8 @@ export class AlertRewriteGuardService {
 
     if (
       normalized === 'refer to:' ||
-      normalized === 'learn more:'
+      normalized === 'learn more:' ||
+      /^learn about(?: the)?$/.test(normalized)
     ) {
       return true;
     }

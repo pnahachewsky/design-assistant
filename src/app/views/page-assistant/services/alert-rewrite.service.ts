@@ -416,7 +416,7 @@ export class AlertRewriteService {
 
       return (
         /^find out\s+\[\[link:[^\]]+\]\][.!?]?$/.test(paragraphWithMarkers) ||
-        /^learn about\s+\[\[link:[^\]]+\]\][.!?]?$/.test(paragraphWithMarkers) ||
+        /^learn about(?: the)?\s+\[\[link:[^\]]+\]\][.!?]?$/.test(paragraphWithMarkers) ||
         /^refer to:\s*\[\[link:[^\]]+\]\][.!?]?$/.test(paragraphWithMarkers) ||
         /^learn more:\s*\[\[link:[^\]]+\]\][.!?]?$/.test(paragraphWithMarkers)
       );
