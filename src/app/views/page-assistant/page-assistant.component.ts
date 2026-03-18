@@ -608,6 +608,7 @@ export class PageAssistantCompareComponent
     url: string,
     messages: Array<{ role: string; content: string }>,
     contextLabel: string,
+    temperature = 0,
   ): Promise<{ text: string; usedModel: string }> {
     const candidates = this.buildModelRotation(model);
     let lastError: Error | undefined;
@@ -619,7 +620,7 @@ export class PageAssistantCompareComponent
         body: JSON.stringify({
           models: [candidate],
           messages,
-          temperature: 0,
+          temperature,
           provider: { allow_fallbacks: false },
         }),
       });

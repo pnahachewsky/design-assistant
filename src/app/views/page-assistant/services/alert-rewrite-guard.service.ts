@@ -55,6 +55,37 @@ export class AlertRewriteGuardService {
     return /\[(?:\/?\s*LINK|END\s+LINK)\]/i.test(value || '');
   }
 
+  // Alerts must expose a semantic heading for screen reader navigation.
+  hasSemanticHeading(alertHtml: string): boolean {
+    try {
+      const doc = new DOMParser().parseFromString(alertHtml, 'text/html');
+      return !!doc.body.querySelector('h1, h2, h3, h4, h5, h6');
+    } catch {
+      return false;
+    }
+  }
+
+  // Final heading insertion keeps the wrapper valid if retries and local repair
+  // still return body-only content.
+  ensureSemanticHeading(alertHtml: string, headingText: string): string {
+    try {
+      const doc = new DOMParser().parseFromString(alertHtml, 'text/html');
+      const root = doc.body.firstElementChild as HTMLElement | null;
+      if (!root) return alertHtml;
+      if (root.querySelector('h1, h2, h3, h4, h5, h6')) return root.outerHTML.trim();
+
+      const normalizedHeading = (headingText || '').trim();
+      if (!normalizedHeading) return root.outerHTML.trim();
+
+      const headingEl = doc.createElement('h3');
+      headingEl.textContent = normalizedHeading;
+      root.insertBefore(headingEl, root.firstChild);
+      return root.outerHTML.trim();
+    } catch {
+      return alertHtml;
+    }
+  }
+
   // Rejects outputs where link-direction text is malformed:
   // link-only sentences, embedded lead-ins, or lead-ins in the wrong paragraph shape.
   hasFullSentenceLinkWithoutAllowedLeadIn(alertHtml: string): boolean {
@@ -201,6 +232,12 @@ export class AlertRewriteGuardService {
         params.originalAlertHtml,
       );
     }
+    if (!this.hasSemanticHeading(repairedHtml)) {
+      repairedHtml = this.ensureSemanticHeading(
+        repairedHtml,
+        candidate.rewrittenHeading || params.originalHeading || '',
+      );
+    }
 
     const repaired = this.alertRewrite.parseAlertRewriteResponse(
       JSON.stringify({
@@ -223,6 +260,7 @@ export class AlertRewriteGuardService {
     }
 
     const repairedHasAnchor = /<a\b/i.test(repaired.rewrittenAlertHtml);
+    if (!this.hasSemanticHeading(repaired.rewrittenAlertHtml)) return null;
     if (!originalHasAnchor && repairedHasAnchor) return null;
     if (originalHasAnchor && !repairedHasAnchor && !params.allowLinkRemoval) {
       return null;

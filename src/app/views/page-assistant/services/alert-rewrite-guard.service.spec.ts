@@ -10,6 +10,12 @@ import { AlertRewriteGuardService } from './alert-rewrite-guard.service';
 describe('AlertRewriteGuardService', () => {
   let service: AlertRewriteGuardService;
   let alertRewriteSpy: jasmine.SpyObj<AlertRewriteService>;
+  const infoPlan = {
+    alertType: 'info',
+    domainTags: [],
+    criteriaMatched: [],
+    directives: [],
+  } satisfies AlertRewritePlan;
 
   const invalidRootLevelLinkHtml =
     '<div class="alert alert-info"><h3>Disability tax credit (DTC)</h3>Processing times for Form T2201 are currently delayed. <a href="/status">view your application status</a></div>';
@@ -30,33 +36,7 @@ describe('AlertRewriteGuardService', () => {
     service = TestBed.inject(AlertRewriteGuardService);
   });
 
-  it('should create', () => {
-    expect(service).toBeTruthy();
-  });
-
-  it('flags a root-level link-only sentence without a lead-in', () => {
-    expect(
-      service.hasFullSentenceLinkWithoutAllowedLeadIn(invalidRootLevelLinkHtml),
-    ).toBeTrue();
-  });
-
-  it('allows a standalone paragraph that uses learn about the before the link', () => {
-    expect(
-      service.hasFullSentenceLinkWithoutAllowedLeadIn(
-        '<div class="alert alert-info"><h3>Canada Groceries and Essentials Benefit increase</h3><p>The benefit will increase by 25% starting July 2026.</p><p>Learn about the <a href="/benefit">Canada Groceries and Essentials Benefit</a>.</p></div>',
-      ),
-    ).toBeFalse();
-  });
-
-  it('rejects learn about the when it is embedded in the explanatory paragraph', () => {
-    expect(
-      service.hasFullSentenceLinkWithoutAllowedLeadIn(
-        '<div class="alert alert-info"><h3>Canada Groceries and Essentials Benefit increase</h3><p>The benefit will increase by 25% starting July 2026. Learn about the <a href="/benefit">Canada Groceries and Essentials Benefit</a>.</p></div>',
-      ),
-    ).toBeTrue();
-  });
-
-  it('rejects local repair output when the link direction still lacks a lead-in', () => {
+  function mockParsedAlertRewriteResult(): void {
     alertRewriteSpy.parseAlertRewriteResponse.and.callFake(
       (text: string): AlertRewriteResult => {
         const payload = JSON.parse(text) as {
@@ -77,6 +57,53 @@ describe('AlertRewriteGuardService', () => {
       },
     );
     alertRewriteSpy.detectExampleCopy.and.returnValue({ isCopy: false });
+  }
+
+  it('should create', () => {
+    expect(service).toBeTruthy();
+  });
+
+  it('flags a root-level link-only sentence without a lead-in', () => {
+    expect(
+      service.hasFullSentenceLinkWithoutAllowedLeadIn(invalidRootLevelLinkHtml),
+    ).toBeTrue();
+  });
+
+  it('detects when an alert html fragment is missing a semantic heading', () => {
+    expect(
+      service.hasSemanticHeading(
+        '<div class="alert alert-info"><p>Body only</p></div>',
+      ),
+    ).toBeFalse();
+  });
+
+  it('inserts a semantic heading when the alert html is missing one', () => {
+    expect(
+      service.ensureSemanticHeading(
+        '<div class="alert alert-info"><p>Body only</p></div>',
+        '[GenAI failure: include a heading]',
+      ),
+    ).toContain('<h3>[GenAI failure: include a heading]</h3>');
+  });
+
+  it('allows a standalone paragraph that uses learn about the before the link', () => {
+    expect(
+      service.hasFullSentenceLinkWithoutAllowedLeadIn(
+        '<div class="alert alert-info"><h3>Canada Groceries and Essentials Benefit increase</h3><p>The benefit will increase by 25% starting July 2026.</p><p>Learn about the <a href="/benefit">Canada Groceries and Essentials Benefit</a>.</p></div>',
+      ),
+    ).toBeFalse();
+  });
+
+  it('rejects learn about the when it is embedded in the explanatory paragraph', () => {
+    expect(
+      service.hasFullSentenceLinkWithoutAllowedLeadIn(
+        '<div class="alert alert-info"><h3>Canada Groceries and Essentials Benefit increase</h3><p>The benefit will increase by 25% starting July 2026. Learn about the <a href="/benefit">Canada Groceries and Essentials Benefit</a>.</p></div>',
+      ),
+    ).toBeTrue();
+  });
+
+  it('rejects local repair output when the link direction still lacks a lead-in', () => {
+    mockParsedAlertRewriteResult();
 
     const result = service.tryLocalAlertRewriteRepair({
       result: {
@@ -91,16 +118,38 @@ describe('AlertRewriteGuardService', () => {
         '<div class="alert alert-info"><h3>Disability tax credit (DTC)</h3><p>Processing times for Form T2201 are currently delayed.</p><p><a href="/status">View your application status</a></p></div>',
       originalHeading: 'Disability tax credit (DTC)',
       originalAlertText: 'Processing times for Form T2201 are currently delayed.',
-      plan: {
-        alertType: 'info',
-        domainTags: [],
-        criteriaMatched: [],
-        directives: [],
-      } satisfies AlertRewritePlan,
+      plan: infoPlan,
       selectedExamples: [],
       allowLinkRemoval: false,
     });
 
     expect(result).toBeNull();
+  });
+
+  it('adds the candidate heading during local repair when the html is missing one', () => {
+    mockParsedAlertRewriteResult();
+
+    const result = service.tryLocalAlertRewriteRepair({
+      result: {
+        rewrittenAlertHtml:
+          '<div class="alert alert-info"><p>Updated body text.</p></div>',
+        rewrittenHeading: '[GenAI failure: include a heading]',
+        rewrittenAlert: 'Updated body text.',
+        appliedDirectives: [],
+        exampleIdsUsed: [],
+      },
+      originalAlertHtml:
+        '<div class="alert alert-info"><p>Original body text.</p></div>',
+      originalHeading: '',
+      originalAlertText: 'Original body text.',
+      plan: infoPlan,
+      selectedExamples: [],
+      allowLinkRemoval: false,
+    });
+
+    expect(result?.rewrittenAlertHtml).toContain(
+      '<h3>[GenAI failure: include a heading]</h3>',
+    );
+    expect(result?.rewrittenAlertHtml).toContain('<p>Updated body text.</p>');
   });
 });

@@ -264,7 +264,7 @@ export class AlertRewriteService {
     examples: AlertRewriteExample[];
     includeBeforeTextInExamples?: boolean;
     includeLinkWritingRules?: boolean;
-    retryInstruction?: string;
+    retryInstructions?: string[];
   }): Promise<ChatMessage[]> {
     const hasTooManyLinksIssue =
       params.plan.criteriaMatched.includes('C3_too_many_links') ||
@@ -288,8 +288,15 @@ export class AlertRewriteService {
         'The original alert already ends with an acceptable standalone final link sentence or paragraph. Preserve that wording and placement unless a selected issue clearly requires a change.',
       );
     }
-    if (params.retryInstruction) {
-      styleRules.push(params.retryInstruction);
+    const retryInstructions = Array.from(
+      new Set(
+        (params.retryInstructions || [])
+          .map((instruction) => (instruction || '').trim())
+          .filter((instruction) => !!instruction),
+      ),
+    );
+    if (retryInstructions.length) {
+      styleRules.push(...retryInstructions);
     }
     const includeBeforeText = params.includeBeforeTextInExamples === true;
     const rawIssues = params.issues
@@ -436,7 +443,7 @@ export class AlertRewriteService {
     }
     const root = parsed as Record<string, unknown>;
     const rawAlertHtml = this.cleanString(root['rewrittenAlertHtml']);
-    let normalizedAlertHtml = this.normalizeAlertWrapperHtml(rawAlertHtml);
+    const normalizedAlertHtml = this.normalizeAlertWrapperHtml(rawAlertHtml);
     if (!normalizedAlertHtml) {
       return null;
     }
@@ -445,16 +452,15 @@ export class AlertRewriteService {
     const extractedHeading = this.extractHeadingFromAlertHtml(normalizedAlertHtml);
     const extractedBodyText = this.extractBodyTextFromAlertHtml(normalizedAlertHtml);
     const rewrittenHeading =
-      parsedHeading || extractedHeading || this.buildFallbackHeading(plan.alertType);
+      parsedHeading || extractedHeading || this.buildFallbackHeading();
     const baseBodyText = rawAlert || extractedBodyText;
     if (!baseBodyText) return null;
     const rewrittenAlert = baseBodyText.trim();
     const appliedDirectives = this.toStringArray(root['appliedDirectives']);
-    const exampleIdsUsedRaw = this.toStringArray(root['exampleIdsUsed']);
-    const fallbackExampleIds = selectedExamples.map((example) => example.id);
-    const exampleIdsUsed = exampleIdsUsedRaw.length
-      ? exampleIdsUsedRaw
-      : fallbackExampleIds;
+    const exampleIdsUsed = this.sanitizeExampleIdsUsed(
+      this.toStringArray(root['exampleIdsUsed']),
+      selectedExamples,
+    );
 
     return {
       rewrittenAlertHtml: normalizedAlertHtml,
@@ -533,7 +539,7 @@ export class AlertRewriteService {
 
     return {
       rewrittenAlertHtml: normalizedAlertHtml,
-      rewrittenHeading: rewrittenHeading || this.buildFallbackHeading('info'),
+      rewrittenHeading: rewrittenHeading || this.buildFallbackHeading(),
       rewrittenAlert: (params.originalAlertText || '').trim(),
       appliedDirectives: [],
       exampleIdsUsed: [],
@@ -681,6 +687,22 @@ export class AlertRewriteService {
       .filter((value) => !!value);
   }
 
+  private sanitizeExampleIdsUsed(
+    rawIds: string[],
+    selectedExamples: AlertRewriteExample[],
+  ): string[] {
+    if (!selectedExamples.length || !rawIds.length) return [];
+
+    const allowedIds = new Set(selectedExamples.map((example) => example.id));
+    const seen = new Set<string>();
+
+    return rawIds.filter((id) => {
+      if (!allowedIds.has(id) || seen.has(id)) return false;
+      seen.add(id);
+      return true;
+    });
+  }
+
   private cleanString(value: unknown): string {
     return typeof value === 'string' ? value.trim() : '';
   }
@@ -751,12 +773,8 @@ export class AlertRewriteService {
     return union > 0 ? intersection / union : 0;
   }
 
-  private buildFallbackHeading(alertType: string): string {
-    const normalized = alertType.toLowerCase();
-    if (normalized === 'error') return 'Error';
-    if (normalized === 'warning') return 'Important';
-    if (normalized === 'success') return 'Success';
-    return 'Information';
+  private buildFallbackHeading(): string {
+    return '[GenAI failure: include a heading]';
   }
 
   private normalizeAlertWrapperHtml(rawHtml: string): string | null {

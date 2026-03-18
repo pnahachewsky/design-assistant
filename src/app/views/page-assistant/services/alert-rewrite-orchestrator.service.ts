@@ -4,6 +4,7 @@ import { AlertRewriteMode, AiModel } from '../data/data.model';
 import { UrlDataService } from './url-data.service';
 import {
   AlertRewriteIssueInput,
+  AlertRewriteResult,
   AlertRewriteService,
 } from './alert-rewrite.service';
 import { AlertRewriteGuardService } from './alert-rewrite-guard.service';
@@ -15,6 +16,7 @@ export interface OpenRouterMessageCaller {
     url: string,
     messages: Array<{ role: string; content: string }>,
     contextLabel: string,
+    temperature?: number,
   ): Promise<{ text: string; usedModel: string }>;
 }
 
@@ -117,19 +119,22 @@ export class AlertRewriteOrchestratorService {
       let rewriteModelName = 'unknown';
       let copyGuardTriggered = false;
       let blockedExampleId: string | null = null;
-      let lastParsedResult = null;
+      let lastParsedResult: AlertRewriteResult | null = null;
+      let softRejectedResult: AlertRewriteResult | null = null;
+      let softRejectedReasons: string[] = [];
+      let lastRetryReasons: string[] = [];
       const originalHasAnchor = /<a\b/i.test(alertHtml);
       const allowLinkRemoval = this.alertRewriteGuard.shouldAllowAlertLinkRemoval(
         relevantIssues,
         plan,
       );
 
-      // We allow one retry with an additional corrective instruction before
+      // We allow one retry with additional corrective instructions before
       // falling back to deterministic local repair.
-      let retryInstruction: string | undefined;
+      let retryInstructionsForAttempt: string[] = [];
       for (let attempt = 0; attempt < 2; attempt += 1) {
-        // Rebuild the rewrite prompt on each attempt so any retry instruction
-        // is appended to the style rules seen by the model.
+        // Rebuild the rewrite prompt on each attempt so any retry instructions
+        // are appended to the style rules seen by the model.
         const alertRewriteMessages = await this.alertRewrite.buildAlertRewriteMessages({
           mode: params.mode,
           originalHeading,
@@ -140,7 +145,7 @@ export class AlertRewriteOrchestratorService {
           examples: selectedExamples,
           includeBeforeTextInExamples: params.includeBeforeTextInExamples,
           includeLinkWritingRules: params.includeLinkWritingRules,
-          retryInstruction,
+          retryInstructions: retryInstructionsForAttempt,
         });
         const rewriteResponse = await params.callOpenRouterForMessages(
           params.model,
@@ -148,6 +153,7 @@ export class AlertRewriteOrchestratorService {
           params.url,
           alertRewriteMessages,
           `Alert ${alertIndex} alertRewrite`,
+          attempt > 0 ? 0.2 : 0,
         );
         rewriteModelName = params.getShortModelName(rewriteResponse.usedModel);
 
@@ -159,19 +165,41 @@ export class AlertRewriteOrchestratorService {
           plan,
           selectedExamples,
         );
+        console.warn('Alert rewrite parsed model output', {
+          alertIndex,
+          attempt: attempt + 1,
+          rewrittenAlertHtml: parsedResult?.rewrittenAlertHtml,
+          rewrittenAlert: parsedResult?.rewrittenAlert,
+        });
         if (!parsedResult?.rewrittenAlertHtml) {
           console.warn('Alert rewrite retry triggered', {
             alertIndex,
             attempt: attempt + 1,
-            reason: 'invalidWrapperHtml',
+            reasons: ['invalidWrapperHtml'],
+            reasonsText: 'invalidWrapperHtml',
             willRetryWithNewModelCall: true,
           });
-          retryInstruction = retryInstructions.invalidWrapperHtml;
+          lastRetryReasons = ['invalidWrapperHtml'];
+          retryInstructionsForAttempt = [retryInstructions.invalidWrapperHtml];
           continue;
         }
         lastParsedResult = parsedResult;
 
-        // Guard 1: placeholder tokens are never valid final output. This catches
+        const retryReasons: string[] = [];
+        const retryInstructionsForResult: string[] = [];
+        const addRetryInstruction = (reason: string, instruction: string): void => {
+          retryReasons.push(reason);
+          retryInstructionsForResult.push(instruction);
+        };
+
+        // Guard 1: semantic alert headings are required for accessibility.
+        if (
+          !this.alertRewriteGuard.hasSemanticHeading(parsedResult.rewrittenAlertHtml)
+        ) {
+          addRetryInstruction('mustHaveHeading', retryInstructions.mustHaveHeading);
+        }
+
+        // Guard 2: placeholder tokens are never valid final output. This catches
         // cases where the model copied a prompt convention instead of returning
         // real HTML anchors or plain text.
         const hasLinkPlaceholders =
@@ -182,44 +210,23 @@ export class AlertRewriteOrchestratorService {
             parsedResult.rewrittenAlert,
           );
         if (hasLinkPlaceholders) {
-          console.warn('Alert rewrite retry triggered', {
-            alertIndex,
-            attempt: attempt + 1,
-            reason: 'placeholderLinks',
-            willRetryWithNewModelCall: true,
-          });
-          retryInstruction = retryInstructions.placeholderLinks;
-          continue;
+          addRetryInstruction('placeholderLinks', retryInstructions.placeholderLinks);
         }
 
-        // Guard 2: compare link presence before vs after rewrite so we do not
+        // Guard 3: compare link presence before vs after rewrite so we do not
         // accidentally add links that were never in the source alert.
         const rewrittenHasAnchor = /<a\b/i.test(parsedResult.rewrittenAlertHtml);
         if (!originalHasAnchor && rewrittenHasAnchor) {
-          console.warn('Alert rewrite retry triggered', {
-            alertIndex,
-            attempt: attempt + 1,
-            reason: 'noLinksAllowed',
-            willRetryWithNewModelCall: true,
-          });
-          retryInstruction = retryInstructions.noLinksAllowed;
-          continue;
+          addRetryInstruction('noLinksAllowed', retryInstructions.noLinksAllowed);
         }
 
-        // Guard 3: if the source alert had a required link, do not let the
+        // Guard 4: if the source alert had a required link, do not let the
         // rewrite drop it unless the issues/plan explicitly allow link removal.
         if (originalHasAnchor && !rewrittenHasAnchor && !allowLinkRemoval) {
-          console.warn('Alert rewrite retry triggered', {
-            alertIndex,
-            attempt: attempt + 1,
-            reason: 'mustKeepLink',
-            willRetryWithNewModelCall: true,
-          });
-          retryInstruction = retryInstructions.mustKeepLink;
-          continue;
+          addRetryInstruction('mustKeepLink', retryInstructions.mustKeepLink);
         }
 
-        // Guard 4: enforce the paragraph-level link-direction conventions
+        // Guard 5: enforce the paragraph-level link-direction conventions
         // handled by AlertRewriteGuardService. This is where malformed
         // "refer to <link>" or link-only sentence patterns trigger a retry.
         if (
@@ -228,17 +235,13 @@ export class AlertRewriteOrchestratorService {
             parsedResult.rewrittenAlertHtml,
           )
         ) {
-          console.warn('Alert rewrite retry triggered', {
-            alertIndex,
-            attempt: attempt + 1,
-            reason: 'fullSentenceLinksNeedLeadIn',
-            willRetryWithNewModelCall: true,
-          });
-          retryInstruction = retryInstructions.fullSentenceLinksNeedLeadIn;
-          continue;
+          addRetryInstruction(
+            'fullSentenceLinksNeedLeadIn',
+            retryInstructions.fullSentenceLinksNeedLeadIn,
+          );
         }
 
-        // Guard 5: if examples are enabled, reject outputs that are too close
+        // Guard 6: if examples are enabled, reject outputs that are too close
         // to an example rewrite instead of specific to the current alert.
         const copyCheck = this.alertRewrite.detectExampleCopy({
           result: parsedResult,
@@ -246,6 +249,41 @@ export class AlertRewriteOrchestratorService {
           originalHeading,
           originalAlertText: alertText,
         });
+        if (copyCheck.isCopy) {
+          copyGuardTriggered = true;
+          blockedExampleId = copyCheck.exampleId || null;
+          addRetryInstruction('avoidExampleCopy', retryInstructions.avoidExampleCopy);
+          console.warn('Alert rewrite copy guard triggered', {
+            alertIndex,
+            attempt: attempt + 1,
+            reason: copyCheck.reason,
+            exampleId: copyCheck.exampleId,
+            similarity: copyCheck.similarity,
+          });
+        }
+
+        if (retryReasons.length) {
+          const hardRetryReasons = retryReasons.filter(
+            (reason) =>
+              reason !== 'mustHaveHeading' &&
+              reason !== 'fullSentenceLinksNeedLeadIn',
+          );
+          if (!hardRetryReasons.length) {
+            softRejectedResult = parsedResult;
+            softRejectedReasons = [...retryReasons];
+          }
+          console.warn('Alert rewrite retry triggered', {
+            alertIndex,
+            attempt: attempt + 1,
+            reasons: retryReasons,
+            reasonsText: retryReasons.join(', '),
+            willRetryWithNewModelCall: true,
+          });
+          lastRetryReasons = [...retryReasons];
+          retryInstructionsForAttempt = Array.from(new Set(retryInstructionsForResult));
+          continue;
+        }
+
         if (!copyCheck.isCopy) {
           if (params.forceLocalRepairForTesting) {
             console.warn('Forcing local repair for testing', { alertIndex });
@@ -254,19 +292,6 @@ export class AlertRewriteOrchestratorService {
           rewriteResult = parsedResult;
           break;
         }
-
-        // Example-copy retries reuse the same model call path as the structural
-        // retries above; the only difference is the corrective instruction.
-        copyGuardTriggered = true;
-        blockedExampleId = copyCheck.exampleId || null;
-        retryInstruction = retryInstructions.avoidExampleCopy;
-        console.warn('Alert rewrite copy guard triggered', {
-          alertIndex,
-          attempt: attempt + 1,
-          reason: copyCheck.reason,
-          exampleId: copyCheck.exampleId,
-          similarity: copyCheck.similarity,
-        });
       }
 
       // If model retries still fail, attempt one deterministic repair pass locally.
@@ -274,6 +299,8 @@ export class AlertRewriteOrchestratorService {
         console.warn('Alert rewrite attempting local repair', {
           alertIndex,
           hadModelOutput: true,
+          lastRetryReasons,
+          lastRetryReasonsText: lastRetryReasons.join(', '),
           willRetryWithNewModelCall: false,
         });
         rewriteResult = this.alertRewriteGuard.tryLocalAlertRewriteRepair({
@@ -287,10 +314,23 @@ export class AlertRewriteOrchestratorService {
         });
       }
 
+      if (!rewriteResult && softRejectedResult) {
+        console.warn('Alert rewrite using soft-failure candidate', {
+          alertIndex,
+          softRejectedReasons,
+          softRejectedReasonsText: softRejectedReasons.join(', '),
+          willRetryWithNewModelCall: false,
+        });
+        rewriteResult = softRejectedResult;
+        lastRetryReasons = [...softRejectedReasons];
+      }
+
       // Final safety net: preserve the original alert rather than dropping it.
       if (!rewriteResult) {
         console.warn('Alert rewrite falling back to passthrough result', {
           alertIndex,
+          lastRetryReasons,
+          lastRetryReasonsText: lastRetryReasons.join(', '),
           willRetryWithNewModelCall: false,
         });
         rewriteResult = this.alertRewrite.buildPassthroughResult({
@@ -299,6 +339,10 @@ export class AlertRewriteOrchestratorService {
           originalAlertText: alertText,
         });
       }
+      rewriteResult.rewrittenAlertHtml = this.alertRewriteGuard.ensureSemanticHeading(
+        rewriteResult.rewrittenAlertHtml,
+        rewriteResult.rewrittenHeading,
+      );
 
       // At this point we have exactly one final rewrite for the current alert,
       // whether it came from the model, local repair, or passthrough fallback.
@@ -307,23 +351,21 @@ export class AlertRewriteOrchestratorService {
         rewritten_alert_html: rewriteResult.rewrittenAlertHtml,
       });
 
-      // These debug logs make review easier when examples are enabled because
-      // they show which example patterns influenced the final rewrite.
-      const examplesUsedDetails = (rewriteResult.exampleIdsUsed.length
-        ? rewriteResult.exampleIdsUsed
-            .map((id) => selectedExamples.find((example) => example.id === id))
-            .filter((example): example is NonNullable<typeof example> => !!example)
-        : selectedExamples
-      ).map((example) => ({
-        id: example.id,
-        alertType: example.alertType,
-        criteria: example.criteria,
-        tags: example.tags,
-        headingBefore: example.headingBefore || '',
-        headingAfter: example.headingAfter || '',
-        before: example.before,
-        after: example.after,
-      }));
+      // These debug logs keep a clean distinction between the examples we
+      // selected and the subset the model explicitly reported using.
+      const examplesUsedDetails = rewriteResult.exampleIdsUsed
+        .map((id) => selectedExamples.find((example) => example.id === id))
+        .filter((example): example is NonNullable<typeof example> => !!example)
+        .map((example) => ({
+          id: example.id,
+          alertType: example.alertType,
+          criteria: example.criteria,
+          tags: example.tags,
+          headingBefore: example.headingBefore || '',
+          headingAfter: example.headingAfter || '',
+          before: example.before,
+          after: example.after,
+        }));
 
       console.log('Alert rewrite examples used', {
         alertIndex,
@@ -346,6 +388,7 @@ export class AlertRewriteOrchestratorService {
         rewriteModel: rewriteModelName,
         copyGuardTriggered,
         blockedExampleId,
+        lastRetryReasons,
         humanRating: null,
       });
     }

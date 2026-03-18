@@ -13,6 +13,7 @@ export interface AlertRewriteRulesJson {
       placeholderLinks: string;
       noLinksAllowed: string;
       mustKeepLink: string;
+      mustHaveHeading: string;
       avoidExampleCopy: string;
       fullSentenceLinksNeedLeadIn: string;
     };
@@ -39,6 +40,7 @@ const ALERT_REWRITE_RULES_FALLBACK: AlertRewriteRulesJson = {
       placeholderLinks: '',
       noLinksAllowed: '',
       mustKeepLink: '',
+      mustHaveHeading: '',
       avoidExampleCopy: '',
       fullSentenceLinksNeedLeadIn: '',
     },
@@ -92,6 +94,7 @@ function toValidatedRules(raw: unknown): AlertRewriteRulesJson | null {
   const placeholderLinks = retryInstructionsRaw['placeholderLinks'];
   const noLinksAllowed = retryInstructionsRaw['noLinksAllowed'];
   const mustKeepLink = retryInstructionsRaw['mustKeepLink'];
+  const mustHaveHeading = retryInstructionsRaw['mustHaveHeading'];
   const avoidExampleCopy = retryInstructionsRaw['avoidExampleCopy'];
   const fullSentenceLinksNeedLeadIn =
     retryInstructionsRaw['fullSentenceLinksNeedLeadIn'];
@@ -100,12 +103,14 @@ function toValidatedRules(raw: unknown): AlertRewriteRulesJson | null {
     typeof placeholderLinks !== 'string' ||
     typeof noLinksAllowed !== 'string' ||
     typeof mustKeepLink !== 'string' ||
+    typeof mustHaveHeading !== 'string' ||
     typeof avoidExampleCopy !== 'string' ||
     typeof fullSentenceLinksNeedLeadIn !== 'string' ||
     !invalidWrapperHtml.trim() ||
     !placeholderLinks.trim() ||
     !noLinksAllowed.trim() ||
     !mustKeepLink.trim() ||
+    !mustHaveHeading.trim() ||
     !avoidExampleCopy.trim() ||
     !fullSentenceLinksNeedLeadIn.trim()
   ) {
@@ -127,6 +132,7 @@ function toValidatedRules(raw: unknown): AlertRewriteRulesJson | null {
         placeholderLinks,
         noLinksAllowed,
         mustKeepLink,
+        mustHaveHeading,
         avoidExampleCopy,
         fullSentenceLinksNeedLeadIn,
       },
