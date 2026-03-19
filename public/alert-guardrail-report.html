@@ -1,0 +1,1345 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Alerts &ndash; Link rewriting guardrails</title>
+  <style>
+    :root {
+      --bg: #f3efe7;
+      --paper: rgba(255, 255, 255, 0.9);
+      --ink: #18222f;
+      --muted: #5b6672;
+      --line: rgba(24, 34, 47, 0.12);
+      --accent: #0d6d5f;
+      --accent-soft: rgba(13, 109, 95, 0.12);
+      --warn: #9a5b00;
+      --warn-soft: rgba(154, 91, 0, 0.12);
+      --risk: #8f2d2d;
+      --risk-soft: rgba(143, 45, 45, 0.1);
+      --shadow: 0 20px 40px rgba(24, 34, 47, 0.08);
+      --radius: 22px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: Aptos, "Segoe UI", sans-serif;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at top left, rgba(13, 109, 95, 0.14), transparent 32%),
+        radial-gradient(circle at top right, rgba(154, 91, 0, 0.12), transparent 26%),
+        linear-gradient(180deg, #f7f3eb 0%, var(--bg) 100%);
+      line-height: 1.55;
+    }
+
+    main {
+      max-width: 1160px;
+      margin: 0 auto;
+      padding: 48px 24px 80px;
+    }
+
+    .hero,
+    .panel {
+      background: var(--paper);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(8px);
+    }
+
+    .hero {
+      padding: 40px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero::after {
+      content: "";
+      position: absolute;
+      inset: auto -80px -120px auto;
+      width: 280px;
+      height: 280px;
+      background: radial-gradient(circle, rgba(13, 109, 95, 0.22), transparent 68%);
+      pointer-events: none;
+    }
+
+    .eyebrow {
+      margin: 0 0 14px;
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+      font-size: 0.78rem;
+      color: var(--accent);
+      font-weight: 700;
+    }
+
+    h1,
+    h2,
+    h3 {
+      margin: 0;
+      font-family: Cambria, Georgia, serif;
+      line-height: 1.1;
+    }
+
+    h1 {
+      font-size: clamp(2.1rem, 4vw, 3.8rem);
+      max-width: 26ch;
+    }
+
+    .lede {
+      max-width: 58rem;
+      margin: 18px 0 0;
+      font-size: 1.08rem;
+      color: var(--muted);
+    }
+
+    .summary-bar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 24px;
+    }
+
+    .quick-nav {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin: 18px 0 22px;
+    }
+
+    .quick-link {
+      display: inline-flex;
+      align-items: center;
+      padding: 10px 14px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      background: rgba(255, 255, 255, 0.72);
+      color: var(--ink);
+      text-decoration: none;
+      font-size: 0.92rem;
+      font-weight: 600;
+    }
+
+    .quick-link:hover {
+      background: rgba(13, 109, 95, 0.08);
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 14px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.82);
+      border: 1px solid var(--line);
+      font-size: 0.94rem;
+      color: var(--ink);
+    }
+
+    .layout {
+      display: grid;
+      gap: 22px;
+      margin-top: 22px;
+    }
+
+    .panel {
+      padding: 28px;
+    }
+
+    .panel + .panel {
+      margin-top: 22px;
+    }
+
+    .panel h2 {
+      font-size: 1.7rem;
+      margin-bottom: 10px;
+    }
+
+    .intro {
+      max-width: 66rem;
+      color: var(--muted);
+      margin: 0 0 18px;
+    }
+
+    ol.intro {
+      max-width: 66rem;
+      color: var(--muted);
+      margin: -6px 0 18px;
+      padding-left: 0;
+      list-style: none;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+    }
+
+    ol.intro li {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      padding: 8px 12px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.72);
+      border: 1px solid var(--line);
+    }
+
+    ol.intro li + li {
+      margin-left: 18px;
+    }
+
+    ol.intro li + li::before {
+      content: "\2192";
+      position: absolute;
+      left: -19px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--accent);
+      font-weight: 700;
+    }
+
+    .principles,
+    .rule-grid,
+    .split,
+    .signal-grid {
+      display: grid;
+      gap: 16px;
+    }
+
+    .principles {
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    }
+
+    .signal-grid {
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      margin-top: 18px;
+    }
+
+    .control-key {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 14px;
+      margin-top: 18px;
+    }
+
+    .rule-grid {
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    }
+
+    .retry-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 16px;
+    }
+
+    .source-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 16px;
+    }
+
+    .split {
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      align-items: start;
+    }
+
+    .overview-grid,
+    .matrix-grid {
+      display: grid;
+      gap: 16px;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    }
+
+    .card {
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 18px 18px 16px;
+      background: rgba(255, 255, 255, 0.72);
+    }
+
+    .card h3 {
+      font-size: 1.18rem;
+      margin-bottom: 8px;
+    }
+
+    .card p {
+      margin: 0;
+      color: var(--muted);
+    }
+
+    .signal {
+      padding: 14px 16px;
+      border-radius: 16px;
+      background: rgba(24, 34, 47, 0.04);
+      border: 1px solid var(--line);
+      font-weight: 600;
+    }
+
+    ul,
+    ol {
+      margin: 0;
+      padding-left: 1.25rem;
+    }
+
+    li + li {
+      margin-top: 8px;
+    }
+
+    .rule-card {
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 18px;
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.82), rgba(243, 239, 231, 0.68));
+    }
+
+    .rule-card h3 {
+      font-size: 1.12rem;
+      margin-bottom: 10px;
+    }
+
+    .glance-card {
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 18px;
+      background: rgba(255, 255, 255, 0.8);
+    }
+
+    .glance-card h3 {
+      font-size: 1.08rem;
+      margin-bottom: 8px;
+    }
+
+    .glance-card p {
+      margin: 0 0 12px;
+      color: var(--muted);
+    }
+
+    .source-note {
+      margin-top: 18px;
+      font-size: 0.9rem;
+      color: var(--muted);
+    }
+
+    .source-note-label {
+      margin: 0 0 8px;
+    }
+
+    .source-list {
+      margin: 0;
+      padding-left: 1.1rem;
+    }
+
+    .source-list li + li {
+      margin-top: 6px;
+    }
+
+    .source-note a {
+      color: var(--accent);
+      text-decoration: none;
+      border-bottom: 1px solid rgba(13, 109, 95, 0.28);
+    }
+
+    .source-note a:hover {
+      border-bottom-color: var(--accent);
+    }
+
+    .compact-list {
+      margin: 0;
+      padding-left: 1.1rem;
+    }
+
+    .compact-list li + li {
+      margin-top: 8px;
+    }
+
+    .compact-pills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .compact-pill {
+      display: inline-flex;
+      align-items: center;
+      padding: 7px 10px;
+      border-radius: 999px;
+      font-size: 0.84rem;
+      background: rgba(24, 34, 47, 0.05);
+      border: 1px solid var(--line);
+    }
+
+    .retry-card {
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 18px;
+      background: rgba(255, 255, 255, 0.8);
+    }
+
+    .retry-card h3 {
+      font-size: 1.08rem;
+      margin-bottom: 8px;
+    }
+
+    .retry-card p {
+      margin: 0 0 12px;
+      color: var(--muted);
+    }
+
+    .retry-text {
+      margin: 0;
+      padding: 12px 14px;
+      border-radius: 14px;
+      border: 1px solid var(--line);
+      background: rgba(24, 34, 47, 0.04);
+      font-family: Consolas, "Courier New", monospace;
+      font-size: 0.9rem;
+      line-height: 1.45;
+      white-space: normal;
+      word-break: break-word;
+    }
+
+    .source-card {
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 18px;
+      background: rgba(255, 255, 255, 0.8);
+    }
+
+    .source-card h3 {
+      font-size: 1.08rem;
+      margin-bottom: 8px;
+    }
+
+    .source-card p {
+      margin: 0 0 12px;
+      color: var(--muted);
+    }
+
+    .live-list {
+      margin: 0;
+      padding-left: 1.1rem;
+    }
+
+    .live-list li + li {
+      margin-top: 10px;
+    }
+
+    .live-loading {
+      color: var(--muted);
+      font-style: italic;
+    }
+
+    .live-error {
+      color: var(--risk);
+      font-weight: 600;
+    }
+
+    .tone-hard {
+      background: linear-gradient(180deg, rgba(143, 45, 45, 0.08), rgba(255, 255, 255, 0.82));
+      border-color: rgba(143, 45, 45, 0.2);
+    }
+
+    .tone-soft {
+      background: linear-gradient(180deg, rgba(154, 91, 0, 0.08), rgba(255, 255, 255, 0.82));
+      border-color: rgba(154, 91, 0, 0.2);
+    }
+
+    .label {
+      display: inline-block;
+      margin-bottom: 10px;
+      padding: 5px 10px;
+      border-radius: 999px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .label-hard {
+      color: var(--risk);
+      background: var(--risk-soft);
+    }
+
+    .label-soft {
+      color: var(--warn);
+      background: var(--warn-soft);
+    }
+
+    .label-core {
+      color: var(--accent);
+      background: var(--accent-soft);
+    }
+
+    .meta-line {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+
+    .mini-badge {
+      display: inline-block;
+      padding: 4px 9px;
+      border-radius: 999px;
+      font-size: 0.74rem;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      border: 1px solid var(--line);
+      background: rgba(24, 34, 47, 0.04);
+    }
+
+    .mini-badge-prompt {
+      color: #0f4f84;
+      background: rgba(15, 79, 132, 0.1);
+      border-color: rgba(15, 79, 132, 0.2);
+    }
+
+    .mini-badge-heuristic {
+      color: #7a3b00;
+      background: rgba(122, 59, 0, 0.1);
+      border-color: rgba(122, 59, 0, 0.2);
+    }
+
+    .mini-badge-mixed {
+      color: #6b2c8e;
+      background: rgba(107, 44, 142, 0.1);
+      border-color: rgba(107, 44, 142, 0.18);
+    }
+
+    .details-panel {
+      padding: 0;
+      overflow: hidden;
+    }
+
+    .details-summary {
+      list-style: none;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      padding: 22px 28px;
+    }
+
+    .details-summary::-webkit-details-marker {
+      display: none;
+    }
+
+    .details-summary p {
+      margin: 6px 0 0;
+      color: var(--muted);
+    }
+
+    .details-hint {
+      white-space: nowrap;
+      font-size: 0.84rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--accent);
+    }
+
+    .details-content {
+      padding: 0 28px 28px;
+      border-top: 1px solid var(--line);
+    }
+
+    .details-content .intro:first-child {
+      margin-top: 18px;
+    }
+
+    .flow {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      display: grid;
+      gap: 14px;
+    }
+
+    .flow li {
+      display: grid;
+      grid-template-columns: 52px 1fr;
+      gap: 16px;
+      align-items: start;
+      padding: 18px;
+      border-radius: 18px;
+      border: 1px solid var(--line);
+      background: rgba(255, 255, 255, 0.76);
+    }
+
+    .step {
+      width: 52px;
+      height: 52px;
+      border-radius: 16px;
+      display: grid;
+      place-items: center;
+      background: linear-gradient(180deg, rgba(13, 109, 95, 0.18), rgba(13, 109, 95, 0.06));
+      color: var(--accent);
+      font-weight: 800;
+      font-size: 1.05rem;
+    }
+
+    .flow strong {
+      display: block;
+      margin-bottom: 4px;
+      font-size: 1.02rem;
+    }
+
+    .flow p {
+      margin: 0;
+      color: var(--muted);
+    }
+
+    .callout {
+      padding: 18px 20px;
+      border-radius: 18px;
+      border: 1px solid rgba(13, 109, 95, 0.18);
+      background: linear-gradient(135deg, rgba(13, 109, 95, 0.12), rgba(255, 255, 255, 0.88));
+    }
+
+    .callout p {
+      margin: 0;
+    }
+
+    .footer-note {
+      margin-top: 16px;
+      font-size: 0.92rem;
+      color: var(--muted);
+    }
+
+    @media (max-width: 720px) {
+      main {
+        padding: 24px 16px 48px;
+      }
+
+      .hero,
+      .panel {
+        padding: 22px;
+      }
+
+      .details-panel {
+        padding: 0;
+      }
+
+      .details-summary {
+        padding: 20px 22px;
+        align-items: start;
+        flex-direction: column;
+      }
+
+      .details-content {
+        padding: 0 22px 22px;
+      }
+
+      .flow li {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media print {
+      body {
+        background: #ffffff;
+      }
+
+      main {
+        max-width: none;
+        padding: 0;
+      }
+
+      .hero,
+      .panel,
+      .rule-card,
+      .card,
+      .flow li {
+        box-shadow: none;
+        backdrop-filter: none;
+        background: #ffffff;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <section class="hero">
+      <p class="eyebrow">Internal Brief | March 19, 2026</p>
+      <h1>Alerts &ndash; Link rewriting guardrails</h1>
+      <p class="lede">
+        Summary of the rules that keep the alert rewrite flow clear, accessible, and low-risk. It focuses on what the system enforces and how decisions are made rather than on implementation details.
+      </p>
+      <div class="summary-bar">
+        <span class="pill">Conservative by design</span>
+        <span class="pill">Links tightly controlled</span>
+        <span class="pill">Examples cannot be copied blindly</span>
+        <span class="pill">Original alert is preserved if needed</span>
+      </div>
+    </section>
+
+    <nav class="quick-nav">
+      <a class="quick-link" href="#overview">At a Glance</a>
+      <a class="quick-link" href="#guardrail-map">Guardrail Map</a>
+      <a class="quick-link" href="#retry-text">Retry Text</a>
+      <a class="quick-link" href="#decision-flow">Decision Flow</a>
+      <a class="quick-link" href="#live-guidance">Live Prompt Guidance</a>
+    </nav>
+
+    <section class="panel" id="overview">
+      <h2>Overview</h2>
+      <p class="intro">The rewrite flow is designed to improve clarity without introducing avoidable risk. At a glance, we have:</p>
+      <ol class="intro">
+        <li>Prompt rules guide the model</li>
+        <li>Heuristics validate the output</li>
+        <li>The system falls back safely when a rewrite is not good enough</li>
+      </ol>
+      <div class="control-key">
+        <article class="card">
+          <div class="meta-line">
+            <span class="mini-badge mini-badge-prompt">Prompt-Based</span>
+          </div>
+          <h3>Model guidance</h3>
+          <p>The system tells the model what good output should look like. This covers tone, length, heading expectations, link-writing preferences, and example usage.</p>
+        </article>
+        <article class="card">
+          <div class="meta-line">
+            <span class="mini-badge mini-badge-heuristic">Heuristic-Managed</span>
+          </div>
+          <h3>System enforcement</h3>
+          <p>The system checks the draft itself. It can reject, retry, repair, or fall back even if the prompt already asked for the right behavior.</p>
+        </article>
+        <article class="card">
+          <div class="meta-line">
+            <span class="mini-badge mini-badge-mixed">Mixed Control</span>
+          </div>
+          <h3>Guided and enforced</h3>
+          <p>Some important rules are handled in both layers: the prompt asks for them, and the system still validates them before accepting the rewrite.</p>
+        </article>
+      </div>
+      <div class="overview-grid">
+        <article class="glance-card tone-hard">
+          <div class="meta-line">
+            <span class="mini-badge mini-badge-heuristic">Hard Stops</span>
+          </div>
+          <h3>Drafts are blocked if they...</h3>
+          <ul class="compact-list">
+            <li>Return invalid alert wrapper HTML.</li>
+            <li>Use placeholder link tokens instead of final links.</li>
+            <li>Add links that were not in the original alert.</li>
+            <li>Drop a required link without a justified too-many-links reason.</li>
+            <li>Copy example wording too closely.</li>
+          </ul>
+        </article>
+        <article class="glance-card tone-soft">
+          <div class="meta-line">
+            <span class="mini-badge mini-badge-mixed">Retry Then Repair</span>
+          </div>
+          <h3>Common retry-triggered issues</h3>
+          <ul class="compact-list">
+            <li>Missing heading.</li>
+            <li>Malformed standalone-link phrasing.</li>
+            <li>Placeholder links or invalid wrapper HTML.</li>
+            <li>Link preservation mistakes.</li>
+          </ul>
+        </article>
+        <article class="glance-card">
+          <div class="meta-line">
+            <span class="mini-badge mini-badge-heuristic">Safety Net</span>
+          </div>
+          <h3>If retries still fail</h3>
+          <ul class="compact-list">
+            <li>Repair the wrapper locally.</li>
+            <li>Restore or remove links based on the original alert.</li>
+            <li>Insert a heading locally if needed.</li>
+            <li>Use the safest candidate or keep the original alert.</li>
+          </ul>
+        </article>
+        <article class="glance-card">
+          <div class="meta-line">
+            <span class="mini-badge mini-badge-prompt">Typical Inputs</span>
+          </div>
+          <h3>Issues the flow commonly responds to</h3>
+          <div class="compact-pills">
+            <span class="compact-pill">Missing next step</span>
+            <span class="compact-pill">Too wordy</span>
+            <span class="compact-pill">Too many links</span>
+            <span class="compact-pill">Missing heading</span>
+            <span class="compact-pill">Vague wording</span>
+            <span class="compact-pill">Focus-order or component misuse</span>
+          </div>
+        </article>
+      </div>
+      <p class="footer-note" id="prompt-source-note">
+        Prompt-derived details in this report are loaded live from the current prompt rule files when the page opens.
+      </p>
+    </section>
+
+    <details class="panel details-panel" open id="guardrail-map">
+      <summary class="details-summary">
+        <div>
+          <h2>Guardrail Map</h2>
+          <p>Grouped by control layer so the main rules are easier to scan.</p>
+        </div>
+        <span class="details-hint">Collapse</span>
+      </summary>
+      <div class="details-content">
+        <div class="matrix-grid">
+          <article class="glance-card">
+            <div class="meta-line">
+              <span class="mini-badge mini-badge-prompt">Prompt-Based</span>
+            </div>
+            <h3>Writing guidance sent to the model</h3>
+            <ul class="compact-list">
+              <li>Keep the alert concise, plain, active, and neutral.</li>
+              <li>State what happened first, then what the user should do.</li>
+              <li>Use descriptive link wording rather than vague anchor text.</li>
+              <li>Treat examples as guidance, not copyable content.</li>
+            </ul>
+            <div class="source-note">
+              <p class="source-note-label">Prompt paths:</p>
+              <ul class="source-list">
+                <li><a href="./ai-prompts/alerts-rewrite-rules.json">ai-prompts/alerts-rewrite-rules.json</a></li>
+                <li><a href="./ai-prompts/link-writing-rules.json">ai-prompts/link-writing-rules.json</a></li>
+              </ul>
+            </div>
+          </article>
+          <article class="glance-card">
+            <div class="meta-line">
+              <span class="mini-badge mini-badge-mixed">Mixed Control</span>
+            </div>
+            <h3>Rules guided by prompts and then validated</h3>
+            <ul class="compact-list">
+              <li>Every final alert needs a clear heading.</li>
+              <li>Links cannot be invented, and required links cannot disappear casually.</li>
+              <li>Standalone link paragraphs must use the approved pattern.</li>
+              <li>Good existing link endings should be preserved unless an issue requires change.</li>
+              <li>Example wording that is too close gets rejected and retried.</li>
+            </ul>
+            <div class="source-note">
+              <p class="source-note-label">Prompt paths:</p>
+              <ul class="source-list">
+                <li><a href="./ai-prompts/alerts-rewrite-rules.json">ai-prompts/alerts-rewrite-rules.json</a></li>
+                <li><a href="./ai-prompts/link-writing-rules.json">ai-prompts/link-writing-rules.json</a></li>
+              </ul>
+            </div>
+          </article>
+          <article class="glance-card">
+            <div class="meta-line">
+              <span class="mini-badge mini-badge-heuristic">Heuristic-Managed</span>
+            </div>
+            <h3>System-owned safety behavior</h3>
+            <ul class="compact-list">
+              <li>Each alert is processed independently so one failure does not block the page.</li>
+              <li>Issues are scoped to the relevant alert, with global issues applied wherever they matter.</li>
+              <li>Failed drafts are validated, retried once, repaired locally, or safely rejected.</li>
+              <li>The final fallback can preserve the original alert when that is safest.</li>
+            </ul>
+          </article>
+        </div>
+      </div>
+    </details>
+
+    <details class="panel details-panel" id="retry-text">
+      <summary class="details-summary">
+        <div>
+          <h2>Retry Text</h2>
+          <p>Exact prompt corrections appended when a draft fails validation.</p>
+        </div>
+        <span class="details-hint">Expand</span>
+      </summary>
+      <div class="details-content">
+        <p class="intro">
+          When a draft fails validation, the original rewrite prompt is rebuilt and one or more short corrective instructions are appended before the retry call is made.
+        </p>
+        <div class="retry-grid">
+        <article class="retry-card">
+          <div class="meta-line">
+            <span class="mini-badge mini-badge-mixed">Retry Prompt</span>
+          </div>
+          <h3>Invalid alert wrapper</h3>
+          <p>Used when the model does not return valid full alert HTML.</p>
+          <p class="retry-text" data-retry-key="invalidWrapperHtml">Loading current retry text...</p>
+        </article>
+        <article class="retry-card">
+          <div class="meta-line">
+            <span class="mini-badge mini-badge-mixed">Retry Prompt</span>
+          </div>
+          <h3>Missing heading</h3>
+          <p>Used when the draft does not include a semantic heading.</p>
+          <p class="retry-text" data-retry-key="mustHaveHeading">Loading current retry text...</p>
+        </article>
+        <article class="retry-card">
+          <div class="meta-line">
+            <span class="mini-badge mini-badge-mixed">Retry Prompt</span>
+          </div>
+          <h3>Placeholder links</h3>
+          <p>Used when the draft contains unfinished link tokens instead of final HTML links.</p>
+          <p class="retry-text" data-retry-key="placeholderLinks">Loading current retry text...</p>
+        </article>
+        <article class="retry-card">
+          <div class="meta-line">
+            <span class="mini-badge mini-badge-mixed">Retry Prompt</span>
+          </div>
+          <h3>Link added when none existed</h3>
+          <p>Used when the original alert had no link but the rewrite introduces one.</p>
+          <p class="retry-text" data-retry-key="noLinksAllowed">Loading current retry text...</p>
+        </article>
+        <article class="retry-card">
+          <div class="meta-line">
+            <span class="mini-badge mini-badge-mixed">Retry Prompt</span>
+          </div>
+          <h3>Required link removed</h3>
+          <p>Used when the original alert had a link and the rewrite drops it without a justified too-many-links case.</p>
+          <p class="retry-text" data-retry-key="mustKeepLink">Loading current retry text...</p>
+        </article>
+        <article class="retry-card">
+          <div class="meta-line">
+            <span class="mini-badge mini-badge-mixed">Retry Prompt</span>
+          </div>
+          <h3>Standalone link wording is malformed</h3>
+          <p>Used when a link-only sentence or paragraph lacks the allowed lead-in pattern.</p>
+          <p class="retry-text" data-retry-key="fullSentenceLinksNeedLeadIn">Loading current retry text...</p>
+        </article>
+        <article class="retry-card">
+          <div class="meta-line">
+            <span class="mini-badge mini-badge-mixed">Retry Prompt</span>
+          </div>
+          <h3>Example wording too close</h3>
+          <p>Used when the rewrite appears to copy example text instead of staying specific to the current alert.</p>
+          <p class="retry-text" data-retry-key="avoidExampleCopy">Loading current retry text...</p>
+        </article>
+        <article class="retry-card">
+          <div class="meta-line">
+            <span class="mini-badge mini-badge-heuristic">No Retry Text</span>
+          </div>
+          <h3>Purely heuristic fallback actions</h3>
+          <p>Some protections happen after retries fail, without appending more prompt text.</p>
+          <ul class="compact-list">
+            <li>Strip unexpected links when the original alert had none.</li>
+            <li>Restore at least one original link when one should have been kept.</li>
+            <li>Insert a heading locally if the model still did not provide one.</li>
+            <li>Rebuild a minimal valid alert wrapper.</li>
+            <li>Keep the safest candidate or fall back to the original alert.</li>
+          </ul>
+        </article>
+        </div>
+      </div>
+    </details>
+
+    <details class="panel details-panel" id="decision-flow">
+      <summary class="details-summary">
+        <div>
+          <h2>Decision Flow</h2>
+          <p>The end-to-end sequence from alert detection through retry, repair, and final fallback.</p>
+        </div>
+        <span class="details-hint">Expand</span>
+      </summary>
+      <div class="details-content">
+        <ol class="flow">
+        <li>
+          <div class="step">1</div>
+          <div>
+            <strong>Find the alerts and scope the issues</strong>
+            <p>Heuristic-managed. The page is scanned for alert components. Each alert gets only the issues that apply to it, plus any global issues that apply everywhere.</p>
+          </div>
+        </li>
+        <li>
+          <div class="step">2</div>
+          <div>
+            <strong>Build a rewrite plan</strong>
+            <p>Mixed control. The system first builds a heuristic plan from the alert and its issues. In advanced mode, it can also ask the model for a more detailed planning pass before rewriting.</p>
+          </div>
+        </li>
+        <li>
+          <div class="step">3</div>
+          <div>
+            <strong>Draft the rewrite with rule-based guidance</strong>
+            <p>Prompt-based. The rewrite step receives the alert text, the selected issues, the style rules, and any allowed example patterns. Link rules are included when the alert contains links.</p>
+          </div>
+        </li>
+        <li>
+          <div class="step">4</div>
+          <div>
+            <strong>Validate the draft immediately</strong>
+            <p>Heuristic-managed. The system checks for missing headings, invalid structure, placeholder links, invented links, missing required links, weak standalone-link wording, and copied example text.</p>
+          </div>
+        </li>
+        <li>
+          <div class="step">5</div>
+          <div>
+            <strong>Retry once with targeted corrections</strong>
+            <p>Mixed control. If a draft fails validation, the flow gives a short, specific prompt correction and tries again instead of accepting the first weak result.</p>
+          </div>
+        </li>
+        <li>
+          <div class="step">6</div>
+          <div>
+            <strong>Attempt a local repair if needed</strong>
+            <p>Heuristic-managed. If the retry still falls short, the flow performs one deterministic repair pass. This can restore a required link, remove an unexpected link, rebuild a valid alert wrapper, or insert a heading.</p>
+          </div>
+        </li>
+        <li>
+          <div class="step">7</div>
+          <div>
+            <strong>Prefer the safest final outcome</strong>
+            <p>Heuristic-managed. If the flow cannot produce a clearly safe rewrite, it does not force one. It falls back to the safest available version, which can include keeping the original alert.</p>
+          </div>
+        </li>
+        <li>
+          <div class="step">8</div>
+          <div>
+            <strong>Patch the page alert by alert</strong>
+            <p>Heuristic-managed. Once each alert has a final version, the page is updated. Because alerts are processed independently, one difficult alert does not stop the others from being improved.</p>
+          </div>
+        </li>
+        </ol>
+      </div>
+    </details>
+
+    <details class="panel details-panel" id="live-guidance">
+      <summary class="details-summary">
+        <div>
+          <h2>Live Prompt Guidance</h2>
+          <p>Current prompt-derived summaries pulled from the active rule files.</p>
+        </div>
+        <span class="details-hint">Expand</span>
+      </summary>
+      <div class="details-content">
+        <div class="source-grid">
+          <article class="source-card">
+            <div class="meta-line">
+              <span class="mini-badge mini-badge-prompt">Live From Prompt Rules</span>
+            </div>
+            <h3>Rewrite style guidance</h3>
+            <p>Short summary synthesized from the current rewrite rules.</p>
+            <ul class="live-list" id="live-style-rules">
+              <li class="live-loading">Loading current rewrite guidance summary...</li>
+            </ul>
+          </article>
+          <article class="source-card">
+            <div class="meta-line">
+              <span class="mini-badge mini-badge-prompt">Live From Prompt Rules</span>
+            </div>
+            <h3>Example-handling guidance</h3>
+            <p>Short summary synthesized from the current example-related rules.</p>
+            <ul class="live-list" id="live-example-rules">
+              <li class="live-loading">Loading current example guidance summary...</li>
+            </ul>
+          </article>
+          <article class="source-card">
+            <div class="meta-line">
+              <span class="mini-badge mini-badge-prompt">Live From Link Rules</span>
+            </div>
+            <h3>Shared link-writing guidance</h3>
+            <p>Short summary synthesized from the current shared link-writing rules.</p>
+            <ul class="live-list" id="live-link-rules">
+              <li class="live-loading">Loading current link-writing guidance summary...</li>
+            </ul>
+          </article>
+        </div>
+      </div>
+    </details>
+
+    <section class="panel">
+      <h2>Bottom Line</h2>
+      <div class="callout">
+        <p>
+          The alert rewrite flow is deliberately conservative. It improves clarity and accessibility, but it does so inside clear boundaries: do not invent links, do not lose necessary links, do not borrow example wording, and do not ship an unsafe rewrite when the original alert is the safer choice.
+        </p>
+      </div>
+    </section>
+  </main>
+  <script>
+    const alertRulesUrl = './ai-prompts/alerts-rewrite-rules.json';
+    const linkRulesUrl = './ai-prompts/link-writing-rules.json';
+
+    function setListItems(container, items, emptyText) {
+      if (!container) return;
+      container.innerHTML = '';
+      const values = Array.isArray(items) ? items.filter((item) => typeof item === 'string' && item.trim()) : [];
+      if (!values.length) {
+        const li = document.createElement('li');
+        li.className = 'live-loading';
+        li.textContent = emptyText;
+        container.appendChild(li);
+        return;
+      }
+      values.forEach((item) => {
+        const li = document.createElement('li');
+        li.textContent = item;
+        container.appendChild(li);
+      });
+    }
+
+    function setErrorState(container, message) {
+      if (!container) return;
+      container.innerHTML = '';
+      const li = document.createElement('li');
+      li.className = 'live-error';
+      li.textContent = message;
+      container.appendChild(li);
+    }
+
+    function addSummaryIfMissing(target, text) {
+      if (!text || target.includes(text)) return;
+      target.push(text);
+    }
+
+    function includesPattern(items, pattern) {
+      return items.some((item) => pattern.test(item));
+    }
+
+    function buildStyleSummaries(styleRules) {
+      const summaries = [];
+
+      if (
+        includesPattern(styleRules, /prefer 1 sentence|use 2 only if needed|keep concise/i)
+      ) {
+        addSummaryIfMissing(
+          summaries,
+          'Keep alerts concise for UI, usually one sentence and only expanding when needed.',
+        );
+      }
+      if (includesPattern(styleRules, /add a short, descriptive heading/i)) {
+        addSummaryIfMissing(
+          summaries,
+          'Include a short, descriptive heading at the start of the alert.',
+        );
+      }
+      if (
+        includesPattern(styleRules, /state what happened, then what to do|next step/i)
+      ) {
+        addSummaryIfMissing(
+          summaries,
+          'Explain what happened first, then give the user a clear next step when possible.',
+        );
+      }
+      if (includesPattern(styleRules, /plain, active, neutral language/i)) {
+        addSummaryIfMissing(
+          summaries,
+          'Use plain, active, neutral language rather than jargon-heavy wording.',
+        );
+      }
+      if (
+        includesPattern(styleRules, /standalone link sentence|own paragraph|last paragraph/i)
+      ) {
+        addSummaryIfMissing(
+          summaries,
+          'When a sentence mainly points to a link, separate it into its own paragraph and usually place it last.',
+        );
+      }
+      if (
+        includesPattern(styleRules, /refer to:|learn more:|learn about|find out/i)
+      ) {
+        addSummaryIfMissing(
+          summaries,
+          'Use approved link lead-ins such as "Refer to:", "Learn more:", "Learn about", or "Find out" only when they fit naturally.',
+        );
+      }
+      if (
+        includesPattern(styleRules, /do not add new links|real anchors|do not output \[link\]/i)
+      ) {
+        addSummaryIfMissing(
+          summaries,
+          'Do not invent links or use placeholders. Keep link handling tied to the original alert and use real HTML anchors.',
+        );
+      }
+      if (
+        includesPattern(styleRules, /preserve it unless a selected issue clearly requires a change/i)
+      ) {
+        addSummaryIfMissing(
+          summaries,
+          'Preserve a good existing standalone link ending unless a selected issue clearly requires changing it.',
+        );
+      }
+
+      return summaries;
+    }
+
+    function buildExampleSummaries(exampleRules, systemWithExamples, systemWithoutExamples) {
+      const summaries = [];
+      const combined = [...exampleRules, ...systemWithExamples, ...systemWithoutExamples];
+
+      if (includesPattern(combined, /pattern guidance|do not copy|specific to the input alert/i)) {
+        addSummaryIfMissing(
+          summaries,
+          'Use examples as pattern guidance only, not as wording to copy.',
+        );
+      }
+      if (includesPattern(combined, /exampleidsused values that match the provided example ids/i)) {
+        addSummaryIfMissing(
+          summaries,
+          'Only report example IDs that actually match the provided examples.',
+        );
+      }
+      if (includesPattern(combined, /exampleidsused as an empty array/i)) {
+        addSummaryIfMissing(
+          summaries,
+          'When no examples are provided, the output should explicitly report that no examples were used.',
+        );
+      }
+      if (includesPattern(combined, /keep the alert wrapper and classes valid/i)) {
+        addSummaryIfMissing(
+          summaries,
+          'Even when examples are involved, the output must still keep a valid alert wrapper.',
+        );
+      }
+      if (includesPattern(combined, /return json only/i)) {
+        addSummaryIfMissing(
+          summaries,
+          'The model is asked to return structured JSON only, without extra commentary.',
+        );
+      }
+
+      return summaries;
+    }
+
+    function buildLinkSummaries(linkRules) {
+      const summaries = [];
+      const normalizedRules = Array.isArray(linkRules) ? linkRules : [];
+
+      if (includesPattern(normalizedRules, /keep links by default|remove links when there are multiple links|do not remove links unless/i)) {
+        addSummaryIfMissing(
+          summaries,
+          'Keep links by default and only remove them in justified too-many-links cases, usually preserving one primary link.',
+        );
+      }
+      if (includesPattern(normalizedRules, /keep its original url/i)) {
+        addSummaryIfMissing(
+          summaries,
+          'If a link is retained, keep its original destination even if the link text is improved.',
+        );
+      }
+      if (
+        includesPattern(normalizedRules, /clearly describe the intended destination|never use vague anchor text|keep link text concise/i)
+      ) {
+        addSummaryIfMissing(
+          summaries,
+          'Use descriptive, concise anchor text and avoid vague wording like "here" or "learn more" as the link text itself.',
+        );
+      }
+      if (includesPattern(normalizedRules, /avoid duplicate wording|let the link text complete the phrase/i)) {
+        addSummaryIfMissing(
+          summaries,
+          'Avoid repeating the same destination wording outside the link when the anchor already carries that meaning.',
+        );
+      }
+      if (includesPattern(normalizedRules, /prefer placing links at the end of their sentence/i)) {
+        addSummaryIfMissing(
+          summaries,
+          'Prefer placing links at the end of the sentence when the sentence contains a link.',
+        );
+      }
+      if (
+        includesPattern(normalizedRules, /entire sentence|new paragraph|refer to:|learn more:|learn about|find out/i)
+      ) {
+        addSummaryIfMissing(
+          summaries,
+          'If a link stands alone or dominates the sentence, move it into its own paragraph and use the approved lead-in style.',
+        );
+      }
+
+      return summaries;
+    }
+
+    async function loadPromptDerivedContent() {
+      const versionPill = document.getElementById('prompt-version-pill');
+      const sourceNote = document.getElementById('prompt-source-note');
+      const styleRulesList = document.getElementById('live-style-rules');
+      const exampleRulesList = document.getElementById('live-example-rules');
+      const linkRulesList = document.getElementById('live-link-rules');
+      const retryNodes = Array.from(document.querySelectorAll('[data-retry-key]'));
+
+      try {
+        const [alertRulesResponse, linkRulesResponse] = await Promise.all([
+          fetch(alertRulesUrl),
+          fetch(linkRulesUrl),
+        ]);
+
+        if (!alertRulesResponse.ok) {
+          throw new Error('Could not load alert rewrite rules.');
+        }
+        if (!linkRulesResponse.ok) {
+          throw new Error('Could not load link-writing rules.');
+        }
+
+        const alertRules = await alertRulesResponse.json();
+        const linkRules = await linkRulesResponse.json();
+
+        const promptVersion = alertRules && typeof alertRules.version === 'string'
+          ? alertRules.version
+          : 'unknown';
+        if (versionPill) {
+          versionPill.textContent = `Prompt rules version: ${promptVersion}`;
+        }
+        if (sourceNote) {
+          sourceNote.textContent =
+            `Prompt-derived details in this report are loaded live from alerts-rewrite-rules.json and link-writing-rules.json. Current prompt rules version: ${promptVersion}.`;
+        }
+
+        const styleRules = alertRules?.alertRewrite?.styleRulesBase || [];
+        const exampleRules = alertRules?.alertRewrite?.styleRulesWithExamples || [];
+        const systemWithExamples =
+          alertRules?.alertRewrite?.systemPromptWithExamplesLines || [];
+        const systemWithoutExamples =
+          alertRules?.alertRewrite?.systemPromptWithoutExamplesLines || [];
+        const rawLinkRules = Array.isArray(linkRules?.rules)
+          ? linkRules.rules.map((rule) =>
+              typeof rule?.text === 'string' ? rule.text : '',
+            ).filter(Boolean)
+          : [];
+
+        const styleSummaries = buildStyleSummaries(styleRules);
+        const exampleSummaries = buildExampleSummaries(
+          exampleRules,
+          systemWithExamples,
+          systemWithoutExamples,
+        );
+        const linkSummaries = buildLinkSummaries(rawLinkRules);
+
+        setListItems(
+          styleRulesList,
+          styleSummaries,
+          'No rewrite guidance summary is available from the current rules.',
+        );
+        setListItems(
+          exampleRulesList,
+          exampleSummaries,
+          'No example guidance summary is available from the current rules.',
+        );
+        setListItems(
+          linkRulesList,
+          linkSummaries,
+          'No link-writing guidance summary is available from the current rules.',
+        );
+
+        const retryInstructions = alertRules?.alertRewrite?.retryInstructions || {};
+        retryNodes.forEach((node) => {
+          const key = node.getAttribute('data-retry-key') || '';
+          const text = typeof retryInstructions[key] === 'string'
+            ? retryInstructions[key]
+            : 'Retry text is not available in the current rules file.';
+          node.textContent = text;
+        });
+      } catch (error) {
+        if (versionPill) {
+          versionPill.textContent = 'Prompt rules version: unavailable';
+        }
+        if (sourceNote) {
+          sourceNote.textContent =
+            'Prompt-derived details could not be loaded live. The narrative report still describes the current flow, but the live prompt text is unavailable.';
+        }
+        setErrorState(styleRulesList, 'Unable to load rewrite style rules.');
+        setErrorState(exampleRulesList, 'Unable to load example-specific rules.');
+        setErrorState(linkRulesList, 'Unable to load link-writing rules.');
+        retryNodes.forEach((node) => {
+          node.textContent = 'Unable to load the current retry instruction from the rules file.';
+        });
+        console.error(error);
+      }
+    }
+
+    loadPromptDerivedContent();
+  </script>
+</body>
+</html>
