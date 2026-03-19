@@ -1,4 +1,5 @@
 import { TestBed } from '@angular/core/testing';
+import { TranslateService } from '@ngx-translate/core';
 
 import {
   AlertRewritePlan,
@@ -30,6 +31,15 @@ describe('AlertRewriteGuardService', () => {
       providers: [
         AlertRewriteGuardService,
         { provide: AlertRewriteService, useValue: alertRewriteSpy },
+        {
+          provide: TranslateService,
+          useValue: {
+            instant: () => [
+              'Based on your selections above',
+              'Based on your selection above',
+            ],
+          },
+        },
       ],
     });
 

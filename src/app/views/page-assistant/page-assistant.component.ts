@@ -43,6 +43,10 @@ import {
 import { OpenRouterService } from './services/openrouter.service';
 import { SkillManagerService, SkillOutputMode } from './services/skill-manager.service';
 import { AlertIssuesContextService } from './services/alert-issues-context.service';
+import {
+  coerceInteractiveResultLeadIns,
+  removeNonReportableAlertsFromHtml,
+} from './services/alert-reportable.utils';
 import { AlertRewriteOrchestratorService } from './services/alert-rewrite-orchestrator.service';
 
 //Data
@@ -786,6 +790,12 @@ export class PageAssistantCompareComponent
     return key ? this.translate.instant(`page.ai-options.model.short.${key}`) : model;
   }
 
+  private getInteractiveResultLeadIns(): string[] {
+    return coerceInteractiveResultLeadIns(
+      this.translate.instant('page.alerts.interactiveResultLeadIns'),
+    );
+  }
+
   private buildModelRotation(model: AiModel): string[] {
     // Fallback order after the user-selected model.
     const fallbackOrder: AiModel[] = [AiModel.Arcee, AiModel.Zai];
@@ -840,11 +850,17 @@ export class PageAssistantCompareComponent
       const useCompactAlertsPageContext =
         promptKeyForRequest === PromptKey.AlertsIssues &&
         this.uploadState.getUseCompactAlertsPageContext();
+      const sanitizedAlertsIssuesHtml =
+        promptKeyForRequest === PromptKey.AlertsIssues
+          ? removeNonReportableAlertsFromHtml(html, {
+              interactiveResultLeadIns: this.getInteractiveResultLeadIns(),
+            })
+          : html;
       const alertsIssuesUserContent = useCompactAlertsPageContext
         ? JSON.stringify(
             this.alertIssuesContext.buildCompactAlertsIssuesPayload(html),
           )
-        : html;
+        : sanitizedAlertsIssuesHtml;
 
       const payload = {
         models: this.buildModelRotation(model),

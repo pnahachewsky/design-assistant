@@ -9,6 +9,10 @@ import { UploadStateService } from './upload-state.service';
 import { SkillManagerService } from './skill-manager.service';
 import type { AlertIssue } from '../components/problems/component-guidance/alerts-guidance/alerts-guidance.component';
 import fallbackSeverityJson from '../components/problems/component-guidance/alerts-guidance/severity-include-fallback.json';
+import {
+  coerceInteractiveResultLeadIns,
+  getReportableAlerts,
+} from './alert-reportable.utils';
 
 @Injectable({ providedIn: 'root' })
 export class AlertAiService {
@@ -382,13 +386,22 @@ export class AlertAiService {
     if (!sourceHtml) return [];
     try {
       const doc = new DOMParser().parseFromString(sourceHtml, 'text/html');
-      // Issue analysis is intentionally scoped to elements already recognized as alerts.
-      const alerts = Array.from(doc.body.querySelectorAll('.alert'));
+      // Issue analysis is intentionally scoped to reportable alerts, excluding
+      // hidden decision-path result panels that are not page-level alerts.
+      const alerts = getReportableAlerts(doc.body, {
+        interactiveResultLeadIns: this.getInteractiveResultLeadIns(),
+      });
       return alerts.map((el) => el.outerHTML);
     } catch (err) {
       console.warn('Failed to extract alerts from HTML', err);
       return [];
     }
+  }
+
+  private getInteractiveResultLeadIns(): string[] {
+    return coerceInteractiveResultLeadIns(
+      this.translate.instant('page.alerts.interactiveResultLeadIns'),
+    );
   }
 
   private normalizeSeverity(v: unknown, category?: string): string {

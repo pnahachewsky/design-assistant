@@ -1,4 +1,5 @@
 import { TestBed } from '@angular/core/testing';
+import { TranslateService } from '@ngx-translate/core';
 
 import { AlertRewriteOrchestratorService } from './alert-rewrite-orchestrator.service';
 import {
@@ -70,6 +71,15 @@ describe('AlertRewriteOrchestratorService', () => {
         { provide: AlertRewriteService, useValue: alertRewriteSpy },
         { provide: AlertRewriteGuardService, useValue: alertRewriteGuardSpy },
         { provide: UrlDataService, useValue: urlDataSpy },
+        {
+          provide: TranslateService,
+          useValue: {
+            instant: () => [
+              'Based on your selections above',
+              'Based on your selection above',
+            ],
+          },
+        },
       ],
     });
 

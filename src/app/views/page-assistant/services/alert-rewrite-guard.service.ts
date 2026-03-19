@@ -1,4 +1,5 @@
 import { Injectable, inject } from '@angular/core';
+import { TranslateService } from '@ngx-translate/core';
 import {
   AlertRewriteExample,
   AlertRewriteIssueInput,
@@ -6,6 +7,10 @@ import {
   AlertRewriteResult,
   AlertRewriteService,
 } from './alert-rewrite.service';
+import {
+  coerceInteractiveResultLeadIns,
+  getReportableAlerts,
+} from './alert-reportable.utils';
 
 export interface AlertHtmlRewrite {
   alert_index: number;
@@ -15,6 +20,7 @@ export interface AlertHtmlRewrite {
 @Injectable({ providedIn: 'root' })
 export class AlertRewriteGuardService {
   private alertRewrite = inject(AlertRewriteService);
+  private translate = inject(TranslateService);
 
   // Extracts the alert body text used by planning and copy-detection logic.
   getAlertTextForRewrite(alertElement: Element): string {
@@ -307,7 +313,9 @@ export class AlertRewriteGuardService {
 
     const parser = new DOMParser();
     const doc = parser.parseFromString(originalHtml, 'text/html');
-    const alerts = Array.from(doc.querySelectorAll('.alert'));
+    const alerts = getReportableAlerts(doc, {
+      interactiveResultLeadIns: this.getInteractiveResultLeadIns(),
+    });
     if (!alerts.length) return null;
 
     for (const rewrite of rewrites) {
@@ -357,6 +365,12 @@ export class AlertRewriteGuardService {
     }
 
     return blocks;
+  }
+
+  private getInteractiveResultLeadIns(): string[] {
+    return coerceInteractiveResultLeadIns(
+      this.translate.instant('page.alerts.interactiveResultLeadIns'),
+    );
   }
 
   private isValidStandaloneLinkLeadIn(leadInText: string): boolean {

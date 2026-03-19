@@ -1,13 +1,22 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
+import { TranslateService } from '@ngx-translate/core';
+import {
+  coerceInteractiveResultLeadIns,
+  getReportableAlerts,
+} from './alert-reportable.utils';
 
 @Injectable({ providedIn: 'root' })
 export class AlertIssuesContextService {
+  private readonly translate = inject(TranslateService);
+
   // Builds the compact alert-analysis payload used when we want the model to
   // reason over structured page signals instead of parsing the full page HTML.
   buildCompactAlertsIssuesPayload(sourceHtml: string): Record<string, unknown> {
     const parser = new DOMParser();
     const doc = parser.parseFromString(sourceHtml, 'text/html');
-    const alerts = Array.from(doc.querySelectorAll('.alert'));
+    const alerts = getReportableAlerts(doc, {
+      interactiveResultLeadIns: this.getInteractiveResultLeadIns(),
+    });
     const main = (doc.querySelector('main') as HTMLElement | null) || doc.body;
     // Extract the page's H2 list so compact mode can pass section-level context
     // without sending the full page HTML back to the model.
@@ -135,6 +144,12 @@ export class AlertIssuesContextService {
       // Compact mode precomputes structural alert checks so the issues skill can spend more reasoning on judgment than HTML parsing.
       alertSignals,
     };
+  }
+
+  private getInteractiveResultLeadIns(): string[] {
+    return coerceInteractiveResultLeadIns(
+      this.translate.instant('page.alerts.interactiveResultLeadIns'),
+    );
   }
 
   // Normalizes page text into short snippets so the compact payload stays cheap.

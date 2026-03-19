@@ -1,4 +1,5 @@
 import { Injectable, inject } from '@angular/core';
+import { TranslateService } from '@ngx-translate/core';
 import { getAlertRewriteRules } from '../../../common/constants/alert-rewrite-rules.constants';
 import { AlertRewriteMode, AiModel } from '../data/data.model';
 import { UrlDataService } from './url-data.service';
@@ -8,6 +9,10 @@ import {
   AlertRewriteService,
 } from './alert-rewrite.service';
 import { AlertRewriteGuardService } from './alert-rewrite-guard.service';
+import {
+  coerceInteractiveResultLeadIns,
+  getReportableAlerts,
+} from './alert-reportable.utils';
 
 export interface OpenRouterMessageCaller {
   (
@@ -25,6 +30,7 @@ export class AlertRewriteOrchestratorService {
   private alertRewrite = inject(AlertRewriteService);
   private alertRewriteGuard = inject(AlertRewriteGuardService);
   private urlDataService = inject(UrlDataService);
+  private translate = inject(TranslateService);
 
   // Runs the full alert-rewrite workflow:
   // plan each alert, generate rewrites, apply retry/repair guards, then patch the page HTML.
@@ -47,9 +53,11 @@ export class AlertRewriteOrchestratorService {
     const retryInstructions = rewriteRules.alertRewrite.retryInstructions;
 
     const alertDoc = new DOMParser().parseFromString(params.html, 'text/html');
-    const alertEls = Array.from(alertDoc.querySelectorAll('.alert'));
+    const alertEls = getReportableAlerts(alertDoc, {
+      interactiveResultLeadIns: this.getInteractiveResultLeadIns(),
+    });
     if (!alertEls.length) {
-      throw new Error('No .alert elements found in the page.');
+      throw new Error('No reportable .alert elements found in the page.');
     }
 
     const examples = params.includeExamples
@@ -412,5 +420,11 @@ export class AlertRewriteOrchestratorService {
     // Keep final output formatting consistent with the rest of the assistant flow.
     const formattedHtml = await this.urlDataService.formatHtml(finalHtml, 'ai');
     return { formattedHtml };
+  }
+
+  private getInteractiveResultLeadIns(): string[] {
+    return coerceInteractiveResultLeadIns(
+      this.translate.instant('page.alerts.interactiveResultLeadIns'),
+    );
   }
 }

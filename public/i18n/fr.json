@@ -76,7 +76,11 @@
 	"page.apiKey.notSet": "Non définie",
 	"--------LANDING PAGE-----------------": "--------------------------------LANDING PAGE-----------------------------------------",
 	"landing.content": "",
-	"--------PAGE ASSISTANT---------------": "--------------------------------PAGE ASSISTANT---------------------------------------",
+		"--------PAGE ASSISTANT---------------": "--------------------------------PAGE ASSISTANT---------------------------------------",
+		"page.alerts.interactiveResultLeadIns": [
+			"Selon vos sélections ci-dessus",
+			"Selon votre sélection ci-dessus"
+		],
 	"page.description": "Comparez les pages de Canada.ca avec des versions prototypes côte à côte.",
 	"page.step1.title": "Téléverser",
 	"page.step2.title": "Afficher",
