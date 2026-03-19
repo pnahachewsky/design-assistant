@@ -71,6 +71,10 @@
   "--------LANDING PAGE-----------------": "--------------------------------LANDING PAGE-----------------------------------------",
   "landing.content": "",
   "--------PAGE ASSISTANT---------------": "--------------------------------PAGE ASSISTANT---------------------------------------",
+  "page.alerts.interactiveResultLeadIns": [
+    "Based on your selections above",
+    "Based on your selection above"
+  ],
   "page.upload.description": "Upload your content to compare it with AI generated content or prototypes.",
   "page.compare.description": "Compare your content with AI generated content or prototypes.",
   "page.upload.sample": "Load sample data",

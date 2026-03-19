@@ -21675,6 +21675,76 @@ var severity_include_fallback_default = {
   "Non-text content": { severity: "High", include: true }
 };
 
+// src/app/views/page-assistant/services/alert-reportable.utils.ts
+var HIDDEN_STYLE_RE = /(display\s*:\s*none|visibility\s*:\s*hidden)/i;
+var HIDDEN_CLASS_NAMES = /* @__PURE__ */ new Set(["hidden", "hide", "d-none", "is-hidden", "wb-inv"]);
+var IGNORED_ALERT_IDS = /* @__PURE__ */ new Set(["norun"]);
+function getReportableAlerts(root, options) {
+  return Array.from(root.querySelectorAll(".alert")).filter((alert) => !isConditionalInteractiveAlert(alert, options));
+}
+function removeNonReportableAlertsFromHtml(sourceHtml, options) {
+  if (!sourceHtml)
+    return "";
+  const doc = new DOMParser().parseFromString(sourceHtml, "text/html");
+  const alerts = Array.from(doc.querySelectorAll(".alert"));
+  alerts.forEach((alert) => {
+    if (isConditionalInteractiveAlert(alert, options)) {
+      alert.remove();
+    }
+  });
+  return doc.body.innerHTML;
+}
+function coerceInteractiveResultLeadIns(value) {
+  if (!Array.isArray(value))
+    return [];
+  return value.filter((item) => typeof item === "string").map((item) => item.trim()).filter((item) => !!item);
+}
+function isConditionalInteractiveAlert(alert, options) {
+  if (isIgnoredAlertId(alert))
+    return true;
+  if (hasInteractiveResultLeadIn(alert, options?.interactiveResultLeadIns ?? [])) {
+    return true;
+  }
+  return isHiddenAlert(alert);
+}
+function hasInteractiveResultLeadIn(alert, leadIns) {
+  const normalizedLeadIns = leadIns.map(normalizeLeadInText).filter((leadIn) => !!leadIn);
+  if (!normalizedLeadIns.length)
+    return false;
+  const firstLeadInCandidate = getFirstLeadInCandidate(alert);
+  const normalizedCandidate = normalizeLeadInText(firstLeadInCandidate);
+  return normalizedLeadIns.some((leadIn) => !!normalizedCandidate && normalizedCandidate.startsWith(leadIn));
+}
+function getFirstLeadInCandidate(alert) {
+  for (const child of Array.from(alert.children)) {
+    const tagName = child.tagName.toLowerCase();
+    if (/^h[1-6]$/.test(tagName))
+      continue;
+    const text = (child.textContent || "").replace(/\s+/g, " ").trim();
+    if (text)
+      return text;
+  }
+  return (alert.textContent || "").replace(/\s+/g, " ").trim();
+}
+function isIgnoredAlertId(alert) {
+  const id = (alert.getAttribute("id") || "").trim().toLowerCase();
+  return !!id && IGNORED_ALERT_IDS.has(id);
+}
+function normalizeLeadInText(value) {
+  return (value || "").replace(/\s+/g, " ").trim().toLowerCase().replace(/[:.]$/, "").trim();
+}
+function isHiddenAlert(alert) {
+  if (alert.hasAttribute("hidden"))
+    return true;
+  if ((alert.getAttribute("aria-hidden") || "").trim().toLowerCase() === "true") {
+    return true;
+  }
+  const style2 = (alert.getAttribute("style") || "").trim().toLowerCase();
+  if (style2 && HIDDEN_STYLE_RE.test(style2))
+    return true;
+  return Array.from(alert.classList).some((className) => HIDDEN_CLASS_NAMES.has(className.toLowerCase()));
+}
+
 // src/app/views/page-assistant/services/alert-ai.service.ts
 var AlertAiService = class _AlertAiService {
   openRouter = inject(OpenRouterService);
@@ -21949,12 +22019,17 @@ var AlertAiService = class _AlertAiService {
       return [];
     try {
       const doc = new DOMParser().parseFromString(sourceHtml, "text/html");
-      const alerts = Array.from(doc.body.querySelectorAll(".alert"));
+      const alerts = getReportableAlerts(doc.body, {
+        interactiveResultLeadIns: this.getInteractiveResultLeadIns()
+      });
       return alerts.map((el) => el.outerHTML);
     } catch (err) {
       console.warn("Failed to extract alerts from HTML", err);
       return [];
     }
+  }
+  getInteractiveResultLeadIns() {
+    return coerceInteractiveResultLeadIns(this.translate.instant("page.alerts.interactiveResultLeadIns"));
   }
   normalizeSeverity(v, category) {
     const rawLower = this.cleanString(v).toLowerCase();
@@ -22003,12 +22078,15 @@ var AlertAiService = class _AlertAiService {
 
 // src/app/views/page-assistant/services/alert-issues-context.service.ts
 var AlertIssuesContextService = class _AlertIssuesContextService {
+  translate = inject(TranslateService);
   // Builds the compact alert-analysis payload used when we want the model to
   // reason over structured page signals instead of parsing the full page HTML.
   buildCompactAlertsIssuesPayload(sourceHtml) {
     const parser = new DOMParser();
     const doc = parser.parseFromString(sourceHtml, "text/html");
-    const alerts = Array.from(doc.querySelectorAll(".alert"));
+    const alerts = getReportableAlerts(doc, {
+      interactiveResultLeadIns: this.getInteractiveResultLeadIns()
+    });
     const main = doc.querySelector("main") || doc.body;
     const h2Elements = Array.from(main.querySelectorAll("h2"));
     const h2Headings = h2Elements.map((h2) => this.truncateContextText(h2.textContent || "", 120)).filter((value) => !!value).slice(0, 20);
@@ -22091,6 +22169,9 @@ H2 headings (${h2Headings.length}): ${h2Headings.join(" | ") || "N/A"}`,
       // Compact mode precomputes structural alert checks so the issues skill can spend more reasoning on judgment than HTML parsing.
       alertSignals
     };
+  }
+  getInteractiveResultLeadIns() {
+    return coerceInteractiveResultLeadIns(this.translate.instant("page.alerts.interactiveResultLeadIns"));
   }
   // Normalizes page text into short snippets so the compact payload stays cheap.
   truncateContextText(value, maxChars) {
@@ -23006,6 +23087,7 @@ var AlertRewriteService = class _AlertRewriteService {
 // src/app/views/page-assistant/services/alert-rewrite-guard.service.ts
 var AlertRewriteGuardService = class _AlertRewriteGuardService {
   alertRewrite = inject(AlertRewriteService);
+  translate = inject(TranslateService);
   // Extracts the alert body text used by planning and copy-detection logic.
   getAlertTextForRewrite(alertElement) {
     const firstParagraph = alertElement.querySelector("p");
@@ -23201,7 +23283,9 @@ var AlertRewriteGuardService = class _AlertRewriteGuardService {
       return null;
     const parser = new DOMParser();
     const doc = parser.parseFromString(originalHtml, "text/html");
-    const alerts = Array.from(doc.querySelectorAll(".alert"));
+    const alerts = getReportableAlerts(doc, {
+      interactiveResultLeadIns: this.getInteractiveResultLeadIns()
+    });
     if (!alerts.length)
       return null;
     for (const rewrite of rewrites) {
@@ -23245,6 +23329,9 @@ var AlertRewriteGuardService = class _AlertRewriteGuardService {
       blocks.push(fallback);
     }
     return blocks;
+  }
+  getInteractiveResultLeadIns() {
+    return coerceInteractiveResultLeadIns(this.translate.instant("page.alerts.interactiveResultLeadIns"));
   }
   isValidStandaloneLinkLeadIn(leadInText) {
     const normalized = this.normalizeLeadInText(leadInText.replace(/[.!?]\s*$/g, ""));
@@ -23345,6 +23432,7 @@ var AlertRewriteOrchestratorService = class _AlertRewriteOrchestratorService {
   alertRewrite = inject(AlertRewriteService);
   alertRewriteGuard = inject(AlertRewriteGuardService);
   urlDataService = inject(UrlDataService);
+  translate = inject(TranslateService);
   // Runs the full alert-rewrite workflow:
   // plan each alert, generate rewrites, apply retry/repair guards, then patch the page HTML.
   generateRecommendations(params) {
@@ -23353,9 +23441,11 @@ var AlertRewriteOrchestratorService = class _AlertRewriteOrchestratorService {
       const rewriteRules = yield getAlertRewriteRules();
       const retryInstructions = rewriteRules.alertRewrite.retryInstructions;
       const alertDoc = new DOMParser().parseFromString(params.html, "text/html");
-      const alertEls = Array.from(alertDoc.querySelectorAll(".alert"));
+      const alertEls = getReportableAlerts(alertDoc, {
+        interactiveResultLeadIns: this.getInteractiveResultLeadIns()
+      });
       if (!alertEls.length) {
-        throw new Error("No .alert elements found in the page.");
+        throw new Error("No reportable .alert elements found in the page.");
       }
       const examples = params.includeExamples ? yield this.alertRewrite.loadExamples() : [];
       const rewrites = [];
@@ -23599,6 +23689,9 @@ var AlertRewriteOrchestratorService = class _AlertRewriteOrchestratorService {
       const formattedHtml = yield this.urlDataService.formatHtml(finalHtml, "ai");
       return { formattedHtml };
     });
+  }
+  getInteractiveResultLeadIns() {
+    return coerceInteractiveResultLeadIns(this.translate.instant("page.alerts.interactiveResultLeadIns"));
   }
   static \u0275fac = function AlertRewriteOrchestratorService_Factory(__ngFactoryType__) {
     return new (__ngFactoryType__ || _AlertRewriteOrchestratorService)();
@@ -41608,6 +41701,9 @@ ${custom}` : composed.prompt;
     const key2 = this.resolveAiModelKey(model);
     return key2 ? this.translate.instant(`page.ai-options.model.short.${key2}`) : model;
   }
+  getInteractiveResultLeadIns() {
+    return coerceInteractiveResultLeadIns(this.translate.instant("page.alerts.interactiveResultLeadIns"));
+  }
   buildModelRotation(model) {
     const fallbackOrder = [AiModel.Arcee, AiModel.Zai];
     const available = new Set(this.openRouter.freeModels);
@@ -41652,7 +41748,10 @@ ${custom}` : composed.prompt;
           "Content-Type": "application/json"
         };
         const useCompactAlertsPageContext = promptKeyForRequest === PromptKey.AlertsIssues && this.uploadState.getUseCompactAlertsPageContext();
-        const alertsIssuesUserContent = useCompactAlertsPageContext ? JSON.stringify(this.alertIssuesContext.buildCompactAlertsIssuesPayload(html)) : html;
+        const sanitizedAlertsIssuesHtml = promptKeyForRequest === PromptKey.AlertsIssues ? removeNonReportableAlertsFromHtml(html, {
+          interactiveResultLeadIns: this.getInteractiveResultLeadIns()
+        }) : html;
+        const alertsIssuesUserContent = useCompactAlertsPageContext ? JSON.stringify(this.alertIssuesContext.buildCompactAlertsIssuesPayload(html)) : sanitizedAlertsIssuesHtml;
         const payload = {
           models: this.buildModelRotation(model),
           messages: [
@@ -42587,9 +42686,9 @@ ${custom}` : composed.prompt;
   }] });
 })();
 (() => {
-  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(PageAssistantCompareComponent, { className: "PageAssistantCompareComponent", filePath: "src/app/views/page-assistant/page-assistant.component.ts", lineNumber: 93 });
+  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(PageAssistantCompareComponent, { className: "PageAssistantCompareComponent", filePath: "src/app/views/page-assistant/page-assistant.component.ts", lineNumber: 97 });
 })();
 export {
   PageAssistantCompareComponent
 };
-//# sourceMappingURL=chunk-Y4TNJD5J.js.map
+//# sourceMappingURL=chunk-Y2LL2P6M.js.map
