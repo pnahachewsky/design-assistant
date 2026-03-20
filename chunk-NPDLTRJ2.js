@@ -138,7 +138,7 @@ import {
   unblockBodyScroll,
   uuid,
   zindexutils
-} from "./chunk-UD35Z6K2.js";
+} from "./chunk-L7SGNDUJ.js";
 import {
   ChangeDetectionStrategy,
   ChangeDetectorRef,
@@ -21300,9 +21300,15 @@ var OpenRouterService = class _OpenRouterService {
   http = inject(HttpClient);
   apiKeyService = inject(ApiKeyService);
   openRouterApiUrl = "https://openrouter.ai/api/v1/chat/completions";
+  freeModelSet = /* @__PURE__ */ new Set([
+    AiModel.NemotronNano,
+    AiModel.NemotronSuper,
+    AiModel.Arcee,
+    AiModel.Zai
+  ]);
   // Canonical model lists used by the assistant UI and fallback helpers.
   models = Object.values(AiModel);
-  freeModels = this.models.filter((model) => model !== AiModel.GPT5Nano);
+  freeModels = this.models.filter((model) => this.freeModelSet.has(model));
   get hasApiKey() {
     return !!this.apiKeyService.getCurrentKey();
   }
@@ -21700,6 +21706,8 @@ function coerceInteractiveResultLeadIns(value) {
   return value.filter((item) => typeof item === "string").map((item) => item.trim()).filter((item) => !!item);
 }
 function isConditionalInteractiveAlert(alert, options) {
+  if (isAlertRewriteStatusMessage(alert))
+    return true;
   if (isIgnoredAlertId(alert))
     return true;
   if (hasInteractiveResultLeadIn(alert, options?.interactiveResultLeadIns ?? [])) {
@@ -21729,6 +21737,9 @@ function getFirstLeadInCandidate(alert) {
 function isIgnoredAlertId(alert) {
   const id = (alert.getAttribute("id") || "").trim().toLowerCase();
   return !!id && IGNORED_ALERT_IDS.has(id);
+}
+function isAlertRewriteStatusMessage(alert) {
+  return !!(alert.getAttribute("data-alert-rewrite-status") || "").trim();
 }
 function normalizeLeadInText(value) {
   return (value || "").replace(/\s+/g, " ").trim().toLowerCase().replace(/[:.]$/, "").trim();
@@ -22774,6 +22785,33 @@ var AlertRewriteService = class _AlertRewriteService {
       exampleIdsUsed
     };
   }
+  parseAlertRewriteRepairCandidate(text, selectedExamples) {
+    const parsed = this.looseJsonParse(this.stripCodeFences(text));
+    if (!parsed || typeof parsed !== "object") {
+      return null;
+    }
+    const root = parsed;
+    const rawAlertHtml = this.cleanString(root["rewrittenAlertHtml"]);
+    const normalizedAlertHtml = this.normalizeAlertWrapperHtml(rawAlertHtml);
+    const parsedHeading = this.cleanString(root["rewrittenHeading"]);
+    const rawAlert = this.cleanString(root["rewrittenAlert"]);
+    const extractedHeading = normalizedAlertHtml ? this.extractHeadingFromAlertHtml(normalizedAlertHtml) : "";
+    const extractedBodyText = normalizedAlertHtml ? this.extractBodyTextFromAlertHtml(normalizedAlertHtml) : this.extractTextFromHtmlFragment(rawAlertHtml);
+    const rewrittenHeading = parsedHeading || extractedHeading || this.buildFallbackHeading();
+    const baseBodyText = rawAlert || extractedBodyText;
+    if (!rawAlertHtml && !baseBodyText) {
+      return null;
+    }
+    const appliedDirectives = this.toStringArray(root["appliedDirectives"]);
+    const exampleIdsUsed = this.sanitizeExampleIdsUsed(this.toStringArray(root["exampleIdsUsed"]), selectedExamples);
+    return {
+      rewrittenAlertHtml: normalizedAlertHtml || rawAlertHtml,
+      rewrittenHeading,
+      rewrittenAlert: (baseBodyText || "").trim(),
+      appliedDirectives,
+      exampleIdsUsed
+    };
+  }
   detectExampleCopy(params) {
     const rewrittenCombined = this.normalizeComparisonText(`${params.result.rewrittenHeading || ""} ${params.result.rewrittenAlert || ""}`);
     const originalCombined = this.normalizeComparisonText(`${params.originalHeading || ""} ${params.originalAlertText || ""}`);
@@ -22812,8 +22850,11 @@ var AlertRewriteService = class _AlertRewriteService {
     const normalizedAlertHtml = this.normalizeAlertWrapperHtml(params.alertHtml) || params.alertHtml.trim();
     const extractedHeading = this.extractHeadingFromAlertHtml(normalizedAlertHtml);
     const rewrittenHeading = (params.originalHeading || "").trim() || extractedHeading;
+    const shouldShowFailureNotice = params.failureReasons !== void 0;
+    const failureReasons = (params.failureReasons || []).filter((reason) => !!reason);
+    const rewrittenAlertHtml = shouldShowFailureNotice ? `${this.buildPassthroughFailureNoticeHtml(failureReasons)}${normalizedAlertHtml}` : normalizedAlertHtml;
     return {
-      rewrittenAlertHtml: normalizedAlertHtml,
+      rewrittenAlertHtml,
       rewrittenHeading: rewrittenHeading || this.buildFallbackHeading(),
       rewrittenAlert: (params.originalAlertText || "").trim(),
       appliedDirectives: [],
@@ -23032,6 +23073,29 @@ var AlertRewriteService = class _AlertRewriteService {
       return "";
     }
   }
+  extractTextFromHtmlFragment(fragmentHtml) {
+    if (!fragmentHtml)
+      return "";
+    try {
+      const doc = new DOMParser().parseFromString(fragmentHtml, "text/html");
+      return (doc.body.textContent || "").trim();
+    } catch {
+      return "";
+    }
+  }
+  buildPassthroughFailureNoticeHtml(failureReasons) {
+    const reasonsText = failureReasons.join(", ");
+    return [
+      '<div class="alert alert-danger mrgn-bttm-md" data-alert-rewrite-status="failed"',
+      ` data-alert-rewrite-failure-reasons="${this.escapeHtmlAttribute(reasonsText)}">`,
+      "<h3>GenAI alert rewrite failed</h3>",
+      "<p>The assistant could not rewrite this alert after multiple attempts. The original alert is shown below.</p>",
+      "</div>"
+    ].join("");
+  }
+  escapeHtmlAttribute(value) {
+    return (value || "").replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  }
   toExampleLinkArray(raw) {
     if (!Array.isArray(raw))
       return [];
@@ -23134,6 +23198,8 @@ var AlertRewriteGuardService = class _AlertRewriteGuardService {
   ensureSemanticHeading(alertHtml, headingText) {
     try {
       const doc = new DOMParser().parseFromString(alertHtml, "text/html");
+      if (doc.body.childElementCount !== 1)
+        return doc.body.innerHTML.trim();
       const root = doc.body.firstElementChild;
       if (!root)
         return alertHtml;
@@ -23293,10 +23359,16 @@ var AlertRewriteGuardService = class _AlertRewriteGuardService {
       if (!target)
         continue;
       const updatedDoc = parser.parseFromString(rewrite.rewritten_alert_html, "text/html");
-      const updatedEl = updatedDoc.body.firstElementChild;
-      if (!updatedEl || !updatedEl.classList.contains("alert"))
+      const replacementNodes = Array.from(updatedDoc.body.childNodes).filter((node) => {
+        if (node.nodeType !== Node.TEXT_NODE)
+          return true;
+        return !!(node.textContent || "").trim();
+      });
+      const hasAlertElement = replacementNodes.some((node) => node.nodeType === Node.ELEMENT_NODE && node.classList.contains("alert"));
+      if (!replacementNodes.length || !hasAlertElement)
         continue;
-      target.replaceWith(updatedEl);
+      const importedNodes = replacementNodes.map((node) => doc.importNode(node, true));
+      target.replaceWith(...importedNodes);
     }
     return doc.body.outerHTML;
   }
@@ -23433,6 +23505,9 @@ var AlertRewriteOrchestratorService = class _AlertRewriteOrchestratorService {
   alertRewriteGuard = inject(AlertRewriteGuardService);
   urlDataService = inject(UrlDataService);
   translate = inject(TranslateService);
+  formatReasonsForLog(reasons) {
+    return reasons.length ? reasons.join(", ") : "none";
+  }
   // Runs the full alert-rewrite workflow:
   // plan each alert, generate rewrites, apply retry/repair guards, then patch the page HTML.
   generateRecommendations(params) {
@@ -23487,7 +23562,7 @@ var AlertRewriteOrchestratorService = class _AlertRewriteOrchestratorService {
         let rewriteModelName = "unknown";
         let copyGuardTriggered = false;
         let blockedExampleId = null;
-        let lastParsedResult = null;
+        let lastRepairCandidate = null;
         let softRejectedResult = null;
         let softRejectedReasons = [];
         let lastRetryReasons = [];
@@ -23517,7 +23592,11 @@ var AlertRewriteOrchestratorService = class _AlertRewriteOrchestratorService {
             rewrittenAlert: parsedResult?.rewrittenAlert
           });
           if (!parsedResult?.rewrittenAlertHtml) {
-            console.warn("Alert rewrite retry triggered", {
+            const repairCandidate = this.alertRewrite.parseAlertRewriteRepairCandidate(rewriteResponse.text, selectedExamples);
+            if (repairCandidate) {
+              lastRepairCandidate = repairCandidate;
+            }
+            console.warn(`Alert rewrite retry triggered for alert ${alertIndex}, attempt ${attempt + 1}: ${this.formatReasonsForLog(["invalidWrapperHtml"])}`, {
               alertIndex,
               attempt: attempt + 1,
               reasons: ["invalidWrapperHtml"],
@@ -23528,7 +23607,7 @@ var AlertRewriteOrchestratorService = class _AlertRewriteOrchestratorService {
             retryInstructionsForAttempt = [retryInstructions.invalidWrapperHtml];
             continue;
           }
-          lastParsedResult = parsedResult;
+          lastRepairCandidate = parsedResult;
           const retryReasons = [];
           const retryInstructionsForResult = [];
           const addRetryInstruction = (reason, instruction) => {
@@ -23576,7 +23655,7 @@ var AlertRewriteOrchestratorService = class _AlertRewriteOrchestratorService {
               softRejectedResult = parsedResult;
               softRejectedReasons = [...retryReasons];
             }
-            console.warn("Alert rewrite retry triggered", {
+            console.warn(`Alert rewrite retry triggered for alert ${alertIndex}, attempt ${attempt + 1}: ${this.formatReasonsForLog(retryReasons)}`, {
               alertIndex,
               attempt: attempt + 1,
               reasons: retryReasons,
@@ -23596,8 +23675,8 @@ var AlertRewriteOrchestratorService = class _AlertRewriteOrchestratorService {
             break;
           }
         }
-        if (!rewriteResult && lastParsedResult) {
-          console.warn("Alert rewrite attempting local repair", {
+        if (!rewriteResult && lastRepairCandidate) {
+          console.warn(`Alert rewrite attempting local repair for alert ${alertIndex}: ${this.formatReasonsForLog(lastRetryReasons)}`, {
             alertIndex,
             hadModelOutput: true,
             lastRetryReasons,
@@ -23605,7 +23684,7 @@ var AlertRewriteOrchestratorService = class _AlertRewriteOrchestratorService {
             willRetryWithNewModelCall: false
           });
           rewriteResult = this.alertRewriteGuard.tryLocalAlertRewriteRepair({
-            result: lastParsedResult,
+            result: lastRepairCandidate,
             originalAlertHtml: alertHtml,
             originalHeading,
             originalAlertText: alertText,
@@ -23615,7 +23694,7 @@ var AlertRewriteOrchestratorService = class _AlertRewriteOrchestratorService {
           });
         }
         if (!rewriteResult && softRejectedResult) {
-          console.warn("Alert rewrite using soft-failure candidate", {
+          console.warn(`Alert rewrite using soft-failure candidate for alert ${alertIndex}: ${this.formatReasonsForLog(softRejectedReasons)}`, {
             alertIndex,
             softRejectedReasons,
             softRejectedReasonsText: softRejectedReasons.join(", "),
@@ -23625,7 +23704,7 @@ var AlertRewriteOrchestratorService = class _AlertRewriteOrchestratorService {
           lastRetryReasons = [...softRejectedReasons];
         }
         if (!rewriteResult) {
-          console.warn("Alert rewrite falling back to passthrough result", {
+          console.warn(`Alert rewrite falling back to passthrough result for alert ${alertIndex}: ${this.formatReasonsForLog(lastRetryReasons)}`, {
             alertIndex,
             lastRetryReasons,
             lastRetryReasonsText: lastRetryReasons.join(", "),
@@ -23634,7 +23713,8 @@ var AlertRewriteOrchestratorService = class _AlertRewriteOrchestratorService {
           rewriteResult = this.alertRewrite.buildPassthroughResult({
             alertHtml,
             originalHeading,
-            originalAlertText: alertText
+            originalAlertText: alertText,
+            failureReasons: lastRetryReasons
           });
         }
         rewriteResult.rewrittenAlertHtml = this.alertRewriteGuard.ensureSemanticHeading(rewriteResult.rewrittenAlertHtml, rewriteResult.rewrittenHeading);
@@ -26700,8 +26780,9 @@ var AiOptionsComponent = class _AiOptionsComponent {
   ];
   paidAiOptions = [
     { id: AiModel.GPT5Nano, label: "page.ai-options.model.GPT5Nano", disabled: false },
-    { id: AiModel.GptOSS, label: "page.ai-options.model.GptOSS", disabled: false },
-    { id: AiModel.Gemini, label: "page.ai-options.model.Gemini", disabled: false }
+    { id: AiModel.Gemini, label: "page.ai-options.model.Gemini", disabled: false },
+    { id: AiModel.GPT5Mini, label: "page.ai-options.model.GPT5Mini", disabled: false },
+    { id: AiModel.GptOSS, label: "page.ai-options.model.GptOSS", disabled: false }
   ];
   ngOnInit() {
     const freeIds = new Set(this.freeAiOptions.map((option) => option.id));
@@ -42691,4 +42772,4 @@ ${custom}` : composed.prompt;
 export {
   PageAssistantCompareComponent
 };
-//# sourceMappingURL=chunk-Y2LL2P6M.js.map
+//# sourceMappingURL=chunk-NPDLTRJ2.js.map

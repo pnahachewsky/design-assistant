@@ -38514,6 +38514,7 @@ var AiModel;
   AiModel2["Arcee"] = "arcee-ai/trinity-large-preview:free";
   AiModel2["Zai"] = "z-ai/glm-4.5-air:free";
   AiModel2["GPT5Nano"] = "openai/gpt-5-nano";
+  AiModel2["GPT5Mini"] = "openai/gpt-5-mini";
   AiModel2["GptOSS"] = "openai/gpt-oss-120b";
   AiModel2["Gemini"] = "google/gemini-2.5-flash-lite";
 })(AiModel || (AiModel = {}));
@@ -100436,4 +100437,4 @@ export {
    * License: MIT
    *)
 */
-//# sourceMappingURL=chunk-UD35Z6K2.js.map
+//# sourceMappingURL=chunk-L7SGNDUJ.js.map
