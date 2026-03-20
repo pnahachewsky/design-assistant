@@ -122,8 +122,9 @@ export class AiOptionsComponent implements OnInit {
   ];
   paidAiOptions = [
     { id: AiModel.GPT5Nano, label: 'page.ai-options.model.GPT5Nano', disabled: false },
-    { id: AiModel.GptOSS, label: 'page.ai-options.model.GptOSS', disabled: false },
     { id: AiModel.Gemini, label: 'page.ai-options.model.Gemini', disabled: false },
+    { id: AiModel.GPT5Mini, label: 'page.ai-options.model.GPT5Mini', disabled: false },
+    { id: AiModel.GptOSS, label: 'page.ai-options.model.GptOSS', disabled: false },
   ];
 
   ngOnInit(): void {

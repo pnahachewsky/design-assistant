@@ -4,6 +4,7 @@ import {
   AlertRewriteExample,
   AlertRewriteIssueInput,
   AlertRewritePlan,
+  AlertRewriteRepairCandidate,
   AlertRewriteResult,
   AlertRewriteService,
 } from './alert-rewrite.service';
@@ -76,6 +77,7 @@ export class AlertRewriteGuardService {
   ensureSemanticHeading(alertHtml: string, headingText: string): string {
     try {
       const doc = new DOMParser().parseFromString(alertHtml, 'text/html');
+      if (doc.body.childElementCount !== 1) return doc.body.innerHTML.trim();
       const root = doc.body.firstElementChild as HTMLElement | null;
       if (!root) return alertHtml;
       if (root.querySelector('h1, h2, h3, h4, h5, h6')) return root.outerHTML.trim();
@@ -169,7 +171,7 @@ export class AlertRewriteGuardService {
   // Local repair is the last deterministic cleanup pass after model retries are exhausted.
   // It fixes wrapper/link issues without making another network call.
   tryLocalAlertRewriteRepair(params: {
-    result: AlertRewriteResult;
+    result: AlertRewriteRepairCandidate;
     originalAlertHtml: string;
     originalHeading?: string;
     originalAlertText: string;
@@ -322,9 +324,19 @@ export class AlertRewriteGuardService {
       const target = alerts[rewrite.alert_index - 1];
       if (!target) continue;
       const updatedDoc = parser.parseFromString(rewrite.rewritten_alert_html, 'text/html');
-      const updatedEl = updatedDoc.body.firstElementChild;
-      if (!updatedEl || !updatedEl.classList.contains('alert')) continue;
-      target.replaceWith(updatedEl);
+      const replacementNodes = Array.from(updatedDoc.body.childNodes).filter((node) => {
+        if (node.nodeType !== Node.TEXT_NODE) return true;
+        return !!(node.textContent || '').trim();
+      });
+      const hasAlertElement = replacementNodes.some(
+        (node) =>
+          node.nodeType === Node.ELEMENT_NODE &&
+          (node as HTMLElement).classList.contains('alert'),
+      );
+      if (!replacementNodes.length || !hasAlertElement) continue;
+
+      const importedNodes = replacementNodes.map((node) => doc.importNode(node, true));
+      target.replaceWith(...importedNodes);
     }
 
     return doc.body.outerHTML;

@@ -108,6 +108,7 @@ export enum AiModel {
   Zai = 'z-ai/glm-4.5-air:free', //131k context, 57B
   // Paid models
   GPT5Nano = 'openai/gpt-5-nano', // 400k context paid - $0.05/M input, $0.40/M output
+  GPT5Mini = 'openai/gpt-5-mini', // 400k context paid
   GptOSS = 'openai/gpt-oss-120b', //131k context paid - $0.039/M input, $0.19/M output
   Gemini = 'google/gemini-2.5-flash-lite', // 1.05M context paid - $0.10/M input, $0.40/M output
 }

@@ -110,6 +110,22 @@ describe('getReportableAlerts', () => {
     expect(alerts[0]?.textContent).toContain('Visible page-level alert');
   });
 
+  it('excludes alert rewrite failure notices from reportable alerts', () => {
+    const body = parseBody(`
+      <div class="alert alert-danger" data-alert-rewrite-status="failed">
+        <p>GenAI alert rewrite failed.</p>
+      </div>
+      <div class="alert alert-info">
+        <p>Visible page-level alert</p>
+      </div>
+    `);
+
+    const alerts = getReportableAlerts(body, { interactiveResultLeadIns });
+
+    expect(alerts.length).toBe(1);
+    expect(alerts[0]?.textContent).toContain('Visible page-level alert');
+  });
+
   it('removes ignored alerts from raw html while preserving reportable alerts', () => {
     const html = `
       <div class="alert alert-warning hidden">

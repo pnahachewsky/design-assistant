@@ -62,6 +62,16 @@ export interface AlertRewriteResult {
   exampleIdsUsed: string[];
 }
 
+// Repair candidates may carry invalid wrapper HTML, but still preserve usable
+// heading/body fields for deterministic local recovery.
+export interface AlertRewriteRepairCandidate {
+  rewrittenAlertHtml: string;
+  rewrittenHeading: string;
+  rewrittenAlert: string;
+  appliedDirectives: string[];
+  exampleIdsUsed: string[];
+}
+
 export interface AlertRewriteCopyCheck {
   isCopy: boolean;
   exampleId?: string;
@@ -471,6 +481,46 @@ export class AlertRewriteService {
     };
   }
 
+  parseAlertRewriteRepairCandidate(
+    text: string,
+    selectedExamples: AlertRewriteExample[],
+  ): AlertRewriteRepairCandidate | null {
+    const parsed = this.looseJsonParse(this.stripCodeFences(text));
+    if (!parsed || typeof parsed !== 'object') {
+      return null;
+    }
+    const root = parsed as Record<string, unknown>;
+    const rawAlertHtml = this.cleanString(root['rewrittenAlertHtml']);
+    const normalizedAlertHtml = this.normalizeAlertWrapperHtml(rawAlertHtml);
+    const parsedHeading = this.cleanString(root['rewrittenHeading']);
+    const rawAlert = this.cleanString(root['rewrittenAlert']);
+    const extractedHeading = normalizedAlertHtml
+      ? this.extractHeadingFromAlertHtml(normalizedAlertHtml)
+      : '';
+    const extractedBodyText = normalizedAlertHtml
+      ? this.extractBodyTextFromAlertHtml(normalizedAlertHtml)
+      : this.extractTextFromHtmlFragment(rawAlertHtml);
+    const rewrittenHeading =
+      parsedHeading || extractedHeading || this.buildFallbackHeading();
+    const baseBodyText = rawAlert || extractedBodyText;
+    if (!rawAlertHtml && !baseBodyText) {
+      return null;
+    }
+    const appliedDirectives = this.toStringArray(root['appliedDirectives']);
+    const exampleIdsUsed = this.sanitizeExampleIdsUsed(
+      this.toStringArray(root['exampleIdsUsed']),
+      selectedExamples,
+    );
+
+    return {
+      rewrittenAlertHtml: normalizedAlertHtml || rawAlertHtml,
+      rewrittenHeading,
+      rewrittenAlert: (baseBodyText || '').trim(),
+      appliedDirectives,
+      exampleIdsUsed,
+    };
+  }
+
   detectExampleCopy(params: {
     result: AlertRewriteResult;
     selectedExamples: AlertRewriteExample[];
@@ -531,14 +581,20 @@ export class AlertRewriteService {
     alertHtml: string;
     originalHeading?: string;
     originalAlertText: string;
+    failureReasons?: string[];
   }): AlertRewriteResult {
     const normalizedAlertHtml =
       this.normalizeAlertWrapperHtml(params.alertHtml) || params.alertHtml.trim();
     const extractedHeading = this.extractHeadingFromAlertHtml(normalizedAlertHtml);
     const rewrittenHeading = (params.originalHeading || '').trim() || extractedHeading;
+    const shouldShowFailureNotice = params.failureReasons !== undefined;
+    const failureReasons = (params.failureReasons || []).filter((reason) => !!reason);
+    const rewrittenAlertHtml = shouldShowFailureNotice
+      ? `${this.buildPassthroughFailureNoticeHtml(failureReasons)}${normalizedAlertHtml}`
+      : normalizedAlertHtml;
 
     return {
-      rewrittenAlertHtml: normalizedAlertHtml,
+      rewrittenAlertHtml,
       rewrittenHeading: rewrittenHeading || this.buildFallbackHeading(),
       rewrittenAlert: (params.originalAlertText || '').trim(),
       appliedDirectives: [],
@@ -810,6 +866,35 @@ export class AlertRewriteService {
     } catch {
       return '';
     }
+  }
+
+  private extractTextFromHtmlFragment(fragmentHtml: string): string {
+    if (!fragmentHtml) return '';
+    try {
+      const doc = new DOMParser().parseFromString(fragmentHtml, 'text/html');
+      return (doc.body.textContent || '').trim();
+    } catch {
+      return '';
+    }
+  }
+
+  private buildPassthroughFailureNoticeHtml(failureReasons: string[]): string {
+    const reasonsText = failureReasons.join(', ');
+    return [
+      '<div class="alert alert-danger mrgn-bttm-md" data-alert-rewrite-status="failed"',
+      ` data-alert-rewrite-failure-reasons="${this.escapeHtmlAttribute(reasonsText)}">`,
+      '<h3>GenAI alert rewrite failed</h3>',
+      '<p>The assistant could not rewrite this alert after multiple attempts. The original alert is shown below.</p>',
+      '</div>',
+    ].join('');
+  }
+
+  private escapeHtmlAttribute(value: string): string {
+    return (value || '')
+      .replace(/&/g, '&amp;')
+      .replace(/"/g, '&quot;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;');
   }
 
   private toExampleLinkArray(raw: unknown): AlertRewriteExampleLink[] {

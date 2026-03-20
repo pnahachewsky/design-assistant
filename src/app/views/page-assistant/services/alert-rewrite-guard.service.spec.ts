@@ -162,4 +162,20 @@ describe('AlertRewriteGuardService', () => {
     );
     expect(result?.rewrittenAlertHtml).toContain('<p>Updated body text.</p>');
   });
+
+  it('preserves multi-node alert replacements so fallback notices can appear above the alert', () => {
+    const result = service.applyAlertHtmlRewrites(
+      '<body><main><section class="alert alert-info"><p>Original alert text.</p></section></main></body>',
+      [
+        {
+          alert_index: 1,
+          rewritten_alert_html:
+            '<div class="alert alert-danger" data-alert-rewrite-status="failed"><p>GenAI alert rewrite failed.</p></div><section class="alert alert-info"><p>Original alert text.</p></section>',
+        },
+      ],
+    );
+
+    expect(result).toContain('data-alert-rewrite-status="failed"');
+    expect(result).toContain('<section class="alert alert-info"><p>Original alert text.</p></section>');
+  });
 });

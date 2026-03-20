@@ -76,4 +76,55 @@ describe('AlertRewriteService', () => {
 
     expect(result?.exampleIdsUsed).toEqual(['ex-002', 'ex-001']);
   });
+
+  it('extracts a repair candidate when the model returns body html instead of a full alert wrapper', () => {
+    const result = service.parseAlertRewriteRepairCandidate(
+      JSON.stringify({
+        rewrittenAlertHtml:
+          '<h3>Benefit increase</h3><p>The benefit will increase by 25% starting in July 2026.</p><p>Learn about the <a href="/benefit">Canada Groceries and Essentials Benefit</a>.</p>',
+        rewrittenHeading: 'Benefit increase',
+        rewrittenAlert:
+          'The benefit will increase by 25% starting in July 2026. Learn about the Canada Groceries and Essentials Benefit.',
+        appliedDirectives: [],
+        exampleIdsUsed: ['ex-001'],
+      }),
+      [
+        {
+          id: 'ex-001',
+          alertType: 'info',
+          tags: [],
+          criteria: [],
+          before: 'Before one',
+          after: 'After one',
+        },
+      ],
+    );
+
+    expect(result?.rewrittenAlertHtml).toContain('<p>The benefit will increase');
+    expect(result?.rewrittenHeading).toBe('Benefit increase');
+    expect(result?.rewrittenAlert).toContain('July 2026');
+    expect(result?.exampleIdsUsed).toEqual(['ex-001']);
+  });
+
+  it('adds a visible failure notice above the original alert for passthrough fallbacks', () => {
+    const result = service.buildPassthroughResult({
+      alertHtml: '<section class="alert alert-info"><p>Original alert text.</p></section>',
+      originalHeading: '',
+      originalAlertText: 'Original alert text.',
+      failureReasons: ['invalidWrapperHtml', 'mustKeepLink'],
+    });
+
+    expect(result.rewrittenAlertHtml).toContain(
+      'data-alert-rewrite-status="failed"',
+    );
+    expect(result.rewrittenAlertHtml).toContain(
+      'The assistant could not rewrite this alert after multiple attempts.',
+    );
+    expect(result.rewrittenAlertHtml).toContain(
+      '<section class="alert alert-info"><p>Original alert text.</p></section>',
+    );
+    expect(result.rewrittenAlertHtml).toContain(
+      'data-alert-rewrite-failure-reasons="invalidWrapperHtml, mustKeepLink"',
+    );
+  });
 });

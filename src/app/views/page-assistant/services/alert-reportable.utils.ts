@@ -45,6 +45,7 @@ function isConditionalInteractiveAlert(
   alert: Element,
   options?: AlertReportableOptions,
 ): boolean {
+  if (isAlertRewriteStatusMessage(alert)) return true;
   if (isIgnoredAlertId(alert)) return true;
 
   // Interactive result alerts start with the lead-in sentence, regardless of
@@ -83,6 +84,10 @@ function getFirstLeadInCandidate(alert: Element): string {
 function isIgnoredAlertId(alert: Element): boolean {
   const id = (alert.getAttribute('id') || '').trim().toLowerCase();
   return !!id && IGNORED_ALERT_IDS.has(id);
+}
+
+function isAlertRewriteStatusMessage(alert: Element): boolean {
+  return !!(alert.getAttribute('data-alert-rewrite-status') || '').trim();
 }
 
 function normalizeLeadInText(value: string): string {

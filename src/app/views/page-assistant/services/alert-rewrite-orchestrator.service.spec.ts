@@ -4,6 +4,7 @@ import { TranslateService } from '@ngx-translate/core';
 import { AlertRewriteOrchestratorService } from './alert-rewrite-orchestrator.service';
 import {
   AlertRewritePlan,
+  AlertRewriteRepairCandidate,
   AlertRewriteResult,
   AlertRewriteService,
 } from './alert-rewrite.service';
@@ -44,9 +45,11 @@ describe('AlertRewriteOrchestratorService', () => {
       'inferAlertType',
       'buildAlertRewriteMessages',
       'parseAlertRewriteResponse',
+      'parseAlertRewriteRepairCandidate',
       'selectExamples',
       'loadExamples',
       'detectExampleCopy',
+      'buildPassthroughResult',
     ]);
     alertRewriteGuardSpy = jasmine.createSpyObj<AlertRewriteGuardService>(
       'AlertRewriteGuardService',
@@ -106,9 +109,19 @@ describe('AlertRewriteOrchestratorService', () => {
     alertRewriteSpy.buildHeuristicPlan.and.returnValue(plan);
     alertRewriteSpy.buildAlertRewriteMessages.and.resolveTo([]);
     alertRewriteSpy.parseAlertRewriteResponse.and.returnValue(softFailureCandidate);
+    alertRewriteSpy.parseAlertRewriteRepairCandidate.and.returnValue(
+      softFailureCandidate,
+    );
     alertRewriteSpy.selectExamples.and.returnValue([]);
     alertRewriteSpy.loadExamples.and.resolveTo([]);
     alertRewriteSpy.detectExampleCopy.and.returnValue({ isCopy: false });
+    alertRewriteSpy.buildPassthroughResult.and.returnValue({
+      rewrittenAlertHtml: originalHtml,
+      rewrittenHeading: '',
+      rewrittenAlert: 'Original alert text',
+      appliedDirectives: [],
+      exampleIdsUsed: [],
+    });
 
     urlDataSpy.formatHtml.and.callFake(async (html: string) => html);
   });
@@ -147,6 +160,106 @@ describe('AlertRewriteOrchestratorService', () => {
     );
     expect(result.formattedHtml).toContain(
       'Check <a href="/times">Check CRA processing times</a>.',
+    );
+  });
+
+  it('attempts local repair from a partial response when wrapper html is invalid on every retry', async () => {
+    const partialCandidate: AlertRewriteRepairCandidate = {
+      rewrittenAlertHtml:
+        '<h3>Benefit increase</h3><p>The benefit will increase by 25% starting in July 2026.</p><p>Learn about the <a href="/benefit">Canada Groceries and Essentials Benefit</a>.</p>',
+      rewrittenHeading: 'Benefit increase',
+      rewrittenAlert:
+        'The benefit will increase by 25% starting in July 2026. Learn about the Canada Groceries and Essentials Benefit.',
+      appliedDirectives: [],
+      exampleIdsUsed: [],
+    };
+    const repairedResult: AlertRewriteResult = {
+      rewrittenAlertHtml:
+        '<section class="alert alert-info"><h3>Benefit increase</h3><p>The benefit will increase by 25% starting in July 2026.</p><p>Learn about the <a href="/benefit">Canada Groceries and Essentials Benefit</a>.</p></section>',
+      rewrittenHeading: 'Benefit increase',
+      rewrittenAlert:
+        'The benefit will increase by 25% starting in July 2026. Learn about the Canada Groceries and Essentials Benefit.',
+      appliedDirectives: [],
+      exampleIdsUsed: [],
+    };
+
+    alertRewriteSpy.parseAlertRewriteResponse.and.returnValue(null);
+    alertRewriteSpy.parseAlertRewriteRepairCandidate.and.returnValue(partialCandidate);
+    alertRewriteGuardSpy.tryLocalAlertRewriteRepair.and.returnValue(repairedResult);
+    alertRewriteGuardSpy.ensureSemanticHeading.and.callFake((html) => html);
+    alertRewriteGuardSpy.applyAlertHtmlRewrites.and.callFake((_html, rewrites) => {
+      return rewrites[0]?.rewritten_alert_html || '';
+    });
+
+    const callOpenRouterForMessages = jasmine
+      .createSpy('callOpenRouterForMessages')
+      .and.resolveTo({
+        text: '{"rewrittenAlertHtml":"<p>invalid</p>"}',
+        usedModel: AiModel.NemotronNano,
+      });
+
+    const result = await service.generateRecommendations({
+      html: originalHtml,
+      issues: [],
+      model: AiModel.NemotronNano,
+      headers: {},
+      url: 'https://example.test',
+      mode: AlertRewriteMode.GoodResultsOnly,
+      includeExamples: false,
+      includeBeforeTextInExamples: false,
+      includeLinkWritingRules: false,
+      forceLocalRepairForTesting: false,
+      callOpenRouterForMessages,
+      getShortModelName: (model) => model,
+    });
+
+    expect(callOpenRouterForMessages).toHaveBeenCalledTimes(2);
+    expect(alertRewriteSpy.parseAlertRewriteRepairCandidate).toHaveBeenCalledTimes(2);
+    expect(alertRewriteGuardSpy.tryLocalAlertRewriteRepair).toHaveBeenCalledWith(
+      jasmine.objectContaining({
+        result: partialCandidate,
+        originalAlertHtml: originalHtml,
+      }),
+    );
+    expect(alertRewriteSpy.buildPassthroughResult).not.toHaveBeenCalled();
+    expect(result.formattedHtml).toContain(
+      '<section class="alert alert-info"><h3>Benefit increase</h3>',
+    );
+  });
+
+  it('passes retry reasons into passthrough fallback results', async () => {
+    alertRewriteSpy.parseAlertRewriteResponse.and.returnValue(null);
+    alertRewriteSpy.parseAlertRewriteRepairCandidate.and.returnValue(null);
+    alertRewriteGuardSpy.tryLocalAlertRewriteRepair.and.returnValue(null);
+
+    const callOpenRouterForMessages = jasmine
+      .createSpy('callOpenRouterForMessages')
+      .and.resolveTo({
+        text: '{"rewrittenAlertHtml":"<p>invalid</p>"}',
+        usedModel: AiModel.NemotronNano,
+      });
+
+    await service.generateRecommendations({
+      html: originalHtml,
+      issues: [],
+      model: AiModel.NemotronNano,
+      headers: {},
+      url: 'https://example.test',
+      mode: AlertRewriteMode.GoodResultsOnly,
+      includeExamples: false,
+      includeBeforeTextInExamples: false,
+      includeLinkWritingRules: false,
+      forceLocalRepairForTesting: false,
+      callOpenRouterForMessages,
+      getShortModelName: (model) => model,
+    });
+
+    expect(alertRewriteSpy.buildPassthroughResult).toHaveBeenCalledWith(
+      jasmine.objectContaining({
+        alertHtml: originalHtml,
+        originalAlertText: 'Original alert text',
+        failureReasons: ['invalidWrapperHtml'],
+      }),
     );
   });
 });

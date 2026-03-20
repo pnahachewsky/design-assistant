@@ -5,6 +5,7 @@ import { AlertRewriteMode, AiModel } from '../data/data.model';
 import { UrlDataService } from './url-data.service';
 import {
   AlertRewriteIssueInput,
+  AlertRewriteRepairCandidate,
   AlertRewriteResult,
   AlertRewriteService,
 } from './alert-rewrite.service';
@@ -31,6 +32,10 @@ export class AlertRewriteOrchestratorService {
   private alertRewriteGuard = inject(AlertRewriteGuardService);
   private urlDataService = inject(UrlDataService);
   private translate = inject(TranslateService);
+
+  private formatReasonsForLog(reasons: string[]): string {
+    return reasons.length ? reasons.join(', ') : 'none';
+  }
 
   // Runs the full alert-rewrite workflow:
   // plan each alert, generate rewrites, apply retry/repair guards, then patch the page HTML.
@@ -127,7 +132,7 @@ export class AlertRewriteOrchestratorService {
       let rewriteModelName = 'unknown';
       let copyGuardTriggered = false;
       let blockedExampleId: string | null = null;
-      let lastParsedResult: AlertRewriteResult | null = null;
+      let lastRepairCandidate: AlertRewriteRepairCandidate | null = null;
       let softRejectedResult: AlertRewriteResult | null = null;
       let softRejectedReasons: string[] = [];
       let lastRetryReasons: string[] = [];
@@ -180,18 +185,29 @@ export class AlertRewriteOrchestratorService {
           rewrittenAlert: parsedResult?.rewrittenAlert,
         });
         if (!parsedResult?.rewrittenAlertHtml) {
-          console.warn('Alert rewrite retry triggered', {
+          const repairCandidate =
+            this.alertRewrite.parseAlertRewriteRepairCandidate(
+              rewriteResponse.text,
+              selectedExamples,
+            );
+          if (repairCandidate) {
+            lastRepairCandidate = repairCandidate;
+          }
+          console.warn(
+            `Alert rewrite retry triggered for alert ${alertIndex}, attempt ${attempt + 1}: ${this.formatReasonsForLog(['invalidWrapperHtml'])}`,
+            {
             alertIndex,
             attempt: attempt + 1,
             reasons: ['invalidWrapperHtml'],
             reasonsText: 'invalidWrapperHtml',
             willRetryWithNewModelCall: true,
-          });
+            },
+          );
           lastRetryReasons = ['invalidWrapperHtml'];
           retryInstructionsForAttempt = [retryInstructions.invalidWrapperHtml];
           continue;
         }
-        lastParsedResult = parsedResult;
+        lastRepairCandidate = parsedResult;
 
         const retryReasons: string[] = [];
         const retryInstructionsForResult: string[] = [];
@@ -280,13 +296,16 @@ export class AlertRewriteOrchestratorService {
             softRejectedResult = parsedResult;
             softRejectedReasons = [...retryReasons];
           }
-          console.warn('Alert rewrite retry triggered', {
+          console.warn(
+            `Alert rewrite retry triggered for alert ${alertIndex}, attempt ${attempt + 1}: ${this.formatReasonsForLog(retryReasons)}`,
+            {
             alertIndex,
             attempt: attempt + 1,
             reasons: retryReasons,
             reasonsText: retryReasons.join(', '),
             willRetryWithNewModelCall: true,
-          });
+            },
+          );
           lastRetryReasons = [...retryReasons];
           retryInstructionsForAttempt = Array.from(new Set(retryInstructionsForResult));
           continue;
@@ -303,16 +322,19 @@ export class AlertRewriteOrchestratorService {
       }
 
       // If model retries still fail, attempt one deterministic repair pass locally.
-      if (!rewriteResult && lastParsedResult) {
-        console.warn('Alert rewrite attempting local repair', {
+      if (!rewriteResult && lastRepairCandidate) {
+        console.warn(
+          `Alert rewrite attempting local repair for alert ${alertIndex}: ${this.formatReasonsForLog(lastRetryReasons)}`,
+          {
           alertIndex,
           hadModelOutput: true,
           lastRetryReasons,
           lastRetryReasonsText: lastRetryReasons.join(', '),
           willRetryWithNewModelCall: false,
-        });
+          },
+        );
         rewriteResult = this.alertRewriteGuard.tryLocalAlertRewriteRepair({
-          result: lastParsedResult,
+          result: lastRepairCandidate,
           originalAlertHtml: alertHtml,
           originalHeading,
           originalAlertText: alertText,
@@ -323,28 +345,35 @@ export class AlertRewriteOrchestratorService {
       }
 
       if (!rewriteResult && softRejectedResult) {
-        console.warn('Alert rewrite using soft-failure candidate', {
+        console.warn(
+          `Alert rewrite using soft-failure candidate for alert ${alertIndex}: ${this.formatReasonsForLog(softRejectedReasons)}`,
+          {
           alertIndex,
           softRejectedReasons,
           softRejectedReasonsText: softRejectedReasons.join(', '),
           willRetryWithNewModelCall: false,
-        });
+          },
+        );
         rewriteResult = softRejectedResult;
         lastRetryReasons = [...softRejectedReasons];
       }
 
       // Final safety net: preserve the original alert rather than dropping it.
       if (!rewriteResult) {
-        console.warn('Alert rewrite falling back to passthrough result', {
+        console.warn(
+          `Alert rewrite falling back to passthrough result for alert ${alertIndex}: ${this.formatReasonsForLog(lastRetryReasons)}`,
+          {
           alertIndex,
           lastRetryReasons,
           lastRetryReasonsText: lastRetryReasons.join(', '),
           willRetryWithNewModelCall: false,
-        });
+          },
+        );
         rewriteResult = this.alertRewrite.buildPassthroughResult({
           alertHtml,
           originalHeading,
           originalAlertText: alertText,
+          failureReasons: lastRetryReasons,
         });
       }
       rewriteResult.rewrittenAlertHtml = this.alertRewriteGuard.ensureSemanticHeading(
