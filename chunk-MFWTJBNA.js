@@ -40652,14 +40652,17 @@ var UrlDataService = class _UrlDataService {
             const [url, anchor] = ajaxUrl.split("#");
             const fullUrl = `${baseUrl}${url}`;
             const fetchedHtml = yield this.fetchUrl(fullUrl, "text");
-            if (!fetchedHtml)
+            if (!fetchedHtml) {
+              element.removeAttribute(attrName);
               continue;
+            }
             const ajaxDoc = new DOMParser().parseFromString(fetchedHtml, "text/html");
             let content;
             if (anchor) {
               const anchorElement = ajaxDoc.querySelector(`#${anchor}`);
               if (!anchorElement) {
                 console.warn(`Anchor #${anchor} not found in ${fullUrl}. Skipping replacement.`);
+                element.removeAttribute(attrName);
                 continue;
               }
               content = anchorElement ? anchorElement.outerHTML : "";
@@ -40667,12 +40670,15 @@ var UrlDataService = class _UrlDataService {
               const isFullDoc = /<html[\s>]/i.test(fetchedHtml) && /<body[\s>]/i.test(fetchedHtml);
               if (isFullDoc) {
                 console.warn(`Skipping full document injection from: ${fullUrl}`);
+                element.removeAttribute(attrName);
                 continue;
               }
               content = ajaxDoc.body ? ajaxDoc.body.innerHTML : ajaxDoc.documentElement.innerHTML;
             }
-            if (!content)
+            if (!content) {
+              element.removeAttribute(attrName);
               continue;
+            }
             const styledContent = `
           <div style="border: 3px dashed #fbc02f; padding: 8px; border-radius: 4px;">
             <${tag}>${content}</${tag}>
@@ -48604,7 +48610,7 @@ var HorizontalRadioButtonsComponent = class _HorizontalRadioButtonsComponent {
   }] });
 })();
 (() => {
-  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(HorizontalRadioButtonsComponent, { className: "HorizontalRadioButtonsComponent", filePath: "src/app/components/horizontal-radio-buttons/horizontal-radio-buttons.component.ts", lineNumber: 33 });
+  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(HorizontalRadioButtonsComponent, { className: "HorizontalRadioButtonsComponent", filePath: "app/components/horizontal-radio-buttons/horizontal-radio-buttons.component.ts", lineNumber: 33 });
 })();
 
 // node_modules/primeng/fesm2022/primeng-toolbar.mjs
@@ -49831,7 +49837,7 @@ var UploadUrlComponent = class _UploadUrlComponent {
   }] });
 })();
 (() => {
-  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(UploadUrlComponent, { className: "UploadUrlComponent", filePath: "src/app/views/page-assistant/components/upload/upload-url.component.ts", lineNumber: 48 });
+  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(UploadUrlComponent, { className: "UploadUrlComponent", filePath: "app/views/page-assistant/components/upload/upload-url.component.ts", lineNumber: 48 });
 })();
 
 // node_modules/primeng/fesm2022/primeng-textarea.mjs
@@ -50389,7 +50395,7 @@ var UploadPasteComponent = class _UploadPasteComponent {
   }] });
 })();
 (() => {
-  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(UploadPasteComponent, { className: "UploadPasteComponent", filePath: "src/app/views/page-assistant/components/upload/upload-paste.component.ts", lineNumber: 29 });
+  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(UploadPasteComponent, { className: "UploadPasteComponent", filePath: "app/views/page-assistant/components/upload/upload-paste.component.ts", lineNumber: 29 });
 })();
 
 // node_modules/primeng/fesm2022/primeng-progressbar.mjs
@@ -53409,7 +53415,7 @@ var UploadWordComponent = class _UploadWordComponent {
   }] });
 })();
 (() => {
-  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(UploadWordComponent, { className: "UploadWordComponent", filePath: "src/app/views/page-assistant/components/upload/upload-word.component.ts", lineNumber: 51 });
+  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(UploadWordComponent, { className: "UploadWordComponent", filePath: "app/views/page-assistant/components/upload/upload-word.component.ts", lineNumber: 51 });
 })();
 
 // node_modules/primeng/fesm2022/primeng-iftalabel.mjs
@@ -100437,4 +100443,4 @@ export {
    * License: MIT
    *)
 */
-//# sourceMappingURL=chunk-L7SGNDUJ.js.map
+//# sourceMappingURL=chunk-MFWTJBNA.js.map

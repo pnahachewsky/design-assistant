@@ -182,7 +182,7 @@ import {
   unblockBodyScroll,
   uuid,
   zindexutils
-} from "./chunk-L7SGNDUJ.js";
+} from "./chunk-MFWTJBNA.js";
 import {
   ANIMATION_MODULE_TYPE,
   BehaviorSubject,
@@ -7218,7 +7218,7 @@ var LandingComponent = class _LandingComponent {
   }], null, null);
 })();
 (() => {
-  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(LandingComponent, { className: "LandingComponent", filePath: "src/app/views/static/landing.component.ts", lineNumber: 14 });
+  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(LandingComponent, { className: "LandingComponent", filePath: "app/views/static/landing.component.ts", lineNumber: 14 });
 })();
 
 // src/app/views/static/not-found.component.ts
@@ -7245,7 +7245,7 @@ var NotFoundComponent = class _NotFoundComponent {
   }], null, null);
 })();
 (() => {
-  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(NotFoundComponent, { className: "NotFoundComponent", filePath: "src/app/views/static/not-found.component.ts", lineNumber: 12 });
+  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(NotFoundComponent, { className: "NotFoundComponent", filePath: "app/views/static/not-found.component.ts", lineNumber: 12 });
 })();
 
 // node_modules/primeng/fesm2022/primeng-icons-eye.mjs
@@ -7555,7 +7555,7 @@ var PageUploadComponent = class _PageUploadComponent {
   }], null, null);
 })();
 (() => {
-  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(PageUploadComponent, { className: "PageUploadComponent", filePath: "src/app/views/page-assistant/components/upload.component.ts", lineNumber: 30 });
+  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(PageUploadComponent, { className: "PageUploadComponent", filePath: "app/views/page-assistant/components/upload.component.ts", lineNumber: 30 });
 })();
 
 // node_modules/primeng/fesm2022/primeng-progressspinner.mjs
@@ -7988,7 +7988,7 @@ var ShareComponent = class _ShareComponent {
   }], null, null);
 })();
 (() => {
-  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(ShareComponent, { className: "ShareComponent", filePath: "src/app/views/page-assistant/components/share.component.ts", lineNumber: 47 });
+  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(ShareComponent, { className: "ShareComponent", filePath: "app/views/page-assistant/components/share.component.ts", lineNumber: 47 });
 })();
 
 // src/app/services/image-processor.ts
@@ -8697,7 +8697,7 @@ var FileUploadComponent = class _FileUploadComponent {
   }] });
 })();
 (() => {
-  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(FileUploadComponent, { className: "FileUploadComponent", filePath: "src/app/views/image-assistant/components/file-upload/file-upload.component.ts", lineNumber: 14 });
+  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(FileUploadComponent, { className: "FileUploadComponent", filePath: "app/views/image-assistant/components/file-upload/file-upload.component.ts", lineNumber: 14 });
 })();
 
 // node_modules/primeng/fesm2022/primeng-dropdown.mjs
@@ -12314,7 +12314,7 @@ var SharedModelSelectorComponent = class _SharedModelSelectorComponent {
   }] });
 })();
 (() => {
-  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(SharedModelSelectorComponent, { className: "SharedModelSelectorComponent", filePath: "src/app/components/model-selector/model-selector.component.ts", lineNumber: 31 });
+  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(SharedModelSelectorComponent, { className: "SharedModelSelectorComponent", filePath: "app/components/model-selector/model-selector.component.ts", lineNumber: 31 });
 })();
 
 // src/app/components/progress-indicator/progress-indicator.component.ts
@@ -12383,7 +12383,7 @@ var ProgressIndicatorComponent = class _ProgressIndicatorComponent {
   }] });
 })();
 (() => {
-  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(ProgressIndicatorComponent, { className: "ProgressIndicatorComponent", filePath: "src/app/components/progress-indicator/progress-indicator.component.ts", lineNumber: 26 });
+  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(ProgressIndicatorComponent, { className: "ProgressIndicatorComponent", filePath: "app/components/progress-indicator/progress-indicator.component.ts", lineNumber: 26 });
 })();
 
 // node_modules/primeng/fesm2022/primeng-divider.mjs
@@ -13087,7 +13087,7 @@ var ImageResultComponent = class _ImageResultComponent {
   }] });
 })();
 (() => {
-  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(ImageResultComponent, { className: "ImageResultComponent", filePath: "src/app/views/image-assistant/components/image-result/image-result.component.ts", lineNumber: 27 });
+  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(ImageResultComponent, { className: "ImageResultComponent", filePath: "app/views/image-assistant/components/image-result/image-result.component.ts", lineNumber: 27 });
 })();
 
 // src/app/views/image-assistant/components/csv-download/csv-download.component.ts
@@ -13204,7 +13204,7 @@ var CsvDownloadComponent = class _CsvDownloadComponent {
   }] });
 })();
 (() => {
-  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(CsvDownloadComponent, { className: "CsvDownloadComponent", filePath: "src/app/views/image-assistant/components/csv-download/csv-download.component.ts", lineNumber: 14 });
+  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(CsvDownloadComponent, { className: "CsvDownloadComponent", filePath: "app/views/image-assistant/components/csv-download/csv-download.component.ts", lineNumber: 14 });
 })();
 
 // src/app/views/image-assistant/image-assistant.component.ts
@@ -13755,7 +13755,7 @@ var ImageAssistantComponent = class _ImageAssistantComponent {
   }], () => [], null);
 })();
 (() => {
-  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(ImageAssistantComponent, { className: "ImageAssistantComponent", filePath: "src/app/views/image-assistant/image-assistant.component.ts", lineNumber: 43 });
+  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(ImageAssistantComponent, { className: "ImageAssistantComponent", filePath: "app/views/image-assistant/image-assistant.component.ts", lineNumber: 43 });
 })();
 
 // node_modules/primeng/fesm2022/primeng-panel.mjs
@@ -19473,7 +19473,7 @@ var TranslationAssistantComponent = class _TranslationAssistantComponent {
   }], null, null);
 })();
 (() => {
-  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(TranslationAssistantComponent, { className: "TranslationAssistantComponent", filePath: "src/app/views/translation-assistant/translation-assistant.component.ts", lineNumber: 43 });
+  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(TranslationAssistantComponent, { className: "TranslationAssistantComponent", filePath: "app/views/translation-assistant/translation-assistant.component.ts", lineNumber: 43 });
 })();
 
 // node_modules/primeng/fesm2022/primeng-fieldset.mjs
@@ -27000,7 +27000,7 @@ var ExportGithubComponent = class _ExportGithubComponent {
   }] });
 })();
 (() => {
-  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(ExportGithubComponent, { className: "ExportGithubComponent", filePath: "src/app/views/ia-assistant/components/export-github.component.ts", lineNumber: 43 });
+  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(ExportGithubComponent, { className: "ExportGithubComponent", filePath: "app/views/ia-assistant/components/export-github.component.ts", lineNumber: 43 });
 })();
 
 // src/app/views/project-assistant/project-assistant.component.ts
@@ -27633,7 +27633,7 @@ var ProjectAssistantComponent = class _ProjectAssistantComponent {
   }], () => [], null);
 })();
 (() => {
-  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(ProjectAssistantComponent, { className: "ProjectAssistantComponent", filePath: "src/app/views/project-assistant/project-assistant.component.ts", lineNumber: 26 });
+  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(ProjectAssistantComponent, { className: "ProjectAssistantComponent", filePath: "app/views/project-assistant/project-assistant.component.ts", lineNumber: 26 });
 })();
 
 // src/app/views/inventory-assistant/inventory-assistant.component.ts
@@ -28175,7 +28175,7 @@ var InventoryAssistantComponent = class _InventoryAssistantComponent {
   }], null, null);
 })();
 (() => {
-  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(InventoryAssistantComponent, { className: "InventoryAssistantComponent", filePath: "src/app/views/inventory-assistant/inventory-assistant.component.ts", lineNumber: 35 });
+  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(InventoryAssistantComponent, { className: "InventoryAssistantComponent", filePath: "app/views/inventory-assistant/inventory-assistant.component.ts", lineNumber: 35 });
 })();
 
 // src/app/services/metadata-assistant.service.ts
@@ -29845,7 +29845,7 @@ var UrlInputComponent = class _UrlInputComponent {
   }] });
 })();
 (() => {
-  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(UrlInputComponent, { className: "UrlInputComponent", filePath: "src/app/views/metadata-assistant/components/url-input/url-input.component.ts", lineNumber: 27 });
+  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(UrlInputComponent, { className: "UrlInputComponent", filePath: "app/views/metadata-assistant/components/url-input/url-input.component.ts", lineNumber: 27 });
 })();
 
 // node_modules/primeng/fesm2022/primeng-tag.mjs
@@ -30904,7 +30904,7 @@ var DocumentUploadComponent = class _DocumentUploadComponent {
   }] });
 })();
 (() => {
-  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(DocumentUploadComponent, { className: "DocumentUploadComponent", filePath: "src/app/views/metadata-assistant/components/document-upload/document-upload.component.ts", lineNumber: 26 });
+  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(DocumentUploadComponent, { className: "DocumentUploadComponent", filePath: "app/views/metadata-assistant/components/document-upload/document-upload.component.ts", lineNumber: 26 });
 })();
 
 // src/app/views/metadata-assistant/components/metadata-result/metadata-result.component.ts
@@ -32111,7 +32111,7 @@ var MetadataResultComponent = class _MetadataResultComponent {
   }] });
 })();
 (() => {
-  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(MetadataResultComponent, { className: "MetadataResultComponent", filePath: "src/app/views/metadata-assistant/components/metadata-result/metadata-result.component.ts", lineNumber: 30 });
+  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(MetadataResultComponent, { className: "MetadataResultComponent", filePath: "app/views/metadata-assistant/components/metadata-result/metadata-result.component.ts", lineNumber: 30 });
 })();
 
 // src/app/views/metadata-assistant/components/csv-export/csv-export.component.ts
@@ -32289,7 +32289,7 @@ var CsvExportComponent = class _CsvExportComponent {
   }] });
 })();
 (() => {
-  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(CsvExportComponent, { className: "CsvExportComponent", filePath: "src/app/views/metadata-assistant/components/csv-export/csv-export.component.ts", lineNumber: 22 });
+  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(CsvExportComponent, { className: "CsvExportComponent", filePath: "app/views/metadata-assistant/components/csv-export/csv-export.component.ts", lineNumber: 22 });
 })();
 
 // src/app/views/metadata-assistant/components/metadata-comparison/metadata-comparison.component.ts
@@ -32735,7 +32735,7 @@ var MetadataComparisonComponent = class _MetadataComparisonComponent {
   }] });
 })();
 (() => {
-  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(MetadataComparisonComponent, { className: "MetadataComparisonComponent", filePath: "src/app/views/metadata-assistant/components/metadata-comparison/metadata-comparison.component.ts", lineNumber: 17 });
+  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(MetadataComparisonComponent, { className: "MetadataComparisonComponent", filePath: "app/views/metadata-assistant/components/metadata-comparison/metadata-comparison.component.ts", lineNumber: 17 });
 })();
 
 // src/app/views/metadata-assistant/metadata-assistant.component.ts
@@ -34245,7 +34245,7 @@ var MetadataAssistantComponent = class _MetadataAssistantComponent {
   }], null, null);
 })();
 (() => {
-  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(MetadataAssistantComponent, { className: "MetadataAssistantComponent", filePath: "src/app/views/metadata-assistant/metadata-assistant.component.ts", lineNumber: 47 });
+  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(MetadataAssistantComponent, { className: "MetadataAssistantComponent", filePath: "app/views/metadata-assistant/metadata-assistant.component.ts", lineNumber: 47 });
 })();
 
 // src/app/views/llm-evaluation/llm-evaluation.component.ts
@@ -34282,7 +34282,7 @@ var LlmEvaluationComponent = class _LlmEvaluationComponent {
   }], null, null);
 })();
 (() => {
-  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(LlmEvaluationComponent, { className: "LlmEvaluationComponent", filePath: "src/app/views/llm-evaluation/llm-evaluation.component.ts", lineNumber: 14 });
+  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(LlmEvaluationComponent, { className: "LlmEvaluationComponent", filePath: "app/views/llm-evaluation/llm-evaluation.component.ts", lineNumber: 14 });
 })();
 
 // src/app/views/static/about.component.ts
@@ -34319,7 +34319,7 @@ var AboutComponent = class _AboutComponent {
   }], null, null);
 })();
 (() => {
-  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(AboutComponent, { className: "AboutComponent", filePath: "src/app/views/static/about.component.ts", lineNumber: 13 });
+  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(AboutComponent, { className: "AboutComponent", filePath: "app/views/static/about.component.ts", lineNumber: 13 });
 })();
 
 // src/app/views/example/test.component.ts
@@ -34581,7 +34581,7 @@ var TestComponent = class _TestComponent {
   }], null, null);
 })();
 (() => {
-  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(TestComponent, { className: "TestComponent", filePath: "src/app/views/example/test.component.ts", lineNumber: 24 });
+  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(TestComponent, { className: "TestComponent", filePath: "app/views/example/test.component.ts", lineNumber: 24 });
 })();
 
 // node_modules/primeng/fesm2022/primeng-confirmpopup.mjs
@@ -35708,7 +35708,7 @@ var LinkListComponent = class _LinkListComponent {
   }] });
 })();
 (() => {
-  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(LinkListComponent, { className: "LinkListComponent", filePath: "src/app/views/ia-assistant/components/link-list.component.ts", lineNumber: 65 });
+  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(LinkListComponent, { className: "LinkListComponent", filePath: "app/views/ia-assistant/components/link-list.component.ts", lineNumber: 65 });
 })();
 
 // src/app/views/ia-assistant/components/validate-urls.component.ts
@@ -36522,7 +36522,7 @@ var ValidateUrlsComponent = class _ValidateUrlsComponent {
   }], null, null);
 })();
 (() => {
-  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(ValidateUrlsComponent, { className: "ValidateUrlsComponent", filePath: "src/app/views/ia-assistant/components/validate-urls.component.ts", lineNumber: 36 });
+  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(ValidateUrlsComponent, { className: "ValidateUrlsComponent", filePath: "app/views/ia-assistant/components/validate-urls.component.ts", lineNumber: 36 });
 })();
 
 // src/app/views/ia-assistant/services/ia-relationship.service.ts
@@ -37086,7 +37086,7 @@ var SetRootsComponent = class _SetRootsComponent {
   }], null, null);
 })();
 (() => {
-  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(SetRootsComponent, { className: "SetRootsComponent", filePath: "src/app/views/ia-assistant/components/set-roots.component.ts", lineNumber: 22 });
+  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(SetRootsComponent, { className: "SetRootsComponent", filePath: "app/views/ia-assistant/components/set-roots.component.ts", lineNumber: 22 });
 })();
 
 // src/app/views/ia-assistant/components/search-criteria.component.ts
@@ -37230,7 +37230,7 @@ var SearchCriteriaComponent = class _SearchCriteriaComponent {
   }], null, null);
 })();
 (() => {
-  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(SearchCriteriaComponent, { className: "SearchCriteriaComponent", filePath: "src/app/views/ia-assistant/components/search-criteria.component.ts", lineNumber: 18 });
+  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(SearchCriteriaComponent, { className: "SearchCriteriaComponent", filePath: "app/views/ia-assistant/components/search-criteria.component.ts", lineNumber: 18 });
 })();
 
 // node_modules/primeng/fesm2022/primeng-toggleswitch.mjs
@@ -39324,7 +39324,7 @@ var IaTreeComponent = class _IaTreeComponent {
   }] });
 })();
 (() => {
-  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(IaTreeComponent, { className: "IaTreeComponent", filePath: "src/app/views/ia-assistant/components/ia-tree.component.ts", lineNumber: 97 });
+  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(IaTreeComponent, { className: "IaTreeComponent", filePath: "app/views/ia-assistant/components/ia-tree.component.ts", lineNumber: 97 });
 })();
 
 // src/app/views/ia-assistant/ia-assistant.component.ts
@@ -39797,7 +39797,7 @@ var IaAssistantComponent = class _IaAssistantComponent {
   }], null, null);
 })();
 (() => {
-  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(IaAssistantComponent, { className: "IaAssistantComponent", filePath: "src/app/views/ia-assistant/ia-assistant.component.ts", lineNumber: 54 });
+  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(IaAssistantComponent, { className: "IaAssistantComponent", filePath: "app/views/ia-assistant/ia-assistant.component.ts", lineNumber: 54 });
 })();
 
 // node_modules/primeng/fesm2022/primeng-avatar.mjs
@@ -42828,7 +42828,7 @@ var JourneyMapComponent = class _JourneyMapComponent {
   }], null, null);
 })();
 (() => {
-  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(JourneyMapComponent, { className: "JourneyMapComponent", filePath: "src/app/views/journey-map/journey-map.component.ts", lineNumber: 632 });
+  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(JourneyMapComponent, { className: "JourneyMapComponent", filePath: "app/views/journey-map/journey-map.component.ts", lineNumber: 632 });
 })();
 
 // src/app/app.routes.ts
@@ -42850,7 +42850,7 @@ var routes = [
       }
       return true;
     }],
-    loadComponent: () => import("./chunk-NPDLTRJ2.js").then((m) => m.PageAssistantCompareComponent)
+    loadComponent: () => import("./chunk-REXIAAAN.js").then((m) => m.PageAssistantCompareComponent)
   },
   {
     path: "page-assistant/share",
@@ -42990,7 +42990,7 @@ var ApiResetComponent = class _ApiResetComponent {
   }], null, null);
 })();
 (() => {
-  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(ApiResetComponent, { className: "ApiResetComponent", filePath: "src/app/template/api-reset.component.ts", lineNumber: 34 });
+  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(ApiResetComponent, { className: "ApiResetComponent", filePath: "app/template/api-reset.component.ts", lineNumber: 34 });
 })();
 
 // src/app/template/header.component.ts
@@ -43111,7 +43111,7 @@ var HeaderComponent = class _HeaderComponent {
   }], () => [], null);
 })();
 (() => {
-  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(HeaderComponent, { className: "HeaderComponent", filePath: "src/app/template/header.component.ts", lineNumber: 69 });
+  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(HeaderComponent, { className: "HeaderComponent", filePath: "app/template/header.component.ts", lineNumber: 69 });
 })();
 
 // src/app/template/sidebar.component.ts
@@ -43430,7 +43430,7 @@ var SidebarComponent = class _SidebarComponent {
   }], null, null);
 })();
 (() => {
-  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(SidebarComponent, { className: "SidebarComponent", filePath: "src/app/template/sidebar.component.ts", lineNumber: 13 });
+  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(SidebarComponent, { className: "SidebarComponent", filePath: "app/template/sidebar.component.ts", lineNumber: 13 });
 })();
 
 // src/app/template/footer.component.ts
@@ -43483,7 +43483,7 @@ var FooterComponent = class _FooterComponent {
   }], null, null);
 })();
 (() => {
-  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(FooterComponent, { className: "FooterComponent", filePath: "src/app/template/footer.component.ts", lineNumber: 32 });
+  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(FooterComponent, { className: "FooterComponent", filePath: "app/template/footer.component.ts", lineNumber: 32 });
 })();
 
 // src/app/template/api-key.component.ts
@@ -43606,7 +43606,7 @@ var ApiKeyComponent = class _ApiKeyComponent {
   }], null, null);
 })();
 (() => {
-  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(ApiKeyComponent, { className: "ApiKeyComponent", filePath: "src/app/template/api-key.component.ts", lineNumber: 20 });
+  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(ApiKeyComponent, { className: "ApiKeyComponent", filePath: "app/template/api-key.component.ts", lineNumber: 20 });
 })();
 
 // src/app/app.component.ts
@@ -43679,7 +43679,7 @@ var AppComponent = class _AppComponent {
   }], null, null);
 })();
 (() => {
-  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(AppComponent, { className: "AppComponent", filePath: "src/app/app.component.ts", lineNumber: 20 });
+  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(AppComponent, { className: "AppComponent", filePath: "app/app.component.ts", lineNumber: 20 });
 })();
 
 // src/main.ts

@@ -138,7 +138,7 @@ import {
   unblockBodyScroll,
   uuid,
   zindexutils
-} from "./chunk-L7SGNDUJ.js";
+} from "./chunk-MFWTJBNA.js";
 import {
   ChangeDetectionStrategy,
   ChangeDetectorRef,
@@ -22760,14 +22760,30 @@ var AlertRewriteService = class _AlertRewriteService {
     if (!parsed || typeof parsed !== "object") {
       return null;
     }
-    const root = parsed;
-    const rawAlertHtml = this.cleanString(root["rewrittenAlertHtml"]);
+    const root = this.resolveAlertRewriteRoot(parsed);
+    const rawAlertHtml = this.cleanStringFromKeys(root, [
+      "rewrittenAlertHtml",
+      "rewritten_alert_html",
+      "alertHtml",
+      "alert_html",
+      "html"
+    ]);
     const normalizedAlertHtml = this.normalizeAlertWrapperHtml(rawAlertHtml);
     if (!normalizedAlertHtml) {
       return null;
     }
-    const parsedHeading = this.cleanString(root["rewrittenHeading"]);
-    const rawAlert = this.cleanString(root["rewrittenAlert"]);
+    const parsedHeading = this.cleanStringFromKeys(root, [
+      "rewrittenHeading",
+      "rewritten_heading",
+      "heading"
+    ]);
+    const rawAlert = this.cleanStringFromKeys(root, [
+      "rewrittenAlert",
+      "rewritten_alert",
+      "alertText",
+      "alert_text",
+      "text"
+    ]);
     const extractedHeading = this.extractHeadingFromAlertHtml(normalizedAlertHtml);
     const extractedBodyText = this.extractBodyTextFromAlertHtml(normalizedAlertHtml);
     const rewrittenHeading = parsedHeading || extractedHeading || this.buildFallbackHeading();
@@ -22775,8 +22791,8 @@ var AlertRewriteService = class _AlertRewriteService {
     if (!baseBodyText)
       return null;
     const rewrittenAlert = baseBodyText.trim();
-    const appliedDirectives = this.toStringArray(root["appliedDirectives"]);
-    const exampleIdsUsed = this.sanitizeExampleIdsUsed(this.toStringArray(root["exampleIdsUsed"]), selectedExamples);
+    const appliedDirectives = this.toStringArray(root["appliedDirectives"] ?? root["applied_directives"]);
+    const exampleIdsUsed = this.sanitizeExampleIdsUsed(this.toStringArray(root["exampleIdsUsed"] ?? root["example_ids_used"]), selectedExamples);
     return {
       rewrittenAlertHtml: normalizedAlertHtml,
       rewrittenHeading,
@@ -22788,22 +22804,50 @@ var AlertRewriteService = class _AlertRewriteService {
   parseAlertRewriteRepairCandidate(text, selectedExamples) {
     const parsed = this.looseJsonParse(this.stripCodeFences(text));
     if (!parsed || typeof parsed !== "object") {
-      return null;
+      const rawHtml = this.extractAlertHtmlFragment(text);
+      const normalizedHtml = this.normalizeAlertWrapperHtml(rawHtml);
+      const rawText = normalizedHtml ? this.extractBodyTextFromAlertHtml(normalizedHtml) : this.extractBodyTextFromHtmlFragment(rawHtml);
+      if (!rawHtml && !rawText) {
+        return null;
+      }
+      return {
+        rewrittenAlertHtml: normalizedHtml || rawHtml,
+        rewrittenHeading: this.extractHeadingFromAlertHtml(rawHtml) || this.buildFallbackHeading(),
+        rewrittenAlert: rawText,
+        appliedDirectives: [],
+        exampleIdsUsed: []
+      };
     }
-    const root = parsed;
-    const rawAlertHtml = this.cleanString(root["rewrittenAlertHtml"]);
+    const root = this.resolveAlertRewriteRoot(parsed);
+    const rawAlertHtml = this.cleanStringFromKeys(root, [
+      "rewrittenAlertHtml",
+      "rewritten_alert_html",
+      "alertHtml",
+      "alert_html",
+      "html"
+    ]);
     const normalizedAlertHtml = this.normalizeAlertWrapperHtml(rawAlertHtml);
-    const parsedHeading = this.cleanString(root["rewrittenHeading"]);
-    const rawAlert = this.cleanString(root["rewrittenAlert"]);
+    const parsedHeading = this.cleanStringFromKeys(root, [
+      "rewrittenHeading",
+      "rewritten_heading",
+      "heading"
+    ]);
+    const rawAlert = this.cleanStringFromKeys(root, [
+      "rewrittenAlert",
+      "rewritten_alert",
+      "alertText",
+      "alert_text",
+      "text"
+    ]);
     const extractedHeading = normalizedAlertHtml ? this.extractHeadingFromAlertHtml(normalizedAlertHtml) : "";
-    const extractedBodyText = normalizedAlertHtml ? this.extractBodyTextFromAlertHtml(normalizedAlertHtml) : this.extractTextFromHtmlFragment(rawAlertHtml);
+    const extractedBodyText = normalizedAlertHtml ? this.extractBodyTextFromAlertHtml(normalizedAlertHtml) : this.extractBodyTextFromHtmlFragment(rawAlertHtml);
     const rewrittenHeading = parsedHeading || extractedHeading || this.buildFallbackHeading();
     const baseBodyText = rawAlert || extractedBodyText;
     if (!rawAlertHtml && !baseBodyText) {
       return null;
     }
-    const appliedDirectives = this.toStringArray(root["appliedDirectives"]);
-    const exampleIdsUsed = this.sanitizeExampleIdsUsed(this.toStringArray(root["exampleIdsUsed"]), selectedExamples);
+    const appliedDirectives = this.toStringArray(root["appliedDirectives"] ?? root["applied_directives"]);
+    const exampleIdsUsed = this.sanitizeExampleIdsUsed(this.toStringArray(root["exampleIdsUsed"] ?? root["example_ids_used"]), selectedExamples);
     return {
       rewrittenAlertHtml: normalizedAlertHtml || rawAlertHtml,
       rewrittenHeading,
@@ -22965,18 +23009,157 @@ var AlertRewriteService = class _AlertRewriteService {
     return input.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/i, "").trim();
   }
   looseJsonParse(input) {
-    try {
-      return JSON.parse(input);
-    } catch {
+    const wholeInput = input.trim();
+    const candidates = [
+      wholeInput,
+      ...this.extractBalancedJsonCandidates(input).filter((candidate) => candidate !== wholeInput).sort((a, b) => b.length - a.length)
+    ].filter((candidate, index, all) => {
+      return !!candidate && all.indexOf(candidate) === index;
+    });
+    for (const candidate of candidates) {
+      try {
+        return JSON.parse(candidate);
+      } catch {
+      }
     }
-    const match = input.match(/\{[\s\S]*\}/);
-    if (!match)
-      return null;
-    try {
-      return JSON.parse(match[0]);
-    } catch {
-      return null;
+    return null;
+  }
+  extractBalancedJsonCandidates(input) {
+    const candidates = [];
+    for (let start = 0; start < input.length; start += 1) {
+      const first = input[start];
+      if (first !== "{" && first !== "[")
+        continue;
+      const stack = [];
+      let inString = false;
+      let escaped = false;
+      for (let index = start; index < input.length; index += 1) {
+        const char = input[index];
+        if (inString) {
+          if (escaped) {
+            escaped = false;
+          } else if (char === "\\") {
+            escaped = true;
+          } else if (char === '"') {
+            inString = false;
+          }
+          continue;
+        }
+        if (char === '"') {
+          inString = true;
+          continue;
+        }
+        if (char === "{") {
+          stack.push("}");
+        } else if (char === "[") {
+          stack.push("]");
+        } else if (char === "}" || char === "]") {
+          if (stack[stack.length - 1] !== char) {
+            break;
+          }
+          stack.pop();
+          if (!stack.length) {
+            candidates.push(input.slice(start, index + 1).trim());
+            break;
+          }
+        }
+      }
     }
+    return candidates;
+  }
+  resolveAlertRewriteRoot(parsed) {
+    const fromArray = (values) => {
+      for (const value of values) {
+        if (value && typeof value === "object" && !Array.isArray(value)) {
+          const record = value;
+          if (this.hasAlertRewriteShape(record))
+            return record;
+        }
+      }
+      return null;
+    };
+    if (Array.isArray(parsed)) {
+      return fromArray(parsed) || {};
+    }
+    const root = parsed && typeof parsed === "object" ? parsed : {};
+    if (this.hasAlertRewriteShape(root))
+      return root;
+    const nestedKeys = [
+      "alertRewrite",
+      "alert_rewrite",
+      "rewrite",
+      "rewrittenAlert",
+      "rewritten_alert",
+      "result",
+      "output",
+      "alert",
+      "data"
+    ];
+    for (const key2 of nestedKeys) {
+      const value = root[key2];
+      if (Array.isArray(value)) {
+        const arrayMatch = fromArray(value);
+        if (arrayMatch)
+          return arrayMatch;
+      } else if (value && typeof value === "object") {
+        const record = value;
+        if (this.hasAlertRewriteShape(record))
+          return record;
+      }
+    }
+    for (const value of Object.values(root)) {
+      if (value && typeof value === "object" && !Array.isArray(value)) {
+        const record = value;
+        if (this.hasAlertRewriteShape(record))
+          return record;
+      }
+    }
+    return root;
+  }
+  hasAlertRewriteShape(root) {
+    return [
+      "rewrittenAlertHtml",
+      "rewritten_alert_html",
+      "alertHtml",
+      "alert_html",
+      "rewrittenAlert",
+      "rewritten_alert",
+      "rewrittenHeading",
+      "rewritten_heading"
+    ].some((key2) => Object.prototype.hasOwnProperty.call(root, key2));
+  }
+  cleanStringFromKeys(root, keys) {
+    for (const key2 of keys) {
+      const value = this.cleanString(root[key2]);
+      if (value)
+        return value;
+    }
+    return "";
+  }
+  extractAlertHtmlFragment(text) {
+    const stripped = this.stripCodeFences(text);
+    const fencedHtmlMatch = stripped.match(/```(?:html)?\s*([\s\S]*?)\s*```/i);
+    const candidates = [
+      fencedHtmlMatch?.[1] || "",
+      stripped
+    ].filter((candidate) => !!candidate.trim());
+    for (const candidate of candidates) {
+      const normalizedAlert = this.normalizeAlertWrapperHtml(candidate);
+      if (normalizedAlert)
+        return normalizedAlert;
+      try {
+        const doc = new DOMParser().parseFromString(candidate, "text/html");
+        const alertEl = doc.body.querySelector(".alert");
+        if (alertEl)
+          return alertEl.outerHTML.trim();
+        const bodyHtml = doc.body.innerHTML.trim();
+        if (bodyHtml && /<\/?(h[1-6]|p|a|ul|ol|li)\b/i.test(bodyHtml)) {
+          return bodyHtml;
+        }
+      } catch {
+      }
+    }
+    return "";
   }
   toStringArray(raw) {
     if (!Array.isArray(raw))
@@ -23043,8 +23226,9 @@ var AlertRewriteService = class _AlertRewriteService {
       return null;
     try {
       const doc = new DOMParser().parseFromString(rawHtml, "text/html");
-      const alertEl = doc.body.firstElementChild;
-      if (!alertEl || !alertEl.classList.contains("alert"))
+      const firstElement = doc.body.firstElementChild;
+      const alertEl = firstElement?.classList.contains("alert") ? firstElement : doc.body.querySelector(".alert");
+      if (!alertEl)
         return null;
       return alertEl.outerHTML.trim();
     } catch {
@@ -23079,6 +23263,18 @@ var AlertRewriteService = class _AlertRewriteService {
     try {
       const doc = new DOMParser().parseFromString(fragmentHtml, "text/html");
       return (doc.body.textContent || "").trim();
+    } catch {
+      return "";
+    }
+  }
+  extractBodyTextFromHtmlFragment(fragmentHtml) {
+    if (!fragmentHtml)
+      return "";
+    try {
+      const doc = new DOMParser().parseFromString(fragmentHtml, "text/html");
+      const clone = doc.body.cloneNode(true);
+      clone.querySelectorAll("h1, h2, h3, h4, h5, h6").forEach((el) => el.remove());
+      return (clone.textContent || "").trim();
     } catch {
       return "";
     }
@@ -27204,7 +27400,7 @@ var AiOptionsComponent = class _AiOptionsComponent {
   }] });
 })();
 (() => {
-  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(AiOptionsComponent, { className: "AiOptionsComponent", filePath: "src/app/views/page-assistant/components/ai-options.component.ts", lineNumber: 32 });
+  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(AiOptionsComponent, { className: "AiOptionsComponent", filePath: "app/views/page-assistant/components/ai-options.component.ts", lineNumber: 32 });
 })();
 
 // src/app/views/page-assistant/components/problems/heading-structure.component.ts
@@ -27421,7 +27617,7 @@ var HeadingStructureComponent = class _HeadingStructureComponent {
   }], null, null);
 })();
 (() => {
-  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(HeadingStructureComponent, { className: "HeadingStructureComponent", filePath: "src/app/views/page-assistant/components/problems/heading-structure.component.ts", lineNumber: 37 });
+  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(HeadingStructureComponent, { className: "HeadingStructureComponent", filePath: "app/views/page-assistant/components/problems/heading-structure.component.ts", lineNumber: 37 });
 })();
 
 // src/app/views/page-assistant/components/problems/component-guidance/alerts-guidance/alerts-guidance.component.ts
@@ -27704,7 +27900,7 @@ var AlertsGuidanceComponent = class _AlertsGuidanceComponent {
   }] });
 })();
 (() => {
-  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(AlertsGuidanceComponent, { className: "AlertsGuidanceComponent", filePath: "src/app/views/page-assistant/components/problems/component-guidance/alerts-guidance/alerts-guidance.component.ts", lineNumber: 100 });
+  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(AlertsGuidanceComponent, { className: "AlertsGuidanceComponent", filePath: "app/views/page-assistant/components/problems/component-guidance/alerts-guidance/alerts-guidance.component.ts", lineNumber: 100 });
 })();
 
 // src/app/views/page-assistant/data/css-list.config.ts
@@ -29438,7 +29634,7 @@ var ComponentGuidanceComponent = class _ComponentGuidanceComponent {
   }], null, null);
 })();
 (() => {
-  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(ComponentGuidanceComponent, { className: "ComponentGuidanceComponent", filePath: "src/app/views/page-assistant/components/problems/component-guidance/component-guidance.component.ts", lineNumber: 149 });
+  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(ComponentGuidanceComponent, { className: "ComponentGuidanceComponent", filePath: "app/views/page-assistant/components/problems/component-guidance/component-guidance.component.ts", lineNumber: 149 });
 })();
 
 // src/app/views/page-assistant/components/problems/seo.component.ts
@@ -29635,7 +29831,7 @@ var SeoComponent = class _SeoComponent {
   }], null, null);
 })();
 (() => {
-  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(SeoComponent, { className: "SeoComponent", filePath: "src/app/views/page-assistant/components/problems/seo.component.ts", lineNumber: 22 });
+  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(SeoComponent, { className: "SeoComponent", filePath: "app/views/page-assistant/components/problems/seo.component.ts", lineNumber: 22 });
 })();
 
 // src/app/views/page-assistant/components/problems/user-insights.component.ts
@@ -29750,7 +29946,7 @@ var UserInsightsComponent = class _UserInsightsComponent {
   }], null, null);
 })();
 (() => {
-  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(UserInsightsComponent, { className: "UserInsightsComponent", filePath: "src/app/views/page-assistant/components/problems/user-insights.component.ts", lineNumber: 19 });
+  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(UserInsightsComponent, { className: "UserInsightsComponent", filePath: "app/views/page-assistant/components/problems/user-insights.component.ts", lineNumber: 19 });
 })();
 
 // src/app/views/page-assistant/services/link-ai.service.ts
@@ -31693,7 +31889,7 @@ var LinkReportComponent = class _LinkReportComponent {
   }] });
 })();
 (() => {
-  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(LinkReportComponent, { className: "LinkReportComponent", filePath: "src/app/views/page-assistant/components/problems/link-report.component.ts", lineNumber: 311 });
+  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(LinkReportComponent, { className: "LinkReportComponent", filePath: "app/views/page-assistant/components/problems/link-report.component.ts", lineNumber: 311 });
 })();
 
 // node_modules/primeng/fesm2022/primeng-breadcrumb.mjs
@@ -34086,7 +34282,7 @@ var IaStructureComponent = class _IaStructureComponent {
   }] });
 })();
 (() => {
-  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(IaStructureComponent, { className: "IaStructureComponent", filePath: "src/app/views/page-assistant/components/problems/ia-structure.component.ts", lineNumber: 105 });
+  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(IaStructureComponent, { className: "IaStructureComponent", filePath: "app/views/page-assistant/components/problems/ia-structure.component.ts", lineNumber: 105 });
 })();
 
 // src/app/views/page-assistant/components/problems/component-guidance/topic-page/topic-page-exceptions.json
@@ -36856,7 +37052,7 @@ var TopicPageIaComponent = class _TopicPageIaComponent {
   }] });
 })();
 (() => {
-  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(TopicPageIaComponent, { className: "TopicPageIaComponent", filePath: "src/app/views/page-assistant/components/problems/component-guidance/topic-page/topic-page-ia.component.ts", lineNumber: 196 });
+  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(TopicPageIaComponent, { className: "TopicPageIaComponent", filePath: "app/views/page-assistant/components/problems/component-guidance/topic-page/topic-page-ia.component.ts", lineNumber: 196 });
 })();
 
 // src/app/views/page-assistant/data/canada-ca-snippets.constants.ts
@@ -40163,7 +40359,7 @@ var TopicIaJsonComponent = class _TopicIaJsonComponent {
   }] });
 })();
 (() => {
-  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(TopicIaJsonComponent, { className: "TopicIaJsonComponent", filePath: "src/app/views/page-assistant/components/problems/component-guidance/topic-page/topic-ia-json.component.ts", lineNumber: 241 });
+  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(TopicIaJsonComponent, { className: "TopicIaJsonComponent", filePath: "app/views/page-assistant/components/problems/component-guidance/topic-page/topic-ia-json.component.ts", lineNumber: 241 });
 })();
 
 // src/app/views/page-assistant/components/problems.component.ts
@@ -40730,7 +40926,7 @@ var PageProblemsComponent = class _PageProblemsComponent {
   }] });
 })();
 (() => {
-  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(PageProblemsComponent, { className: "PageProblemsComponent", filePath: "src/app/views/page-assistant/components/problems.component.ts", lineNumber: 72 });
+  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(PageProblemsComponent, { className: "PageProblemsComponent", filePath: "app/views/page-assistant/components/problems.component.ts", lineNumber: 72 });
 })();
 
 // src/app/views/page-assistant/components/data/search.component.ts
@@ -40748,7 +40944,7 @@ var SearchComponent = class _SearchComponent {
   }], null, null);
 })();
 (() => {
-  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(SearchComponent, { className: "SearchComponent", filePath: "src/app/views/page-assistant/components/data/search.component.ts", lineNumber: 9 });
+  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(SearchComponent, { className: "SearchComponent", filePath: "app/views/page-assistant/components/data/search.component.ts", lineNumber: 9 });
 })();
 
 // src/app/views/page-assistant/components/data/chatLogs.component.ts
@@ -40766,7 +40962,7 @@ var ChatLogsComponent = class _ChatLogsComponent {
   }], null, null);
 })();
 (() => {
-  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(ChatLogsComponent, { className: "ChatLogsComponent", filePath: "src/app/views/page-assistant/components/data/chatlogs.component.ts", lineNumber: 9 });
+  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(ChatLogsComponent, { className: "ChatLogsComponent", filePath: "app/views/page-assistant/components/data/chatlogs.component.ts", lineNumber: 9 });
 })();
 
 // src/app/views/page-assistant/components/data/feedback.component.ts
@@ -40784,7 +40980,7 @@ var FeedbackComponent = class _FeedbackComponent {
   }], null, null);
 })();
 (() => {
-  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(FeedbackComponent, { className: "FeedbackComponent", filePath: "src/app/views/page-assistant/components/data/feedback.component.ts", lineNumber: 9 });
+  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(FeedbackComponent, { className: "FeedbackComponent", filePath: "app/views/page-assistant/components/data/feedback.component.ts", lineNumber: 9 });
 })();
 
 // src/app/views/page-assistant/components/data/uxTesting.component.ts
@@ -40802,7 +40998,7 @@ var UxTestingComponent = class _UxTestingComponent {
   }], null, null);
 })();
 (() => {
-  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(UxTestingComponent, { className: "UxTestingComponent", filePath: "src/app/views/page-assistant/components/data/uxtesting.component.ts", lineNumber: 9 });
+  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(UxTestingComponent, { className: "UxTestingComponent", filePath: "app/views/page-assistant/components/data/uxtesting.component.ts", lineNumber: 9 });
 })();
 
 // src/app/views/page-assistant/components/data.component.ts
@@ -40952,7 +41148,7 @@ var PageDataComponent = class _PageDataComponent {
   }], null, null);
 })();
 (() => {
-  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(PageDataComponent, { className: "PageDataComponent", filePath: "src/app/views/page-assistant/components/data.component.ts", lineNumber: 36 });
+  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(PageDataComponent, { className: "PageDataComponent", filePath: "app/views/page-assistant/components/data.component.ts", lineNumber: 36 });
 })();
 
 // src/app/views/page-assistant/components/tools/template-conversion.component.ts
@@ -40978,7 +41174,7 @@ var TemplateConversionComponent = class _TemplateConversionComponent {
   }], null, null);
 })();
 (() => {
-  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(TemplateConversionComponent, { className: "TemplateConversionComponent", filePath: "src/app/views/page-assistant/components/tools/template-conversion.component.ts", lineNumber: 9 });
+  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(TemplateConversionComponent, { className: "TemplateConversionComponent", filePath: "app/views/page-assistant/components/tools/template-conversion.component.ts", lineNumber: 9 });
 })();
 
 // src/app/views/page-assistant/components/tools.component.ts
@@ -41049,7 +41245,7 @@ var PageToolsComponent = class _PageToolsComponent {
   }], null, null);
 })();
 (() => {
-  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(PageToolsComponent, { className: "PageToolsComponent", filePath: "src/app/views/page-assistant/components/tools.component.ts", lineNumber: 30 });
+  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(PageToolsComponent, { className: "PageToolsComponent", filePath: "app/views/page-assistant/components/tools.component.ts", lineNumber: 30 });
 })();
 
 // src/app/views/page-assistant/page-assistant.component.ts
@@ -41703,7 +41899,7 @@ ${custom}` : composed.prompt;
         const choices = Array.isArray(rawJson["choices"]) ? rawJson["choices"] : [];
         const firstChoice = choices[0];
         const message = firstChoice && typeof firstChoice["message"] === "object" ? firstChoice["message"] : null;
-        const text = message && typeof message["content"] === "string" ? message["content"] : "";
+        const text = message ? this.extractOpenRouterMessageText(message) : "";
         const usedModel = typeof rawJson["model"] === "string" ? rawJson["model"] : candidate;
         if (!text) {
           lastError = new Error(`${contextLabel} response was empty (${this.getShortModelName(candidate)}).`);
@@ -41713,6 +41909,24 @@ ${custom}` : composed.prompt;
       }
       throw lastError ?? new Error(`${contextLabel} response was empty.`);
     });
+  }
+  extractOpenRouterMessageText(message) {
+    const content = message["content"];
+    if (typeof content === "string")
+      return content;
+    if (Array.isArray(content)) {
+      return content.map((part) => {
+        if (typeof part === "string")
+          return part;
+        if (part && typeof part === "object") {
+          const block = part;
+          const text = block["text"] ?? block["content"];
+          return typeof text === "string" ? text : "";
+        }
+        return "";
+      }).filter((part) => !!part.trim()).join("\n").trim();
+    }
+    return "";
   }
   // UI-facing summary of the alert rewrite options currently active.
   buildAlertRewriteStatusMessage() {
@@ -42767,9 +42981,9 @@ ${custom}` : composed.prompt;
   }] });
 })();
 (() => {
-  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(PageAssistantCompareComponent, { className: "PageAssistantCompareComponent", filePath: "src/app/views/page-assistant/page-assistant.component.ts", lineNumber: 97 });
+  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(PageAssistantCompareComponent, { className: "PageAssistantCompareComponent", filePath: "app/views/page-assistant/page-assistant.component.ts", lineNumber: 97 });
 })();
 export {
   PageAssistantCompareComponent
 };
-//# sourceMappingURL=chunk-NPDLTRJ2.js.map
+//# sourceMappingURL=chunk-REXIAAAN.js.map
