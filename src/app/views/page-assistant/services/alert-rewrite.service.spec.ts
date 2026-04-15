@@ -106,6 +106,61 @@ describe('AlertRewriteService', () => {
     expect(result?.exampleIdsUsed).toEqual(['ex-001']);
   });
 
+  it('accepts nested snake_case rewrite fields from model output', () => {
+    const result = service.parseAlertRewriteResponse(
+      JSON.stringify({
+        output: {
+          rewritten_alert_html:
+            '<section class="alert alert-info"><h3>File online</h3><p>You can file your return in My Business Account.</p></section>',
+          rewritten_heading: 'File online',
+          rewritten_alert: 'You can file your return in My Business Account.',
+          applied_directives: ['add_heading'],
+          example_ids_used: ['ex-001'],
+        },
+      }),
+      plan,
+      [
+        {
+          id: 'ex-001',
+          alertType: 'info',
+          tags: [],
+          criteria: [],
+          before: 'Before one',
+          after: 'After one',
+        },
+      ],
+    );
+
+    expect(result?.rewrittenAlertHtml).toContain(
+      '<section class="alert alert-info">',
+    );
+    expect(result?.rewrittenHeading).toBe('File online');
+    expect(result?.rewrittenAlert).toBe(
+      'You can file your return in My Business Account.',
+    );
+    expect(result?.appliedDirectives).toEqual(['add_heading']);
+    expect(result?.exampleIdsUsed).toEqual(['ex-001']);
+  });
+
+  it('extracts a repair candidate when the model returns raw alert html', () => {
+    const result = service.parseAlertRewriteRepairCandidate(
+      [
+        '```html',
+        '<section class="alert alert-info"><h3>File online</h3><p>You can file your return in My Business Account.</p></section>',
+        '```',
+      ].join('\n'),
+      [],
+    );
+
+    expect(result?.rewrittenAlertHtml).toContain(
+      '<section class="alert alert-info">',
+    );
+    expect(result?.rewrittenHeading).toBe('File online');
+    expect(result?.rewrittenAlert).toBe(
+      'You can file your return in My Business Account.',
+    );
+  });
+
   it('adds a visible failure notice above the original alert for passthrough fallbacks', () => {
     const result = service.buildPassthroughResult({
       alertHtml: '<section class="alert alert-info"><p>Original alert text.</p></section>',

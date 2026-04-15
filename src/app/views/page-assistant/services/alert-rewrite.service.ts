@@ -451,14 +451,32 @@ export class AlertRewriteService {
     if (!parsed || typeof parsed !== 'object') {
       return null;
     }
-    const root = parsed as Record<string, unknown>;
-    const rawAlertHtml = this.cleanString(root['rewrittenAlertHtml']);
+    // Some models return the right fields with snake_case names or nested under
+    // output/result objects. Normalize that shape before enforcing the contract.
+    const root = this.resolveAlertRewriteRoot(parsed);
+    const rawAlertHtml = this.cleanStringFromKeys(root, [
+      'rewrittenAlertHtml',
+      'rewritten_alert_html',
+      'alertHtml',
+      'alert_html',
+      'html',
+    ]);
     const normalizedAlertHtml = this.normalizeAlertWrapperHtml(rawAlertHtml);
     if (!normalizedAlertHtml) {
       return null;
     }
-    const parsedHeading = this.cleanString(root['rewrittenHeading']);
-    const rawAlert = this.cleanString(root['rewrittenAlert']);
+    const parsedHeading = this.cleanStringFromKeys(root, [
+      'rewrittenHeading',
+      'rewritten_heading',
+      'heading',
+    ]);
+    const rawAlert = this.cleanStringFromKeys(root, [
+      'rewrittenAlert',
+      'rewritten_alert',
+      'alertText',
+      'alert_text',
+      'text',
+    ]);
     const extractedHeading = this.extractHeadingFromAlertHtml(normalizedAlertHtml);
     const extractedBodyText = this.extractBodyTextFromAlertHtml(normalizedAlertHtml);
     const rewrittenHeading =
@@ -466,9 +484,11 @@ export class AlertRewriteService {
     const baseBodyText = rawAlert || extractedBodyText;
     if (!baseBodyText) return null;
     const rewrittenAlert = baseBodyText.trim();
-    const appliedDirectives = this.toStringArray(root['appliedDirectives']);
+    const appliedDirectives = this.toStringArray(
+      root['appliedDirectives'] ?? root['applied_directives'],
+    );
     const exampleIdsUsed = this.sanitizeExampleIdsUsed(
-      this.toStringArray(root['exampleIdsUsed']),
+      this.toStringArray(root['exampleIdsUsed'] ?? root['example_ids_used']),
       selectedExamples,
     );
 
@@ -487,28 +507,63 @@ export class AlertRewriteService {
   ): AlertRewriteRepairCandidate | null {
     const parsed = this.looseJsonParse(this.stripCodeFences(text));
     if (!parsed || typeof parsed !== 'object') {
-      return null;
+      // If the model ignored the JSON schema but returned usable alert HTML,
+      // keep it as a local-repair candidate instead of forcing a hard failure.
+      const rawHtml = this.extractAlertHtmlFragment(text);
+      const normalizedHtml = this.normalizeAlertWrapperHtml(rawHtml);
+      const rawText = normalizedHtml
+        ? this.extractBodyTextFromAlertHtml(normalizedHtml)
+        : this.extractBodyTextFromHtmlFragment(rawHtml);
+      if (!rawHtml && !rawText) {
+        return null;
+      }
+      return {
+        rewrittenAlertHtml: normalizedHtml || rawHtml,
+        rewrittenHeading:
+          this.extractHeadingFromAlertHtml(rawHtml) || this.buildFallbackHeading(),
+        rewrittenAlert: rawText,
+        appliedDirectives: [],
+        exampleIdsUsed: [],
+      };
     }
-    const root = parsed as Record<string, unknown>;
-    const rawAlertHtml = this.cleanString(root['rewrittenAlertHtml']);
+    const root = this.resolveAlertRewriteRoot(parsed);
+    const rawAlertHtml = this.cleanStringFromKeys(root, [
+      'rewrittenAlertHtml',
+      'rewritten_alert_html',
+      'alertHtml',
+      'alert_html',
+      'html',
+    ]);
     const normalizedAlertHtml = this.normalizeAlertWrapperHtml(rawAlertHtml);
-    const parsedHeading = this.cleanString(root['rewrittenHeading']);
-    const rawAlert = this.cleanString(root['rewrittenAlert']);
+    const parsedHeading = this.cleanStringFromKeys(root, [
+      'rewrittenHeading',
+      'rewritten_heading',
+      'heading',
+    ]);
+    const rawAlert = this.cleanStringFromKeys(root, [
+      'rewrittenAlert',
+      'rewritten_alert',
+      'alertText',
+      'alert_text',
+      'text',
+    ]);
     const extractedHeading = normalizedAlertHtml
       ? this.extractHeadingFromAlertHtml(normalizedAlertHtml)
       : '';
     const extractedBodyText = normalizedAlertHtml
       ? this.extractBodyTextFromAlertHtml(normalizedAlertHtml)
-      : this.extractTextFromHtmlFragment(rawAlertHtml);
+      : this.extractBodyTextFromHtmlFragment(rawAlertHtml);
     const rewrittenHeading =
       parsedHeading || extractedHeading || this.buildFallbackHeading();
     const baseBodyText = rawAlert || extractedBodyText;
     if (!rawAlertHtml && !baseBodyText) {
       return null;
     }
-    const appliedDirectives = this.toStringArray(root['appliedDirectives']);
+    const appliedDirectives = this.toStringArray(
+      root['appliedDirectives'] ?? root['applied_directives'],
+    );
     const exampleIdsUsed = this.sanitizeExampleIdsUsed(
-      this.toStringArray(root['exampleIdsUsed']),
+      this.toStringArray(root['exampleIdsUsed'] ?? root['example_ids_used']),
       selectedExamples,
     );
 
@@ -721,18 +776,186 @@ export class AlertRewriteService {
   }
 
   private looseJsonParse(input: string): unknown | null {
-    try {
-      return JSON.parse(input);
-    } catch {
-      // fall through
+    const wholeInput = input.trim();
+    // Prefer the full response, then recover balanced JSON blocks from
+    // markdown/prose wrappers that small models sometimes add.
+    const candidates = [
+      wholeInput,
+      ...this.extractBalancedJsonCandidates(input)
+        .filter((candidate) => candidate !== wholeInput)
+        .sort((a, b) => b.length - a.length),
+    ].filter((candidate, index, all) => {
+      return !!candidate && all.indexOf(candidate) === index;
+    });
+
+    for (const candidate of candidates) {
+      try {
+        return JSON.parse(candidate);
+      } catch {
+        // Try the next recoverable JSON block.
+      }
     }
-    const match = input.match(/\{[\s\S]*\}/);
-    if (!match) return null;
-    try {
-      return JSON.parse(match[0]);
-    } catch {
+
+    return null;
+  }
+
+  private extractBalancedJsonCandidates(input: string): string[] {
+    const candidates: string[] = [];
+    for (let start = 0; start < input.length; start += 1) {
+      const first = input[start];
+      if (first !== '{' && first !== '[') continue;
+
+      const stack: string[] = [];
+      let inString = false;
+      let escaped = false;
+
+      for (let index = start; index < input.length; index += 1) {
+        const char = input[index];
+
+        if (inString) {
+          if (escaped) {
+            escaped = false;
+          } else if (char === '\\') {
+            escaped = true;
+          } else if (char === '"') {
+            inString = false;
+          }
+          continue;
+        }
+
+        if (char === '"') {
+          inString = true;
+          continue;
+        }
+
+        if (char === '{') {
+          stack.push('}');
+        } else if (char === '[') {
+          stack.push(']');
+        } else if (char === '}' || char === ']') {
+          if (stack[stack.length - 1] !== char) {
+            break;
+          }
+          stack.pop();
+          if (!stack.length) {
+            candidates.push(input.slice(start, index + 1).trim());
+            break;
+          }
+        }
+      }
+    }
+
+    return candidates;
+  }
+
+  private resolveAlertRewriteRoot(parsed: unknown): Record<string, unknown> {
+    // Accept equivalent wrapper objects so the parser is resilient to common
+    // model variations without weakening downstream alert validation.
+    const fromArray = (values: unknown[]): Record<string, unknown> | null => {
+      for (const value of values) {
+        if (value && typeof value === 'object' && !Array.isArray(value)) {
+          const record = value as Record<string, unknown>;
+          if (this.hasAlertRewriteShape(record)) return record;
+        }
+      }
       return null;
+    };
+
+    if (Array.isArray(parsed)) {
+      return fromArray(parsed) || {};
     }
+
+    const root =
+      parsed && typeof parsed === 'object'
+        ? (parsed as Record<string, unknown>)
+        : {};
+    if (this.hasAlertRewriteShape(root)) return root;
+
+    const nestedKeys = [
+      'alertRewrite',
+      'alert_rewrite',
+      'rewrite',
+      'rewrittenAlert',
+      'rewritten_alert',
+      'result',
+      'output',
+      'alert',
+      'data',
+    ];
+    for (const key of nestedKeys) {
+      const value = root[key];
+      if (Array.isArray(value)) {
+        const arrayMatch = fromArray(value);
+        if (arrayMatch) return arrayMatch;
+      } else if (value && typeof value === 'object') {
+        const record = value as Record<string, unknown>;
+        if (this.hasAlertRewriteShape(record)) return record;
+      }
+    }
+
+    for (const value of Object.values(root)) {
+      if (value && typeof value === 'object' && !Array.isArray(value)) {
+        const record = value as Record<string, unknown>;
+        if (this.hasAlertRewriteShape(record)) return record;
+      }
+    }
+
+    return root;
+  }
+
+  private hasAlertRewriteShape(root: Record<string, unknown>): boolean {
+    return [
+      'rewrittenAlertHtml',
+      'rewritten_alert_html',
+      'alertHtml',
+      'alert_html',
+      'rewrittenAlert',
+      'rewritten_alert',
+      'rewrittenHeading',
+      'rewritten_heading',
+    ].some((key) => Object.prototype.hasOwnProperty.call(root, key));
+  }
+
+  private cleanStringFromKeys(
+    root: Record<string, unknown>,
+    keys: string[],
+  ): string {
+    for (const key of keys) {
+      const value = this.cleanString(root[key]);
+      if (value) return value;
+    }
+    return '';
+  }
+
+  private extractAlertHtmlFragment(text: string): string {
+    // Last-chance recovery for responses that contain HTML instead of JSON.
+    // The guard service still validates/rebuilds the wrapper before insertion.
+    const stripped = this.stripCodeFences(text);
+    const fencedHtmlMatch = stripped.match(/```(?:html)?\s*([\s\S]*?)\s*```/i);
+    const candidates = [
+      fencedHtmlMatch?.[1] || '',
+      stripped,
+    ].filter((candidate) => !!candidate.trim());
+
+    for (const candidate of candidates) {
+      const normalizedAlert = this.normalizeAlertWrapperHtml(candidate);
+      if (normalizedAlert) return normalizedAlert;
+
+      try {
+        const doc = new DOMParser().parseFromString(candidate, 'text/html');
+        const alertEl = doc.body.querySelector('.alert');
+        if (alertEl) return alertEl.outerHTML.trim();
+
+        const bodyHtml = doc.body.innerHTML.trim();
+        if (bodyHtml && /<\/?(h[1-6]|p|a|ul|ol|li)\b/i.test(bodyHtml)) {
+          return bodyHtml;
+        }
+      } catch {
+        // Try the next candidate.
+      }
+    }
+
+    return '';
   }
 
   private toStringArray(raw: unknown): string[] {
@@ -837,8 +1060,13 @@ export class AlertRewriteService {
     if (!rawHtml) return null;
     try {
       const doc = new DOMParser().parseFromString(rawHtml, 'text/html');
-      const alertEl = doc.body.firstElementChild;
-      if (!alertEl || !alertEl.classList.contains('alert')) return null;
+      const firstElement = doc.body.firstElementChild;
+      // A model may prepend prose or markdown artifacts before the alert; keep
+      // the actual .alert element if one is present.
+      const alertEl = firstElement?.classList.contains('alert')
+        ? firstElement
+        : doc.body.querySelector('.alert');
+      if (!alertEl) return null;
       return alertEl.outerHTML.trim();
     } catch {
       return null;
@@ -873,6 +1101,18 @@ export class AlertRewriteService {
     try {
       const doc = new DOMParser().parseFromString(fragmentHtml, 'text/html');
       return (doc.body.textContent || '').trim();
+    } catch {
+      return '';
+    }
+  }
+
+  private extractBodyTextFromHtmlFragment(fragmentHtml: string): string {
+    if (!fragmentHtml) return '';
+    try {
+      const doc = new DOMParser().parseFromString(fragmentHtml, 'text/html');
+      const clone = doc.body.cloneNode(true) as HTMLElement;
+      clone.querySelectorAll('h1, h2, h3, h4, h5, h6').forEach((el) => el.remove());
+      return (clone.textContent || '').trim();
     } catch {
       return '';
     }

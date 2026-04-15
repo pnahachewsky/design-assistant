@@ -671,9 +671,7 @@ export class PageAssistantCompareComponent
         firstChoice && typeof firstChoice['message'] === 'object'
           ? (firstChoice['message'] as Record<string, unknown>)
           : null;
-      const text = message && typeof message['content'] === 'string'
-        ? message['content']
-        : '';
+      const text = message ? this.extractOpenRouterMessageText(message) : '';
       const usedModel =
         typeof rawJson['model'] === 'string' ? rawJson['model'] : candidate;
 
@@ -688,6 +686,31 @@ export class PageAssistantCompareComponent
     }
 
     throw lastError ?? new Error(`${contextLabel} response was empty.`);
+  }
+
+  private extractOpenRouterMessageText(message: Record<string, unknown>): string {
+    // OpenRouter usually returns a string, but some providers return content
+    // blocks. Collapse text blocks so the parser does not see a false empty response.
+    const content = message['content'];
+    if (typeof content === 'string') return content;
+
+    if (Array.isArray(content)) {
+      return content
+        .map((part) => {
+          if (typeof part === 'string') return part;
+          if (part && typeof part === 'object') {
+            const block = part as Record<string, unknown>;
+            const text = block['text'] ?? block['content'];
+            return typeof text === 'string' ? text : '';
+          }
+          return '';
+        })
+        .filter((part) => !!part.trim())
+        .join('\n')
+        .trim();
+    }
+
+    return '';
   }
 
   // UI-facing summary of the alert rewrite options currently active.

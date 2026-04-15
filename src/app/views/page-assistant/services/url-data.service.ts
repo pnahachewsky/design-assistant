@@ -194,7 +194,12 @@ export class UrlDataService {
           const fullUrl = `${baseUrl}${url}`;
           const fetchedHtml = await this.fetchUrl(fullUrl, 'text');
 
-          if (!fetchedHtml) continue;
+          // Mark failed AJAX includes as handled so the nested replacement loop
+          // does not repeatedly fetch known-missing Canada.ca assets.
+          if (!fetchedHtml) {
+            element.removeAttribute(attrName);
+            continue;
+          }
 
           const ajaxDoc = new DOMParser().parseFromString(fetchedHtml, 'text/html');
 
@@ -203,6 +208,8 @@ export class UrlDataService {
             const anchorElement = ajaxDoc.querySelector(`#${anchor}`);
             if (!anchorElement) {
               console.warn(`Anchor #${anchor} not found in ${fullUrl}. Skipping replacement.`);
+              // Remove the attribute for the same one-shot retry behavior as 404s.
+              element.removeAttribute(attrName);
               continue;
             }
             content = anchorElement ? anchorElement.outerHTML : '';
@@ -210,12 +217,16 @@ export class UrlDataService {
             const isFullDoc = /<html[\s>]/i.test(fetchedHtml) && /<body[\s>]/i.test(fetchedHtml);
             if (isFullDoc) {
               console.warn(`Skipping full document injection from: ${fullUrl}`);
+              element.removeAttribute(attrName);
               continue;
             }
             content = ajaxDoc.body ? ajaxDoc.body.innerHTML : ajaxDoc.documentElement.innerHTML;
           }
 
-          if (!content) continue;
+          if (!content) {
+            element.removeAttribute(attrName);
+            continue;
+          }
 
           const styledContent = `
           <div style="border: 3px dashed #fbc02f; padding: 8px; border-radius: 4px;">
