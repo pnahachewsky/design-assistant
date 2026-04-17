@@ -8,7 +8,7 @@ You will receive:
 You must analyze every alert in the alerts array.
 ________________________________________
 2. Analysis Logic
-Analyze the inputs using the following two steps. You must distinguish between "simple issues" (structural/pattern-based) and "complex issues" (requiring AI analysis/context).
+Analyze the inputs using the following steps. You must distinguish between "simple issues" (structural/pattern-based) and "complex issues" (requiring AI analysis/context).
 Step 1: Enumerate all alerts in the alerts array, and use the array order as the output alert_index (1-based).
 Step 2: For each alert, analyze for "simple" alert issues (rule-based checks)
  - Misuse: Do not use alerts for standard process steps, low-risk warnings, or emphasis.
