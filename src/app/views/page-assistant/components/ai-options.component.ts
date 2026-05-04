@@ -103,9 +103,7 @@ export class AiOptionsComponent implements OnInit {
   includeAlertRewriteExamples = false;
   includeBeforeTextInAlertRewriteExamples = false;
   includeLinkWritingRules = true;
-  useJsonAlertsIssuesPrompt = false;
   useCompactAlertsPageContext = false;
-  useSkillPrompts = false;
   get useAlertPlanning(): boolean {
     return this.selectedAlertRewriteMode === AlertRewriteMode.AB;
   }
@@ -144,11 +142,8 @@ export class AiOptionsComponent implements OnInit {
       this.uploadState.setIncludeBeforeTextInAlertRewriteExamples(false);
     }
     this.includeLinkWritingRules = this.uploadState.getIncludeLinkWritingRules();
-    this.useJsonAlertsIssuesPrompt =
-      this.uploadState.getUseJsonAlertsIssuesPrompt();
     this.useCompactAlertsPageContext =
       this.uploadState.getUseCompactAlertsPageContext();
-    this.useSkillPrompts = this.uploadState.getUseSkillPrompts();
   }
 
   isAiCheckboxDisabled(id: AiModel): boolean {
@@ -191,19 +186,9 @@ export class AiOptionsComponent implements OnInit {
     this.uploadState.setIncludeLinkWritingRules(include);
   }
 
-  onUseJsonAlertsIssuesPromptSelect(useJson: boolean): void {
-    this.useJsonAlertsIssuesPrompt = useJson;
-    this.uploadState.setUseJsonAlertsIssuesPrompt(useJson);
-  }
-
   onUseCompactAlertsPageContextSelect(useCompact: boolean): void {
     this.useCompactAlertsPageContext = useCompact;
     this.uploadState.setUseCompactAlertsPageContext(useCompact);
-  }
-
-  onUseSkillPromptsSelect(useSkills: boolean): void {
-    this.useSkillPrompts = useSkills;
-    this.uploadState.setUseSkillPrompts(useSkills);
   }
 
   // Close the drawer and let the parent component execute the request.

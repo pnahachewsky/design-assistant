@@ -2,7 +2,6 @@ import { Injectable, inject } from '@angular/core';
 import { Subject } from 'rxjs';
 import { MessageService } from 'primeng/api';
 import { TranslateService } from '@ngx-translate/core';
-import { getPromptTemplate } from '../data/ai-prompts.constants';
 import { PromptKey, AiModel } from '../data/data.model';
 import { OpenRouterService, ChatMessage } from './openrouter.service';
 import { UploadStateService } from './upload-state.service';
@@ -71,23 +70,16 @@ export class AlertAiService {
       summary: this.translate.instant('common.ai.sending'),
       life: 2000,
     });
-    const basePrompt = await getPromptTemplate(PromptKey.AlertsIssues, {
-      useJsonAlertsIssuesPrompt:
-        this.uploadState.getUseJsonAlertsIssuesPrompt(),
+    const composed = await this.skillManager.composePrompt({
+      basePrompt: '',
+      queryText: 'analyze canada.ca html alerts for issues and accessibility',
+      promptKey: PromptKey.AlertsIssues,
+      outputMode: 'json',
+      includeReferences: true,
+      includeAssets: true,
+      requireSkill: true,
     });
-    let systemPrompt = basePrompt;
-    if (this.uploadState.getUseSkillPrompts()) {
-      // Skill composition is optional; when enabled it augments the base prompt with references/assets.
-      const composed = await this.skillManager.composePrompt({
-        basePrompt,
-        queryText: 'analyze canada.ca html alerts for issues and accessibility',
-        promptKey: PromptKey.AlertsIssues,
-        outputMode: 'json',
-        includeReferences: true,
-        includeAssets: true,
-      });
-      systemPrompt = composed.prompt;
-    }
+    const systemPrompt = composed.prompt;
     //console.log('[AlertAiService] AlertsIssues system prompt:', systemPrompt);
     // Only alert fragments are sent to the model; full-page context is trimmed separately.
     const alerts = this.extractAlerts(alertHtml);

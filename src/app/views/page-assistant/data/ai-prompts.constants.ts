@@ -1,19 +1,11 @@
 import { PromptKey } from './data.model';
 
 const PROMPT_BASE_URL = new URL('ai-prompts/', document.baseURI);
-const alertsIssuesTextPath = new URL(
-  'alerts-issues.txt',
-  PROMPT_BASE_URL,
-).toString();
-const alertsIssuesJsonPath = new URL(
-  'alerts-issues.json',
-  PROMPT_BASE_URL,
-).toString();
 const promptFiles: Record<PromptKey, string> = {
   [PromptKey.Headings]: new URL('headings.txt', PROMPT_BASE_URL).toString(),
   [PromptKey.Doormats]: new URL('doormats.txt', PROMPT_BASE_URL).toString(),
   [PromptKey.PlainLanguage]: new URL('plain-language.txt', PROMPT_BASE_URL).toString(),
-  [PromptKey.AlertsIssues]: alertsIssuesTextPath,
+  [PromptKey.AlertsIssues]: new URL('alerts-issues.txt', PROMPT_BASE_URL).toString(),
   [PromptKey.AlertsRecommendations]: new URL('alerts-rewriting.txt', PROMPT_BASE_URL).toString(),
 };
 
@@ -32,17 +24,7 @@ async function loadPromptText(path: string): Promise<string> {
   return text;
 }
 
-export interface PromptTemplateOptions {
-  useJsonAlertsIssuesPrompt?: boolean;
-}
-
-export async function getPromptTemplate(
-  key: PromptKey,
-  options?: PromptTemplateOptions,
-): Promise<string> {
-  if (key === PromptKey.AlertsIssues && options?.useJsonAlertsIssuesPrompt) {
-    return loadPromptText(alertsIssuesJsonPath);
-  }
+export async function getPromptTemplate(key: PromptKey): Promise<string> {
   return loadPromptText(promptFiles[key]);
 }
 

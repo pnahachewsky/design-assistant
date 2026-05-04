@@ -43,6 +43,7 @@ export interface SkillComposeRequest extends SkillSelectionRequest {
   includeReferences?: boolean;
   includeOptionalReferences?: boolean;
   includeAssets?: boolean;
+  requireSkill?: boolean;
   debugStorageKey?: string;
 }
 
@@ -73,6 +74,10 @@ export class SkillManagerService {
     const loadedPaths: string[] = [];
     const promptSections = [request.basePrompt.trim()].filter(Boolean);
 
+    if (!selectedSkill && request.requireSkill) {
+      throw new Error('No matching skill found for required skill prompt composition.');
+    }
+
     if (selectedSkill) {
       try {
         const skills = await this.loadManifest();
@@ -87,6 +92,9 @@ export class SkillManagerService {
           sectionLabel: 'Activated Skill',
         });
       } catch (err) {
+        if (request.requireSkill) {
+          throw err;
+        }
         console.warn('Skill composition failed, using base prompt fallback:', err);
         promptSections.length = 0;
         promptSections.push(request.basePrompt.trim());
@@ -94,6 +102,9 @@ export class SkillManagerService {
     }
 
     const prompt = this.joinUniqueSections(promptSections);
+    if (!prompt && request.requireSkill) {
+      throw new Error('Required skill prompt composition produced an empty prompt.');
+    }
     const estimatedPromptTokens = Math.ceil(prompt.length / 4);
     this.maybeLogDiagnostics({
       request,

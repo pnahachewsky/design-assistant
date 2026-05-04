@@ -41,7 +41,7 @@ import {
   AlertRewriteIssueInput,
 } from './services/alert-rewrite.service';
 import { OpenRouterService } from './services/openrouter.service';
-import { SkillManagerService, SkillOutputMode } from './services/skill-manager.service';
+import { SkillManagerService } from './services/skill-manager.service';
 import { AlertIssuesContextService } from './services/alert-issues-context.service';
 import {
   coerceInteractiveResultLeadIns,
@@ -546,37 +546,25 @@ export class PageAssistantCompareComponent
   }
 
   private async getPromptForKey(key: PromptKey): Promise<string> {
-    const base = await getPromptTemplate(key, {
-      useJsonAlertsIssuesPrompt: this.uploadState.getUseJsonAlertsIssuesPrompt(),
-    });
     const custom = this.customPromptText.trim();
-    const includeEditPrompt =
-      key !== PromptKey.AlertsIssues &&
-      key !== PromptKey.AlertsRecommendations;
-    const editPrefix = includeEditPrompt ? this.customEditText : '';
-    const promptBody = editPrefix ? `${editPrefix}\n\n${base}` : base;
-    const useSkillPrompts = this.uploadState.getUseSkillPrompts();
-    if (!useSkillPrompts) {
-      return custom ? `${promptBody}\n\n${custom}` : promptBody;
+    if (key === PromptKey.AlertsIssues) {
+      const composed = await this.skillManager.composePrompt({
+        basePrompt: '',
+        queryText: this.buildSkillQueryText(key, custom),
+        promptKey: key,
+        outputMode: 'json',
+        includeReferences: true,
+        includeAssets: true,
+        requireSkill: true,
+      });
+      return custom ? `${composed.prompt}\n\n${custom}` : composed.prompt;
     }
 
-    const queryText = this.buildSkillQueryText(key, custom);
-    const outputMode = this.resolveSkillOutputMode(key);
-    const composed = await this.skillManager.composePrompt({
-      basePrompt: promptBody,
-      queryText,
-      promptKey: key,
-      outputMode,
-      includeReferences:
-        key === PromptKey.AlertsIssues || key === PromptKey.AlertsRecommendations,
-      includeOptionalReferences: key === PromptKey.AlertsRecommendations,
-      includeAssets:
-        key === PromptKey.AlertsIssues || key === PromptKey.AlertsRecommendations,
-    });
-
-    return custom
-      ? `${composed.prompt}\n\n${custom}`
-      : composed.prompt; //Note: a heading can be added to the custom instructions here, something like ${base}\n\nPrioritize the following:\n${custom}
+    const base = await getPromptTemplate(key);
+    const includeEditPrompt = key !== PromptKey.AlertsRecommendations;
+    const editPrefix = includeEditPrompt ? this.customEditText : '';
+    const promptBody = editPrefix ? `${editPrefix}\n\n${base}` : base;
+    return custom ? `${promptBody}\n\n${custom}` : promptBody;
   }
 
   private buildSkillQueryText(key: PromptKey, custom: string): string {
@@ -589,13 +577,6 @@ export class PageAssistantCompareComponent
         'rewrite canada.ca alerts and provide corrected output',
     };
     return [promptIntents[key], custom].filter(Boolean).join('\n');
-  }
-
-  private resolveSkillOutputMode(key: PromptKey): SkillOutputMode {
-    if (key === PromptKey.AlertsIssues || key === PromptKey.AlertsRecommendations) {
-      return 'json';
-    }
-    return 'text';
   }
 
   private shouldForceLocalRepairForTesting(): boolean {

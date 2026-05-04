@@ -119,17 +119,6 @@
                     </div>
                     <div class="p-field-checkbox mt-2">
                       <p-checkbox
-                        [(ngModel)]="useJsonAlertsIssuesPrompt"
-                        [binary]="true"
-                        inputId="useJsonAlertsIssuesPrompt"
-                        (onChange)="onUseJsonAlertsIssuesPromptSelect(useJsonAlertsIssuesPrompt)"
-                      />
-                      <label for="useJsonAlertsIssuesPrompt" class="pl-2">
-                        Use JSON format for Alerts Issues prompt
-                      </label>
-                    </div>
-                    <div class="p-field-checkbox mt-2">
-                      <p-checkbox
                         [(ngModel)]="useCompactAlertsPageContext"
                         [binary]="true"
                         inputId="useCompactAlertsPageContext"
@@ -137,17 +126,6 @@
                       />
                       <label for="useCompactAlertsPageContext" class="pl-2">
                         Send compact page context to AI for alerts
-                      </label>
-                    </div>
-                    <div class="p-field-checkbox mt-2">
-                      <p-checkbox
-                        [(ngModel)]="useSkillPrompts"
-                        [binary]="true"
-                        inputId="useSkillPrompts"
-                        (onChange)="onUseSkillPromptsSelect(useSkillPrompts)"
-                      />
-                      <label for="useSkillPrompts" class="pl-2">
-                        Use skill-based prompt composition (issues)
                       </label>
                     </div>
                   </div>

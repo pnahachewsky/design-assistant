@@ -19,11 +19,8 @@ export class UploadStateService {
     'pageAssistant.includeBeforeTextInAlertRewriteExamples';
   private readonly includeLinkWritingRulesKey =
     'pageAssistant.includeLinkWritingRules';
-  private readonly useJsonAlertsIssuesPromptKey =
-    'pageAssistant.useJsonAlertsIssuesPrompt';
   private readonly useCompactAlertsPageContextKey =
     'pageAssistant.useCompactAlertsPageContext';
-  private readonly useSkillPromptsKey = 'pageAssistant.useSkillPrompts';
 
   // Upload source chosen in the drawer.
   private selectedUploadType = signal<'url' | 'paste' | 'word'>('url');
@@ -90,16 +87,6 @@ export class UploadStateService {
     this.storage.saveData(this.includeLinkWritingRulesKey, String(!!include));
   }
 
-  // Whether alert issue analysis uses the JSON-oriented prompt variant.
-  private useJsonAlertsIssuesPrompt = signal<boolean>(false);
-  getUseJsonAlertsIssuesPrompt = computed(() =>
-    this.useJsonAlertsIssuesPrompt(),
-  );
-  setUseJsonAlertsIssuesPrompt(useJson: boolean) {
-    this.useJsonAlertsIssuesPrompt.set(!!useJson);
-    this.storage.saveData(this.useJsonAlertsIssuesPromptKey, String(!!useJson));
-  }
-
   // Whether alert issue analysis uses compact extracted page context instead of raw HTML.
   private useCompactAlertsPageContext = signal<boolean>(false);
   getUseCompactAlertsPageContext = computed(() =>
@@ -108,14 +95,6 @@ export class UploadStateService {
   setUseCompactAlertsPageContext(useCompact: boolean) {
     this.useCompactAlertsPageContext.set(!!useCompact);
     this.storage.saveData(this.useCompactAlertsPageContextKey, String(!!useCompact));
-  }
-
-  // Whether prompt assembly uses the skill manager instead of legacy base prompts only.
-  private useSkillPrompts = signal<boolean>(false);
-  getUseSkillPrompts = computed(() => this.useSkillPrompts());
-  setUseSkillPrompts(useSkills: boolean) {
-    this.useSkillPrompts.set(!!useSkills);
-    this.storage.saveData(this.useSkillPromptsKey, String(!!useSkills));
   }
 
   // Working page data plus shallow history for undo.
@@ -134,9 +113,9 @@ export class UploadStateService {
       this.storage.removeData(this.includeAlertRewriteExamplesKey);
       this.storage.removeData(this.includeBeforeTextInAlertRewriteExamplesKey);
       this.storage.removeData(this.includeLinkWritingRulesKey);
-      this.storage.removeData(this.useJsonAlertsIssuesPromptKey);
+      this.storage.removeData('pageAssistant.useJsonAlertsIssuesPrompt');
       this.storage.removeData(this.useCompactAlertsPageContextKey);
-      this.storage.removeData(this.useSkillPromptsKey);
+      this.storage.removeData('pageAssistant.useSkillPrompts');
       return;
     }
     this.restoreState();
@@ -214,9 +193,7 @@ export class UploadStateService {
     this.includeAlertRewriteExamples.set(false);
     this.includeBeforeTextInAlertRewriteExamples.set(false);
     this.includeLinkWritingRules.set(true);
-    this.useJsonAlertsIssuesPrompt.set(false);
     this.useCompactAlertsPageContext.set(false);
-    this.useSkillPrompts.set(false);
     this.uploadData.set(null);
     this.prevUploadData = [];
     this.storage.removeData(this.uploadTypeKey);
@@ -226,9 +203,9 @@ export class UploadStateService {
     this.storage.removeData(this.includeAlertRewriteExamplesKey);
     this.storage.removeData(this.includeBeforeTextInAlertRewriteExamplesKey);
     this.storage.removeData(this.includeLinkWritingRulesKey);
-    this.storage.removeData(this.useJsonAlertsIssuesPromptKey);
+    this.storage.removeData('pageAssistant.useJsonAlertsIssuesPrompt');
     this.storage.removeData(this.useCompactAlertsPageContextKey);
-    this.storage.removeData(this.useSkillPromptsKey);
+    this.storage.removeData('pageAssistant.useSkillPrompts');
     this.storage.removeData(this.uploadDataKey);
   }
 
@@ -303,18 +280,6 @@ export class UploadStateService {
       this.includeLinkWritingRules.set(storedIncludeLinkRules === 'true');
     }
 
-    const storedUseJsonAlertsIssuesPrompt = this.storage.getData(
-      this.useJsonAlertsIssuesPromptKey,
-    );
-    if (
-      storedUseJsonAlertsIssuesPrompt === 'true' ||
-      storedUseJsonAlertsIssuesPrompt === 'false'
-    ) {
-      this.useJsonAlertsIssuesPrompt.set(
-        storedUseJsonAlertsIssuesPrompt === 'true',
-      );
-    }
-
     const storedUseCompactAlertsPageContext = this.storage.getData(
       this.useCompactAlertsPageContextKey,
     );
@@ -325,11 +290,6 @@ export class UploadStateService {
       this.useCompactAlertsPageContext.set(
         storedUseCompactAlertsPageContext === 'true',
       );
-    }
-
-    const storedUseSkillPrompts = this.storage.getData(this.useSkillPromptsKey);
-    if (storedUseSkillPrompts === 'true' || storedUseSkillPrompts === 'false') {
-      this.useSkillPrompts.set(storedUseSkillPrompts === 'true');
     }
 
     const storedData = this.storage.getData(this.uploadDataKey);
