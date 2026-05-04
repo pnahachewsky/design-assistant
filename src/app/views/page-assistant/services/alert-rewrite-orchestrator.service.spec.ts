@@ -131,13 +131,13 @@ describe('AlertRewriteOrchestratorService', () => {
       .createSpy('callOpenRouterForMessages')
       .and.resolveTo({
         text: '{"rewrittenAlertHtml":"ignored"}',
-        usedModel: AiModel.NemotronNano,
+        usedModel: AiModel.NemotronSuper,
       });
 
     const result = await service.generateRecommendations({
       html: originalHtml,
       issues: [],
-      model: AiModel.NemotronNano,
+      model: AiModel.NemotronSuper,
       headers: {},
       url: 'https://example.test',
       mode: AlertRewriteMode.GoodResultsOnly,
@@ -195,13 +195,13 @@ describe('AlertRewriteOrchestratorService', () => {
       .createSpy('callOpenRouterForMessages')
       .and.resolveTo({
         text: '{"rewrittenAlertHtml":"<p>invalid</p>"}',
-        usedModel: AiModel.NemotronNano,
+        usedModel: AiModel.NemotronSuper,
       });
 
     const result = await service.generateRecommendations({
       html: originalHtml,
       issues: [],
-      model: AiModel.NemotronNano,
+      model: AiModel.NemotronSuper,
       headers: {},
       url: 'https://example.test',
       mode: AlertRewriteMode.GoodResultsOnly,
@@ -236,13 +236,13 @@ describe('AlertRewriteOrchestratorService', () => {
       .createSpy('callOpenRouterForMessages')
       .and.resolveTo({
         text: '{"rewrittenAlertHtml":"<p>invalid</p>"}',
-        usedModel: AiModel.NemotronNano,
+        usedModel: AiModel.NemotronSuper,
       });
 
     await service.generateRecommendations({
       html: originalHtml,
       issues: [],
-      model: AiModel.NemotronNano,
+      model: AiModel.NemotronSuper,
       headers: {},
       url: 'https://example.test',
       mode: AlertRewriteMode.GoodResultsOnly,

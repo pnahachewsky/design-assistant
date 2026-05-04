@@ -742,7 +742,7 @@ export class PageAssistantCompareComponent
   }
 
   //AI Model
-  selectedAiModel: AiModel = AiModel.NemotronNano;
+  selectedAiModel: AiModel = AiModel.NemotronSuper;
 
   onAiChange(key: AiModel) {
     this.selectedAiModel = key;
@@ -802,7 +802,7 @@ export class PageAssistantCompareComponent
 
   private buildModelRotation(model: AiModel): string[] {
     // Fallback order after the user-selected model.
-    const fallbackOrder: AiModel[] = [AiModel.Arcee, AiModel.Zai];
+    const fallbackOrder: AiModel[] = [AiModel.GptOSSFree, AiModel.Zai, AiModel.NemotronSuper];
     const available = new Set(this.openRouter.freeModels);
     const rotation: string[] = [model];
 

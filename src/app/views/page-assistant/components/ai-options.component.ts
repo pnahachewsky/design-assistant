@@ -96,7 +96,7 @@ export class AiOptionsComponent implements OnInit {
   }
 
   // Model and alert-specific options persisted through UploadStateService.
-  selectedAi: AiModel = AiModel.NemotronNano;
+  selectedAi: AiModel = AiModel.NemotronSuper;
   selectedAis: AiModel[] = [];
 
   selectedAlertRewriteMode: AlertRewriteMode = AlertRewriteMode.GoodResultsOnly;
@@ -113,16 +113,14 @@ export class AiOptionsComponent implements OnInit {
 
   // Free and paid model groups are rendered separately in the UI.
   freeAiOptions = [
-    { id: AiModel.NemotronNano, label: 'page.ai-options.model.NemotronNano', disabled: false },
     { id: AiModel.NemotronSuper, label: 'page.ai-options.model.NemotronSuper', disabled: false },
-    { id: AiModel.Arcee, label: 'page.ai-options.model.Arcee', disabled: false },
     { id: AiModel.Zai, label: 'page.ai-options.model.Zai', disabled: false },
+    { id: AiModel.GptOSSFree, label: 'page.ai-options.model.GptOSSFree', disabled: false },
   ];
   paidAiOptions = [
-    { id: AiModel.GPT5Nano, label: 'page.ai-options.model.GPT5Nano', disabled: false },
     { id: AiModel.Gemini, label: 'page.ai-options.model.Gemini', disabled: false },
     { id: AiModel.GPT5Mini, label: 'page.ai-options.model.GPT5Mini', disabled: false },
-    { id: AiModel.GptOSS, label: 'page.ai-options.model.GptOSS', disabled: false },
+    { id: AiModel.DeepSeek, label: 'page.ai-options.model.DeepSeek', disabled: false },
   ];
 
   ngOnInit(): void {

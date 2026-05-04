@@ -102,14 +102,12 @@ export enum AlertRewriteMode {
 // These values are also the canonical ids used for friendly-name resolution.
 export enum AiModel {
   // Free models
-  NemotronNano = 'nvidia/nemotron-3-nano-30b-a3b:free', //256k context, 17B weekly, 30B parameters
   NemotronSuper = 'nvidia/nemotron-3-super-120b-a12b:free', //262k context, 263B weekly, 120B parameters
-  Arcee = 'arcee-ai/trinity-large-preview:free', //131k context, 458B weekly, 13B parameters
   Zai = 'z-ai/glm-4.5-air:free', //131k context, 57B
+  GptOSSFree = 'openai/gpt-oss-120b:free', //131k context free
   // Paid models
-  GPT5Nano = 'openai/gpt-5-nano', // 400k context paid - $0.05/M input, $0.40/M output
   GPT5Mini = 'openai/gpt-5-mini', // 400k context paid
-  GptOSS = 'openai/gpt-oss-120b', //131k context paid - $0.039/M input, $0.19/M output
+  DeepSeek = 'deepseek/deepseek-v3.2',
   Gemini = 'google/gemini-2.5-flash-lite', // 1.05M context paid - $0.10/M input, $0.40/M output
 }
 

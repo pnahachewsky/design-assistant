@@ -31,7 +31,7 @@ export class UploadStateService {
   }
 
   // Primary AI model selected for the current session.
-  private selectedAiModel = signal<AiModel>(AiModel.NemotronNano);
+  private selectedAiModel = signal<AiModel>(AiModel.NemotronSuper);
   getSelectedAiModel = computed(() => this.selectedAiModel());
   setSelectedAiModel(model: AiModel) {
     this.selectedAiModel.set(model);
@@ -187,7 +187,7 @@ export class UploadStateService {
   // Clear both in-memory state and the persisted assistant session.
   resetUploadFlow(): void {
     this.selectedUploadType.set('url'); // default to URL
-    this.selectedAiModel.set(AiModel.NemotronNano);
+    this.selectedAiModel.set(AiModel.NemotronSuper);
     this.editPromptText.set('');
     this.selectedAlertRewriteMode.set(AlertRewriteMode.GoodResultsOnly);
     this.includeAlertRewriteExamples.set(false);
