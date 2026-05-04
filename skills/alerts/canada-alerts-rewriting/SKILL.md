@@ -13,7 +13,7 @@ Use this skill only for alert rewriting. Do not return issue-analysis payloads.
 3. Return JSON only.
 
 ## Resources
-- Read `references/rubric-and-guidelines.md` for rewrite rules, style rules, markup rules, and output rules.
+- Read `references/rewrite-instructions.json` for rewrite rules, style rules, markup rules, link rules, and output rules.
 - Use `references/examples.json` for pattern guidance only. Do not copy wording.
 - Apply the included `link-writing` skill for reusable link-writing rules.
 - Match `assets/rewriting-output-schema.json` exactly.

@@ -138,7 +138,7 @@ import {
   unblockBodyScroll,
   uuid,
   zindexutils
-} from "./chunk-MFWTJBNA.js";
+} from "./chunk-RZRC4JIU.js";
 import {
   ChangeDetectionStrategy,
   ChangeDetectorRef,
@@ -21254,57 +21254,15 @@ var ShadowDomService = class _ShadowDomService {
   }], null, null);
 })();
 
-// src/app/views/page-assistant/data/ai-prompts.constants.ts
-var PROMPT_BASE_URL = new URL("ai-prompts/", document.baseURI);
-var alertsIssuesTextPath = new URL("alerts-issues.txt", PROMPT_BASE_URL).toString();
-var alertsIssuesJsonPath = new URL("alerts-issues.json", PROMPT_BASE_URL).toString();
-var promptFiles = {
-  [PromptKey.Headings]: new URL("headings.txt", PROMPT_BASE_URL).toString(),
-  [PromptKey.Doormats]: new URL("doormats.txt", PROMPT_BASE_URL).toString(),
-  [PromptKey.PlainLanguage]: new URL("plain-language.txt", PROMPT_BASE_URL).toString(),
-  [PromptKey.AlertsIssues]: alertsIssuesTextPath,
-  [PromptKey.AlertsRecommendations]: new URL("alerts-rewriting.txt", PROMPT_BASE_URL).toString()
-};
-var commsObjectivePath = new URL("comms-objective.txt", PROMPT_BASE_URL).toString();
-var promptCache = /* @__PURE__ */ new Map();
-function loadPromptText(path) {
-  return __async(this, null, function* () {
-    const cached = promptCache.get(path);
-    if (cached)
-      return cached;
-    const resp = yield fetch(path);
-    if (!resp.ok) {
-      throw new Error(`Prompt file request failed (${resp.status}): ${path}`);
-    }
-    const text = yield resp.text();
-    promptCache.set(path, text);
-    return text;
-  });
-}
-function getPromptTemplate(key2, options) {
-  return __async(this, null, function* () {
-    if (key2 === PromptKey.AlertsIssues && options?.useJsonAlertsIssuesPrompt) {
-      return loadPromptText(alertsIssuesJsonPath);
-    }
-    return loadPromptText(promptFiles[key2]);
-  });
-}
-function getCommsObjectivePrompt() {
-  return __async(this, null, function* () {
-    return loadPromptText(commsObjectivePath);
-  });
-}
-
 // src/app/views/page-assistant/services/openrouter.service.ts
 var OpenRouterService = class _OpenRouterService {
   http = inject(HttpClient);
   apiKeyService = inject(ApiKeyService);
   openRouterApiUrl = "https://openrouter.ai/api/v1/chat/completions";
   freeModelSet = /* @__PURE__ */ new Set([
-    AiModel.NemotronNano,
     AiModel.NemotronSuper,
-    AiModel.Arcee,
-    AiModel.Zai
+    AiModel.Zai,
+    AiModel.GptOSSFree
   ]);
   // Canonical model lists used by the assistant UI and fallback helpers.
   models = Object.values(AiModel);
@@ -21390,6 +21348,9 @@ var SkillManagerService = class _SkillManagerService {
       const selectedSkill = selectedCandidate && selectedCandidate.score > 0 ? selectedCandidate.skill : null;
       const loadedPaths = [];
       const promptSections = [request.basePrompt.trim()].filter(Boolean);
+      if (!selectedSkill && request.requireSkill) {
+        throw new Error("No matching skill found for required skill prompt composition.");
+      }
       if (selectedSkill) {
         try {
           const skills = yield this.loadManifest();
@@ -21404,12 +21365,18 @@ var SkillManagerService = class _SkillManagerService {
             sectionLabel: "Activated Skill"
           });
         } catch (err) {
+          if (request.requireSkill) {
+            throw err;
+          }
           console.warn("Skill composition failed, using base prompt fallback:", err);
           promptSections.length = 0;
           promptSections.push(request.basePrompt.trim());
         }
       }
       const prompt = this.joinUniqueSections(promptSections);
+      if (!prompt && request.requireSkill) {
+        throw new Error("Required skill prompt composition produced an empty prompt.");
+      }
       const estimatedPromptTokens = Math.ceil(prompt.length / 4);
       this.maybeLogDiagnostics({
         request,
@@ -21796,21 +21763,16 @@ var AlertAiService = class _AlertAiService {
         summary: this.translate.instant("common.ai.sending"),
         life: 2e3
       });
-      const basePrompt = yield getPromptTemplate(PromptKey.AlertsIssues, {
-        useJsonAlertsIssuesPrompt: this.uploadState.getUseJsonAlertsIssuesPrompt()
+      const composed = yield this.skillManager.composePrompt({
+        basePrompt: "",
+        queryText: "analyze canada.ca html alerts for issues and accessibility",
+        promptKey: PromptKey.AlertsIssues,
+        outputMode: "json",
+        includeReferences: true,
+        includeAssets: true,
+        requireSkill: true
       });
-      let systemPrompt = basePrompt;
-      if (this.uploadState.getUseSkillPrompts()) {
-        const composed = yield this.skillManager.composePrompt({
-          basePrompt,
-          queryText: "analyze canada.ca html alerts for issues and accessibility",
-          promptKey: PromptKey.AlertsIssues,
-          outputMode: "json",
-          includeReferences: true,
-          includeAssets: true
-        });
-        systemPrompt = composed.prompt;
-      }
+      const systemPrompt = composed.prompt;
       const alerts = this.extractAlerts(alertHtml);
       const userPayload = {
         alerts,
@@ -23980,6 +23942,42 @@ var AlertRewriteOrchestratorService = class _AlertRewriteOrchestratorService {
     args: [{ providedIn: "root" }]
   }], null, null);
 })();
+
+// src/app/views/page-assistant/data/ai-prompts.constants.ts
+var PROMPT_BASE_URL = new URL("ai-prompts/", document.baseURI);
+var promptFiles = {
+  [PromptKey.Headings]: new URL("headings.txt", PROMPT_BASE_URL).toString(),
+  [PromptKey.Doormats]: new URL("doormats.txt", PROMPT_BASE_URL).toString(),
+  [PromptKey.PlainLanguage]: new URL("plain-language.txt", PROMPT_BASE_URL).toString(),
+  [PromptKey.AlertsIssues]: new URL("alerts-issues.txt", PROMPT_BASE_URL).toString(),
+  [PromptKey.AlertsRecommendations]: new URL("alerts-rewriting.txt", PROMPT_BASE_URL).toString()
+};
+var commsObjectivePath = new URL("comms-objective.txt", PROMPT_BASE_URL).toString();
+var promptCache = /* @__PURE__ */ new Map();
+function loadPromptText(path) {
+  return __async(this, null, function* () {
+    const cached = promptCache.get(path);
+    if (cached)
+      return cached;
+    const resp = yield fetch(path);
+    if (!resp.ok) {
+      throw new Error(`Prompt file request failed (${resp.status}): ${path}`);
+    }
+    const text = yield resp.text();
+    promptCache.set(path, text);
+    return text;
+  });
+}
+function getPromptTemplate(key2) {
+  return __async(this, null, function* () {
+    return loadPromptText(promptFiles[key2]);
+  });
+}
+function getCommsObjectivePrompt() {
+  return __async(this, null, function* () {
+    return loadPromptText(commsObjectivePath);
+  });
+}
 
 // node_modules/primeng/fesm2022/primeng-drawer.mjs
 var _c02 = ["header"];
@@ -26479,49 +26477,17 @@ function AiOptionsComponent_Conditional_16_Conditional_22_Template(rf, ctx) {
     \u0275\u0275twoWayListener("ngModelChange", function AiOptionsComponent_Conditional_16_Conditional_22_Template_p_checkbox_ngModelChange_21_listener($event) {
       \u0275\u0275restoreView(_r10);
       const ctx_r1 = \u0275\u0275nextContext(2);
-      \u0275\u0275twoWayBindingSet(ctx_r1.useJsonAlertsIssuesPrompt, $event) || (ctx_r1.useJsonAlertsIssuesPrompt = $event);
+      \u0275\u0275twoWayBindingSet(ctx_r1.useCompactAlertsPageContext, $event) || (ctx_r1.useCompactAlertsPageContext = $event);
       return \u0275\u0275resetView($event);
     });
     \u0275\u0275listener("onChange", function AiOptionsComponent_Conditional_16_Conditional_22_Template_p_checkbox_onChange_21_listener() {
       \u0275\u0275restoreView(_r10);
       const ctx_r1 = \u0275\u0275nextContext(2);
-      return \u0275\u0275resetView(ctx_r1.onUseJsonAlertsIssuesPromptSelect(ctx_r1.useJsonAlertsIssuesPrompt));
-    });
-    \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(22, "label", 40);
-    \u0275\u0275text(23, " Use JSON format for Alerts Issues prompt ");
-    \u0275\u0275elementEnd()();
-    \u0275\u0275elementStart(24, "div", 34)(25, "p-checkbox", 41);
-    \u0275\u0275twoWayListener("ngModelChange", function AiOptionsComponent_Conditional_16_Conditional_22_Template_p_checkbox_ngModelChange_25_listener($event) {
-      \u0275\u0275restoreView(_r10);
-      const ctx_r1 = \u0275\u0275nextContext(2);
-      \u0275\u0275twoWayBindingSet(ctx_r1.useCompactAlertsPageContext, $event) || (ctx_r1.useCompactAlertsPageContext = $event);
-      return \u0275\u0275resetView($event);
-    });
-    \u0275\u0275listener("onChange", function AiOptionsComponent_Conditional_16_Conditional_22_Template_p_checkbox_onChange_25_listener() {
-      \u0275\u0275restoreView(_r10);
-      const ctx_r1 = \u0275\u0275nextContext(2);
       return \u0275\u0275resetView(ctx_r1.onUseCompactAlertsPageContextSelect(ctx_r1.useCompactAlertsPageContext));
     });
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(26, "label", 42);
-    \u0275\u0275text(27, " Send compact page context to AI for alerts ");
-    \u0275\u0275elementEnd()();
-    \u0275\u0275elementStart(28, "div", 34)(29, "p-checkbox", 43);
-    \u0275\u0275twoWayListener("ngModelChange", function AiOptionsComponent_Conditional_16_Conditional_22_Template_p_checkbox_ngModelChange_29_listener($event) {
-      \u0275\u0275restoreView(_r10);
-      const ctx_r1 = \u0275\u0275nextContext(2);
-      \u0275\u0275twoWayBindingSet(ctx_r1.useSkillPrompts, $event) || (ctx_r1.useSkillPrompts = $event);
-      return \u0275\u0275resetView($event);
-    });
-    \u0275\u0275listener("onChange", function AiOptionsComponent_Conditional_16_Conditional_22_Template_p_checkbox_onChange_29_listener() {
-      \u0275\u0275restoreView(_r10);
-      const ctx_r1 = \u0275\u0275nextContext(2);
-      return \u0275\u0275resetView(ctx_r1.onUseSkillPromptsSelect(ctx_r1.useSkillPrompts));
-    });
-    \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(30, "label", 44);
-    \u0275\u0275text(31, " Use skill-based prompt composition (issues) ");
+    \u0275\u0275elementStart(22, "label", 40);
+    \u0275\u0275text(23, " Send compact page context to AI for alerts ");
     \u0275\u0275elementEnd()()();
   }
   if (rf & 2) {
@@ -26539,13 +26505,7 @@ function AiOptionsComponent_Conditional_16_Conditional_22_Template(rf, ctx) {
     \u0275\u0275twoWayProperty("ngModel", ctx_r1.useAlertPlanning);
     \u0275\u0275property("binary", true);
     \u0275\u0275advance(4);
-    \u0275\u0275twoWayProperty("ngModel", ctx_r1.useJsonAlertsIssuesPrompt);
-    \u0275\u0275property("binary", true);
-    \u0275\u0275advance(4);
     \u0275\u0275twoWayProperty("ngModel", ctx_r1.useCompactAlertsPageContext);
-    \u0275\u0275property("binary", true);
-    \u0275\u0275advance(4);
-    \u0275\u0275twoWayProperty("ngModel", ctx_r1.useSkillPrompts);
     \u0275\u0275property("binary", true);
   }
 }
@@ -26596,7 +26556,7 @@ function AiOptionsComponent_Conditional_16_Template(rf, ctx) {
       return \u0275\u0275resetView(ctx_r1.emitEditPrompt(ctx_r1.currentEditLevel.prompt));
     });
     \u0275\u0275elementEnd()();
-    \u0275\u0275template(22, AiOptionsComponent_Conditional_16_Conditional_22_Template, 32, 15, "div", 22);
+    \u0275\u0275template(22, AiOptionsComponent_Conditional_16_Conditional_22_Template, 24, 11, "div", 22);
     \u0275\u0275elementEnd()()()();
   }
   if (rf & 2) {
@@ -26629,7 +26589,7 @@ function AiOptionsComponent_Conditional_17_Conditional_10_ng_container_3_Templat
   if (rf & 1) {
     const _r11 = \u0275\u0275getCurrentView();
     \u0275\u0275elementContainerStart(0);
-    \u0275\u0275elementStart(1, "div", 13)(2, "p-radioButton", 47);
+    \u0275\u0275elementStart(1, "div", 13)(2, "p-radioButton", 43);
     \u0275\u0275twoWayListener("ngModelChange", function AiOptionsComponent_Conditional_17_Conditional_10_ng_container_3_Template_p_radioButton_ngModelChange_2_listener($event) {
       \u0275\u0275restoreView(_r11);
       const ctx_r1 = \u0275\u0275nextContext(3);
@@ -26665,7 +26625,7 @@ function AiOptionsComponent_Conditional_17_Conditional_10_ng_container_7_Templat
   if (rf & 1) {
     const _r13 = \u0275\u0275getCurrentView();
     \u0275\u0275elementContainerStart(0);
-    \u0275\u0275elementStart(1, "div", 13)(2, "p-radioButton", 47);
+    \u0275\u0275elementStart(1, "div", 13)(2, "p-radioButton", 43);
     \u0275\u0275twoWayListener("ngModelChange", function AiOptionsComponent_Conditional_17_Conditional_10_ng_container_7_Template_p_radioButton_ngModelChange_2_listener($event) {
       \u0275\u0275restoreView(_r13);
       const ctx_r1 = \u0275\u0275nextContext(3);
@@ -26681,7 +26641,7 @@ function AiOptionsComponent_Conditional_17_Conditional_10_ng_container_7_Templat
     \u0275\u0275elementStart(3, "label", 15);
     \u0275\u0275text(4);
     \u0275\u0275pipe(5, "translate");
-    \u0275\u0275element(6, "p-chip", 48);
+    \u0275\u0275element(6, "p-chip", 44);
     \u0275\u0275pipe(7, "translate");
     \u0275\u0275elementEnd()();
     \u0275\u0275elementContainerEnd();
@@ -26703,12 +26663,12 @@ function AiOptionsComponent_Conditional_17_Conditional_10_ng_container_7_Templat
 }
 function AiOptionsComponent_Conditional_17_Conditional_10_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275elementStart(0, "p", 45);
+    \u0275\u0275elementStart(0, "p", 41);
     \u0275\u0275text(1);
     \u0275\u0275pipe(2, "translate");
     \u0275\u0275elementEnd();
     \u0275\u0275template(3, AiOptionsComponent_Conditional_17_Conditional_10_ng_container_3_Template, 6, 8, "ng-container", 8);
-    \u0275\u0275elementStart(4, "p", 46);
+    \u0275\u0275elementStart(4, "p", 42);
     \u0275\u0275text(5);
     \u0275\u0275pipe(6, "translate");
     \u0275\u0275elementEnd();
@@ -26772,7 +26732,7 @@ function AiOptionsComponent_Conditional_17_Conditional_11_ng_container_7_Templat
     \u0275\u0275elementStart(3, "label", 15);
     \u0275\u0275text(4);
     \u0275\u0275pipe(5, "translate");
-    \u0275\u0275element(6, "p-chip", 48);
+    \u0275\u0275element(6, "p-chip", 44);
     \u0275\u0275pipe(7, "translate");
     \u0275\u0275elementEnd()();
     \u0275\u0275elementContainerEnd();
@@ -26794,12 +26754,12 @@ function AiOptionsComponent_Conditional_17_Conditional_11_ng_container_7_Templat
 }
 function AiOptionsComponent_Conditional_17_Conditional_11_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275elementStart(0, "p", 45);
+    \u0275\u0275elementStart(0, "p", 41);
     \u0275\u0275text(1);
     \u0275\u0275pipe(2, "translate");
     \u0275\u0275elementEnd();
     \u0275\u0275template(3, AiOptionsComponent_Conditional_17_Conditional_11_ng_container_3_Template, 6, 8, "ng-container", 8);
-    \u0275\u0275elementStart(4, "p", 46);
+    \u0275\u0275elementStart(4, "p", 42);
     \u0275\u0275text(5);
     \u0275\u0275pipe(6, "translate");
     \u0275\u0275elementEnd();
@@ -26846,7 +26806,7 @@ function AiOptionsComponent_Conditional_17_Template(rf, ctx) {
 function AiOptionsComponent_Conditional_18_Template(rf, ctx) {
   if (rf & 1) {
     const _r19 = \u0275\u0275getCurrentView();
-    \u0275\u0275elementStart(0, "p-button", 49);
+    \u0275\u0275elementStart(0, "p-button", 45);
     \u0275\u0275pipe(1, "translate");
     \u0275\u0275listener("click", function AiOptionsComponent_Conditional_18_Template_p_button_click_0_listener() {
       \u0275\u0275restoreView(_r19);
@@ -26861,7 +26821,7 @@ function AiOptionsComponent_Conditional_18_Template(rf, ctx) {
 }
 function AiOptionsComponent_Conditional_19_ca_upload_url_1_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275element(0, "ca-upload-url", 51);
+    \u0275\u0275element(0, "ca-upload-url", 47);
   }
   if (rf & 2) {
     \u0275\u0275property("showSampleDataButton", false);
@@ -26869,7 +26829,7 @@ function AiOptionsComponent_Conditional_19_ca_upload_url_1_Template(rf, ctx) {
 }
 function AiOptionsComponent_Conditional_19_ca_upload_paste_2_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275element(0, "ca-upload-paste", 51);
+    \u0275\u0275element(0, "ca-upload-paste", 47);
   }
   if (rf & 2) {
     \u0275\u0275property("showSampleDataButton", false);
@@ -26877,7 +26837,7 @@ function AiOptionsComponent_Conditional_19_ca_upload_paste_2_Template(rf, ctx) {
 }
 function AiOptionsComponent_Conditional_19_ca_upload_word_3_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275element(0, "ca-upload-word", 51);
+    \u0275\u0275element(0, "ca-upload-word", 47);
   }
   if (rf & 2) {
     \u0275\u0275property("showSampleDataButton", false);
@@ -26886,7 +26846,7 @@ function AiOptionsComponent_Conditional_19_ca_upload_word_3_Template(rf, ctx) {
 function AiOptionsComponent_Conditional_19_Template(rf, ctx) {
   if (rf & 1) {
     \u0275\u0275elementContainerStart(0, 12);
-    \u0275\u0275template(1, AiOptionsComponent_Conditional_19_ca_upload_url_1_Template, 1, 1, "ca-upload-url", 50)(2, AiOptionsComponent_Conditional_19_ca_upload_paste_2_Template, 1, 1, "ca-upload-paste", 50)(3, AiOptionsComponent_Conditional_19_ca_upload_word_3_Template, 1, 1, "ca-upload-word", 50);
+    \u0275\u0275template(1, AiOptionsComponent_Conditional_19_ca_upload_url_1_Template, 1, 1, "ca-upload-url", 46)(2, AiOptionsComponent_Conditional_19_ca_upload_paste_2_Template, 1, 1, "ca-upload-paste", 46)(3, AiOptionsComponent_Conditional_19_ca_upload_word_3_Template, 1, 1, "ca-upload-word", 46);
     \u0275\u0275elementContainerEnd();
   }
   if (rf & 2) {
@@ -26952,15 +26912,13 @@ var AiOptionsComponent = class _AiOptionsComponent {
     this.promptChange.emit(key2);
   }
   // Model and alert-specific options persisted through UploadStateService.
-  selectedAi = AiModel.NemotronNano;
+  selectedAi = AiModel.NemotronSuper;
   selectedAis = [];
   selectedAlertRewriteMode = AlertRewriteMode.GoodResultsOnly;
   includeAlertRewriteExamples = false;
   includeBeforeTextInAlertRewriteExamples = false;
   includeLinkWritingRules = true;
-  useJsonAlertsIssuesPrompt = false;
   useCompactAlertsPageContext = false;
-  useSkillPrompts = false;
   get useAlertPlanning() {
     return this.selectedAlertRewriteMode === AlertRewriteMode.AB;
   }
@@ -26969,16 +26927,14 @@ var AiOptionsComponent = class _AiOptionsComponent {
   }
   // Free and paid model groups are rendered separately in the UI.
   freeAiOptions = [
-    { id: AiModel.NemotronNano, label: "page.ai-options.model.NemotronNano", disabled: false },
     { id: AiModel.NemotronSuper, label: "page.ai-options.model.NemotronSuper", disabled: false },
-    { id: AiModel.Arcee, label: "page.ai-options.model.Arcee", disabled: false },
-    { id: AiModel.Zai, label: "page.ai-options.model.Zai", disabled: false }
+    { id: AiModel.Zai, label: "page.ai-options.model.Zai", disabled: false },
+    { id: AiModel.GptOSSFree, label: "page.ai-options.model.GptOSSFree", disabled: false }
   ];
   paidAiOptions = [
-    { id: AiModel.GPT5Nano, label: "page.ai-options.model.GPT5Nano", disabled: false },
     { id: AiModel.Gemini, label: "page.ai-options.model.Gemini", disabled: false },
     { id: AiModel.GPT5Mini, label: "page.ai-options.model.GPT5Mini", disabled: false },
-    { id: AiModel.GptOSS, label: "page.ai-options.model.GptOSS", disabled: false }
+    { id: AiModel.DeepSeek, label: "page.ai-options.model.DeepSeek", disabled: false }
   ];
   ngOnInit() {
     const freeIds = new Set(this.freeAiOptions.map((option) => option.id));
@@ -26994,9 +26950,7 @@ var AiOptionsComponent = class _AiOptionsComponent {
       this.uploadState.setIncludeBeforeTextInAlertRewriteExamples(false);
     }
     this.includeLinkWritingRules = this.uploadState.getIncludeLinkWritingRules();
-    this.useJsonAlertsIssuesPrompt = this.uploadState.getUseJsonAlertsIssuesPrompt();
     this.useCompactAlertsPageContext = this.uploadState.getUseCompactAlertsPageContext();
-    this.useSkillPrompts = this.uploadState.getUseSkillPrompts();
   }
   isAiCheckboxDisabled(id) {
     return !this.selectedAis.includes(id) && this.selectedAis.length >= 2;
@@ -27026,17 +26980,9 @@ var AiOptionsComponent = class _AiOptionsComponent {
     this.includeLinkWritingRules = include;
     this.uploadState.setIncludeLinkWritingRules(include);
   }
-  onUseJsonAlertsIssuesPromptSelect(useJson) {
-    this.useJsonAlertsIssuesPrompt = useJson;
-    this.uploadState.setUseJsonAlertsIssuesPrompt(useJson);
-  }
   onUseCompactAlertsPageContextSelect(useCompact) {
     this.useCompactAlertsPageContext = useCompact;
     this.uploadState.setUseCompactAlertsPageContext(useCompact);
-  }
-  onUseSkillPromptsSelect(useSkills) {
-    this.useSkillPrompts = useSkills;
-    this.uploadState.setUseSkillPrompts(useSkills);
   }
   // Close the drawer and let the parent component execute the request.
   onSubmit() {
@@ -27073,7 +27019,7 @@ var AiOptionsComponent = class _AiOptionsComponent {
   static \u0275fac = function AiOptionsComponent_Factory(__ngFactoryType__) {
     return new (__ngFactoryType__ || _AiOptionsComponent)();
   };
-  static \u0275cmp = /* @__PURE__ */ \u0275\u0275defineComponent({ type: _AiOptionsComponent, selectors: [["ca-ai-options"]], outputs: { promptChange: "promptChange", customPrompt: "customPrompt", editPrompt: "editPrompt", aiChange: "aiChange", alertRewriteModeChange: "alertRewriteModeChange", aiSubmit: "aiSubmit" }, decls: 20, vars: 19, consts: [["label", "Options", "icon", "pi pi-bars", "severity", "info", 3, "click"], ["position", "right", 3, "visibleChange", "visible", "header"], [1, "flex", "flex-column", "gap-3"], ["value", "1", 1, "flex", "flex-column", "gap-3"], ["value", "0", 1, "border-1", "border-round-md", "border-surface"], [1, "border-none"], [1, "font-bold", "mb-2"], [1, "flex", "flex-column", "gap-2"], [4, "ngFor", "ngForOf", "ngForTrackBy"], ["value", "1", 1, "border-1", "border-round-md", "border-surface"], ["value", "2", 1, "border-1", "border-round-md", "border-surface"], ["icon", "pi pi-comments", "severity", "primary", 3, "label"], [3, "ngSwitch"], [1, "p-field-radiobutton"], ["name", "taskOptions", 3, "ngModelChange", "value", "ngModel", "inputId", "disabled"], [1, "pl-2", 3, "for"], [1, "p-field-checkbox", "mt-3"], ["inputId", "appendCustom", 3, "ngModelChange", "onChange", "ngModel", "binary"], ["for", "appendCustom", 1, "pl-2"], [1, "flex", "flex-column", "gap-3", "mt-3"], ["id", "ai-changes"], ["ariaLabelledBy", "ai-changes", "fluid", "", 3, "ngModelChange", "onChange", "ngModel", "step"], [1, "flex", "flex-column", "gap-2", "mt-3"], ["name", "promptOptions", 3, "ngModelChange", "onClick", "value", "ngModel", "inputId", "disabled"], [1, "p-field-checkbox"], [3, "ngModelChange", "value", "ngModel", "inputId", "disabled"], ["pTextarea", "", "id", "customPrompt", "fluid", "", 3, "ngModelChange", "blur", "ngModel", "autoResize"], ["for", "customPrompt"], [1, "font-bold", "m-0"], ["inputId", "includeAlertRewriteExamples", 3, "ngModelChange", "onChange", "ngModel", "binary"], ["for", "includeAlertRewriteExamples", 1, "pl-2"], ["inputId", "includeBeforeTextInAlertRewriteExamples", 3, "ngModelChange", "onChange", "ngModel", "binary", "disabled"], ["for", "includeBeforeTextInAlertRewriteExamples", 1, "pl-2"], [1, "border-top-1", "mt-2", 2, "border-color", "#d3d3d3"], [1, "p-field-checkbox", "mt-2"], ["inputId", "includeLinkWritingRules", 3, "ngModelChange", "onChange", "ngModel", "binary"], ["for", "includeLinkWritingRules", 1, "pl-2"], ["inputId", "useAlertPlanning", 3, "ngModelChange", "ngModel", "binary"], ["for", "useAlertPlanning", 1, "pl-2"], ["inputId", "useJsonAlertsIssuesPrompt", 3, "ngModelChange", "onChange", "ngModel", "binary"], ["for", "useJsonAlertsIssuesPrompt", 1, "pl-2"], ["inputId", "useCompactAlertsPageContext", 3, "ngModelChange", "onChange", "ngModel", "binary"], ["for", "useCompactAlertsPageContext", 1, "pl-2"], ["inputId", "useSkillPrompts", 3, "ngModelChange", "onChange", "ngModel", "binary"], ["for", "useSkillPrompts", 1, "pl-2"], [1, "text-xs", "text-500"], [1, "text-xs", "text-500", "mt-3"], ["name", "aiOptions", 3, "ngModelChange", "onClick", "value", "ngModel", "inputId", "disabled"], ["styleClass", "chip chip-severe ml-2", 3, "label"], ["icon", "pi pi-comments", "severity", "primary", 3, "click", "label"], ["mode", "prototype", 3, "showSampleDataButton", 4, "ngSwitchCase"], ["mode", "prototype", 3, "showSampleDataButton"]], template: function AiOptionsComponent_Template(rf, ctx) {
+  static \u0275cmp = /* @__PURE__ */ \u0275\u0275defineComponent({ type: _AiOptionsComponent, selectors: [["ca-ai-options"]], outputs: { promptChange: "promptChange", customPrompt: "customPrompt", editPrompt: "editPrompt", aiChange: "aiChange", alertRewriteModeChange: "alertRewriteModeChange", aiSubmit: "aiSubmit" }, decls: 20, vars: 19, consts: [["label", "Options", "icon", "pi pi-bars", "severity", "info", 3, "click"], ["position", "right", 3, "visibleChange", "visible", "header"], [1, "flex", "flex-column", "gap-3"], ["value", "1", 1, "flex", "flex-column", "gap-3"], ["value", "0", 1, "border-1", "border-round-md", "border-surface"], [1, "border-none"], [1, "font-bold", "mb-2"], [1, "flex", "flex-column", "gap-2"], [4, "ngFor", "ngForOf", "ngForTrackBy"], ["value", "1", 1, "border-1", "border-round-md", "border-surface"], ["value", "2", 1, "border-1", "border-round-md", "border-surface"], ["icon", "pi pi-comments", "severity", "primary", 3, "label"], [3, "ngSwitch"], [1, "p-field-radiobutton"], ["name", "taskOptions", 3, "ngModelChange", "value", "ngModel", "inputId", "disabled"], [1, "pl-2", 3, "for"], [1, "p-field-checkbox", "mt-3"], ["inputId", "appendCustom", 3, "ngModelChange", "onChange", "ngModel", "binary"], ["for", "appendCustom", 1, "pl-2"], [1, "flex", "flex-column", "gap-3", "mt-3"], ["id", "ai-changes"], ["ariaLabelledBy", "ai-changes", "fluid", "", 3, "ngModelChange", "onChange", "ngModel", "step"], [1, "flex", "flex-column", "gap-2", "mt-3"], ["name", "promptOptions", 3, "ngModelChange", "onClick", "value", "ngModel", "inputId", "disabled"], [1, "p-field-checkbox"], [3, "ngModelChange", "value", "ngModel", "inputId", "disabled"], ["pTextarea", "", "id", "customPrompt", "fluid", "", 3, "ngModelChange", "blur", "ngModel", "autoResize"], ["for", "customPrompt"], [1, "font-bold", "m-0"], ["inputId", "includeAlertRewriteExamples", 3, "ngModelChange", "onChange", "ngModel", "binary"], ["for", "includeAlertRewriteExamples", 1, "pl-2"], ["inputId", "includeBeforeTextInAlertRewriteExamples", 3, "ngModelChange", "onChange", "ngModel", "binary", "disabled"], ["for", "includeBeforeTextInAlertRewriteExamples", 1, "pl-2"], [1, "border-top-1", "mt-2", 2, "border-color", "#d3d3d3"], [1, "p-field-checkbox", "mt-2"], ["inputId", "includeLinkWritingRules", 3, "ngModelChange", "onChange", "ngModel", "binary"], ["for", "includeLinkWritingRules", 1, "pl-2"], ["inputId", "useAlertPlanning", 3, "ngModelChange", "ngModel", "binary"], ["for", "useAlertPlanning", 1, "pl-2"], ["inputId", "useCompactAlertsPageContext", 3, "ngModelChange", "onChange", "ngModel", "binary"], ["for", "useCompactAlertsPageContext", 1, "pl-2"], [1, "text-xs", "text-500"], [1, "text-xs", "text-500", "mt-3"], ["name", "aiOptions", 3, "ngModelChange", "onClick", "value", "ngModel", "inputId", "disabled"], ["styleClass", "chip chip-severe ml-2", 3, "label"], ["icon", "pi pi-comments", "severity", "primary", 3, "click", "label"], ["mode", "prototype", 3, "showSampleDataButton", 4, "ngSwitchCase"], ["mode", "prototype", 3, "showSampleDataButton"]], template: function AiOptionsComponent_Template(rf, ctx) {
     if (rf & 1) {
       \u0275\u0275elementStart(0, "p-button", 0);
       \u0275\u0275listener("click", function AiOptionsComponent_Template_p_button_click_0_listener() {
@@ -27262,40 +27208,18 @@ var AiOptionsComponent = class _AiOptionsComponent {
                         Advanced AI planning before rewrite\r
                       </label>\r
                     </div>\r
-                    <div class="p-field-checkbox mt-2">\r
-                      <p-checkbox\r
-                        [(ngModel)]="useJsonAlertsIssuesPrompt"\r
-                        [binary]="true"\r
-                        inputId="useJsonAlertsIssuesPrompt"\r
-                        (onChange)="onUseJsonAlertsIssuesPromptSelect(useJsonAlertsIssuesPrompt)"\r
-                      />\r
-                      <label for="useJsonAlertsIssuesPrompt" class="pl-2">\r
-                        Use JSON format for Alerts Issues prompt\r
-                      </label>\r
-                    </div>\r
-                    <div class="p-field-checkbox mt-2">\r
-                      <p-checkbox\r
-                        [(ngModel)]="useCompactAlertsPageContext"\r
+                    <div class="p-field-checkbox mt-2">
+                      <p-checkbox
+                        [(ngModel)]="useCompactAlertsPageContext"
                         [binary]="true"\r
                         inputId="useCompactAlertsPageContext"\r
                         (onChange)="onUseCompactAlertsPageContextSelect(useCompactAlertsPageContext)"\r
                       />\r
                       <label for="useCompactAlertsPageContext" class="pl-2">\r
-                        Send compact page context to AI for alerts\r
-                      </label>\r
-                    </div>\r
-                    <div class="p-field-checkbox mt-2">\r
-                      <p-checkbox\r
-                        [(ngModel)]="useSkillPrompts"\r
-                        [binary]="true"\r
-                        inputId="useSkillPrompts"\r
-                        (onChange)="onUseSkillPromptsSelect(useSkillPrompts)"\r
-                      />\r
-                      <label for="useSkillPrompts" class="pl-2">\r
-                        Use skill-based prompt composition (issues)\r
-                      </label>\r
-                    </div>\r
-                  </div>\r
+                        Send compact page context to AI for alerts
+                      </label>
+                    </div>
+                  </div>
                 }\r
               </div>\r
             </fieldset>\r
@@ -41809,35 +41733,30 @@ var PageAssistantCompareComponent = class _PageAssistantCompareComponent {
   }
   getPromptForKey(key2) {
     return __async(this, null, function* () {
-      const base = yield getPromptTemplate(key2, {
-        useJsonAlertsIssuesPrompt: this.uploadState.getUseJsonAlertsIssuesPrompt()
-      });
       const custom = this.customPromptText.trim();
-      const includeEditPrompt = key2 !== PromptKey.AlertsIssues && key2 !== PromptKey.AlertsRecommendations;
+      if (key2 === PromptKey.AlertsIssues) {
+        const composed = yield this.skillManager.composePrompt({
+          basePrompt: "",
+          queryText: this.buildSkillQueryText(key2, custom),
+          promptKey: key2,
+          outputMode: "json",
+          includeReferences: true,
+          includeAssets: true,
+          requireSkill: true
+        });
+        return custom ? `${composed.prompt}
+
+${custom}` : composed.prompt;
+      }
+      const base = yield getPromptTemplate(key2);
+      const includeEditPrompt = key2 !== PromptKey.AlertsRecommendations;
       const editPrefix = includeEditPrompt ? this.customEditText : "";
       const promptBody = editPrefix ? `${editPrefix}
 
 ${base}` : base;
-      const useSkillPrompts = this.uploadState.getUseSkillPrompts();
-      if (!useSkillPrompts) {
-        return custom ? `${promptBody}
+      return custom ? `${promptBody}
 
 ${custom}` : promptBody;
-      }
-      const queryText = this.buildSkillQueryText(key2, custom);
-      const outputMode = this.resolveSkillOutputMode(key2);
-      const composed = yield this.skillManager.composePrompt({
-        basePrompt: promptBody,
-        queryText,
-        promptKey: key2,
-        outputMode,
-        includeReferences: key2 === PromptKey.AlertsIssues || key2 === PromptKey.AlertsRecommendations,
-        includeOptionalReferences: key2 === PromptKey.AlertsRecommendations,
-        includeAssets: key2 === PromptKey.AlertsIssues || key2 === PromptKey.AlertsRecommendations
-      });
-      return custom ? `${composed.prompt}
-
-${custom}` : composed.prompt;
     });
   }
   buildSkillQueryText(key2, custom) {
@@ -41849,12 +41768,6 @@ ${custom}` : composed.prompt;
       [PromptKey.AlertsRecommendations]: "rewrite canada.ca alerts and provide corrected output"
     };
     return [promptIntents[key2], custom].filter(Boolean).join("\n");
-  }
-  resolveSkillOutputMode(key2) {
-    if (key2 === PromptKey.AlertsIssues || key2 === PromptKey.AlertsRecommendations) {
-      return "json";
-    }
-    return "text";
   }
   shouldForceLocalRepairForTesting() {
     try {
@@ -41963,7 +41876,7 @@ ${custom}` : composed.prompt;
     });
   }
   //AI Model
-  selectedAiModel = AiModel.NemotronNano;
+  selectedAiModel = AiModel.NemotronSuper;
   onAiChange(key2) {
     this.selectedAiModel = key2;
     this.uploadState.setSelectedAiModel(key2);
@@ -42000,7 +41913,7 @@ ${custom}` : composed.prompt;
     return coerceInteractiveResultLeadIns(this.translate.instant("page.alerts.interactiveResultLeadIns"));
   }
   buildModelRotation(model) {
-    const fallbackOrder = [AiModel.Arcee, AiModel.Zai];
+    const fallbackOrder = [AiModel.GptOSSFree, AiModel.Zai, AiModel.NemotronSuper];
     const available = new Set(this.openRouter.freeModels);
     const rotation = [model];
     for (const candidate of fallbackOrder) {
@@ -42986,4 +42899,4 @@ ${custom}` : composed.prompt;
 export {
   PageAssistantCompareComponent
 };
-//# sourceMappingURL=chunk-REXIAAAN.js.map
+//# sourceMappingURL=chunk-HTT366B3.js.map

@@ -38509,13 +38509,11 @@ var AlertRewriteMode;
 })(AlertRewriteMode || (AlertRewriteMode = {}));
 var AiModel;
 (function(AiModel2) {
-  AiModel2["NemotronNano"] = "nvidia/nemotron-3-nano-30b-a3b:free";
   AiModel2["NemotronSuper"] = "nvidia/nemotron-3-super-120b-a12b:free";
-  AiModel2["Arcee"] = "arcee-ai/trinity-large-preview:free";
   AiModel2["Zai"] = "z-ai/glm-4.5-air:free";
-  AiModel2["GPT5Nano"] = "openai/gpt-5-nano";
+  AiModel2["GptOSSFree"] = "openai/gpt-oss-120b:free";
   AiModel2["GPT5Mini"] = "openai/gpt-5-mini";
-  AiModel2["GptOSS"] = "openai/gpt-oss-120b";
+  AiModel2["DeepSeek"] = "deepseek/deepseek-v3.2";
   AiModel2["Gemini"] = "google/gemini-2.5-flash-lite";
 })(AiModel || (AiModel = {}));
 
@@ -38562,9 +38560,7 @@ var UploadStateService = class _UploadStateService {
   includeAlertRewriteExamplesKey = "pageAssistant.includeAlertRewriteExamples";
   includeBeforeTextInAlertRewriteExamplesKey = "pageAssistant.includeBeforeTextInAlertRewriteExamples";
   includeLinkWritingRulesKey = "pageAssistant.includeLinkWritingRules";
-  useJsonAlertsIssuesPromptKey = "pageAssistant.useJsonAlertsIssuesPrompt";
   useCompactAlertsPageContextKey = "pageAssistant.useCompactAlertsPageContext";
-  useSkillPromptsKey = "pageAssistant.useSkillPrompts";
   // Upload source chosen in the drawer.
   selectedUploadType = signal("url");
   getSelectedUploadType = computed(() => this.selectedUploadType());
@@ -38573,7 +38569,7 @@ var UploadStateService = class _UploadStateService {
     this.storage.saveData(this.uploadTypeKey, type);
   }
   // Primary AI model selected for the current session.
-  selectedAiModel = signal(AiModel.NemotronNano);
+  selectedAiModel = signal(AiModel.NemotronSuper);
   getSelectedAiModel = computed(() => this.selectedAiModel());
   setSelectedAiModel(model2) {
     this.selectedAiModel.set(model2);
@@ -38614,26 +38610,12 @@ var UploadStateService = class _UploadStateService {
     this.includeLinkWritingRules.set(!!include);
     this.storage.saveData(this.includeLinkWritingRulesKey, String(!!include));
   }
-  // Whether alert issue analysis uses the JSON-oriented prompt variant.
-  useJsonAlertsIssuesPrompt = signal(false);
-  getUseJsonAlertsIssuesPrompt = computed(() => this.useJsonAlertsIssuesPrompt());
-  setUseJsonAlertsIssuesPrompt(useJson) {
-    this.useJsonAlertsIssuesPrompt.set(!!useJson);
-    this.storage.saveData(this.useJsonAlertsIssuesPromptKey, String(!!useJson));
-  }
   // Whether alert issue analysis uses compact extracted page context instead of raw HTML.
   useCompactAlertsPageContext = signal(false);
   getUseCompactAlertsPageContext = computed(() => this.useCompactAlertsPageContext());
   setUseCompactAlertsPageContext(useCompact) {
     this.useCompactAlertsPageContext.set(!!useCompact);
     this.storage.saveData(this.useCompactAlertsPageContextKey, String(!!useCompact));
-  }
-  // Whether prompt assembly uses the skill manager instead of legacy base prompts only.
-  useSkillPrompts = signal(false);
-  getUseSkillPrompts = computed(() => this.useSkillPrompts());
-  setUseSkillPrompts(useSkills) {
-    this.useSkillPrompts.set(!!useSkills);
-    this.storage.saveData(this.useSkillPromptsKey, String(!!useSkills));
   }
   // Working page data plus shallow history for undo.
   uploadData = signal(null);
@@ -38652,9 +38634,9 @@ var UploadStateService = class _UploadStateService {
       this.storage.removeData(this.includeAlertRewriteExamplesKey);
       this.storage.removeData(this.includeBeforeTextInAlertRewriteExamplesKey);
       this.storage.removeData(this.includeLinkWritingRulesKey);
-      this.storage.removeData(this.useJsonAlertsIssuesPromptKey);
+      this.storage.removeData("pageAssistant.useJsonAlertsIssuesPrompt");
       this.storage.removeData(this.useCompactAlertsPageContextKey);
-      this.storage.removeData(this.useSkillPromptsKey);
+      this.storage.removeData("pageAssistant.useSkillPrompts");
       return;
     }
     this.restoreState();
@@ -38713,15 +38695,13 @@ var UploadStateService = class _UploadStateService {
   // Clear both in-memory state and the persisted assistant session.
   resetUploadFlow() {
     this.selectedUploadType.set("url");
-    this.selectedAiModel.set(AiModel.NemotronNano);
+    this.selectedAiModel.set(AiModel.NemotronSuper);
     this.editPromptText.set("");
     this.selectedAlertRewriteMode.set(AlertRewriteMode.GoodResultsOnly);
     this.includeAlertRewriteExamples.set(false);
     this.includeBeforeTextInAlertRewriteExamples.set(false);
     this.includeLinkWritingRules.set(true);
-    this.useJsonAlertsIssuesPrompt.set(false);
     this.useCompactAlertsPageContext.set(false);
-    this.useSkillPrompts.set(false);
     this.uploadData.set(null);
     this.prevUploadData = [];
     this.storage.removeData(this.uploadTypeKey);
@@ -38731,9 +38711,9 @@ var UploadStateService = class _UploadStateService {
     this.storage.removeData(this.includeAlertRewriteExamplesKey);
     this.storage.removeData(this.includeBeforeTextInAlertRewriteExamplesKey);
     this.storage.removeData(this.includeLinkWritingRulesKey);
-    this.storage.removeData(this.useJsonAlertsIssuesPromptKey);
+    this.storage.removeData("pageAssistant.useJsonAlertsIssuesPrompt");
     this.storage.removeData(this.useCompactAlertsPageContextKey);
-    this.storage.removeData(this.useSkillPromptsKey);
+    this.storage.removeData("pageAssistant.useSkillPrompts");
     this.storage.removeData(this.uploadDataKey);
   }
   persistUploadData() {
@@ -38777,17 +38757,9 @@ var UploadStateService = class _UploadStateService {
     if (storedIncludeLinkRules === "true" || storedIncludeLinkRules === "false") {
       this.includeLinkWritingRules.set(storedIncludeLinkRules === "true");
     }
-    const storedUseJsonAlertsIssuesPrompt = this.storage.getData(this.useJsonAlertsIssuesPromptKey);
-    if (storedUseJsonAlertsIssuesPrompt === "true" || storedUseJsonAlertsIssuesPrompt === "false") {
-      this.useJsonAlertsIssuesPrompt.set(storedUseJsonAlertsIssuesPrompt === "true");
-    }
     const storedUseCompactAlertsPageContext = this.storage.getData(this.useCompactAlertsPageContextKey);
     if (storedUseCompactAlertsPageContext === "true" || storedUseCompactAlertsPageContext === "false") {
       this.useCompactAlertsPageContext.set(storedUseCompactAlertsPageContext === "true");
-    }
-    const storedUseSkillPrompts = this.storage.getData(this.useSkillPromptsKey);
-    if (storedUseSkillPrompts === "true" || storedUseSkillPrompts === "false") {
-      this.useSkillPrompts.set(storedUseSkillPrompts === "true");
     }
     const storedData = this.storage.getData(this.uploadDataKey);
     if (!storedData)
@@ -100443,4 +100415,4 @@ export {
    * License: MIT
    *)
 */
-//# sourceMappingURL=chunk-MFWTJBNA.js.map
+//# sourceMappingURL=chunk-RZRC4JIU.js.map

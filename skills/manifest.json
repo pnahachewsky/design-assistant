@@ -24,7 +24,7 @@
         "json"
       ],
       "defaultReferencePaths": [
-        "skills/alerts/canada-alerts-issues/references/rubric-and-guidelines.md"
+        "skills/alerts/canada-alerts-issues/references/issue-analysis-instructions.json"
       ],
       "defaultAssetPaths": [
         "skills/alerts/canada-alerts-issues/assets/issues-output-schema.json"
@@ -55,7 +55,7 @@
         "json"
       ],
       "defaultReferencePaths": [
-        "skills/alerts/canada-alerts-rewriting/references/rubric-and-guidelines.md"
+        "skills/alerts/canada-alerts-rewriting/references/rewrite-instructions.json"
       ],
       "optionalReferencePaths": [
         "skills/alerts/canada-alerts-rewriting/references/examples.json"
