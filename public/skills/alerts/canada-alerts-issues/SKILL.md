@@ -13,7 +13,7 @@ Use this skill only for issue analysis. Do not rewrite alert HTML.
 3. Return JSON only.
 
 ## Resources
-- Read `references/rubric-and-guidelines.md` for issue taxonomy, analysis procedure, and output rules.
+- Read `references/issue-analysis-instructions.json` for issue taxonomy, analysis procedure, structured context rules, and output rules.
 - Match `assets/issues-output-schema.json` exactly.
 - If structured fields such as `pageSignals`, `alertPlacementContext`, or `alertSignals` are present, use them as primary evidence for context-sensitive issues.
 

@@ -17,7 +17,9 @@ describe('SkillManagerService', () => {
         triggerPhrases: ['alert', 'analyze alert', 'issues', 'wcag'],
         promptKeys: ['alertsIssues'],
         outputModes: ['json'],
-        defaultReferencePaths: ['skills/alerts/canada-alerts-issues/references/rubric-and-guidelines.md'],
+        defaultReferencePaths: [
+          'skills/alerts/canada-alerts-issues/references/issue-analysis-instructions.json',
+        ],
         defaultAssetPaths: ['skills/alerts/canada-alerts-issues/assets/issues-output-schema.json'],
       },
       {
@@ -29,7 +31,9 @@ describe('SkillManagerService', () => {
         triggerPhrases: ['alert', 'rewrite alert', 'updated html'],
         promptKeys: ['alertsRecommendations'],
         outputModes: ['json'],
-        defaultReferencePaths: ['skills/alerts/canada-alerts-rewriting/references/rubric-and-guidelines.md'],
+        defaultReferencePaths: [
+          'skills/alerts/canada-alerts-rewriting/references/rewrite-instructions.json',
+        ],
         optionalReferencePaths: ['skills/alerts/canada-alerts-rewriting/references/examples.json'],
         defaultAssetPaths: ['skills/alerts/canada-alerts-rewriting/assets/rewriting-output-schema.json'],
       },
@@ -81,8 +85,11 @@ describe('SkillManagerService', () => {
         if (url.includes('skills/link-writing/references/link-writing-rules.json')) {
           return new Response('{"rules":[{"id":"L1"}]}', { status: 200 });
         }
-        if (url.includes('rubric-and-guidelines.md')) {
-          return new Response('# Rubric\nUse one link max.', { status: 200 });
+        if (url.includes('issue-analysis-instructions.json')) {
+          return new Response('{"objective":"Analyze alerts."}', { status: 200 });
+        }
+        if (url.includes('rewrite-instructions.json')) {
+          return new Response('{"rewriteRules":["Use one link max."]}', { status: 200 });
         }
         if (url.includes('issues-output-schema.json')) {
           return new Response('{"type":"object"}', { status: 200 });
@@ -123,7 +130,7 @@ describe('SkillManagerService', () => {
     expect(result.selectedSkill?.id).toBe('canada-alerts-issues');
     expect(result.loadedPaths).toContain('skills/alerts/canada-alerts-issues/SKILL.md');
     expect(result.loadedPaths).toContain(
-      'skills/alerts/canada-alerts-issues/references/rubric-and-guidelines.md',
+      'skills/alerts/canada-alerts-issues/references/issue-analysis-instructions.json',
     );
     expect(result.loadedPaths).toContain(
       'skills/alerts/canada-alerts-issues/assets/issues-output-schema.json',
@@ -159,6 +166,9 @@ describe('SkillManagerService', () => {
     );
     expect(result.loadedPaths).not.toContain(
       'skills/alerts/canada-alerts-issues/assets/issues-output-schema.json',
+    );
+    expect(result.loadedPaths).toContain(
+      'skills/alerts/canada-alerts-rewriting/references/rewrite-instructions.json',
     );
     expect(result.loadedPaths).toContain(
       'skills/alerts/canada-alerts-rewriting/references/examples.json',
