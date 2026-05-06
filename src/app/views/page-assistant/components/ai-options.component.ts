@@ -102,7 +102,6 @@ export class AiOptionsComponent implements OnInit {
   selectedAlertRewriteMode: AlertRewriteMode = AlertRewriteMode.GoodResultsOnly;
   includeAlertRewriteExamples = false;
   includeBeforeTextInAlertRewriteExamples = false;
-  includeLinkWritingRules = true;
   useCompactAlertsPageContext = false;
   get useAlertPlanning(): boolean {
     return this.selectedAlertRewriteMode === AlertRewriteMode.AB;
@@ -139,7 +138,6 @@ export class AiOptionsComponent implements OnInit {
       this.includeBeforeTextInAlertRewriteExamples = false;
       this.uploadState.setIncludeBeforeTextInAlertRewriteExamples(false);
     }
-    this.includeLinkWritingRules = this.uploadState.getIncludeLinkWritingRules();
     this.useCompactAlertsPageContext =
       this.uploadState.getUseCompactAlertsPageContext();
   }
@@ -177,11 +175,6 @@ export class AiOptionsComponent implements OnInit {
   onIncludeBeforeTextInAlertRewriteExamplesSelect(include: boolean): void {
     this.includeBeforeTextInAlertRewriteExamples = include;
     this.uploadState.setIncludeBeforeTextInAlertRewriteExamples(include);
-  }
-
-  onIncludeLinkWritingRulesSelect(include: boolean): void {
-    this.includeLinkWritingRules = include;
-    this.uploadState.setIncludeLinkWritingRules(include);
   }
 
   onUseCompactAlertsPageContextSelect(useCompact: boolean): void {

@@ -17,8 +17,6 @@ export class UploadStateService {
     'pageAssistant.includeAlertRewriteExamples';
   private readonly includeBeforeTextInAlertRewriteExamplesKey =
     'pageAssistant.includeBeforeTextInAlertRewriteExamples';
-  private readonly includeLinkWritingRulesKey =
-    'pageAssistant.includeLinkWritingRules';
   private readonly useCompactAlertsPageContextKey =
     'pageAssistant.useCompactAlertsPageContext';
 
@@ -79,14 +77,6 @@ export class UploadStateService {
     );
   }
 
-  // Whether alert rewrites include the standalone link-writing rules block.
-  private includeLinkWritingRules = signal<boolean>(true);
-  getIncludeLinkWritingRules = computed(() => this.includeLinkWritingRules());
-  setIncludeLinkWritingRules(include: boolean) {
-    this.includeLinkWritingRules.set(!!include);
-    this.storage.saveData(this.includeLinkWritingRulesKey, String(!!include));
-  }
-
   // Whether alert issue analysis uses compact extracted page context instead of raw HTML.
   private useCompactAlertsPageContext = signal<boolean>(false);
   getUseCompactAlertsPageContext = computed(() =>
@@ -112,7 +102,7 @@ export class UploadStateService {
       this.storage.removeData(this.uploadDataKey);
       this.storage.removeData(this.includeAlertRewriteExamplesKey);
       this.storage.removeData(this.includeBeforeTextInAlertRewriteExamplesKey);
-      this.storage.removeData(this.includeLinkWritingRulesKey);
+      this.storage.removeData('pageAssistant.includeLinkWritingRules');
       this.storage.removeData('pageAssistant.useJsonAlertsIssuesPrompt');
       this.storage.removeData(this.useCompactAlertsPageContextKey);
       this.storage.removeData('pageAssistant.useSkillPrompts');
@@ -192,7 +182,6 @@ export class UploadStateService {
     this.selectedAlertRewriteMode.set(AlertRewriteMode.GoodResultsOnly);
     this.includeAlertRewriteExamples.set(false);
     this.includeBeforeTextInAlertRewriteExamples.set(false);
-    this.includeLinkWritingRules.set(true);
     this.useCompactAlertsPageContext.set(false);
     this.uploadData.set(null);
     this.prevUploadData = [];
@@ -202,7 +191,7 @@ export class UploadStateService {
     this.storage.removeData(this.alertRewriteModeKey);
     this.storage.removeData(this.includeAlertRewriteExamplesKey);
     this.storage.removeData(this.includeBeforeTextInAlertRewriteExamplesKey);
-    this.storage.removeData(this.includeLinkWritingRulesKey);
+    this.storage.removeData('pageAssistant.includeLinkWritingRules');
     this.storage.removeData('pageAssistant.useJsonAlertsIssuesPrompt');
     this.storage.removeData(this.useCompactAlertsPageContextKey);
     this.storage.removeData('pageAssistant.useSkillPrompts');
@@ -271,13 +260,6 @@ export class UploadStateService {
       this.includeBeforeTextInAlertRewriteExamples.set(
         storedIncludeBeforeTextInExamples === 'true',
       );
-    }
-
-    const storedIncludeLinkRules = this.storage.getData(
-      this.includeLinkWritingRulesKey,
-    );
-    if (storedIncludeLinkRules === 'true' || storedIncludeLinkRules === 'false') {
-      this.includeLinkWritingRules.set(storedIncludeLinkRules === 'true');
     }
 
     const storedUseCompactAlertsPageContext = this.storage.getData(
