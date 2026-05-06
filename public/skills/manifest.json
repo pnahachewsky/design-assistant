@@ -65,20 +65,6 @@
       ]
     },
     {
-      "id": "canada-alerts-rewriting-examples",
-      "name": "canada-alerts-rewriting-examples",
-      "description": "Provides optional Canada.ca alert rewrite examples for pattern guidance. Use only when example-assisted alert rewriting is enabled.",
-      "skillMdPath": "skills/alerts/canada-alerts-rewriting-examples/SKILL.md",
-      "selectable": false,
-      "triggerPhrases": [],
-      "outputModes": [
-        "json"
-      ],
-      "defaultReferencePaths": [
-        "skills/alerts/canada-alerts-rewriting/references/examples.json"
-      ]
-    },
-    {
       "id": "link-writing",
       "name": "link-writing",
       "description": "Applies reusable Canada.ca link-writing rules for descriptive, accessible, non-redundant links while preserving valid destination URLs.",

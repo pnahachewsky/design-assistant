@@ -19,9 +19,14 @@ export interface LinkWritingRulesJson {
 }
 
 const LINK_WRITING_RULES_PATH = new URL(
-  'skills/link-writing/references/link-writing-rules.json',
+  'ai-prompts/link-writing-rules.json',
   document.baseURI,
 ).toString();
+
+const LINK_WRITING_RULES_FALLBACK: LinkWritingRulesJson = {
+  version: 'fallback-empty',
+  rules: [],
+};
 
 let linkWritingRulesCache: LinkWritingRulesJson | null = null;
 
@@ -58,16 +63,21 @@ function toValidatedRulesJson(raw: unknown): LinkWritingRulesJson | null {
 
 async function loadRulesSource(): Promise<LinkWritingRulesJson> {
   if (linkWritingRulesCache) return linkWritingRulesCache;
-  const response = await fetch(LINK_WRITING_RULES_PATH);
-  if (!response.ok) {
-    throw new Error(`Failed to load link writing skill rules (${response.status}).`);
+  try {
+    const response = await fetch(LINK_WRITING_RULES_PATH);
+    if (!response.ok) {
+      throw new Error(`Failed to load link writing rules (${response.status}).`);
+    }
+    const payload = (await response.json()) as unknown;
+    const validated = toValidatedRulesJson(payload);
+    if (!validated) {
+      throw new Error('Invalid link writing rules JSON schema.');
+    }
+    linkWritingRulesCache = validated;
+  } catch (err) {
+    console.warn('Unable to load link writing rules JSON; using empty fallback.', err);
+    linkWritingRulesCache = LINK_WRITING_RULES_FALLBACK;
   }
-  const payload = (await response.json()) as unknown;
-  const validated = toValidatedRulesJson(payload);
-  if (!validated) {
-    throw new Error('Invalid link writing skill rules JSON schema.');
-  }
-  linkWritingRulesCache = validated;
   return linkWritingRulesCache;
 }
 

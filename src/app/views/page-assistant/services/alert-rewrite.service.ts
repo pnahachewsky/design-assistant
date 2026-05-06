@@ -89,7 +89,7 @@ export interface AlertRewriteInput {
 @Injectable({ providedIn: 'root' })
 export class AlertRewriteService {
   private readonly examplesPath = new URL(
-    'skills/alerts/canada-alerts-rewriting/references/examples.json',
+    'ai-prompts/alerts-rewrite-examples.json',
     document.baseURI,
   ).toString();
   private examplesCache: AlertRewriteExample[] | null = null;

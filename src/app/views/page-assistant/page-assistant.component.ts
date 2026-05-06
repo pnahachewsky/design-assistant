@@ -729,7 +729,7 @@ export class PageAssistantCompareComponent
         mode: this.selectedAlertRewriteMode,
         includeExamples,
         includeBeforeTextInExamples,
-        includeLinkWritingRules: true,
+        includeLinkWritingRules: this.uploadState.getIncludeLinkWritingRules(),
         forceLocalRepairForTesting: this.shouldForceLocalRepairForTesting(),
         callOpenRouterForMessages: this.callOpenRouterForMessages.bind(this),
         getShortModelName: this.getShortModelName.bind(this),
@@ -792,31 +792,6 @@ export class PageAssistantCompareComponent
   private getShortModelName(model: string): string {
     const key = this.resolveAiModelKey(model);
     return key ? this.translate.instant(`page.ai-options.model.short.${key}`) : model;
-  }
-
-  private isRetryableAiError(status: unknown, message: string): boolean {
-    const normalizedStatus =
-      typeof status === 'number'
-        ? status
-        : typeof status === 'string'
-          ? Number.parseInt(status, 10)
-          : Number.NaN;
-    if ([408, 429, 500, 502, 503, 504].includes(normalizedStatus)) {
-      return true;
-    }
-    const normalizedMessage = (message || '').toLowerCase();
-    return [
-      'provider returned error',
-      'provider error',
-      'model is down',
-      'temporarily unavailable',
-      'no available model provider',
-      'timeout',
-      'timed out',
-      'rate limit',
-      'rate limited',
-      'overloaded',
-    ].some((pattern) => normalizedMessage.includes(pattern));
   }
 
   private getInteractiveResultLeadIns(): string[] {
@@ -943,108 +918,83 @@ export class PageAssistantCompareComponent
       const candidates = this.buildModelRotation(model);
       let aiResponse: any | null = null;
       let lastAttemptedModel = model;
-      let lastModelError: string | null = null;
 
       for (let i = 0; i < candidates.length; i += 1) {
         const candidate = candidates[i];
-        const maxAttemptsForCandidate = i === 0 ? 2 : 1;
-        for (let attempt = 0; attempt < maxAttemptsForCandidate; attempt += 1) {
-          lastAttemptedModel = candidate as AiModel;
-          const attemptPayload = {
-            ...payload,
-            models: [candidate],
-            provider: { allow_fallbacks: false },
-          };
+        lastAttemptedModel = candidate as AiModel;
+        const attemptPayload = {
+          ...payload,
+          models: [candidate],
+          provider: { allow_fallbacks: false },
+        };
 
-          console.log('Sending to OpenRouter:', {
-            payload: attemptPayload,
-            attempt: attempt + 1,
-          });
+        console.log('Sending to OpenRouter:', { payload: attemptPayload });
 
-          const orResponse = await fetch(url, {
-            method: 'POST',
-            headers,
-            body: JSON.stringify(attemptPayload),
-          });
+        const orResponse = await fetch(url, {
+          method: 'POST',
+          headers,
+          body: JSON.stringify(attemptPayload),
+        });
 
-          console.log(`OpenRouter response status: `, orResponse.status);
-          if (orResponse.status === 200) {
-            console.log('Waiting for AI response');
-            this.statusMessage = this.translate.instant('common.ai.generating');
-          }
-
-          const attemptResponse =
-            (await orResponse.json().catch(() => ({}))) || {};
-          const hasAnotherAttemptForCandidate = attempt < maxAttemptsForCandidate - 1;
-          const hasFallbackModel = i < candidates.length - 1;
-
-          if (orResponse.status === 404 && hasFallbackModel) {
-            console.warn(
-              `Model not found (404): ${candidate}. Retrying next model in rotation.`,
-            );
-            break;
-          }
-          if (orResponse.status === 429 && (hasAnotherAttemptForCandidate || hasFallbackModel)) {
-            const retryAfterHeader = orResponse.headers.get('retry-after');
-            const retryAfterMs = retryAfterHeader
-              ? Math.min(Math.max(Number(retryAfterHeader) * 1000, 600), 30000)
-              : 600;
-            console.warn(
-              `Rate limited (429): ${candidate}. Retrying ${
-                hasAnotherAttemptForCandidate ? 'selected model' : 'next model'
-              } in ${retryAfterMs}ms.`,
-            );
-            await new Promise((resolve) => setTimeout(resolve, retryAfterMs));
-            if (hasAnotherAttemptForCandidate) {
-              continue;
-            }
-            break;
-          }
-
-          if (attemptResponse.error) {
-            const attemptModelShort = this.getShortModelName(candidate);
-            const errorStatus = attemptResponse.error?.status;
-            const errorMessage = attemptResponse.error?.message || 'Unknown error';
-            lastModelError = `AI error (${attemptModelShort}): ${errorMessage}`;
-            console.groupCollapsed('AI Error');
-            console.error('Status:', errorStatus);
-            console.error('Message:', errorMessage);
-            console.groupEnd();
-
-            const retryableError = this.isRetryableAiError(errorStatus, errorMessage);
-            if (retryableError && (hasAnotherAttemptForCandidate || hasFallbackModel)) {
-              console.warn(
-                `Retryable AI error from ${attemptModelShort}. ${
-                  hasAnotherAttemptForCandidate
-                    ? 'Trying selected model one more time.'
-                    : 'Trying next fallback model.'
-                }`,
-              );
-              if (hasAnotherAttemptForCandidate) {
-                continue;
-              }
-              break;
-            }
-
-            this.statusSeverity = 'error';
-            this.statusMessage = this.translate.instant(
-              'common.ai.errorCommunicatingAi',
-            );
-            throw new Error(lastModelError);
-          }
-
-          aiResponse = attemptResponse;
-          break;
+        console.log(`OpenRouter response status: `, orResponse.status);
+        if (orResponse.status === 200) {
+          console.log('Waiting for AI response');
+          this.statusMessage = this.translate.instant('common.ai.generating');
         }
-        if (aiResponse) {
-          break;
+
+        const attemptResponse =
+          (await orResponse.json().catch(() => ({}))) || {};
+
+        if (orResponse.status === 404 && i < candidates.length - 1) {
+          console.warn(
+            `Model not found (404): ${candidate}. Retrying next model in rotation.`,
+          );
+          continue;
         }
+        if (orResponse.status === 429 && i < candidates.length - 1) {
+          const retryAfterHeader = orResponse.headers.get('retry-after');
+          const retryAfterMs = retryAfterHeader
+            ? Math.min(Math.max(Number(retryAfterHeader) * 1000, 600), 30000)
+            : 600;
+          console.warn(
+            `Rate limited (429): ${candidate}. Retrying next model in ${retryAfterMs}ms.`,
+          );
+          await new Promise((resolve) => setTimeout(resolve, retryAfterMs));
+          continue;
+        }
+
+        if (attemptResponse.error) {
+          const attemptModelShort = this.getShortModelName(candidate);
+          console.groupCollapsed('AI Error');
+          console.error(attemptResponse.error?.status);
+          console.warn(`400: Bad Request (invalid or missing params, CORS)\n
+                    401: Invalid credentials (OAuth session expired, disabled/invalid API key)\n
+                    402: Your account or API key has insufficient credits. Add more credits and retry the request.\n
+                    403: Your chosen model requires moderation and your input was flagged\n
+                    408: Your request timed out\n
+                    429: You are being rate limited\n
+                    502: Your chosen model is down or we received an invalid response from it\n
+                    503: There is no available model provider that meets your routing requirements`);
+          console.error(attemptResponse.error?.message);
+          console.groupEnd();
+          this.statusSeverity = 'error';
+          this.statusMessage = this.translate.instant(
+            'common.ai.errorCommunicatingAi',
+          );
+          throw new Error(
+            `AI error (${attemptModelShort}): ${
+              attemptResponse.error?.message || 'Unknown error'
+            }`,
+          );
+        }
+
+        aiResponse = attemptResponse;
+        break;
       }
 
       if (!aiResponse) {
         throw new Error(
-          lastModelError ||
-            `AI response was empty (${this.getShortModelName(lastAttemptedModel)}).`,
+          `AI response was empty (${this.getShortModelName(lastAttemptedModel)}).`,
         );
       }
 

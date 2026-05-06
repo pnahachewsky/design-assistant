@@ -1,5 +1,4 @@
 {
-  "version": "2026-02-28",
   "name": "canada-alerts-rewrite-instructions",
   "purpose": "Rewrite Canada.ca alert HTML based on identified issues and return replacement JSON only.",
   "role": {
@@ -10,85 +9,6 @@
     "alerts": "Array of alert objects that include alert_index and alert_html."
   },
   "objective": "Return a replacement entry for every input alert, with corrected alert HTML that resolves the provided issues while preserving meaning and valid source links.",
-  "alertPlanning": {
-    "systemPromptLines": [
-      "You are alertPlanning for UI alert rewriting.",
-      "Classify the alert and produce a deterministic rewrite plan.",
-      "Return JSON only and follow this exact schema:",
-      "{\"alertType\":\"error|warning|info|success\",\"domainTags\":[\"...\"],\"criteriaMatched\":[\"C...\"],\"directives\":[{\"op\":\"string\",\"value\":\"optional\"}]}",
-      "Allowed directive ops:",
-      "specify_subject, add_next_step, add_fallback, add_heading, avoid_jargon, limit_links, preserve_tone.",
-      "Rules:",
-      "- Keep domainTags short and specific.",
-      "- criteriaMatched should be stable identifiers (for example, C1_missing_next_step).",
-      "- Directives must be concrete operations.",
-      "- Return JSON only. No prose."
-    ]
-  },
-  "alertRewrite": {
-    "styleRulesBase": [
-      "Edit only the alert content needed to resolve the provided issues.",
-      "Edit only inside each .alert container.",
-      "Keep alerts in place unless incorrect placement is one of the reported issues.",
-      "Do not add new alerts.",
-      "Return a replacements entry for every alert_index in the alerts list.",
-      "Every alert_index must appear exactly once in replacements.",
-      "Apply each relevant issue to every alert it affects.",
-      "Each issue must cause at least one HTML change per affected alert unless the issue is No issues.",
-      "Prefer preserving the original meaning and existing links.",
-      "Prefer original wording and meaning. Edit text only when required by issues such as too wordy, multiple links, unclear impact, missing heading, or wrong type.",
-      "Do not invent facts, dates, URLs, program names, or destination details.",
-      "Do not use placeholder tokens such as [LINK] or [END LINK].",
-      "Prefer 1 sentence, not counting a sentence that only introduces a link. Use 2 sentences only if needed.",
-      "If the alert includes a standalone lead-in to a link, first include one substantive sentence that explains the alert.",
-      "Do not output an alert whose only body text is a link-introduction sentence such as Learn about: or Refer to:.",
-      "If a link stands alone as its own sentence or paragraph, or if a sentence mainly directs the user to a link, force a separate paragraph for that link direction.",
-      "Prefer putting standalone link sentences or paragraphs last in the alert content when possible.",
-      "Add or preserve a short, descriptive heading.",
-      "State what happened, then what to do.",
-      "Use plain, active, neutral language.",
-      "Include a next step when possible.",
-      "Keep alert content concise for UI.",
-      "Use a full alert wrapper such as <section class=\"alert alert-info\">, <section class=\"alert alert-success\">, <section class=\"alert alert-warning\">, or <section class=\"alert alert-danger\">.",
-      "updated_html must be the full alert wrapper with the correct alert-* class.",
-      "Use valid heading levels.",
-      "Avoid hidden content.",
-      "Add text alternatives for images or icons if needed."
-    ],
-    "styleRulesWithExamples": [
-      "Use examples as pattern guidance only.",
-      "Do not copy example wording.",
-      "Keep wording specific to the input alert's own facts and wording."
-    ],
-    "systemPromptWithExamplesLines": [
-      "You are alertRewrite for UI alerts.",
-      "Use examples as pattern guidance, not copy/paste text.",
-      "Only include exampleIdsUsed values that match the provided example ids.",
-      "Keep the alert wrapper and classes valid.",
-      "Do not return any sentence copied from the examples.",
-      "Return JSON only. No extra text.",
-      "Output schema:",
-      "{\"rewrittenAlertHtml\":\"string\",\"rewrittenHeading\":\"string\",\"rewrittenAlert\":\"string\",\"appliedDirectives\":[\"...\"],\"exampleIdsUsed\":[\"ex-001\"]}"
-    ],
-    "systemPromptWithoutExamplesLines": [
-      "You are alertRewrite for UI alerts.",
-      "No examples are provided for this request.",
-      "Return exampleIdsUsed as an empty array: [].",
-      "Keep the alert wrapper and classes valid.",
-      "Return JSON only. No extra text.",
-      "Output schema:",
-      "{\"rewrittenAlertHtml\":\"string\",\"rewrittenHeading\":\"string\",\"rewrittenAlert\":\"string\",\"appliedDirectives\":[\"...\"],\"exampleIdsUsed\":[]}"
-    ],
-    "retryInstructions": {
-      "invalidWrapperHtml": "Return valid rewrittenAlertHtml as a full .alert wrapper element.",
-      "placeholderLinks": "Do not output [LINK] or [END LINK]. Use real HTML anchors (<a href=\"...\">text</a>) in rewrittenAlertHtml.",
-      "noLinksAllowed": "The original alert has no links. Do not add hyperlinks. Return rewrittenAlertHtml without any <a> tags.",
-      "mustKeepLink": "The original alert has a link. Keep at least one real hyperlink in rewrittenAlertHtml unless there is a too-many-links issue.",
-      "mustHaveHeading": "Alerts must include a semantic heading element in rewrittenAlertHtml. Add a short, descriptive heading using <h2 class=\"h3\"> or <h3> to <h6> as needed, and place it before the body text.",
-      "avoidExampleCopy": "Your previous output matched example wording. Rewrite using alert-specific wording and facts only.",
-      "fullSentenceLinksNeedLeadIn": "If a link stands alone as its own sentence or paragraph, or if a sentence mainly directs the user to a link, place that link direction in its own paragraph. Prefer putting a standalone link sentence or paragraph last in the alert content, but do not treat placement as a hard requirement. Use one of these lead-ins before the anchor: \"Refer to:\" or \"Learn more:\". Prefer \"Refer to:\" for required task or service links. Prefer \"Learn more:\" for optional background, status, or update links. Use \"Learn about\" without a colon when the linked text naturally completes the phrase, especially for explainer or topic pages. If the phrase needs an article, place it before the anchor, for example \"Learn about the <a>Canada Groceries and Essentials Benefit</a>\"."
-    }
-  },
   "rewriteRules": [
     "Edit only the alert content needed to resolve the provided issues.",
     "Edit only inside each .alert container.",

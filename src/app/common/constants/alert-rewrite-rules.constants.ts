@@ -21,9 +21,31 @@ export interface AlertRewriteRulesJson {
 }
 
 const ALERT_REWRITE_RULES_PATH = new URL(
-  'skills/alerts/canada-alerts-rewriting/references/rewrite-instructions.json',
+  'ai-prompts/alerts-rewrite-rules.json',
   document.baseURI,
 ).toString();
+
+const ALERT_REWRITE_RULES_FALLBACK: AlertRewriteRulesJson = {
+  version: 'fallback-inline',
+  alertPlanning: {
+    systemPromptLines: [],
+  },
+  alertRewrite: {
+    styleRulesBase: [],
+    styleRulesWithExamples: [],
+    systemPromptWithExamplesLines: [],
+    systemPromptWithoutExamplesLines: [],
+    retryInstructions: {
+      invalidWrapperHtml: '',
+      placeholderLinks: '',
+      noLinksAllowed: '',
+      mustKeepLink: '',
+      mustHaveHeading: '',
+      avoidExampleCopy: '',
+      fullSentenceLinksNeedLeadIn: '',
+    },
+  },
+};
 
 let alertRewriteRulesCache: AlertRewriteRulesJson | null = null;
 
@@ -121,16 +143,24 @@ function toValidatedRules(raw: unknown): AlertRewriteRulesJson | null {
 export async function getAlertRewriteRules(): Promise<AlertRewriteRulesJson> {
   if (alertRewriteRulesCache) return alertRewriteRulesCache;
 
-  const response = await fetch(ALERT_REWRITE_RULES_PATH);
-  if (!response.ok) {
-    throw new Error(`Failed to load alert rewrite skill rules (${response.status}).`);
+  try {
+    const response = await fetch(ALERT_REWRITE_RULES_PATH);
+    if (!response.ok) {
+      throw new Error(`Failed to load alert rewrite rules (${response.status}).`);
+    }
+    const payload = (await response.json()) as unknown;
+    const validated = toValidatedRules(payload);
+    if (!validated) {
+      throw new Error('Invalid alert rewrite rules JSON schema.');
+    }
+    alertRewriteRulesCache = validated;
+  } catch (err) {
+    console.warn(
+      'Unable to load alert rewrite rules JSON; using inline fallback.',
+      err,
+    );
+    alertRewriteRulesCache = ALERT_REWRITE_RULES_FALLBACK;
   }
-  const payload = (await response.json()) as unknown;
-  const validated = toValidatedRules(payload);
-  if (!validated) {
-    throw new Error('Invalid alert rewrite skill rules JSON schema.');
-  }
-  alertRewriteRulesCache = validated;
 
   return alertRewriteRulesCache;
 }
