@@ -17,7 +17,7 @@ Step 2: For each alert, analyze for "simple" alert issues (rule-based checks)
  - Unclear impact: The alert must explain the consequence to the user, not just state a fact.
  - Outdated: Flag past dates or resolved events. Alerts are temporary.
  - Missing heading: Alerts must contain a heading element.
- - Wrong type: Ensure color matches severity (e.g., Blue=Info, Red=Danger).
+ - Wrong type: Ensure the alert type matches severity. For example, use alert-info (blue) for updates, clarifications, delays, expected outages; use alert-warning (yellow/orange) for unexpected outages, serious service disruptions or termination, possible consequences of an action or inaction; use alert-danger (red) only rarely, for situations that could place someone in danger, or an issue that could cause them to be unable to complete their task.
  - Hidden content: Do not use expand/collapse (accordions) in alerts; content must be visible.
  - Wrong component: Do not use alerts just to flag "New" items (use Labels instead).
  - Accessibility/code: Icons must have text alternatives; hierarchy must be correct.

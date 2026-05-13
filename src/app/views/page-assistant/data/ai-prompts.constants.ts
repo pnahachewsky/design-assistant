@@ -1,11 +1,12 @@
 import { PromptKey } from './data.model';
 
 const PROMPT_BASE_URL = new URL('ai-prompts/', document.baseURI);
-const promptFiles: Record<PromptKey, string> = {
+type StaticPromptKey = Exclude<PromptKey, PromptKey.AlertsIssues>;
+
+const promptFiles: Record<StaticPromptKey, string> = {
   [PromptKey.Headings]: new URL('headings.txt', PROMPT_BASE_URL).toString(),
   [PromptKey.Doormats]: new URL('doormats.txt', PROMPT_BASE_URL).toString(),
   [PromptKey.PlainLanguage]: new URL('plain-language.txt', PROMPT_BASE_URL).toString(),
-  [PromptKey.AlertsIssues]: new URL('alerts-issues.txt', PROMPT_BASE_URL).toString(),
   [PromptKey.AlertsRecommendations]: new URL('alerts-rewriting.txt', PROMPT_BASE_URL).toString(),
 };
 
@@ -24,7 +25,7 @@ async function loadPromptText(path: string): Promise<string> {
   return text;
 }
 
-export async function getPromptTemplate(key: PromptKey): Promise<string> {
+export async function getPromptTemplate(key: StaticPromptKey): Promise<string> {
   return loadPromptText(promptFiles[key]);
 }
 
