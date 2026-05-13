@@ -1,5 +1,5 @@
 ---
-name: gcweb-doormats
+name: topic-doormats
 description: >
   Generate GCWeb doormat navigation patterns for Canada.ca and CRA web pages.
   Use this skill whenever the user asks to create doormats, navigation tiles,

@@ -74,6 +74,25 @@
       "defaultReferencePaths": [
         "skills/link-writing/references/link-writing-rules.json"
       ]
+    },
+    {
+      "id": "topic-doormats",
+      "name": "topic-doormats",
+      "description": "Generates GCWeb doormat navigation patterns for Canada.ca and CRA pages, including linked tiles with short descriptions for topic, landing, and index pages.",
+      "skillMdPath": "skills/topic-doormats/SKILL.md",
+      "triggerPhrases": [
+        "doormat",
+        "doormats",
+        "doormat pattern",
+        "navigation tiles",
+        "link tiles",
+        "topic page links",
+        "landing page links",
+        "subway index"
+      ],
+      "outputModes": [
+        "html"
+      ]
     }
   ]
 }
