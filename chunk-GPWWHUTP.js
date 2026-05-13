@@ -138,7 +138,7 @@ import {
   unblockBodyScroll,
   uuid,
   zindexutils
-} from "./chunk-RZRC4JIU.js";
+} from "./chunk-74UPLLTV.js";
 import {
   ChangeDetectionStrategy,
   ChangeDetectorRef,
@@ -22049,18 +22049,50 @@ var AlertAiService = class _AlertAiService {
   }], null, null);
 })();
 
-// src/app/views/page-assistant/services/alert-issues-context.service.ts
-var AlertIssuesContextService = class _AlertIssuesContextService {
+// src/app/views/page-assistant/services/alert-context.service.ts
+var AlertContextService = class _AlertContextService {
   translate = inject(TranslateService);
   // Builds the compact alert-analysis payload used when we want the model to
   // reason over structured page signals instead of parsing the full page HTML.
   buildCompactAlertsIssuesPayload(sourceHtml) {
     const parser = new DOMParser();
     const doc = parser.parseFromString(sourceHtml, "text/html");
-    const alerts = getReportableAlerts(doc, {
+    const context = this.buildCompactPageContext(doc);
+    const alertPlacementContext = context.alerts.map((alertEl, index) => this.buildCompactAlertPlacementContext(alertEl, index + 1, context));
+    const alertSignals = context.alerts.map((alertEl, index) => this.buildCompactAlertSignals(alertEl, index + 1));
+    const alertsBeforeFirstH2Count = alertPlacementContext.filter((item) => item.is_before_first_h2).length;
+    const adjacentAlertCount = alertSignals.filter((item) => item.previous_sibling_is_alert || item.next_sibling_is_alert).length;
+    return {
+      alerts: context.alerts.map((alertEl) => alertEl.outerHTML),
+      alertCount: context.alerts.length,
+      pageContext: `Title: ${context.title || "N/A"}
+H1: ${context.h1 || "N/A"}
+Page type signal: ${context.pageTypeSignal}
+Main intro: ${context.introSnippet || "N/A"}
+H2 headings (${context.h2Headings.length}): ${context.h2Headings.join(" | ") || "N/A"}`,
+      pageSignals: {
+        title: context.title,
+        h1: context.h1,
+        pageTypeSignal: context.pageTypeSignal,
+        h2Headings: context.h2Headings,
+        alertCount: context.alerts.length,
+        hasMultipleAlerts: context.alerts.length > 1,
+        alertsBeforeFirstH2Count,
+        adjacentAlertCount
+      },
+      alertPlacementContext,
+      alertSignals
+    };
+  }
+  // Collects the shared page frame used by issue detection and rewrite prompts:
+  // reportable alerts, heading landmarks, title/H1 context, and a coarse
+  // page-type hint. Keeping this in one place prevents prompt paths from
+  // drifting in how they understand the same source document.
+  buildCompactPageContext(sourceDoc) {
+    const alerts = getReportableAlerts(sourceDoc, {
       interactiveResultLeadIns: this.getInteractiveResultLeadIns()
     });
-    const main = doc.querySelector("main") || doc.body;
+    const main = sourceDoc.querySelector("main") || sourceDoc.body;
     const h2Elements = Array.from(main.querySelectorAll("h2"));
     const h2Headings = h2Elements.map((h2) => this.truncateContextText(h2.textContent || "", 120)).filter((value) => !!value).slice(0, 20);
     const mainElements = Array.from(main.querySelectorAll("*"));
@@ -22070,77 +22102,75 @@ var AlertIssuesContextService = class _AlertIssuesContextService {
       idx: mainIndexMap.get(h2)
     })).filter((item) => Number.isFinite(item.idx));
     const firstH2Index = h2IndexPairs.length ? h2IndexPairs[0].idx : -1;
-    const title = this.truncateContextText(doc.querySelector("title")?.textContent || "", 120);
-    const h1 = this.truncateContextText(main.querySelector("h1")?.textContent || "", 120);
-    const introSnippet = this.truncateContextText(main.querySelector("p")?.textContent || "", 280);
+    const title = this.truncateContextText(sourceDoc.querySelector("title")?.textContent || "", 200);
+    const h1 = this.truncateContextText(main.querySelector("h1")?.textContent || "", 200);
+    const introSnippet = this.truncateContextText(main.querySelector("p")?.textContent || "", 350);
     const pageTypeSignal = this.inferPageTypeSignal(title, h1);
-    const alertPlacementContext = alerts.map((alertEl, index) => {
+    const alertsBeforeFirstH2Count = alerts.filter((alertEl) => {
       const mainIndex = mainIndexMap.get(alertEl);
-      const positionPercentInMain = typeof mainIndex === "number" && mainElements.length > 1 ? Math.round(mainIndex / (mainElements.length - 1) * 100) : null;
-      const beforeCandidates = h2IndexPairs.filter((item) => typeof mainIndex === "number" && item.idx < mainIndex);
-      const afterCandidates = h2IndexPairs.filter((item) => typeof mainIndex === "number" && item.idx > mainIndex);
-      const nearestH2Above = beforeCandidates.length ? beforeCandidates[beforeCandidates.length - 1].text : "";
-      const nearestH2Below = afterCandidates.length ? afterCandidates[0].text : "";
-      return {
-        alert_index: index + 1,
-        is_before_first_h2: typeof mainIndex === "number" && firstH2Index >= 0 ? mainIndex < firstH2Index : false,
-        position_percent_in_main: positionPercentInMain,
-        nearest_h2_above: nearestH2Above,
-        nearest_h2_below: nearestH2Below,
-        section_snippet_before: this.collectSiblingTextSnippet(alertEl, "before", 220),
-        section_snippet_after: this.collectSiblingTextSnippet(alertEl, "after", 220)
-      };
-    });
-    const alertSignals = alerts.map((alertEl, index) => {
-      const heading = this.getAlertHeadingMetadata(alertEl);
-      const links = this.getAlertLinks(alertEl);
-      const paragraphCount = this.getAlertParagraphCount(alertEl);
-      const visibleText = this.truncateContextText(alertEl.textContent || "", 400);
-      const previousSiblingIsAlert = alertEl.previousElementSibling?.classList.contains("alert") ?? false;
-      const nextSiblingIsAlert = alertEl.nextElementSibling?.classList.contains("alert") ?? false;
-      return {
-        alert_index: index + 1,
-        alert_type: this.getAlertTypeClass(alertEl),
-        heading_text: heading.text,
-        heading_level: heading.level,
-        heading_source: heading.source,
-        heading_tag: heading.tag,
-        has_heading: heading.source !== "none",
-        paragraph_count: paragraphCount,
-        has_multiple_paragraphs: paragraphCount > 1,
-        text_length_chars: visibleText.length,
-        link_count: links.length,
-        has_multiple_links: links.length > 1,
-        links,
-        has_hidden_content: this.hasHiddenAlertContent(alertEl),
-        previous_sibling_is_alert: previousSiblingIsAlert,
-        next_sibling_is_alert: nextSiblingIsAlert,
-        adjacent_alert_cluster_size: this.getAdjacentAlertClusterSize(alertEl)
-      };
-    });
-    const alertsBeforeFirstH2Count = alertPlacementContext.filter((item) => item.is_before_first_h2).length;
-    const adjacentAlertCount = alertSignals.filter((item) => item.previous_sibling_is_alert || item.next_sibling_is_alert).length;
+      return typeof mainIndex === "number" && firstH2Index >= 0 && mainIndex < firstH2Index;
+    }).length;
     return {
-      alerts: alerts.map((alertEl) => alertEl.outerHTML),
-      alertCount: alerts.length,
-      pageContext: `Title: ${title || "N/A"}
-H1: ${h1 || "N/A"}
-Page type signal: ${pageTypeSignal}
-Main intro: ${introSnippet || "N/A"}
-H2 headings (${h2Headings.length}): ${h2Headings.join(" | ") || "N/A"}`,
-      pageSignals: {
-        title,
-        h1,
-        pageTypeSignal,
-        h2Headings,
-        alertCount: alerts.length,
-        hasMultipleAlerts: alerts.length > 1,
-        alertsBeforeFirstH2Count,
-        adjacentAlertCount
-      },
-      alertPlacementContext,
-      // Compact mode precomputes structural alert checks so the issues skill can spend more reasoning on judgment than HTML parsing.
-      alertSignals
+      alerts,
+      main,
+      h2Elements,
+      h2Headings,
+      mainElements,
+      mainIndexMap,
+      h2IndexPairs,
+      firstH2Index,
+      title,
+      h1,
+      introSnippet,
+      pageTypeSignal,
+      alertsBeforeFirstH2Count
+    };
+  }
+  // Converts an alert's DOM position into section-aware context: before/after
+  // the first H2, nearest surrounding H2s, and nearby body text.
+  buildCompactAlertPlacementContext(alertElement, alertIndex, context) {
+    const mainIndex = context.mainIndexMap.get(alertElement);
+    const positionPercentInMain = typeof mainIndex === "number" && context.mainElements.length > 1 ? Math.round(mainIndex / (context.mainElements.length - 1) * 100) : null;
+    const beforeCandidates = context.h2IndexPairs.filter((item) => typeof mainIndex === "number" && item.idx < mainIndex);
+    const afterCandidates = context.h2IndexPairs.filter((item) => typeof mainIndex === "number" && item.idx > mainIndex);
+    const nearestH2Above = beforeCandidates.length ? beforeCandidates[beforeCandidates.length - 1].text : "";
+    const nearestH2Below = afterCandidates.length ? afterCandidates[0].text : "";
+    return {
+      alert_index: alertIndex,
+      is_before_first_h2: typeof mainIndex === "number" && context.firstH2Index >= 0 ? mainIndex < context.firstH2Index : false,
+      position_percent_in_main: positionPercentInMain,
+      nearest_h2_above: nearestH2Above,
+      nearest_h2_below: nearestH2Below,
+      section_snippet_before: this.collectSiblingTextSnippet(alertElement, "before", 220),
+      section_snippet_after: this.collectSiblingTextSnippet(alertElement, "after", 220)
+    };
+  }
+  // Builds the per-alert facts that commonly drive issue decisions.
+  buildCompactAlertSignals(alertElement, alertIndex) {
+    const heading = this.getAlertHeadingMetadata(alertElement);
+    const links = this.getAlertLinks(alertElement);
+    const paragraphCount = this.getAlertParagraphCount(alertElement);
+    const visibleText = this.truncateContextText(alertElement.textContent || "", 400);
+    const previousSiblingIsAlert = alertElement.previousElementSibling?.classList.contains("alert") ?? false;
+    const nextSiblingIsAlert = alertElement.nextElementSibling?.classList.contains("alert") ?? false;
+    return {
+      alert_index: alertIndex,
+      alert_type: this.getAlertTypeClass(alertElement),
+      heading_text: heading.text,
+      heading_level: heading.level,
+      heading_source: heading.source,
+      heading_tag: heading.tag,
+      has_heading: heading.source !== "none",
+      paragraph_count: paragraphCount,
+      has_multiple_paragraphs: paragraphCount > 1,
+      text_length_chars: visibleText.length,
+      link_count: links.length,
+      has_multiple_links: links.length > 1,
+      links,
+      has_hidden_content: this.hasHiddenAlertContent(alertElement),
+      previous_sibling_is_alert: previousSiblingIsAlert,
+      next_sibling_is_alert: nextSiblingIsAlert,
+      adjacent_alert_cluster_size: this.getAdjacentAlertClusterSize(alertElement)
     };
   }
   getInteractiveResultLeadIns() {
@@ -22251,6 +22281,47 @@ H2 headings (${h2Headings.length}): ${h2Headings.join(" | ") || "N/A"}`,
     }
     return "unknown";
   }
+  // Builds compact context for one alert rewrite. This path is useful when the
+  // caller already has a specific alert element rather than a full alert list.
+  buildCompactAlertRewritePayload(alertElement, sourceDoc, alertIndex) {
+    const context = this.buildCompactPageContext(sourceDoc);
+    return this.buildCompactAlertRewritePayloadFromContext(alertElement, alertIndex, context);
+  }
+  // Builds rewrite payloads for all reportable alerts while reusing the shared
+  // page context. The orchestrator uses this batch path to avoid rescanning the
+  // same document for every alert.
+  buildCompactAlertRewritePayloads(sourceDoc) {
+    const context = this.buildCompactPageContext(sourceDoc);
+    return context.alerts.map((alertElement, index) => this.buildCompactAlertRewritePayloadFromContext(alertElement, index + 1, context));
+  }
+  buildCompactAlertRewritePayloadFromContext(alertElement, alertIndex, context) {
+    const alertSignals = this.buildCompactAlertSignals(alertElement, alertIndex);
+    const adjacentAlertCount = alertSignals.previous_sibling_is_alert || alertSignals.next_sibling_is_alert ? Math.max(alertSignals.adjacent_alert_cluster_size - 1, 0) : 0;
+    return {
+      alertIndex,
+      alertType: this.getAlertTypeClass(alertElement),
+      originalHeading: alertSignals.heading_text,
+      originalAlertText: this.truncateContextText(alertElement.textContent || "", 400),
+      pageContext: `Title: ${context.title || "N/A"}
+H1: ${context.h1 || "N/A"}
+Page type signal: ${context.pageTypeSignal}
+Main intro: ${context.introSnippet || "N/A"}
+H2 headings (${context.h2Headings.length}): ${context.h2Headings.join(" | ") || "N/A"}`,
+      pageSignals: {
+        title: context.title,
+        h1: context.h1,
+        pageTypeSignal: context.pageTypeSignal,
+        h2Headings: context.h2Headings,
+        alertCount: context.alerts.length,
+        hasMultipleAlerts: context.alerts.length > 1,
+        alertsBeforeFirstH2Count: context.alertsBeforeFirstH2Count,
+        adjacentAlertCount,
+        adjacentAlertClusterSize: alertSignals.adjacent_alert_cluster_size
+      },
+      alertPlacementContext: this.buildCompactAlertPlacementContext(alertElement, alertIndex, context),
+      alertSignals
+    };
+  }
   // Extracts links in a compact form so prompts can reason over link count and intent.
   getAlertLinks(alertElement) {
     return Array.from(alertElement.querySelectorAll("a[href]")).map((anchor) => ({
@@ -22269,7 +22340,7 @@ H2 headings (${h2Headings.length}): ${h2Headings.join(" | ") || "N/A"}`,
       return !!text && !this.getHeadingUtilityLevel(paragraph);
     }).length;
   }
-  // Adjacent alerts are a strong overload signal, so we calculate the whole cluster size.
+  // Counts the contiguous alert run that contains this alert, including itself.
   getAdjacentAlertClusterSize(alertElement) {
     let clusterSize = 1;
     let previous = alertElement.previousElementSibling;
@@ -22284,13 +22355,13 @@ H2 headings (${h2Headings.length}): ${h2Headings.join(" | ") || "N/A"}`,
     }
     return clusterSize;
   }
-  static \u0275fac = function AlertIssuesContextService_Factory(__ngFactoryType__) {
-    return new (__ngFactoryType__ || _AlertIssuesContextService)();
+  static \u0275fac = function AlertContextService_Factory(__ngFactoryType__) {
+    return new (__ngFactoryType__ || _AlertContextService)();
   };
-  static \u0275prov = /* @__PURE__ */ \u0275\u0275defineInjectable({ token: _AlertIssuesContextService, factory: _AlertIssuesContextService.\u0275fac, providedIn: "root" });
+  static \u0275prov = /* @__PURE__ */ \u0275\u0275defineInjectable({ token: _AlertContextService, factory: _AlertContextService.\u0275fac, providedIn: "root" });
 };
 (() => {
-  (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(AlertIssuesContextService, [{
+  (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(AlertContextService, [{
     type: Injectable,
     args: [{ providedIn: "root" }]
   }], null, null);
@@ -22511,6 +22582,7 @@ var AlertRewriteService = class _AlertRewriteService {
   buildHeuristicPlan(input) {
     const criteriaMatched = this.inferCriteriaFromIssues(input.issues);
     const domainTags = this.inferDomainTags(input.alertText, input.issues);
+    const purposeTags = this.inferPurposeTags(input.alertHtml, input.alertText, input.issues, criteriaMatched);
     const directives = [];
     if (criteriaMatched.includes("C1_missing_next_step")) {
       directives.push({ op: "add_next_step" });
@@ -22523,6 +22595,7 @@ var AlertRewriteService = class _AlertRewriteService {
     return {
       alertType: input.alertType || "info",
       domainTags,
+      purposeTags,
       criteriaMatched,
       directives: this.uniqueDirectives(directives)
     };
@@ -22568,26 +22641,29 @@ var AlertRewriteService = class _AlertRewriteService {
     const root = parsed;
     const alertType = this.cleanString(root["alertType"]) || fallback.alertType;
     const domainTags = this.toStringArray(root["domainTags"]);
+    const purposeTags = this.toStringArray(root["purposeTags"]);
     const criteriaMatched = this.toStringArray(root["criteriaMatched"]);
     const rawDirectives = Array.isArray(root["directives"]) ? root["directives"] : [];
     const directives = rawDirectives.map((raw) => this.toDirective(raw)).filter((directive) => !!directive);
     return {
       alertType,
       domainTags: domainTags.length ? domainTags : fallback.domainTags,
+      purposeTags: purposeTags.length ? purposeTags : fallback.purposeTags,
       criteriaMatched: criteriaMatched.length ? criteriaMatched : fallback.criteriaMatched,
       directives: directives.length ? this.uniqueDirectives(directives) : fallback.directives
     };
   }
-  selectExamples(plan, examples, count = 2) {
+  selectExamples(plan, examples, count = 2, context) {
     const requestedCount = Math.max(1, count);
     const criteria = new Set(plan.criteriaMatched || []);
     const tags = new Set(plan.domainTags || []);
+    const purposeTags = new Set(plan.purposeTags || []);
+    const sourceText = this.normalizeComparisonText(`${context?.originalHeading || ""} ${context?.originalAlertText || ""}`);
     const scored = examples.map((example) => {
       let score = 0;
-      if (example.alertType === plan.alertType) {
-        score += 3;
-      } else {
-        score -= 2;
+      for (const purposeTag of example.purposeTags || []) {
+        if (purposeTags.has(purposeTag))
+          score += 3;
       }
       for (const criterion of example.criteria || []) {
         if (criteria.has(criterion))
@@ -22595,8 +22671,9 @@ var AlertRewriteService = class _AlertRewriteService {
       }
       for (const tag of example.tags || []) {
         if (tags.has(tag))
-          score += 1;
+          score += 0.25;
       }
+      score += this.calculateExampleTextRelevance(sourceText, example);
       return { example, score };
     });
     scored.sort((a, b) => b.score - a.score);
@@ -22652,11 +22729,12 @@ var AlertRewriteService = class _AlertRewriteService {
       const planPayload = params.mode === AlertRewriteMode.AB ? params.plan : {
         alertType: params.plan.alertType,
         domainTags: params.plan.domainTags,
+        purposeTags: params.plan.purposeTags,
         criteriaMatched: params.plan.criteriaMatched,
         directives: []
       };
       const systemPrompt = (params.examples.length ? rules.alertRewrite.systemPromptWithExamplesLines : rules.alertRewrite.systemPromptWithoutExamplesLines).join("\n");
-      const userPayload = {
+      const userPayload = __spreadValues({
         mode: params.mode,
         styleRules,
         examples: params.examples.map((example) => __spreadProps(__spreadValues({
@@ -22668,8 +22746,10 @@ var AlertRewriteService = class _AlertRewriteService {
         } : {}), {
           headingAfter: example.headingAfter || "",
           after: example.after,
+          updatedHtml: example.updatedHtml || "",
           criteria: example.criteria,
           tags: example.tags,
+          purposeTags: example.purposeTags || [],
           linksAfter: example.linksAfter || [],
           linkEdits: example.linkEdits || []
         })),
@@ -22678,7 +22758,7 @@ var AlertRewriteService = class _AlertRewriteService {
         originalHeading: (params.originalHeading || "").trim(),
         originalAlertText: (params.originalAlertText || "").trim(),
         originalAlertHtml: (params.originalAlertHtml || "").trim()
-      };
+      }, params.compactAlertPayload ? { compactAlertPayload: params.compactAlertPayload } : {});
       return [
         { role: "system", content: systemPrompt },
         { role: "user", content: JSON.stringify(userPayload) }
@@ -22829,7 +22909,10 @@ var AlertRewriteService = class _AlertRewriteService {
       const exampleCombined = this.normalizeComparisonText(`${example.headingAfter || ""} ${example.after || ""}`);
       if (!exampleCombined)
         continue;
-      if (rewrittenCombined === exampleCombined && rewrittenCombined !== originalCombined) {
+      const exampleBeforeCombined = this.normalizeComparisonText(`${example.headingBefore || ""} ${example.before || ""}`);
+      const originalSimilarity = this.calculateJaccardSimilarity(originalCombined, exampleCombined);
+      const sourceSimilarityToExampleBefore = this.calculateJaccardSimilarity(originalCombined, exampleBeforeCombined);
+      if (rewrittenCombined === exampleCombined && rewrittenCombined !== originalCombined && originalSimilarity < 0.8 && sourceSimilarityToExampleBefore < 0.8) {
         return {
           isCopy: true,
           exampleId: example.id,
@@ -22840,8 +22923,7 @@ var AlertRewriteService = class _AlertRewriteService {
       if (rewrittenTokenCount < 8)
         continue;
       const similarity = this.calculateJaccardSimilarity(rewrittenCombined, exampleCombined);
-      const originalSimilarity = this.calculateJaccardSimilarity(originalCombined, exampleCombined);
-      if (similarity >= 0.92 && originalSimilarity < 0.8) {
+      if (similarity >= 0.92 && originalSimilarity < 0.8 && sourceSimilarityToExampleBefore < 0.8) {
         return {
           isCopy: true,
           exampleId: example.id,
@@ -22856,11 +22938,8 @@ var AlertRewriteService = class _AlertRewriteService {
     const normalizedAlertHtml = this.normalizeAlertWrapperHtml(params.alertHtml) || params.alertHtml.trim();
     const extractedHeading = this.extractHeadingFromAlertHtml(normalizedAlertHtml);
     const rewrittenHeading = (params.originalHeading || "").trim() || extractedHeading;
-    const shouldShowFailureNotice = params.failureReasons !== void 0;
-    const failureReasons = (params.failureReasons || []).filter((reason) => !!reason);
-    const rewrittenAlertHtml = shouldShowFailureNotice ? `${this.buildPassthroughFailureNoticeHtml(failureReasons)}${normalizedAlertHtml}` : normalizedAlertHtml;
     return {
-      rewrittenAlertHtml,
+      rewrittenAlertHtml: normalizedAlertHtml,
       rewrittenHeading: rewrittenHeading || this.buildFallbackHeading(),
       rewrittenAlert: (params.originalAlertText || "").trim(),
       appliedDirectives: [],
@@ -22919,6 +22998,97 @@ var AlertRewriteService = class _AlertRewriteService {
     maybeAdd("vague", /\bvague|unclear\b/);
     return Array.from(tags).slice(0, 6);
   }
+  inferPurposeTags(alertHtml, alertText, issues, criteriaMatched) {
+    const tags = /* @__PURE__ */ new Set();
+    const lower = (alertText || "").toLowerCase();
+    const issueText = issues.map((issue) => `${issue.category || ""} ${issue.description || ""} ${issue.recommendation || ""}`).join(" ").toLowerCase();
+    const combined = `${lower} ${issueText}`;
+    const criteria = new Set(criteriaMatched || []);
+    const linkCount = (alertHtml.match(/<a\b/gi) || []).length;
+    const maybeAdd = (tag, pattern) => {
+      if (pattern.test(combined)) {
+        tags.add(tag);
+      }
+    };
+    if (criteria.has("C4_missing_heading"))
+      tags.add("missing-heading");
+    if (criteria.has("C1_missing_next_step"))
+      tags.add("action-required");
+    if (criteria.has("C2_too_wordy"))
+      tags.add("shorten-alert");
+    if (criteria.has("C3_too_many_links"))
+      tags.add("remove-secondary-link");
+    if (linkCount === 1)
+      tags.add("standalone-action-link");
+    if (linkCount > 1) {
+      tags.add("multiple-detail-links");
+      tags.add("duplicate-link-cleanup");
+    }
+    maybeAdd("service-delay", /\bdelay|processing time|service standard\b/);
+    maybeAdd("service-change", /\bno longer|ending|must register|effective\b/);
+    maybeAdd("service-update", /\bresumed|paused|interruption|operations\b/);
+    maybeAdd("status-change", /\bresumed|paused|tentative agreement|strike|lockout\b/);
+    maybeAdd("fraud-warning", /\bfalse information|disinformation|fraud|scam\b/);
+    maybeAdd("correction", /\bdoes not exist|false information|correction\b/);
+    maybeAdd("legislative-update", /\bproposed legislation|legislative|budget|tabled legislation\b/);
+    maybeAdd("policy-caveat", /\bmay change|subject to parliamentary approval|proposal\b/);
+    maybeAdd("date-sensitive", /\bas of|effective|starting|january|february|march|april|may|june|july|august|september|october|november|december\b/);
+    maybeAdd("account-service", /\bcra account|my business account|access code|sign in\b/);
+    maybeAdd("online-service", /\bonline|electronically|sign in|register\b/);
+    maybeAdd("support-info", /\bsupport|relief|help|affected\b/);
+    maybeAdd("technical-notice", /\bnotice [a-z]{2,}|technical information|excise\b/i);
+    maybeAdd("benefit-change", /\bbenefit|credit|payment|top-up\b/);
+    maybeAdd("new-program", /\bnew |replace|will replace\b/);
+    maybeAdd("official-source-warning", /\bofficial government|official source|official web\b/);
+    return Array.from(tags).slice(0, 8);
+  }
+  calculateExampleTextRelevance(sourceText, example) {
+    if (!sourceText)
+      return 0;
+    const exampleText = this.normalizeComparisonText(`${example.headingBefore || ""} ${example.before || ""}`);
+    if (!exampleText || exampleText.includes("original text unavailable")) {
+      return 0;
+    }
+    const sourceTokens = new Set(this.tokenizeComparisonText(sourceText));
+    const exampleTokens = new Set(this.tokenizeComparisonText(exampleText));
+    if (sourceTokens.size < 4 || exampleTokens.size < 4)
+      return 0;
+    const stopWords = /* @__PURE__ */ new Set([
+      "a",
+      "an",
+      "and",
+      "are",
+      "as",
+      "at",
+      "be",
+      "by",
+      "can",
+      "for",
+      "from",
+      "has",
+      "have",
+      "in",
+      "is",
+      "it",
+      "its",
+      "of",
+      "on",
+      "or",
+      "our",
+      "the",
+      "their",
+      "this",
+      "to",
+      "we",
+      "will",
+      "with",
+      "you",
+      "your"
+    ]);
+    const distinctiveMatches = Array.from(sourceTokens).filter((token) => token.length >= 4 && !stopWords.has(token) && exampleTokens.has(token)).length;
+    const containment = this.calculateJaccardSimilarity(sourceText, exampleText) + this.calculateJaccardSimilarity(exampleText, sourceText);
+    return Math.min(2.5, distinctiveMatches * 0.35 + containment);
+  }
   toExample(raw) {
     if (!raw || typeof raw !== "object")
       return null;
@@ -22933,11 +23103,13 @@ var AlertRewriteService = class _AlertRewriteService {
       id,
       alertType,
       tags: this.toStringArray(root["tags"]),
+      purposeTags: this.toStringArray(root["purposeTags"]),
       criteria: this.toStringArray(root["criteria"]),
       before,
       after,
       headingBefore: this.cleanString(root["headingBefore"]) || void 0,
       headingAfter: this.cleanString(root["headingAfter"]) || void 0,
+      updatedHtml: this.cleanString(root["updatedHtml"]) || void 0,
       linksBefore: this.toExampleLinkArray(root["linksBefore"]),
       linksAfter: this.toExampleLinkArray(root["linksAfter"]),
       linkEdits: this.toExampleLinkEditArray(root["linkEdits"]),
@@ -23241,19 +23413,6 @@ var AlertRewriteService = class _AlertRewriteService {
       return "";
     }
   }
-  buildPassthroughFailureNoticeHtml(failureReasons) {
-    const reasonsText = failureReasons.join(", ");
-    return [
-      '<div class="alert alert-danger mrgn-bttm-md" data-alert-rewrite-status="failed"',
-      ` data-alert-rewrite-failure-reasons="${this.escapeHtmlAttribute(reasonsText)}">`,
-      "<h3>GenAI alert rewrite failed</h3>",
-      "<p>The assistant could not rewrite this alert after multiple attempts. The original alert is shown below.</p>",
-      "</div>"
-    ].join("");
-  }
-  escapeHtmlAttribute(value) {
-    return (value || "").replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-  }
   toExampleLinkArray(raw) {
     if (!Array.isArray(raw))
       return [];
@@ -23419,6 +23578,9 @@ var AlertRewriteGuardService = class _AlertRewriteGuardService {
           if (hasDirectionalLeadIn) {
             return true;
           }
+          if (linkSentenceOnly && this.hasStandaloneActionVerbLinkText(sentence, markerPrefix, markerSuffix)) {
+            return false;
+          }
           return linkSentenceOnly;
         });
       });
@@ -23463,6 +23625,8 @@ var AlertRewriteGuardService = class _AlertRewriteGuardService {
     if (!this.hasSemanticHeading(repairedHtml)) {
       repairedHtml = this.ensureSemanticHeading(repairedHtml, candidate.rewrittenHeading || params.originalHeading || "");
     }
+    repairedHtml = this.stripRedundantLeadInsBeforeActionLinks(repairedHtml);
+    repairedHtml = this.stripStandaloneLinkTerminalPunctuation(repairedHtml);
     const repaired = this.alertRewrite.parseAlertRewriteResponse(JSON.stringify({
       rewrittenAlertHtml: repairedHtml,
       rewrittenHeading: candidate.rewrittenHeading,
@@ -23530,6 +23694,12 @@ var AlertRewriteGuardService = class _AlertRewriteGuardService {
     }
     return doc.body.outerHTML;
   }
+  removeRedundantLeadInsBeforeActionLinks(alertHtml) {
+    return this.stripRedundantLeadInsBeforeActionLinks(alertHtml);
+  }
+  removeStandaloneLinkTerminalPunctuation(alertHtml) {
+    return this.stripStandaloneLinkTerminalPunctuation(alertHtml);
+  }
   // The remaining helpers support the guard logic above and stay private so the
   // orchestration layer only depends on the high-level validation/repair API.
   normalizeLeadInText(value) {
@@ -23579,6 +23749,98 @@ var AlertRewriteGuardService = class _AlertRewriteGuardService {
     if (!normalized)
       return false;
     return /\blearn more\b/.test(normalized);
+  }
+  hasStandaloneActionVerbLinkText(sentence, markerPrefix, markerSuffix) {
+    const escapedPrefix = markerPrefix.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const escapedSuffix = markerSuffix.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const linkTextPattern = new RegExp(`${escapedPrefix}([^\\]]+)${escapedSuffix}`, "g");
+    const linkTexts = Array.from(sentence.matchAll(linkTextPattern)).map((match) => this.normalizeLeadInText(match[1] || "")).filter((text) => !!text);
+    return linkTexts.length > 0 && linkTexts.every((text) => this.containsActionVerbLinkText(text));
+  }
+  containsActionVerbLinkText(linkText) {
+    const normalized = this.normalizeLeadInText(linkText);
+    if (!normalized || /^learn more\b/.test(normalized))
+      return false;
+    return /^(?:how to\s+)?(?:view|get|apply|register|sign in|log in|file|review|check|submit|download|pay|request|update|manage|start|use|learn|find out)\b/.test(normalized);
+  }
+  stripRedundantLeadInsBeforeActionLinks(alertHtml) {
+    try {
+      const doc = new DOMParser().parseFromString(alertHtml || "", "text/html");
+      const root = doc.body.firstElementChild;
+      if (!root)
+        return alertHtml;
+      Array.from(root.querySelectorAll("p")).forEach((paragraph) => {
+        const anchors = Array.from(paragraph.querySelectorAll("a"));
+        if (anchors.length !== 1)
+          return;
+        const anchor = anchors[0];
+        const anchorText = (anchor.textContent || "").trim();
+        if (!this.containsActionVerbLinkText(anchorText))
+          return;
+        const beforeRange = doc.createRange();
+        beforeRange.setStart(paragraph, 0);
+        beforeRange.setEndBefore(anchor);
+        const beforeText = this.normalizeLeadInText(beforeRange.toString());
+        beforeRange.detach();
+        if (beforeText !== "refer to:" && beforeText !== "learn more:")
+          return;
+        const afterRange = doc.createRange();
+        afterRange.setStartAfter(anchor);
+        afterRange.setEnd(paragraph, paragraph.childNodes.length);
+        const afterText = afterRange.toString();
+        afterRange.detach();
+        if (afterText.replace(/[.!?\s]/g, ""))
+          return;
+        while (paragraph.firstChild && paragraph.firstChild !== anchor) {
+          paragraph.removeChild(paragraph.firstChild);
+        }
+        this.removeTextAfterNode(anchor);
+      });
+      return root.outerHTML;
+    } catch {
+      return alertHtml;
+    }
+  }
+  stripStandaloneLinkTerminalPunctuation(alertHtml) {
+    try {
+      const doc = new DOMParser().parseFromString(alertHtml || "", "text/html");
+      const root = doc.body.firstElementChild;
+      if (!root)
+        return alertHtml;
+      Array.from(root.querySelectorAll("p")).forEach((paragraph) => {
+        const anchors = Array.from(paragraph.querySelectorAll("a"));
+        if (anchors.length !== 1)
+          return;
+        const anchor = anchors[0];
+        const beforeRange = doc.createRange();
+        beforeRange.setStart(paragraph, 0);
+        beforeRange.setEndBefore(anchor);
+        const beforeText = this.normalizeLeadInText(beforeRange.toString());
+        beforeRange.detach();
+        const isStandaloneLink = !beforeText || this.isValidStandaloneLinkLeadIn(beforeText) || this.containsActionVerbLinkText(anchor.textContent || "");
+        if (!isStandaloneLink)
+          return;
+        const afterRange = doc.createRange();
+        afterRange.setStartAfter(anchor);
+        afterRange.setEnd(paragraph, paragraph.childNodes.length);
+        const afterText = afterRange.toString();
+        afterRange.detach();
+        if (!/^[\s.!?]+$/.test(afterText))
+          return;
+        this.removeTextAfterNode(anchor);
+      });
+      return root.outerHTML.trim();
+    } catch {
+      return alertHtml;
+    }
+  }
+  removeTextAfterNode(node) {
+    const parent = node.parentNode;
+    if (!parent)
+      return;
+    while (node.nextSibling) {
+      parent.removeChild(node.nextSibling);
+    }
   }
   stripLinkPlaceholders(value) {
     return (value || "").replace(/\[(?:\/?\s*LINK|END\s+LINK)\]/gi, "").trim();
@@ -23661,6 +23923,7 @@ var AlertRewriteGuardService = class _AlertRewriteGuardService {
 var AlertRewriteOrchestratorService = class _AlertRewriteOrchestratorService {
   alertRewrite = inject(AlertRewriteService);
   alertRewriteGuard = inject(AlertRewriteGuardService);
+  alertContext = inject(AlertContextService);
   urlDataService = inject(UrlDataService);
   translate = inject(TranslateService);
   formatReasonsForLog(reasons) {
@@ -23682,17 +23945,26 @@ var AlertRewriteOrchestratorService = class _AlertRewriteOrchestratorService {
       }
       const examples = params.includeExamples ? yield this.alertRewrite.loadExamples() : [];
       const rewrites = [];
+      const fallbackNotices = [];
+      const compactAlertPayloads = params.useCompactAlertsPageContext ? this.alertContext.buildCompactAlertRewritePayloads(alertDoc) : [];
       for (let i = 0; i < alertEls.length; i += 1) {
         const alertElement = alertEls[i];
         if (!alertElement)
           continue;
         const alertIndex = i + 1;
         const relevantIssues = this.alertRewriteGuard.getIssuesForAlertIndex(params.issues, alertIndex);
+        if (!params.includeExamples && !relevantIssues.length) {
+          console.info("Alert rewrite skipped for alert without selected issues", {
+            alertIndex
+          });
+          continue;
+        }
         const alertHtml = alertElement.outerHTML;
         const originalHeading = this.alertRewriteGuard.getAlertHeadingForRewrite(alertElement);
         const alertText = this.alertRewriteGuard.getAlertTextForRewrite(alertElement);
         if (!alertText)
           continue;
+        const compactAlertPayload = params.useCompactAlertsPageContext ? compactAlertPayloads[i] : void 0;
         const initialPlan = this.alertRewrite.buildHeuristicPlan({
           alertHtml,
           alertText,
@@ -23715,7 +23987,10 @@ var AlertRewriteOrchestratorService = class _AlertRewriteOrchestratorService {
           }
           planModelName = params.getShortModelName(alertPlanningResponse.usedModel);
         }
-        const selectedExamples = params.includeExamples ? this.alertRewrite.selectExamples(plan, examples, 2) : [];
+        const selectedExamples = params.includeExamples ? this.alertRewrite.selectExamples(plan, examples, 2, {
+          originalHeading,
+          originalAlertText: alertText
+        }) : [];
         let rewriteResult = null;
         let rewriteModelName = "unknown";
         let copyGuardTriggered = false;
@@ -23733,6 +24008,7 @@ var AlertRewriteOrchestratorService = class _AlertRewriteOrchestratorService {
             originalHeading,
             originalAlertText: alertText,
             originalAlertHtml: alertHtml,
+            compactAlertPayload,
             plan,
             issues: relevantIssues,
             examples: selectedExamples,
@@ -23871,11 +24147,16 @@ var AlertRewriteOrchestratorService = class _AlertRewriteOrchestratorService {
           rewriteResult = this.alertRewrite.buildPassthroughResult({
             alertHtml,
             originalHeading,
-            originalAlertText: alertText,
-            failureReasons: lastRetryReasons
+            originalAlertText: alertText
+          });
+          fallbackNotices.push({
+            alertIndex,
+            reasons: [...lastRetryReasons]
           });
         }
         rewriteResult.rewrittenAlertHtml = this.alertRewriteGuard.ensureSemanticHeading(rewriteResult.rewrittenAlertHtml, rewriteResult.rewrittenHeading);
+        rewriteResult.rewrittenAlertHtml = this.alertRewriteGuard.removeRedundantLeadInsBeforeActionLinks(rewriteResult.rewrittenAlertHtml);
+        rewriteResult.rewrittenAlertHtml = this.alertRewriteGuard.removeStandaloneLinkTerminalPunctuation(rewriteResult.rewrittenAlertHtml);
         rewrites.push({
           alert_index: alertIndex,
           rewritten_alert_html: rewriteResult.rewrittenAlertHtml
@@ -23916,7 +24197,11 @@ var AlertRewriteOrchestratorService = class _AlertRewriteOrchestratorService {
       }
       const finalHtml = this.alertRewriteGuard.applyAlertHtmlRewrites(params.html, rewrites);
       if (!finalHtml) {
-        throw new Error("No alert rewrites were generated.");
+        console.info("Alert rewrite skipped because no alerts had selected issues.");
+        return {
+          formattedHtml: yield this.urlDataService.formatHtml(params.html, "ai"),
+          fallbackNotices
+        };
       }
       console.log("Alert rewrite model + time", {
         requestedModel: params.model,
@@ -23925,7 +24210,7 @@ var AlertRewriteOrchestratorService = class _AlertRewriteOrchestratorService {
         ms: Math.round(performance.now() - start)
       });
       const formattedHtml = yield this.urlDataService.formatHtml(finalHtml, "ai");
-      return { formattedHtml };
+      return { formattedHtml, fallbackNotices };
     });
   }
   getInteractiveResultLeadIns() {
@@ -23949,7 +24234,6 @@ var promptFiles = {
   [PromptKey.Headings]: new URL("headings.txt", PROMPT_BASE_URL).toString(),
   [PromptKey.Doormats]: new URL("doormats.txt", PROMPT_BASE_URL).toString(),
   [PromptKey.PlainLanguage]: new URL("plain-language.txt", PROMPT_BASE_URL).toString(),
-  [PromptKey.AlertsIssues]: new URL("alerts-issues.txt", PROMPT_BASE_URL).toString(),
   [PromptKey.AlertsRecommendations]: new URL("alerts-rewriting.txt", PROMPT_BASE_URL).toString()
 };
 var commsObjectivePath = new URL("comms-objective.txt", PROMPT_BASE_URL).toString();
@@ -27208,18 +27492,18 @@ var AiOptionsComponent = class _AiOptionsComponent {
                         Advanced AI planning before rewrite\r
                       </label>\r
                     </div>\r
-                    <div class="p-field-checkbox mt-2">
-                      <p-checkbox
-                        [(ngModel)]="useCompactAlertsPageContext"
+                    <div class="p-field-checkbox mt-2">\r
+                      <p-checkbox\r
+                        [(ngModel)]="useCompactAlertsPageContext"\r
                         [binary]="true"\r
                         inputId="useCompactAlertsPageContext"\r
                         (onChange)="onUseCompactAlertsPageContextSelect(useCompactAlertsPageContext)"\r
                       />\r
                       <label for="useCompactAlertsPageContext" class="pl-2">\r
-                        Send compact page context to AI for alerts
-                      </label>
-                    </div>
-                  </div>
+                        Send compact page context to AI for alerts\r
+                      </label>\r
+                    </div>\r
+                  </div>\r
                 }\r
               </div>\r
             </fieldset>\r
@@ -41384,7 +41668,7 @@ var PageAssistantCompareComponent = class _PageAssistantCompareComponent {
   sourceDiffService = inject(SourceDiffService);
   shadowDomService = inject(ShadowDomService);
   alertAi = inject(AlertAiService);
-  alertIssuesContext = inject(AlertIssuesContextService);
+  alertContext = inject(AlertContextService);
   alertRewriteOrchestrator = inject(AlertRewriteOrchestratorService);
   openRouter = inject(OpenRouterService);
   skillManager = inject(SkillManagerService);
@@ -41780,7 +42064,8 @@ ${custom}` : promptBody;
     return __async(this, null, function* () {
       const candidates = this.buildModelRotation(model);
       let lastError;
-      for (const candidate of candidates) {
+      for (let i = 0; i < candidates.length; i += 1) {
+        const candidate = candidates[i];
         const response = yield fetch(url, {
           method: "POST",
           headers,
@@ -41807,6 +42092,9 @@ ${custom}` : promptBody;
         if (errorObj && typeof errorObj === "object") {
           const errorMessage = errorObj["message"];
           lastError = new Error(`${contextLabel} error (${this.getShortModelName(candidate)}): ${typeof errorMessage === "string" ? errorMessage : "Unknown error"}`);
+          if (this.isRetryableAiProviderError(errorObj) && i < candidates.length - 1) {
+            this.logRetryableAiProviderError(`${contextLabel} provider error; retrying next model in rotation.`, candidate, errorObj);
+          }
           continue;
         }
         const choices = Array.isArray(rawJson["choices"]) ? rawJson["choices"] : [];
@@ -41854,6 +42142,32 @@ ${custom}` : promptBody;
     return __async(this, null, function* () {
       const includeExamples = this.uploadState.getIncludeAlertRewriteExamples();
       const includeBeforeTextInExamples = includeExamples && this.uploadState.getIncludeBeforeTextInAlertRewriteExamples();
+      if (!params.issues.length && !includeExamples) {
+        this.statusSeverity = "info";
+        this.statusMessage = "No selected alert issues found, so no alert rewrites were generated.";
+        this.messageService.add({
+          severity: "info",
+          summary: this.translate.instant("common.ai.alertIssuesNotIdentified"),
+          detail: "Alert rewriting was skipped because there were no selected issues to fix.",
+          life: 5e3
+        });
+        return false;
+      }
+      const alertDoc = new DOMParser().parseFromString(params.html, "text/html");
+      const reportableAlerts = getReportableAlerts(alertDoc, {
+        interactiveResultLeadIns: this.getInteractiveResultLeadIns()
+      });
+      if (!reportableAlerts.length) {
+        this.statusSeverity = "info";
+        this.statusMessage = "No reportable alerts found on this page.";
+        this.messageService.add({
+          severity: "info",
+          summary: "No reportable alerts found",
+          detail: "The alert rewrite flow was skipped because this page does not contain any reportable alerts.",
+          life: 5e3
+        });
+        return false;
+      }
       this.statusMessage = this.buildAlertRewriteStatusMessage();
       const recommendationResult = yield this.alertRewriteOrchestrator.generateRecommendations({
         html: params.html,
@@ -41865,6 +42179,7 @@ ${custom}` : promptBody;
         includeExamples,
         includeBeforeTextInExamples,
         includeLinkWritingRules: this.uploadState.getIncludeLinkWritingRules(),
+        useCompactAlertsPageContext: this.uploadState.getUseCompactAlertsPageContext(),
         forceLocalRepairForTesting: this.shouldForceLocalRepairForTesting(),
         callOpenRouterForMessages: this.callOpenRouterForMessages.bind(this),
         getShortModelName: this.getShortModelName.bind(this)
@@ -41873,6 +42188,16 @@ ${custom}` : promptBody;
         modifiedUrl: "AI generated",
         modifiedHtml: recommendationResult.formattedHtml
       });
+      if (recommendationResult.fallbackNotices.length) {
+        const failedAlertIndexes = recommendationResult.fallbackNotices.map((notice) => notice.alertIndex).join(", ");
+        this.messageService.add({
+          severity: "warn",
+          summary: "Some alerts were not rewritten",
+          detail: `The original alert content was kept for alert ${failedAlertIndexes}.`,
+          life: 8e3
+        });
+      }
+      return true;
     });
   }
   //AI Model
@@ -41959,7 +42284,7 @@ ${custom}` : promptBody;
         const sanitizedAlertsIssuesHtml = promptKeyForRequest === PromptKey.AlertsIssues ? removeNonReportableAlertsFromHtml(html, {
           interactiveResultLeadIns: this.getInteractiveResultLeadIns()
         }) : html;
-        const alertsIssuesUserContent = useCompactAlertsPageContext ? JSON.stringify(this.alertIssuesContext.buildCompactAlertsIssuesPayload(html)) : sanitizedAlertsIssuesHtml;
+        const alertsIssuesUserContent = useCompactAlertsPageContext ? JSON.stringify(this.alertContext.buildCompactAlertsIssuesPayload(html)) : sanitizedAlertsIssuesHtml;
         const payload = {
           models: this.buildModelRotation(model),
           messages: [
@@ -41983,13 +42308,16 @@ ${custom}` : promptBody;
                 life: 3e3
               });
             }
-            yield this.applyAlertRecommendations({
+            const recommendationsApplied = yield this.applyAlertRecommendations({
               html,
               issues: selectedIssues,
               model,
               headers,
               url
             });
+            if (!recommendationsApplied) {
+              return;
+            }
             this.statusSeverity = "success";
             this.statusMessage = this.translate.instant("common.ai.alertRecommendationsGenerated");
             this.messageService.add({
@@ -42011,7 +42339,12 @@ ${custom}` : promptBody;
             models: [candidate],
             provider: { allow_fallbacks: false }
           });
-          console.log("Sending to OpenRouter:", { payload: attemptPayload });
+          console.log("Sending to OpenRouter", {
+            model: candidate,
+            attempt: i + 1,
+            attempts: candidates.length,
+            prompt: promptKeyForRequest
+          });
           const orResponse = yield fetch(url, {
             method: "POST",
             headers,
@@ -42036,8 +42369,14 @@ ${custom}` : promptBody;
           }
           if (attemptResponse.error) {
             const attemptModelShort = this.getShortModelName(candidate);
+            const errorDetails = this.getAiErrorDiagnostics(attemptResponse.error);
+            const shouldTryNextModel = i < candidates.length - 1 && this.isRetryableAiProviderError(attemptResponse.error);
+            if (shouldTryNextModel) {
+              this.logRetryableAiProviderError("AI provider error; retrying next model in rotation.", candidate, attemptResponse.error);
+              continue;
+            }
             console.groupCollapsed("AI Error");
-            console.error(attemptResponse.error?.status);
+            console.error(errorDetails);
             console.warn(`400: Bad Request (invalid or missing params, CORS)
 
                     401: Invalid credentials (OAuth session expired, disabled/invalid API key)
@@ -42129,13 +42468,16 @@ ${custom}` : promptBody;
               life: 3e3
             });
           }
-          yield this.applyAlertRecommendations({
+          const recommendationsApplied = yield this.applyAlertRecommendations({
             html,
             issues: selectedIssues,
             model,
             headers,
             url
           });
+          if (!recommendationsApplied) {
+            return;
+          }
         } else {
           const formattedHtml = yield this.urlDataService.formatHtml(aiHtml, "ai");
           this.uploadState.mergeModifiedData({
@@ -42177,6 +42519,40 @@ ${custom}` : promptBody;
         });
       }
     });
+  }
+  logRetryableAiProviderError(message, model, error) {
+    const diagnostics = this.getAiErrorDiagnostics(error);
+    console.warn(message, {
+      model: this.getShortModelName(model),
+      status: diagnostics["status"],
+      code: diagnostics["code"],
+      providerName: diagnostics["providerName"],
+      providerError: diagnostics["rawProviderError"] || diagnostics["message"]
+    });
+  }
+  isRetryableAiProviderError(error) {
+    if (!error || typeof error !== "object")
+      return false;
+    const record = error;
+    const message = String(record["message"] || "").toLowerCase();
+    const code = String(record["code"] || "").toLowerCase();
+    const status = Number(record["status"]);
+    return message.includes("provider returned error") || message.includes("provider error") || message.includes("no available model provider") || code.includes("provider") || status === 502 || status === 503;
+  }
+  getAiErrorDiagnostics(error) {
+    if (!error || typeof error !== "object") {
+      return { message: String(error || "Unknown AI error") };
+    }
+    const record = error;
+    const metadata = record["metadata"] && typeof record["metadata"] === "object" ? record["metadata"] : {};
+    return {
+      status: record["status"],
+      code: record["code"],
+      message: record["message"],
+      providerName: record["provider_name"] || record["providerName"] || metadata["provider_name"] || metadata["providerName"],
+      rawProviderError: record["raw_provider_error"] || record["rawProviderError"] || metadata["raw_provider_error"] || metadata["rawProviderError"],
+      metadata
+    };
   }
   /*TOOLBAR FUNCTIONS*/
   //Start of shadow DOM navigation
@@ -42894,9 +43270,9 @@ ${custom}` : promptBody;
   }] });
 })();
 (() => {
-  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(PageAssistantCompareComponent, { className: "PageAssistantCompareComponent", filePath: "app/views/page-assistant/page-assistant.component.ts", lineNumber: 97 });
+  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(PageAssistantCompareComponent, { className: "PageAssistantCompareComponent", filePath: "app/views/page-assistant/page-assistant.component.ts", lineNumber: 98 });
 })();
 export {
   PageAssistantCompareComponent
 };
-//# sourceMappingURL=chunk-HTT366B3.js.map
+//# sourceMappingURL=chunk-GPWWHUTP.js.map

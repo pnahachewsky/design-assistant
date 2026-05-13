@@ -38521,18 +38521,15 @@ var AiModel;
 var LocalStorageService = class _LocalStorageService {
   saveData(key, value) {
     localStorage.setItem(key, value);
-    console.log(`Saved ` + key + `: ` + value);
   }
   getData(key) {
     return localStorage.getItem(key);
   }
   removeData(key) {
     localStorage.removeItem(key);
-    console.log(`Removed ` + key);
   }
   clearData() {
     localStorage.clear();
-    console.log(`Removed all stored values`);
   }
   static \u0275fac = function LocalStorageService_Factory(__ngFactoryType__) {
     return new (__ngFactoryType__ || _LocalStorageService)();
@@ -40633,7 +40630,7 @@ var UrlDataService = class _UrlDataService {
             if (anchor) {
               const anchorElement = ajaxDoc.querySelector(`#${anchor}`);
               if (!anchorElement) {
-                console.warn(`Anchor #${anchor} not found in ${fullUrl}. Skipping replacement.`);
+                console.debug(`Anchor #${anchor} not found in ${fullUrl}. Skipping replacement.`);
                 element.removeAttribute(attrName);
                 continue;
               }
@@ -40641,7 +40638,7 @@ var UrlDataService = class _UrlDataService {
             } else {
               const isFullDoc = /<html[\s>]/i.test(fetchedHtml) && /<body[\s>]/i.test(fetchedHtml);
               if (isFullDoc) {
-                console.warn(`Skipping full document injection from: ${fullUrl}`);
+                console.debug(`Skipping full document injection from: ${fullUrl}`);
                 element.removeAttribute(attrName);
                 continue;
               }
@@ -100415,4 +100412,4 @@ export {
    * License: MIT
    *)
 */
-//# sourceMappingURL=chunk-RZRC4JIU.js.map
+//# sourceMappingURL=chunk-74UPLLTV.js.map

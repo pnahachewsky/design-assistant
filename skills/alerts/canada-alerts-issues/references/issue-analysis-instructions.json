@@ -65,7 +65,7 @@
     { "name": "Unclear impact", "rule": "The alert must explain the consequence or impact to the user, not just state a fact." },
     { "name": "Outdated", "rule": "Flag past dates, expired notices, or resolved events. Alerts are temporary." },
     { "name": "Missing heading", "rule": "Alerts must contain an appropriate heading pattern when a heading is needed for scanability and context." },
-    { "name": "Wrong type", "rule": "The alert class and colour must match the severity and message type, such as info, success, warning, or danger." },
+    { "name": "Wrong type", "rule": "The alert type must match the severity. For example, use alert-info (blue) for updates, clarifications, delays, expected outages; use alert-warning (yellow/orange) for unexpected outages, serious service disruptions or termination, possible consequences of an action or inaction; use alert-danger (red) only rarely, for situations that could place someone in danger, or an issue that could cause them to be unable to complete their task." },
     { "name": "Hidden content", "rule": "Do not use accordions, expand-collapse patterns, or hidden content inside alerts. Alert content must be visible." },
     { "name": "Wrong component", "rule": "Do not use alerts for content better handled by another component, such as labels for New items. These alerts should usually be removed." },
     { "name": "Accessibility/code", "rule": "Icons and images need text alternatives, hierarchy must be valid, and markup must support accessibility." },

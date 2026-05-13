@@ -2,118 +2,587 @@
   {
     "id": "ex-001",
     "alertType": "info",
-    "tags": ["housing", "gst", "rebate", "legislation", "policy-update", "missing-heading"],
-    "criteria": ["C2_too_wordy", "C4_missing_heading", "C7_too_vague"],
+    "tags": [
+      "housing",
+      "gst",
+      "rebate",
+      "legislation",
+      "policy-update",
+      "missing-heading"
+    ],
+    "purposeTags": [
+      "policy-caveat",
+      "legislative-update",
+      "missing-heading",
+      "remove-boilerplate"
+    ],
+    "criteria": [
+      "C2_too_wordy",
+      "C4_missing_heading",
+      "C7_too_vague"
+    ],
     "headingBefore": "",
-    "headingAfter": "Details provided may change",
+    "headingAfter": "Rebate details may change",
     "before": "This webpage has been updated to include details about the First-time home buyers' GST rebate. Please see GST/HST new housing rebates you can claim for more information. The details provided on this rebate are based on legislative proposals, which are currently subject to parliamentary approval and may change.",
     "after": "The details provided on this rebate are based on proposed legislation and may change.",
-    "linksBefore": [],
-    "linksAfter": [],
-    "updatedHtml": "<section class=\"alert alert-info\"><p class=\"h3 mrgn-tp-0\">Details provided may change</p><p>The details provided on this rebate are based on proposed legislation and may change.</p></section>",
-    "notes": "Adds a descriptive heading and removes non-essential text."
+    "updatedHtml": "<section class=\"alert alert-info\"><h2 class=\"h3\">Rebate details may change</h2><p>The details provided on this rebate are based on proposed legislation and may change.</p></section>",
+    "notes": "Adds missing heading, removes update/link boilerplate, and keeps the core policy caveat."
   },
   {
     "id": "ex-002",
     "alertType": "info",
-    "tags": ["tax", "slips", "filing", "cra-account", "action-required"],
-    "criteria": ["C1_missing_next_step", "C2_too_wordy"],
+    "tags": [
+      "tax",
+      "slips",
+      "filing",
+      "cra-account",
+      "action-required"
+    ],
+    "purposeTags": [
+      "action-required",
+      "account-service",
+      "remove-process-detail",
+      "replace-vague-heading"
+    ],
+    "criteria": [
+      "C1_missing_next_step",
+      "C2_too_wordy"
+    ],
     "headingBefore": "Availability of tax information",
-    "headingAfter": "Availability of tax information",
-    "before": "While the CRA works to process tax slips and make them available as they are received, it is possible that your slips may not currently be available in your CRA account or through the Auto-fill my return service. If you have not yet filed your 2024 tax return and do not see a slip in your CRA account, we recommend using the slip provided by the issuer (for example, your financial institution or employer).",
-    "after": "If you do not see a tax slip in your CRA account when filing your 2024 tax return, use the slip provided by the issuer, such as your financial institution or employer.",
-    "linksBefore": [],
-    "linksAfter": [],
-    "updatedHtml": "<section class=\"alert alert-info\"><p class=\"h3 mrgn-tp-0\">Availability of tax information</p><p>If you do not see a tax slip in your CRA account when filing your 2024 tax return, use the slip provided by the issuer, such as your financial institution or employer.</p></section>",
-    "notes": "Keeps the existing heading and adds a clearer next step."
+    "headingAfter": "Finding your tax slips",
+    "before": "While the CRA works to process tax slips and make them available as they are received, it is possible that your slips may not currently be available in your CRA account or through the Auto-fill my return service. If you have not yet filed your 2024 tax return and do not see a slip in your CRA account, we recommend using the slip provided by the issuer (e.g. your financial institution or employer).",
+    "after": "If you do not see a tax slip in your CRA account when you file your 2024 tax return, use the slip provided by your issuer (such as your employer or financial institution).",
+    "updatedHtml": "<section class=\"alert alert-info\"><h2 class=\"h3\">Finding your tax slips</h2><p>If you do not see a tax slip in your CRA account when you file your 2024 tax return, use the slip provided by your issuer (such as your employer or financial institution).</p></section>",
+    "notes": "Replaces the original heading, removes process detail, and gives a direct next step."
   },
   {
     "id": "ex-003",
     "alertType": "info",
-    "tags": ["wildfire", "disaster-support", "benefits", "tax-affairs"],
-    "criteria": ["C0_no_change"],
-    "headingBefore": "Support for Canadians affected by wildfires",
-    "headingAfter": "Support for Canadians affected by wildfires",
-    "before": "If you've been impacted by wildfires, visit the disaster support page for information on managing your tax affairs and accessing benefit and credit payments during and after a disaster.",
-    "after": "If you've been impacted by wildfires, visit the disaster support page for information on managing your tax affairs and accessing benefit and credit payments during and after a disaster.",
-    "linksBefore": [
-      {
-        "id": "L1",
-        "text": "disaster support page",
-        "href": "/disaster-support"
-      }
+    "tags": [
+      "wildfire",
+      "disaster-support",
+      "benefits",
+      "tax-affairs"
     ],
+    "purposeTags": [
+      "support-info",
+      "keep-support-link"
+    ],
+    "headingAfter": "Support for Canadians affected by wildfires",
+    "before": "[Original text unavailable]",
+    "after": "If you've been impacted by wildfires, visit our disaster support page for information on managing your taxes and accessing benefit and credit payments during and after a disaster.",
     "linksAfter": [
       {
         "id": "L1",
         "text": "disaster support page",
-        "href": "/disaster-support"
+        "href": "https://www.canada.ca/en/revenue-agency/corporate/about-canada-revenue-agency-cra/managing-tax-affairs-during-after-disaster.html"
       }
     ],
-    "linkEdits": [
-      {
-        "id": "L1",
-        "action": "keep",
-        "note": "Link text and placement unchanged."
-      }
-    ],
-    "updatedHtml": "<section class=\"alert alert-info\"><p class=\"h3 mrgn-tp-0\">Support for Canadians affected by wildfires</p><p>If you've been impacted by wildfires, visit the <a href=\"/disaster-support\">disaster support page</a> for information on managing your tax affairs and accessing benefit and credit payments during and after a disaster.</p></section>",
-    "notes": "No rewrite required beyond preserving valid HTML link markup."
+    "updatedHtml": "<section class=\"alert alert-info\"><h2 class=\"h3\">Support for Canadians affected by wildfires</h2><p>If you've been impacted by wildfires, visit our <a href=\"https://www.canada.ca/en/revenue-agency/corporate/about-canada-revenue-agency-cra/managing-tax-affairs-during-after-disaster.html\">disaster support page</a> for information on managing your taxes and accessing benefit and credit payments during and after a disaster.</p></section>",
+    "notes": "Shows a complete alert that keeps the disaster support link and a clear support-focused heading."
   },
   {
     "id": "ex-004",
     "alertType": "info",
-    "tags": ["business", "tariffs", "tax-relief", "support"],
-    "criteria": ["C4_missing_heading", "C7_too_vague"],
-    "headingBefore": "",
+    "tags": [
+      "business",
+      "tariffs",
+      "tax-relief",
+      "support"
+    ],
+    "purposeTags": [
+      "support-info",
+      "missing-source-context",
+      "standalone-action-link"
+    ],
+    "criteria": [
+      "C4_missing_heading",
+      "C7_too_vague"
+    ],
     "headingAfter": "Support for businesses in response to tariffs",
     "before": "[Original text unavailable]",
-    "after": "Find the CRA's latest tax relief measures and support for businesses in response to tariffs.",
-    "linksBefore": [],
+    "after": "Find the CRA's latest tariff-related tax relief measures and support for businesses.",
     "linksAfter": [
       {
         "id": "L1",
-        "text": "tax relief measures and support for businesses in response to tariffs"
+        "text": "tax relief measures and support for businesses",
+        "href": "https://www.canada.ca/en/revenue-agency/services/support-difficult-situations/tax-relief-businesses-tariffs.html"
+      }
+    ],
+    "updatedHtml": "<section class=\"alert alert-info\"><h2 class=\"h3\">Support for businesses in response to tariffs</h2><p>Find the CRA's latest tariff-related <a href=\"https://www.canada.ca/en/revenue-agency/services/support-difficult-situations/tax-relief-businesses-tariffs.html\">tax relief measures and support for businesses</a>.</p></section>",
+    "notes": "Original source text is unavailable. Shows a complete support alert with a descriptive heading and one service link."
+  },
+  {
+    "id": "ex-005",
+    "alertType": "info",
+    "tags": [
+      "luxury-tax",
+      "aircraft",
+      "vessels",
+      "legislation",
+      "date-sensitive"
+    ],
+    "purposeTags": [
+      "legislative-update",
+      "date-sensitive",
+      "remove-secondary-link",
+      "reference-link"
+    ],
+    "criteria": [
+      "C2_too_wordy",
+      "C7_too_vague"
+    ],
+    "headingBefore": "Luxury tax not payable on subject aircraft and subject vessels",
+    "headingAfter": "Removal of the luxury tax on sales of aircraft and vessels",
+    "before": "On November 4, 2025, the Government of Canada announced, through Budget 2025, that the luxury tax would no longer be payable on subject aircraft and subject vessels starting on November 5, 2025. For more information, refer to Notice LTN5, Luxury tax not payable on subject aircraft and subject vessels.",
+    "after": "The Government of Canada has proposed legislation to remove the luxury tax on sales of aircraft and vessels as of November 5, 2025. For more information: Notice LTN5, Luxury tax not payable on subject aircraft and subject vessels",
+    "linksBefore": [
+      {
+        "id": "L1",
+        "text": "Budget 2025",
+        "href": "https://www.canada.ca/content/canadasite/en/department-finance/news/2025/11/government-of-canada-releases-budget-2025-canada-strong.html"
+      },
+      {
+        "id": "L2",
+        "text": "Notice LTN5, Luxury tax not payable on subject aircraft and subject vessels",
+        "href": "https://www.canada.ca/content/canadasite/en/revenue-agency/services/forms-publications/publications/ltn5/ltn5-luxury-tax-not-payable-subject-aircraft-and-vessels.html"
+      }
+    ],
+    "linksAfter": [
+      {
+        "id": "L2",
+        "text": "Notice LTN5, Luxury tax not payable on subject aircraft and subject vessels",
+        "href": "https://www.canada.ca/content/canadasite/en/revenue-agency/services/forms-publications/publications/ltn5/ltn5-luxury-tax-not-payable-subject-aircraft-and-vessels.html"
       }
     ],
     "linkEdits": [
       {
         "id": "L1",
-        "action": "add",
-        "afterText": "tax relief measures and support for businesses in response to tariffs",
-        "note": "Original text unavailable; use only for heading specificity and concise phrasing guidance."
+        "action": "remove",
+        "beforeText": "Budget 2025",
+        "note": "Secondary background link removed to keep the alert focused."
+      },
+      {
+        "id": "L2",
+        "action": "keep",
+        "note": "Primary reference link retained."
       }
     ],
-    "notes": "Original source text was unavailable. Treat this as a style example, not a factual source."
+    "updatedHtml": "<section class=\"alert alert-info\"><h2 class=\"h3\">Removal of the luxury tax on sales of aircraft and vessels</h2><p>The Government of Canada has proposed legislation to remove the luxury tax on sales of aircraft and vessels as of November 5, 2025.</p><p>For more information: <a href=\"https://www.canada.ca/content/canadasite/en/revenue-agency/services/forms-publications/publications/ltn5/ltn5-luxury-tax-not-payable-subject-aircraft-and-vessels.html\">Notice LTN5, Luxury tax not payable on subject aircraft and subject vessels</a></p></section>",
+    "notes": "Reframes as proposed legislation and keeps reference link."
   },
   {
-    "id": "ex-005",
+    "id": "ex-006",
     "alertType": "info",
-    "tags": ["luxury-tax", "aircraft", "vessels", "legislation", "date-sensitive"],
-    "criteria": ["C2_too_wordy", "C7_too_vague"],
-    "headingBefore": "Luxury tax not payable on subject aircraft and subject vessels",
-    "headingAfter": "Removal of the luxury tax on sales of aircraft and vessels",
-    "before": "On November 4, 2025, the Government of Canada announced, through Budget 2025, that the luxury tax would no longer be payable on subject aircraft and subject vessels starting on November 5, 2025. For more information, refer to Notice LTN5, Luxury tax not payable on subject aircraft and subject vessels.",
-    "after": "The Government of Canada has tabled legislation proposing to remove the luxury tax on sales of aircraft and vessels effective November 5, 2025. For more information, refer to Notice LTN5, Luxury tax not payable on subject aircraft and subject vessels.",
+    "tags": [
+      "business",
+      "gst",
+      "hst",
+      "access-code",
+      "cra-account",
+      "filing"
+    ],
+    "purposeTags": [
+      "account-service",
+      "action-required",
+      "standalone-action-link",
+      "missing-heading"
+    ],
+    "criteria": [
+      "C1_missing_next_step",
+      "C4_missing_heading"
+    ],
+    "headingAfter": "Get your access code in your CRA account",
+    "before": "Get your access code in your CRA account\n\nAs of October 20, 2025, business owners can view their GST/HST access code through their secure CRA account (My Business Account only).\n\nFind out How to get an access code.",
+    "after": "Business owners can get their GST/HST access code in their CRA account (My Business Account). How to get an access code",
     "linksBefore": [
       {
         "id": "L1",
-        "text": "Notice LTN5, Luxury tax not payable on subject aircraft and subject vessels"
+        "text": "How to get an access code",
+        "href": "https://www.canada.ca/en/revenue-agency/services/tax/businesses/topics/gst-hst-businesses/file-gst-hst-return/how-file/get-gst-hst-access-code.html#hw_gt"
       }
     ],
     "linksAfter": [
       {
         "id": "L1",
-        "text": "Notice LTN5, Luxury tax not payable on subject aircraft and subject vessels"
+        "text": "How to get an access code",
+        "href": "https://www.canada.ca/en/revenue-agency/services/tax/businesses/topics/gst-hst-businesses/file-gst-hst-return/how-file/get-gst-hst-access-code.html#hw_gt"
       }
     ],
     "linkEdits": [
       {
         "id": "L1",
         "action": "keep",
-        "note": "Primary reference link retained."
+        "afterText": "How to get an access code",
+        "note": "Link retained as a standalone action link."
       }
     ],
-    "notes": "Reframes the message as proposed legislation and keeps the reference link."
+    "updatedHtml": "<section class=\"alert alert-info\"><h2 class=\"h3\">Get your access code in your CRA account</h2><p>Business owners can get their GST/HST access code in their CRA account (My Business Account).</p><p><a href=\"https://www.canada.ca/en/revenue-agency/services/tax/businesses/topics/gst-hst-businesses/file-gst-hst-return/how-file/get-gst-hst-access-code.html#hw_gt\">How to get an access code</a></p></section>",
+    "notes": "Adds a task-oriented heading and uses a standalone action-link paragraph without extra lead-in text."
+  },
+  {
+    "id": "ex-007",
+    "alertType": "warning",
+    "tags": [
+      "postal-service",
+      "labour-disruption",
+      "service-update",
+      "mail-service"
+    ],
+    "purposeTags": [
+      "service-update",
+      "status-change",
+      "remove-secondary-link",
+      "shorten-alert"
+    ],
+    "criteria": [
+      "C2_too_wordy",
+      "C7_too_vague"
+    ],
+    "headingBefore": "Canada Post in labour negotiations - strike paused",
+    "headingAfter": "Canada Post strike paused",
+    "before": "Canada Post in labour negotiations - strike paused\n\nCanada Post operations have resumed. Tentative agreements have been reached, and Canada Post and its union have agreed not to engage in any strike or lockout activity until the ratification process is complete. For more information on the impact on CRA services, visit our postal interruption page.",
+    "after": "Canada Post has reached tentative agreements with its union. Mail service has resumed.",
+    "linksBefore": [
+      {
+        "id": "L1",
+        "text": "postal interruption page",
+        "href": "https://www.canada.ca/content/canadasite/en/revenue-agency/news/newsroom/canada-post-mail-service-disruption-impact-cra.html"
+      }
+    ],
+    "linksAfter": [],
+    "linkEdits": [
+      {
+        "id": "L1",
+        "action": "remove",
+        "beforeText": "postal interruption page",
+        "note": "Background service-impact link removed because the final alert states the current service status directly."
+      }
+    ],
+    "updatedHtml": "<section class=\"alert alert-warning\"><h2 class=\"h3\">Canada Post strike paused</h2><p>Canada Post has reached tentative agreements with its union. Mail service has resumed.</p></section>",
+    "notes": "Shortens a labour-disruption status update and removes a secondary background link."
+  },
+  {
+    "id": "ex-008",
+    "alertType": "warning",
+    "tags": [
+      "dtc",
+      "disability-tax-credit",
+      "processing-delay",
+      "form-t2201",
+      "service-standard"
+    ],
+    "purposeTags": [
+      "service-delay",
+      "action-required",
+      "standalone-action-link",
+      "remove-secondary-link"
+    ],
+    "criteria": [
+      "C1_missing_next_step",
+      "C4_missing_heading"
+    ],
+    "headingAfter": "DTC processing delay",
+    "before": "The Canada Revenue Agency is experiencing delays in processing Form T2201, Disability Tax Credit Certificate. The most up-to-date processing times can be found on Check CRA processing times. We will respond in writing once a decision has been made. You can also view the status of your application through the progress tracker in your CRA account.",
+    "after": "The CRA is experiencing delays in processing Form T2201 Disability Tax Credit Certificate. Check CRA processing times",
+    "linksBefore": [
+      {
+        "id": "L1",
+        "text": "Check CRA processing times",
+        "href": "https://www.canada.ca/en/revenue-agency/corporate/contact-information/check-cra-processing-times.html"
+      },
+      {
+        "id": "L2",
+        "text": "CRA account",
+        "href": "https://www.canada.ca/en/revenue-agency/services/e-services/cra-login-services.html"
+      }
+    ],
+    "linksAfter": [
+      {
+        "id": "L1",
+        "text": "Check CRA processing times",
+        "href": "https://www.canada.ca/en/revenue-agency/corporate/contact-information/check-cra-processing-times.html"
+      }
+    ],
+    "linkEdits": [
+      {
+        "id": "L1",
+        "action": "keep",
+        "afterText": "Check CRA processing times",
+        "note": "Primary processing-time link retained as the only action link."
+      },
+      {
+        "id": "L2",
+        "action": "remove",
+        "beforeText": "CRA account",
+        "note": "Secondary account-status link removed to keep the alert focused."
+      }
+    ],
+    "updatedHtml": "<section class=\"alert alert-warning\"><h2 class=\"h3\">DTC processing delay</h2><p>The CRA is experiencing delays in processing Form T2201 Disability Tax Credit Certificate.</p><p><a href=\"https://www.canada.ca/en/revenue-agency/corporate/contact-information/check-cra-processing-times.html\">Check CRA processing times</a>.</p></section>",
+    "notes": "Uses a warning alert for a service delay and provides one clear standalone action link."
+  },
+  {
+    "id": "ex-009",
+    "alertType": "info",
+    "tags": [
+      "benefits",
+      "gst",
+      "hst",
+      "groceries",
+      "essentials",
+      "payment",
+      "date-sensitive"
+    ],
+    "purposeTags": [
+      "benefit-change",
+      "date-sensitive",
+      "multiple-detail-links",
+      "new-program"
+    ],
+    "criteria": [
+      "C1_missing_next_step",
+      "C2_too_wordy"
+    ],
+    "headingAfter": "New Canada Groceries and Essentials Benefit",
+    "before": "The Canada Groceries and Essentials Benefit will replace the GST/HST credit in July 2026. As part of the transition, an additional one-time GST/HST credit top-up payment will be issued starting on June 5, 2026 to recipients who were entitled to the January 2026 payment.\n\nFor details:\n\nCanada Groceries and Essentials Benefit\n\nOne-time GST/HST credit top-up payment",
+    "after": "The Canada Groceries and Essentials Benefit will replace the GST/HST credit in July 2026. An additional one-time GST/HST credit top-up payment will be issued starting on June 5, 2026 to recipients who qualify. For details: Groceries and Essentials benefit One-time GST/HST payment",
+    "linksBefore": [
+      {
+        "id": "L1",
+        "text": "Canada Groceries and Essentials Benefit",
+        "href": "https://www.canada.ca/en/revenue-agency/services/child-family-benefits/canada-groceries-essentials-benefit.html"
+      },
+      {
+        "id": "L2",
+        "text": "One-time GST/HST credit top-up payment",
+        "href": "https://www.canada.ca/en/revenue-agency/services/child-family-benefits/gst-hst-credit/how-much/one-time-top-up.html"
+      }
+    ],
+    "linksAfter": [
+      {
+        "id": "L1",
+        "text": "Groceries and Essentials benefit",
+        "href": "https://www.canada.ca/en/revenue-agency/services/child-family-benefits/canada-groceries-essentials-benefit.html"
+      },
+      {
+        "id": "L2",
+        "text": "One-time GST/HST payment",
+        "href": "https://www.canada.ca/en/revenue-agency/services/child-family-benefits/gst-hst-credit/how-much/one-time-top-up.html"
+      }
+    ],
+    "linkEdits": [
+      {
+        "id": "L1",
+        "action": "update",
+        "beforeText": "Canada Groceries and Essentials Benefit",
+        "afterText": "Groceries and Essentials benefit",
+        "note": "Link retained for the renamed benefit page."
+      },
+      {
+        "id": "L2",
+        "action": "update",
+        "beforeText": "One-time GST/HST credit top-up payment",
+        "afterText": "One-time GST/HST payment",
+        "note": "Link retained for the one-time payment details."
+      }
+    ],
+    "updatedHtml": "<section class=\"alert alert-info\"><h2 class=\"h3\">New Canada Groceries and Essentials Benefit</h2><p>The Canada Groceries and Essentials Benefit will replace the GST/HST credit in July 2026. An additional one-time GST/HST credit top-up payment will be issued starting on June 5, 2026 to recipients who qualify.</p><p>For details:</p><ul class=\"list-unstyled\"><li><a href=\"https://www.canada.ca/en/revenue-agency/services/child-family-benefits/canada-groceries-essentials-benefit.html\">Groceries and Essentials benefit</a></li><li><a href=\"https://www.canada.ca/en/revenue-agency/services/child-family-benefits/gst-hst-credit/how-much/one-time-top-up.html\">One-time GST/HST payment</a></li></ul></section>",
+    "notes": "Shows 2 final standalone detail links in an unstyled list after one lead-in paragraph."
+  },
+  {
+    "id": "ex-010",
+    "alertType": "warning",
+    "tags": [
+      "benefits",
+      "disinformation",
+      "fraud-awareness",
+      "payments",
+      "official-sources"
+    ],
+    "purposeTags": [
+      "fraud-warning",
+      "correction",
+      "official-source-warning",
+      "missing-heading"
+    ],
+    "criteria": [
+      "C4_missing_heading",
+      "C7_too_vague"
+    ],
+    "headingAfter": "Beware of false information online",
+    "before": "Beware of false information online\n\nThere is disinformation online that the Government of Canada has introduced a new $680 one-time payment. There is no new one-time payment. To avoid disinformation about government benefits or payments, refer to official Government of Canada web pages and your provincial or territorial government's official web pages.",
+    "after": "There is false information online about a new one-time payment of $680 from the Government of Canada. This payment does not exist. To avoid disinformation about any benefits or payments, always check official government web pages.",
+    "linksBefore": [],
+    "linksAfter": [],
+    "updatedHtml": "<section class=\"alert alert-warning\"><h2 class=\"h3\">Beware of false information online</h2><p>There is false information online about a new one-time payment of $680 from the Government of Canada. This payment does not exist. To avoid disinformation about any benefits or payments, always check official government web pages.</p></section>",
+    "notes": "Uses a warning alert for disinformation and states the correction directly."
+  },
+  {
+    "id": "ex-011",
+    "alertType": "warning",
+    "tags": [
+      "business",
+      "registration",
+      "business-number",
+      "program-account",
+      "service-change",
+      "date-sensitive"
+    ],
+    "purposeTags": [
+      "service-change",
+      "date-sensitive",
+      "action-required",
+      "standalone-action-link"
+    ],
+    "criteria": [
+      "C1_missing_next_step",
+      "C4_missing_heading"
+    ],
+    "headingAfter": "Business registration by phone is ending",
+    "before": "Business registration by phone is ending\n\nEffective November 3, 2025, the CRA will no longer accept business number (BN) and CRA program account registrations by phone. You must register using Business Registration Online (BRO). Learn more at Business registration online.",
+    "after": "As of November 5, 2026, you can no longer register a business number (BN) or CRA program account by phone. You must register using Business Registration Online (BRO). Learn more: Business registration online",
+    "linksBefore": [
+      {
+        "id": "L1",
+        "text": "Business registration online",
+        "href": "https://www.canada.ca/en/revenue-agency/services/tax/businesses/topics/business-registration/business-number-program-account/how-register/resident.html"
+      }
+    ],
+    "linksAfter": [
+      {
+        "id": "L1",
+        "text": "Business registration online",
+        "href": "https://www.canada.ca/en/revenue-agency/services/tax/businesses/topics/business-registration/business-number-program-account/how-register/resident.html"
+      }
+    ],
+    "linkEdits": [
+      {
+        "id": "L1",
+        "action": "keep",
+        "afterText": "Business registration online",
+        "note": "Business Registration Online link retained."
+      }
+    ],
+    "updatedHtml": "<section class=\"alert alert-warning\"><h2 class=\"h3\">Business registration by phone is ending</h2><p>As of November 5, 2026, you can no longer register a business number (BN) or CRA program account by phone. You must register using Business Registration Online (BRO).</p><p>Learn more: <a href=\"https://www.canada.ca/en/revenue-agency/services/tax/businesses/topics/business-registration/business-number-program-account/how-register/resident.html\">Business registration online</a></p></section>",
+    "notes": "Uses a warning alert for a service-channel change and gives the required online next step."
+  },
+  {
+    "id": "ex-012",
+    "alertType": "info",
+    "tags": [
+      "excise-tax",
+      "fuel",
+      "legislation",
+      "rates",
+      "technical-information"
+    ],
+    "purposeTags": [
+      "legislative-update",
+      "technical-notice",
+      "remove-secondary-link",
+      "standalone-action-link"
+    ],
+    "criteria": [
+      "C1_missing_next_step",
+      "C4_missing_heading"
+    ],
+    "before": "Proposed temporary reductions of excise tax rates on certain types of fuel\n\nOn April 14, 2026, the Government of Canada proposed temporary reductions of the federal excise tax rates on certain types of fuel.\n\nFor more information, including how to calculate the multiple excise tax rates, refer to Notice ETSL82, Proposed temporary rate reductions of excise tax on certain types of fuel.",
+    "after": "The Government of Canada intends to reduce the excise tax rates on some types of fuel. Review the proposed excise tax rates",
+    "linksBefore": [
+      {
+        "id": "L1",
+        "text": "Government of Canada proposed temporary reductions of the federal excise tax rates on certain types of fuel",
+        "href": "https://www.canada.ca/content/canadasite/en/department-finance/news/2026/04/temporarily-suspending-the-federal-fuel-excise-tax.html"
+      },
+      {
+        "id": "L2",
+        "text": "Notice ETSL82, Proposed temporary rate reductions of excise tax on certain types of fuel",
+        "href": "https://www.canada.ca/content/canadasite/en/revenue-agency/services/tax/technical-information/excise-taxes-special-levies/excise-taxes-special-levies-notices/etsl82-proposed-temporary-rate-reductions-excise-tax-on-certain-types-fuel.html"
+      }
+    ],
+    "linksAfter": [
+      {
+        "id": "L2",
+        "text": "Review the proposed excise tax rates",
+        "href": "https://www.canada.ca/content/canadasite/en/revenue-agency/services/tax/technical-information/excise-taxes-special-levies/excise-taxes-special-levies-notices/etsl82-proposed-temporary-rate-reductions-excise-tax-on-certain-types-fuel.html"
+      }
+    ],
+    "linkEdits": [
+      {
+        "id": "L1",
+        "action": "remove",
+        "beforeText": "Government of Canada proposed temporary reductions of the federal excise tax rates on certain types of fuel",
+        "note": "Secondary announcement link removed to keep the alert focused on the technical notice."
+      },
+      {
+        "id": "L2",
+        "action": "update",
+        "beforeText": "Notice ETSL82, Proposed temporary rate reductions of excise tax on certain types of fuel",
+        "afterText": "Review the proposed excise tax rates",
+        "note": "Long notice title changed to shorter action-oriented link text."
+      }
+    ],
+    "updatedHtml": "<section class=\"alert alert-info\"><p>The Government of Canada intends to reduce the excise tax rates on some types of fuel.</p><p><a href=\"https://www.canada.ca/content/canadasite/en/revenue-agency/services/tax/technical-information/excise-taxes-special-levies/excise-taxes-special-levies-notices/etsl82-proposed-temporary-rate-reductions-excise-tax-on-certain-types-fuel.html\">Review the proposed excise tax rates</a></p></section>",
+    "notes": "Uses concise legislative-update wording and keeps the action-link paragraph separate."
+  },
+  {
+    "id": "ex-013",
+    "alertType": "info",
+    "tags": [
+      "tax-return",
+      "filing",
+      "cra-account",
+      "online-services",
+      "action-required"
+    ],
+    "purposeTags": [
+      "online-service",
+      "action-required",
+      "duplicate-link-cleanup",
+      "standalone-action-link"
+    ],
+    "criteria": [
+      "C1_missing_next_step",
+      "C4_missing_heading"
+    ],
+    "headingAfter": "File your return online with your CRA Account",
+    "before": "You can file your return electronically using My Business Account. It's fast, convenient and secure. To register, go to Sign in to your CRA account.\n\nAre you a representative living in Canada or a non-resident representative living in the United States? You can use My Business Account services by registering with Represent a Client. To register, go to Sign in to your CRA account.",
+    "after": "You can file your tax return online using your CRA account. Sign in or register for a CRA Account",
+    "linksBefore": [
+      {
+        "id": "L1",
+        "text": "Sign in to your CRA account",
+        "href": "https://www.canada.ca/content/canadasite/en/revenue-agency/services/e-services/digital-services-businesses/business-account.html"
+      },
+      {
+        "id": "L2",
+        "text": "Sign in to your CRA account",
+        "href": "https://www.canada.ca/content/canadasite/en/revenue-agency/services/e-services/represent-a-client.html"
+      }
+    ],
+    "linksAfter": [
+      {
+        "id": "L1",
+        "text": "CRA Account",
+        "href": "https://www.canada.ca/content/canadasite/en/revenue-agency/services/e-services/represent-a-client.html"
+      }
+    ],
+    "linkEdits": [
+      {
+        "id": "L1",
+        "action": "update",
+        "beforeText": "Sign in to your CRA account",
+        "afterText": "CRA Account",
+        "note": "Repeated sign-in links consolidated into one clearer account action link."
+      },
+      {
+        "id": "L2",
+        "action": "remove",
+        "beforeText": "Sign in to your CRA account",
+        "note": "Duplicate sign-in link removed."
+      }
+    ],
+    "updatedHtml": "<section class=\"alert alert-info\"><h2 class=\"h3\">File your return online with your CRA Account</h2><p>You can file your tax return online using your CRA account.</p><p>Sign in or register for a <a href=\"https://www.canada.ca/content/canadasite/en/revenue-agency/services/e-services/represent-a-client.html\">CRA Account</a>.</p></section>",
+    "notes": "Gives a direct filing action and uses a standalone action link for the required next step."
   }
 ]

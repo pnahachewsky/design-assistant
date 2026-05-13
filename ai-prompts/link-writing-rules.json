@@ -32,9 +32,19 @@
       "text": "Prefer placing links at the end of their sentence."
     },
     {
+      "id": "L6a_short_sentences_no_semicolons",
+      "condition": "always",
+      "text": "Prefer short sentences. Use 1 or 2 sentences when the sentences are short, or 1 sentence when the sentence is longer. Treat these as flexible guidance, not hard limits. Avoid semicolons, and do not use semicolons to combine ideas just to reduce the sentence count."
+    },
+    {
       "id": "L7_learn_more_fallback",
       "condition": "always",
       "text": "If a link is an entire sentence, or if a sentence mainly directs the user to a link, move it to a new paragraph. When possible, place that standalone link paragraph last in the alert content. Use one of these lead-ins before the anchor: \"Refer to:\" or \"Learn more:\". Use \"Find out\" or \"Learn about\" without a colon only when the link text naturally completes the phrase. If the phrase needs an article, place it before the anchor, for example \"Learn about the <a>Canada Groceries and Essentials Benefit</a>\"."
+    },
+    {
+      "id": "L7a_multiple_standalone_links_list",
+      "condition": "always",
+      "text": "When more than one standalone link must be kept at the end of an alert, use one lead-in paragraph followed by <ul class=\"list-unstyled\"> with one link per <li>. Do not use separate standalone link paragraphs for multiple final links."
     },
     {
       "id": "L8_remove_only_when_too_many",
@@ -60,6 +70,11 @@
       "id": "L12_lead_in_selection",
       "condition": "always",
       "text": "Choose the lead-in that matches the destination and keep it in its own paragraph when the sentence mainly directs the user to the link. Prefer placing that paragraph last in the alert content, but treat this as a preference rather than a strict rule. Prefer \"Refer to:\" when the link is needed to complete a task, access a service, sign in, apply, register, submit, get a code, or take a required next step. Prefer \"Learn more:\" when the link is optional background, a status page, an update page, or supplemental information. Use \"Learn about\" without a colon when the linked text naturally completes the phrase for explainer or topic pages. If the phrase needs an article, place it before the anchor, for example \"Learn about the <a>Canada Groceries and Essentials Benefit</a>\". Avoid repeating the topic noun outside the link if the anchor already names it."
+    },
+    {
+      "id": "L13_action_link_no_lead_in",
+      "condition": "always",
+      "text": "If a standalone link already contains a clear action verb, do not add lead-in text such as \"Refer to:\" or \"Learn more:\". Examples include standalone links such as \"View CRA processing times\", \"Get an access code\", \"Apply for benefits\", \"Register a business\", \"Sign in or register for a CRA account\", \"File your return online\", \"Review the proposed rates\", \"Learn about the Canada Groceries and Essentials Benefit\", \"Find out how to get an access code\", and \"How to get an access code\"."
     }
   ]
 }
