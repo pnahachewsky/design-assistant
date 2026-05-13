@@ -26,6 +26,11 @@ export interface OpenRouterMessageCaller {
   ): Promise<{ text: string; usedModel: string }>;
 }
 
+export interface AlertRewriteFallbackNotice {
+  alertIndex: number;
+  reasons: string[];
+}
+
 @Injectable({ providedIn: 'root' })
 export class AlertRewriteOrchestratorService {
   private alertRewrite = inject(AlertRewriteService);
@@ -52,7 +57,10 @@ export class AlertRewriteOrchestratorService {
     forceLocalRepairForTesting: boolean;
     callOpenRouterForMessages: OpenRouterMessageCaller;
     getShortModelName: (model: string) => string;
-  }): Promise<{ formattedHtml: string }> {
+  }): Promise<{
+    formattedHtml: string;
+    fallbackNotices: AlertRewriteFallbackNotice[];
+  }> {
     const start = performance.now();
     const rewriteRules = await getAlertRewriteRules();
     const retryInstructions = rewriteRules.alertRewrite.retryInstructions;
@@ -72,6 +80,7 @@ export class AlertRewriteOrchestratorService {
       alert_index: number;
       rewritten_alert_html: string;
     }> = [];
+    const fallbackNotices: AlertRewriteFallbackNotice[] = [];
 
     // Each alert is planned and rewritten independently so a bad output for one
     // alert does not block the others from being generated.
@@ -83,6 +92,12 @@ export class AlertRewriteOrchestratorService {
         params.issues,
         alertIndex,
       );
+      if (!params.includeExamples && !relevantIssues.length) {
+        console.info('Alert rewrite skipped for alert without selected issues', {
+          alertIndex,
+        });
+        continue;
+      }
 
       const alertHtml = alertElement.outerHTML;
       const originalHeading =
@@ -126,7 +141,10 @@ export class AlertRewriteOrchestratorService {
       }
 
       const selectedExamples = params.includeExamples
-        ? this.alertRewrite.selectExamples(plan, examples, 2)
+        ? this.alertRewrite.selectExamples(plan, examples, 2, {
+            originalHeading,
+            originalAlertText: alertText,
+          })
         : [];
       let rewriteResult = null;
       let rewriteModelName = 'unknown';
@@ -373,13 +391,24 @@ export class AlertRewriteOrchestratorService {
           alertHtml,
           originalHeading,
           originalAlertText: alertText,
-          failureReasons: lastRetryReasons,
+        });
+        fallbackNotices.push({
+          alertIndex,
+          reasons: [...lastRetryReasons],
         });
       }
       rewriteResult.rewrittenAlertHtml = this.alertRewriteGuard.ensureSemanticHeading(
         rewriteResult.rewrittenAlertHtml,
         rewriteResult.rewrittenHeading,
       );
+      rewriteResult.rewrittenAlertHtml =
+        this.alertRewriteGuard.removeRedundantLeadInsBeforeActionLinks(
+          rewriteResult.rewrittenAlertHtml,
+        );
+      rewriteResult.rewrittenAlertHtml =
+        this.alertRewriteGuard.removeStandaloneLinkTerminalPunctuation(
+          rewriteResult.rewrittenAlertHtml,
+        );
 
       // At this point we have exactly one final rewrite for the current alert,
       // whether it came from the model, local repair, or passthrough fallback.
@@ -436,7 +465,11 @@ export class AlertRewriteOrchestratorService {
       rewrites,
     );
     if (!finalHtml) {
-      throw new Error('No alert rewrites were generated.');
+      console.info('Alert rewrite skipped because no alerts had selected issues.');
+      return {
+        formattedHtml: await this.urlDataService.formatHtml(params.html, 'ai'),
+        fallbackNotices,
+      };
     }
 
     console.log('Alert rewrite model + time', {
@@ -448,7 +481,7 @@ export class AlertRewriteOrchestratorService {
 
     // Keep final output formatting consistent with the rest of the assistant flow.
     const formattedHtml = await this.urlDataService.formatHtml(finalHtml, 'ai');
-    return { formattedHtml };
+    return { formattedHtml, fallbackNotices };
   }
 
   private getInteractiveResultLeadIns(): string[] {

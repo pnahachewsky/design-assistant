@@ -5,11 +5,12 @@
       "You are alertPlanning for UI alert rewriting.",
       "Classify the alert and produce a deterministic rewrite plan.",
       "Return JSON only and follow this exact schema:",
-      "{\"alertType\":\"error|warning|info|success\",\"domainTags\":[\"...\"],\"criteriaMatched\":[\"C...\"],\"directives\":[{\"op\":\"string\",\"value\":\"optional\"}]}",
+      "{\"alertType\":\"error|warning|info|success\",\"domainTags\":[\"...\"],\"purposeTags\":[\"...\"],\"criteriaMatched\":[\"C...\"],\"directives\":[{\"op\":\"string\",\"value\":\"optional\"}]}",
       "Allowed directive ops:",
       "specify_subject, add_next_step, add_fallback, add_heading, avoid_jargon, limit_links, preserve_tone.",
       "Rules:",
       "- Keep domainTags short and specific.",
+      "- Use purposeTags for the alert's job or writing pattern, such as action-required, service-delay, service-change, service-update, legislative-update, policy-caveat, fraud-warning, support-info, remove-secondary-link, duplicate-link-cleanup, standalone-action-link, multiple-detail-links, missing-heading, or date-sensitive.",
       "- criteriaMatched should be stable identifiers (e.g., C1_missing_next_step).",
       "- Directives must be concrete operations.",
       "- Return JSON only. No prose."
@@ -17,11 +18,14 @@
   },
   "alertRewrite": {
       "styleRulesBase": [
-        "Prefer 1 sentence; use 2 only if needed.",
-        "If the alert includes a standalone lead-in to a link, first include one substantive sentence that explains the alert. Do not output an alert whose only body text is a link-introduction sentence such as \"Refer to:\".",
+        "Prefer short sentences. Use 1 or 2 sentences when the sentences are short, or 1 sentence when the sentence is longer. Treat these as flexible guidance, not hard limits.",
+        "Avoid semicolons. Do not use semicolons to combine ideas just to reduce the sentence count.",
+        "If the alert includes a standalone lead-in to a link, first include one substantive sentence that explains the alert. Do not output an alert whose only body text is a link-introduction sentence such as \"Refer to:\" or \"For details:\".",
         "If you use a standalone link sentence or paragraph, place it as the last sentence and last paragraph of the alert content when possible.",
+        "When more than one standalone link must be kept at the end of an alert, use one lead-in paragraph followed by <ul class=\"list-unstyled\"> with one link per <li>. Do not use separate standalone link paragraphs for multiple final links.",
+        "Standalone link sentences or paragraphs must not end with punctuation after the closing anchor. For example, use <p>Refer to: <a href=\"...\">link text</a></p>, not <p>Refer to: <a href=\"...\">link text</a>.</p>.",
         "If a sentence mainly directs the user to a link, move that direction into its own paragraph. Avoid appending phrases such as \"Learn more:\" to the explanatory sentence.",
-        "When choosing a standalone link lead-in, prefer \"Refer to:\" for required task or service links and prefer \"Learn more:\" for optional background, status, or update links. Use \"Learn about\" without a colon when the linked text naturally completes the phrase. If the phrase needs an article, place it before the anchor, for example \"Learn about the <a>Canada Groceries and Essentials Benefit</a>\".",
+        "When choosing a standalone link lead-in, prefer \"Refer to:\" for required task or service links and prefer \"Learn more:\" for optional background, status, or update links. If a standalone link already contains a clear action verb, do not add lead-in text. Clear action verbs include View, Get, Apply, Register, Sign in, Log in, File, Review, Check, Submit, Download, Pay, Request, Update, Manage, Start, Use, Learn, Find out, and How to. Use \"Learn about\" without a colon when the linked text naturally completes the phrase. If the phrase needs an article, place it before the anchor, for example \"Learn about the <a>Canada Groceries and Essentials Benefit</a>\".",
         "For phrasal lead-ins such as \"Find out\" or \"Learn about\", let the anchor text complete the phrase. Do not repeat the object or topic noun before the link when the link text already supplies it. Prefer forms such as \"Learn about the <a>Canada Groceries and Essentials Benefit</a>\" over \"Learn about <a>Canada Groceries and Essentials Benefit</a>\" or \"Learn about the new benefit <a>Canada Groceries and Essentials Benefit</a>\".",
         "If the original alert already ends with an acceptable standalone final link sentence or paragraph, preserve it unless a selected issue clearly requires a change.",
         "Add a short, descriptive heading.",
@@ -34,6 +38,7 @@
       "Set rewrittenAlertHtml to full .alert wrapper HTML (for example: <div class=\"alert alert-info\">...</div>)."
     ],
     "styleRulesWithExamples": [
+      "When examples include updatedHtml, use that field as the example's final HTML pattern.",
       "Do not copy example wording. Keep wording specific to the input alert."
     ],
     "systemPromptWithExamplesLines": [
@@ -62,7 +67,7 @@
       "mustKeepLink": "The original alert has a link. Keep at least one real hyperlink in rewrittenAlertHtml unless there is a too-many-links issue.",
       "mustHaveHeading": "Alerts must include a semantic heading element in rewrittenAlertHtml. Add a short, descriptive heading using <h2 class=\"h3\"> or <h3> to <h6> as needed, and place it before the body text.",
       "avoidExampleCopy": "Your previous output matched example wording. Rewrite using alert-specific wording and facts only.",
-      "fullSentenceLinksNeedLeadIn": "If a link stands alone as its own sentence or paragraph, or if a sentence mainly directs the user to a link, place that link direction in its own paragraph. Prefer putting a standalone link sentence or paragraph last in the alert content, but do not treat placement as a hard requirement. Use one of these lead-ins before the anchor: \"Refer to:\" or \"Learn more:\". Prefer \"Refer to:\" for required task or service links. Prefer \"Learn more:\" for optional background, status, or update links. Use \"Learn about\" without a colon when the linked text naturally completes the phrase, especially for explainer or topic pages. If the phrase needs an article, place it before the anchor, for example \"Learn about the <a>Canada Groceries and Essentials Benefit</a>\"."
+      "fullSentenceLinksNeedLeadIn": "If a link stands alone as its own sentence or paragraph, or if a sentence mainly directs the user to a link, place that link direction in its own paragraph. Prefer putting a standalone link sentence or paragraph last in the alert content, but do not treat placement as a hard requirement. Use one of these lead-ins before the anchor when the standalone link text does not already contain a clear action verb: \"Refer to:\" or \"Learn more:\". Prefer \"Refer to:\" for required task or service links. Prefer \"Learn more:\" for optional background, status, or update links. Do not add a lead-in before standalone action links such as \"View CRA processing times\", \"Check CRA processing times\", \"Get an access code\", \"Register a business\", \"Sign in or register for a CRA account\", \"Learn about the Canada Groceries and Essentials Benefit\", \"Find out how to get an access code\", or \"How to get an access code\". Use \"Learn about\" without a colon when the linked text naturally completes the phrase, especially for explainer or topic pages. If the phrase needs an article, place it before the anchor, for example \"Learn about the <a>Canada Groceries and Essentials Benefit</a>\". Do not put a period or other punctuation after the closing anchor in a standalone link sentence or paragraph."
     }
   }
 }

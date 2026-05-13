@@ -14,6 +14,7 @@ describe('AlertRewriteGuardService', () => {
   const infoPlan = {
     alertType: 'info',
     domainTags: [],
+    purposeTags: [],
     criteriaMatched: [],
     directives: [],
   } satisfies AlertRewritePlan;
@@ -99,9 +100,78 @@ describe('AlertRewriteGuardService', () => {
   it('allows a standalone paragraph that uses learn about the before the link', () => {
     expect(
       service.hasFullSentenceLinkWithoutAllowedLeadIn(
-        '<div class="alert alert-info"><h3>Canada Groceries and Essentials Benefit increase</h3><p>The benefit will increase by 25% starting July 2026.</p><p>Learn about the <a href="/benefit">Canada Groceries and Essentials Benefit</a>.</p></div>',
+        '<div class="alert alert-info"><h3>Canada Groceries and Essentials Benefit increase</h3><p>The benefit will increase by 25% starting July 2026.</p><p>Learn about the <a href="/benefit">Canada Groceries and Essentials Benefit</a></p></div>',
       ),
     ).toBeFalse();
+  });
+
+  it('allows a standalone action-verb link without a lead-in', () => {
+    expect(
+      service.hasFullSentenceLinkWithoutAllowedLeadIn(
+        '<div class="alert alert-warning"><h3>DTC processing delay</h3><p>The CRA is experiencing delays in processing Form T2201.</p><p><a href="/times">View CRA processing times</a></p></div>',
+      ),
+    ).toBeFalse();
+  });
+
+  it('allows a standalone how-to action link without a lead-in', () => {
+    expect(
+      service.hasFullSentenceLinkWithoutAllowedLeadIn(
+        '<div class="alert alert-info"><h3>Get your access code in your CRA account</h3><p>Business owners can get their GST/HST access code in My Business Account.</p><p><a href="/access-code">How to get an access code</a></p></div>',
+      ),
+    ).toBeFalse();
+  });
+
+  it('allows standalone learn and find out action links without a lead-in', () => {
+    expect(
+      service.hasFullSentenceLinkWithoutAllowedLeadIn(
+        '<div class="alert alert-info"><h3>Access code</h3><p>Business owners can get their GST/HST access code in My Business Account.</p><p><a href="/access-code">Find out how to get an access code</a></p></div>',
+      ),
+    ).toBeFalse();
+    expect(
+      service.hasFullSentenceLinkWithoutAllowedLeadIn(
+        '<div class="alert alert-info"><h3>Benefit update</h3><p>The benefit will change in July 2026.</p><p><a href="/benefit">Learn about the Canada Groceries and Essentials Benefit</a></p></div>',
+      ),
+    ).toBeFalse();
+  });
+
+  it('removes redundant lead-ins before standalone action links', () => {
+    const repaired = service.removeRedundantLeadInsBeforeActionLinks(
+      '<div class="alert alert-warning"><h3>DTC processing delay</h3><p>The CRA is experiencing delays in processing Form T2201.</p><p>Refer to: <a href="/times">Check CRA processing times</a></p></div>',
+    );
+
+    expect(repaired).toContain('<p><a href="/times">Check CRA processing times</a></p>');
+    expect(repaired).not.toContain('Refer to:');
+  });
+
+  it('removes terminal punctuation from standalone link paragraphs', () => {
+    const repaired = service.removeStandaloneLinkTerminalPunctuation(
+      '<div class="alert alert-info"><h3>Benefit update</h3><p>The benefit will change in July 2026.</p><p>Learn about the <a href="/benefit">Canada Groceries and Essentials Benefit</a>.</p><p>Refer to: <a href="/details">benefit details</a>!</p></div>',
+    );
+
+    expect(repaired).toContain(
+      '<p>Learn about the <a href="/benefit">Canada Groceries and Essentials Benefit</a></p>',
+    );
+    expect(repaired).toContain(
+      '<p>Refer to: <a href="/details">benefit details</a></p>',
+    );
+  });
+
+  it('keeps punctuation when a link is part of normal prose', () => {
+    const repaired = service.removeStandaloneLinkTerminalPunctuation(
+      '<div class="alert alert-info"><h3>Benefit update</h3><p>You can apply for the <a href="/benefit">Canada Groceries and Essentials Benefit</a>.</p></div>',
+    );
+
+    expect(repaired).toContain(
+      '<p>You can apply for the <a href="/benefit">Canada Groceries and Essentials Benefit</a>.</p>',
+    );
+  });
+
+  it('rejects a standalone vague link without a lead-in', () => {
+    expect(
+      service.hasFullSentenceLinkWithoutAllowedLeadIn(
+        '<div class="alert alert-info"><h3>Benefit update</h3><p>The benefit will change in July 2026.</p><p><a href="/benefit">More information</a></p></div>',
+      ),
+    ).toBeTrue();
   });
 
   it('rejects learn about the when it is embedded in the explanatory paragraph', () => {

@@ -159,6 +159,12 @@ export class AlertRewriteGuardService {
           if (hasDirectionalLeadIn) {
             return true;
           }
+          if (
+            linkSentenceOnly &&
+            this.hasStandaloneActionVerbLinkText(sentence, markerPrefix, markerSuffix)
+          ) {
+            return false;
+          }
 
           return linkSentenceOnly;
         });
@@ -246,6 +252,8 @@ export class AlertRewriteGuardService {
         candidate.rewrittenHeading || params.originalHeading || '',
       );
     }
+    repairedHtml = this.stripRedundantLeadInsBeforeActionLinks(repairedHtml);
+    repairedHtml = this.stripStandaloneLinkTerminalPunctuation(repairedHtml);
 
     const repaired = this.alertRewrite.parseAlertRewriteResponse(
       JSON.stringify({
@@ -342,6 +350,14 @@ export class AlertRewriteGuardService {
     return doc.body.outerHTML;
   }
 
+  removeRedundantLeadInsBeforeActionLinks(alertHtml: string): string {
+    return this.stripRedundantLeadInsBeforeActionLinks(alertHtml);
+  }
+
+  removeStandaloneLinkTerminalPunctuation(alertHtml: string): string {
+    return this.stripStandaloneLinkTerminalPunctuation(alertHtml);
+  }
+
   // The remaining helpers support the guard logic above and stay private so the
   // orchestration layer only depends on the high-level validation/repair API.
   private normalizeLeadInText(value: string): string {
@@ -410,6 +426,121 @@ export class AlertRewriteGuardService {
     if (!normalized) return false;
 
     return /\blearn more\b/.test(normalized);
+  }
+
+  private hasStandaloneActionVerbLinkText(
+    sentence: string,
+    markerPrefix: string,
+    markerSuffix: string,
+  ): boolean {
+    const escapedPrefix = markerPrefix.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const escapedSuffix = markerSuffix.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const linkTextPattern = new RegExp(`${escapedPrefix}([^\\]]+)${escapedSuffix}`, 'g');
+    const linkTexts = Array.from(sentence.matchAll(linkTextPattern))
+      .map((match) => this.normalizeLeadInText(match[1] || ''))
+      .filter((text) => !!text);
+
+    return (
+      linkTexts.length > 0 &&
+      linkTexts.every((text) => this.containsActionVerbLinkText(text))
+    );
+  }
+
+  private containsActionVerbLinkText(linkText: string): boolean {
+    const normalized = this.normalizeLeadInText(linkText);
+    if (!normalized || /^learn more\b/.test(normalized)) return false;
+
+    return /^(?:how to\s+)?(?:view|get|apply|register|sign in|log in|file|review|check|submit|download|pay|request|update|manage|start|use|learn|find out)\b/.test(
+      normalized,
+    );
+  }
+
+  private stripRedundantLeadInsBeforeActionLinks(alertHtml: string): string {
+    try {
+      const doc = new DOMParser().parseFromString(alertHtml || '', 'text/html');
+      const root = doc.body.firstElementChild as HTMLElement | null;
+      if (!root) return alertHtml;
+
+      Array.from(root.querySelectorAll('p')).forEach((paragraph) => {
+        const anchors = Array.from(paragraph.querySelectorAll('a'));
+        if (anchors.length !== 1) return;
+
+        const anchor = anchors[0];
+        const anchorText = (anchor.textContent || '').trim();
+        if (!this.containsActionVerbLinkText(anchorText)) return;
+
+        const beforeRange = doc.createRange();
+        beforeRange.setStart(paragraph, 0);
+        beforeRange.setEndBefore(anchor);
+        const beforeText = this.normalizeLeadInText(beforeRange.toString());
+        beforeRange.detach();
+        if (beforeText !== 'refer to:' && beforeText !== 'learn more:') return;
+
+        const afterRange = doc.createRange();
+        afterRange.setStartAfter(anchor);
+        afterRange.setEnd(paragraph, paragraph.childNodes.length);
+        const afterText = afterRange.toString();
+        afterRange.detach();
+        if (afterText.replace(/[.!?\s]/g, '')) return;
+
+        while (paragraph.firstChild && paragraph.firstChild !== anchor) {
+          paragraph.removeChild(paragraph.firstChild);
+        }
+        this.removeTextAfterNode(anchor);
+      });
+
+      return root.outerHTML;
+    } catch {
+      return alertHtml;
+    }
+  }
+
+  private stripStandaloneLinkTerminalPunctuation(alertHtml: string): string {
+    try {
+      const doc = new DOMParser().parseFromString(alertHtml || '', 'text/html');
+      const root = doc.body.firstElementChild as HTMLElement | null;
+      if (!root) return alertHtml;
+
+      Array.from(root.querySelectorAll('p')).forEach((paragraph) => {
+        const anchors = Array.from(paragraph.querySelectorAll('a'));
+        if (anchors.length !== 1) return;
+
+        const anchor = anchors[0];
+        const beforeRange = doc.createRange();
+        beforeRange.setStart(paragraph, 0);
+        beforeRange.setEndBefore(anchor);
+        const beforeText = this.normalizeLeadInText(beforeRange.toString());
+        beforeRange.detach();
+
+        const isStandaloneLink =
+          !beforeText ||
+          this.isValidStandaloneLinkLeadIn(beforeText) ||
+          this.containsActionVerbLinkText(anchor.textContent || '');
+        if (!isStandaloneLink) return;
+
+        const afterRange = doc.createRange();
+        afterRange.setStartAfter(anchor);
+        afterRange.setEnd(paragraph, paragraph.childNodes.length);
+        const afterText = afterRange.toString();
+        afterRange.detach();
+        if (!/^[\s.!?]+$/.test(afterText)) return;
+
+        this.removeTextAfterNode(anchor);
+      });
+
+      return root.outerHTML.trim();
+    } catch {
+      return alertHtml;
+    }
+  }
+
+  private removeTextAfterNode(node: Node): void {
+    const parent = node.parentNode;
+    if (!parent) return;
+
+    while (node.nextSibling) {
+      parent.removeChild(node.nextSibling);
+    }
   }
 
   private stripLinkPlaceholders(value: string): string {

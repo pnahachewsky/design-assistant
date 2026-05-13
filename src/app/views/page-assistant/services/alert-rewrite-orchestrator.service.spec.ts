@@ -21,12 +21,18 @@ describe('AlertRewriteOrchestratorService', () => {
   const plan = {
     alertType: 'info',
     domainTags: [],
+    purposeTags: [],
     criteriaMatched: [],
     directives: [],
   } satisfies AlertRewritePlan;
 
   const originalHtml =
     '<div class="alert alert-info"><p>Original alert text <a href="/times">Check CRA processing times</a></p></div>';
+  const includedIssue = {
+    alertIndex: 1,
+    category: 'Missing heading',
+    include: true,
+  };
 
   const softFailureCandidate: AlertRewriteResult = {
     rewrittenAlertHtml:
@@ -88,7 +94,7 @@ describe('AlertRewriteOrchestratorService', () => {
 
     service = TestBed.inject(AlertRewriteOrchestratorService);
 
-    alertRewriteGuardSpy.getIssuesForAlertIndex.and.returnValue([]);
+    alertRewriteGuardSpy.getIssuesForAlertIndex.and.returnValue([includedIssue]);
     alertRewriteGuardSpy.getAlertHeadingForRewrite.and.returnValue('');
     alertRewriteGuardSpy.getAlertTextForRewrite.and.returnValue(
       'Original alert text',
@@ -227,7 +233,7 @@ describe('AlertRewriteOrchestratorService', () => {
     );
   });
 
-  it('passes retry reasons into passthrough fallback results', async () => {
+  it('returns retry reasons as UI fallback notices', async () => {
     alertRewriteSpy.parseAlertRewriteResponse.and.returnValue(null);
     alertRewriteSpy.parseAlertRewriteRepairCandidate.and.returnValue(null);
     alertRewriteGuardSpy.tryLocalAlertRewriteRepair.and.returnValue(null);
@@ -239,7 +245,7 @@ describe('AlertRewriteOrchestratorService', () => {
         usedModel: AiModel.NemotronSuper,
       });
 
-    await service.generateRecommendations({
+    const result = await service.generateRecommendations({
       html: originalHtml,
       issues: [],
       model: AiModel.NemotronSuper,
@@ -258,8 +264,13 @@ describe('AlertRewriteOrchestratorService', () => {
       jasmine.objectContaining({
         alertHtml: originalHtml,
         originalAlertText: 'Original alert text',
-        failureReasons: ['invalidWrapperHtml'],
       }),
     );
+    expect(result.fallbackNotices).toEqual([
+      {
+        alertIndex: 1,
+        reasons: ['invalidWrapperHtml'],
+      },
+    ]);
   });
 });

@@ -45,6 +45,7 @@ import { SkillManagerService } from './services/skill-manager.service';
 import { AlertIssuesContextService } from './services/alert-issues-context.service';
 import {
   coerceInteractiveResultLeadIns,
+  getReportableAlerts,
   removeNonReportableAlertsFromHtml,
 } from './services/alert-reportable.utils';
 import { AlertRewriteOrchestratorService } from './services/alert-rewrite-orchestrator.service';
@@ -598,7 +599,8 @@ export class PageAssistantCompareComponent
     const candidates = this.buildModelRotation(model);
     let lastError: Error | undefined;
 
-    for (const candidate of candidates) {
+    for (let i = 0; i < candidates.length; i += 1) {
+      const candidate = candidates[i];
       const response = await fetch(url, {
         method: 'POST',
         headers,
@@ -641,6 +643,16 @@ export class PageAssistantCompareComponent
             typeof errorMessage === 'string' ? errorMessage : 'Unknown error'
           }`,
         );
+        if (
+          this.isRetryableAiProviderError(errorObj) &&
+          i < candidates.length - 1
+        ) {
+          this.logRetryableAiProviderError(
+            `${contextLabel} provider error; retrying next model in rotation.`,
+            candidate,
+            errorObj,
+          );
+        }
         continue;
       }
 
@@ -712,11 +724,41 @@ export class PageAssistantCompareComponent
     model: AiModel;
     headers: Record<string, string>;
     url: string;
-  }): Promise<void> {
+  }): Promise<boolean> {
     const includeExamples = this.uploadState.getIncludeAlertRewriteExamples();
     const includeBeforeTextInExamples =
       includeExamples &&
       this.uploadState.getIncludeBeforeTextInAlertRewriteExamples();
+    if (!params.issues.length && !includeExamples) {
+      this.statusSeverity = 'info';
+      this.statusMessage =
+        'No selected alert issues found, so no alert rewrites were generated.';
+      this.messageService.add({
+        severity: 'info',
+        summary: this.translate.instant('common.ai.alertIssuesNotIdentified'),
+        detail:
+          'Alert rewriting was skipped because there were no selected issues to fix.',
+        life: 5000,
+      });
+      return false;
+    }
+
+    const alertDoc = new DOMParser().parseFromString(params.html, 'text/html');
+    const reportableAlerts = getReportableAlerts(alertDoc, {
+      interactiveResultLeadIns: this.getInteractiveResultLeadIns(),
+    });
+    if (!reportableAlerts.length) {
+      this.statusSeverity = 'info';
+      this.statusMessage = 'No reportable alerts found on this page.';
+      this.messageService.add({
+        severity: 'info',
+        summary: 'No reportable alerts found',
+        detail: 'The alert rewrite flow was skipped because this page does not contain any reportable alerts.',
+        life: 5000,
+      });
+      return false;
+    }
+
     this.statusMessage = this.buildAlertRewriteStatusMessage();
 
     const recommendationResult =
@@ -739,6 +781,18 @@ export class PageAssistantCompareComponent
       modifiedUrl: 'AI generated',
       modifiedHtml: recommendationResult.formattedHtml,
     });
+    if (recommendationResult.fallbackNotices.length) {
+      const failedAlertIndexes = recommendationResult.fallbackNotices
+        .map((notice) => notice.alertIndex)
+        .join(', ');
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Some alerts were not rewritten',
+        detail: `The original alert content was kept for alert ${failedAlertIndexes}.`,
+        life: 8000,
+      });
+    }
+    return true;
   }
 
   //AI Model
@@ -892,13 +946,16 @@ export class PageAssistantCompareComponent
               life: 3000,
             });
           }
-          await this.applyAlertRecommendations({
+          const recommendationsApplied = await this.applyAlertRecommendations({
             html,
             issues: selectedIssues,
             model,
             headers,
             url,
           });
+          if (!recommendationsApplied) {
+            return;
+          }
           this.statusSeverity = 'success';
           this.statusMessage = this.translate.instant(
             'common.ai.alertRecommendationsGenerated',
@@ -928,7 +985,12 @@ export class PageAssistantCompareComponent
           provider: { allow_fallbacks: false },
         };
 
-        console.log('Sending to OpenRouter:', { payload: attemptPayload });
+        console.log('Sending to OpenRouter', {
+          model: candidate,
+          attempt: i + 1,
+          attempts: candidates.length,
+          prompt: promptKeyForRequest,
+        });
 
         const orResponse = await fetch(url, {
           method: 'POST',
@@ -965,8 +1027,20 @@ export class PageAssistantCompareComponent
 
         if (attemptResponse.error) {
           const attemptModelShort = this.getShortModelName(candidate);
+          const errorDetails = this.getAiErrorDiagnostics(attemptResponse.error);
+          const shouldTryNextModel =
+            i < candidates.length - 1 &&
+            this.isRetryableAiProviderError(attemptResponse.error);
+          if (shouldTryNextModel) {
+            this.logRetryableAiProviderError(
+              'AI provider error; retrying next model in rotation.',
+              candidate,
+              attemptResponse.error,
+            );
+            continue;
+          }
           console.groupCollapsed('AI Error');
-          console.error(attemptResponse.error?.status);
+          console.error(errorDetails);
           console.warn(`400: Bad Request (invalid or missing params, CORS)\n
                     401: Invalid credentials (OAuth session expired, disabled/invalid API key)\n
                     402: Your account or API key has insufficient credits. Add more credits and retry the request.\n
@@ -1079,13 +1153,16 @@ export class PageAssistantCompareComponent
             });
           }
           // Step 2: run alert rewrite flow with selected issues, or example-only when none are selected.
-          await this.applyAlertRecommendations({
+          const recommendationsApplied = await this.applyAlertRecommendations({
             html,
             issues: selectedIssues,
             model,
             headers,
             url,
           });
+          if (!recommendationsApplied) {
+            return;
+          }
         } else {
         const formattedHtml = await this.urlDataService.formatHtml(aiHtml, 'ai');
 
@@ -1137,6 +1214,66 @@ export class PageAssistantCompareComponent
         life: 10000,
       });
     }
+  }
+
+  private logRetryableAiProviderError(
+    message: string,
+    model: string,
+    error: unknown,
+  ): void {
+    const diagnostics = this.getAiErrorDiagnostics(error);
+    console.warn(message, {
+      model: this.getShortModelName(model),
+      status: diagnostics['status'],
+      code: diagnostics['code'],
+      providerName: diagnostics['providerName'],
+      providerError: diagnostics['rawProviderError'] || diagnostics['message'],
+    });
+  }
+
+  private isRetryableAiProviderError(error: unknown): boolean {
+    if (!error || typeof error !== 'object') return false;
+    const record = error as Record<string, unknown>;
+    const message = String(record['message'] || '').toLowerCase();
+    const code = String(record['code'] || '').toLowerCase();
+    const status = Number(record['status']);
+
+    return (
+      message.includes('provider returned error') ||
+      message.includes('provider error') ||
+      message.includes('no available model provider') ||
+      code.includes('provider') ||
+      status === 502 ||
+      status === 503
+    );
+  }
+
+  private getAiErrorDiagnostics(error: unknown): Record<string, unknown> {
+    if (!error || typeof error !== 'object') {
+      return { message: String(error || 'Unknown AI error') };
+    }
+    const record = error as Record<string, unknown>;
+    const metadata =
+      record['metadata'] && typeof record['metadata'] === 'object'
+        ? (record['metadata'] as Record<string, unknown>)
+        : {};
+
+    return {
+      status: record['status'],
+      code: record['code'],
+      message: record['message'],
+      providerName:
+        record['provider_name'] ||
+        record['providerName'] ||
+        metadata['provider_name'] ||
+        metadata['providerName'],
+      rawProviderError:
+        record['raw_provider_error'] ||
+        record['rawProviderError'] ||
+        metadata['raw_provider_error'] ||
+        metadata['rawProviderError'],
+      metadata,
+    };
   }
   /*TOOLBAR FUNCTIONS*/
 

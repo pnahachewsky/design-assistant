@@ -207,7 +207,7 @@ export class UrlDataService {
           if (anchor) {
             const anchorElement = ajaxDoc.querySelector(`#${anchor}`);
             if (!anchorElement) {
-              console.warn(`Anchor #${anchor} not found in ${fullUrl}. Skipping replacement.`);
+              console.debug(`Anchor #${anchor} not found in ${fullUrl}. Skipping replacement.`);
               // Remove the attribute for the same one-shot retry behavior as 404s.
               element.removeAttribute(attrName);
               continue;
@@ -216,7 +216,7 @@ export class UrlDataService {
           } else {
             const isFullDoc = /<html[\s>]/i.test(fetchedHtml) && /<body[\s>]/i.test(fetchedHtml);
             if (isFullDoc) {
-              console.warn(`Skipping full document injection from: ${fullUrl}`);
+              console.debug(`Skipping full document injection from: ${fullUrl}`);
               element.removeAttribute(attrName);
               continue;
             }

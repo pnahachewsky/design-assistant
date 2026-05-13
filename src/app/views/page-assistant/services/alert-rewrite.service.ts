@@ -21,6 +21,7 @@ export interface AlertRewriteDirective {
 export interface AlertRewritePlan {
   alertType: string;
   domainTags: string[];
+  purposeTags: string[];
   criteriaMatched: string[];
   directives: AlertRewriteDirective[];
 }
@@ -29,11 +30,13 @@ export interface AlertRewriteExample {
   id: string;
   alertType: string;
   tags: string[];
+  purposeTags?: string[];
   criteria: string[];
   before: string;
   after: string;
   headingBefore?: string;
   headingAfter?: string;
+  updatedHtml?: string;
   linksBefore?: AlertRewriteExampleLink[];
   linksAfter?: AlertRewriteExampleLink[];
   linkEdits?: AlertRewriteExampleLinkEdit[];
@@ -134,6 +137,12 @@ export class AlertRewriteService {
   buildHeuristicPlan(input: AlertRewriteInput): AlertRewritePlan {
     const criteriaMatched = this.inferCriteriaFromIssues(input.issues);
     const domainTags = this.inferDomainTags(input.alertText, input.issues);
+    const purposeTags = this.inferPurposeTags(
+      input.alertHtml,
+      input.alertText,
+      input.issues,
+      criteriaMatched,
+    );
     const directives: AlertRewriteDirective[] = [];
 
     if (criteriaMatched.includes('C1_missing_next_step')) {
@@ -148,6 +157,7 @@ export class AlertRewriteService {
     return {
       alertType: input.alertType || 'info',
       domainTags,
+      purposeTags,
       criteriaMatched,
       directives: this.uniqueDirectives(directives),
     };
@@ -206,6 +216,7 @@ export class AlertRewriteService {
     const root = parsed as Record<string, unknown>;
     const alertType = this.cleanString(root['alertType']) || fallback.alertType;
     const domainTags = this.toStringArray(root['domainTags']);
+    const purposeTags = this.toStringArray(root['purposeTags']);
     const criteriaMatched = this.toStringArray(root['criteriaMatched']);
     const rawDirectives = Array.isArray(root['directives']) ? root['directives'] : [];
     const directives = rawDirectives
@@ -215,6 +226,7 @@ export class AlertRewriteService {
     return {
       alertType,
       domainTags: domainTags.length ? domainTags : fallback.domainTags,
+      purposeTags: purposeTags.length ? purposeTags : fallback.purposeTags,
       criteriaMatched: criteriaMatched.length ? criteriaMatched : fallback.criteriaMatched,
       directives: directives.length ? this.uniqueDirectives(directives) : fallback.directives,
     };
@@ -224,24 +236,31 @@ export class AlertRewriteService {
     plan: AlertRewritePlan,
     examples: AlertRewriteExample[],
     count = 2,
+    context?: {
+      originalHeading?: string;
+      originalAlertText?: string;
+    },
   ): AlertRewriteExample[] {
     const requestedCount = Math.max(1, count);
     const criteria = new Set(plan.criteriaMatched || []);
     const tags = new Set(plan.domainTags || []);
+    const purposeTags = new Set(plan.purposeTags || []);
+    const sourceText = this.normalizeComparisonText(
+      `${context?.originalHeading || ''} ${context?.originalAlertText || ''}`,
+    );
 
     const scored = examples.map((example) => {
       let score = 0;
-      if (example.alertType === plan.alertType) {
-        score += 3;
-      } else {
-        score -= 2;
+      for (const purposeTag of example.purposeTags || []) {
+        if (purposeTags.has(purposeTag)) score += 3;
       }
       for (const criterion of example.criteria || []) {
         if (criteria.has(criterion)) score += 2;
       }
       for (const tag of example.tags || []) {
-        if (tags.has(tag)) score += 1;
+        if (tags.has(tag)) score += 0.25;
       }
+      score += this.calculateExampleTextRelevance(sourceText, example);
       return { example, score };
     });
 
@@ -350,6 +369,7 @@ export class AlertRewriteService {
         : {
             alertType: params.plan.alertType,
             domainTags: params.plan.domainTags,
+            purposeTags: params.plan.purposeTags,
             criteriaMatched: params.plan.criteriaMatched,
             directives: [],
           };
@@ -374,8 +394,10 @@ export class AlertRewriteService {
           : {}),
         headingAfter: example.headingAfter || '',
         after: example.after,
+        updatedHtml: example.updatedHtml || '',
         criteria: example.criteria,
         tags: example.tags,
+        purposeTags: example.purposeTags || [],
         linksAfter: example.linksAfter || [],
         linkEdits: example.linkEdits || [],
       })),
@@ -600,7 +622,24 @@ export class AlertRewriteService {
       );
       if (!exampleCombined) continue;
 
-      if (rewrittenCombined === exampleCombined && rewrittenCombined !== originalCombined) {
+      const exampleBeforeCombined = this.normalizeComparisonText(
+        `${example.headingBefore || ''} ${example.before || ''}`,
+      );
+      const originalSimilarity = this.calculateJaccardSimilarity(
+        originalCombined,
+        exampleCombined,
+      );
+      const sourceSimilarityToExampleBefore = this.calculateJaccardSimilarity(
+        originalCombined,
+        exampleBeforeCombined,
+      );
+
+      if (
+        rewrittenCombined === exampleCombined &&
+        rewrittenCombined !== originalCombined &&
+        originalSimilarity < 0.8 &&
+        sourceSimilarityToExampleBefore < 0.8
+      ) {
         return {
           isCopy: true,
           exampleId: example.id,
@@ -614,12 +653,12 @@ export class AlertRewriteService {
         rewrittenCombined,
         exampleCombined,
       );
-      const originalSimilarity = this.calculateJaccardSimilarity(
-        originalCombined,
-        exampleCombined,
-      );
 
-      if (similarity >= 0.92 && originalSimilarity < 0.8) {
+      if (
+        similarity >= 0.92 &&
+        originalSimilarity < 0.8 &&
+        sourceSimilarityToExampleBefore < 0.8
+      ) {
         return {
           isCopy: true,
           exampleId: example.id,
@@ -636,20 +675,14 @@ export class AlertRewriteService {
     alertHtml: string;
     originalHeading?: string;
     originalAlertText: string;
-    failureReasons?: string[];
   }): AlertRewriteResult {
     const normalizedAlertHtml =
       this.normalizeAlertWrapperHtml(params.alertHtml) || params.alertHtml.trim();
     const extractedHeading = this.extractHeadingFromAlertHtml(normalizedAlertHtml);
     const rewrittenHeading = (params.originalHeading || '').trim() || extractedHeading;
-    const shouldShowFailureNotice = params.failureReasons !== undefined;
-    const failureReasons = (params.failureReasons || []).filter((reason) => !!reason);
-    const rewrittenAlertHtml = shouldShowFailureNotice
-      ? `${this.buildPassthroughFailureNoticeHtml(failureReasons)}${normalizedAlertHtml}`
-      : normalizedAlertHtml;
 
     return {
-      rewrittenAlertHtml,
+      rewrittenAlertHtml: normalizedAlertHtml,
       rewrittenHeading: rewrittenHeading || this.buildFallbackHeading(),
       rewrittenAlert: (params.originalAlertText || '').trim(),
       appliedDirectives: [],
@@ -719,6 +752,121 @@ export class AlertRewriteService {
     return Array.from(tags).slice(0, 6);
   }
 
+  private inferPurposeTags(
+    alertHtml: string,
+    alertText: string,
+    issues: AlertRewriteIssueInput[],
+    criteriaMatched: string[],
+  ): string[] {
+    const tags = new Set<string>();
+    const lower = (alertText || '').toLowerCase();
+    const issueText = issues
+      .map(
+        (issue) =>
+          `${issue.category || ''} ${issue.description || ''} ${issue.recommendation || ''}`,
+      )
+      .join(' ')
+      .toLowerCase();
+    const combined = `${lower} ${issueText}`;
+    const criteria = new Set(criteriaMatched || []);
+    const linkCount = (alertHtml.match(/<a\b/gi) || []).length;
+
+    const maybeAdd = (tag: string, pattern: RegExp): void => {
+      if (pattern.test(combined)) {
+        tags.add(tag);
+      }
+    };
+
+    if (criteria.has('C4_missing_heading')) tags.add('missing-heading');
+    if (criteria.has('C1_missing_next_step')) tags.add('action-required');
+    if (criteria.has('C2_too_wordy')) tags.add('shorten-alert');
+    if (criteria.has('C3_too_many_links')) tags.add('remove-secondary-link');
+    if (linkCount === 1) tags.add('standalone-action-link');
+    if (linkCount > 1) {
+      tags.add('multiple-detail-links');
+      tags.add('duplicate-link-cleanup');
+    }
+
+    maybeAdd('service-delay', /\bdelay|processing time|service standard\b/);
+    maybeAdd('service-change', /\bno longer|ending|must register|effective\b/);
+    maybeAdd('service-update', /\bresumed|paused|interruption|operations\b/);
+    maybeAdd('status-change', /\bresumed|paused|tentative agreement|strike|lockout\b/);
+    maybeAdd('fraud-warning', /\bfalse information|disinformation|fraud|scam\b/);
+    maybeAdd('correction', /\bdoes not exist|false information|correction\b/);
+    maybeAdd('legislative-update', /\bproposed legislation|legislative|budget|tabled legislation\b/);
+    maybeAdd('policy-caveat', /\bmay change|subject to parliamentary approval|proposal\b/);
+    maybeAdd('date-sensitive', /\bas of|effective|starting|january|february|march|april|may|june|july|august|september|october|november|december\b/);
+    maybeAdd('account-service', /\bcra account|my business account|access code|sign in\b/);
+    maybeAdd('online-service', /\bonline|electronically|sign in|register\b/);
+    maybeAdd('support-info', /\bsupport|relief|help|affected\b/);
+    maybeAdd('technical-notice', /\bnotice [a-z]{2,}|technical information|excise\b/i);
+    maybeAdd('benefit-change', /\bbenefit|credit|payment|top-up\b/);
+    maybeAdd('new-program', /\bnew |replace|will replace\b/);
+    maybeAdd('official-source-warning', /\bofficial government|official source|official web\b/);
+
+    return Array.from(tags).slice(0, 8);
+  }
+
+  private calculateExampleTextRelevance(
+    sourceText: string,
+    example: AlertRewriteExample,
+  ): number {
+    if (!sourceText) return 0;
+
+    const exampleText = this.normalizeComparisonText(
+      `${example.headingBefore || ''} ${example.before || ''}`,
+    );
+    if (!exampleText || exampleText.includes('original text unavailable')) {
+      return 0;
+    }
+
+    const sourceTokens = new Set(this.tokenizeComparisonText(sourceText));
+    const exampleTokens = new Set(this.tokenizeComparisonText(exampleText));
+    if (sourceTokens.size < 4 || exampleTokens.size < 4) return 0;
+
+    const stopWords = new Set([
+      'a',
+      'an',
+      'and',
+      'are',
+      'as',
+      'at',
+      'be',
+      'by',
+      'can',
+      'for',
+      'from',
+      'has',
+      'have',
+      'in',
+      'is',
+      'it',
+      'its',
+      'of',
+      'on',
+      'or',
+      'our',
+      'the',
+      'their',
+      'this',
+      'to',
+      'we',
+      'will',
+      'with',
+      'you',
+      'your',
+    ]);
+    const distinctiveMatches = Array.from(sourceTokens).filter(
+      (token) =>
+        token.length >= 4 && !stopWords.has(token) && exampleTokens.has(token),
+    ).length;
+    const containment =
+      this.calculateJaccardSimilarity(sourceText, exampleText) +
+      this.calculateJaccardSimilarity(exampleText, sourceText);
+
+    return Math.min(2.5, distinctiveMatches * 0.35 + containment);
+  }
+
   private toExample(raw: unknown): AlertRewriteExample | null {
     if (!raw || typeof raw !== 'object') return null;
     const root = raw as Record<string, unknown>;
@@ -731,11 +879,13 @@ export class AlertRewriteService {
       id,
       alertType,
       tags: this.toStringArray(root['tags']),
+      purposeTags: this.toStringArray(root['purposeTags']),
       criteria: this.toStringArray(root['criteria']),
       before,
       after,
       headingBefore: this.cleanString(root['headingBefore']) || undefined,
       headingAfter: this.cleanString(root['headingAfter']) || undefined,
+      updatedHtml: this.cleanString(root['updatedHtml']) || undefined,
       linksBefore: this.toExampleLinkArray(root['linksBefore']),
       linksAfter: this.toExampleLinkArray(root['linksAfter']),
       linkEdits: this.toExampleLinkEditArray(root['linkEdits']),
@@ -1116,25 +1266,6 @@ export class AlertRewriteService {
     } catch {
       return '';
     }
-  }
-
-  private buildPassthroughFailureNoticeHtml(failureReasons: string[]): string {
-    const reasonsText = failureReasons.join(', ');
-    return [
-      '<div class="alert alert-danger mrgn-bttm-md" data-alert-rewrite-status="failed"',
-      ` data-alert-rewrite-failure-reasons="${this.escapeHtmlAttribute(reasonsText)}">`,
-      '<h3>GenAI alert rewrite failed</h3>',
-      '<p>The assistant could not rewrite this alert after multiple attempts. The original alert is shown below.</p>',
-      '</div>',
-    ].join('');
-  }
-
-  private escapeHtmlAttribute(value: string): string {
-    return (value || '')
-      .replace(/&/g, '&amp;')
-      .replace(/"/g, '&quot;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;');
   }
 
   private toExampleLinkArray(raw: unknown): AlertRewriteExampleLink[] {

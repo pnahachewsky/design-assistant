@@ -12,6 +12,7 @@ describe('AlertRewriteService', () => {
   const plan = {
     alertType: 'info',
     domainTags: [],
+    purposeTags: [],
     criteriaMatched: [],
     directives: [],
   } satisfies AlertRewritePlan;
@@ -22,6 +23,184 @@ describe('AlertRewriteService', () => {
     });
 
     service = TestBed.inject(AlertRewriteService);
+  });
+
+  it('does not rank examples by alert type', () => {
+    const examples: AlertRewriteExample[] = [
+      {
+        id: 'same-type-generic',
+        alertType: 'info',
+        tags: [],
+        criteria: [],
+        before: 'Generic info alert',
+        after: 'Generic info rewrite',
+      },
+      {
+        id: 'different-type-matching-criteria',
+        alertType: 'warning',
+        tags: [],
+        criteria: ['C1_missing_next_step'],
+        before: 'Relevant warning alert',
+        after: 'Relevant warning rewrite',
+      },
+    ];
+
+    const selected = service.selectExamples(
+      {
+        alertType: 'info',
+        domainTags: [],
+        purposeTags: [],
+        criteriaMatched: ['C1_missing_next_step'],
+        directives: [],
+      },
+      examples,
+      1,
+    );
+
+    expect(selected.map((example) => example.id)).toEqual([
+      'different-type-matching-criteria',
+    ]);
+  });
+
+  it('ranks purpose tag matches ahead of generic topic matches', () => {
+    const examples: AlertRewriteExample[] = [
+      {
+        id: 'topic-only',
+        alertType: 'info',
+        tags: ['payment', 'support', 'deadline'],
+        purposeTags: [],
+        criteria: [],
+        before: 'Payment support topic alert',
+        after: 'Payment support topic rewrite',
+      },
+      {
+        id: 'purpose-match',
+        alertType: 'warning',
+        tags: [],
+        purposeTags: ['service-delay'],
+        criteria: [],
+        before: 'Processing delay alert',
+        after: 'Processing delay rewrite',
+      },
+    ];
+
+    const selected = service.selectExamples(
+      {
+        alertType: 'info',
+        domainTags: ['payment', 'support', 'deadline'],
+        purposeTags: ['service-delay'],
+        criteriaMatched: [],
+        directives: [],
+      },
+      examples,
+      1,
+    );
+
+    expect(selected.map((example) => example.id)).toEqual(['purpose-match']);
+  });
+
+  it('uses alert text relevance as a bounded boost for direct example matches', () => {
+    const examples: AlertRewriteExample[] = [
+      {
+        id: 'generic-action',
+        alertType: 'info',
+        tags: [],
+        purposeTags: ['action-required'],
+        criteria: ['C1_missing_next_step'],
+        before: 'Business owners can get their GST/HST access code in My Business Account.',
+        after: 'Business owners can get their access code online.',
+      },
+      {
+        id: 'dtc-delay',
+        alertType: 'warning',
+        tags: [],
+        purposeTags: ['action-required'],
+        criteria: ['C1_missing_next_step'],
+        before:
+          'The Canada Revenue Agency is experiencing delays in processing Form T2201, Disability Tax Credit Certificate. The most up-to-date processing times can be found on Check CRA processing times.',
+        after:
+          'The CRA is experiencing delays in processing Form T2201 Disability Tax Credit Certificate. Check CRA processing times',
+      },
+    ];
+
+    const selected = service.selectExamples(
+      {
+        alertType: 'info',
+        domainTags: [],
+        purposeTags: ['action-required'],
+        criteriaMatched: ['C1_missing_next_step'],
+        directives: [],
+      },
+      examples,
+      1,
+      {
+        originalAlertText:
+          'The Canada Revenue Agency is experiencing delays in processing Form T2201, Disability Tax Credit Certificate. Check CRA processing times.',
+      },
+    );
+
+    expect(selected.map((example) => example.id)).toEqual(['dtc-delay']);
+  });
+
+  it('does not flag exact example wording when the original alert is already a close match', () => {
+    const example: AlertRewriteExample = {
+      id: 'dtc-delay',
+      alertType: 'warning',
+      tags: [],
+      criteria: [],
+      before:
+        'The Canada Revenue Agency is experiencing delays in processing Form T2201, Disability Tax Credit Certificate. The most up-to-date processing times can be found on Check CRA processing times.',
+      after:
+        'The CRA is experiencing delays in processing Form T2201 Disability Tax Credit Certificate. Check CRA processing times',
+    };
+
+    const result = service.detectExampleCopy({
+      result: {
+        rewrittenAlertHtml:
+          '<section class="alert alert-warning"><h2 class="h3">DTC processing delay</h2><p>The CRA is experiencing delays in processing Form T2201 Disability Tax Credit Certificate. Check CRA processing times</p></section>',
+        rewrittenHeading: 'DTC processing delay',
+        rewrittenAlert:
+          'The CRA is experiencing delays in processing Form T2201 Disability Tax Credit Certificate. Check CRA processing times',
+        appliedDirectives: [],
+        exampleIdsUsed: [],
+      },
+      selectedExamples: [example],
+      originalHeading: '',
+      originalAlertText:
+        'The Canada Revenue Agency is experiencing delays in processing Form T2201, Disability Tax Credit Certificate. Check CRA processing times.',
+    });
+
+    expect(result.isCopy).toBeFalse();
+  });
+
+  it('flags exact example wording when the original alert is not a close match', () => {
+    const example: AlertRewriteExample = {
+      id: 'dtc-delay',
+      alertType: 'warning',
+      tags: [],
+      criteria: [],
+      before: 'Some unrelated alert text.',
+      after:
+        'The CRA is experiencing delays in processing Form T2201 Disability Tax Credit Certificate. Check CRA processing times',
+    };
+
+    const result = service.detectExampleCopy({
+      result: {
+        rewrittenAlertHtml:
+          '<section class="alert alert-warning"><h2 class="h3">DTC processing delay</h2><p>The CRA is experiencing delays in processing Form T2201 Disability Tax Credit Certificate. Check CRA processing times</p></section>',
+        rewrittenHeading: 'DTC processing delay',
+        rewrittenAlert:
+          'The CRA is experiencing delays in processing Form T2201 Disability Tax Credit Certificate. Check CRA processing times',
+        appliedDirectives: [],
+        exampleIdsUsed: [],
+      },
+      selectedExamples: [example],
+      originalHeading: '',
+      originalAlertText: 'A different alert about a benefit payment.',
+    });
+
+    expect(result.isCopy).toBeTrue();
+    expect(result.reason).toBe('exact-example-match');
   });
 
   it('forces exampleIdsUsed to an empty array when no examples were selected', () => {
@@ -161,25 +340,15 @@ describe('AlertRewriteService', () => {
     );
   });
 
-  it('adds a visible failure notice above the original alert for passthrough fallbacks', () => {
+  it('preserves the original alert for passthrough fallbacks', () => {
     const result = service.buildPassthroughResult({
       alertHtml: '<section class="alert alert-info"><p>Original alert text.</p></section>',
       originalHeading: '',
       originalAlertText: 'Original alert text.',
-      failureReasons: ['invalidWrapperHtml', 'mustKeepLink'],
     });
 
-    expect(result.rewrittenAlertHtml).toContain(
-      'data-alert-rewrite-status="failed"',
-    );
-    expect(result.rewrittenAlertHtml).toContain(
-      'The assistant could not rewrite this alert after multiple attempts.',
-    );
-    expect(result.rewrittenAlertHtml).toContain(
+    expect(result.rewrittenAlertHtml).toBe(
       '<section class="alert alert-info"><p>Original alert text.</p></section>',
-    );
-    expect(result.rewrittenAlertHtml).toContain(
-      'data-alert-rewrite-failure-reasons="invalidWrapperHtml, mustKeepLink"',
     );
   });
 });

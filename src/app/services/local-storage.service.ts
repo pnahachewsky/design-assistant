@@ -7,7 +7,6 @@ export class LocalStorageService {
 
   public saveData(key: string, value: string) {
     localStorage.setItem(key, value);
-    console.log(`Saved ` + key + `: ` + value);
   }
 
   public getData(key: string) {
@@ -15,11 +14,9 @@ export class LocalStorageService {
   }
   public removeData(key: string) {
     localStorage.removeItem(key);
-    console.log(`Removed ` + key);
   }
 
   public clearData() {
     localStorage.clear();
-    console.log(`Removed all stored values`);
   }
 }
