@@ -288,6 +288,7 @@ export class AlertRewriteService {
     originalAlertText: string;
     originalHeading?: string;
     originalAlertHtml: string;
+    compactAlertPayload?: Record<string, unknown>;
     plan: AlertRewritePlan;
     issues: AlertRewriteIssueInput[];
     examples: AlertRewriteExample[];
@@ -406,6 +407,9 @@ export class AlertRewriteService {
       originalHeading: (params.originalHeading || '').trim(),
       originalAlertText: (params.originalAlertText || '').trim(),
       originalAlertHtml: (params.originalAlertHtml || '').trim(),
+      ...(params.compactAlertPayload
+        ? { compactAlertPayload: params.compactAlertPayload }
+        : {}),
     };
 
     return [

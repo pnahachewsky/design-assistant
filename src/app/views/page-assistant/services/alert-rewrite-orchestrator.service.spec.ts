@@ -1,3 +1,5 @@
+/// <reference types="jasmine" />
+
 import { TestBed } from '@angular/core/testing';
 import { TranslateService } from '@ngx-translate/core';
 
@@ -8,7 +10,10 @@ import {
   AlertRewriteResult,
   AlertRewriteService,
 } from './alert-rewrite.service';
-import { AlertRewriteGuardService } from './alert-rewrite-guard.service';
+import {
+  AlertRewriteGuardService,
+  type AlertHtmlRewrite,
+} from './alert-rewrite-guard.service';
 import { UrlDataService } from './url-data.service';
 import { AiModel, AlertRewriteMode } from '../data/data.model';
 
@@ -104,12 +109,15 @@ describe('AlertRewriteOrchestratorService', () => {
     alertRewriteGuardSpy.containsLinkPlaceholderSyntax.and.returnValue(false);
     alertRewriteGuardSpy.hasFullSentenceLinkWithoutAllowedLeadIn.and.returnValue(true);
     alertRewriteGuardSpy.tryLocalAlertRewriteRepair.and.returnValue(null);
-    alertRewriteGuardSpy.ensureSemanticHeading.and.callFake((html, heading) =>
-      `<div class="alert alert-info"><h3>${heading}</h3><p>Processing of Form T2201 is delayed.</p><p>Check <a href="/times">Check CRA processing times</a>.</p></div>`,
+    alertRewriteGuardSpy.ensureSemanticHeading.and.callFake(
+      (html: string, heading: string) =>
+        `<div class="alert alert-info"><h3>${heading}</h3><p>Processing of Form T2201 is delayed.</p><p>Check <a href="/times">Check CRA processing times</a>.</p></div>`,
     );
-    alertRewriteGuardSpy.applyAlertHtmlRewrites.and.callFake((_html, rewrites) => {
-      return rewrites[0]?.rewritten_alert_html || '';
-    });
+    alertRewriteGuardSpy.applyAlertHtmlRewrites.and.callFake(
+      (_html: string, rewrites: AlertHtmlRewrite[]) => {
+        return rewrites[0]?.rewritten_alert_html || '';
+      },
+    );
 
     alertRewriteSpy.inferAlertType.and.returnValue('info');
     alertRewriteSpy.buildHeuristicPlan.and.returnValue(plan);
@@ -150,6 +158,7 @@ describe('AlertRewriteOrchestratorService', () => {
       includeExamples: false,
       includeBeforeTextInExamples: false,
       includeLinkWritingRules: false,
+      useCompactAlertsPageContext: false,
       forceLocalRepairForTesting: false,
       callOpenRouterForMessages,
       getShortModelName: (model) => model,
@@ -192,10 +201,12 @@ describe('AlertRewriteOrchestratorService', () => {
     alertRewriteSpy.parseAlertRewriteResponse.and.returnValue(null);
     alertRewriteSpy.parseAlertRewriteRepairCandidate.and.returnValue(partialCandidate);
     alertRewriteGuardSpy.tryLocalAlertRewriteRepair.and.returnValue(repairedResult);
-    alertRewriteGuardSpy.ensureSemanticHeading.and.callFake((html) => html);
-    alertRewriteGuardSpy.applyAlertHtmlRewrites.and.callFake((_html, rewrites) => {
-      return rewrites[0]?.rewritten_alert_html || '';
-    });
+    alertRewriteGuardSpy.ensureSemanticHeading.and.callFake((html: string) => html);
+    alertRewriteGuardSpy.applyAlertHtmlRewrites.and.callFake(
+      (_html: string, rewrites: AlertHtmlRewrite[]) => {
+        return rewrites[0]?.rewritten_alert_html || '';
+      },
+    );
 
     const callOpenRouterForMessages = jasmine
       .createSpy('callOpenRouterForMessages')
@@ -214,6 +225,7 @@ describe('AlertRewriteOrchestratorService', () => {
       includeExamples: false,
       includeBeforeTextInExamples: false,
       includeLinkWritingRules: false,
+      useCompactAlertsPageContext: false,
       forceLocalRepairForTesting: false,
       callOpenRouterForMessages,
       getShortModelName: (model) => model,
@@ -255,6 +267,7 @@ describe('AlertRewriteOrchestratorService', () => {
       includeExamples: false,
       includeBeforeTextInExamples: false,
       includeLinkWritingRules: false,
+      useCompactAlertsPageContext: false,
       forceLocalRepairForTesting: false,
       callOpenRouterForMessages,
       getShortModelName: (model) => model,

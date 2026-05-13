@@ -1,14 +1,14 @@
 import { TestBed } from '@angular/core/testing';
 import { TranslateService } from '@ngx-translate/core';
-import { AlertIssuesContextService } from './alert-issues-context.service';
+import { AlertContextService } from './alert-context.service';
 
-describe('AlertIssuesContextService', () => {
-  let service: AlertIssuesContextService;
+describe('AlertContextService', () => {
+  let service: AlertContextService;
 
   beforeEach(() => {
     TestBed.configureTestingModule({
       providers: [
-        AlertIssuesContextService,
+        AlertContextService,
         {
           provide: TranslateService,
           useValue: {
@@ -24,7 +24,7 @@ describe('AlertIssuesContextService', () => {
       ],
     });
 
-    service = TestBed.inject(AlertIssuesContextService);
+    service = TestBed.inject(AlertContextService);
   });
 
   it('omits hidden interactive answer alerts from the compact payload', () => {

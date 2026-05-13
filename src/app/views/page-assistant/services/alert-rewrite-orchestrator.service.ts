@@ -10,6 +10,7 @@ import {
   AlertRewriteService,
 } from './alert-rewrite.service';
 import { AlertRewriteGuardService } from './alert-rewrite-guard.service';
+import { AlertContextService } from './alert-context.service';
 import {
   coerceInteractiveResultLeadIns,
   getReportableAlerts,
@@ -35,6 +36,7 @@ export interface AlertRewriteFallbackNotice {
 export class AlertRewriteOrchestratorService {
   private alertRewrite = inject(AlertRewriteService);
   private alertRewriteGuard = inject(AlertRewriteGuardService);
+  private alertContext = inject(AlertContextService);
   private urlDataService = inject(UrlDataService);
   private translate = inject(TranslateService);
 
@@ -54,6 +56,7 @@ export class AlertRewriteOrchestratorService {
     includeExamples: boolean;
     includeBeforeTextInExamples: boolean;
     includeLinkWritingRules: boolean;
+    useCompactAlertsPageContext: boolean;
     forceLocalRepairForTesting: boolean;
     callOpenRouterForMessages: OpenRouterMessageCaller;
     getShortModelName: (model: string) => string;
@@ -81,6 +84,9 @@ export class AlertRewriteOrchestratorService {
       rewritten_alert_html: string;
     }> = [];
     const fallbackNotices: AlertRewriteFallbackNotice[] = [];
+    const compactAlertPayloads = params.useCompactAlertsPageContext
+      ? this.alertContext.buildCompactAlertRewritePayloads(alertDoc)
+      : [];
 
     // Each alert is planned and rewritten independently so a bad output for one
     // alert does not block the others from being generated.
@@ -104,6 +110,9 @@ export class AlertRewriteOrchestratorService {
         this.alertRewriteGuard.getAlertHeadingForRewrite(alertElement);
       const alertText = this.alertRewriteGuard.getAlertTextForRewrite(alertElement);
       if (!alertText) continue;
+      const compactAlertPayload = params.useCompactAlertsPageContext
+        ? compactAlertPayloads[i]
+        : undefined;
 
       const initialPlan = this.alertRewrite.buildHeuristicPlan({
         alertHtml,
@@ -171,6 +180,7 @@ export class AlertRewriteOrchestratorService {
           originalHeading,
           originalAlertText: alertText,
           originalAlertHtml: alertHtml,
+          compactAlertPayload,
           plan,
           issues: relevantIssues,
           examples: selectedExamples,

@@ -42,7 +42,7 @@ import {
 } from './services/alert-rewrite.service';
 import { OpenRouterService } from './services/openrouter.service';
 import { SkillManagerService } from './services/skill-manager.service';
-import { AlertIssuesContextService } from './services/alert-issues-context.service';
+import { AlertContextService } from './services/alert-context.service';
 import {
   coerceInteractiveResultLeadIns,
   getReportableAlerts,
@@ -110,7 +110,7 @@ export class PageAssistantCompareComponent
   private sourceDiffService = inject(SourceDiffService);
   private shadowDomService = inject(ShadowDomService);
   private alertAi = inject(AlertAiService);
-  private alertIssuesContext = inject(AlertIssuesContextService);
+  private alertContext = inject(AlertContextService);
   private alertRewriteOrchestrator = inject(AlertRewriteOrchestratorService);
   private openRouter = inject(OpenRouterService);
   private skillManager = inject(SkillManagerService);
@@ -772,6 +772,7 @@ export class PageAssistantCompareComponent
         includeExamples,
         includeBeforeTextInExamples,
         includeLinkWritingRules: this.uploadState.getIncludeLinkWritingRules(),
+        useCompactAlertsPageContext: this.uploadState.getUseCompactAlertsPageContext(),
         forceLocalRepairForTesting: this.shouldForceLocalRepairForTesting(),
         callOpenRouterForMessages: this.callOpenRouterForMessages.bind(this),
         getShortModelName: this.getShortModelName.bind(this),
@@ -916,7 +917,7 @@ export class PageAssistantCompareComponent
           : html;
       const alertsIssuesUserContent = useCompactAlertsPageContext
         ? JSON.stringify(
-            this.alertIssuesContext.buildCompactAlertsIssuesPayload(html),
+            this.alertContext.buildCompactAlertsIssuesPayload(html),
           )
         : sanitizedAlertsIssuesHtml;
 
