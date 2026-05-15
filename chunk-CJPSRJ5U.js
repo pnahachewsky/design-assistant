@@ -22543,6 +22543,87 @@ function getLinkWritingRules(options) {
   });
 }
 
+// src/app/common/constants/canada-ca-style.constants.ts
+var CANADA_CA_STYLE_RULES_PATH = new URL("skills/canada-ca-style/references/writing-rules.json", document.baseURI).toString();
+var CANADA_CA_STYLE_RULES_FALLBACK = {
+  version: "fallback-empty",
+  rules: [],
+  examples: []
+};
+var canadaCaStyleRulesCache = null;
+function isSeverity(value) {
+  return value === "must" || value === "should";
+}
+function toValidatedRulesJson2(raw) {
+  if (!raw || typeof raw !== "object")
+    return null;
+  const root = raw;
+  const version = typeof root["version"] === "string" ? root["version"].trim() : "";
+  const status = typeof root["status"] === "string" ? root["status"].trim() : "";
+  const rulesRaw = Array.isArray(root["rules"]) ? root["rules"] : [];
+  const examplesRaw = Array.isArray(root["examples"]) ? root["examples"] : [];
+  const rules = [];
+  const examples = [];
+  for (const item of rulesRaw) {
+    if (!item || typeof item !== "object")
+      continue;
+    const entry = item;
+    const id = typeof entry["id"] === "string" ? entry["id"].trim() : "";
+    const severityRaw = typeof entry["severity"] === "string" ? entry["severity"].trim() : "";
+    const condition = typeof entry["condition"] === "string" ? entry["condition"].trim() : "";
+    const text = typeof entry["text"] === "string" ? entry["text"].trim() : "";
+    if (!id || !condition || !text || !isSeverity(severityRaw))
+      continue;
+    rules.push({ id, severity: severityRaw, condition, text });
+  }
+  for (const item of examplesRaw) {
+    if (!item || typeof item !== "object")
+      continue;
+    const entry = item;
+    const ruleId = typeof entry["ruleId"] === "string" ? entry["ruleId"].trim() : "";
+    const avoid = typeof entry["avoid"] === "string" ? entry["avoid"].trim() : "";
+    const prefer = typeof entry["prefer"] === "string" ? entry["prefer"].trim() : "";
+    if (!ruleId || !avoid || !prefer)
+      continue;
+    examples.push({ ruleId, avoid, prefer });
+  }
+  if (!version || !rules.length)
+    return null;
+  return __spreadProps(__spreadValues({ version }, status ? { status } : {}), { rules, examples });
+}
+function loadRulesSource2() {
+  return __async(this, null, function* () {
+    if (canadaCaStyleRulesCache)
+      return canadaCaStyleRulesCache;
+    try {
+      const response = yield fetch(CANADA_CA_STYLE_RULES_PATH);
+      if (!response.ok) {
+        throw new Error(`Failed to load Canada.ca style rules (${response.status}).`);
+      }
+      const payload = yield response.json();
+      const validated = toValidatedRulesJson2(payload);
+      if (!validated) {
+        throw new Error("Invalid Canada.ca style rules JSON schema.");
+      }
+      canadaCaStyleRulesCache = validated;
+    } catch (err) {
+      console.warn("Unable to load Canada.ca style rules JSON; using empty fallback.", err);
+      canadaCaStyleRulesCache = CANADA_CA_STYLE_RULES_FALLBACK;
+    }
+    return canadaCaStyleRulesCache;
+  });
+}
+function getCanadaCaStyleRules() {
+  return __async(this, arguments, function* (options = {}) {
+    const source = yield loadRulesSource2();
+    const rules = source.rules.map((rule) => `[Canada.ca style ${rule.id} ${rule.severity}] ${rule.text}`);
+    if (options.includeExamples === false)
+      return rules;
+    const examples = source.examples.map((example) => `[Canada.ca style example ${example.ruleId}] Avoid: "${example.avoid}" Prefer: "${example.prefer}"`);
+    return [...rules, ...examples];
+  });
+}
+
 // src/app/views/page-assistant/services/alert-rewrite.service.ts
 var AlertRewriteService = class _AlertRewriteService {
   examplesPath = new URL("ai-prompts/alerts-rewrite-examples.json", document.baseURI).toString();
@@ -22700,9 +22781,13 @@ var AlertRewriteService = class _AlertRewriteService {
       const linkRules = shouldIncludeLinkWritingRules ? yield getLinkWritingRules({
         hasTooManyLinksIssue
       }) : [];
+      const canadaCaStyleRules = yield getCanadaCaStyleRules({
+        includeExamples: true
+      });
       const rules = yield getAlertRewriteRules();
       const styleRules = [
         ...rules.alertRewrite.styleRulesBase,
+        ...canadaCaStyleRules,
         ...linkRules,
         ...params.examples.length ? rules.alertRewrite.styleRulesWithExamples : []
       ];
@@ -43275,4 +43360,4 @@ ${custom}` : promptBody;
 export {
   PageAssistantCompareComponent
 };
-//# sourceMappingURL=chunk-GPWWHUTP.js.map
+//# sourceMappingURL=chunk-CJPSRJ5U.js.map
