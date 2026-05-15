@@ -3,6 +3,7 @@ import { ChatMessage } from './openrouter.service';
 import { AlertRewriteMode } from '../data/data.model';
 import { getLinkWritingRules } from '../../../common/constants/link-writing.constants';
 import { getAlertRewriteRules } from '../../../common/constants/alert-rewrite-rules.constants';
+import { getCanadaCaStyleRules } from '../../../common/constants/canada-ca-style.constants';
 
 export interface AlertRewriteIssueInput {
   alertIndex?: number;
@@ -307,9 +308,13 @@ export class AlertRewriteService {
           hasTooManyLinksIssue,
         })
       : [];
+    const canadaCaStyleRules = await getCanadaCaStyleRules({
+      includeExamples: true,
+    });
     const rules = await getAlertRewriteRules();
     const styleRules = [
       ...rules.alertRewrite.styleRulesBase,
+      ...canadaCaStyleRules,
       ...linkRules,
       ...(params.examples.length ? rules.alertRewrite.styleRulesWithExamples : []),
     ];

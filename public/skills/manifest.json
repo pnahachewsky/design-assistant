@@ -36,7 +36,8 @@
       "description": "Rewrites Canada.ca web alerts into corrected HTML output using alert issues as input. Use for rewrite generation only.",
       "skillMdPath": "skills/alerts/canada-alerts-rewriting/SKILL.md",
       "includedSkillIds": [
-        "link-writing"
+        "link-writing",
+        "canada-ca-style"
       ],
       "triggerPhrases": [
         "alert",
@@ -73,6 +74,17 @@
       "triggerPhrases": [],
       "defaultReferencePaths": [
         "skills/link-writing/references/link-writing-rules.json"
+      ]
+    },
+    {
+      "id": "canada-ca-style",
+      "name": "canada-ca-style",
+      "description": "Applies reusable Canada.ca writing style rules for plain language, direct instructions, tone, and task-oriented content.",
+      "skillMdPath": "skills/canada-ca-style/SKILL.md",
+      "selectable": false,
+      "triggerPhrases": [],
+      "defaultReferencePaths": [
+        "skills/canada-ca-style/references/writing-rules.json"
       ]
     },
     {

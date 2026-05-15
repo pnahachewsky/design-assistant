@@ -60,7 +60,7 @@
   ],
   "simpleIssueCategories": [
     { "name": "Misuse", "rule": "Do not use alerts for standard process steps, low-risk warnings, routine information, or emphasis." },
-    { "name": "Too wordy", "rule": "Alerts must be short, usually 1-2 sentences. If longer, recommend a summary with a link to fuller information." },
+    { "name": "Too wordy", "rule": "Alerts must be short and succinct. If more than 2 sentences are needed, the sentences must be short. To fix a longer alert, recommend a summary with a link to a page that contains the full information." },
     { "name": "Generic titles", "rule": "Flag headings such as Note, Info, Important, or New. Alert titles must be descriptive." },
     { "name": "Unclear impact", "rule": "The alert must explain the consequence or impact to the user, not just state a fact." },
     { "name": "Outdated", "rule": "Flag past dates, expired notices, or resolved events. Alerts are temporary." },

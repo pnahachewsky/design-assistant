@@ -5,6 +5,7 @@ import {
   AlertRewritePlan,
   AlertRewriteService,
 } from './alert-rewrite.service';
+import { AlertRewriteMode } from '../data/data.model';
 
 describe('AlertRewriteService', () => {
   let service: AlertRewriteService;
@@ -23,6 +24,86 @@ describe('AlertRewriteService', () => {
     });
 
     service = TestBed.inject(AlertRewriteService);
+  });
+
+  it('includes reusable Canada.ca style rules in alert rewrite messages', async () => {
+    const fetchSpy = spyOn(window, 'fetch').and.callFake(
+      async (input: RequestInfo | URL): Promise<Response> => {
+        const url = String(input);
+        if (url.includes('skills/canada-ca-style/references/writing-rules.json')) {
+          return new Response(
+            JSON.stringify({
+              version: 'test',
+              rules: [
+                {
+                  id: 'C1_avoid_please',
+                  severity: 'must',
+                  condition: 'always',
+                  text: 'Do not use "please" as a courtesy filler.',
+                },
+              ],
+              examples: [
+                {
+                  ruleId: 'C1_avoid_please',
+                  avoid: 'Please upload your documents.',
+                  prefer: 'Upload your documents.',
+                },
+              ],
+            }),
+            { status: 200 },
+          );
+        }
+        if (url.includes('ai-prompts/alerts-rewrite-rules.json')) {
+          return new Response(
+            JSON.stringify({
+              version: 'test',
+              alertPlanning: {
+                systemPromptLines: ['Plan alert rewrites.'],
+              },
+              alertRewrite: {
+                styleRulesBase: ['Keep the alert scoped.'],
+                styleRulesWithExamples: [],
+                systemPromptWithExamplesLines: ['Rewrite alert with examples.'],
+                systemPromptWithoutExamplesLines: ['Rewrite alert.'],
+                retryInstructions: {
+                  invalidWrapperHtml: 'Return one valid alert wrapper.',
+                  placeholderLinks: 'Do not use placeholder links.',
+                  noLinksAllowed: 'Do not add links.',
+                  mustKeepLink: 'Keep required links.',
+                  mustHaveHeading: 'Include a heading.',
+                  avoidExampleCopy: 'Do not copy examples.',
+                  fullSentenceLinksNeedLeadIn: 'Use a clear link lead-in.',
+                },
+              },
+            }),
+            { status: 200 },
+          );
+        }
+        return new Response('Not found', { status: 404 });
+      },
+    );
+
+    const messages = await service.buildAlertRewriteMessages({
+      mode: AlertRewriteMode.GoodResultsOnly,
+      originalAlertText: 'Please upload your documents.',
+      originalAlertHtml: '<section class="alert alert-info"><p>Please upload your documents.</p></section>',
+      plan,
+      issues: [],
+      examples: [],
+      includeLinkWritingRules: false,
+    });
+
+    const userPayload = JSON.parse(messages[1]?.content || '{}') as {
+      styleRules: string[];
+    };
+
+    expect(fetchSpy).toHaveBeenCalled();
+    expect(userPayload.styleRules).toContain(
+      '[Canada.ca style C1_avoid_please must] Do not use "please" as a courtesy filler.',
+    );
+    expect(userPayload.styleRules).toContain(
+      '[Canada.ca style example C1_avoid_please] Avoid: "Please upload your documents." Prefer: "Upload your documents."',
+    );
   });
 
   it('does not rank examples by alert type', () => {

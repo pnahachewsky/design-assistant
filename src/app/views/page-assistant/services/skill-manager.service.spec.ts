@@ -27,7 +27,7 @@ describe('SkillManagerService', () => {
         name: 'canada-alerts-rewriting',
         description: 'Rewrites Canada.ca web alerts.',
         skillMdPath: 'skills/alerts/canada-alerts-rewriting/SKILL.md',
-        includedSkillIds: ['link-writing'],
+        includedSkillIds: ['link-writing', 'canada-ca-style'],
         triggerPhrases: ['alert', 'rewrite alert', 'updated html'],
         promptKeys: ['alertsRecommendations'],
         outputModes: ['json'],
@@ -45,6 +45,15 @@ describe('SkillManagerService', () => {
         selectable: false,
         triggerPhrases: [],
         defaultReferencePaths: ['skills/link-writing/references/link-writing-rules.json'],
+      },
+      {
+        id: 'canada-ca-style',
+        name: 'canada-ca-style',
+        description: 'Shared Canada.ca writing style rules.',
+        skillMdPath: 'skills/canada-ca-style/SKILL.md',
+        selectable: false,
+        triggerPhrases: [],
+        defaultReferencePaths: ['skills/canada-ca-style/references/writing-rules.json'],
       },
     ],
   };
@@ -79,11 +88,20 @@ describe('SkillManagerService', () => {
             { status: 200 },
           );
         }
+        if (url.includes('skills/canada-ca-style/SKILL.md')) {
+          return new Response(
+            '---\nname: test-canada-ca-style\ndescription: test\n---\n# Instructions\nApply Canada.ca style rules.',
+            { status: 200 },
+          );
+        }
         if (url.includes('skills/alerts/canada-alerts-rewriting/references/examples.json')) {
           return new Response('[{"id":"ex-1"}]', { status: 200 });
         }
         if (url.includes('skills/link-writing/references/link-writing-rules.json')) {
           return new Response('{"rules":[{"id":"L1"}]}', { status: 200 });
+        }
+        if (url.includes('skills/canada-ca-style/references/writing-rules.json')) {
+          return new Response('{"rules":[{"id":"C1"}]}', { status: 200 });
         }
         if (url.includes('issue-analysis-instructions.json')) {
           return new Response('{"objective":"Analyze alerts."}', { status: 200 });
@@ -178,6 +196,12 @@ describe('SkillManagerService', () => {
     );
     expect(result.loadedPaths).toContain(
       'skills/link-writing/references/link-writing-rules.json',
+    );
+    expect(result.loadedPaths).toContain(
+      'skills/canada-ca-style/SKILL.md',
+    );
+    expect(result.loadedPaths).toContain(
+      'skills/canada-ca-style/references/writing-rules.json',
     );
     expect(result.prompt).toContain('### Included Skill');
   });
