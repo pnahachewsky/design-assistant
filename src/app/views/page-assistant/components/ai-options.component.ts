@@ -74,7 +74,7 @@ export class AiOptionsComponent implements OnInit {
   ];
 
   // Prompt family selection for single- and dual-prompt runs.
-  selectedPrompt: PromptKey = PromptKey.PlainLanguage;
+  selectedPrompt: PromptKey = PromptKey.AlertsRecommendations;
   selectedPrompts: PromptKey[] = [];
 
   promptOptions = [
@@ -103,7 +103,7 @@ export class AiOptionsComponent implements OnInit {
   includeAlertRewriteExamples = false;
   includeBeforeTextInAlertRewriteExamples = false;
   includeLinkWritingRules = true;
-  useCompactAlertsPageContext = false;
+  useCompactAlertsPageContext = true;
   get useAlertPlanning(): boolean {
     return this.selectedAlertRewriteMode === AlertRewriteMode.AB;
   }

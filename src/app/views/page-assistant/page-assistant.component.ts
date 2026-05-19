@@ -525,7 +525,7 @@ export class PageAssistantCompareComponent
   }
 
   //AI Prompt
-  selectedPromptKey: PromptKey = PromptKey.PlainLanguage;
+  selectedPromptKey: PromptKey = PromptKey.AlertsRecommendations;
   onPromptChange(key: PromptKey) {
     this.selectedPromptKey = key;
   }

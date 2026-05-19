@@ -88,7 +88,7 @@ export class UploadStateService {
   }
 
   // Whether alert issue analysis uses compact extracted page context instead of raw HTML.
-  private useCompactAlertsPageContext = signal<boolean>(false);
+  private useCompactAlertsPageContext = signal<boolean>(true);
   getUseCompactAlertsPageContext = computed(() =>
     this.useCompactAlertsPageContext(),
   );
@@ -193,7 +193,7 @@ export class UploadStateService {
     this.includeAlertRewriteExamples.set(false);
     this.includeBeforeTextInAlertRewriteExamples.set(false);
     this.includeLinkWritingRules.set(true);
-    this.useCompactAlertsPageContext.set(false);
+    this.useCompactAlertsPageContext.set(true);
     this.uploadData.set(null);
     this.prevUploadData = [];
     this.storage.removeData(this.uploadTypeKey);
