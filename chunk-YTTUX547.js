@@ -38608,7 +38608,7 @@ var UploadStateService = class _UploadStateService {
     this.storage.saveData(this.includeLinkWritingRulesKey, String(!!include));
   }
   // Whether alert issue analysis uses compact extracted page context instead of raw HTML.
-  useCompactAlertsPageContext = signal(false);
+  useCompactAlertsPageContext = signal(true);
   getUseCompactAlertsPageContext = computed(() => this.useCompactAlertsPageContext());
   setUseCompactAlertsPageContext(useCompact) {
     this.useCompactAlertsPageContext.set(!!useCompact);
@@ -38698,7 +38698,7 @@ var UploadStateService = class _UploadStateService {
     this.includeAlertRewriteExamples.set(false);
     this.includeBeforeTextInAlertRewriteExamples.set(false);
     this.includeLinkWritingRules.set(true);
-    this.useCompactAlertsPageContext.set(false);
+    this.useCompactAlertsPageContext.set(true);
     this.uploadData.set(null);
     this.prevUploadData = [];
     this.storage.removeData(this.uploadTypeKey);
@@ -100412,4 +100412,4 @@ export {
    * License: MIT
    *)
 */
-//# sourceMappingURL=chunk-74UPLLTV.js.map
+//# sourceMappingURL=chunk-YTTUX547.js.map

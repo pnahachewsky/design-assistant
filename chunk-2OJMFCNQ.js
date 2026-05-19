@@ -138,7 +138,7 @@ import {
   unblockBodyScroll,
   uuid,
   zindexutils
-} from "./chunk-74UPLLTV.js";
+} from "./chunk-YTTUX547.js";
 import {
   ChangeDetectionStrategy,
   ChangeDetectorRef,
@@ -27267,7 +27267,7 @@ var AiOptionsComponent = class _AiOptionsComponent {
     { id: CompareTask.TwoPrompts, label: "page.ai-options.task.TwoPrompts", disabled: false }
   ];
   // Prompt family selection for single- and dual-prompt runs.
-  selectedPrompt = PromptKey.PlainLanguage;
+  selectedPrompt = PromptKey.AlertsRecommendations;
   selectedPrompts = [];
   promptOptions = [
     { id: PromptKey.Headings, label: "page.ai-options.prompt.Headings", disabled: false },
@@ -27288,7 +27288,7 @@ var AiOptionsComponent = class _AiOptionsComponent {
   includeAlertRewriteExamples = false;
   includeBeforeTextInAlertRewriteExamples = false;
   includeLinkWritingRules = true;
-  useCompactAlertsPageContext = false;
+  useCompactAlertsPageContext = true;
   get useAlertPlanning() {
     return this.selectedAlertRewriteMode === AlertRewriteMode.AB;
   }
@@ -42086,7 +42086,7 @@ var PageAssistantCompareComponent = class _PageAssistantCompareComponent {
     });
   }
   //AI Prompt
-  selectedPromptKey = PromptKey.PlainLanguage;
+  selectedPromptKey = PromptKey.AlertsRecommendations;
   onPromptChange(key2) {
     this.selectedPromptKey = key2;
   }
@@ -43363,4 +43363,4 @@ ${custom}` : promptBody;
 export {
   PageAssistantCompareComponent
 };
-//# sourceMappingURL=chunk-6M3G2C53.js.map
+//# sourceMappingURL=chunk-2OJMFCNQ.js.map
