@@ -23404,7 +23404,7 @@ var AlertRewriteService = class _AlertRewriteService {
     const lower = (category || "").toLowerCase();
     if (!lower)
       return false;
-    return lower.includes("misuse") || lower.includes("wrong component") || lower.includes("wrong type") || lower.includes("wrong placement") || lower.includes("low relevance") || lower.includes("focus order") || lower.includes("sensory") || lower.includes("content clarity") || lower.includes("non-text") || lower.includes("accessibility/code") || lower.includes("outdated") || lower.includes("incorrect hierarchy");
+    return lower.includes("misuse") || lower.includes("wrong component") || lower.includes("wrong type") || lower.includes("wrong placement") || lower.includes("low relevance") || lower.includes("focus order") || lower.includes("content clarity") || lower.includes("non-text") || lower.includes("accessibility/code") || lower.includes("outdated") || lower.includes("incorrect hierarchy");
   }
   toDescriptionSnippet(value, maxLength) {
     const normalized = this.cleanString(value).replace(/\s+/g, " ");
@@ -26630,6 +26630,7 @@ var SliderModule = class _SliderModule {
 
 // src/app/views/page-assistant/components/ai-options.component.ts
 var _c04 = () => ({ width: "30rem" });
+var _c14 = () => ["1", "2"];
 function AiOptionsComponent_ng_container_15_Template(rf, ctx) {
   if (rf & 1) {
     const _r1 = \u0275\u0275getCurrentView();
@@ -27388,7 +27389,7 @@ var AiOptionsComponent = class _AiOptionsComponent {
   static \u0275fac = function AiOptionsComponent_Factory(__ngFactoryType__) {
     return new (__ngFactoryType__ || _AiOptionsComponent)();
   };
-  static \u0275cmp = /* @__PURE__ */ \u0275\u0275defineComponent({ type: _AiOptionsComponent, selectors: [["ca-ai-options"]], outputs: { promptChange: "promptChange", customPrompt: "customPrompt", editPrompt: "editPrompt", aiChange: "aiChange", alertRewriteModeChange: "alertRewriteModeChange", aiSubmit: "aiSubmit" }, decls: 20, vars: 19, consts: [["label", "Options", "icon", "pi pi-bars", "severity", "info", 3, "click"], ["position", "right", 3, "visibleChange", "visible", "header"], [1, "flex", "flex-column", "gap-3"], ["value", "1", 1, "flex", "flex-column", "gap-3"], ["value", "0", 1, "border-1", "border-round-md", "border-surface"], [1, "border-none"], [1, "font-bold", "mb-2"], [1, "flex", "flex-column", "gap-2"], [4, "ngFor", "ngForOf", "ngForTrackBy"], ["value", "1", 1, "border-1", "border-round-md", "border-surface"], ["value", "2", 1, "border-1", "border-round-md", "border-surface"], ["icon", "pi pi-comments", "severity", "primary", 3, "label"], [3, "ngSwitch"], [1, "p-field-radiobutton"], ["name", "taskOptions", 3, "ngModelChange", "value", "ngModel", "inputId", "disabled"], [1, "pl-2", 3, "for"], [1, "p-field-checkbox", "mt-3"], ["inputId", "appendCustom", 3, "ngModelChange", "onChange", "ngModel", "binary"], ["for", "appendCustom", 1, "pl-2"], [1, "flex", "flex-column", "gap-3", "mt-3"], ["id", "ai-changes"], ["ariaLabelledBy", "ai-changes", "fluid", "", 3, "ngModelChange", "onChange", "ngModel", "step"], [1, "flex", "flex-column", "gap-2", "mt-3"], ["name", "promptOptions", 3, "ngModelChange", "onClick", "value", "ngModel", "inputId", "disabled"], [1, "p-field-checkbox"], [3, "ngModelChange", "value", "ngModel", "inputId", "disabled"], ["pTextarea", "", "id", "customPrompt", "fluid", "", 3, "ngModelChange", "blur", "ngModel", "autoResize"], ["for", "customPrompt"], [1, "font-bold", "m-0"], ["inputId", "includeAlertRewriteExamples", 3, "ngModelChange", "onChange", "ngModel", "binary"], ["for", "includeAlertRewriteExamples", 1, "pl-2"], ["inputId", "includeBeforeTextInAlertRewriteExamples", 3, "ngModelChange", "onChange", "ngModel", "binary", "disabled"], ["for", "includeBeforeTextInAlertRewriteExamples", 1, "pl-2"], [1, "border-top-1", "mt-2", 2, "border-color", "#d3d3d3"], [1, "p-field-checkbox", "mt-2"], ["inputId", "includeLinkWritingRules", 3, "ngModelChange", "onChange", "ngModel", "binary"], ["for", "includeLinkWritingRules", 1, "pl-2"], ["inputId", "useAlertPlanning", 3, "ngModelChange", "ngModel", "binary"], ["for", "useAlertPlanning", 1, "pl-2"], ["inputId", "useCompactAlertsPageContext", 3, "ngModelChange", "onChange", "ngModel", "binary"], ["for", "useCompactAlertsPageContext", 1, "pl-2"], [1, "text-xs", "text-500"], [1, "text-xs", "text-500", "mt-3"], ["name", "aiOptions", 3, "ngModelChange", "onClick", "value", "ngModel", "inputId", "disabled"], ["styleClass", "chip chip-severe ml-2", 3, "label"], ["icon", "pi pi-comments", "severity", "primary", 3, "click", "label"], ["mode", "prototype", 3, "showSampleDataButton", 4, "ngSwitchCase"], ["mode", "prototype", 3, "showSampleDataButton"]], template: function AiOptionsComponent_Template(rf, ctx) {
+  static \u0275cmp = /* @__PURE__ */ \u0275\u0275defineComponent({ type: _AiOptionsComponent, selectors: [["ca-ai-options"]], outputs: { promptChange: "promptChange", customPrompt: "customPrompt", editPrompt: "editPrompt", aiChange: "aiChange", alertRewriteModeChange: "alertRewriteModeChange", aiSubmit: "aiSubmit" }, decls: 20, vars: 22, consts: [["label", "Options", "icon", "pi pi-bars", "severity", "info", 3, "click"], ["position", "right", 3, "visibleChange", "visible", "header"], [1, "flex", "flex-column", "gap-3"], [1, "flex", "flex-column", "gap-3", 3, "value", "multiple"], ["value", "0", 1, "border-1", "border-round-md", "border-surface"], [1, "border-none"], [1, "font-bold", "mb-2"], [1, "flex", "flex-column", "gap-2"], [4, "ngFor", "ngForOf", "ngForTrackBy"], ["value", "1", 1, "border-1", "border-round-md", "border-surface"], ["value", "2", 1, "border-1", "border-round-md", "border-surface"], ["icon", "pi pi-comments", "severity", "primary", 3, "label"], [3, "ngSwitch"], [1, "p-field-radiobutton"], ["name", "taskOptions", 3, "ngModelChange", "value", "ngModel", "inputId", "disabled"], [1, "pl-2", 3, "for"], [1, "p-field-checkbox", "mt-3"], ["inputId", "appendCustom", 3, "ngModelChange", "onChange", "ngModel", "binary"], ["for", "appendCustom", 1, "pl-2"], [1, "flex", "flex-column", "gap-3", "mt-3"], ["id", "ai-changes"], ["ariaLabelledBy", "ai-changes", "fluid", "", 3, "ngModelChange", "onChange", "ngModel", "step"], [1, "flex", "flex-column", "gap-2", "mt-3"], ["name", "promptOptions", 3, "ngModelChange", "onClick", "value", "ngModel", "inputId", "disabled"], [1, "p-field-checkbox"], [3, "ngModelChange", "value", "ngModel", "inputId", "disabled"], ["pTextarea", "", "id", "customPrompt", "fluid", "", 3, "ngModelChange", "blur", "ngModel", "autoResize"], ["for", "customPrompt"], [1, "font-bold", "m-0"], ["inputId", "includeAlertRewriteExamples", 3, "ngModelChange", "onChange", "ngModel", "binary"], ["for", "includeAlertRewriteExamples", 1, "pl-2"], ["inputId", "includeBeforeTextInAlertRewriteExamples", 3, "ngModelChange", "onChange", "ngModel", "binary", "disabled"], ["for", "includeBeforeTextInAlertRewriteExamples", 1, "pl-2"], [1, "border-top-1", "mt-2", 2, "border-color", "#d3d3d3"], [1, "p-field-checkbox", "mt-2"], ["inputId", "includeLinkWritingRules", 3, "ngModelChange", "onChange", "ngModel", "binary"], ["for", "includeLinkWritingRules", 1, "pl-2"], ["inputId", "useAlertPlanning", 3, "ngModelChange", "ngModel", "binary"], ["for", "useAlertPlanning", 1, "pl-2"], ["inputId", "useCompactAlertsPageContext", 3, "ngModelChange", "onChange", "ngModel", "binary"], ["for", "useCompactAlertsPageContext", 1, "pl-2"], [1, "text-xs", "text-500"], [1, "text-xs", "text-500", "mt-3"], ["name", "aiOptions", 3, "ngModelChange", "onClick", "value", "ngModel", "inputId", "disabled"], ["styleClass", "chip chip-severe ml-2", 3, "label"], ["icon", "pi pi-comments", "severity", "primary", 3, "click", "label"], ["mode", "prototype", 3, "showSampleDataButton", 4, "ngSwitchCase"], ["mode", "prototype", 3, "showSampleDataButton"]], template: function AiOptionsComponent_Template(rf, ctx) {
     if (rf & 1) {
       \u0275\u0275elementStart(0, "p-button", 0);
       \u0275\u0275listener("click", function AiOptionsComponent_Template_p_button_click_0_listener() {
@@ -27419,13 +27420,15 @@ var AiOptionsComponent = class _AiOptionsComponent {
     }
     if (rf & 2) {
       \u0275\u0275advance();
-      \u0275\u0275styleMap(\u0275\u0275pureFunction0(18, _c04));
+      \u0275\u0275styleMap(\u0275\u0275pureFunction0(20, _c04));
       \u0275\u0275twoWayProperty("visible", ctx.visible);
-      \u0275\u0275property("header", \u0275\u0275pipeBind1(2, 12, "page.ai-options.header"));
-      \u0275\u0275advance(6);
-      \u0275\u0275textInterpolate(\u0275\u0275pipeBind1(8, 14, "page.ai-options.task.header"));
+      \u0275\u0275property("header", \u0275\u0275pipeBind1(2, 14, "page.ai-options.header"));
+      \u0275\u0275advance(3);
+      \u0275\u0275property("value", \u0275\u0275pureFunction0(21, _c14))("multiple", true);
+      \u0275\u0275advance(3);
+      \u0275\u0275textInterpolate(\u0275\u0275pipeBind1(8, 16, "page.ai-options.task.header"));
       \u0275\u0275advance(5);
-      \u0275\u0275textInterpolate(\u0275\u0275pipeBind1(13, 16, "page.ai-options.task.legend"));
+      \u0275\u0275textInterpolate(\u0275\u0275pipeBind1(13, 18, "page.ai-options.task.legend"));
       \u0275\u0275advance(3);
       \u0275\u0275property("ngForOf", ctx.taskOptions)("ngForTrackBy", ctx.trackById);
       \u0275\u0275advance();
@@ -27462,7 +27465,7 @@ var AiOptionsComponent = class _AiOptionsComponent {
 <p-drawer [(visible)]="visible" [header]="'page.ai-options.header' | translate" position="right"\r
           [style]="{ width: '30rem'}">\r
   <div class="flex flex-column gap-3">\r
-    <p-accordion value="1" class="flex flex-column gap-3">\r
+    <p-accordion [value]="['1', '2']" [multiple]="true" class="flex flex-column gap-3">
       <!--TASK OPTIONS-->\r
       <p-accordion-panel value="0" class="border-1 border-round-md border-surface">\r
         <p-accordion-header>{{ 'page.ai-options.task.header' | translate }}</p-accordion-header>\r
@@ -30666,7 +30669,7 @@ var ContentExtractorService = class _ContentExtractorService {
 
 // src/app/views/page-assistant/components/problems/link-report.component.ts
 var _c07 = ["typePanel"];
-var _c14 = () => ({ "min-width": "50rem" });
+var _c15 = () => ({ "min-width": "50rem" });
 var _c24 = (a0, a1, a2, a3) => ({ "chip-severe": a0, "chip-minor": a1, "chip-ok": a2, "chip-unk": a3 });
 var _c34 = (a0, a1, a2, a3) => ({ "pi-exclamation-triangle": a0, "pi-times-circle": a1, "pi-check-circle": a2, "pi-question-circle": a3 });
 function LinkReportComponent_ng_template_1_th_2_p_sortIcon_4_Template(rf, ctx) {
@@ -31878,7 +31881,7 @@ var LinkReportComponent = class _LinkReportComponent {
       \u0275\u0275elementEnd()();
     }
     if (rf & 2) {
-      \u0275\u0275property("value", ctx.filteredHeadings)("tableStyle", \u0275\u0275pureFunction0(19, _c14));
+      \u0275\u0275property("value", ctx.filteredHeadings)("tableStyle", \u0275\u0275pureFunction0(19, _c15));
       \u0275\u0275twoWayProperty("selection", ctx.selectedHeading);
       \u0275\u0275property("customSort", true);
       \u0275\u0275advance(3);
@@ -32187,7 +32190,7 @@ var LinkReportComponent = class _LinkReportComponent {
 
 // node_modules/primeng/fesm2022/primeng-breadcrumb.mjs
 var _c08 = ["item"];
-var _c15 = ["separator"];
+var _c16 = ["separator"];
 var _c25 = (a0) => ({
   "p-breadcrumb-home-item": true,
   "p-disabled": a0
@@ -32830,7 +32833,7 @@ var Breadcrumb = class _Breadcrumb extends BaseComponent {
     contentQueries: function Breadcrumb_ContentQueries(rf, ctx, dirIndex) {
       if (rf & 1) {
         \u0275\u0275contentQuery(dirIndex, _c08, 5);
-        \u0275\u0275contentQuery(dirIndex, _c15, 5);
+        \u0275\u0275contentQuery(dirIndex, _c16, 5);
         \u0275\u0275contentQuery(dirIndex, PrimeTemplate, 4);
       }
       if (rf & 2) {
@@ -33237,7 +33240,7 @@ var IaStructureService = class _IaStructureService {
 
 // src/app/views/page-assistant/components/problems/ia-structure.component.ts
 var _c09 = ["chartContainer"];
-var _c16 = ["cm"];
+var _c17 = ["cm"];
 var _c26 = () => ({ height: "1rem" });
 var _c36 = () => ({ "min-width": "50rem" });
 function IaStructureComponent_p_button_6_Template(rf, ctx) {
@@ -34236,7 +34239,7 @@ var IaStructureComponent = class _IaStructureComponent {
   static \u0275cmp = /* @__PURE__ */ \u0275\u0275defineComponent({ type: _IaStructureComponent, selectors: [["ca-ia-structure"]], viewQuery: function IaStructureComponent_Query(rf, ctx) {
     if (rf & 1) {
       \u0275\u0275viewQuery(_c09, 5);
-      \u0275\u0275viewQuery(_c16, 5);
+      \u0275\u0275viewQuery(_c17, 5);
     }
     if (rf & 2) {
       let _t;
@@ -34585,7 +34588,7 @@ var topic_page_exceptions_default = [
 
 // src/app/views/page-assistant/components/problems/component-guidance/topic-page/topic-page-ia.component.ts
 var _c010 = ["chartContainer"];
-var _c17 = ["cm"];
+var _c18 = ["cm"];
 var _c27 = () => ({ height: "1rem" });
 var _c37 = () => ({ "min-width": "50rem" });
 function TopicPageIaComponent_Conditional_31_Template(rf, ctx) {
@@ -36781,7 +36784,7 @@ var TopicPageIaComponent = class _TopicPageIaComponent {
   static \u0275cmp = /* @__PURE__ */ \u0275\u0275defineComponent({ type: _TopicPageIaComponent, selectors: [["ca-topic-page-ia"]], viewQuery: function TopicPageIaComponent_Query(rf, ctx) {
     if (rf & 1) {
       \u0275\u0275viewQuery(_c010, 5);
-      \u0275\u0275viewQuery(_c17, 5);
+      \u0275\u0275viewQuery(_c18, 5);
     }
     if (rf & 2) {
       let _t;
@@ -37537,7 +37540,7 @@ var SnippetService = class _SnippetService {
 
 // src/app/views/page-assistant/components/problems/component-guidance/topic-page/topic-ia-json.component.ts
 var _c011 = ["chartContainer"];
-var _c18 = ["cm"];
+var _c19 = ["cm"];
 var _c28 = () => ({ height: "1rem" });
 var _c38 = () => ({ "min-width": "50rem" });
 function TopicIaJsonComponent_Conditional_8_Template(rf, ctx) {
@@ -40232,7 +40235,7 @@ var TopicIaJsonComponent = class _TopicIaJsonComponent {
   static \u0275cmp = /* @__PURE__ */ \u0275\u0275defineComponent({ type: _TopicIaJsonComponent, selectors: [["ca-topic-ia-json"]], viewQuery: function TopicIaJsonComponent_Query(rf, ctx) {
     if (rf & 1) {
       \u0275\u0275viewQuery(_c011, 5);
-      \u0275\u0275viewQuery(_c18, 5);
+      \u0275\u0275viewQuery(_c19, 5);
     }
     if (rf & 2) {
       let _t;
@@ -41543,7 +41546,7 @@ var PageToolsComponent = class _PageToolsComponent {
 
 // src/app/views/page-assistant/page-assistant.component.ts
 var _c012 = ["liveContainer"];
-var _c19 = ["sourceContainer"];
+var _c110 = ["sourceContainer"];
 var _c29 = () => ({ ariaLabel: "Accept selected changes" });
 var _c39 = () => ({ ariaLabel: "More accept options" });
 var _c45 = () => ({ ariaLabel: "Reject selected changes" });
@@ -42884,7 +42887,7 @@ ${custom}` : promptBody;
   static \u0275cmp = /* @__PURE__ */ \u0275\u0275defineComponent({ type: _PageAssistantCompareComponent, selectors: [["ca-page-assistant-compare"]], viewQuery: function PageAssistantCompareComponent_Query(rf, ctx) {
     if (rf & 1) {
       \u0275\u0275viewQuery(_c012, 5);
-      \u0275\u0275viewQuery(_c19, 5);
+      \u0275\u0275viewQuery(_c110, 5);
     }
     if (rf & 2) {
       let _t;
@@ -43360,4 +43363,4 @@ ${custom}` : promptBody;
 export {
   PageAssistantCompareComponent
 };
-//# sourceMappingURL=chunk-CJPSRJ5U.js.map
+//# sourceMappingURL=chunk-6M3G2C53.js.map

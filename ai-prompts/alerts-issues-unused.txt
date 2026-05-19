@@ -29,7 +29,7 @@ Step 2: For each alert, analyze for "simple" alert issues (rule-based checks)
  - Nothing actionable: If no action/consequence is listed, convert to plain text.
 Step 3: Analyze for "complex" issues (AI/LLM analysis)
  - Focus order: Ensure the alert logical reading order is preserved and not skipped by screen readers.
- - Sensory/color reliance: Ensure importance is not conveyed by color alone (add text prefixes like "Warning:").
+ - (Removed until we have a solution) Sensory/color reliance: Ensure importance is not conveyed by color alone (add text prefixes like "Warning:").
  - Content clarity: Ensure reading level is Grade 6-8 and plain language is used.
  - Non-text content: Ensure images/icons have descriptive Alt text.
 ___________________________________

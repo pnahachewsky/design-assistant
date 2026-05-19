@@ -47,7 +47,7 @@
       ],
       "complex_issues": [
         { "name": "Focus order", "details": "Ensure the alert logical reading order is preserved and not skipped by screen readers." },
-        { "name": "Sensory/color reliance", "details": "Ensure importance is not conveyed by color alone (add text prefixes like \"Warning:\")." },
+        { "name": "(Removed until we have a solution) Sensory/color reliance", "details": "Ensure importance is not conveyed by color alone (add text prefixes like \"Warning:\")." },
         { "name": "Content clarity", "details": "Ensure reading level is Grade 6-8 and plain language is used." },
         { "name": "Non-text content", "details": "Ensure images/icons have descriptive Alt text." }
       ]

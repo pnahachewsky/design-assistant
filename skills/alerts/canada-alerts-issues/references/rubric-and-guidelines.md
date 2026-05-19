@@ -67,7 +67,6 @@ Scan the input content, identify specific issues based on the categories below, 
 
 ### Complex issues
 - Focus order: logical reading order should be preserved.
-- Sensory/color reliance: importance must not be conveyed by color alone. Add text cues such as `Warning:` when needed.
 - Content clarity: use plain language and keep the reading level around Grade 6-8.
 - Non-text content: images and icons need descriptive alternatives.
 
