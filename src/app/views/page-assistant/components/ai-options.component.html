@@ -2,7 +2,7 @@
 <p-drawer [(visible)]="visible" [header]="'page.ai-options.header' | translate" position="right"
           [style]="{ width: '30rem'}">
   <div class="flex flex-column gap-3">
-    <p-accordion value="1" class="flex flex-column gap-3">
+    <p-accordion [value]="['1', '2']" [multiple]="true" class="flex flex-column gap-3">
       <!--TASK OPTIONS-->
       <p-accordion-panel value="0" class="border-1 border-round-md border-surface">
         <p-accordion-header>{{ 'page.ai-options.task.header' | translate }}</p-accordion-header>

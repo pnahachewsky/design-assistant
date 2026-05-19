@@ -78,7 +78,6 @@
   ],
   "complexIssueCategories": [
     { "name": "Focus order", "rule": "Ensure the alert's logical reading order is preserved and not skipped by assistive technologies." },
-    { "name": "Sensory/color reliance", "rule": "Importance must not be conveyed by colour alone. Add text cues such as Warning: when needed." },
     { "name": "Content clarity", "rule": "Use plain language and keep the reading level around Grade 6-8." },
     { "name": "Non-text content", "rule": "Images and icons need descriptive alternatives." }
   ],

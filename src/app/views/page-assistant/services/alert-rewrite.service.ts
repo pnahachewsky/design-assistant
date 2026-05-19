@@ -1155,7 +1155,6 @@ export class AlertRewriteService {
       lower.includes('wrong placement') ||
       lower.includes('low relevance') ||
       lower.includes('focus order') ||
-      lower.includes('sensory') ||
       lower.includes('content clarity') ||
       lower.includes('non-text') ||
       lower.includes('accessibility/code') ||
