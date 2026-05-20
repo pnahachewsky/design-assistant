@@ -564,6 +564,7 @@ export class AlertRewriteGuardService {
   }
 
   // Restores one original link when the rewrite incorrectly removed a required anchor.
+  // Keep it in a standalone final paragraph so link-direction validation can pass.
   private ensureAtLeastOneOriginalLink(
     rewrittenHtml: string,
     originalAlertHtml: string,
@@ -578,8 +579,12 @@ export class AlertRewriteGuardService {
       if (!root) return rewrittenHtml;
       if (root.querySelector('a')) return root.outerHTML.trim();
 
-      const target = (root.querySelector('p, li, div, span') || root) as HTMLElement;
-      target.insertAdjacentHTML('beforeend', ` ${sourceAnchor.outerHTML}`);
+      const linkParagraph = rewrittenDoc.createElement('p');
+      linkParagraph.insertAdjacentHTML(
+        'beforeend',
+        `Refer to: ${sourceAnchor.outerHTML}`,
+      );
+      root.appendChild(linkParagraph);
       return root.outerHTML.trim();
     } catch {
       return rewrittenHtml;

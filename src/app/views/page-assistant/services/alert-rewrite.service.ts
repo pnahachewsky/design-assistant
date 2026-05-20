@@ -303,15 +303,17 @@ export class AlertRewriteService {
     const originalHasLink = /<a\b/i.test(params.originalAlertHtml || '');
     const shouldIncludeLinkWritingRules =
       params.includeLinkWritingRules !== false && originalHasLink;
-    const linkRules = shouldIncludeLinkWritingRules
-      ? await getLinkWritingRules({
-          hasTooManyLinksIssue,
-        })
-      : [];
-    const canadaCaStyleRules = await getCanadaCaStyleRules({
-      includeExamples: true,
-    });
-    const rules = await getAlertRewriteRules();
+    const [linkRules, canadaCaStyleRules, rules] = await Promise.all([
+      shouldIncludeLinkWritingRules
+        ? getLinkWritingRules({
+            hasTooManyLinksIssue,
+          })
+        : Promise.resolve([]),
+      getCanadaCaStyleRules({
+        includeExamples: true,
+      }),
+      getAlertRewriteRules(),
+    ]);
     const styleRules = [
       ...rules.alertRewrite.styleRulesBase,
       ...canadaCaStyleRules,

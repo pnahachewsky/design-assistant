@@ -32,6 +32,22 @@ export interface AlertRewriteFallbackNotice {
   reasons: string[];
 }
 
+type AlertRewriteTimingKey =
+  | 'loadRulesMs'
+  | 'parseAlertsMs'
+  | 'loadExamplesMs'
+  | 'buildCompactContextMs'
+  | 'planningPromptMs'
+  | 'planningAiMs'
+  | 'rewritePromptMs'
+  | 'rewriteAiMs'
+  | 'parseAndGuardMs'
+  | 'localRepairMs'
+  | 'applyRewritesMs'
+  | 'formatHtmlMs';
+
+type AlertRewriteTimings = Record<AlertRewriteTimingKey, number>;
+
 @Injectable({ providedIn: 'root' })
 export class AlertRewriteOrchestratorService {
   private alertRewrite = inject(AlertRewriteService);
@@ -42,6 +58,51 @@ export class AlertRewriteOrchestratorService {
 
   private formatReasonsForLog(reasons: string[]): string {
     return reasons.length ? reasons.join(', ') : 'none';
+  }
+
+  private createTimings(): AlertRewriteTimings {
+    return {
+      loadRulesMs: 0,
+      parseAlertsMs: 0,
+      loadExamplesMs: 0,
+      buildCompactContextMs: 0,
+      planningPromptMs: 0,
+      planningAiMs: 0,
+      rewritePromptMs: 0,
+      rewriteAiMs: 0,
+      parseAndGuardMs: 0,
+      localRepairMs: 0,
+      applyRewritesMs: 0,
+      formatHtmlMs: 0,
+    };
+  }
+
+  private addElapsed(
+    timings: AlertRewriteTimings,
+    key: AlertRewriteTimingKey,
+    start: number,
+  ): void {
+    timings[key] += performance.now() - start;
+  }
+
+  private roundTimings(timings: AlertRewriteTimings): AlertRewriteTimings {
+    return Object.fromEntries(
+      Object.entries(timings).map(([key, value]) => [key, Math.round(value)]),
+    ) as AlertRewriteTimings;
+  }
+
+  private isDebugLoggingEnabled(): boolean {
+    try {
+      return localStorage.getItem('pageAssistant.alertRewriteDebug') === 'true';
+    } catch {
+      return false;
+    }
+  }
+
+  private debugLog(message: string, details: Record<string, unknown>): void {
+    if (this.isDebugLoggingEnabled()) {
+      console.debug(message, details);
+    }
   }
 
   // Runs the full alert-rewrite workflow:
@@ -65,28 +126,37 @@ export class AlertRewriteOrchestratorService {
     fallbackNotices: AlertRewriteFallbackNotice[];
   }> {
     const start = performance.now();
+    const timings = this.createTimings();
+    let timingStart = performance.now();
     const rewriteRules = await getAlertRewriteRules();
+    this.addElapsed(timings, 'loadRulesMs', timingStart);
     const retryInstructions = rewriteRules.alertRewrite.retryInstructions;
 
+    timingStart = performance.now();
     const alertDoc = new DOMParser().parseFromString(params.html, 'text/html');
     const alertEls = getReportableAlerts(alertDoc, {
       interactiveResultLeadIns: this.getInteractiveResultLeadIns(),
     });
+    this.addElapsed(timings, 'parseAlertsMs', timingStart);
     if (!alertEls.length) {
       throw new Error('No reportable .alert elements found in the page.');
     }
 
+    timingStart = performance.now();
     const examples = params.includeExamples
       ? await this.alertRewrite.loadExamples()
       : [];
+    this.addElapsed(timings, 'loadExamplesMs', timingStart);
     const rewrites: Array<{
       alert_index: number;
       rewritten_alert_html: string;
     }> = [];
     const fallbackNotices: AlertRewriteFallbackNotice[] = [];
+    timingStart = performance.now();
     const compactAlertPayloads = params.useCompactAlertsPageContext
       ? this.alertContext.buildCompactAlertRewritePayloads(alertDoc)
       : [];
+    this.addElapsed(timings, 'buildCompactContextMs', timingStart);
 
     // Each alert is planned and rewritten independently so a bad output for one
     // alert does not block the others from being generated.
@@ -125,6 +195,7 @@ export class AlertRewriteOrchestratorService {
 
       // Advanced-planning mode adds a model-generated plan on top of the local heuristic plan.
       if (params.mode === AlertRewriteMode.AB) {
+        timingStart = performance.now();
         const alertPlanningMessages =
           await this.alertRewrite.buildAlertPlanningMessages({
             alertHtml,
@@ -132,6 +203,9 @@ export class AlertRewriteOrchestratorService {
             alertType: initialPlan.alertType,
             issues: relevantIssues,
           });
+        this.addElapsed(timings, 'planningPromptMs', timingStart);
+
+        timingStart = performance.now();
         const alertPlanningResponse = await params.callOpenRouterForMessages(
           params.model,
           params.headers,
@@ -139,6 +213,7 @@ export class AlertRewriteOrchestratorService {
           alertPlanningMessages,
           `Alert ${alertIndex} alertPlanning`,
         );
+        this.addElapsed(timings, 'planningAiMs', timingStart);
         const parsedPlan = this.alertRewrite.parseAlertPlanningResponse(
           alertPlanningResponse.text,
           initialPlan,
@@ -175,6 +250,7 @@ export class AlertRewriteOrchestratorService {
       for (let attempt = 0; attempt < 2; attempt += 1) {
         // Rebuild the rewrite prompt on each attempt so any retry instructions
         // are appended to the style rules seen by the model.
+        timingStart = performance.now();
         const alertRewriteMessages = await this.alertRewrite.buildAlertRewriteMessages({
           mode: params.mode,
           originalHeading,
@@ -188,6 +264,9 @@ export class AlertRewriteOrchestratorService {
           includeLinkWritingRules: params.includeLinkWritingRules,
           retryInstructions: retryInstructionsForAttempt,
         });
+        this.addElapsed(timings, 'rewritePromptMs', timingStart);
+
+        timingStart = performance.now();
         const rewriteResponse = await params.callOpenRouterForMessages(
           params.model,
           params.headers,
@@ -196,17 +275,19 @@ export class AlertRewriteOrchestratorService {
           `Alert ${alertIndex} alertRewrite`,
           attempt > 0 ? 0.2 : 0,
         );
+        this.addElapsed(timings, 'rewriteAiMs', timingStart);
         rewriteModelName = params.getShortModelName(rewriteResponse.usedModel);
 
         // Parse the model response back into the normalized rewrite contract
         // used by the rest of the pipeline. If parsing fails we cannot safely
         // patch the alert into the page, so we retry with a structure-specific instruction.
+        timingStart = performance.now();
         const parsedResult = this.alertRewrite.parseAlertRewriteResponse(
           rewriteResponse.text,
           plan,
           selectedExamples,
         );
-        console.warn('Alert rewrite parsed model output', {
+        this.debugLog('Alert rewrite parsed model output', {
           alertIndex,
           attempt: attempt + 1,
           rewrittenAlertHtml: parsedResult?.rewrittenAlertHtml,
@@ -233,6 +314,7 @@ export class AlertRewriteOrchestratorService {
           );
           lastRetryReasons = ['invalidWrapperHtml'];
           retryInstructionsForAttempt = [retryInstructions.invalidWrapperHtml];
+          this.addElapsed(timings, 'parseAndGuardMs', timingStart);
           continue;
         }
         lastRepairCandidate = parsedResult;
@@ -336,21 +418,26 @@ export class AlertRewriteOrchestratorService {
           );
           lastRetryReasons = [...retryReasons];
           retryInstructionsForAttempt = Array.from(new Set(retryInstructionsForResult));
+          this.addElapsed(timings, 'parseAndGuardMs', timingStart);
           continue;
         }
 
         if (!copyCheck.isCopy) {
           if (params.forceLocalRepairForTesting) {
             console.warn('Forcing local repair for testing', { alertIndex });
+            this.addElapsed(timings, 'parseAndGuardMs', timingStart);
             break;
           }
           rewriteResult = parsedResult;
+          this.addElapsed(timings, 'parseAndGuardMs', timingStart);
           break;
         }
+        this.addElapsed(timings, 'parseAndGuardMs', timingStart);
       }
 
       // If model retries still fail, attempt one deterministic repair pass locally.
       if (!rewriteResult && lastRepairCandidate) {
+        timingStart = performance.now();
         console.warn(
           `Alert rewrite attempting local repair for alert ${alertIndex}: ${this.formatReasonsForLog(lastRetryReasons)}`,
           {
@@ -370,6 +457,7 @@ export class AlertRewriteOrchestratorService {
           selectedExamples,
           allowLinkRemoval,
         });
+        this.addElapsed(timings, 'localRepairMs', timingStart);
       }
 
       if (!rewriteResult && softRejectedResult) {
@@ -429,27 +517,38 @@ export class AlertRewriteOrchestratorService {
 
       // These debug logs keep a clean distinction between the examples we
       // selected and the subset the model explicitly reported using.
-      const examplesUsedDetails = rewriteResult.exampleIdsUsed
-        .map((id) => selectedExamples.find((example) => example.id === id))
-        .filter((example): example is NonNullable<typeof example> => !!example)
-        .map((example) => ({
+      const compactExampleDetails = (examples: typeof selectedExamples) =>
+        examples.map((example) => ({
           id: example.id,
           alertType: example.alertType,
           criteria: example.criteria,
           tags: example.tags,
-          headingBefore: example.headingBefore || '',
           headingAfter: example.headingAfter || '',
-          before: example.before,
-          after: example.after,
         }));
+      const examplesUsedDetails = compactExampleDetails(
+        rewriteResult.exampleIdsUsed
+          .map((id) => selectedExamples.find((example) => example.id === id))
+          .filter((example): example is NonNullable<typeof example> => !!example),
+      );
+      const suppliedExampleIds = selectedExamples.map((example) => example.id);
 
-      console.log('Alert rewrite examples used', {
+      console.info('Alert rewrite examples', {
         alertIndex,
+        suppliedExampleIds,
         exampleIdsUsed: rewriteResult.exampleIdsUsed,
-        examplesUsedDetails,
       });
 
-      console.log('Alert rewrite iteration', {
+      this.debugLog('Alert rewrite examples used', {
+        alertIndex,
+        suppliedExampleIds,
+        suppliedExamples: compactExampleDetails(selectedExamples),
+        usedExamples: examplesUsedDetails,
+        suppliedCount: selectedExamples.length,
+        usedCount: rewriteResult.exampleIdsUsed.length,
+        exampleIdsUsed: rewriteResult.exampleIdsUsed,
+      });
+
+      this.debugLog('Alert rewrite iteration', {
         mode: params.mode,
         alertIndex,
         plan,
@@ -470,27 +569,41 @@ export class AlertRewriteOrchestratorService {
     }
 
     // Once each alert has a final rewrite, patch them back into the original page.
+    timingStart = performance.now();
     const finalHtml = this.alertRewriteGuard.applyAlertHtmlRewrites(
       params.html,
       rewrites,
     );
+    this.addElapsed(timings, 'applyRewritesMs', timingStart);
     if (!finalHtml) {
       console.info('Alert rewrite skipped because no alerts had selected issues.');
+      timingStart = performance.now();
+      const formattedHtml = await this.urlDataService.formatHtml(params.html, 'ai');
+      this.addElapsed(timings, 'formatHtmlMs', timingStart);
+      console.info('Alert rewrite timing', {
+        requestedModel: params.model,
+        mode: params.mode,
+        rewrites: 0,
+        totalMs: Math.round(performance.now() - start),
+        timings: this.roundTimings(timings),
+      });
       return {
-        formattedHtml: await this.urlDataService.formatHtml(params.html, 'ai'),
+        formattedHtml,
         fallbackNotices,
       };
     }
 
-    console.log('Alert rewrite model + time', {
+    // Keep final output formatting consistent with the rest of the assistant flow.
+    timingStart = performance.now();
+    const formattedHtml = await this.urlDataService.formatHtml(finalHtml, 'ai');
+    this.addElapsed(timings, 'formatHtmlMs', timingStart);
+    console.info('Alert rewrite timing', {
       requestedModel: params.model,
       mode: params.mode,
       rewrites: rewrites.length,
-      ms: Math.round(performance.now() - start),
+      totalMs: Math.round(performance.now() - start),
+      timings: this.roundTimings(timings),
     });
-
-    // Keep final output formatting consistent with the rest of the assistant flow.
-    const formattedHtml = await this.urlDataService.formatHtml(finalHtml, 'ai');
     return { formattedHtml, fallbackNotices };
   }
 

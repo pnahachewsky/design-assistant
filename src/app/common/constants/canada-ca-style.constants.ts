@@ -36,6 +36,7 @@ const CANADA_CA_STYLE_RULES_FALLBACK: CanadaCaStyleRulesJson = {
 };
 
 let canadaCaStyleRulesCache: CanadaCaStyleRulesJson | null = null;
+const canadaCaStyleRuleTextCache = new Map<string, string[]>();
 
 function isSeverity(value: string): value is CanadaCaStyleRuleSeverity {
   return value === 'must' || value === 'should';
@@ -111,15 +112,24 @@ export async function getCanadaCaStyleRulesJson(): Promise<CanadaCaStyleRulesJso
 export async function getCanadaCaStyleRules(
   options: CanadaCaStyleRulesOptions = {},
 ): Promise<string[]> {
+  const cacheKey = options.includeExamples === false ? 'rules-only' : 'with-examples';
+  const cached = canadaCaStyleRuleTextCache.get(cacheKey);
+  if (cached) return cached;
+
   const source = await loadRulesSource();
   const rules = source.rules.map(
     (rule) => `[Canada.ca style ${rule.id} ${rule.severity}] ${rule.text}`,
   );
-  if (options.includeExamples === false) return rules;
+  if (options.includeExamples === false) {
+    canadaCaStyleRuleTextCache.set(cacheKey, rules);
+    return rules;
+  }
 
   const examples = source.examples.map(
     (example) =>
       `[Canada.ca style example ${example.ruleId}] Avoid: "${example.avoid}" Prefer: "${example.prefer}"`,
   );
-  return [...rules, ...examples];
+  const ruleText = [...rules, ...examples];
+  canadaCaStyleRuleTextCache.set(cacheKey, ruleText);
+  return ruleText;
 }

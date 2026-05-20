@@ -118,6 +118,14 @@ export class PageAssistantCompareComponent
   private router = inject(Router);
   private locationStrategy = inject(LocationStrategy);
 
+  private isAiDebugLoggingEnabled(): boolean {
+    try {
+      return localStorage.getItem('pageAssistant.aiDebug') === 'true';
+    } catch {
+      return false;
+    }
+  }
+
   constructor() {
     effect(async () => {
       const data = this.uploadState.getUploadData();
@@ -875,8 +883,13 @@ export class PageAssistantCompareComponent
   statusSeverity: 'info' | 'warn' | 'error' | 'success' = 'info';
 
   async sendToAI(): Promise<void> {
-    console.time('Time until AI response');
     const startTime = performance.now();
+    let selectedPromptForTiming = this.selectedPromptKey;
+    let requestPromptForTiming = this.selectedPromptKey;
+    let timingFlow = 'single-prompt';
+    let usedCachedAlertIssues = false;
+    let alertIssuesPromptSent = false;
+    let alertRewriteRan = false;
     this.isLoading = true;
     this.aiDisabled = 'Wait for response from AI';
     this.statusSeverity = 'info';
@@ -897,6 +910,9 @@ export class PageAssistantCompareComponent
       const promptKeyForRequest = isAlertsRecommendations
         ? PromptKey.AlertsIssues
         : this.selectedPromptKey;
+      selectedPromptForTiming = this.selectedPromptKey;
+      requestPromptForTiming = promptKeyForRequest;
+      timingFlow = isAlertFlow ? 'alert-issues-and-rewrite' : 'single-prompt';
       const prompt = await this.getPromptForKey(promptKeyForRequest);
       const model = this.selectedAiModel;
       const requestedModelShort = this.getShortModelName(model);
@@ -937,6 +953,8 @@ export class PageAssistantCompareComponent
       if (isAlertFlow) {
         const cachedIssues = this.alertAi.getCachedIssues(html);
         if (cachedIssues) {
+          usedCachedAlertIssues = true;
+          timingFlow = 'alert-rewrite-with-cached-issues';
           const selectedIssues: AlertRewriteIssueInput[] = cachedIssues
             .filter((issue) => issue.include)
             .map((issue) => ({ ...issue }));
@@ -954,6 +972,7 @@ export class PageAssistantCompareComponent
             headers,
             url,
           });
+          alertRewriteRan = true;
           if (!recommendationsApplied) {
             return;
           }
@@ -976,6 +995,9 @@ export class PageAssistantCompareComponent
       const candidates = this.buildModelRotation(model);
       let aiResponse: any | null = null;
       let lastAttemptedModel = model;
+      if (promptKeyForRequest === PromptKey.AlertsIssues) {
+        alertIssuesPromptSent = true;
+      }
 
       for (let i = 0; i < candidates.length; i += 1) {
         const candidate = candidates[i];
@@ -986,12 +1008,14 @@ export class PageAssistantCompareComponent
           provider: { allow_fallbacks: false },
         };
 
-        console.log('Sending to OpenRouter', {
-          model: candidate,
-          attempt: i + 1,
-          attempts: candidates.length,
-          prompt: promptKeyForRequest,
-        });
+        if (this.isAiDebugLoggingEnabled()) {
+          console.debug('Sending to OpenRouter', {
+            model: candidate,
+            attempt: i + 1,
+            attempts: candidates.length,
+            prompt: promptKeyForRequest,
+          });
+        }
 
         const orResponse = await fetch(url, {
           method: 'POST',
@@ -999,9 +1023,13 @@ export class PageAssistantCompareComponent
           body: JSON.stringify(attemptPayload),
         });
 
-        console.log(`OpenRouter response status: `, orResponse.status);
+        if (this.isAiDebugLoggingEnabled()) {
+          console.debug('OpenRouter response status', {
+            status: orResponse.status,
+            model: candidate,
+          });
+        }
         if (orResponse.status === 200) {
-          console.log('Waiting for AI response');
           this.statusMessage = this.translate.instant('common.ai.generating');
         }
 
@@ -1078,13 +1106,15 @@ export class PageAssistantCompareComponent
         throw new Error(`AI response was empty (${requestedModelShort}).`);
       }
 
-      console.groupCollapsed('AI Response');
-      console.log(`AI model: `, aiResponse.model);
-      console.log(`Prompt tokens: `, aiResponse.usage.prompt_tokens);
-      console.log(`Response tokens: `, aiResponse.usage.completion_tokens);
-      console.log(`Total tokens: `, aiResponse.usage.total_tokens);
-      console.dir(aiResponse);
-      console.groupEnd();
+      if (this.isAiDebugLoggingEnabled()) {
+        console.groupCollapsed('AI Response');
+        console.log(`AI model: `, aiResponse.model);
+        console.log(`Prompt tokens: `, aiResponse.usage.prompt_tokens);
+        console.log(`Response tokens: `, aiResponse.usage.completion_tokens);
+        console.log(`Total tokens: `, aiResponse.usage.total_tokens);
+        console.dir(aiResponse);
+        console.groupEnd();
+      }
 
       //AI model translation
       const requestedModel = this.getShortModelName(model);
@@ -1161,6 +1191,7 @@ export class PageAssistantCompareComponent
             headers,
             url,
           });
+          alertRewriteRan = true;
           if (!recommendationsApplied) {
             return;
           }
@@ -1203,9 +1234,19 @@ export class PageAssistantCompareComponent
     } finally {
       this.isLoading = false;
       this.aiDisabled = '';
-      console.timeEnd('Time until AI response');
       const endTime = performance.now();
       const durationInSeconds = ((endTime - startTime) / 1000).toFixed(2);
+      console.info('AI request timing', {
+        selectedPrompt: selectedPromptForTiming,
+        requestPrompt: requestPromptForTiming,
+        flow: timingFlow,
+        processes: [
+          ...(alertIssuesPromptSent ? ['alert-issues'] : []),
+          ...(alertRewriteRan ? ['alert-rewrite'] : []),
+        ],
+        usedCachedAlertIssues,
+        totalMs: Math.round(endTime - startTime),
+      });
       this.messageService.add({
         severity: 'info',
         summary: this.translate.instant('common.requestComplete'),

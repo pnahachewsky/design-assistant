@@ -29,6 +29,8 @@ const LINK_WRITING_RULES_FALLBACK: LinkWritingRulesJson = {
 };
 
 let linkWritingRulesCache: LinkWritingRulesJson | null = null;
+const filteredRulesCache = new Map<string, LinkWritingRule[]>();
+const ruleTextCache = new Map<string, string[]>();
 
 function isRuleCondition(value: string): value is LinkWritingRuleCondition {
   return (
@@ -95,13 +97,25 @@ function filterRules(
 export async function getLinkWritingRulesJson(
   options: LinkWritingRulesOptions,
 ): Promise<LinkWritingRule[]> {
+  const cacheKey = options.hasTooManyLinksIssue ? 'too_many_links' : 'default';
+  const cached = filteredRulesCache.get(cacheKey);
+  if (cached) return cached;
+
   const source = await loadRulesSource();
-  return filterRules(source, options);
+  const rules = filterRules(source, options);
+  filteredRulesCache.set(cacheKey, rules);
+  return rules;
 }
 
 export async function getLinkWritingRules(
   options: LinkWritingRulesOptions,
 ): Promise<string[]> {
+  const cacheKey = options.hasTooManyLinksIssue ? 'too_many_links' : 'default';
+  const cached = ruleTextCache.get(cacheKey);
+  if (cached) return cached;
+
   const rules = await getLinkWritingRulesJson(options);
-  return rules.map((rule) => rule.text);
+  const ruleText = rules.map((rule) => rule.text);
+  ruleTextCache.set(cacheKey, ruleText);
+  return ruleText;
 }

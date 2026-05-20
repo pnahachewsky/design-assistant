@@ -233,6 +233,37 @@ describe('AlertRewriteGuardService', () => {
     expect(result?.rewrittenAlertHtml).toContain('<p>Updated body text.</p>');
   });
 
+  it('restores a required original link as a standalone final paragraph during local repair', () => {
+    mockParsedAlertRewriteResult();
+
+    const result = service.tryLocalAlertRewriteRepair({
+      result: {
+        rewrittenAlertHtml:
+          '<div class="alert alert-warning"><h3>First-time home buyers rebate</h3><p>The rebate has received Royal Assent.</p></div>',
+        rewrittenHeading: 'First-time home buyers rebate',
+        rewrittenAlert: 'The rebate has received Royal Assent.',
+        appliedDirectives: [],
+        exampleIdsUsed: [],
+      },
+      originalAlertHtml:
+        '<div class="alert alert-warning"><p>The rebate has received Royal Assent. <a href="/en/revenue-agency/services/forms-publications/publications/rc7190/fthb-gst-hst-rebate.html">First-time home buyers’ (FTHB) GST/HST rebate</a></p></div>',
+      originalHeading: '',
+      originalAlertText: 'The rebate has received Royal Assent.',
+      plan: infoPlan,
+      selectedExamples: [],
+      allowLinkRemoval: false,
+    });
+
+    expect(result?.rewrittenAlertHtml).toContain(
+      '<p>The rebate has received Royal Assent.</p><p>Refer to: <a href="/en/revenue-agency/services/forms-publications/publications/rc7190/fthb-gst-hst-rebate.html">First-time home buyers’ (FTHB) GST/HST rebate</a></p>',
+    );
+    expect(
+      service.hasFullSentenceLinkWithoutAllowedLeadIn(
+        result?.rewrittenAlertHtml || '',
+      ),
+    ).toBeFalse();
+  });
+
   it('preserves multi-node alert replacements so fallback notices can appear above the alert', () => {
     const result = service.applyAlertHtmlRewrites(
       '<body><main><section class="alert alert-info"><p>Original alert text.</p></section></main></body>',
