@@ -62,7 +62,7 @@
     { "name": "Misuse", "rule": "Do not use alerts for standard process steps, low-risk warnings, routine information, or emphasis." },
     { "name": "Too wordy", "rule": "Alerts must be short and succinct. If more than 2 sentences are needed, the sentences must be short. To fix a longer alert, recommend a summary with a link to a page that contains the full information." },
     { "name": "Generic titles", "rule": "Flag headings such as Note, Info, Important, or New. Alert titles must be descriptive." },
-    { "name": "Unclear impact", "rule": "The alert must explain the consequence or impact to the user, not just state a fact." },
+    { "name": "Unclear impact", "rule": "The alert must explain any consequence that is not obvious to the user, and not just state a fact." },
     { "name": "Outdated", "rule": "Flag past dates, expired notices, or resolved events. Alerts are temporary." },
     { "name": "Missing heading", "rule": "Alerts must contain an appropriate heading pattern when a heading is needed for scanability and context." },
     { "name": "Wrong type", "rule": "The alert type must match the severity. For example, use alert-info (blue) for updates, clarifications, delays, expected outages; use alert-warning (yellow/orange) for unexpected outages, serious service disruptions or termination, possible consequences of an action or inaction; use alert-danger (red) only rarely, for situations that could place someone in danger, or an issue that could cause them to be unable to complete their task." },
@@ -73,8 +73,8 @@
     { "name": "Wrong placement", "rule": "Place alerts near the relevant section rather than globally when the message applies to specific content." },
     { "name": "Alert overload", "rule": "Flag multiple stacked or clustered alerts that may create alert fatigue." },
     { "name": "Low relevance", "rule": "On home, landing, or broad overview pages, alerts should apply to more than half of the audience." },
-    { "name": "Incorrect hierarchy", "rule": "Alert headings must fit the page outline and nearby section hierarchy." },
-    { "name": "Nothing actionable", "rule": "If no action or consequence is present, flag the alert for deletion and recommend moving the information into regular page content or another page." }
+    { "name": "Incorrect hierarchy", "rule": "Alert headings must follow the heading structure of the page (e.g., there should never be an H4 after an H2)." },
+    { "name": "Nothing actionable", "rule": "If no next-step link exists, flag the alert to confirm that none is needed or whether it needs to be deleted and the information added to the page instead." }
   ],
   "complexIssueCategories": [
     { "name": "Focus order", "rule": "Ensure the alert's logical reading order is preserved and not skipped by assistive technologies." },

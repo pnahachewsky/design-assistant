@@ -14,7 +14,7 @@ Step 2: For each alert, analyze for "simple" alert issues (rule-based checks)
  - Misuse: Do not use alerts for standard process steps, low-risk warnings, or emphasis.
  - Too wordy: Alerts must be short (1-2 sentences). If longer, recommend a summary with a link.
  - Generic titles: Flag headers like "Note," "Info," or "Important." Titles must be descriptive.
- - Unclear impact: The alert must explain the consequence to the user, not just state a fact.
+ - Unclear impact: The alert must explain any consequence that is not obvious to the user, and not just state a fact.
  - Outdated: Flag past dates or resolved events. Alerts are temporary.
  - Missing heading: Alerts must contain a heading element.
  - Wrong type: Ensure the alert type matches severity. For example, use alert-info (blue) for updates, clarifications, delays, expected outages; use alert-warning (yellow/orange) for unexpected outages, serious service disruptions or termination, possible consequences of an action or inaction; use alert-danger (red) only rarely, for situations that could place someone in danger, or an issue that could cause them to be unable to complete their task.
@@ -25,8 +25,8 @@ Step 2: For each alert, analyze for "simple" alert issues (rule-based checks)
  - Wrong placement: Alerts must be adjacent to the relevant section, not at the top of a general page if specific.
  - Alert overload: Flag pages with multiple stacked alerts (alert fatigue).
  - Low relevance: On Home/Landing pages, alerts must apply to >50% of the audience.
- - Incorrect hierarchy: Alert headings must fit the page outline (e.g., don't put an H4 after an H2).
- - Nothing actionable: If no action/consequence is listed, convert to plain text.
+ - Incorrect hierarchy: Alert headings must follow the heading structure of the page (e.g., there should never be an H4 after an H2).
+ - Nothing actionable: If no next-step link exists, flag the alert to confirm that none is needed or whether it needs to be deleted and the information added to the page instead.
 Step 3: Analyze for "complex" issues (AI/LLM analysis)
  - Focus order: Ensure the alert logical reading order is preserved and not skipped by screen readers.
  - (Removed until we have a solution) Sensory/color reliance: Ensure importance is not conveyed by color alone (add text prefixes like "Warning:").
