@@ -32,7 +32,7 @@
         "State what happened, then what to do.",
         "Use plain, active, neutral language.",
       "Include a next step when possible.",
-      "Do not add new links. Only keep, rename, or remove links from the original alert HTML.",
+      "Do not add new links. If the original alert has exactly one link, keep that link in rewrittenAlertHtml. Preserve its original href exactly. You may rewrite the anchor text only if it improves clarity and still describes the same destination. If the original alert has multiple links, only remove links when the selected issues or plan identify too many links or link removal.",
       "Do not output [LINK] or [END LINK]. Use real anchors: <a href=\"...\">text</a>.",
       "Keep concise for UI.",
       "Set rewrittenAlertHtml to full .alert wrapper HTML (for example: <div class=\"alert alert-info\">...</div>)."

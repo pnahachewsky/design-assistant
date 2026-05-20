@@ -22485,6 +22485,8 @@ var LINK_WRITING_RULES_FALLBACK = {
   rules: []
 };
 var linkWritingRulesCache = null;
+var filteredRulesCache = /* @__PURE__ */ new Map();
+var ruleTextCache = /* @__PURE__ */ new Map();
 function isRuleCondition(value) {
   return value === "always" || value === "too_many_links" || value === "not_too_many_links";
 }
@@ -22543,14 +22545,26 @@ function filterRules(source, options) {
 }
 function getLinkWritingRulesJson(options) {
   return __async(this, null, function* () {
+    const cacheKey = options.hasTooManyLinksIssue ? "too_many_links" : "default";
+    const cached = filteredRulesCache.get(cacheKey);
+    if (cached)
+      return cached;
     const source = yield loadRulesSource();
-    return filterRules(source, options);
+    const rules = filterRules(source, options);
+    filteredRulesCache.set(cacheKey, rules);
+    return rules;
   });
 }
 function getLinkWritingRules(options) {
   return __async(this, null, function* () {
+    const cacheKey = options.hasTooManyLinksIssue ? "too_many_links" : "default";
+    const cached = ruleTextCache.get(cacheKey);
+    if (cached)
+      return cached;
     const rules = yield getLinkWritingRulesJson(options);
-    return rules.map((rule) => rule.text);
+    const ruleText = rules.map((rule) => rule.text);
+    ruleTextCache.set(cacheKey, ruleText);
+    return ruleText;
   });
 }
 
@@ -22562,6 +22576,7 @@ var CANADA_CA_STYLE_RULES_FALLBACK = {
   examples: []
 };
 var canadaCaStyleRulesCache = null;
+var canadaCaStyleRuleTextCache = /* @__PURE__ */ new Map();
 function isSeverity(value) {
   return value === "must" || value === "should";
 }
@@ -22626,12 +22641,20 @@ function loadRulesSource2() {
 }
 function getCanadaCaStyleRules() {
   return __async(this, arguments, function* (options = {}) {
+    const cacheKey = options.includeExamples === false ? "rules-only" : "with-examples";
+    const cached = canadaCaStyleRuleTextCache.get(cacheKey);
+    if (cached)
+      return cached;
     const source = yield loadRulesSource2();
     const rules = source.rules.map((rule) => `[Canada.ca style ${rule.id} ${rule.severity}] ${rule.text}`);
-    if (options.includeExamples === false)
+    if (options.includeExamples === false) {
+      canadaCaStyleRuleTextCache.set(cacheKey, rules);
       return rules;
+    }
     const examples = source.examples.map((example) => `[Canada.ca style example ${example.ruleId}] Avoid: "${example.avoid}" Prefer: "${example.prefer}"`);
-    return [...rules, ...examples];
+    const ruleText = [...rules, ...examples];
+    canadaCaStyleRuleTextCache.set(cacheKey, ruleText);
+    return ruleText;
   });
 }
 
@@ -22789,13 +22812,15 @@ var AlertRewriteService = class _AlertRewriteService {
       const hasTooManyLinksIssue = params.plan.criteriaMatched.includes("C3_too_many_links") || params.plan.directives.some((directive) => directive.op === "limit_links");
       const originalHasLink = /<a\b/i.test(params.originalAlertHtml || "");
       const shouldIncludeLinkWritingRules = params.includeLinkWritingRules !== false && originalHasLink;
-      const linkRules = shouldIncludeLinkWritingRules ? yield getLinkWritingRules({
-        hasTooManyLinksIssue
-      }) : [];
-      const canadaCaStyleRules = yield getCanadaCaStyleRules({
-        includeExamples: true
-      });
-      const rules = yield getAlertRewriteRules();
+      const [linkRules, canadaCaStyleRules, rules] = yield Promise.all([
+        shouldIncludeLinkWritingRules ? getLinkWritingRules({
+          hasTooManyLinksIssue
+        }) : Promise.resolve([]),
+        getCanadaCaStyleRules({
+          includeExamples: true
+        }),
+        getAlertRewriteRules()
+      ]);
       const styleRules = [
         ...rules.alertRewrite.styleRulesBase,
         ...canadaCaStyleRules,
@@ -23958,6 +23983,7 @@ var AlertRewriteGuardService = class _AlertRewriteGuardService {
     }
   }
   // Restores one original link when the rewrite incorrectly removed a required anchor.
+  // Keep it in a standalone final paragraph so link-direction validation can pass.
   ensureAtLeastOneOriginalLink(rewrittenHtml, originalAlertHtml) {
     try {
       const sourceDoc = new DOMParser().parseFromString(originalAlertHtml, "text/html");
@@ -23970,8 +23996,9 @@ var AlertRewriteGuardService = class _AlertRewriteGuardService {
         return rewrittenHtml;
       if (root.querySelector("a"))
         return root.outerHTML.trim();
-      const target = root.querySelector("p, li, div, span") || root;
-      target.insertAdjacentHTML("beforeend", ` ${sourceAnchor.outerHTML}`);
+      const linkParagraph = rewrittenDoc.createElement("p");
+      linkParagraph.insertAdjacentHTML("beforeend", `Refer to: ${sourceAnchor.outerHTML}`);
+      root.appendChild(linkParagraph);
       return root.outerHTML.trim();
     } catch {
       return rewrittenHtml;
@@ -24025,24 +24052,67 @@ var AlertRewriteOrchestratorService = class _AlertRewriteOrchestratorService {
   formatReasonsForLog(reasons) {
     return reasons.length ? reasons.join(", ") : "none";
   }
+  createTimings() {
+    return {
+      loadRulesMs: 0,
+      parseAlertsMs: 0,
+      loadExamplesMs: 0,
+      buildCompactContextMs: 0,
+      planningPromptMs: 0,
+      planningAiMs: 0,
+      rewritePromptMs: 0,
+      rewriteAiMs: 0,
+      parseAndGuardMs: 0,
+      localRepairMs: 0,
+      applyRewritesMs: 0,
+      formatHtmlMs: 0
+    };
+  }
+  addElapsed(timings, key2, start) {
+    timings[key2] += performance.now() - start;
+  }
+  roundTimings(timings) {
+    return Object.fromEntries(Object.entries(timings).map(([key2, value]) => [key2, Math.round(value)]));
+  }
+  isDebugLoggingEnabled() {
+    try {
+      return localStorage.getItem("pageAssistant.alertRewriteDebug") === "true";
+    } catch {
+      return false;
+    }
+  }
+  debugLog(message, details) {
+    if (this.isDebugLoggingEnabled()) {
+      console.debug(message, details);
+    }
+  }
   // Runs the full alert-rewrite workflow:
   // plan each alert, generate rewrites, apply retry/repair guards, then patch the page HTML.
   generateRecommendations(params) {
     return __async(this, null, function* () {
       const start = performance.now();
+      const timings = this.createTimings();
+      let timingStart = performance.now();
       const rewriteRules = yield getAlertRewriteRules();
+      this.addElapsed(timings, "loadRulesMs", timingStart);
       const retryInstructions = rewriteRules.alertRewrite.retryInstructions;
+      timingStart = performance.now();
       const alertDoc = new DOMParser().parseFromString(params.html, "text/html");
       const alertEls = getReportableAlerts(alertDoc, {
         interactiveResultLeadIns: this.getInteractiveResultLeadIns()
       });
+      this.addElapsed(timings, "parseAlertsMs", timingStart);
       if (!alertEls.length) {
         throw new Error("No reportable .alert elements found in the page.");
       }
+      timingStart = performance.now();
       const examples = params.includeExamples ? yield this.alertRewrite.loadExamples() : [];
+      this.addElapsed(timings, "loadExamplesMs", timingStart);
       const rewrites = [];
       const fallbackNotices = [];
+      timingStart = performance.now();
       const compactAlertPayloads = params.useCompactAlertsPageContext ? this.alertContext.buildCompactAlertRewritePayloads(alertDoc) : [];
+      this.addElapsed(timings, "buildCompactContextMs", timingStart);
       for (let i = 0; i < alertEls.length; i += 1) {
         const alertElement = alertEls[i];
         if (!alertElement)
@@ -24070,13 +24140,17 @@ var AlertRewriteOrchestratorService = class _AlertRewriteOrchestratorService {
         let plan = initialPlan;
         let planModelName = "heuristic";
         if (params.mode === AlertRewriteMode.AB) {
+          timingStart = performance.now();
           const alertPlanningMessages = yield this.alertRewrite.buildAlertPlanningMessages({
             alertHtml,
             alertText,
             alertType: initialPlan.alertType,
             issues: relevantIssues
           });
+          this.addElapsed(timings, "planningPromptMs", timingStart);
+          timingStart = performance.now();
           const alertPlanningResponse = yield params.callOpenRouterForMessages(params.model, params.headers, params.url, alertPlanningMessages, `Alert ${alertIndex} alertPlanning`);
+          this.addElapsed(timings, "planningAiMs", timingStart);
           const parsedPlan = this.alertRewrite.parseAlertPlanningResponse(alertPlanningResponse.text, initialPlan);
           if (parsedPlan) {
             plan = parsedPlan;
@@ -24099,6 +24173,7 @@ var AlertRewriteOrchestratorService = class _AlertRewriteOrchestratorService {
         const allowLinkRemoval = this.alertRewriteGuard.shouldAllowAlertLinkRemoval(relevantIssues, plan);
         let retryInstructionsForAttempt = [];
         for (let attempt = 0; attempt < 2; attempt += 1) {
+          timingStart = performance.now();
           const alertRewriteMessages = yield this.alertRewrite.buildAlertRewriteMessages({
             mode: params.mode,
             originalHeading,
@@ -24112,10 +24187,14 @@ var AlertRewriteOrchestratorService = class _AlertRewriteOrchestratorService {
             includeLinkWritingRules: params.includeLinkWritingRules,
             retryInstructions: retryInstructionsForAttempt
           });
+          this.addElapsed(timings, "rewritePromptMs", timingStart);
+          timingStart = performance.now();
           const rewriteResponse = yield params.callOpenRouterForMessages(params.model, params.headers, params.url, alertRewriteMessages, `Alert ${alertIndex} alertRewrite`, attempt > 0 ? 0.2 : 0);
+          this.addElapsed(timings, "rewriteAiMs", timingStart);
           rewriteModelName = params.getShortModelName(rewriteResponse.usedModel);
+          timingStart = performance.now();
           const parsedResult = this.alertRewrite.parseAlertRewriteResponse(rewriteResponse.text, plan, selectedExamples);
-          console.warn("Alert rewrite parsed model output", {
+          this.debugLog("Alert rewrite parsed model output", {
             alertIndex,
             attempt: attempt + 1,
             rewrittenAlertHtml: parsedResult?.rewrittenAlertHtml,
@@ -24135,6 +24214,7 @@ var AlertRewriteOrchestratorService = class _AlertRewriteOrchestratorService {
             });
             lastRetryReasons = ["invalidWrapperHtml"];
             retryInstructionsForAttempt = [retryInstructions.invalidWrapperHtml];
+            this.addElapsed(timings, "parseAndGuardMs", timingStart);
             continue;
           }
           lastRepairCandidate = parsedResult;
@@ -24194,18 +24274,23 @@ var AlertRewriteOrchestratorService = class _AlertRewriteOrchestratorService {
             });
             lastRetryReasons = [...retryReasons];
             retryInstructionsForAttempt = Array.from(new Set(retryInstructionsForResult));
+            this.addElapsed(timings, "parseAndGuardMs", timingStart);
             continue;
           }
           if (!copyCheck.isCopy) {
             if (params.forceLocalRepairForTesting) {
               console.warn("Forcing local repair for testing", { alertIndex });
+              this.addElapsed(timings, "parseAndGuardMs", timingStart);
               break;
             }
             rewriteResult = parsedResult;
+            this.addElapsed(timings, "parseAndGuardMs", timingStart);
             break;
           }
+          this.addElapsed(timings, "parseAndGuardMs", timingStart);
         }
         if (!rewriteResult && lastRepairCandidate) {
+          timingStart = performance.now();
           console.warn(`Alert rewrite attempting local repair for alert ${alertIndex}: ${this.formatReasonsForLog(lastRetryReasons)}`, {
             alertIndex,
             hadModelOutput: true,
@@ -24222,6 +24307,7 @@ var AlertRewriteOrchestratorService = class _AlertRewriteOrchestratorService {
             selectedExamples,
             allowLinkRemoval
           });
+          this.addElapsed(timings, "localRepairMs", timingStart);
         }
         if (!rewriteResult && softRejectedResult) {
           console.warn(`Alert rewrite using soft-failure candidate for alert ${alertIndex}: ${this.formatReasonsForLog(softRejectedReasons)}`, {
@@ -24257,22 +24343,30 @@ var AlertRewriteOrchestratorService = class _AlertRewriteOrchestratorService {
           alert_index: alertIndex,
           rewritten_alert_html: rewriteResult.rewrittenAlertHtml
         });
-        const examplesUsedDetails = rewriteResult.exampleIdsUsed.map((id) => selectedExamples.find((example) => example.id === id)).filter((example) => !!example).map((example) => ({
+        const compactExampleDetails = (examples2) => examples2.map((example) => ({
           id: example.id,
           alertType: example.alertType,
           criteria: example.criteria,
           tags: example.tags,
-          headingBefore: example.headingBefore || "",
-          headingAfter: example.headingAfter || "",
-          before: example.before,
-          after: example.after
+          headingAfter: example.headingAfter || ""
         }));
-        console.log("Alert rewrite examples used", {
+        const examplesUsedDetails = compactExampleDetails(rewriteResult.exampleIdsUsed.map((id) => selectedExamples.find((example) => example.id === id)).filter((example) => !!example));
+        const suppliedExampleIds = selectedExamples.map((example) => example.id);
+        console.info("Alert rewrite examples", {
           alertIndex,
-          exampleIdsUsed: rewriteResult.exampleIdsUsed,
-          examplesUsedDetails
+          suppliedExampleIds,
+          exampleIdsUsed: rewriteResult.exampleIdsUsed
         });
-        console.log("Alert rewrite iteration", {
+        this.debugLog("Alert rewrite examples used", {
+          alertIndex,
+          suppliedExampleIds,
+          suppliedExamples: compactExampleDetails(selectedExamples),
+          usedExamples: examplesUsedDetails,
+          suppliedCount: selectedExamples.length,
+          usedCount: rewriteResult.exampleIdsUsed.length,
+          exampleIdsUsed: rewriteResult.exampleIdsUsed
+        });
+        this.debugLog("Alert rewrite iteration", {
           mode: params.mode,
           alertIndex,
           plan,
@@ -24291,21 +24385,36 @@ var AlertRewriteOrchestratorService = class _AlertRewriteOrchestratorService {
           humanRating: null
         });
       }
+      timingStart = performance.now();
       const finalHtml = this.alertRewriteGuard.applyAlertHtmlRewrites(params.html, rewrites);
+      this.addElapsed(timings, "applyRewritesMs", timingStart);
       if (!finalHtml) {
         console.info("Alert rewrite skipped because no alerts had selected issues.");
+        timingStart = performance.now();
+        const formattedHtml2 = yield this.urlDataService.formatHtml(params.html, "ai");
+        this.addElapsed(timings, "formatHtmlMs", timingStart);
+        console.info("Alert rewrite timing", {
+          requestedModel: params.model,
+          mode: params.mode,
+          rewrites: 0,
+          totalMs: Math.round(performance.now() - start),
+          timings: this.roundTimings(timings)
+        });
         return {
-          formattedHtml: yield this.urlDataService.formatHtml(params.html, "ai"),
+          formattedHtml: formattedHtml2,
           fallbackNotices
         };
       }
-      console.log("Alert rewrite model + time", {
+      timingStart = performance.now();
+      const formattedHtml = yield this.urlDataService.formatHtml(finalHtml, "ai");
+      this.addElapsed(timings, "formatHtmlMs", timingStart);
+      console.info("Alert rewrite timing", {
         requestedModel: params.model,
         mode: params.mode,
         rewrites: rewrites.length,
-        ms: Math.round(performance.now() - start)
+        totalMs: Math.round(performance.now() - start),
+        timings: this.roundTimings(timings)
       });
-      const formattedHtml = yield this.urlDataService.formatHtml(finalHtml, "ai");
       return { formattedHtml, fallbackNotices };
     });
   }
@@ -26868,7 +26977,7 @@ function AiOptionsComponent_Conditional_16_Conditional_22_Template(rf, ctx) {
     });
     \u0275\u0275elementEnd();
     \u0275\u0275elementStart(22, "label", 40);
-    \u0275\u0275text(23, " Send compact page context to AI for alerts ");
+    \u0275\u0275text(23, " Compact context (not for nemotron super) ");
     \u0275\u0275elementEnd()()();
   }
   if (rf & 2) {
@@ -27476,7 +27585,7 @@ var AiOptionsComponent = class _AiOptionsComponent {
 <p-drawer [(visible)]="visible" [header]="'page.ai-options.header' | translate" position="right"\r
           [style]="{ width: '30rem'}">\r
   <div class="flex flex-column gap-3">\r
-    <p-accordion [value]="['1', '2']" [multiple]="true" class="flex flex-column gap-3">
+    <p-accordion [value]="['1', '2']" [multiple]="true" class="flex flex-column gap-3">\r
       <!--TASK OPTIONS-->\r
       <p-accordion-panel value="0" class="border-1 border-round-md border-surface">\r
         <p-accordion-header>{{ 'page.ai-options.task.header' | translate }}</p-accordion-header>\r
@@ -27599,7 +27708,7 @@ var AiOptionsComponent = class _AiOptionsComponent {
                         (onChange)="onUseCompactAlertsPageContextSelect(useCompactAlertsPageContext)"\r
                       />\r
                       <label for="useCompactAlertsPageContext" class="pl-2">\r
-                        Send compact page context to AI for alerts\r
+                        Compact context (not for nemotron super)\r
                       </label>\r
                     </div>\r
                   </div>\r
@@ -41824,6 +41933,13 @@ var PageAssistantCompareComponent = class _PageAssistantCompareComponent {
   urlDataService = inject(UrlDataService);
   router = inject(Router);
   locationStrategy = inject(LocationStrategy);
+  isAiDebugLoggingEnabled() {
+    try {
+      return localStorage.getItem("pageAssistant.aiDebug") === "true";
+    } catch {
+      return false;
+    }
+  }
   constructor() {
     effect(() => __async(this, null, function* () {
       const data = this.uploadState.getUploadData();
@@ -42403,8 +42519,13 @@ ${custom}` : promptBody;
   statusSeverity = "info";
   sendToAI() {
     return __async(this, null, function* () {
-      console.time("Time until AI response");
       const startTime = performance.now();
+      let selectedPromptForTiming = this.selectedPromptKey;
+      let requestPromptForTiming = this.selectedPromptKey;
+      let timingFlow = "single-prompt";
+      let usedCachedAlertIssues = false;
+      let alertIssuesPromptSent = false;
+      let alertRewriteRan = false;
       this.isLoading = true;
       this.aiDisabled = "Wait for response from AI";
       this.statusSeverity = "info";
@@ -42421,6 +42542,9 @@ ${custom}` : promptBody;
         const isAlertsIssues = this.selectedPromptKey === PromptKey.AlertsIssues;
         const isAlertFlow = isAlertsRecommendations || isAlertsIssues;
         const promptKeyForRequest = isAlertsRecommendations ? PromptKey.AlertsIssues : this.selectedPromptKey;
+        selectedPromptForTiming = this.selectedPromptKey;
+        requestPromptForTiming = promptKeyForRequest;
+        timingFlow = isAlertFlow ? "alert-issues-and-rewrite" : "single-prompt";
         const prompt = yield this.getPromptForKey(promptKeyForRequest);
         const model = this.selectedAiModel;
         const requestedModelShort = this.getShortModelName(model);
@@ -42449,6 +42573,8 @@ ${custom}` : promptBody;
         if (isAlertFlow) {
           const cachedIssues = this.alertAi.getCachedIssues(html);
           if (cachedIssues) {
+            usedCachedAlertIssues = true;
+            timingFlow = "alert-rewrite-with-cached-issues";
             const selectedIssues = cachedIssues.filter((issue) => issue.include).map((issue) => __spreadValues({}, issue));
             if (!selectedIssues.length) {
               this.messageService.add({
@@ -42464,6 +42590,7 @@ ${custom}` : promptBody;
               headers,
               url
             });
+            alertRewriteRan = true;
             if (!recommendationsApplied) {
               return;
             }
@@ -42481,6 +42608,9 @@ ${custom}` : promptBody;
         const candidates = this.buildModelRotation(model);
         let aiResponse = null;
         let lastAttemptedModel = model;
+        if (promptKeyForRequest === PromptKey.AlertsIssues) {
+          alertIssuesPromptSent = true;
+        }
         for (let i = 0; i < candidates.length; i += 1) {
           const candidate = candidates[i];
           lastAttemptedModel = candidate;
@@ -42488,20 +42618,26 @@ ${custom}` : promptBody;
             models: [candidate],
             provider: { allow_fallbacks: false }
           });
-          console.log("Sending to OpenRouter", {
-            model: candidate,
-            attempt: i + 1,
-            attempts: candidates.length,
-            prompt: promptKeyForRequest
-          });
+          if (this.isAiDebugLoggingEnabled()) {
+            console.debug("Sending to OpenRouter", {
+              model: candidate,
+              attempt: i + 1,
+              attempts: candidates.length,
+              prompt: promptKeyForRequest
+            });
+          }
           const orResponse = yield fetch(url, {
             method: "POST",
             headers,
             body: JSON.stringify(attemptPayload)
           });
-          console.log(`OpenRouter response status: `, orResponse.status);
+          if (this.isAiDebugLoggingEnabled()) {
+            console.debug("OpenRouter response status", {
+              status: orResponse.status,
+              model: candidate
+            });
+          }
           if (orResponse.status === 200) {
-            console.log("Waiting for AI response");
             this.statusMessage = this.translate.instant("common.ai.generating");
           }
           const attemptResponse = (yield orResponse.json().catch(() => ({}))) || {};
@@ -42557,13 +42693,15 @@ ${custom}` : promptBody;
         if (!aiHtml) {
           throw new Error(`AI response was empty (${requestedModelShort}).`);
         }
-        console.groupCollapsed("AI Response");
-        console.log(`AI model: `, aiResponse.model);
-        console.log(`Prompt tokens: `, aiResponse.usage.prompt_tokens);
-        console.log(`Response tokens: `, aiResponse.usage.completion_tokens);
-        console.log(`Total tokens: `, aiResponse.usage.total_tokens);
-        console.dir(aiResponse);
-        console.groupEnd();
+        if (this.isAiDebugLoggingEnabled()) {
+          console.groupCollapsed("AI Response");
+          console.log(`AI model: `, aiResponse.model);
+          console.log(`Prompt tokens: `, aiResponse.usage.prompt_tokens);
+          console.log(`Response tokens: `, aiResponse.usage.completion_tokens);
+          console.log(`Total tokens: `, aiResponse.usage.total_tokens);
+          console.dir(aiResponse);
+          console.groupEnd();
+        }
         const requestedModel = this.getShortModelName(model);
         const usedModel = this.getShortModelName(aiResponse.model);
         if (!this.isSameAiModelFamily(model, aiResponse.model)) {
@@ -42624,6 +42762,7 @@ ${custom}` : promptBody;
             headers,
             url
           });
+          alertRewriteRan = true;
           if (!recommendationsApplied) {
             return;
           }
@@ -42655,9 +42794,19 @@ ${custom}` : promptBody;
       } finally {
         this.isLoading = false;
         this.aiDisabled = "";
-        console.timeEnd("Time until AI response");
         const endTime = performance.now();
         const durationInSeconds = ((endTime - startTime) / 1e3).toFixed(2);
+        console.info("AI request timing", {
+          selectedPrompt: selectedPromptForTiming,
+          requestPrompt: requestPromptForTiming,
+          flow: timingFlow,
+          processes: [
+            ...alertIssuesPromptSent ? ["alert-issues"] : [],
+            ...alertRewriteRan ? ["alert-rewrite"] : []
+          ],
+          usedCachedAlertIssues,
+          totalMs: Math.round(endTime - startTime)
+        });
         this.messageService.add({
           severity: "info",
           summary: this.translate.instant("common.requestComplete"),
@@ -43424,4 +43573,4 @@ ${custom}` : promptBody;
 export {
   PageAssistantCompareComponent
 };
-//# sourceMappingURL=chunk-IEHQGCWQ.js.map
+//# sourceMappingURL=chunk-HW2E4PZD.js.map
