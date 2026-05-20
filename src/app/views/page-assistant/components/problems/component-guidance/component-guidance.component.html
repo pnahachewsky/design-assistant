@@ -217,6 +217,7 @@
               (categoriesChange)="onAlertCategoriesChange($event)"
               (loadingChange)="onAlertLoadingChange($event)"
               (errorChange)="onAlertErrorChange($event)"
+              (issuesCleared)="onAlertIssuesCleared()"
             ></ca-alerts-guidance>
           } @else {
             <p-table styleClass="p-datatable-sm expansion-table">

@@ -24,3 +24,16 @@
     </tr>
   </ng-template>
 </p-table>
+
+@if (issues.length) {
+  <div class="alert-table-actions">
+    <button
+      pButton
+      type="button"
+      label="Clear alert issues"
+      icon="pi pi-trash"
+      class="p-button-secondary p-button-sm"
+      (click)="clearPersistedIssues()"
+    ></button>
+  </div>
+}

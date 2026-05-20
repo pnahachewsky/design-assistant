@@ -488,6 +488,26 @@ export class ComponentGuidanceComponent implements OnInit, OnDestroy {
     });
   }
 
+  onAlertIssuesCleared(): void {
+    const alertRow = this.rows.find((r) => r.__nameKey === this.alertsNameKey);
+    this.alertCategories = [];
+    this.alertMaxSeverity = null;
+    this.alertHasIssues = false;
+    this.alertLoading = false;
+    this.alertError = false;
+    this.alertDataLoaded = false;
+    this.alertLoadAttempted = false;
+    this.prevAlertHasIssues = false;
+    if (alertRow) {
+      this.selectedRows = this.selectedRows.filter((r) => r.url !== alertRow.url);
+      this.alertSelectAll = false;
+      const expandedRows = { ...this.expandedRows };
+      delete expandedRows[alertRow.url];
+      this.expandedRows = expandedRows;
+    }
+    this.cdr.markForCheck();
+  }
+
   private syncAlertRowSelection(): void {
     const alertRow = this.rows.find((r) => r.__nameKey === this.alertsNameKey);
     if (!alertRow) return;

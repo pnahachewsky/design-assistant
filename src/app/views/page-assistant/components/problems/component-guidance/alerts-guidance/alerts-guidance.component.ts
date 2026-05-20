@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TableModule } from 'primeng/table';
 import { CheckboxModule } from 'primeng/checkbox';
+import { ButtonModule } from 'primeng/button';
 import { Subscription } from 'rxjs';
 import { UploadStateService } from '../../../../services/upload-state.service';
 import { AlertAiService } from '../../../../services/alert-ai.service';
@@ -93,7 +94,7 @@ export function computeAlertMaxSeverity(
 @Component({
   selector: 'ca-alerts-guidance',
   standalone: true,
-  imports: [CommonModule, FormsModule, TableModule, CheckboxModule],
+  imports: [CommonModule, FormsModule, TableModule, CheckboxModule, ButtonModule],
   templateUrl: './alerts-guidance.component.html',
   styleUrls: ['./alerts-guidance.component.css', '../component-guidance.component.css'],
 })
@@ -108,6 +109,7 @@ export class AlertsGuidanceComponent implements OnInit, OnChanges, OnDestroy {
   @Output() categoriesChange = new EventEmitter<{ label: string; severity: string }[]>();
   @Output() loadingChange = new EventEmitter<boolean>();
   @Output() errorChange = new EventEmitter<boolean>();
+  @Output() issuesCleared = new EventEmitter<void>();
 
   issues: AlertIssue[] = [];
   isLoading = false;
@@ -148,6 +150,15 @@ export class AlertsGuidanceComponent implements OnInit, OnChanges, OnDestroy {
     this.sortIssues();
     this.emitDerived();
     this.syncCache();
+  }
+
+  clearPersistedIssues(): void {
+    const html = this.uploadState.getUploadData()?.originalHtml || '';
+    this.alertAi.clearCachedIssues(html);
+    this.issues = [];
+    this.isLoading = false;
+    this.emitDerived();
+    this.issuesCleared.emit();
   }
 
   private applySelectAll(flag: boolean, sync = true): void {

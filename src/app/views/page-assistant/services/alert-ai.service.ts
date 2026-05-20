@@ -215,6 +215,23 @@ export class AlertAiService {
     });
   }
 
+  clearCachedIssues(alertHtml?: string): void {
+    const normalized = this.trimText(alertHtml);
+    if (
+      normalized &&
+      this.cachedAlertIssues &&
+      this.cachedAlertIssues.html !== normalized
+    ) {
+      return;
+    }
+
+    this.cachedAlertIssues = null;
+    this.issuesUpdatedSubject.next({
+      html: normalized,
+      issues: [],
+    });
+  }
+
   private notifyError(err: unknown): void {
     const message =
       err instanceof Error

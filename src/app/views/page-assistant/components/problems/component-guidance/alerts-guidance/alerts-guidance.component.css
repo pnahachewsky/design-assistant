@@ -39,6 +39,12 @@
   table-layout: auto !important;
 }
 
+.alert-table-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 0.75rem;
+}
+
 .alert-table .toggle-col,
 .alert-table .checkbox-col {
   width: 1%;
