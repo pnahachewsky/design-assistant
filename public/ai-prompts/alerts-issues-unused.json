@@ -32,7 +32,7 @@
         { "name": "Misuse", "details": "Do not use alerts for standard process steps, low-risk warnings, or emphasis." },
         { "name": "Too wordy", "details": "Alerts must be short and succinct. If more than 2 sentences are needed, the sentences must be short. To fix a longer alert, recommend a summary with a link to a page that contains the full information." },
         { "name": "Generic titles", "details": "Flag headers like \"Note\", \"Info\", \"Important\" or \"New\". Titles must be descriptive." },
-        { "name": "Unclear impact", "details": "The alert must explain the consequence to the user, not just state a fact." },
+        { "name": "Unclear impact", "details": "The alert must explain any consequence that is not obvious to the user, and not just state a fact." },
         { "name": "Outdated", "details": "Flag past dates or resolved events. Alerts are temporary." },
         { "name": "Missing heading", "details": "Alerts must contain a heading element." },
         { "name": "Wrong type", "details": "Ensure the alert type matches severity. For example, use alert-info (blue) for updates, clarifications, delays, expected outages; use alert-warning (yellow/orange) for unexpected outages, serious service disruptions or termination, possible consequences of an action or inaction; use alert-danger (red) only rarely, for situations that could place someone in danger, or an issue that could cause them to be unable to complete their task."},        { "name": "Hidden content", "details": "Do not use expand/collapse (accordions) in alerts; content must be visible." },
@@ -42,8 +42,8 @@
         { "name": "Wrong placement", "details": "Alerts must be adjacent to the relevant section, not at the top of a general page if specific." },
         { "name": "Alert overload", "details": "Flag pages with multiple stacked alerts (alert fatigue)." },
         { "name": "Low relevance", "details": "On Home/Landing pages, alerts must apply to >50% of the audience." },
-        { "name": "Incorrect hierarchy", "details": "Alert headings must fit the page outline (e.g., don't put an H4 after an H2)." },
-        { "name": "Nothing actionable", "details": "If no action/consequence is listed, flag the alert to be deleted and the information as a section on the page or on another page." }
+        { "name": "Incorrect hierarchy", "details": "Alert headings must follow the heading structure of the page (e.g., there should never be an H4 after an H2)." },
+        { "name": "Nothing actionable", "details": "If no next-step link exists, flag the alert to confirm that none is needed or whether it needs to be deleted and the information added to the page instead." }
       ],
       "complex_issues": [
         { "name": "Focus order", "details": "Ensure the alert logical reading order is preserved and not skipped by screen readers." },
