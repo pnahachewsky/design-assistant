@@ -106,6 +106,122 @@ describe('AlertRewriteService', () => {
     );
   });
 
+  it('includes a deterministic link manifest in alert rewrite messages', async () => {
+    spyOn(window, 'fetch').and.callFake(
+      async (input: RequestInfo | URL): Promise<Response> => {
+        const url = String(input);
+        if (url.includes('ai-prompts/link-writing-rules.json')) {
+          return new Response(
+            JSON.stringify({
+              version: 'test',
+              rules: [
+                {
+                  id: 'L1',
+                  condition: 'always',
+                  text: 'Use link manifest links.',
+                },
+              ],
+            }),
+            { status: 200 },
+          );
+        }
+        if (url.includes('skills/canada-ca-style/references/writing-rules.json')) {
+          return new Response(
+            JSON.stringify({
+              version: 'test',
+              rules: [],
+              examples: [],
+            }),
+            { status: 200 },
+          );
+        }
+        if (url.includes('ai-prompts/alerts-rewrite-rules.json')) {
+          return new Response(
+            JSON.stringify({
+              version: 'test',
+              alertPlanning: {
+                systemPromptLines: ['Plan alert rewrites.'],
+              },
+              alertRewrite: {
+                styleRulesBase: ['Keep the alert scoped.'],
+                styleRulesWithExamples: [],
+                systemPromptWithExamplesLines: ['Rewrite alert with examples.'],
+                systemPromptWithoutExamplesLines: ['Rewrite alert.'],
+                retryInstructions: {
+                  invalidWrapperHtml: 'Return one valid alert wrapper.',
+                  placeholderLinks: 'Do not use placeholder links.',
+                  noLinksAllowed: 'Do not add links.',
+                  mustKeepLink: 'Keep required links.',
+                  mustHaveHeading: 'Include a heading.',
+                  avoidExampleCopy: 'Do not copy examples.',
+                  fullSentenceLinksNeedLeadIn: 'Use a clear link lead-in.',
+                },
+              },
+            }),
+            { status: 200 },
+          );
+        }
+        return new Response('Not found', { status: 404 });
+      },
+    );
+
+    const messages = await service.buildAlertRewriteMessages({
+      mode: AlertRewriteMode.GoodResultsOnly,
+      originalAlertText:
+        'The rebate has received Royal Assent. First-time home buyers rebate',
+      originalAlertHtml:
+        '<section class="alert alert-info"><p>The rebate has received Royal Assent. <a href="/rebate.html">First-time home buyers rebate</a></p></section>',
+      plan,
+      issues: [],
+      examples: [],
+    });
+
+    const userPayload = JSON.parse(messages[1]?.content || '{}') as {
+      styleRules: string[];
+      linkManifest: {
+        count: number;
+        hasLinks: boolean;
+        allowRemoval: boolean;
+        mustPreserveAtLeastOne: boolean;
+        items: Array<{ href: string; text: string; surroundingText?: string }>;
+      };
+    };
+
+    expect(userPayload.linkManifest.count).toBe(1);
+    expect(userPayload.linkManifest.hasLinks).toBeTrue();
+    expect(userPayload.linkManifest.allowRemoval).toBeFalse();
+    expect(userPayload.linkManifest.mustPreserveAtLeastOne).toBeTrue();
+    expect(userPayload.linkManifest.items[0]).toEqual(
+      jasmine.objectContaining({
+        href: '/rebate.html',
+        text: 'First-time home buyers rebate',
+      }),
+    );
+    expect(userPayload.linkManifest.items[0].surroundingText).toContain(
+      'The rebate has received Royal Assent.',
+    );
+    expect(
+      userPayload.styleRules.some((rule) =>
+        rule.includes('Use linkManifest as the source of truth'),
+      ),
+    ).toBeTrue();
+
+    const misclassifiedMessages = await service.buildAlertRewriteMessages({
+      mode: AlertRewriteMode.GoodResultsOnly,
+      originalAlertText: 'The rebate has received Royal Assent.',
+      originalAlertHtml:
+        '<section class="alert alert-info"><p>The rebate has received Royal Assent. <a href="/rebate.html">First-time home buyers rebate</a></p></section>',
+      plan,
+      issues: [{ category: 'Too many links' }],
+      examples: [],
+    });
+    const misclassifiedPayload = JSON.parse(
+      misclassifiedMessages[1]?.content || '{}',
+    ) as { linkManifest: { allowRemoval: boolean; mustPreserveAtLeastOne: boolean } };
+    expect(misclassifiedPayload.linkManifest.allowRemoval).toBeFalse();
+    expect(misclassifiedPayload.linkManifest.mustPreserveAtLeastOne).toBeTrue();
+  });
+
   it('does not rank examples by alert type', () => {
     const examples: AlertRewriteExample[] = [
       {

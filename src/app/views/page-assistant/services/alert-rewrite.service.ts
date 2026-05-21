@@ -58,6 +58,21 @@ export interface AlertRewriteExampleLinkEdit {
   note?: string;
 }
 
+export interface AlertRewriteLinkManifestItem {
+  index: number;
+  href: string;
+  text: string;
+  surroundingText?: string;
+}
+
+export interface AlertRewriteLinkManifest {
+  count: number;
+  hasLinks: boolean;
+  allowRemoval: boolean;
+  mustPreserveAtLeastOne: boolean;
+  items: AlertRewriteLinkManifestItem[];
+}
+
 export interface AlertRewriteResult {
   rewrittenAlertHtml: string;
   rewrittenHeading: string;
@@ -298,9 +313,16 @@ export class AlertRewriteService {
     retryInstructions?: string[];
   }): Promise<ChatMessage[]> {
     const hasTooManyLinksIssue =
+      params.issues.some((issue) =>
+        (issue.category || '').toLowerCase().includes('too many links'),
+      ) ||
       params.plan.criteriaMatched.includes('C3_too_many_links') ||
       params.plan.directives.some((directive) => directive.op === 'limit_links');
     const originalHasLink = /<a\b/i.test(params.originalAlertHtml || '');
+    const linkManifest = this.buildAlertLinkManifest(
+      params.originalAlertHtml,
+      hasTooManyLinksIssue,
+    );
     const shouldIncludeLinkWritingRules =
       params.includeLinkWritingRules !== false && originalHasLink;
     const [linkRules, canadaCaStyleRules, rules] = await Promise.all([
@@ -323,6 +345,11 @@ export class AlertRewriteService {
     if (this.hasAcceptableFinalStandaloneLinkSentence(params.originalAlertHtml)) {
       styleRules.push(
         'The original alert already ends with an acceptable standalone final link sentence or paragraph. Preserve that wording and placement unless a selected issue clearly requires a change.',
+      );
+    }
+    if (linkManifest.hasLinks) {
+      styleRules.push(
+        'Use linkManifest as the source of truth for original links. If linkManifest.mustPreserveAtLeastOne is true, rewrittenAlertHtml must include at least one real <a> element whose href exactly matches one of linkManifest.items[].href values.',
       );
     }
     const retryInstructions = Array.from(
@@ -414,6 +441,7 @@ export class AlertRewriteService {
       originalHeading: (params.originalHeading || '').trim(),
       originalAlertText: (params.originalAlertText || '').trim(),
       originalAlertHtml: (params.originalAlertHtml || '').trim(),
+      linkManifest,
       ...(params.compactAlertPayload
         ? { compactAlertPayload: params.compactAlertPayload }
         : {}),
@@ -473,6 +501,44 @@ export class AlertRewriteService {
     } catch {
       return false;
     }
+  }
+
+  private buildAlertLinkManifest(
+    alertHtml: string,
+    allowRemoval: boolean,
+  ): AlertRewriteLinkManifest {
+    const items: AlertRewriteLinkManifestItem[] = [];
+    try {
+      const doc = new DOMParser().parseFromString(alertHtml || '', 'text/html');
+      doc.body.querySelectorAll('a[href]').forEach((anchor, index) => {
+        const href = (anchor.getAttribute('href') || '').trim();
+        if (!href) return;
+
+        const text = this.toDescriptionSnippet(anchor.textContent || href, 140);
+        const surroundingText = this.toDescriptionSnippet(
+          anchor.closest('p, li, div, section, aside')?.textContent || '',
+          240,
+        );
+        items.push({
+          index: index + 1,
+          href,
+          text,
+          ...(surroundingText ? { surroundingText } : {}),
+        });
+      });
+    } catch {
+      // Empty manifest is safer than asking the model to preserve guessed links.
+    }
+
+    const canRemoveLinks = allowRemoval && items.length > 1;
+
+    return {
+      count: items.length,
+      hasLinks: items.length > 0,
+      allowRemoval: canRemoveLinks,
+      mustPreserveAtLeastOne: items.length > 0 && !canRemoveLinks,
+      items,
+    };
   }
 
   parseAlertRewriteResponse(
