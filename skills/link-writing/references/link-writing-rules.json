@@ -4,12 +4,12 @@
     {
       "id": "L1_keep_links_default",
       "condition": "always",
-      "text": "Keep links by default."
+      "text": "Keep links by default. If the original alert has exactly one <a> link, the rewritten alert must include one real <a> element with the same href."
     },
     {
       "id": "L2_keep_url_change_text",
       "condition": "always",
-      "text": "Link text may be rewritten, but any kept link must keep its original URL."
+      "text": "Link text may be rewritten, but any kept link must keep its original URL. Do not convert a kept link to plain text, omit it, or replace it with placeholder text."
     },
     {
       "id": "L3_descriptive_text",
@@ -39,12 +39,12 @@
     {
       "id": "L8_remove_only_when_too_many",
       "condition": "too_many_links",
-      "text": "Only remove links when there are multiple links and a too-many-links issue is identified; keep one primary link."
+      "text": "Only remove links when the original alert has multiple links and a too-many-links issue is identified; keep one primary <a> link with its original href."
     },
     {
       "id": "L9_do_not_remove_without_issue",
       "condition": "not_too_many_links",
-      "text": "Do not remove links unless a too-many-links issue is identified and multiple links are present."
+      "text": "Do not remove links unless the original alert has multiple links and a too-many-links issue is identified. If only one link is present, preserve a real <a> element with the original href."
     },
     {
       "id": "L10_concise_link_text",

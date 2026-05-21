@@ -22809,8 +22809,9 @@ var AlertRewriteService = class _AlertRewriteService {
   }
   buildAlertRewriteMessages(params) {
     return __async(this, null, function* () {
-      const hasTooManyLinksIssue = params.plan.criteriaMatched.includes("C3_too_many_links") || params.plan.directives.some((directive) => directive.op === "limit_links");
+      const hasTooManyLinksIssue = params.issues.some((issue) => (issue.category || "").toLowerCase().includes("too many links")) || params.plan.criteriaMatched.includes("C3_too_many_links") || params.plan.directives.some((directive) => directive.op === "limit_links");
       const originalHasLink = /<a\b/i.test(params.originalAlertHtml || "");
+      const linkManifest = this.buildAlertLinkManifest(params.originalAlertHtml, hasTooManyLinksIssue);
       const shouldIncludeLinkWritingRules = params.includeLinkWritingRules !== false && originalHasLink;
       const [linkRules, canadaCaStyleRules, rules] = yield Promise.all([
         shouldIncludeLinkWritingRules ? getLinkWritingRules({
@@ -22829,6 +22830,9 @@ var AlertRewriteService = class _AlertRewriteService {
       ];
       if (this.hasAcceptableFinalStandaloneLinkSentence(params.originalAlertHtml)) {
         styleRules.push("The original alert already ends with an acceptable standalone final link sentence or paragraph. Preserve that wording and placement unless a selected issue clearly requires a change.");
+      }
+      if (linkManifest.hasLinks) {
+        styleRules.push("Use linkManifest as the source of truth for original links. If linkManifest.mustPreserveAtLeastOne is true, rewrittenAlertHtml must include at least one real <a> element whose href exactly matches one of linkManifest.items[].href values.");
       }
       const retryInstructions = Array.from(new Set((params.retryInstructions || []).map((instruction) => (instruction || "").trim()).filter((instruction) => !!instruction)));
       if (retryInstructions.length) {
@@ -22878,7 +22882,8 @@ var AlertRewriteService = class _AlertRewriteService {
         issues: rawIssues,
         originalHeading: (params.originalHeading || "").trim(),
         originalAlertText: (params.originalAlertText || "").trim(),
-        originalAlertHtml: (params.originalAlertHtml || "").trim()
+        originalAlertHtml: (params.originalAlertHtml || "").trim(),
+        linkManifest
       }, params.compactAlertPayload ? { compactAlertPayload: params.compactAlertPayload } : {});
       return [
         { role: "system", content: systemPrompt },
@@ -22917,6 +22922,33 @@ var AlertRewriteService = class _AlertRewriteService {
     } catch {
       return false;
     }
+  }
+  buildAlertLinkManifest(alertHtml, allowRemoval) {
+    const items = [];
+    try {
+      const doc = new DOMParser().parseFromString(alertHtml || "", "text/html");
+      doc.body.querySelectorAll("a[href]").forEach((anchor, index) => {
+        const href = (anchor.getAttribute("href") || "").trim();
+        if (!href)
+          return;
+        const text = this.toDescriptionSnippet(anchor.textContent || href, 140);
+        const surroundingText = this.toDescriptionSnippet(anchor.closest("p, li, div, section, aside")?.textContent || "", 240);
+        items.push(__spreadValues({
+          index: index + 1,
+          href,
+          text
+        }, surroundingText ? { surroundingText } : {}));
+      });
+    } catch {
+    }
+    const canRemoveLinks = allowRemoval && items.length > 1;
+    return {
+      count: items.length,
+      hasLinks: items.length > 0,
+      allowRemoval: canRemoveLinks,
+      mustPreserveAtLeastOne: items.length > 0 && !canRemoveLinks,
+      items
+    };
   }
   parseAlertRewriteResponse(text, plan, selectedExamples) {
     const parsed = this.looseJsonParse(this.stripCodeFences(text));
@@ -43573,4 +43605,4 @@ ${custom}` : promptBody;
 export {
   PageAssistantCompareComponent
 };
-//# sourceMappingURL=chunk-HW2E4PZD.js.map
+//# sourceMappingURL=chunk-ZRVWIB5D.js.map

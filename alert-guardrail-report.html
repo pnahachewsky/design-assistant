@@ -1198,10 +1198,10 @@
       const summaries = [];
       const normalizedRules = Array.isArray(linkRules) ? linkRules : [];
 
-      if (includesPattern(normalizedRules, /keep links by default|remove links when there are multiple links|do not remove links unless/i)) {
+      if (includesPattern(normalizedRules, /keep links by default|original alert has exactly one <a> link|do not remove links unless/i)) {
         addSummaryIfMissing(
           summaries,
-          'Keep links by default and only remove them in justified too-many-links cases, usually preserving one primary link.',
+          'Keep links by default. If an alert has one link, preserve a real anchor with the original href; only remove links in justified too-many-links cases.',
         );
       }
       if (includesPattern(normalizedRules, /keep its original url/i)) {
