@@ -714,6 +714,31 @@ export class PageAssistantCompareComponent
     return '';
   }
 
+  private isValidAlertsIssuesResponse(text: string): boolean {
+    // Alert issue analysis may validly return an empty issues array; require the
+    // JSON shape so a rewrite payload is not mistaken for "no issues found".
+    const parsed = this.alertAi.looseJsonParse(
+      this.alertAi.stripCodeFences(text),
+    );
+    if (Array.isArray(parsed)) return true;
+    if (!parsed || typeof parsed !== 'object') return false;
+    return Array.isArray((parsed as Record<string, unknown>)['issues']);
+  }
+
+  private looksLikeStructuredAiJsonResponse(text: string): boolean {
+    // Generic comparison prompts expect renderable HTML. If a model returns one
+    // of AIDA's structured JSON contracts, fail before that JSON reaches the page.
+    const cleaned = (text || '').trim();
+    if (!cleaned) return false;
+    const stripped = this.alertAi.stripCodeFences(cleaned);
+    const parsed = this.alertAi.looseJsonParse(stripped);
+    if (parsed && typeof parsed === 'object') return true;
+
+    return /"(?:rewrittenAlertHtml|rewritten_alert_html|rewrittenAlert|rewritten_alert|appliedDirectives|applied_directives|replacements|issues)"\s*:/i.test(
+      stripped,
+    );
+  }
+
   // UI-facing summary of the alert rewrite options currently active.
   private buildAlertRewriteStatusMessage(): string {
     const includeExamples = this.uploadState.getIncludeAlertRewriteExamples();
@@ -995,6 +1020,7 @@ export class PageAssistantCompareComponent
       const candidates = this.buildModelRotation(model);
       let aiResponse: any | null = null;
       let lastAttemptedModel = model;
+      let lastValidationError: Error | null = null;
       if (promptKeyForRequest === PromptKey.AlertsIssues) {
         alertIssuesPromptSent = true;
       }
@@ -1091,17 +1117,53 @@ export class PageAssistantCompareComponent
           );
         }
 
+        const attemptText = this.extractOpenRouterMessageText(
+          (attemptResponse.choices?.[0]?.message || {}) as Record<
+            string,
+            unknown
+          >,
+        );
+        if (!attemptText) {
+          lastValidationError = new Error(
+            `AI response was empty (${this.getShortModelName(candidate)}).`,
+          );
+          console.warn(
+            `AI response was empty (${this.getShortModelName(candidate)}). Retrying next model in rotation.`,
+          );
+          continue;
+        }
+
+        // Validate each model attempt before accepting it. This keeps fallback
+        // models in the rotation, but rejects responses for the wrong contract.
+        if (
+          promptKeyForRequest === PromptKey.AlertsIssues &&
+          !this.isValidAlertsIssuesResponse(attemptText)
+        ) {
+          lastValidationError = new Error(
+            `Invalid AlertsIssues response shape (${this.getShortModelName(candidate)}).`,
+          );
+          console.warn(
+            `Invalid AlertsIssues response shape from ${this.getShortModelName(candidate)}. Retrying next model in rotation.`,
+          );
+          continue;
+        }
+
         aiResponse = attemptResponse;
         break;
       }
 
       if (!aiResponse) {
-        throw new Error(
-          `AI response was empty (${this.getShortModelName(lastAttemptedModel)}).`,
+        throw (
+          lastValidationError ??
+          new Error(
+            `AI response was empty (${this.getShortModelName(lastAttemptedModel)}).`,
+          )
         );
       }
 
-      const aiHtml = aiResponse.choices?.[0].message.content;
+      const aiHtml = this.extractOpenRouterMessageText(
+        (aiResponse.choices?.[0]?.message || {}) as Record<string, unknown>,
+      );
       if (!aiHtml) {
         throw new Error(`AI response was empty (${requestedModelShort}).`);
       }
@@ -1149,53 +1211,59 @@ export class PageAssistantCompareComponent
       }
 
       if (promptKeyForRequest === PromptKey.AlertsIssues) {
-          // Step 1: parse issues from AlertsIssues output (JSON response expected).
-          const issues = this.alertAi.parseIssuesFromText(aiHtml);
-          const cachedIssues = this.alertAi.getCachedIssues(html);
-          let selectedIssues: AlertRewriteIssueInput[] = [];
-          if (cachedIssues) {
-            selectedIssues = cachedIssues
-              .filter((issue) => issue.include)
-              .map((issue) => ({ ...issue }));
-          } else {
-            const normalizedIssues = issues.length
-              ? this.alertAi.normalizeAlertIssues(issues, {
-                  useIncludeFallback: false,
-                })
-              : [];
-            this.alertAi.cacheIssues(html, normalizedIssues);
-            selectedIssues = normalizedIssues
-              .filter((issue) => issue.include)
-              .map((issue) => ({ ...issue }));
-          }
-          if (selectedIssues.length) {
-            this.messageService.add({
-              severity: 'info',
-              summary: this.translate.instant('common.ai.alertIssuesReceived', {
-                model: usedModel,
-              }),
-              life: 3000,
-            });
-          } else {
-            this.messageService.add({
-              severity: 'info',
-              summary: this.translate.instant('common.ai.alertIssuesNotIdentified'),
-              life: 3000,
-            });
-          }
-          // Step 2: run alert rewrite flow with selected issues, or example-only when none are selected.
-          const recommendationsApplied = await this.applyAlertRecommendations({
-            html,
-            issues: selectedIssues,
-            model,
-            headers,
-            url,
-          });
-          alertRewriteRan = true;
-          if (!recommendationsApplied) {
-            return;
-          }
+        // Step 1: parse issues from AlertsIssues output (JSON response expected).
+        const issues = this.alertAi.parseIssuesFromText(aiHtml);
+        const cachedIssues = this.alertAi.getCachedIssues(html);
+        let selectedIssues: AlertRewriteIssueInput[] = [];
+        if (cachedIssues) {
+          selectedIssues = cachedIssues
+            .filter((issue) => issue.include)
+            .map((issue) => ({ ...issue }));
         } else {
+          const normalizedIssues = issues.length
+            ? this.alertAi.normalizeAlertIssues(issues, {
+                useIncludeFallback: false,
+              })
+            : [];
+          this.alertAi.cacheIssues(html, normalizedIssues);
+          selectedIssues = normalizedIssues
+            .filter((issue) => issue.include)
+            .map((issue) => ({ ...issue }));
+        }
+        if (selectedIssues.length) {
+          this.messageService.add({
+            severity: 'info',
+            summary: this.translate.instant('common.ai.alertIssuesReceived', {
+              model: usedModel,
+            }),
+            life: 3000,
+          });
+        } else {
+          this.messageService.add({
+            severity: 'info',
+            summary: this.translate.instant('common.ai.alertIssuesNotIdentified'),
+            life: 3000,
+          });
+        }
+        // Step 2: run alert rewrite flow with selected issues, or example-only when none are selected.
+        const recommendationsApplied = await this.applyAlertRecommendations({
+          html,
+          issues: selectedIssues,
+          model,
+          headers,
+          url,
+        });
+        alertRewriteRan = true;
+        if (!recommendationsApplied) {
+          return;
+        }
+      } else {
+        // Last guard for non-alert prompts: never render JSON contracts as HTML.
+        if (this.looksLikeStructuredAiJsonResponse(aiHtml)) {
+          throw new Error(
+            'The AI returned structured JSON where HTML was expected. No comparison update was applied.',
+          );
+        }
         const formattedHtml = await this.urlDataService.formatHtml(aiHtml, 'ai');
 
         this.uploadState.mergeModifiedData({
