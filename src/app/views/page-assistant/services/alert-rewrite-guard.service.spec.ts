@@ -177,6 +177,17 @@ describe('AlertRewriteGuardService', () => {
     expect(repaired).not.toContain('Refer to:');
   });
 
+  it('removes redundant lead-ins before sign-up action links', () => {
+    const repaired = service.removeRedundantLeadInsBeforeActionLinks(
+      '<div class="alert alert-warning"><h2>Get timely benefit payments</h2><p>Sign up for direct deposit to avoid delays in your benefit payments. It\'s fast, secure, and convenient.</p><p>Refer to: <a href="https://www.canada.ca/en/public-services-procurement/services/payments-to-from-government/direct-deposit/individuals-canada.html">Sign up for direct deposit</a></p></div>',
+    );
+
+    expect(repaired).toContain(
+      '<p><a href="https://www.canada.ca/en/public-services-procurement/services/payments-to-from-government/direct-deposit/individuals-canada.html">Sign up for direct deposit</a></p>',
+    );
+    expect(repaired).not.toContain('Refer to:');
+  });
+
   it('removes terminal punctuation from standalone link paragraphs', () => {
     const repaired = service.removeStandaloneLinkTerminalPunctuation(
       '<div class="alert alert-info"><h3>Benefit update</h3><p>The benefit will change in July 2026.</p><p>Learn about the <a href="/benefit">Canada Groceries and Essentials Benefit</a>.</p><p>Refer to: <a href="/details">benefit details</a>!</p></div>',

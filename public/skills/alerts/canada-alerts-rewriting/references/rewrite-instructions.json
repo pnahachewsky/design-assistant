@@ -30,7 +30,7 @@
     "Do not output an alert whose only body text is a link-introduction sentence such as Learn about: or Refer to:.",
     "If a link stands alone as its own sentence or paragraph, or if a sentence mainly directs the user to a link, place that link direction in its own paragraph.",
     "Prefer putting standalone link sentences or paragraphs last in the alert content when possible, but do not treat placement as a hard requirement.",
-    "When choosing a standalone link lead-in, prefer \"Refer to:\" for required task or service links and prefer \"Learn more:\" for optional background, status, or update links. If a standalone link already contains a clear action verb, do not add lead-in text. Clear action verbs include View, Get, Apply, Register, Sign in, Log in, File, Review, Check, Submit, Download, Pay, Request, Update, Manage, Start, Use, Learn, Find out, and How to.",
+    "When choosing a standalone link lead-in, prefer \"Refer to:\" for required task or service links and prefer \"Learn more:\" for optional background, status, or update links. If a standalone link already contains a clear action verb, do not add lead-in text. Clear action verbs include View, Get, Apply, Register, Sign in, Sign up, Log in, Login, File, Review, Check, Submit, Download, Pay, Request, Update, Manage, Start, Use, Learn, Find out, How to, Create, Cancel, Send, and Confirm.",
     "For phrasal lead-ins such as \"Find out\" or \"Learn about\", let the anchor text complete the phrase. Do not repeat the object or topic noun before the link when the link text already supplies it.",
     "Add or preserve a short, descriptive heading.",
     "State what happened, then what to do.",
@@ -65,7 +65,7 @@
     "Use valid HTML anchors in updated_html, for example <a href=\"...\">text</a>.",
     "For required task or service links, prefer a standalone lead-in of Refer to: before the anchor when the standalone link text does not already contain a clear action verb.",
     "For optional background, status, or update links, prefer Learn more: before the anchor when the standalone link text does not already contain a clear action verb.",
-    "Do not add a lead-in before standalone action links such as \"View CRA processing times\", \"Check CRA processing times\", \"Get an access code\", \"Register a business\", \"Sign in or register for a CRA account\", \"Learn about the Canada Groceries and Essentials Benefit\", \"Find out how to get an access code\", or \"How to get an access code\".",
+    "Do not add a lead-in before standalone action links such as \"View CRA processing times\", \"Check CRA processing times\", \"Get an access code\", \"Sign up for direct deposit\", \"Create an account\", \"Cancel a payment\", \"Send documents\", \"Confirm your information\", \"Review the proposed rates\", \"Register a business\", \"Sign in or register for a CRA account\", \"Learn about the Canada Groceries and Essentials Benefit\", \"Find out how to get an access code\", or \"How to get an access code\".",
     "Use Learn about without a colon when the linked text naturally completes the phrase. If an article is needed, place it before the anchor, for example: Learn about the <a>Canada Groceries and Essentials Benefit</a>.",
     "Use Find out only without a colon and only when the linked text naturally completes the phrase, such as Find out how to... or Find out if....",
     "Do not append link lead-ins to the explanatory sentence."

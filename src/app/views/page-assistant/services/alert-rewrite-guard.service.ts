@@ -510,7 +510,7 @@ export class AlertRewriteGuardService {
     const normalized = this.normalizeLeadInText(linkText);
     if (!normalized || /^learn more\b/.test(normalized)) return false;
 
-    return /^(?:how to\s+)?(?:view|get|apply|register|sign in|log in|file|review|check|submit|download|pay|request|update|manage|start|use|learn|find out)\b/.test(
+    return /^(?:how to\s+)?(?:view|get|apply|register|sign in|sign up|log in|login|file|review|check|submit|download|pay|request|update|manage|start|use|learn|find out|create|cancel|send|confirm)\b/.test(
       normalized,
     );
   }
