@@ -23985,7 +23985,7 @@ var AlertRewriteGuardService = class _AlertRewriteGuardService {
     const normalized = this.normalizeLeadInText(linkText);
     if (!normalized || /^learn more\b/.test(normalized))
       return false;
-    return /^(?:how to\s+)?(?:view|get|apply|register|sign in|log in|file|review|check|submit|download|pay|request|update|manage|start|use|learn|find out)\b/.test(normalized);
+    return /^(?:how to\s+)?(?:view|get|apply|register|sign in|sign up|log in|login|file|review|check|submit|download|pay|request|update|manage|start|use|learn|find out|create|cancel|send|confirm)\b/.test(normalized);
   }
   stripRedundantLeadInsBeforeActionLinks(alertHtml) {
     try {
@@ -43729,4 +43729,4 @@ ${custom}` : promptBody;
 export {
   PageAssistantCompareComponent
 };
-//# sourceMappingURL=chunk-JKNI3JPF.js.map
+//# sourceMappingURL=chunk-YQMWEYXO.js.map
