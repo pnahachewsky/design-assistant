@@ -72,6 +72,8 @@ describe('AlertRewriteOrchestratorService', () => {
         'hasSemanticHeading',
         'containsLinkPlaceholderSyntax',
         'hasFullSentenceLinkWithoutAllowedLeadIn',
+        'getFullSentenceLinkLeadInIssue',
+        'repairEmbeddedStandaloneLeadInParagraphs',
         'tryLocalAlertRewriteRepair',
         'ensureSemanticHeading',
         'applyAlertHtmlRewrites',
@@ -108,6 +110,12 @@ describe('AlertRewriteOrchestratorService', () => {
     alertRewriteGuardSpy.hasSemanticHeading.and.returnValue(false);
     alertRewriteGuardSpy.containsLinkPlaceholderSyntax.and.returnValue(false);
     alertRewriteGuardSpy.hasFullSentenceLinkWithoutAllowedLeadIn.and.returnValue(true);
+    alertRewriteGuardSpy.getFullSentenceLinkLeadInIssue.and.returnValue(
+      'fullSentenceLinksNeedLeadIn',
+    );
+    alertRewriteGuardSpy.repairEmbeddedStandaloneLeadInParagraphs.and.callFake(
+      (html: string) => html,
+    );
     alertRewriteGuardSpy.tryLocalAlertRewriteRepair.and.returnValue(null);
     alertRewriteGuardSpy.ensureSemanticHeading.and.callFake(
       (html: string, heading: string) =>
@@ -176,6 +184,64 @@ describe('AlertRewriteOrchestratorService', () => {
     expect(result.formattedHtml).toContain(
       'Check <a href="/times">Check CRA processing times</a>.',
     );
+  });
+
+  it('repairs an embedded valid lead-in before retrying', async () => {
+    const embeddedCandidate: AlertRewriteResult = {
+      rewrittenAlertHtml:
+        '<div class="alert alert-info"><h3>Benefit increase</h3><p>The benefit will increase by 25% starting in July 2026. Learn about the <a href="/benefit">Canada Groceries and Essentials Benefit</a>.</p></div>',
+      rewrittenHeading: 'Benefit increase',
+      rewrittenAlert:
+        'The benefit will increase by 25% starting in July 2026. Learn about the Canada Groceries and Essentials Benefit.',
+      appliedDirectives: [],
+      exampleIdsUsed: [],
+    };
+    const repairedHtml =
+      '<div class="alert alert-info"><h3>Benefit increase</h3><p>The benefit will increase by 25% starting in July 2026.</p><p>Learn about the <a href="/benefit">Canada Groceries and Essentials Benefit</a></p></div>';
+    const repairedCandidate: AlertRewriteResult = {
+      ...embeddedCandidate,
+      rewrittenAlertHtml: repairedHtml,
+    };
+
+    alertRewriteGuardSpy.hasSemanticHeading.and.returnValue(true);
+    alertRewriteGuardSpy.getFullSentenceLinkLeadInIssue.and.returnValues(
+      'linkLeadInNotStandalone',
+      null,
+    );
+    alertRewriteGuardSpy.repairEmbeddedStandaloneLeadInParagraphs.and.returnValue(
+      repairedHtml,
+    );
+    alertRewriteSpy.parseAlertRewriteResponse.and.returnValues(
+      embeddedCandidate,
+      repairedCandidate,
+    );
+
+    const callOpenRouterForMessages = jasmine
+      .createSpy('callOpenRouterForMessages')
+      .and.resolveTo({
+        text: '{"rewrittenAlertHtml":"ignored"}',
+        usedModel: AiModel.NemotronSuper,
+      });
+
+    const result = await service.generateRecommendations({
+      html: originalHtml,
+      issues: [],
+      model: AiModel.NemotronSuper,
+      headers: {},
+      url: 'https://example.test',
+      mode: AlertRewriteMode.GoodResultsOnly,
+      includeExamples: false,
+      includeBeforeTextInExamples: false,
+      includeLinkWritingRules: false,
+      useCompactAlertsPageContext: false,
+      forceLocalRepairForTesting: false,
+      callOpenRouterForMessages,
+      getShortModelName: (model) => model,
+    });
+
+    expect(callOpenRouterForMessages).toHaveBeenCalledTimes(1);
+    expect(alertRewriteGuardSpy.tryLocalAlertRewriteRepair).not.toHaveBeenCalled();
+    expect(result.formattedHtml).toContain(repairedHtml);
   });
 
   it('attempts local repair from a partial response when wrapper html is invalid on every retry', async () => {

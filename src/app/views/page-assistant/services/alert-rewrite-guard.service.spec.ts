@@ -80,6 +80,12 @@ describe('AlertRewriteGuardService', () => {
     ).toBeTrue();
   });
 
+  it('returns the generic lead-in issue for a root-level link-only sentence', () => {
+    expect(
+      service.getFullSentenceLinkLeadInIssue(invalidRootLevelLinkHtml),
+    ).toBe('fullSentenceLinksNeedLeadIn');
+  });
+
   it('detects when an alert html fragment is missing a semantic heading', () => {
     expect(
       service.hasSemanticHeading(
@@ -103,6 +109,34 @@ describe('AlertRewriteGuardService', () => {
         '<div class="alert alert-info"><h3>Canada Groceries and Essentials Benefit increase</h3><p>The benefit will increase by 25% starting July 2026.</p><p>Learn about the <a href="/benefit">Canada Groceries and Essentials Benefit</a></p></div>',
       ),
     ).toBeFalse();
+  });
+
+  it('separates a valid lead-in that is embedded in an explanatory paragraph', () => {
+    expect(
+      service.getFullSentenceLinkLeadInIssue(
+        '<div class="alert alert-info"><h3>Canada Groceries and Essentials Benefit increase</h3><p>The benefit will increase by 25% starting July 2026. Learn about the <a href="/benefit">Canada Groceries and Essentials Benefit</a>.</p></div>',
+      ),
+    ).toBe('linkLeadInNotStandalone');
+  });
+
+  it('repairs an embedded valid lead-in by moving it to its own paragraph', () => {
+    const repaired = service.repairEmbeddedStandaloneLeadInParagraphs(
+      '<div class="alert alert-info"><h3>Canada Groceries and Essentials Benefit increase</h3><p>The benefit will increase by 25% starting July 2026. Learn about the <a href="/benefit">Canada Groceries and Essentials Benefit</a>.</p></div>',
+    );
+
+    expect(repaired).toContain(
+      '<p>The benefit will increase by 25% starting July 2026.</p><p>Learn about the <a href="/benefit">Canada Groceries and Essentials Benefit</a></p>',
+    );
+    expect(service.getFullSentenceLinkLeadInIssue(repaired)).toBeNull();
+  });
+
+  it('does not repair when the embedded lead-in link sentence is not last', () => {
+    const original =
+      '<div class="alert alert-info"><h3>Benefit update</h3><p>The benefit will change. Learn about the <a href="/benefit">Canada Groceries and Essentials Benefit</a>. Applications open later.</p></div>';
+
+    expect(service.repairEmbeddedStandaloneLeadInParagraphs(original)).toBe(
+      original,
+    );
   });
 
   it('allows a standalone action-verb link without a lead-in', () => {

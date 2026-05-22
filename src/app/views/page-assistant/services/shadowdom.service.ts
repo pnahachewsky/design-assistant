@@ -36,26 +36,8 @@ export class ShadowDomService {
       return;
     }
 
-    // Clear previous content
-    this.clearShadowDOM(shadowRoot);
-
-    // Add external stylesheets
-    const externalStyles = [
-      'https://use.fontawesome.com/releases/v5.15.4/css/all.css',
-      'https://www.canada.ca/etc/designs/canada/wet-boew/css/theme.min.css',
-      'https://www.canada.ca/etc/designs/canada/wet-boew/méli-mélo/2024-09-kejimkujik.min.css'
-    ];
-    for (const href of externalStyles) {
-      const link = document.createElement('link');
-      link.rel = 'stylesheet';
-      link.href = href;
-      shadowRoot.appendChild(link);
-    }
-
-    // Add base styles
-    const style = document.createElement('style');
-    style.textContent = this.webDiffService.getRenderedDiffStyles();
-    shadowRoot.insertBefore(style, shadowRoot.firstChild);
+    this.ensureShadowDOMStyles(shadowRoot);
+    this.clearRenderedContent(shadowRoot);
 
     // Create container
     const diffContainer = document.createElement('div');
@@ -79,6 +61,49 @@ export class ShadowDomService {
 
     diffContainer.appendChild(renderedContent);
     shadowRoot.appendChild(diffContainer);
+  }
+
+  private ensureShadowDOMStyles(shadowRoot: ShadowRoot): void {
+    const styleId = 'aida-rendered-diff-styles';
+    const existingStyle = shadowRoot.querySelector<HTMLStyleElement>(
+      `style[data-aida-style="${styleId}"]`,
+    );
+
+    if (existingStyle) {
+      existingStyle.textContent = this.webDiffService.getRenderedDiffStyles();
+    } else {
+      const style = document.createElement('style');
+      style.dataset['aidaStyle'] = styleId;
+      style.textContent = this.webDiffService.getRenderedDiffStyles();
+      shadowRoot.appendChild(style);
+    }
+
+    const externalStyles = [
+      'https://use.fontawesome.com/releases/v5.15.4/css/all.css',
+      'https://www.canada.ca/etc/designs/canada/wet-boew/css/theme.min.css',
+      'https://www.canada.ca/etc/designs/canada/wet-boew/m%C3%A9li-m%C3%A9lo/2024-09-kejimkujik.min.css',
+    ];
+
+    for (const href of externalStyles) {
+      const existingLink = Array.from(
+        shadowRoot.querySelectorAll<HTMLLinkElement>('link[rel="stylesheet"]'),
+      ).find((link) => link.getAttribute('href') === href);
+
+      if (existingLink) {
+        continue;
+      }
+
+      const link = document.createElement('link');
+      link.rel = 'stylesheet';
+      link.href = href;
+      shadowRoot.appendChild(link);
+    }
+  }
+
+  private clearRenderedContent(shadowRoot: ShadowRoot): void {
+    shadowRoot.querySelectorAll('.rendered-diff-container').forEach((el) => {
+      el.remove();
+    });
   }
 
   //Render HTML

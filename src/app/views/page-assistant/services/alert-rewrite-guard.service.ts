@@ -18,6 +18,10 @@ export interface AlertHtmlRewrite {
   rewritten_alert_html: string;
 }
 
+export type AlertLinkLeadInIssue =
+  | 'fullSentenceLinksNeedLeadIn'
+  | 'linkLeadInNotStandalone';
+
 @Injectable({ providedIn: 'root' })
 export class AlertRewriteGuardService {
   private alertRewrite = inject(AlertRewriteService);
@@ -97,15 +101,19 @@ export class AlertRewriteGuardService {
   // Rejects outputs where link-direction text is malformed:
   // link-only sentences, embedded lead-ins, or lead-ins in the wrong paragraph shape.
   hasFullSentenceLinkWithoutAllowedLeadIn(alertHtml: string): boolean {
+    return this.getFullSentenceLinkLeadInIssue(alertHtml) !== null;
+  }
+
+  getFullSentenceLinkLeadInIssue(alertHtml: string): AlertLinkLeadInIssue | null {
     try {
       const doc = new DOMParser().parseFromString(alertHtml, 'text/html');
       const root = doc.body.firstElementChild as HTMLElement | null;
-      if (!root) return false;
+      if (!root) return null;
 
       const blocks = this.getLeadInCheckBlocks(root, doc);
-      return blocks.some((block) => {
+      for (const block of blocks) {
         const anchors = Array.from(block.querySelectorAll('a'));
-        if (!anchors.length) return false;
+        if (!anchors.length) continue;
 
         const markerPrefix = '[[link:';
         const markerSuffix = ']]';
@@ -123,16 +131,16 @@ export class AlertRewriteGuardService {
             })
             .join(' '),
         );
-        if (!paragraphWithMarkers) return false;
+        if (!paragraphWithMarkers) continue;
 
         const sentences = paragraphWithMarkers
           .match(/[^.!?]+[.!?]?/g)
           ?.map((sentence) => sentence.trim())
           .filter((sentence) => !!sentence) ?? [];
-        if (!sentences.length) return false;
+        if (!sentences.length) continue;
 
-        return sentences.some((sentence) => {
-          if (!sentence.includes(markerPrefix)) return false;
+        for (const sentence of sentences) {
+          if (!sentence.includes(markerPrefix)) continue;
 
           const sentenceWithoutLinks = this.normalizeLeadInText(
             sentence.replace(/\[\[link:[^\]]+\]\]/g, ' '),
@@ -149,28 +157,80 @@ export class AlertRewriteGuardService {
           const linkSentenceOnly = !nonLinkText;
 
           if (hasAllowedLeadIn && sentences.length > 1) {
-            return true;
+            return 'linkLeadInNotStandalone';
           }
 
           if (hasAllowedLeadIn) {
-            return false;
+            continue;
           }
 
           if (hasDirectionalLeadIn) {
-            return true;
+            return 'fullSentenceLinksNeedLeadIn';
           }
           if (
             linkSentenceOnly &&
             this.hasStandaloneActionVerbLinkText(sentence, markerPrefix, markerSuffix)
           ) {
-            return false;
+            continue;
           }
 
-          return linkSentenceOnly;
-        });
-      });
+          if (linkSentenceOnly) return 'fullSentenceLinksNeedLeadIn';
+        }
+      }
+      return null;
     } catch {
-      return false;
+      return null;
+    }
+  }
+
+  repairEmbeddedStandaloneLeadInParagraphs(alertHtml: string): string {
+    try {
+      const doc = new DOMParser().parseFromString(alertHtml || '', 'text/html');
+      const root = doc.body.firstElementChild as HTMLElement | null;
+      if (!root) return alertHtml;
+
+      Array.from(root.querySelectorAll('p')).forEach((paragraph) => {
+        const anchors = Array.from(paragraph.querySelectorAll('a'));
+        if (anchors.length !== 1) return;
+
+        const anchor = anchors[0];
+        if (anchor.parentElement !== paragraph) return;
+
+        const childNodes = Array.from(paragraph.childNodes);
+        const anchorIndex = childNodes.indexOf(anchor);
+        if (anchorIndex !== 1) return;
+
+        const beforeNode = childNodes[0];
+        if (beforeNode.nodeType !== Node.TEXT_NODE) return;
+        const afterNodes = childNodes.slice(anchorIndex + 1);
+        if (afterNodes.some((node) => node.nodeType !== Node.TEXT_NODE)) return;
+
+        const beforeText = beforeNode.textContent || '';
+        const afterText = afterNodes.map((node) => node.textContent || '').join('');
+        if (afterText.replace(/[.!?\s]/g, '')) return;
+
+        const split = beforeText.match(/^([\s\S]*[.!?])\s+([^.!?]+)$/);
+        if (!split) return;
+
+        const explanatoryText = (split[1] || '').trim();
+        const leadInText = (split[2] || '').trim();
+        if (!explanatoryText || !this.isValidStandaloneLinkLeadIn(leadInText)) {
+          return;
+        }
+
+        const explanatoryParagraph = doc.createElement('p');
+        explanatoryParagraph.textContent = explanatoryText;
+
+        const linkParagraph = doc.createElement('p');
+        linkParagraph.appendChild(doc.createTextNode(`${leadInText} `));
+        linkParagraph.appendChild(anchor.cloneNode(true));
+
+        paragraph.replaceWith(explanatoryParagraph, linkParagraph);
+      });
+
+      return root.outerHTML.trim();
+    } catch {
+      return alertHtml;
     }
   }
 

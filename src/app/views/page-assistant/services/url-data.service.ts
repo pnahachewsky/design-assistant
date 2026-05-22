@@ -18,7 +18,7 @@ export class UrlDataService {
 
   async fetchAndProcess(url: string): Promise<htmlProcessingResult> {
     //Get HTML content
-    const doc = await this.fetchService.fetchContent(`${url}?_=${Date.now()}`, "both")
+    const doc = await this.fetchService.fetchContent(url, "both")
     //Process HTML and return main element
     return await this.extractContent(doc);
   }

@@ -363,14 +363,14 @@ export class AlertRewriteOrchestratorService {
         // Guard 5: enforce the paragraph-level link-direction conventions
         // handled by AlertRewriteGuardService. This is where malformed
         // "refer to <link>" or link-only sentence patterns trigger a retry.
-        if (
-          rewrittenHasAnchor &&
-          this.alertRewriteGuard.hasFullSentenceLinkWithoutAllowedLeadIn(
-            parsedResult.rewrittenAlertHtml,
-          )
-        ) {
+        const linkLeadInIssue = rewrittenHasAnchor
+          ? this.alertRewriteGuard.getFullSentenceLinkLeadInIssue(
+              parsedResult.rewrittenAlertHtml,
+            )
+          : null;
+        if (linkLeadInIssue) {
           addRetryInstruction(
-            'fullSentenceLinksNeedLeadIn',
+            linkLeadInIssue,
             retryInstructions.fullSentenceLinksNeedLeadIn,
           );
         }
@@ -396,11 +396,50 @@ export class AlertRewriteOrchestratorService {
           });
         }
 
+        if (
+          !params.forceLocalRepairForTesting &&
+          retryReasons.length === 1 &&
+          retryReasons[0] === 'linkLeadInNotStandalone'
+        ) {
+          const repairedHtml =
+            this.alertRewriteGuard.repairEmbeddedStandaloneLeadInParagraphs(
+              parsedResult.rewrittenAlertHtml,
+            );
+          if (repairedHtml !== parsedResult.rewrittenAlertHtml) {
+            const repairedResult = this.alertRewrite.parseAlertRewriteResponse(
+              JSON.stringify({
+                ...parsedResult,
+                rewrittenAlertHtml: repairedHtml,
+              }),
+              plan,
+              selectedExamples,
+            );
+            if (
+              repairedResult?.rewrittenAlertHtml &&
+              !this.alertRewriteGuard.getFullSentenceLinkLeadInIssue(
+                repairedResult.rewrittenAlertHtml,
+              ) &&
+              !this.alertRewrite.detectExampleCopy({
+                result: repairedResult,
+                selectedExamples,
+                originalHeading,
+                originalAlertText: alertText,
+              }).isCopy
+            ) {
+              rewriteResult = repairedResult;
+              lastRepairCandidate = repairedResult;
+              this.addElapsed(timings, 'parseAndGuardMs', timingStart);
+              break;
+            }
+          }
+        }
+
         if (retryReasons.length) {
           const hardRetryReasons = retryReasons.filter(
             (reason) =>
               reason !== 'mustHaveHeading' &&
-              reason !== 'fullSentenceLinksNeedLeadIn',
+              reason !== 'fullSentenceLinksNeedLeadIn' &&
+              reason !== 'linkLeadInNotStandalone',
           );
           if (!hardRetryReasons.length) {
             softRejectedResult = parsedResult;
