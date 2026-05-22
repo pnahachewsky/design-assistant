@@ -23689,16 +23689,19 @@ var AlertRewriteGuardService = class _AlertRewriteGuardService {
   // Rejects outputs where link-direction text is malformed:
   // link-only sentences, embedded lead-ins, or lead-ins in the wrong paragraph shape.
   hasFullSentenceLinkWithoutAllowedLeadIn(alertHtml) {
+    return this.getFullSentenceLinkLeadInIssue(alertHtml) !== null;
+  }
+  getFullSentenceLinkLeadInIssue(alertHtml) {
     try {
       const doc = new DOMParser().parseFromString(alertHtml, "text/html");
       const root = doc.body.firstElementChild;
       if (!root)
-        return false;
+        return null;
       const blocks = this.getLeadInCheckBlocks(root, doc);
-      return blocks.some((block) => {
+      for (const block of blocks) {
         const anchors = Array.from(block.querySelectorAll("a"));
         if (!anchors.length)
-          return false;
+          continue;
         const markerPrefix = "[[link:";
         const markerSuffix = "]]";
         const paragraphWithMarkers = this.normalizeLeadInText(Array.from(block.childNodes).map((node) => {
@@ -23709,13 +23712,13 @@ var AlertRewriteGuardService = class _AlertRewriteGuardService {
           return node.textContent || "";
         }).join(" "));
         if (!paragraphWithMarkers)
-          return false;
+          continue;
         const sentences = paragraphWithMarkers.match(/[^.!?]+[.!?]?/g)?.map((sentence) => sentence.trim()).filter((sentence) => !!sentence) ?? [];
         if (!sentences.length)
-          return false;
-        return sentences.some((sentence) => {
+          continue;
+        for (const sentence of sentences) {
           if (!sentence.includes(markerPrefix))
-            return false;
+            continue;
           const sentenceWithoutLinks = this.normalizeLeadInText(sentence.replace(/\[\[link:[^\]]+\]\]/g, " "));
           const leadInText = sentenceWithoutLinks.replace(/[.!?]\s*$/g, "").trim();
           const hasAllowedLeadIn = this.isValidStandaloneLinkLeadIn(leadInText);
@@ -23723,22 +23726,71 @@ var AlertRewriteGuardService = class _AlertRewriteGuardService {
           const nonLinkText = sentenceWithoutLinks.replace(/[:;,.!?()\-\u2013\u2014]/g, "").trim();
           const linkSentenceOnly = !nonLinkText;
           if (hasAllowedLeadIn && sentences.length > 1) {
-            return true;
+            return "linkLeadInNotStandalone";
           }
           if (hasAllowedLeadIn) {
-            return false;
+            continue;
           }
           if (hasDirectionalLeadIn) {
-            return true;
+            return "fullSentenceLinksNeedLeadIn";
           }
           if (linkSentenceOnly && this.hasStandaloneActionVerbLinkText(sentence, markerPrefix, markerSuffix)) {
-            return false;
+            continue;
           }
-          return linkSentenceOnly;
-        });
-      });
+          if (linkSentenceOnly)
+            return "fullSentenceLinksNeedLeadIn";
+        }
+      }
+      return null;
     } catch {
-      return false;
+      return null;
+    }
+  }
+  repairEmbeddedStandaloneLeadInParagraphs(alertHtml) {
+    try {
+      const doc = new DOMParser().parseFromString(alertHtml || "", "text/html");
+      const root = doc.body.firstElementChild;
+      if (!root)
+        return alertHtml;
+      Array.from(root.querySelectorAll("p")).forEach((paragraph) => {
+        const anchors = Array.from(paragraph.querySelectorAll("a"));
+        if (anchors.length !== 1)
+          return;
+        const anchor = anchors[0];
+        if (anchor.parentElement !== paragraph)
+          return;
+        const childNodes = Array.from(paragraph.childNodes);
+        const anchorIndex = childNodes.indexOf(anchor);
+        if (anchorIndex !== 1)
+          return;
+        const beforeNode = childNodes[0];
+        if (beforeNode.nodeType !== Node.TEXT_NODE)
+          return;
+        const afterNodes = childNodes.slice(anchorIndex + 1);
+        if (afterNodes.some((node) => node.nodeType !== Node.TEXT_NODE))
+          return;
+        const beforeText = beforeNode.textContent || "";
+        const afterText = afterNodes.map((node) => node.textContent || "").join("");
+        if (afterText.replace(/[.!?\s]/g, ""))
+          return;
+        const split = beforeText.match(/^([\s\S]*[.!?])\s+([^.!?]+)$/);
+        if (!split)
+          return;
+        const explanatoryText = (split[1] || "").trim();
+        const leadInText = (split[2] || "").trim();
+        if (!explanatoryText || !this.isValidStandaloneLinkLeadIn(leadInText)) {
+          return;
+        }
+        const explanatoryParagraph = doc.createElement("p");
+        explanatoryParagraph.textContent = explanatoryText;
+        const linkParagraph = doc.createElement("p");
+        linkParagraph.appendChild(doc.createTextNode(`${leadInText} `));
+        linkParagraph.appendChild(anchor.cloneNode(true));
+        paragraph.replaceWith(explanatoryParagraph, linkParagraph);
+      });
+      return root.outerHTML.trim();
+    } catch {
+      return alertHtml;
     }
   }
   // Local repair is the last deterministic cleanup pass after model retries are exhausted.
@@ -24270,8 +24322,9 @@ var AlertRewriteOrchestratorService = class _AlertRewriteOrchestratorService {
           if (originalHasAnchor && !rewrittenHasAnchor && !allowLinkRemoval) {
             addRetryInstruction("mustKeepLink", retryInstructions.mustKeepLink);
           }
-          if (rewrittenHasAnchor && this.alertRewriteGuard.hasFullSentenceLinkWithoutAllowedLeadIn(parsedResult.rewrittenAlertHtml)) {
-            addRetryInstruction("fullSentenceLinksNeedLeadIn", retryInstructions.fullSentenceLinksNeedLeadIn);
+          const linkLeadInIssue = rewrittenHasAnchor ? this.alertRewriteGuard.getFullSentenceLinkLeadInIssue(parsedResult.rewrittenAlertHtml) : null;
+          if (linkLeadInIssue) {
+            addRetryInstruction(linkLeadInIssue, retryInstructions.fullSentenceLinksNeedLeadIn);
           }
           const copyCheck = this.alertRewrite.detectExampleCopy({
             result: parsedResult,
@@ -24291,8 +24344,27 @@ var AlertRewriteOrchestratorService = class _AlertRewriteOrchestratorService {
               similarity: copyCheck.similarity
             });
           }
+          if (!params.forceLocalRepairForTesting && retryReasons.length === 1 && retryReasons[0] === "linkLeadInNotStandalone") {
+            const repairedHtml = this.alertRewriteGuard.repairEmbeddedStandaloneLeadInParagraphs(parsedResult.rewrittenAlertHtml);
+            if (repairedHtml !== parsedResult.rewrittenAlertHtml) {
+              const repairedResult = this.alertRewrite.parseAlertRewriteResponse(JSON.stringify(__spreadProps(__spreadValues({}, parsedResult), {
+                rewrittenAlertHtml: repairedHtml
+              })), plan, selectedExamples);
+              if (repairedResult?.rewrittenAlertHtml && !this.alertRewriteGuard.getFullSentenceLinkLeadInIssue(repairedResult.rewrittenAlertHtml) && !this.alertRewrite.detectExampleCopy({
+                result: repairedResult,
+                selectedExamples,
+                originalHeading,
+                originalAlertText: alertText
+              }).isCopy) {
+                rewriteResult = repairedResult;
+                lastRepairCandidate = repairedResult;
+                this.addElapsed(timings, "parseAndGuardMs", timingStart);
+                break;
+              }
+            }
+          }
           if (retryReasons.length) {
-            const hardRetryReasons = retryReasons.filter((reason) => reason !== "mustHaveHeading" && reason !== "fullSentenceLinksNeedLeadIn");
+            const hardRetryReasons = retryReasons.filter((reason) => reason !== "mustHaveHeading" && reason !== "fullSentenceLinksNeedLeadIn" && reason !== "linkLeadInNotStandalone");
             if (!hardRetryReasons.length) {
               softRejectedResult = parsedResult;
               softRejectedReasons = [...retryReasons];
@@ -43638,4 +43710,4 @@ ${custom}` : promptBody;
 export {
   PageAssistantCompareComponent
 };
-//# sourceMappingURL=chunk-QV3ZSNSJ.js.map
+//# sourceMappingURL=chunk-24AE2SUB.js.map
