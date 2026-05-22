@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AIDA advanced planning flow</title>
+  <script type="module" src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs"></script>
+  <style>
+    :root {
+      --bg: #f6f7f9;
+      --surface: #ffffff;
+      --surface-soft: #f0f4f8;
+      --ink: #1f2933;
+      --muted: #5f6f7f;
+      --border: #d7dee6;
+      --accent: #0f766e;
+      --accent-soft: #e6f4f1;
+      --warning: #8a5a00;
+      --warning-soft: #fff4d8;
+      --code-bg: #17212b;
+      --code-ink: #edf4f7;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      line-height: 1.5;
+      background: var(--bg);
+      color: var(--ink);
+    }
+
+    main {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 32px 20px 48px;
+    }
+
+    header {
+      margin-bottom: 24px;
+      padding-bottom: 18px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    h1,
+    h2,
+    h3 {
+      margin: 0;
+      line-height: 1.2;
+      letter-spacing: 0;
+    }
+
+    h1 {
+      max-width: 900px;
+      font-size: 2.3rem;
+    }
+
+    h2 {
+      margin-bottom: 12px;
+      font-size: 1.45rem;
+    }
+
+    h3 {
+      margin-bottom: 8px;
+      font-size: 1.05rem;
+    }
+
+    p {
+      margin: 0.7rem 0;
+      max-width: 900px;
+    }
+
+    .lede {
+      margin-top: 12px;
+      color: var(--muted);
+      font-size: 1.05rem;
+    }
+
+    .section {
+      margin-top: 24px;
+      padding: 24px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+    }
+
+    .callout {
+      margin-top: 16px;
+      padding: 16px;
+      background: var(--accent-soft);
+      border: 1px solid #b8ded8;
+      border-radius: 8px;
+    }
+
+    .warning {
+      background: var(--warning-soft);
+      border-color: #ecd08d;
+      color: #4e3900;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 16px;
+      margin-top: 16px;
+    }
+
+    .panel {
+      padding: 16px;
+      background: var(--surface-soft);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+    }
+
+    .panel.off {
+      border-top: 5px solid #6b7280;
+    }
+
+    .panel.on {
+      border-top: 5px solid var(--accent);
+    }
+
+    .label {
+      display: inline-block;
+      margin-bottom: 10px;
+      padding: 3px 8px;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      background: #ffffff;
+      color: var(--muted);
+      font-size: 0.78rem;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    pre {
+      margin: 12px 0 0;
+      padding: 14px;
+      overflow-x: auto;
+      background: var(--code-bg);
+      color: var(--code-ink);
+      border-radius: 8px;
+      font-size: 0.86rem;
+      line-height: 1.45;
+    }
+
+    code {
+      font-family: Consolas, "Courier New", monospace;
+    }
+
+    .diagram {
+      margin-top: 16px;
+      padding: 18px;
+      overflow-x: auto;
+      background: #f8fafc;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+    }
+
+    .comparison-visual {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(280px, 1fr));
+      gap: 18px;
+    }
+
+    .comparison-column {
+      display: grid;
+      gap: 10px;
+      align-content: start;
+    }
+
+    .comparison-column h3 {
+      margin: 0 0 2px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .flow-step {
+      min-height: 74px;
+      padding: 12px;
+      background: #ffffff;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+    }
+
+    .flow-step strong {
+      display: block;
+      margin-bottom: 4px;
+    }
+
+    .flow-arrow {
+      color: var(--muted);
+      font-size: 1.25rem;
+      line-height: 1;
+      text-align: center;
+    }
+
+    .list {
+      margin: 10px 0 0;
+      padding-left: 20px;
+    }
+
+    .list li {
+      margin: 6px 0;
+    }
+
+    .example-row {
+      display: grid;
+      grid-template-columns: 1fr 1.2fr;
+      gap: 16px;
+      margin-top: 16px;
+    }
+
+    .example-stack {
+      display: grid;
+      gap: 16px;
+      margin-top: 16px;
+    }
+
+    .small {
+      color: var(--muted);
+      font-size: 0.92rem;
+    }
+
+    .footer-note {
+      margin-top: 20px;
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+
+    @media (max-width: 820px) {
+      main {
+        padding: 20px 12px 32px;
+      }
+
+      h1 {
+        font-size: 1.85rem;
+      }
+
+      .section {
+        padding: 18px;
+      }
+
+      .grid,
+      .example-row,
+      .comparison-visual {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <h1>AIDA advanced planning flow</h1>
+      <p class="lede">
+        Advanced planning adds a separate model call before alert rewriting. That first call creates a structured plan, and AIDA uses the plan to choose examples and focus the final rewrite request.
+      </p>
+    </header>
+
+    <section class="section">
+      <h2>One-sentence explanation</h2>
+      <div class="callout">
+        <strong>Advanced planning helps AIDA decide what kind of rewrite is needed before it writes.</strong>
+        The planner classifies the alert, creates rewrite directives, and gives AIDA better labels for selecting relevant examples.
+      </div>
+    </section>
+
+    <section class="section">
+      <h2>Where it fits</h2>
+      <p>
+        AIDA always processes alert rewrites one alert at a time. With planning off, it uses a local heuristic plan. With planning on, it asks the model to refine that plan before the rewrite prompt is built.
+      </p>
+      <div class="diagram">
+        <div class="mermaid">
+flowchart TD
+  A[Selected alert issues] --> B[Find reportable alert elements]
+  B --> C[For each alert]
+  C --> D[Build local heuristic plan]
+  D --> E{Advanced planning on?}
+  E -->|No| F[Use heuristic plan]
+  E -->|Yes| G[Planning model call]
+  G --> H[Structured model plan]
+  F --> I[Select examples]
+  H --> I
+  I --> J[Build rewrite payload]
+  J --> K[Rewrite model call]
+  K --> L[Parse JSON and HTML]
+  L --> M[Guard checks, retry, or local repair]
+  M --> N[Patch final alert into page HTML]
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <h2>Example alert</h2>
+      <p>
+        This example is useful because the alert has a real issue: it says something is unavailable, but the next step is weak and the alert has no heading.
+      </p>
+      <div class="example-stack">
+        <div class="panel">
+          <span class="label">Original alert</span>
+          <pre><code>&lt;div class="alert alert-warning"&gt;
+  &lt;p&gt;
+    Some CRA services are unavailable. For more information,
+    visit &lt;a href="/en/revenue-agency/services/e-services/cra-login-services.html"&gt;CRA sign-in services&lt;/a&gt;.
+  &lt;/p&gt;
+&lt;/div&gt;</code></pre>
+        </div>
+        <div class="panel">
+          <span class="label">Selected issue</span>
+          <pre><code>{
+  "alertIndex": 1,
+  "category": "Missing next step",
+  "severity": "High",
+  "description": "The alert says services are unavailable but does not clearly tell users what to do next.",
+  "recommendation": "Add a clear next step and a short heading."
+}</code></pre>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <h2>Payload difference</h2>
+      <p>
+        The clearest difference is the plan inside the rewrite payload. Planning off sends the model a simpler plan with no rewrite operations. Planning on sends a richer plan with directives.
+      </p>
+      <div class="grid">
+        <div class="panel off">
+          <span class="label">Advanced planning off</span>
+          <h3>Rewrite payload uses a simpler plan</h3>
+          <pre><code>{
+  "mode": "good-results-only",
+  "plan": {
+    "alertType": "warning",
+    "domainTags": ["service"],
+    "purposeTags": ["action-required"],
+    "criteriaMatched": ["C1_missing_next_step"],
+    "directives": []
+  },
+  "originalHeading": "",
+  "originalAlertText": "Some CRA services are unavailable. For more information, visit CRA sign-in services.",
+  "linkManifest": {
+    "count": 1,
+    "hasLinks": true,
+    "mustPreserveAtLeastOne": true
+  }
+}</code></pre>
+        </div>
+        <div class="panel on">
+          <span class="label">Advanced planning on</span>
+          <h3>Rewrite payload uses a model-generated plan</h3>
+          <pre><code>{
+  "mode": "ab",
+  "plan": {
+    "alertType": "warning",
+    "domainTags": ["cra-services", "account-access"],
+    "purposeTags": [
+      "service-delay",
+      "action-required",
+      "missing-heading",
+      "standalone-action-link"
+    ],
+    "criteriaMatched": ["C1_missing_next_step"],
+    "directives": [
+      { "op": "add_heading" },
+      { "op": "add_next_step" },
+      { "op": "preserve_tone" }
+    ]
+  },
+  "originalHeading": "",
+  "originalAlertText": "Some CRA services are unavailable. For more information, visit CRA sign-in services.",
+  "linkManifest": {
+    "count": 1,
+    "hasLinks": true,
+    "mustPreserveAtLeastOne": true
+  }
+}</code></pre>
+        </div>
+      </div>
+      <div class="callout warning">
+        <strong>What directives means:</strong> the directives array is the structured rewrite strategy. It tells the rewrite model what operations to perform, such as adding a heading, adding a next step, simplifying jargon, limiting links, or preserving tone.
+      </div>
+    </section>
+
+    <section class="section">
+      <h2>The planning call</h2>
+      <p>
+        When Advanced planning is on, AIDA sends a small planning payload before the rewrite request. The planner does not write HTML. It returns classification tags and directives.
+      </p>
+      <div class="grid">
+        <div class="panel">
+          <span class="label">Planning request</span>
+          <pre><code>{
+  "alertText": "Some CRA services are unavailable. For more information, visit CRA sign-in services.",
+  "alertType": "warning",
+  "signals": {
+    "hasHeading": false,
+    "hasLink": true,
+    "linkCount": 1,
+    "wordCount": 11
+  },
+  "issues": [
+    {
+      "category": "Missing next step",
+      "severity": "High",
+      "descriptionSnippet": "The alert says services are unavailable but does not clearly tell users what to do next."
+    }
+  ]
+}</code></pre>
+        </div>
+        <div class="panel">
+          <span class="label">Planning response</span>
+          <pre><code>{
+  "alertType": "warning",
+  "domainTags": ["cra-services", "account-access"],
+  "purposeTags": [
+    "service-delay",
+    "action-required",
+    "missing-heading",
+    "standalone-action-link"
+  ],
+  "criteriaMatched": ["C1_missing_next_step"],
+  "directives": [
+    { "op": "add_heading" },
+    { "op": "add_next_step" },
+    { "op": "preserve_tone" }
+  ]
+}</code></pre>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <h2>How examples are selected</h2>
+      <p>
+        AIDA uses the plan labels to choose examples. Advanced planning changes the labels, so it can change which examples are considered the best match.
+      </p>
+      <div class="diagram">
+        <div class="comparison-visual">
+          <div class="comparison-column">
+            <h3>Planning off</h3>
+            <div class="flow-step">
+              <strong>Available labels</strong>
+              missing next step, action required, service
+            </div>
+            <div class="flow-arrow">&darr;</div>
+            <div class="flow-step">
+              <strong>Best match</strong>
+              generic missing next-step example
+            </div>
+            <div class="flow-arrow">&darr;</div>
+            <div class="flow-step">
+              <strong>Selected example</strong>
+              ex-001
+            </div>
+          </div>
+          <div class="comparison-column">
+            <h3>Planning on</h3>
+            <div class="flow-step">
+              <strong>Available labels</strong>
+              service delay, account access, standalone action link, missing heading
+            </div>
+            <div class="flow-arrow">&darr;</div>
+            <div class="flow-step">
+              <strong>Best match</strong>
+              service-delay alert with final action link
+            </div>
+            <div class="flow-arrow">&darr;</div>
+            <div class="flow-step">
+              <strong>Selected examples</strong>
+              ex-014 + ex-001
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="grid">
+        <div class="panel off">
+          <span class="label">Planning off</span>
+          <h3>Fewer labels, broader match</h3>
+          <pre><code>{
+  "criteriaMatched": ["C1_missing_next_step"],
+  "purposeTags": ["action-required"],
+  "domainTags": ["service"]
+}</code></pre>
+          <pre><code>Selected examples:
+["ex-001"]</code></pre>
+          <p class="small">
+            This may find a generic missing-next-step example, but it has less information about the alert's actual job.
+          </p>
+        </div>
+        <div class="panel on">
+          <span class="label">Planning on</span>
+          <h3>More labels, more specific match</h3>
+          <pre><code>{
+  "criteriaMatched": ["C1_missing_next_step"],
+  "purposeTags": [
+    "service-delay",
+    "action-required",
+    "standalone-action-link"
+  ],
+  "domainTags": ["cra-services", "account-access"]
+}</code></pre>
+          <pre><code>Selected examples:
+["ex-014", "ex-001"]</code></pre>
+          <p class="small">
+            This can match a service-delay example with the right link pattern before falling back to a generic example.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <h2>Why we want this step</h2>
+      <ul class="list">
+        <li><strong>It separates diagnosis from writing.</strong> The first call decides the rewrite strategy; the second call writes the final alert.</li>
+        <li><strong>It improves example selection.</strong> AIDA can match examples by the alert's purpose, not only by a broad issue category.</li>
+        <li><strong>It makes the rewrite request more specific.</strong> Directives turn the plan into concrete operations like add a heading, add a next step, or preserve tone.</li>
+        <li><strong>It helps with similar-looking issues.</strong> Two alerts can both have a missing next step, but one may be a service outage, one a fraud warning, and one a policy caveat.</li>
+      </ul>
+      <div class="callout">
+        <strong>Team summary:</strong> Advanced planning gives AIDA a better intent map before it rewrites. That map improves example matching and gives the rewrite model a clearer job to do.
+      </div>
+    </section>
+
+    <p class="footer-note">
+      Note: This page uses Mermaid from a CDN to render diagrams. If the diagrams do not appear, open the file in a browser with network access or paste the Mermaid blocks into a Mermaid-compatible editor.
+    </p>
+  </main>
+
+  <script>
+    if (typeof mermaid !== 'undefined') {
+      mermaid.initialize({
+        startOnLoad: true,
+        theme: 'base',
+        themeVariables: {
+          primaryColor: '#e6f4f1',
+          primaryTextColor: '#1f2933',
+          primaryBorderColor: '#0f766e',
+          lineColor: '#5f6f7f',
+          secondaryColor: '#f0f4f8',
+          tertiaryColor: '#ffffff'
+        }
+      });
+    }
+  </script>
+</body>
+</html>

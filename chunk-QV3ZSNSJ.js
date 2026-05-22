@@ -42426,6 +42426,24 @@ ${custom}` : promptBody;
     }
     return "";
   }
+  isValidAlertsIssuesResponse(text) {
+    const parsed = this.alertAi.looseJsonParse(this.alertAi.stripCodeFences(text));
+    if (Array.isArray(parsed))
+      return true;
+    if (!parsed || typeof parsed !== "object")
+      return false;
+    return Array.isArray(parsed["issues"]);
+  }
+  looksLikeStructuredAiJsonResponse(text) {
+    const cleaned = (text || "").trim();
+    if (!cleaned)
+      return false;
+    const stripped = this.alertAi.stripCodeFences(cleaned);
+    const parsed = this.alertAi.looseJsonParse(stripped);
+    if (parsed && typeof parsed === "object")
+      return true;
+    return /"(?:rewrittenAlertHtml|rewritten_alert_html|rewrittenAlert|rewritten_alert|appliedDirectives|applied_directives|replacements|issues)"\s*:/i.test(stripped);
+  }
   // UI-facing summary of the alert rewrite options currently active.
   buildAlertRewriteStatusMessage() {
     const includeExamples = this.uploadState.getIncludeAlertRewriteExamples();
@@ -42640,6 +42658,7 @@ ${custom}` : promptBody;
         const candidates = this.buildModelRotation(model);
         let aiResponse = null;
         let lastAttemptedModel = model;
+        let lastValidationError = null;
         if (promptKeyForRequest === PromptKey.AlertsIssues) {
           alertIssuesPromptSent = true;
         }
@@ -42715,13 +42734,24 @@ ${custom}` : promptBody;
             this.statusMessage = this.translate.instant("common.ai.errorCommunicatingAi");
             throw new Error(`AI error (${attemptModelShort}): ${attemptResponse.error?.message || "Unknown error"}`);
           }
+          const attemptText = this.extractOpenRouterMessageText(attemptResponse.choices?.[0]?.message || {});
+          if (!attemptText) {
+            lastValidationError = new Error(`AI response was empty (${this.getShortModelName(candidate)}).`);
+            console.warn(`AI response was empty (${this.getShortModelName(candidate)}). Retrying next model in rotation.`);
+            continue;
+          }
+          if (promptKeyForRequest === PromptKey.AlertsIssues && !this.isValidAlertsIssuesResponse(attemptText)) {
+            lastValidationError = new Error(`Invalid AlertsIssues response shape (${this.getShortModelName(candidate)}).`);
+            console.warn(`Invalid AlertsIssues response shape from ${this.getShortModelName(candidate)}. Retrying next model in rotation.`);
+            continue;
+          }
           aiResponse = attemptResponse;
           break;
         }
         if (!aiResponse) {
-          throw new Error(`AI response was empty (${this.getShortModelName(lastAttemptedModel)}).`);
+          throw lastValidationError ?? new Error(`AI response was empty (${this.getShortModelName(lastAttemptedModel)}).`);
         }
-        const aiHtml = aiResponse.choices?.[0].message.content;
+        const aiHtml = this.extractOpenRouterMessageText(aiResponse.choices?.[0]?.message || {});
         if (!aiHtml) {
           throw new Error(`AI response was empty (${requestedModelShort}).`);
         }
@@ -42799,6 +42829,9 @@ ${custom}` : promptBody;
             return;
           }
         } else {
+          if (this.looksLikeStructuredAiJsonResponse(aiHtml)) {
+            throw new Error("The AI returned structured JSON where HTML was expected. No comparison update was applied.");
+          }
           const formattedHtml = yield this.urlDataService.formatHtml(aiHtml, "ai");
           this.uploadState.mergeModifiedData({
             modifiedUrl: "AI generated",
@@ -43605,4 +43638,4 @@ ${custom}` : promptBody;
 export {
   PageAssistantCompareComponent
 };
-//# sourceMappingURL=chunk-ZRVWIB5D.js.map
+//# sourceMappingURL=chunk-QV3ZSNSJ.js.map
