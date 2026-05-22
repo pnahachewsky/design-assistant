@@ -40485,7 +40485,7 @@ var UrlDataService = class _UrlDataService {
   /** Gets HTML content from a URL and processes it. **/
   fetchAndProcess(url) {
     return __async(this, null, function* () {
-      const doc = yield this.fetchService.fetchContent(`${url}?_=${Date.now()}`, "both");
+      const doc = yield this.fetchService.fetchContent(url, "both");
       return yield this.extractContent(doc);
     });
   }
@@ -100412,4 +100412,4 @@ export {
    * License: MIT
    *)
 */
-//# sourceMappingURL=chunk-YTTUX547.js.map
+//# sourceMappingURL=chunk-LSDGVAMC.js.map

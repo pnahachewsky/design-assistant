@@ -138,7 +138,7 @@ import {
   unblockBodyScroll,
   uuid,
   zindexutils
-} from "./chunk-YTTUX547.js";
+} from "./chunk-LSDGVAMC.js";
 import {
   ChangeDetectionStrategy,
   ChangeDetectorRef,
@@ -20886,21 +20886,8 @@ var ShadowDomService = class _ShadowDomService {
         console.error("Shadow DOM not available");
         return;
       }
-      this.clearShadowDOM(shadowRoot);
-      const externalStyles = [
-        "https://use.fontawesome.com/releases/v5.15.4/css/all.css",
-        "https://www.canada.ca/etc/designs/canada/wet-boew/css/theme.min.css",
-        "https://www.canada.ca/etc/designs/canada/wet-boew/m\xE9li-m\xE9lo/2024-09-kejimkujik.min.css"
-      ];
-      for (const href of externalStyles) {
-        const link = document.createElement("link");
-        link.rel = "stylesheet";
-        link.href = href;
-        shadowRoot.appendChild(link);
-      }
-      const style2 = document.createElement("style");
-      style2.textContent = this.webDiffService.getRenderedDiffStyles();
-      shadowRoot.insertBefore(style2, shadowRoot.firstChild);
+      this.ensureShadowDOMStyles(shadowRoot);
+      this.clearRenderedContent(shadowRoot);
       const diffContainer = document.createElement("div");
       diffContainer.className = "rendered-diff-container";
       const renderedContent = document.createElement("div");
@@ -20918,6 +20905,38 @@ var ShadowDomService = class _ShadowDomService {
       }
       diffContainer.appendChild(renderedContent);
       shadowRoot.appendChild(diffContainer);
+    });
+  }
+  ensureShadowDOMStyles(shadowRoot) {
+    const styleId = "aida-rendered-diff-styles";
+    const existingStyle = shadowRoot.querySelector(`style[data-aida-style="${styleId}"]`);
+    if (existingStyle) {
+      existingStyle.textContent = this.webDiffService.getRenderedDiffStyles();
+    } else {
+      const style2 = document.createElement("style");
+      style2.dataset["aidaStyle"] = styleId;
+      style2.textContent = this.webDiffService.getRenderedDiffStyles();
+      shadowRoot.appendChild(style2);
+    }
+    const externalStyles = [
+      "https://use.fontawesome.com/releases/v5.15.4/css/all.css",
+      "https://www.canada.ca/etc/designs/canada/wet-boew/css/theme.min.css",
+      "https://www.canada.ca/etc/designs/canada/wet-boew/m%C3%A9li-m%C3%A9lo/2024-09-kejimkujik.min.css"
+    ];
+    for (const href of externalStyles) {
+      const existingLink = Array.from(shadowRoot.querySelectorAll('link[rel="stylesheet"]')).find((link2) => link2.getAttribute("href") === href);
+      if (existingLink) {
+        continue;
+      }
+      const link = document.createElement("link");
+      link.rel = "stylesheet";
+      link.href = href;
+      shadowRoot.appendChild(link);
+    }
+  }
+  clearRenderedContent(shadowRoot) {
+    shadowRoot.querySelectorAll(".rendered-diff-container").forEach((el) => {
+      el.remove();
     });
   }
   //Render HTML
@@ -43710,4 +43729,4 @@ ${custom}` : promptBody;
 export {
   PageAssistantCompareComponent
 };
-//# sourceMappingURL=chunk-24AE2SUB.js.map
+//# sourceMappingURL=chunk-JKNI3JPF.js.map
