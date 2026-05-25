@@ -18511,13 +18511,11 @@ Your task:
 3. If the French text is one paragraph but the English input is split into multiple segments, split it appropriately.
 Return only the French HTML document.`;
   models = [
-    "meta-llama/llama-3.3-70b-instruct:free",
-    "google/gemini-2.0-flash-exp:free",
-    "google/gemini-exp-1206:free",
-    "cognitivecomputations/dolphin3.0-mistral-24b:free",
-    "cognitivecomputations/dolphin3.0-r1-mistral-24b:free",
-    "nvidia/llama-3.1-nemotron-70b-instruct:free",
-    "deepseek/deepseek-r1:free"
+    "nvidia/nemotron-3-nano-30b-a3b:free",
+    "google/gemma-4-26b-a4b-it:free",
+    "openai/gpt-oss-20b:free",
+    "qwen/qwen3-next-80b-a3b-instruct:free",
+    "meta-llama/llama-3.3-70b-instruct:free"
   ];
   /**
    * Aligns French text with the English HTML structure.
