@@ -18511,11 +18511,11 @@ Your task:
 3. If the French text is one paragraph but the English input is split into multiple segments, split it appropriately.
 Return only the French HTML document.`;
   models = [
-    "nvidia/nemotron-nano-9b-v2:free",
-    "openai/gpt-oss-20b:free",
     "nvidia/nemotron-3-nano-30b-a3b:free",
-    "nvidia/nemotron-nano-12b-v2-vl:free",
+    "openai/gpt-oss-20b:free",
     "google/gemma-4-26b-a4b-it:free",
+    "nvidia/nemotron-nano-9b-v2:free",
+    "nvidia/nemotron-nano-12b-v2-vl:free",
     "z-ai/glm-4.5-air:free",
     "qwen/qwen3-next-80b-a3b-instruct:free",
     "deepseek/deepseek-v4-flash:free",
@@ -18542,14 +18542,21 @@ Return the French document in HTML format that exactly follows the structure of 
         { role: "system", content: systemPrompt },
         { role: "user", content: combinedPrompt }
       ];
+      const expectedParagraphIds = this.extractParagraphIds(englishHtml);
       for (const model of this.models) {
         console.log(`Translation assistant trying model: ${model}`);
         const aiResponse = yield this.getORData(model, requestMessages, 0);
         const text2 = aiResponse?.choices?.[0]?.message?.content;
         if (text2) {
+          const html = this.removeCodeFences(text2);
+          const validation = this.validateParagraphIds(html, expectedParagraphIds);
+          if (!validation.isValid) {
+            console.warn(`Translation assistant rejected model ${model}: ${validation.reason}`);
+            continue;
+          }
           console.log(`Translation assistant used model: ${model}`);
           return {
-            html: this.removeCodeFences(text2),
+            html,
             modelUsed: model
           };
         }
@@ -18602,6 +18609,31 @@ Return the French document in HTML format that exactly follows the structure of 
    */
   removeCodeFences(str) {
     return str.replace(/^```(?:html|json)?\s*/i, "").replace(/\s*```$/i, "").trim();
+  }
+  extractParagraphIds(html) {
+    const tempDiv = document.createElement("div");
+    tempDiv.innerHTML = html;
+    return Array.from(tempDiv.querySelectorAll("p[id]")).map((p2) => p2.getAttribute("id")).filter((id) => Boolean(id));
+  }
+  validateParagraphIds(html, expectedIds) {
+    if (expectedIds.length === 0) {
+      return { isValid: true, reason: "" };
+    }
+    const actualIds = this.extractParagraphIds(html);
+    if (actualIds.length !== expectedIds.length) {
+      return {
+        isValid: false,
+        reason: `expected ${expectedIds.length} paragraph IDs, received ${actualIds.length}`
+      };
+    }
+    const mismatchIndex = expectedIds.findIndex((id, index) => actualIds[index] !== id);
+    if (mismatchIndex !== -1) {
+      return {
+        isValid: false,
+        reason: `expected ${expectedIds[mismatchIndex]} at position ${mismatchIndex + 1}, received ${actualIds[mismatchIndex] || "missing"}`
+      };
+    }
+    return { isValid: true, reason: "" };
   }
   /**
    * Builds a mapping of paragraph IDs to French text from HTML.
@@ -19069,9 +19101,9 @@ var TranslationAssistantComponent = class _TranslationAssistantComponent {
       if (mappingIndex >= aggregatedMapping.length)
         break;
       const tElements = p2.getElementsByTagName("w:t");
-      if (tElements.length > 0 && tElements[0].textContent?.trim()) {
+      if (tElements.length > 0) {
         const key = aggregatedMapping[mappingIndex].id;
-        if (frenchMap[key]) {
+        if (Object.prototype.hasOwnProperty.call(frenchMap, key)) {
           tElements[0].textContent = frenchMap[key];
           const firstT = tElements[0];
           if (!firstT.getAttribute("xml:space")) {
