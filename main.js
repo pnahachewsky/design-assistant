@@ -18511,8 +18511,8 @@ Your task:
 3. If the French text is one paragraph but the English input is split into multiple segments, split it appropriately.
 Return only the French HTML document.`;
   models = [
-    "nvidia/nemotron-3-nano-30b-a3b:free",
     "google/gemma-4-26b-a4b-it:free",
+    "nvidia/nemotron-3-nano-30b-a3b:free",
     "openai/gpt-oss-20b:free",
     "qwen/qwen3-next-80b-a3b-instruct:free",
     "meta-llama/llama-3.3-70b-instruct:free"
@@ -18538,17 +18538,20 @@ Return the French document in HTML format that exactly follows the structure of 
         { role: "system", content: systemPrompt },
         { role: "user", content: combinedPrompt }
       ];
-      let finalResponse = null;
       for (const model of this.models) {
+        console.log(`Translation assistant trying model: ${model}`);
         const aiResponse = yield this.getORData(model, requestMessages, 0);
         const text2 = aiResponse?.choices?.[0]?.message?.content;
         if (text2) {
-          finalResponse = this.removeCodeFences(text2);
-          console.log("AI response received.");
-          break;
+          console.log(`Translation assistant used model: ${model}`);
+          return {
+            html: this.removeCodeFences(text2),
+            modelUsed: model
+          };
         }
       }
-      return finalResponse;
+      console.warn("Translation assistant did not receive a usable response from any model.");
+      return null;
     });
   }
   /**
@@ -18625,12 +18628,12 @@ Return the French document in HTML format that exactly follows the structure of 
 
 // src/app/views/translation-assistant/translation-assistant.component.ts
 var _c07 = (a0, a1) => ({ "pi-plus": a0, "pi-minus": a1 });
-function TranslationAssistantComponent_ng_container_12_i_2_Template(rf, ctx) {
+function TranslationAssistantComponent_ng_container_13_i_2_Template(rf, ctx) {
   if (rf & 1) {
     \u0275\u0275element(0, "i", 18);
   }
 }
-function TranslationAssistantComponent_ng_container_12_fa_icon_3_Template(rf, ctx) {
+function TranslationAssistantComponent_ng_container_13_fa_icon_3_Template(rf, ctx) {
   if (rf & 1) {
     \u0275\u0275element(0, "fa-icon", 19);
   }
@@ -18639,11 +18642,11 @@ function TranslationAssistantComponent_ng_container_12_fa_icon_3_Template(rf, ct
     \u0275\u0275property("icon", ctx_r2.faFilePowerpoint);
   }
 }
-function TranslationAssistantComponent_ng_container_12_Template(rf, ctx) {
+function TranslationAssistantComponent_ng_container_13_Template(rf, ctx) {
   if (rf & 1) {
     \u0275\u0275elementContainerStart(0);
     \u0275\u0275elementStart(1, "p", 15);
-    \u0275\u0275template(2, TranslationAssistantComponent_ng_container_12_i_2_Template, 1, 0, "i", 16)(3, TranslationAssistantComponent_ng_container_12_fa_icon_3_Template, 1, 1, "fa-icon", 17);
+    \u0275\u0275template(2, TranslationAssistantComponent_ng_container_13_i_2_Template, 1, 0, "i", 16)(3, TranslationAssistantComponent_ng_container_13_fa_icon_3_Template, 1, 1, "fa-icon", 17);
     \u0275\u0275text(4);
     \u0275\u0275elementEnd();
     \u0275\u0275elementContainerEnd();
@@ -18658,7 +18661,7 @@ function TranslationAssistantComponent_ng_container_12_Template(rf, ctx) {
     \u0275\u0275textInterpolate1(" ", ctx_r2.selectedFile.name, " ");
   }
 }
-function TranslationAssistantComponent_ng_template_13_Template(rf, ctx) {
+function TranslationAssistantComponent_ng_template_14_Template(rf, ctx) {
   if (rf & 1) {
     \u0275\u0275element(0, "i", 20);
     \u0275\u0275elementStart(1, "p", 21);
@@ -18666,7 +18669,7 @@ function TranslationAssistantComponent_ng_template_13_Template(rf, ctx) {
     \u0275\u0275elementEnd();
   }
 }
-function TranslationAssistantComponent_div_18_div_11_Template(rf, ctx) {
+function TranslationAssistantComponent_div_19_div_11_Template(rf, ctx) {
   if (rf & 1) {
     \u0275\u0275elementStart(0, "div", 32)(1, "span");
     \u0275\u0275text(2);
@@ -18678,19 +18681,19 @@ function TranslationAssistantComponent_div_18_div_11_Template(rf, ctx) {
     \u0275\u0275textInterpolate(ctx_r2.previewText);
   }
 }
-function TranslationAssistantComponent_div_18_Template(rf, ctx) {
+function TranslationAssistantComponent_div_19_Template(rf, ctx) {
   if (rf & 1) {
     const _r4 = \u0275\u0275getCurrentView();
     \u0275\u0275elementStart(0, "div", 22)(1, "div", 23)(2, "div", 24);
-    \u0275\u0275listener("click", function TranslationAssistantComponent_div_18_Template_div_click_2_listener() {
+    \u0275\u0275listener("click", function TranslationAssistantComponent_div_19_Template_div_click_2_listener() {
       \u0275\u0275restoreView(_r4);
       const ctx_r2 = \u0275\u0275nextContext();
       return \u0275\u0275resetView(ctx_r2.isExpanded = !ctx_r2.isExpanded);
-    })("keyup.enter", function TranslationAssistantComponent_div_18_Template_div_keyup_enter_2_listener() {
+    })("keyup.enter", function TranslationAssistantComponent_div_19_Template_div_keyup_enter_2_listener() {
       \u0275\u0275restoreView(_r4);
       const ctx_r2 = \u0275\u0275nextContext();
       return \u0275\u0275resetView(ctx_r2.isExpanded = !ctx_r2.isExpanded);
-    })("keyup.space", function TranslationAssistantComponent_div_18_Template_div_keyup_space_2_listener() {
+    })("keyup.space", function TranslationAssistantComponent_div_19_Template_div_keyup_space_2_listener() {
       \u0275\u0275restoreView(_r4);
       const ctx_r2 = \u0275\u0275nextContext();
       return \u0275\u0275resetView(ctx_r2.isExpanded = !ctx_r2.isExpanded);
@@ -18701,7 +18704,7 @@ function TranslationAssistantComponent_div_18_Template(rf, ctx) {
     \u0275\u0275text(6, " Preview source language file ");
     \u0275\u0275elementEnd()();
     \u0275\u0275elementStart(7, "button", 28);
-    \u0275\u0275listener("click", function TranslationAssistantComponent_div_18_Template_button_click_7_listener($event) {
+    \u0275\u0275listener("click", function TranslationAssistantComponent_div_19_Template_button_click_7_listener($event) {
       \u0275\u0275restoreView(_r4);
       const ctx_r2 = \u0275\u0275nextContext();
       return \u0275\u0275resetView(ctx_r2.copyAll($event));
@@ -18710,7 +18713,7 @@ function TranslationAssistantComponent_div_18_Template(rf, ctx) {
     \u0275\u0275elementStart(9, "span", 30);
     \u0275\u0275text(10, "Copy All");
     \u0275\u0275elementEnd()()();
-    \u0275\u0275template(11, TranslationAssistantComponent_div_18_div_11_Template, 3, 1, "div", 31);
+    \u0275\u0275template(11, TranslationAssistantComponent_div_19_div_11_Template, 3, 1, "div", 31);
     \u0275\u0275elementEnd()();
   }
   if (rf & 2) {
@@ -18723,7 +18726,7 @@ function TranslationAssistantComponent_div_18_Template(rf, ctx) {
     \u0275\u0275property("ngIf", ctx_r2.isExpanded);
   }
 }
-function TranslationAssistantComponent_div_19_Template(rf, ctx) {
+function TranslationAssistantComponent_div_20_Template(rf, ctx) {
   if (rf & 1) {
     const _r5 = \u0275\u0275getCurrentView();
     \u0275\u0275elementStart(0, "div", 33)(1, "p-card")(2, "h2", 34);
@@ -18733,7 +18736,7 @@ function TranslationAssistantComponent_div_19_Template(rf, ctx) {
     \u0275\u0275text(5, " Paste the full translation of the uploaded source content into the box below. ");
     \u0275\u0275elementEnd();
     \u0275\u0275elementStart(6, "textarea", 35);
-    \u0275\u0275twoWayListener("ngModelChange", function TranslationAssistantComponent_div_19_Template_textarea_ngModelChange_6_listener($event) {
+    \u0275\u0275twoWayListener("ngModelChange", function TranslationAssistantComponent_div_20_Template_textarea_ngModelChange_6_listener($event) {
       \u0275\u0275restoreView(_r5);
       const ctx_r2 = \u0275\u0275nextContext();
       \u0275\u0275twoWayBindingSet(ctx_r2.frenchText, $event) || (ctx_r2.frenchText = $event);
@@ -18741,7 +18744,7 @@ function TranslationAssistantComponent_div_19_Template(rf, ctx) {
     });
     \u0275\u0275elementEnd();
     \u0275\u0275elementStart(7, "div", 10)(8, "button", 36);
-    \u0275\u0275listener("click", function TranslationAssistantComponent_div_19_Template_button_click_8_listener() {
+    \u0275\u0275listener("click", function TranslationAssistantComponent_div_20_Template_button_click_8_listener() {
       \u0275\u0275restoreView(_r5);
       const ctx_r2 = \u0275\u0275nextContext();
       return \u0275\u0275resetView(ctx_r2.onFormatTargetLanguageContent());
@@ -18755,7 +18758,7 @@ function TranslationAssistantComponent_div_19_Template(rf, ctx) {
     \u0275\u0275twoWayProperty("ngModel", ctx_r2.frenchText);
   }
 }
-function TranslationAssistantComponent_div_20_Template(rf, ctx) {
+function TranslationAssistantComponent_div_21_Template(rf, ctx) {
   if (rf & 1) {
     \u0275\u0275elementStart(0, "div", 37);
     \u0275\u0275element(1, "p-progressSpinner", 38);
@@ -18764,7 +18767,7 @@ function TranslationAssistantComponent_div_20_Template(rf, ctx) {
     \u0275\u0275elementEnd()();
   }
 }
-function TranslationAssistantComponent_div_21_Template(rf, ctx) {
+function TranslationAssistantComponent_div_22_Template(rf, ctx) {
   if (rf & 1) {
     const _r6 = \u0275\u0275getCurrentView();
     \u0275\u0275elementStart(0, "div", 33)(1, "p-card")(2, "h2", 34);
@@ -18774,7 +18777,7 @@ function TranslationAssistantComponent_div_21_Template(rf, ctx) {
     \u0275\u0275text(5, " The translated file has been formatted to match the original layout and is ready for download. ");
     \u0275\u0275elementEnd();
     \u0275\u0275elementStart(6, "div", 10)(7, "button", 40);
-    \u0275\u0275listener("click", function TranslationAssistantComponent_div_21_Template_button_click_7_listener() {
+    \u0275\u0275listener("click", function TranslationAssistantComponent_div_22_Template_button_click_7_listener() {
       \u0275\u0275restoreView(_r6);
       const ctx_r2 = \u0275\u0275nextContext();
       return \u0275\u0275resetView(ctx_r2.onDownloadFile());
@@ -18790,6 +18793,7 @@ var TranslationAssistantComponent = class _TranslationAssistantComponent {
   router = inject(Router);
   route = inject(ActivatedRoute);
   parseSrv = inject(FileParseService);
+  messageService = inject(MessageService);
   isExpanded = false;
   isDragging = false;
   selectedFile = null;
@@ -18915,13 +18919,20 @@ var TranslationAssistantComponent = class _TranslationAssistantComponent {
       this.isProcessing = true;
       this.showDownloadSection = false;
       try {
-        const formattedHtml = yield this.translationService.alignTranslation(this.englishHtmlStored, this.frenchText, this.selectedFile);
-        if (!formattedHtml) {
+        const formattedResult = yield this.translationService.alignTranslation(this.englishHtmlStored, this.frenchText, this.selectedFile);
+        if (!formattedResult) {
           alert("Formatting failed. No response from API.");
           return;
         }
-        this.finalFrenchHtml = formattedHtml;
+        this.finalFrenchHtml = formattedResult.html;
         console.log("Final French HTML:", this.finalFrenchHtml);
+        console.log(`Translation assistant formatting model used: ${formattedResult.modelUsed}`);
+        this.messageService.add({
+          severity: "success",
+          summary: "Formatting complete",
+          detail: `Model used: ${formattedResult.modelUsed}`,
+          life: 8e3
+        });
         this.showDownloadSection = true;
       } catch (error) {
         console.error("Error during formatting:", error);
@@ -19129,63 +19140,64 @@ var TranslationAssistantComponent = class _TranslationAssistantComponent {
   static \u0275fac = function TranslationAssistantComponent_Factory(__ngFactoryType__) {
     return new (__ngFactoryType__ || _TranslationAssistantComponent)();
   };
-  static \u0275cmp = /* @__PURE__ */ \u0275\u0275defineComponent({ type: _TranslationAssistantComponent, selectors: [["ca-translation-assistant"]], decls: 22, vars: 7, consts: [["fileInput", ""], ["dragArea", ""], [1, "p-mb-3"], [1, "p-text-bold"], [1, "surface-100", "border-round", "shadow-3", "p-4", "max-w-3xl", "mx-auto"], [1, "p-mb-4"], [1, "p-m-0", "p-text-bold", "p-text-2xl", 2, "color", "black"], ["role", "button", "tabindex", "0", "aria-label", "Select a source .docx or .pptx file", 1, "flex", "flex-column", "align-items-center", "justify-content-center", "p-3", "border-dashed", "border-round", "border-200", "surface-100", "hover:surface-200", "hover:border-primary-400", "transition-colors", "transition-duration-300", "cursor-pointer", "w-full", "max-w-30rem", "min-h-12rem", 3, "click", "keyup.enter", "keyup.space", "dragover", "dragleave", "drop"], ["type", "file", "accept", ".docx,.pptx", 2, "display", "none", 3, "change"], [4, "ngIf", "ngIfElse"], [1, "flex", "gap-2", "mt-3"], ["pButton", "", "type", "button", "icon", "pi pi-upload", 1, "p-button", "p-component", "p-button-primary", 3, "click", "disabled"], ["class", "mt-3", 4, "ngIf"], ["class", "surface-100 border-round shadow-3", "style", "border: 2px solid #00000000; padding: 1rem", 4, "ngIf"], ["class", "p-mt-4 text-center", 4, "ngIf"], [1, "text-xl", "text-center"], ["class", "pi pi-file-word text-blue-500 text-2xl mr-1", "aria-hidden", "true", 4, "ngIf"], ["class", "text-orange-500 text-2xl mr-1", "aria-hidden", "true", 3, "icon", 4, "ngIf"], ["aria-hidden", "true", 1, "pi", "pi-file-word", "text-blue-500", "text-2xl", "mr-1"], ["aria-hidden", "true", 1, "text-orange-500", "text-2xl", "mr-1", 3, "icon"], ["aria-hidden", "true", 1, "pi", "pi-upload", "border-2", "border-circle", "border-300", "p-3", "text-3xl", "text-color-secondary", "mb-2", "hover:bg-primary", "hover:text-white", "transition-colors", "transition-duration-300"], [1, "m-0", "text-center", "text-sm"], [1, "mt-3"], [1, "p-panel", "p-component", "border-1", "border-round", "surface-100", 2, "border-color", "#00000023", "font-size", "1rem", "font-family", '"Segoe UI", Roboto, sans-serif'], ["role", "button", "tabindex", "0", "aria-controls", "preview-panel-content", 1, "p-panel-header", "d-flex", "justify-content-between", "align-items-center", "cursor-pointer", 2, "height", "4rem", "padding", "0 1rem", "display", "flex", "font-size", "1rem", "justify-content", "space-between", "align-items", "center", "flex-wrap", "nowrap", "gap", "0.5rem", "width", "100%", 3, "click", "keyup.enter", "keyup.space"], [1, "d-flex", "align-items-center"], ["aria-hidden", "true", 1, "pi", 2, "margin-right", "0.5rem", 3, "ngClass"], [1, "p-panel-title", "font-semibold", 2, "color", "black"], ["pButton", "", "type", "button", "title", "Copy All", "aria-label", "Copy all preview text", 1, "p-button-text", "p-button-icon-only", "flex-shrink-0", 2, "width", "3rem", "height", "3rem", 3, "click"], ["aria-hidden", "true", 1, "pi", "pi-copy", 2, "font-size", "1.4rem"], [1, "sr-only"], ["id", "preview-panel-content", "class", "p-panel-content p-mt-2", "style", "\n            background-color: white;\n            padding: 1rem;\n            border-top: 1px solid #ccc;\n          ", 4, "ngIf"], ["id", "preview-panel-content", 1, "p-panel-content", "p-mt-2", 2, "background-color", "white", "padding", "1rem", "border-top", "1px solid #ccc"], [1, "surface-100", "border-round", "shadow-3", 2, "border", "2px solid #00000000", "padding", "1rem"], [1, "p-mb-3", 2, "color", "black"], ["pTextarea", "", "rows", "15", "cols", "70", "placeholder", "", 1, "p-inputtext", "p-mb-3", "w-full", 2, "border-color", "#00000052", "min-height", "10rem", "resize", "vertical text", "font-family", '"Segoe UI", Roboto, sans-serif', "font-size", "1rem", "color", "#000000be", 3, "ngModelChange", "ngModel"], ["pButton", "", "type", "button", "icon", "pi pi-align-left", 1, "p-button-primary", 3, "click"], [1, "p-mt-4", "text-center"], ["styleClass", "p-mt-3"], [1, "p-mt-2", "font-bold"], ["pButton", "", "type", "button", "icon", "pi pi-download", 1, "p-button-primary", 3, "click"]], template: function TranslationAssistantComponent_Template(rf, ctx) {
+  static \u0275cmp = /* @__PURE__ */ \u0275\u0275defineComponent({ type: _TranslationAssistantComponent, selectors: [["ca-translation-assistant"]], features: [\u0275\u0275ProvidersFeature([MessageService])], decls: 23, vars: 7, consts: [["fileInput", ""], ["dragArea", ""], [1, "p-mb-3"], [1, "p-text-bold"], [1, "surface-100", "border-round", "shadow-3", "p-4", "max-w-3xl", "mx-auto"], [1, "p-mb-4"], [1, "p-m-0", "p-text-bold", "p-text-2xl", 2, "color", "black"], ["role", "button", "tabindex", "0", "aria-label", "Select a source .docx or .pptx file", 1, "flex", "flex-column", "align-items-center", "justify-content-center", "p-3", "border-dashed", "border-round", "border-200", "surface-100", "hover:surface-200", "hover:border-primary-400", "transition-colors", "transition-duration-300", "cursor-pointer", "w-full", "max-w-30rem", "min-h-12rem", 3, "click", "keyup.enter", "keyup.space", "dragover", "dragleave", "drop"], ["type", "file", "accept", ".docx,.pptx", 2, "display", "none", 3, "change"], [4, "ngIf", "ngIfElse"], [1, "flex", "gap-2", "mt-3"], ["pButton", "", "type", "button", "icon", "pi pi-upload", 1, "p-button", "p-component", "p-button-primary", 3, "click", "disabled"], ["class", "mt-3", 4, "ngIf"], ["class", "surface-100 border-round shadow-3", "style", "border: 2px solid #00000000; padding: 1rem", 4, "ngIf"], ["class", "p-mt-4 text-center", 4, "ngIf"], [1, "text-xl", "text-center"], ["class", "pi pi-file-word text-blue-500 text-2xl mr-1", "aria-hidden", "true", 4, "ngIf"], ["class", "text-orange-500 text-2xl mr-1", "aria-hidden", "true", 3, "icon", 4, "ngIf"], ["aria-hidden", "true", 1, "pi", "pi-file-word", "text-blue-500", "text-2xl", "mr-1"], ["aria-hidden", "true", 1, "text-orange-500", "text-2xl", "mr-1", 3, "icon"], ["aria-hidden", "true", 1, "pi", "pi-upload", "border-2", "border-circle", "border-300", "p-3", "text-3xl", "text-color-secondary", "mb-2", "hover:bg-primary", "hover:text-white", "transition-colors", "transition-duration-300"], [1, "m-0", "text-center", "text-sm"], [1, "mt-3"], [1, "p-panel", "p-component", "border-1", "border-round", "surface-100", 2, "border-color", "#00000023", "font-size", "1rem", "font-family", '"Segoe UI", Roboto, sans-serif'], ["role", "button", "tabindex", "0", "aria-controls", "preview-panel-content", 1, "p-panel-header", "d-flex", "justify-content-between", "align-items-center", "cursor-pointer", 2, "height", "4rem", "padding", "0 1rem", "display", "flex", "font-size", "1rem", "justify-content", "space-between", "align-items", "center", "flex-wrap", "nowrap", "gap", "0.5rem", "width", "100%", 3, "click", "keyup.enter", "keyup.space"], [1, "d-flex", "align-items-center"], ["aria-hidden", "true", 1, "pi", 2, "margin-right", "0.5rem", 3, "ngClass"], [1, "p-panel-title", "font-semibold", 2, "color", "black"], ["pButton", "", "type", "button", "title", "Copy All", "aria-label", "Copy all preview text", 1, "p-button-text", "p-button-icon-only", "flex-shrink-0", 2, "width", "3rem", "height", "3rem", 3, "click"], ["aria-hidden", "true", 1, "pi", "pi-copy", 2, "font-size", "1.4rem"], [1, "sr-only"], ["id", "preview-panel-content", "class", "p-panel-content p-mt-2", "style", "\n            background-color: white;\n            padding: 1rem;\n            border-top: 1px solid #ccc;\n          ", 4, "ngIf"], ["id", "preview-panel-content", 1, "p-panel-content", "p-mt-2", 2, "background-color", "white", "padding", "1rem", "border-top", "1px solid #ccc"], [1, "surface-100", "border-round", "shadow-3", 2, "border", "2px solid #00000000", "padding", "1rem"], [1, "p-mb-3", 2, "color", "black"], ["pTextarea", "", "rows", "15", "cols", "70", "placeholder", "", 1, "p-inputtext", "p-mb-3", "w-full", 2, "border-color", "#00000052", "min-height", "10rem", "resize", "vertical text", "font-family", '"Segoe UI", Roboto, sans-serif', "font-size", "1rem", "color", "#000000be", 3, "ngModelChange", "ngModel"], ["pButton", "", "type", "button", "icon", "pi pi-align-left", 1, "p-button-primary", 3, "click"], [1, "p-mt-4", "text-center"], ["styleClass", "p-mt-3"], [1, "p-mt-2", "font-bold"], ["pButton", "", "type", "button", "icon", "pi pi-download", 1, "p-button-primary", 3, "click"]], template: function TranslationAssistantComponent_Template(rf, ctx) {
     if (rf & 1) {
       const _r1 = \u0275\u0275getCurrentView();
-      \u0275\u0275elementStart(0, "div", 2)(1, "h1", 3);
-      \u0275\u0275text(2, "Translation Assistant");
+      \u0275\u0275element(0, "p-toast");
+      \u0275\u0275elementStart(1, "div", 2)(2, "h1", 3);
+      \u0275\u0275text(3, "Translation Assistant");
       \u0275\u0275elementEnd()();
-      \u0275\u0275elementStart(3, "div", 4)(4, "p-card", 5)(5, "h2", 6);
-      \u0275\u0275text(6, " Upload source language file ");
+      \u0275\u0275elementStart(4, "div", 4)(5, "p-card", 5)(6, "h2", 6);
+      \u0275\u0275text(7, " Upload source language file ");
       \u0275\u0275elementEnd();
-      \u0275\u0275elementStart(7, "p");
-      \u0275\u0275text(8, " Please upload a Word (.docx) or PowerPoint (.pptx) file containing your source language content. ");
+      \u0275\u0275elementStart(8, "p");
+      \u0275\u0275text(9, " Please upload a Word (.docx) or PowerPoint (.pptx) file containing your source language content. ");
       \u0275\u0275elementEnd();
-      \u0275\u0275elementStart(9, "div", 7);
-      \u0275\u0275listener("click", function TranslationAssistantComponent_Template_div_click_9_listener() {
+      \u0275\u0275elementStart(10, "div", 7);
+      \u0275\u0275listener("click", function TranslationAssistantComponent_Template_div_click_10_listener() {
         \u0275\u0275restoreView(_r1);
-        const fileInput_r2 = \u0275\u0275reference(11);
+        const fileInput_r2 = \u0275\u0275reference(12);
         return \u0275\u0275resetView(fileInput_r2.click());
-      })("keyup.enter", function TranslationAssistantComponent_Template_div_keyup_enter_9_listener() {
+      })("keyup.enter", function TranslationAssistantComponent_Template_div_keyup_enter_10_listener() {
         \u0275\u0275restoreView(_r1);
-        const fileInput_r2 = \u0275\u0275reference(11);
+        const fileInput_r2 = \u0275\u0275reference(12);
         return \u0275\u0275resetView(fileInput_r2.click());
-      })("keyup.space", function TranslationAssistantComponent_Template_div_keyup_space_9_listener() {
+      })("keyup.space", function TranslationAssistantComponent_Template_div_keyup_space_10_listener() {
         \u0275\u0275restoreView(_r1);
-        const fileInput_r2 = \u0275\u0275reference(11);
+        const fileInput_r2 = \u0275\u0275reference(12);
         return \u0275\u0275resetView(fileInput_r2.click());
-      })("dragover", function TranslationAssistantComponent_Template_div_dragover_9_listener($event) {
+      })("dragover", function TranslationAssistantComponent_Template_div_dragover_10_listener($event) {
         \u0275\u0275restoreView(_r1);
         return \u0275\u0275resetView(ctx.onDragOver($event));
-      })("dragleave", function TranslationAssistantComponent_Template_div_dragleave_9_listener($event) {
+      })("dragleave", function TranslationAssistantComponent_Template_div_dragleave_10_listener($event) {
         \u0275\u0275restoreView(_r1);
         return \u0275\u0275resetView(ctx.onDragLeave($event));
-      })("drop", function TranslationAssistantComponent_Template_div_drop_9_listener($event) {
+      })("drop", function TranslationAssistantComponent_Template_div_drop_10_listener($event) {
         \u0275\u0275restoreView(_r1);
         return \u0275\u0275resetView(ctx.onDrop($event));
       });
-      \u0275\u0275elementStart(10, "input", 8, 0);
-      \u0275\u0275listener("change", function TranslationAssistantComponent_Template_input_change_10_listener($event) {
+      \u0275\u0275elementStart(11, "input", 8, 0);
+      \u0275\u0275listener("change", function TranslationAssistantComponent_Template_input_change_11_listener($event) {
         \u0275\u0275restoreView(_r1);
         return \u0275\u0275resetView(ctx.onFileSelected($event));
       });
       \u0275\u0275elementEnd();
-      \u0275\u0275template(12, TranslationAssistantComponent_ng_container_12_Template, 5, 3, "ng-container", 9)(13, TranslationAssistantComponent_ng_template_13_Template, 3, 0, "ng-template", null, 1, \u0275\u0275templateRefExtractor);
+      \u0275\u0275template(13, TranslationAssistantComponent_ng_container_13_Template, 5, 3, "ng-container", 9)(14, TranslationAssistantComponent_ng_template_14_Template, 3, 0, "ng-template", null, 1, \u0275\u0275templateRefExtractor);
       \u0275\u0275elementEnd();
-      \u0275\u0275elementStart(15, "div", 10)(16, "button", 11);
-      \u0275\u0275listener("click", function TranslationAssistantComponent_Template_button_click_16_listener() {
+      \u0275\u0275elementStart(16, "div", 10)(17, "button", 11);
+      \u0275\u0275listener("click", function TranslationAssistantComponent_Template_button_click_17_listener() {
         \u0275\u0275restoreView(_r1);
         return \u0275\u0275resetView(ctx.previewSource());
       });
-      \u0275\u0275text(17, " Upload file ");
+      \u0275\u0275text(18, " Upload file ");
       \u0275\u0275elementEnd()();
-      \u0275\u0275template(18, TranslationAssistantComponent_div_18_Template, 12, 6, "div", 12);
+      \u0275\u0275template(19, TranslationAssistantComponent_div_19_Template, 12, 6, "div", 12);
       \u0275\u0275elementEnd()();
-      \u0275\u0275template(19, TranslationAssistantComponent_div_19_Template, 10, 1, "div", 13)(20, TranslationAssistantComponent_div_20_Template, 4, 0, "div", 14)(21, TranslationAssistantComponent_div_21_Template, 9, 0, "div", 13);
+      \u0275\u0275template(20, TranslationAssistantComponent_div_20_Template, 10, 1, "div", 13)(21, TranslationAssistantComponent_div_21_Template, 4, 0, "div", 14)(22, TranslationAssistantComponent_div_22_Template, 9, 0, "div", 13);
     }
     if (rf & 2) {
-      const dragArea_r7 = \u0275\u0275reference(14);
-      \u0275\u0275advance(12);
+      const dragArea_r7 = \u0275\u0275reference(15);
+      \u0275\u0275advance(13);
       \u0275\u0275property("ngIf", ctx.selectedFile)("ngIfElse", dragArea_r7);
       \u0275\u0275advance(4);
       \u0275\u0275property("disabled", !ctx.selectedFile);
@@ -19218,6 +19230,8 @@ var TranslationAssistantComponent = class _TranslationAssistantComponent {
     ProgressSpinner,
     TextareaModule,
     Textarea,
+    ToastModule,
+    Toast,
     FontAwesomeModule,
     FaIconComponent
   ], encapsulation: 2 });
@@ -19236,10 +19250,13 @@ var TranslationAssistantComponent = class _TranslationAssistantComponent {
       FormsModule,
       ProgressSpinnerModule,
       TextareaModule,
+      ToastModule,
       FontAwesomeModule
-    ], template: `<div class="p-mb-3">\r
-  <h1 class="p-text-bold">Translation Assistant</h1>\r
-</div>\r
+    ], providers: [MessageService], template: `<p-toast></p-toast>
+
+<div class="p-mb-3">
+  <h1 class="p-text-bold">Translation Assistant</h1>
+</div>
 \r
 <div class="surface-100 border-round shadow-3 p-4 max-w-3xl mx-auto">\r
   <p-card class="p-mb-4">\r
@@ -19471,7 +19488,7 @@ var TranslationAssistantComponent = class _TranslationAssistantComponent {
   }], null, null);
 })();
 (() => {
-  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(TranslationAssistantComponent, { className: "TranslationAssistantComponent", filePath: "app/views/translation-assistant/translation-assistant.component.ts", lineNumber: 43 });
+  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(TranslationAssistantComponent, { className: "TranslationAssistantComponent", filePath: "app/views/translation-assistant/translation-assistant.component.ts", lineNumber: 47 });
 })();
 
 // node_modules/primeng/fesm2022/primeng-fieldset.mjs
