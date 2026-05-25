@@ -18511,9 +18511,9 @@ Your task:
 3. If the French text is one paragraph but the English input is split into multiple segments, split it appropriately.
 Return only the French HTML document.`;
   models = [
+    "nvidia/nemotron-nano-9b-v2:free",
     "openai/gpt-oss-20b:free",
     "nvidia/nemotron-3-nano-30b-a3b:free",
-    "nvidia/nemotron-nano-9b-v2:free",
     "nvidia/nemotron-nano-12b-v2-vl:free",
     "google/gemma-4-26b-a4b-it:free",
     "z-ai/glm-4.5-air:free",
