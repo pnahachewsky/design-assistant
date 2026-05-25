@@ -397,9 +397,11 @@ export class TranslationAssistantComponent implements OnInit {
       if (mappingIndex >= aggregatedMapping.length) break;
 
       const tElements = p.getElementsByTagName('w:t');
-      if (tElements.length > 0 && tElements[0].textContent?.trim()) {
+      if (tElements.length > 0) {
         const key = aggregatedMapping[mappingIndex].id;
-        if (frenchMap[key]) {
+        // Empty translated paragraphs are still valid IDs. If they are skipped,
+        // every later paragraph can be written to the wrong source paragraph.
+        if (Object.prototype.hasOwnProperty.call(frenchMap, key)) {
           // Replace the text in the first <w:t> element
           tElements[0].textContent = frenchMap[key];
 

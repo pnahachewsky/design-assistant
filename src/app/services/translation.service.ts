@@ -50,11 +50,11 @@ Your task:
 Return only the French HTML document.`;
 
   private readonly models: string[] = [
-    'nvidia/nemotron-nano-9b-v2:free',
-    'openai/gpt-oss-20b:free',
     'nvidia/nemotron-3-nano-30b-a3b:free',
-    'nvidia/nemotron-nano-12b-v2-vl:free',
+    'openai/gpt-oss-20b:free',
     'google/gemma-4-26b-a4b-it:free',
+    'nvidia/nemotron-nano-9b-v2:free',
+    'nvidia/nemotron-nano-12b-v2-vl:free',
     'z-ai/glm-4.5-air:free',
     'qwen/qwen3-next-80b-a3b-instruct:free',
     'deepseek/deepseek-v4-flash:free',
@@ -84,15 +84,30 @@ Return only the French HTML document.`;
       { role: 'system', content: systemPrompt },
       { role: 'user', content: combinedPrompt },
     ];
+    // Guardrail: the formatter must preserve every source paragraph ID.
+    // If a model drops or reorders IDs, the generated file can be misaligned.
+    const expectedParagraphIds = this.extractParagraphIds(englishHtml);
 
     for (const model of this.models) {
       console.log(`Translation assistant trying model: ${model}`);
       const aiResponse = await this.getORData(model, requestMessages, 0.0);
       const text = aiResponse?.choices?.[0]?.message?.content;
       if (text) {
+        const html = this.removeCodeFences(text);
+        const validation = this.validateParagraphIds(
+          html,
+          expectedParagraphIds,
+        );
+        if (!validation.isValid) {
+          console.warn(
+            `Translation assistant rejected model ${model}: ${validation.reason}`,
+          );
+          continue;
+        }
+
         console.log(`Translation assistant used model: ${model}`);
         return {
-          html: this.removeCodeFences(text),
+          html,
           modelUsed: model,
         };
       }
@@ -163,6 +178,43 @@ Return only the French HTML document.`;
       .replace(/^```(?:html|json)?\s*/i, '')
       .replace(/\s*```$/i, '')
       .trim();
+  }
+
+  private extractParagraphIds(html: string): string[] {
+    const tempDiv = document.createElement('div');
+    tempDiv.innerHTML = html;
+    return Array.from(tempDiv.querySelectorAll('p[id]'))
+      .map((p) => p.getAttribute('id'))
+      .filter((id): id is string => Boolean(id));
+  }
+
+  private validateParagraphIds(
+    html: string,
+    expectedIds: string[],
+  ): { isValid: boolean; reason: string } {
+    if (expectedIds.length === 0) {
+      return { isValid: true, reason: '' };
+    }
+
+    const actualIds = this.extractParagraphIds(html);
+    if (actualIds.length !== expectedIds.length) {
+      return {
+        isValid: false,
+        reason: `expected ${expectedIds.length} paragraph IDs, received ${actualIds.length}`,
+      };
+    }
+
+    const mismatchIndex = expectedIds.findIndex(
+      (id, index) => actualIds[index] !== id,
+    );
+    if (mismatchIndex !== -1) {
+      return {
+        isValid: false,
+        reason: `expected ${expectedIds[mismatchIndex]} at position ${mismatchIndex + 1}, received ${actualIds[mismatchIndex] || 'missing'}`,
+      };
+    }
+
+    return { isValid: true, reason: '' };
   }
 
   /**
