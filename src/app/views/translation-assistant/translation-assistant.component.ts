@@ -12,6 +12,8 @@ import { MessageModule } from 'primeng/message';
 import { FileUploadModule } from 'primeng/fileupload';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { TextareaModule } from 'primeng/textarea';
+import { ToastModule } from 'primeng/toast';
+import { MessageService } from 'primeng/api';
 
 // FontAwesome
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
@@ -35,10 +37,12 @@ import { TranslationService } from '../../services/translation.service';
     FormsModule,
     ProgressSpinnerModule,
     TextareaModule,
+    ToastModule,
     FontAwesomeModule,
   ],
   templateUrl: './translation-assistant.component.html',
   styles: ``,
+  providers: [MessageService],
 })
 export class TranslationAssistantComponent implements OnInit {
   // prefer-inject: replace constructor DI with inject()
@@ -47,6 +51,7 @@ export class TranslationAssistantComponent implements OnInit {
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
   private readonly parseSrv = inject(FileParseService);
+  private readonly messageService = inject(MessageService);
 
   isExpanded = false;
   isDragging = false;
@@ -197,19 +202,29 @@ export class TranslationAssistantComponent implements OnInit {
     this.showDownloadSection = false;
 
     try {
-      const formattedHtml = await this.translationService.alignTranslation(
+      const formattedResult = await this.translationService.alignTranslation(
         this.englishHtmlStored,
         this.frenchText,
         this.selectedFile,
       );
 
-      if (!formattedHtml) {
+      if (!formattedResult) {
         alert('Formatting failed. No response from API.');
         return;
       }
 
-      this.finalFrenchHtml = formattedHtml;
+      this.finalFrenchHtml = formattedResult.html;
       console.log('Final French HTML:', this.finalFrenchHtml);
+      console.log(
+        `Translation assistant formatting model used: ${formattedResult.modelUsed}`,
+      );
+
+      this.messageService.add({
+        severity: 'success',
+        summary: 'Formatting complete',
+        detail: `Model used: ${formattedResult.modelUsed}`,
+        life: 8000,
+      });
 
       this.showDownloadSection = true;
     } catch (error) {

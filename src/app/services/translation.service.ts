@@ -14,6 +14,10 @@ interface OpenRouterChoice {
 interface OpenRouterResponse {
   choices?: OpenRouterChoice[];
 }
+export interface TranslationAlignmentResult {
+  html: string;
+  modelUsed: string;
+}
 
 @Injectable({ providedIn: 'root' })
 export class TranslationService {
@@ -46,11 +50,11 @@ Your task:
 Return only the French HTML document.`;
 
   private readonly models: string[] = [
-    'nvidia/nemotron-3-nano-30b-a3b:free',
     'google/gemma-4-26b-a4b-it:free',
+    'nvidia/nemotron-3-nano-30b-a3b:free',
     'openai/gpt-oss-20b:free',
     'qwen/qwen3-next-80b-a3b-instruct:free',
-    'meta-llama/llama-3.3-70b-instruct:free'
+    'meta-llama/llama-3.3-70b-instruct:free',
   ];
 
   /**
@@ -60,7 +64,7 @@ Return only the French HTML document.`;
     englishHtml: string,
     frenchText: string,
     englishFile: File | null,
-  ): Promise<string | null> {
+  ): Promise<TranslationAlignmentResult | null> {
     // Clean English HTML
     englishHtml = englishHtml.replace(/<img[^>]*>/g, '');
 
@@ -77,19 +81,21 @@ Return only the French HTML document.`;
       { role: 'user', content: combinedPrompt },
     ];
 
-    let finalResponse: string | null = null;
-
     for (const model of this.models) {
+      console.log(`Translation assistant trying model: ${model}`);
       const aiResponse = await this.getORData(model, requestMessages, 0.0);
       const text = aiResponse?.choices?.[0]?.message?.content;
       if (text) {
-        finalResponse = this.removeCodeFences(text);
-        console.log('AI response received.');
-        break; // Stop at first successful response
+        console.log(`Translation assistant used model: ${model}`);
+        return {
+          html: this.removeCodeFences(text),
+          modelUsed: model,
+        };
       }
     }
 
-    return finalResponse;
+    console.warn('Translation assistant did not receive a usable response from any model.');
+    return null;
   }
 
   /**
