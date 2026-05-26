@@ -37661,7 +37661,7 @@ var TOPIC_PAGE_SNIPPETS = {
   serviceItem: [
     '<div class="col-lg-4 col-md-6">',
     '  <h3><a href="{{url}}">{{label}}</a></h3>',
-    "  <p>Use action verbs, or simply list keywords to summarize the information or tasks that can be accomplished on the page it links to</p>",
+    "  <p>{{description}}</p>",
     "</div>"
   ].join("\n"),
   featureItem: '<div class="col-sm-6">{{imageTag}}</div><div class="col-sm-6"><h3><a class="stretched-link" href="{{url}}">{{label}}</a></h3><p>Brief description of the feature being promoted.</p></div>',
@@ -39055,27 +39055,46 @@ var TopicIaJsonComponent = class _TopicIaJsonComponent {
       { key: "feature", selector: ".gc-features" }
     ];
     for (const section of sections) {
-      const container = section.key === "focus" ? this.findFocusOnContainer(doc) : doc.querySelector(section.selector);
+      const container = section.key === "focus" ? this.findFocusOnContainer(doc) : section.key === "feature" ? this.findFeaturesContainer(doc) : doc.querySelector(section.selector);
       if (!container)
         continue;
       const links = container.querySelectorAll("a[href]");
       links.forEach((link) => {
+        if (section.key === "feature" && this.isSocialMediaLink(link))
+          return;
         const href = link.getAttribute("href");
         if (!href)
           return;
-        const text = (link.textContent || "").trim();
+        const text = this.extractTopicSectionLinkLabel(link, section.key);
         const normalized = this.normalizeUrl(this.resolveUrl(href, baseUrl));
         if (this.isExcludedUrl(normalized))
           return;
         if (normalized) {
           map.set(normalized, {
             section: section.key,
-            label: text || href
+            label: text || href,
+            description: section.key === "doormats" ? this.extractDoormatDescription(link) : void 0
           });
         }
       });
     }
     this.topicPageSections = map;
+  }
+  findFeaturesContainer(doc) {
+    const gcFeatures = doc.querySelector("section.gc-features");
+    if (gcFeatures)
+      return gcFeatures;
+    const headings = Array.from(doc.querySelectorAll("h2"));
+    const match = headings.find((h) => (h.textContent || "").trim().toLowerCase() === "features");
+    return match?.closest("section") ?? null;
+  }
+  extractTopicSectionLinkLabel(link, section) {
+    if (section === "feature") {
+      const caption = (link.querySelector("figcaption")?.textContent || "").replace(/\s+/g, " ").trim();
+      if (caption)
+        return caption;
+    }
+    return (link.textContent || "").replace(/\s+/g, " ").trim();
   }
   findFocusOnContainer(doc) {
     const headings = Array.from(doc.querySelectorAll("h2"));
@@ -39156,6 +39175,9 @@ var TopicIaJsonComponent = class _TopicIaJsonComponent {
       }
       const normalized = this.normalizeUrl(url);
       const currentInfo = this.topicPageSections.get(normalized) ?? this.topicPageSections.get(this.normalizeUrl(this.decodeUrl(url)));
+      if (currentInfo?.description) {
+        node.data.originalDescription = currentInfo.description;
+      }
       if (!currentInfo) {
         node.data.diffState = null;
         node.label = this.getTopicNodeBaseLabel(node);
@@ -39211,6 +39233,7 @@ var TopicIaJsonComponent = class _TopicIaJsonComponent {
           isCategory: false,
           diffState: "missingIa",
           originalLabel: info.label,
+          originalDescription: info.description,
           originalSuggestedSection: info.section,
           isMissingIa: true
         }
@@ -40032,7 +40055,12 @@ var TopicIaJsonComponent = class _TopicIaJsonComponent {
   renderServiceItem(node) {
     const label = this.getNodeLabel(node);
     const url = this.getNodeUrl(node);
-    return this.snippetService.applySnippet(TOPIC_PAGE_SNIPPETS.serviceItem, { url, label });
+    const description = this.getNodeDescription(node);
+    return this.snippetService.applySnippet(TOPIC_PAGE_SNIPPETS.serviceItem, {
+      url,
+      label,
+      description
+    });
   }
   getNodeLabel(node) {
     const raw = typeof node?.data?.originalLabel === "string" && node.data.originalLabel.trim().length ? node.data.originalLabel : (node?.label ?? "").toString();
@@ -40045,6 +40073,10 @@ var TopicIaJsonComponent = class _TopicIaJsonComponent {
   getNodeUrl(node) {
     const url = typeof node?.data?.url === "string" ? node.data.url.trim() : "";
     return this.escapeHtml(url || "#");
+  }
+  getNodeDescription(node) {
+    const description = typeof node?.data?.originalDescription === "string" ? node.data.originalDescription.trim() : "";
+    return this.escapeHtml(description || "[***Use action verbs, or simply list keywords to summarize the information or tasks that can be accomplished on the page it links to***]");
   }
   extractPageTitles(sourceHtml) {
     if (!sourceHtml)
@@ -40143,6 +40175,11 @@ var TopicIaJsonComponent = class _TopicIaJsonComponent {
     return this.snippetService.applySnippet(TOPIC_PAGE_SNIPPETS.contributorsOnlyRow, {
       contributorBlock
     });
+  }
+  extractDoormatDescription(link) {
+    const item = link.closest(".col-lg-4, .col-md-6, li");
+    const paragraph = item?.querySelector("p");
+    return (paragraph?.textContent || "").replace(/\s+/g, " ").trim();
   }
   buildSocialOnlyRow(socialMediaBlock) {
     if (!socialMediaBlock.trim())
@@ -40271,11 +40308,13 @@ var TopicIaJsonComponent = class _TopicIaJsonComponent {
     if (!sourceHtml)
       return map;
     const doc = new DOMParser().parseFromString(sourceHtml, "text/html");
-    const featuresSection = doc.body.querySelector("section.gc-features");
+    const featuresSection = this.findFeaturesContainer(doc);
     if (!featuresSection)
       return map;
     const items = Array.from(featuresSection.querySelectorAll("a[href]"));
     items.forEach((link) => {
+      if (this.isSocialMediaLink(link))
+        return;
       const href = link.getAttribute("href") || "";
       if (!href)
         return;
@@ -40290,6 +40329,9 @@ var TopicIaJsonComponent = class _TopicIaJsonComponent {
       }
     });
     return map;
+  }
+  isSocialMediaLink(link) {
+    return !!link.closest(".gc-followus, #social-media-en, #social-media-fr");
   }
   getFeatureImageSrc(url, featureImageMap) {
     const normalized = this.normalizeUrl(url);
@@ -40948,7 +40990,7 @@ var TopicIaJsonComponent = class _TopicIaJsonComponent {
   }] });
 })();
 (() => {
-  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(TopicIaJsonComponent, { className: "TopicIaJsonComponent", filePath: "app/views/page-assistant/components/problems/component-guidance/topic-page/topic-ia-json.component.ts", lineNumber: 241 });
+  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(TopicIaJsonComponent, { className: "TopicIaJsonComponent", filePath: "app/views/page-assistant/components/problems/component-guidance/topic-page/topic-ia-json.component.ts", lineNumber: 242 });
 })();
 
 // src/app/views/page-assistant/components/problems.component.ts
@@ -43729,4 +43771,4 @@ ${custom}` : promptBody;
 export {
   PageAssistantCompareComponent
 };
-//# sourceMappingURL=chunk-YQMWEYXO.js.map
+//# sourceMappingURL=chunk-Z7KBUBBF.js.map
