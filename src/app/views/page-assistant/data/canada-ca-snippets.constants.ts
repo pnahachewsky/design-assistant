@@ -25,10 +25,10 @@ export const TOPIC_PAGE_SNIPPETS = {
     '<div class="col-sm-6">' +
     '{{imageTag}}' +
     '</div>' +
-    '<div class="col-sm-6">' +
-    '<h3><a class="stretched-link" href="{{url}}">{{label}}</a></h3>' +
-    '<p>Brief description of the feature being promoted.</p>' +
-    '</div>',
+	'<div class="col-sm-6">' +
+	'<h3><a class="stretched-link" href="{{url}}">{{label}}</a></h3>' +
+	'<p>{{description}}</p>' +
+	'</div>',
   featuresSectionTwoNoSocial: [
     '<section class="gc-features mrgn-tp-xl">',
     '  <h2 class="wb-inv">Features</h2>',
@@ -71,10 +71,10 @@ export const TOPIC_PAGE_SNIPPETS = {
   featureCardItem: [
     '<div class="{{columnClass}}">',
     '  <div class="well well-sm eqht-trgt">',
-    '    {{imageTag}}',
-    '    <h3><a href="{{url}}" class="stretched-link">{{label}}</a></h3>',
-    '    <p>Brief description of the feature being promoted.</p>',
-    '  </div>',
+	'    {{imageTag}}',
+	'    <h3><a href="{{url}}" class="stretched-link">{{label}}</a></h3>',
+	'    <p>{{description}}</p>',
+	'  </div>',
     '</div>',
   ].join('\n'),
   emptyFeatureColumn: '<div class="col-lg-4 col-sm-6"></div>',

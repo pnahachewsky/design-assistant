@@ -1225,6 +1225,8 @@ export class TopicIaJsonComponent implements OnInit {
             description:
               section.key === 'doormats'
                 ? this.extractDoormatDescription(link)
+                : section.key === 'feature'
+                  ? this.extractFeatureDescription(link)
                 : undefined,
           });
         }
@@ -2457,6 +2459,7 @@ export class TopicIaJsonComponent implements OnInit {
 
     const label = this.getNodeLabel(first);
     const url = this.getNodeUrl(first);
+    const description = this.getFeatureDescription(first);
     const imageSrc = this.getFeatureImageSrc(url, featureImageMap);
     const imageTag = imageSrc
       ? `<img src="${imageSrc}" alt="" class="thumbnail">`
@@ -2465,6 +2468,7 @@ export class TopicIaJsonComponent implements OnInit {
       imageTag,
       url,
       label,
+      description,
     });
   }
 
@@ -2511,6 +2515,16 @@ export class TopicIaJsonComponent implements OnInit {
     return this.escapeHtml(
       description ||
         '[***Use action verbs, or simply list keywords to summarize the information or tasks that can be accomplished on the page it links to***]',
+    );
+  }
+
+  private getFeatureDescription(node: TreeNode): string {
+    const description =
+      typeof node?.data?.originalDescription === 'string'
+        ? node.data.originalDescription.trim()
+        : '';
+    return this.escapeHtml(
+      description || '[***Brief description of the feature being promoted.***]',
     );
   }
 
@@ -2620,6 +2634,7 @@ export class TopicIaJsonComponent implements OnInit {
   ): string {
     const label = this.getNodeLabel(node);
     const url = this.getNodeUrl(node);
+    const description = this.getFeatureDescription(node);
     const imageSrc = this.getFeatureImageSrc(url, featureImageMap);
     const imageTag = imageSrc
       ? `<img src="${imageSrc}" alt="">`
@@ -2629,6 +2644,7 @@ export class TopicIaJsonComponent implements OnInit {
       imageTag,
       url,
       label,
+      description,
     });
   }
 
@@ -2661,6 +2677,11 @@ export class TopicIaJsonComponent implements OnInit {
   private extractDoormatDescription(link: Element): string {
     const item = link.closest('.col-lg-4, .col-md-6, li');
     const paragraph = item?.querySelector('p');
+    return (paragraph?.textContent || '').replace(/\s+/g, ' ').trim();
+  }
+
+  private extractFeatureDescription(link: Element): string {
+    const paragraph = link.querySelector('p');
     return (paragraph?.textContent || '').replace(/\s+/g, ' ').trim();
   }
 
