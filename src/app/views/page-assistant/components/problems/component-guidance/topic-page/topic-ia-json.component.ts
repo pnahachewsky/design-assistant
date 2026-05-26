@@ -50,6 +50,7 @@ type TopicSection = 'most' | 'doormats' | 'focus' | 'feature';
 type TopicPageLinkInfo = {
   section: TopicSection;
   label: string;
+  description?: string;
 };
 interface TopicAiRecommendation {
   url?: string;
@@ -1203,13 +1204,16 @@ export class TopicIaJsonComponent implements OnInit {
       const container =
         section.key === 'focus'
           ? this.findFocusOnContainer(doc)
-          : doc.querySelector(section.selector);
+          : section.key === 'feature'
+            ? this.findFeaturesContainer(doc)
+            : doc.querySelector(section.selector);
       if (!container) continue;
       const links = container.querySelectorAll('a[href]');
       links.forEach((link) => {
+        if (section.key === 'feature' && this.isSocialMediaLink(link)) return;
         const href = link.getAttribute('href');
         if (!href) return;
-        const text = (link.textContent || '').trim();
+        const text = this.extractTopicSectionLinkLabel(link, section.key);
         const normalized = this.normalizeUrl(
           this.resolveUrl(href, baseUrl),
         );
@@ -1218,12 +1222,40 @@ export class TopicIaJsonComponent implements OnInit {
           map.set(normalized, {
             section: section.key,
             label: text || href,
+            description:
+              section.key === 'doormats'
+                ? this.extractDoormatDescription(link)
+                : undefined,
           });
         }
       });
     }
 
     this.topicPageSections = map;
+  }
+
+  private findFeaturesContainer(doc: Document): Element | null {
+    const gcFeatures = doc.querySelector('section.gc-features');
+    if (gcFeatures) return gcFeatures;
+
+    const headings = Array.from(doc.querySelectorAll('h2'));
+    const match = headings.find(
+      (h) => (h.textContent || '').trim().toLowerCase() === 'features',
+    );
+    return match?.closest('section') ?? null;
+  }
+
+  private extractTopicSectionLinkLabel(
+    link: Element,
+    section: TopicSection,
+  ): string {
+    if (section === 'feature') {
+      const caption = (link.querySelector('figcaption')?.textContent || '')
+        .replace(/\s+/g, ' ')
+        .trim();
+      if (caption) return caption;
+    }
+    return (link.textContent || '').replace(/\s+/g, ' ').trim();
   }
 
   private findFocusOnContainer(doc: Document): Element | null {
@@ -1320,6 +1352,9 @@ export class TopicIaJsonComponent implements OnInit {
       const currentInfo =
         this.topicPageSections.get(normalized) ??
         this.topicPageSections.get(this.normalizeUrl(this.decodeUrl(url)));
+      if (currentInfo?.description) {
+        node.data.originalDescription = currentInfo.description;
+      }
       if (!currentInfo) {
         node.data.diffState = null; // all new stays grey
         node.label = this.getTopicNodeBaseLabel(node);
@@ -1388,6 +1423,7 @@ export class TopicIaJsonComponent implements OnInit {
           isCategory: false,
           diffState: 'missingIa',
           originalLabel: info.label,
+          originalDescription: info.description,
           originalSuggestedSection: info.section,
           isMissingIa: true,
         },
@@ -2441,7 +2477,12 @@ export class TopicIaJsonComponent implements OnInit {
   private renderServiceItem(node: TreeNode): string {
     const label = this.getNodeLabel(node);
     const url = this.getNodeUrl(node);
-    return this.snippetService.applySnippet(TOPIC_PAGE_SNIPPETS.serviceItem, { url, label });
+    const description = this.getNodeDescription(node);
+    return this.snippetService.applySnippet(TOPIC_PAGE_SNIPPETS.serviceItem, {
+      url,
+      label,
+      description,
+    });
   }
 
   private getNodeLabel(node: TreeNode): string {
@@ -2460,6 +2501,17 @@ export class TopicIaJsonComponent implements OnInit {
   private getNodeUrl(node: TreeNode): string {
     const url = typeof node?.data?.url === 'string' ? node.data.url.trim() : '';
     return this.escapeHtml(url || '#');
+  }
+
+  private getNodeDescription(node: TreeNode): string {
+    const description =
+      typeof node?.data?.originalDescription === 'string'
+        ? node.data.originalDescription.trim()
+        : '';
+    return this.escapeHtml(
+      description ||
+        '[***Use action verbs, or simply list keywords to summarize the information or tasks that can be accomplished on the page it links to***]',
+    );
   }
 
   private extractPageTitles(sourceHtml: string): {
@@ -2604,6 +2656,12 @@ export class TopicIaJsonComponent implements OnInit {
     return this.snippetService.applySnippet(TOPIC_PAGE_SNIPPETS.contributorsOnlyRow, {
       contributorBlock,
     });
+  }
+
+  private extractDoormatDescription(link: Element): string {
+    const item = link.closest('.col-lg-4, .col-md-6, li');
+    const paragraph = item?.querySelector('p');
+    return (paragraph?.textContent || '').replace(/\s+/g, ' ').trim();
   }
 
   private buildSocialOnlyRow(socialMediaBlock: string): string {
@@ -2777,11 +2835,12 @@ export class TopicIaJsonComponent implements OnInit {
     const map = new Map<string, string>();
     if (!sourceHtml) return map;
     const doc = new DOMParser().parseFromString(sourceHtml, 'text/html');
-    const featuresSection = doc.body.querySelector('section.gc-features');
+    const featuresSection = this.findFeaturesContainer(doc);
     if (!featuresSection) return map;
 
     const items = Array.from(featuresSection.querySelectorAll('a[href]'));
     items.forEach((link) => {
+      if (this.isSocialMediaLink(link)) return;
       const href = link.getAttribute('href') || '';
       if (!href) return;
       const normalized = this.normalizeUrl(href);
@@ -2797,6 +2856,10 @@ export class TopicIaJsonComponent implements OnInit {
       }
     });
     return map;
+  }
+
+  private isSocialMediaLink(link: Element): boolean {
+    return !!link.closest('.gc-followus, #social-media-en, #social-media-fr');
   }
 
   private getFeatureImageSrc(

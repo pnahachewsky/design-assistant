@@ -18,7 +18,7 @@ export const TOPIC_PAGE_SNIPPETS = {
   serviceItem: [
     '<div class="col-lg-4 col-md-6">',
     '  <h3><a href="{{url}}">{{label}}</a></h3>',
-    '  <p>Use action verbs, or simply list keywords to summarize the information or tasks that can be accomplished on the page it links to</p>',
+    '  <p>{{description}}</p>',
     '</div>',
   ].join('\n'),
   featureItem:
