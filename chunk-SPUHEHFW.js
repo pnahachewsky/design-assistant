@@ -37664,7 +37664,7 @@ var TOPIC_PAGE_SNIPPETS = {
     "  <p>{{description}}</p>",
     "</div>"
   ].join("\n"),
-  featureItem: '<div class="col-sm-6">{{imageTag}}</div><div class="col-sm-6"><h3><a class="stretched-link" href="{{url}}">{{label}}</a></h3><p>Brief description of the feature being promoted.</p></div>',
+  featureItem: '<div class="col-sm-6">{{imageTag}}</div><div class="col-sm-6"><h3><a class="stretched-link" href="{{url}}">{{label}}</a></h3><p>{{description}}</p></div>',
   featuresSectionTwoNoSocial: [
     '<section class="gc-features mrgn-tp-xl">',
     '  <h2 class="wb-inv">Features</h2>',
@@ -37709,7 +37709,7 @@ var TOPIC_PAGE_SNIPPETS = {
     '  <div class="well well-sm eqht-trgt">',
     "    {{imageTag}}",
     '    <h3><a href="{{url}}" class="stretched-link">{{label}}</a></h3>',
-    "    <p>Brief description of the feature being promoted.</p>",
+    "    <p>{{description}}</p>",
     "  </div>",
     "</div>"
   ].join("\n"),
@@ -39073,7 +39073,7 @@ var TopicIaJsonComponent = class _TopicIaJsonComponent {
           map.set(normalized, {
             section: section.key,
             label: text || href,
-            description: section.key === "doormats" ? this.extractDoormatDescription(link) : void 0
+            description: section.key === "doormats" ? this.extractDoormatDescription(link) : section.key === "feature" ? this.extractFeatureDescription(link) : void 0
           });
         }
       });
@@ -40039,12 +40039,14 @@ var TopicIaJsonComponent = class _TopicIaJsonComponent {
     }
     const label = this.getNodeLabel(first);
     const url = this.getNodeUrl(first);
+    const description = this.getFeatureDescription(first);
     const imageSrc = this.getFeatureImageSrc(url, featureImageMap);
     const imageTag = imageSrc ? `<img src="${imageSrc}" alt="" class="thumbnail">` : `<img src="${this.getAssetUrl("img/feature-360x203.png")}" alt="" class="thumbnail">`;
     return this.snippetService.applySnippet(TOPIC_PAGE_SNIPPETS.featureItem, {
       imageTag,
       url,
-      label
+      label,
+      description
     });
   }
   renderListItem(node) {
@@ -40077,6 +40079,10 @@ var TopicIaJsonComponent = class _TopicIaJsonComponent {
   getNodeDescription(node) {
     const description = typeof node?.data?.originalDescription === "string" ? node.data.originalDescription.trim() : "";
     return this.escapeHtml(description || "[***Use action verbs, or simply list keywords to summarize the information or tasks that can be accomplished on the page it links to***]");
+  }
+  getFeatureDescription(node) {
+    const description = typeof node?.data?.originalDescription === "string" ? node.data.originalDescription.trim() : "";
+    return this.escapeHtml(description || "[***Brief description of the feature being promoted.***]");
   }
   extractPageTitles(sourceHtml) {
     if (!sourceHtml)
@@ -40146,13 +40152,15 @@ var TopicIaJsonComponent = class _TopicIaJsonComponent {
   buildFeatureCardItem(node, featureImageMap, columnClass) {
     const label = this.getNodeLabel(node);
     const url = this.getNodeUrl(node);
+    const description = this.getFeatureDescription(node);
     const imageSrc = this.getFeatureImageSrc(url, featureImageMap);
     const imageTag = imageSrc ? `<img src="${imageSrc}" alt="">` : `<img src="${this.getAssetUrl("img/feature-360x203.png")}" alt="">`;
     return this.snippetService.applySnippet(TOPIC_PAGE_SNIPPETS.featureCardItem, {
       columnClass,
       imageTag,
       url,
-      label
+      label,
+      description
     });
   }
   buildSocialMediaBlock() {
@@ -40179,6 +40187,10 @@ var TopicIaJsonComponent = class _TopicIaJsonComponent {
   extractDoormatDescription(link) {
     const item = link.closest(".col-lg-4, .col-md-6, li");
     const paragraph = item?.querySelector("p");
+    return (paragraph?.textContent || "").replace(/\s+/g, " ").trim();
+  }
+  extractFeatureDescription(link) {
+    const paragraph = link.querySelector("p");
     return (paragraph?.textContent || "").replace(/\s+/g, " ").trim();
   }
   buildSocialOnlyRow(socialMediaBlock) {
@@ -43771,4 +43783,4 @@ ${custom}` : promptBody;
 export {
   PageAssistantCompareComponent
 };
-//# sourceMappingURL=chunk-Z7KBUBBF.js.map
+//# sourceMappingURL=chunk-SPUHEHFW.js.map
