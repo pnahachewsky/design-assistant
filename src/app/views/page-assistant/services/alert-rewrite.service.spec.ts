@@ -90,7 +90,6 @@ describe('AlertRewriteService', () => {
       plan,
       issues: [],
       examples: [],
-      includeLinkWritingRules: false,
     });
 
     const userPayload = JSON.parse(messages[1]?.content || '{}') as {

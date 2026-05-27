@@ -296,7 +296,6 @@ export class AlertRewriteService {
     plan: AlertRewritePlan;
     issues: AlertRewriteIssueInput[];
     examples: AlertRewriteExample[];
-    includeLinkWritingRules?: boolean;
     retryInstructions?: string[];
   }): Promise<ChatMessage[]> {
     const hasTooManyLinksIssue =
@@ -310,10 +309,8 @@ export class AlertRewriteService {
       params.originalAlertHtml,
       hasTooManyLinksIssue,
     );
-    const shouldIncludeLinkWritingRules =
-      params.includeLinkWritingRules !== false && originalHasLink;
     const [linkRules, canadaCaStyleRules, rules] = await Promise.all([
-      shouldIncludeLinkWritingRules
+      originalHasLink
         ? getLinkWritingRules({
             hasTooManyLinksIssue,
           })
@@ -323,6 +320,12 @@ export class AlertRewriteService {
       }),
       getAlertRewriteRules(),
     ]);
+    this.debugLog('Alert rewrite link rules', {
+      originalHasLink,
+      hasTooManyLinksIssue,
+      linkRulesIncluded: originalHasLink,
+      linkRuleCount: linkRules.length,
+    });
     const styleRules = [
       ...rules.alertRewrite.styleRulesBase,
       ...canadaCaStyleRules,
@@ -429,6 +432,20 @@ export class AlertRewriteService {
       { role: 'system', content: systemPrompt },
       { role: 'user', content: JSON.stringify(userPayload) },
     ];
+  }
+
+  private isDebugLoggingEnabled(): boolean {
+    try {
+      return localStorage.getItem('pageAssistant.alertRewriteDebug') === 'true';
+    } catch {
+      return false;
+    }
+  }
+
+  private debugLog(message: string, details: Record<string, unknown>): void {
+    if (this.isDebugLoggingEnabled()) {
+      console.info(message, details);
+    }
   }
 
   private hasAcceptableFinalStandaloneLinkSentence(alertHtml: string): boolean {

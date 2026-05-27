@@ -115,7 +115,6 @@ export class AlertRewriteOrchestratorService {
     url: string;
     mode: AlertRewriteMode;
     includeExamples: boolean;
-    includeLinkWritingRules: boolean;
     useCompactAlertsPageContext: boolean;
     forceLocalRepairForTesting: boolean;
     callOpenRouterForMessages: OpenRouterMessageCaller;
@@ -259,7 +258,6 @@ export class AlertRewriteOrchestratorService {
           plan,
           issues: relevantIssues,
           examples: selectedExamples,
-          includeLinkWritingRules: params.includeLinkWritingRules,
           retryInstructions: retryInstructionsForAttempt,
         });
         this.addElapsed(timings, 'rewritePromptMs', timingStart);

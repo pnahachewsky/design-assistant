@@ -797,7 +797,6 @@ export class PageAssistantCompareComponent
         url: params.url,
         mode: this.selectedAlertRewriteMode,
         includeExamples,
-        includeLinkWritingRules: this.uploadState.getIncludeLinkWritingRules(),
         useCompactAlertsPageContext: this.uploadState.getUseCompactAlertsPageContext(),
         forceLocalRepairForTesting: this.shouldForceLocalRepairForTesting(),
         callOpenRouterForMessages: this.callOpenRouterForMessages.bind(this),
