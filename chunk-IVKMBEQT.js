@@ -138,7 +138,7 @@ import {
   unblockBodyScroll,
   uuid,
   zindexutils
-} from "./chunk-LSDGVAMC.js";
+} from "./chunk-ADDQFKSU.js";
 import {
   ChangeDetectionStrategy,
   ChangeDetectorRef,
@@ -27525,10 +27525,10 @@ var AiOptionsComponent = class _AiOptionsComponent {
     this.promptChange.emit(key2);
   }
   // Model and alert-specific options persisted through UploadStateService.
-  selectedAi = AiModel.NemotronSuper;
+  selectedAi = AiModel.Gemini;
   selectedAis = [];
   selectedAlertRewriteMode = AlertRewriteMode.GoodResultsOnly;
-  includeAlertRewriteExamples = false;
+  includeAlertRewriteExamples = true;
   includeBeforeTextInAlertRewriteExamples = false;
   includeLinkWritingRules = true;
   useCompactAlertsPageContext = true;
@@ -27551,7 +27551,11 @@ var AiOptionsComponent = class _AiOptionsComponent {
   ];
   ngOnInit() {
     const freeIds = new Set(this.freeAiOptions.map((option) => option.id));
-    if (!freeIds.has(this.selectedAi)) {
+    const modelIds = /* @__PURE__ */ new Set([
+      ...this.freeAiOptions.map((option) => option.id),
+      ...this.paidAiOptions.map((option) => option.id)
+    ]);
+    if (!modelIds.has(this.selectedAi)) {
       this.selectedAi = this.freeAiOptions[0]?.id ?? this.selectedAi;
     }
     this.selectedAis = this.selectedAis.filter((id) => freeIds.has(id));
@@ -42661,7 +42665,7 @@ ${custom}` : promptBody;
     });
   }
   //AI Model
-  selectedAiModel = AiModel.NemotronSuper;
+  selectedAiModel = AiModel.Gemini;
   onAiChange(key2) {
     this.selectedAiModel = key2;
     this.uploadState.setSelectedAiModel(key2);
@@ -43783,4 +43787,4 @@ ${custom}` : promptBody;
 export {
   PageAssistantCompareComponent
 };
-//# sourceMappingURL=chunk-SPUHEHFW.js.map
+//# sourceMappingURL=chunk-IVKMBEQT.js.map

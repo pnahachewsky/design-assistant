@@ -1,5 +1,5 @@
 ---
-name: canada-alerts-issues
+name: alerts-issues
 description: Analyze Canada.ca web alerts and return issue reports only. Use when the task is to identify alert problems, classify issues, or assess alert accessibility and content quality.
 ---
 

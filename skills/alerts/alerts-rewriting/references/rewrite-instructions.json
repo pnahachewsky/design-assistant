@@ -1,5 +1,5 @@
 {
-  "name": "canada-alerts-rewrite-instructions",
+  "name": "alerts-rewrite-instructions",
   "purpose": "Rewrite Canada.ca alert HTML based on identified issues and return replacement JSON only.",
   "role": {
     "description": "You are an expert in Canada.ca alerts, accessibility, content design, and alert HTML rewriting."

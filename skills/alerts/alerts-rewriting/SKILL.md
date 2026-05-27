@@ -1,5 +1,5 @@
 ---
-name: canada-alerts-rewriting
+name: alerts-rewriting
 description: Rewrite Canada.ca web alerts and return corrected output only. Use when the task is to produce updated alert HTML from identified issues.
 ---
 

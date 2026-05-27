@@ -38566,7 +38566,7 @@ var UploadStateService = class _UploadStateService {
     this.storage.saveData(this.uploadTypeKey, type);
   }
   // Primary AI model selected for the current session.
-  selectedAiModel = signal(AiModel.NemotronSuper);
+  selectedAiModel = signal(AiModel.Gemini);
   getSelectedAiModel = computed(() => this.selectedAiModel());
   setSelectedAiModel(model2) {
     this.selectedAiModel.set(model2);
@@ -38587,7 +38587,7 @@ var UploadStateService = class _UploadStateService {
     this.storage.saveData(this.alertRewriteModeKey, mode);
   }
   // Whether rewrite prompts should include selected good examples.
-  includeAlertRewriteExamples = signal(false);
+  includeAlertRewriteExamples = signal(true);
   getIncludeAlertRewriteExamples = computed(() => this.includeAlertRewriteExamples());
   setIncludeAlertRewriteExamples(include) {
     this.includeAlertRewriteExamples.set(!!include);
@@ -38692,10 +38692,10 @@ var UploadStateService = class _UploadStateService {
   // Clear both in-memory state and the persisted assistant session.
   resetUploadFlow() {
     this.selectedUploadType.set("url");
-    this.selectedAiModel.set(AiModel.NemotronSuper);
+    this.selectedAiModel.set(AiModel.Gemini);
     this.editPromptText.set("");
     this.selectedAlertRewriteMode.set(AlertRewriteMode.GoodResultsOnly);
-    this.includeAlertRewriteExamples.set(false);
+    this.includeAlertRewriteExamples.set(true);
     this.includeBeforeTextInAlertRewriteExamples.set(false);
     this.includeLinkWritingRules.set(true);
     this.useCompactAlertsPageContext.set(true);
@@ -100412,4 +100412,4 @@ export {
    * License: MIT
    *)
 */
-//# sourceMappingURL=chunk-LSDGVAMC.js.map
+//# sourceMappingURL=chunk-ADDQFKSU.js.map
