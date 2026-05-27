@@ -96,11 +96,11 @@ export class AiOptionsComponent implements OnInit {
   }
 
   // Model and alert-specific options persisted through UploadStateService.
-  selectedAi: AiModel = AiModel.NemotronSuper;
+  selectedAi: AiModel = AiModel.Gemini;
   selectedAis: AiModel[] = [];
 
   selectedAlertRewriteMode: AlertRewriteMode = AlertRewriteMode.GoodResultsOnly;
-  includeAlertRewriteExamples = false;
+  includeAlertRewriteExamples = true;
   includeBeforeTextInAlertRewriteExamples = false;
   includeLinkWritingRules = true;
   useCompactAlertsPageContext = true;
@@ -126,7 +126,11 @@ export class AiOptionsComponent implements OnInit {
   ngOnInit(): void {
     // Restore persisted toggles, but keep the selected model inside the currently rendered option set.
     const freeIds = new Set(this.freeAiOptions.map((option) => option.id));
-    if (!freeIds.has(this.selectedAi)) {
+    const modelIds = new Set([
+      ...this.freeAiOptions.map((option) => option.id),
+      ...this.paidAiOptions.map((option) => option.id),
+    ]);
+    if (!modelIds.has(this.selectedAi)) {
       this.selectedAi = this.freeAiOptions[0]?.id ?? this.selectedAi;
     }
     this.selectedAis = this.selectedAis.filter((id) => freeIds.has(id));

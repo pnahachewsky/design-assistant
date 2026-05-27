@@ -830,7 +830,7 @@ export class PageAssistantCompareComponent
   }
 
   //AI Model
-  selectedAiModel: AiModel = AiModel.NemotronSuper;
+  selectedAiModel: AiModel = AiModel.Gemini;
 
   onAiChange(key: AiModel) {
     this.selectedAiModel = key;

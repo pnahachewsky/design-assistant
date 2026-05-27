@@ -31,7 +31,7 @@ export class UploadStateService {
   }
 
   // Primary AI model selected for the current session.
-  private selectedAiModel = signal<AiModel>(AiModel.NemotronSuper);
+  private selectedAiModel = signal<AiModel>(AiModel.Gemini);
   getSelectedAiModel = computed(() => this.selectedAiModel());
   setSelectedAiModel(model: AiModel) {
     this.selectedAiModel.set(model);
@@ -57,7 +57,7 @@ export class UploadStateService {
   }
 
   // Whether rewrite prompts should include selected good examples.
-  private includeAlertRewriteExamples = signal<boolean>(false);
+  private includeAlertRewriteExamples = signal<boolean>(true);
   getIncludeAlertRewriteExamples = computed(() =>
     this.includeAlertRewriteExamples(),
   );
@@ -187,10 +187,10 @@ export class UploadStateService {
   // Clear both in-memory state and the persisted assistant session.
   resetUploadFlow(): void {
     this.selectedUploadType.set('url'); // default to URL
-    this.selectedAiModel.set(AiModel.NemotronSuper);
+    this.selectedAiModel.set(AiModel.Gemini);
     this.editPromptText.set('');
     this.selectedAlertRewriteMode.set(AlertRewriteMode.GoodResultsOnly);
-    this.includeAlertRewriteExamples.set(false);
+    this.includeAlertRewriteExamples.set(true);
     this.includeBeforeTextInAlertRewriteExamples.set(false);
     this.includeLinkWritingRules.set(true);
     this.useCompactAlertsPageContext.set(true);
