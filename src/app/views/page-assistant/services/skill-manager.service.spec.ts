@@ -10,32 +10,32 @@ describe('SkillManagerService', () => {
   const manifestPayload = {
     skills: [
       {
-        id: 'canada-alerts-issues',
-        name: 'canada-alerts-issues',
+        id: 'alerts-issues',
+        name: 'alerts-issues',
         description: 'Analyzes Canada.ca web alerts.',
-        skillMdPath: 'skills/alerts/canada-alerts-issues/SKILL.md',
+        skillMdPath: 'skills/alerts/alerts-issues/SKILL.md',
         triggerPhrases: ['alert', 'analyze alert', 'issues', 'wcag'],
         promptKeys: ['alertsIssues'],
         outputModes: ['json'],
         defaultReferencePaths: [
-          'skills/alerts/canada-alerts-issues/references/issue-analysis-instructions.json',
+          'skills/alerts/alerts-issues/references/issue-analysis-instructions.json',
         ],
-        defaultAssetPaths: ['skills/alerts/canada-alerts-issues/assets/issues-output-schema.json'],
+        defaultAssetPaths: ['skills/alerts/alerts-issues/assets/issues-output-schema.json'],
       },
       {
-        id: 'canada-alerts-rewriting',
-        name: 'canada-alerts-rewriting',
+        id: 'alerts-rewriting',
+        name: 'alerts-rewriting',
         description: 'Rewrites Canada.ca web alerts.',
-        skillMdPath: 'skills/alerts/canada-alerts-rewriting/SKILL.md',
+        skillMdPath: 'skills/alerts/alerts-rewriting/SKILL.md',
         includedSkillIds: ['link-writing', 'canada-ca-style'],
         triggerPhrases: ['alert', 'rewrite alert', 'updated html'],
         promptKeys: ['alertsRecommendations'],
         outputModes: ['json'],
         defaultReferencePaths: [
-          'skills/alerts/canada-alerts-rewriting/references/rewrite-instructions.json',
+          'skills/alerts/alerts-rewriting/references/rewrite-instructions.json',
         ],
-        optionalReferencePaths: ['skills/alerts/canada-alerts-rewriting/references/examples.json'],
-        defaultAssetPaths: ['skills/alerts/canada-alerts-rewriting/assets/rewriting-output-schema.json'],
+        optionalReferencePaths: ['skills/alerts/alerts-rewriting/references/examples.json'],
+        defaultAssetPaths: ['skills/alerts/alerts-rewriting/assets/rewriting-output-schema.json'],
       },
       {
         id: 'link-writing',
@@ -70,13 +70,13 @@ describe('SkillManagerService', () => {
             headers: { 'Content-Type': 'application/json' },
           });
         }
-        if (url.includes('skills/alerts/canada-alerts-issues/SKILL.md')) {
+        if (url.includes('skills/alerts/alerts-issues/SKILL.md')) {
           return new Response(
             '---\nname: test-issues-skill\ndescription: test\n---\n# Instructions\nFollow alert issues rubric.',
             { status: 200 },
           );
         }
-        if (url.includes('skills/alerts/canada-alerts-rewriting/SKILL.md')) {
+        if (url.includes('skills/alerts/alerts-rewriting/SKILL.md')) {
           return new Response(
             '---\nname: test-rewriting-skill\ndescription: test\n---\n# Instructions\nRewrite alert HTML.',
             { status: 200 },
@@ -94,7 +94,7 @@ describe('SkillManagerService', () => {
             { status: 200 },
           );
         }
-        if (url.includes('skills/alerts/canada-alerts-rewriting/references/examples.json')) {
+        if (url.includes('skills/alerts/alerts-rewriting/references/examples.json')) {
           return new Response('[{"id":"ex-1"}]', { status: 200 });
         }
         if (url.includes('skills/link-writing/references/link-writing-rules.json')) {
@@ -145,13 +145,13 @@ describe('SkillManagerService', () => {
       includeAssets: true,
     });
 
-    expect(result.selectedSkill?.id).toBe('canada-alerts-issues');
-    expect(result.loadedPaths).toContain('skills/alerts/canada-alerts-issues/SKILL.md');
+    expect(result.selectedSkill?.id).toBe('alerts-issues');
+    expect(result.loadedPaths).toContain('skills/alerts/alerts-issues/SKILL.md');
     expect(result.loadedPaths).toContain(
-      'skills/alerts/canada-alerts-issues/references/issue-analysis-instructions.json',
+      'skills/alerts/alerts-issues/references/issue-analysis-instructions.json',
     );
     expect(result.loadedPaths).toContain(
-      'skills/alerts/canada-alerts-issues/assets/issues-output-schema.json',
+      'skills/alerts/alerts-issues/assets/issues-output-schema.json',
     );
     expect(result.prompt).toContain('### Activated Skill');
   });
@@ -178,18 +178,18 @@ describe('SkillManagerService', () => {
       includeAssets: true,
     });
 
-    expect(result.selectedSkill?.id).toBe('canada-alerts-rewriting');
+    expect(result.selectedSkill?.id).toBe('alerts-rewriting');
     expect(result.loadedPaths).toContain(
-      'skills/alerts/canada-alerts-rewriting/assets/rewriting-output-schema.json',
+      'skills/alerts/alerts-rewriting/assets/rewriting-output-schema.json',
     );
     expect(result.loadedPaths).not.toContain(
-      'skills/alerts/canada-alerts-issues/assets/issues-output-schema.json',
+      'skills/alerts/alerts-issues/assets/issues-output-schema.json',
     );
     expect(result.loadedPaths).toContain(
-      'skills/alerts/canada-alerts-rewriting/references/rewrite-instructions.json',
+      'skills/alerts/alerts-rewriting/references/rewrite-instructions.json',
     );
     expect(result.loadedPaths).toContain(
-      'skills/alerts/canada-alerts-rewriting/references/examples.json',
+      'skills/alerts/alerts-rewriting/references/examples.json',
     );
     expect(result.loadedPaths).toContain(
       'skills/link-writing/SKILL.md',
@@ -216,8 +216,8 @@ describe('SkillManagerService', () => {
         });
       }
       if (
-        url.includes('skills/alerts/canada-alerts-issues/SKILL.md') ||
-        url.includes('skills/alerts/canada-alerts-rewriting/SKILL.md')
+        url.includes('skills/alerts/alerts-issues/SKILL.md') ||
+        url.includes('skills/alerts/alerts-rewriting/SKILL.md')
       ) {
         return new Response('Not found', { status: 404 });
       }
