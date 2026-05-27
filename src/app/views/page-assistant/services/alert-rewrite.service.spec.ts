@@ -109,7 +109,27 @@ describe('AlertRewriteService', () => {
     spyOn(window, 'fetch').and.callFake(
       async (input: RequestInfo | URL): Promise<Response> => {
         const url = String(input);
-        if (url.includes('ai-prompts/link-writing-rules.json')) {
+        if (url.includes('skills/manifest.json')) {
+          return new Response(
+            JSON.stringify({
+              skills: [
+                {
+                  id: 'link-writing',
+                  name: 'link-writing',
+                  description: 'Shared link-writing rules.',
+                  skillMdPath: 'skills/link-writing/SKILL.md',
+                  selectable: false,
+                  triggerPhrases: [],
+                  defaultReferencePaths: [
+                    'skills/link-writing/references/link-writing-rules.json',
+                  ],
+                },
+              ],
+            }),
+            { status: 200 },
+          );
+        }
+        if (url.includes('skills/link-writing/references/link-writing-rules.json')) {
           return new Response(
             JSON.stringify({
               version: 'test',

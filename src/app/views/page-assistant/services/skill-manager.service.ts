@@ -60,9 +60,35 @@ export class SkillManagerService {
   private readonly manifestUrl = new URL('skills/manifest.json', document.baseURI).toString();
   private manifestPromise: Promise<SkillManifestEntry[]> | null = null;
   private readonly textCache = new Map<string, Promise<string>>();
+  private readonly jsonCache = new Map<string, Promise<unknown>>();
 
   async getSkillMetadata(): Promise<SkillManifestEntry[]> {
     return this.loadManifest();
+  }
+
+  async loadSkillReferenceJson<T = unknown>(
+    skillId: string,
+    referencePath?: string,
+  ): Promise<T> {
+    const skills = await this.loadManifest();
+    const skill = skills.find((entry) => entry.id === skillId);
+    if (!skill) {
+      throw new Error(`Skill not found: ${skillId}`);
+    }
+
+    const path = referencePath || skill.defaultReferencePaths?.[0];
+    if (!path) {
+      throw new Error(`Skill has no default reference JSON path: ${skillId}`);
+    }
+
+    const cacheKey = `${skillId}:${path}`;
+    if (!this.jsonCache.has(cacheKey)) {
+      this.jsonCache.set(
+        cacheKey,
+        this.loadText(path).then((text) => JSON.parse(text) as T),
+      );
+    }
+    return this.jsonCache.get(cacheKey) as Promise<T>;
   }
 
   async composePrompt(request: SkillComposeRequest): Promise<SkillComposeResult> {

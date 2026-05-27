@@ -1,9 +1,9 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { ChatMessage } from './openrouter.service';
 import { AlertRewriteMode } from '../data/data.model';
-import { getLinkWritingRules } from '../../../common/constants/link-writing.constants';
 import { getAlertRewriteRules } from '../../../common/constants/alert-rewrite-rules.constants';
 import { getCanadaCaStyleRules } from '../../../common/constants/canada-ca-style.constants';
+import { LinkWritingRulesService } from './link-writing-rules.service';
 
 export interface AlertRewriteIssueInput {
   alertIndex?: number;
@@ -95,6 +95,7 @@ export interface AlertRewriteInput {
 
 @Injectable({ providedIn: 'root' })
 export class AlertRewriteService {
+  private readonly linkWritingRules = inject(LinkWritingRulesService);
   private readonly examplesPath = new URL(
     'ai-prompts/alerts-rewrite-examples.json',
     document.baseURI,
@@ -311,7 +312,7 @@ export class AlertRewriteService {
     );
     const [linkRules, canadaCaStyleRules, rules] = await Promise.all([
       originalHasLink
-        ? getLinkWritingRules({
+        ? this.linkWritingRules.getLinkWritingRules({
             hasTooManyLinksIssue,
           })
         : Promise.resolve([]),

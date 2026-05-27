@@ -98,7 +98,10 @@ describe('SkillManagerService', () => {
           return new Response('[{"id":"ex-1"}]', { status: 200 });
         }
         if (url.includes('skills/link-writing/references/link-writing-rules.json')) {
-          return new Response('{"rules":[{"id":"L1"}]}', { status: 200 });
+          return new Response(
+            '{"version":"test","rules":[{"id":"L1","condition":"always","text":"Use descriptive link text."}]}',
+            { status: 200 },
+          );
         }
         if (url.includes('skills/canada-ca-style/references/writing-rules.json')) {
           return new Response('{"rules":[{"id":"C1"}]}', { status: 200 });
@@ -204,6 +207,21 @@ describe('SkillManagerService', () => {
       'skills/canada-ca-style/references/writing-rules.json',
     );
     expect(result.prompt).toContain('### Included Skill');
+  });
+
+  it('loads structured JSON from a skill default reference', async () => {
+    const rules = await service.loadSkillReferenceJson<{
+      version: string;
+      rules: Array<{ id: string; text: string }>;
+    }>('link-writing');
+
+    expect(rules.version).toBe('test');
+    expect(rules.rules[0]).toEqual(
+      jasmine.objectContaining({
+        id: 'L1',
+        text: 'Use descriptive link text.',
+      }),
+    );
   });
 
   it('falls back to base prompt when skill resources fail to load', async () => {
