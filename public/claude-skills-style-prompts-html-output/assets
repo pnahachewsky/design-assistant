@@ -1,9 +1,0 @@
-<section class="alert alert-info" data-alert-index="1">
-  <p class="h3 mrgn-tp-0">Rewritten Title Goes Here</p>
-  <p>This is the concise, 1-2 sentence rewritten alert with a single <a href="/example">hyperlink</a>.</p>
-</section>
-
-<section class="alert alert-warning" data-alert-index="2">
-  <p class="h3 mrgn-tp-0">Original Title Preserved</p>
-  <p>The original alert content is preserved here because no issues were identified.</p>
-</section>
