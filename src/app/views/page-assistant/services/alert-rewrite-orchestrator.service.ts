@@ -115,7 +115,6 @@ export class AlertRewriteOrchestratorService {
     url: string;
     mode: AlertRewriteMode;
     includeExamples: boolean;
-    includeBeforeTextInExamples: boolean;
     includeLinkWritingRules: boolean;
     useCompactAlertsPageContext: boolean;
     forceLocalRepairForTesting: boolean;
@@ -260,7 +259,6 @@ export class AlertRewriteOrchestratorService {
           plan,
           issues: relevantIssues,
           examples: selectedExamples,
-          includeBeforeTextInExamples: params.includeBeforeTextInExamples,
           includeLinkWritingRules: params.includeLinkWritingRules,
           retryInstructions: retryInstructionsForAttempt,
         });
@@ -562,7 +560,7 @@ export class AlertRewriteOrchestratorService {
           alertType: example.alertType,
           criteria: example.criteria,
           tags: example.tags,
-          headingAfter: example.headingAfter || '',
+          egHeading: example.egHeading || '',
         }));
       const examplesUsedDetails = compactExampleDetails(
         rewriteResult.exampleIdsUsed

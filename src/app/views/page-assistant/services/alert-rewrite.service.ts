@@ -33,14 +33,10 @@ export interface AlertRewriteExample {
   tags: string[];
   purposeTags?: string[];
   criteria: string[];
-  before: string;
-  after: string;
-  headingBefore?: string;
-  headingAfter?: string;
-  updatedHtml?: string;
-  linksBefore?: AlertRewriteExampleLink[];
-  linksAfter?: AlertRewriteExampleLink[];
-  linkEdits?: AlertRewriteExampleLinkEdit[];
+  egText: string;
+  egHeading?: string;
+  egHtml?: string;
+  egLinks?: AlertRewriteExampleLink[];
   notes?: string;
 }
 
@@ -48,14 +44,6 @@ export interface AlertRewriteExampleLink {
   id: string;
   text: string;
   href?: string;
-}
-
-export interface AlertRewriteExampleLinkEdit {
-  id: string;
-  action: 'keep' | 'rename' | 'remove' | 'add';
-  beforeText?: string;
-  afterText?: string;
-  note?: string;
 }
 
 export interface AlertRewriteLinkManifestItem {
@@ -308,7 +296,6 @@ export class AlertRewriteService {
     plan: AlertRewritePlan;
     issues: AlertRewriteIssueInput[];
     examples: AlertRewriteExample[];
-    includeBeforeTextInExamples?: boolean;
     includeLinkWritingRules?: boolean;
     retryInstructions?: string[];
   }): Promise<ChatMessage[]> {
@@ -362,7 +349,6 @@ export class AlertRewriteService {
     if (retryInstructions.length) {
       styleRules.push(...retryInstructions);
     }
-    const includeBeforeText = params.includeBeforeTextInExamples === true;
     const rawIssues = params.issues
       .map((issue) => {
         const category = this.cleanString(issue.category);
@@ -420,21 +406,13 @@ export class AlertRewriteService {
       styleRules,
       examples: params.examples.map((example) => ({
         id: example.id,
-        ...(includeBeforeText
-          ? {
-              headingBefore: example.headingBefore || '',
-              before: example.before,
-              linksBefore: example.linksBefore || [],
-            }
-          : {}),
-        headingAfter: example.headingAfter || '',
-        after: example.after,
-        updatedHtml: example.updatedHtml || '',
+        egHeading: example.egHeading || '',
+        egText: example.egText,
+        egHtml: example.egHtml || '',
         criteria: example.criteria,
         tags: example.tags,
         purposeTags: example.purposeTags || [],
-        linksAfter: example.linksAfter || [],
-        linkEdits: example.linkEdits || [],
+        egLinks: example.egLinks || [],
       })),
       plan: planPayload,
       issues: rawIssues,
@@ -695,27 +673,19 @@ export class AlertRewriteService {
 
     for (const example of params.selectedExamples) {
       const exampleCombined = this.normalizeComparisonText(
-        `${example.headingAfter || ''} ${example.after || ''}`,
+        `${example.egHeading || ''} ${example.egText || ''}`,
       );
       if (!exampleCombined) continue;
 
-      const exampleBeforeCombined = this.normalizeComparisonText(
-        `${example.headingBefore || ''} ${example.before || ''}`,
-      );
       const originalSimilarity = this.calculateJaccardSimilarity(
         originalCombined,
         exampleCombined,
-      );
-      const sourceSimilarityToExampleBefore = this.calculateJaccardSimilarity(
-        originalCombined,
-        exampleBeforeCombined,
       );
 
       if (
         rewrittenCombined === exampleCombined &&
         rewrittenCombined !== originalCombined &&
-        originalSimilarity < 0.8 &&
-        sourceSimilarityToExampleBefore < 0.8
+        originalSimilarity < 0.8
       ) {
         return {
           isCopy: true,
@@ -733,8 +703,7 @@ export class AlertRewriteService {
 
       if (
         similarity >= 0.92 &&
-        originalSimilarity < 0.8 &&
-        sourceSimilarityToExampleBefore < 0.8
+        originalSimilarity < 0.8
       ) {
         return {
           isCopy: true,
@@ -891,9 +860,16 @@ export class AlertRewriteService {
     if (!sourceText) return 0;
 
     const exampleText = this.normalizeComparisonText(
-      `${example.headingBefore || ''} ${example.before || ''}`,
+      [
+        example.egHeading || '',
+        example.egText || '',
+        example.notes || '',
+        ...(example.criteria || []),
+        ...(example.tags || []),
+        ...(example.purposeTags || []),
+      ].join(' '),
     );
-    if (!exampleText || exampleText.includes('original text unavailable')) {
+    if (!exampleText) {
       return 0;
     }
 
@@ -949,23 +925,18 @@ export class AlertRewriteService {
     const root = raw as Record<string, unknown>;
     const id = this.cleanString(root['id']);
     const alertType = this.cleanString(root['alertType']);
-    const before = this.cleanString(root['before']);
-    const after = this.cleanString(root['after']);
-    if (!id || !alertType || !before || !after) return null;
+    const egText = this.cleanString(root['egText']);
+    if (!id || !alertType || !egText) return null;
     return {
       id,
       alertType,
       tags: this.toStringArray(root['tags']),
       purposeTags: this.toStringArray(root['purposeTags']),
       criteria: this.toStringArray(root['criteria']),
-      before,
-      after,
-      headingBefore: this.cleanString(root['headingBefore']) || undefined,
-      headingAfter: this.cleanString(root['headingAfter']) || undefined,
-      updatedHtml: this.cleanString(root['updatedHtml']) || undefined,
-      linksBefore: this.toExampleLinkArray(root['linksBefore']),
-      linksAfter: this.toExampleLinkArray(root['linksAfter']),
-      linkEdits: this.toExampleLinkEditArray(root['linkEdits']),
+      egText,
+      egHeading: this.cleanString(root['egHeading']) || undefined,
+      egHtml: this.cleanString(root['egHtml']) || undefined,
+      egLinks: this.toExampleLinkArray(root['egLinks']),
       notes: this.cleanString(root['notes']) || undefined,
     };
   }
@@ -1357,36 +1328,6 @@ export class AlertRewriteService {
       links.push(href ? { id, text, href } : { id, text });
     }
     return links;
-  }
-
-  private toExampleLinkEditArray(raw: unknown): AlertRewriteExampleLinkEdit[] {
-    if (!Array.isArray(raw)) return [];
-    const edits: AlertRewriteExampleLinkEdit[] = [];
-    for (const item of raw) {
-      if (!item || typeof item !== 'object') continue;
-      const root = item as Record<string, unknown>;
-      const id = this.cleanString(root['id']);
-      const actionRaw = this.cleanString(root['action']).toLowerCase();
-      const action =
-        actionRaw === 'keep' ||
-        actionRaw === 'rename' ||
-        actionRaw === 'remove' ||
-        actionRaw === 'add'
-          ? (actionRaw as AlertRewriteExampleLinkEdit['action'])
-          : null;
-      if (!id || !action) continue;
-      const beforeText = this.cleanString(root['beforeText']) || undefined;
-      const afterText = this.cleanString(root['afterText']) || undefined;
-      const note = this.cleanString(root['note']) || undefined;
-      edits.push({
-        id,
-        action,
-        ...(beforeText ? { beforeText } : {}),
-        ...(afterText ? { afterText } : {}),
-        ...(note ? { note } : {}),
-      });
-    }
-    return edits;
   }
 
 }

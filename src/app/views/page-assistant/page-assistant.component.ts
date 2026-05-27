@@ -742,10 +742,7 @@ export class PageAssistantCompareComponent
   // UI-facing summary of the alert rewrite options currently active.
   private buildAlertRewriteStatusMessage(): string {
     const includeExamples = this.uploadState.getIncludeAlertRewriteExamples();
-    const includeBeforeTextInExamples =
-      includeExamples &&
-      this.uploadState.getIncludeBeforeTextInAlertRewriteExamples();
-    return `Generating alert rewrites (${this.selectedAlertRewriteMode === AlertRewriteMode.AB ? 'planning on' : 'planning off'}, ${includeExamples ? 'good examples on' : 'good examples off'}, ${includeBeforeTextInExamples ? 'before text on' : 'before text off'}).`;
+    return `Generating alert rewrites (${this.selectedAlertRewriteMode === AlertRewriteMode.AB ? 'planning on' : 'planning off'}, ${includeExamples ? 'good examples on' : 'good examples off'}).`;
   }
 
   // Thin component-level handoff into the extracted alert rewrite workflow.
@@ -759,9 +756,6 @@ export class PageAssistantCompareComponent
     url: string;
   }): Promise<boolean> {
     const includeExamples = this.uploadState.getIncludeAlertRewriteExamples();
-    const includeBeforeTextInExamples =
-      includeExamples &&
-      this.uploadState.getIncludeBeforeTextInAlertRewriteExamples();
     if (!params.issues.length && !includeExamples) {
       this.statusSeverity = 'info';
       this.statusMessage =
@@ -803,7 +797,6 @@ export class PageAssistantCompareComponent
         url: params.url,
         mode: this.selectedAlertRewriteMode,
         includeExamples,
-        includeBeforeTextInExamples,
         includeLinkWritingRules: this.uploadState.getIncludeLinkWritingRules(),
         useCompactAlertsPageContext: this.uploadState.getUseCompactAlertsPageContext(),
         forceLocalRepairForTesting: this.shouldForceLocalRepairForTesting(),

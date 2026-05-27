@@ -229,16 +229,14 @@ describe('AlertRewriteService', () => {
         alertType: 'info',
         tags: [],
         criteria: [],
-        before: 'Generic info alert',
-        after: 'Generic info rewrite',
+        egText: 'Generic info rewrite',
       },
       {
         id: 'different-type-matching-criteria',
         alertType: 'warning',
         tags: [],
         criteria: ['C1_missing_next_step'],
-        before: 'Relevant warning alert',
-        after: 'Relevant warning rewrite',
+        egText: 'Relevant warning rewrite',
       },
     ];
 
@@ -267,8 +265,7 @@ describe('AlertRewriteService', () => {
         tags: ['payment', 'support', 'deadline'],
         purposeTags: [],
         criteria: [],
-        before: 'Payment support topic alert',
-        after: 'Payment support topic rewrite',
+        egText: 'Payment support topic rewrite',
       },
       {
         id: 'purpose-match',
@@ -276,8 +273,7 @@ describe('AlertRewriteService', () => {
         tags: [],
         purposeTags: ['service-delay'],
         criteria: [],
-        before: 'Processing delay alert',
-        after: 'Processing delay rewrite',
+        egText: 'Processing delay rewrite',
       },
     ];
 
@@ -304,8 +300,7 @@ describe('AlertRewriteService', () => {
         tags: [],
         purposeTags: ['action-required'],
         criteria: ['C1_missing_next_step'],
-        before: 'Business owners can get their GST/HST access code in My Business Account.',
-        after: 'Business owners can get their access code online.',
+        egText: 'Business owners can get their access code online.',
       },
       {
         id: 'dtc-delay',
@@ -313,9 +308,7 @@ describe('AlertRewriteService', () => {
         tags: [],
         purposeTags: ['action-required'],
         criteria: ['C1_missing_next_step'],
-        before:
-          'The Canada Revenue Agency is experiencing delays in processing Form T2201, Disability Tax Credit Certificate. The most up-to-date processing times can be found on Check CRA processing times.',
-        after:
+        egText:
           'The CRA is experiencing delays in processing Form T2201 Disability Tax Credit Certificate. Check CRA processing times',
       },
     ];
@@ -345,9 +338,7 @@ describe('AlertRewriteService', () => {
       alertType: 'warning',
       tags: [],
       criteria: [],
-      before:
-        'The Canada Revenue Agency is experiencing delays in processing Form T2201, Disability Tax Credit Certificate. The most up-to-date processing times can be found on Check CRA processing times.',
-      after:
+      egText:
         'The CRA is experiencing delays in processing Form T2201 Disability Tax Credit Certificate. Check CRA processing times',
     };
 
@@ -376,8 +367,7 @@ describe('AlertRewriteService', () => {
       alertType: 'warning',
       tags: [],
       criteria: [],
-      before: 'Some unrelated alert text.',
-      after:
+      egText:
         'The CRA is experiencing delays in processing Form T2201 Disability Tax Credit Certificate. Check CRA processing times',
     };
 
@@ -424,16 +414,14 @@ describe('AlertRewriteService', () => {
         alertType: 'info',
         tags: [],
         criteria: [],
-        before: 'Before two',
-        after: 'After two',
+        egText: 'After two',
       },
       {
         id: 'ex-001',
         alertType: 'info',
         tags: [],
         criteria: [],
-        before: 'Before one',
-        after: 'After one',
+        egText: 'After one',
       },
     ];
 
@@ -470,8 +458,7 @@ describe('AlertRewriteService', () => {
           alertType: 'info',
           tags: [],
           criteria: [],
-          before: 'Before one',
-          after: 'After one',
+          egText: 'After one',
         },
       ],
     );
@@ -501,8 +488,7 @@ describe('AlertRewriteService', () => {
           alertType: 'info',
           tags: [],
           criteria: [],
-          before: 'Before one',
-          after: 'After one',
+          egText: 'After one',
         },
       ],
     );

@@ -15,8 +15,6 @@ export class UploadStateService {
   private readonly alertRewriteModeKey = 'pageAssistant.alertRewriteMode';
   private readonly includeAlertRewriteExamplesKey =
     'pageAssistant.includeAlertRewriteExamples';
-  private readonly includeBeforeTextInAlertRewriteExamplesKey =
-    'pageAssistant.includeBeforeTextInAlertRewriteExamples';
   private readonly includeLinkWritingRulesKey =
     'pageAssistant.includeLinkWritingRules';
   private readonly useCompactAlertsPageContextKey =
@@ -66,19 +64,6 @@ export class UploadStateService {
     this.storage.saveData(this.includeAlertRewriteExamplesKey, String(!!include));
   }
 
-  // Whether examples include the original "before" text as extra context.
-  private includeBeforeTextInAlertRewriteExamples = signal<boolean>(false);
-  getIncludeBeforeTextInAlertRewriteExamples = computed(() =>
-    this.includeBeforeTextInAlertRewriteExamples(),
-  );
-  setIncludeBeforeTextInAlertRewriteExamples(include: boolean) {
-    this.includeBeforeTextInAlertRewriteExamples.set(!!include);
-    this.storage.saveData(
-      this.includeBeforeTextInAlertRewriteExamplesKey,
-      String(!!include),
-    );
-  }
-
   // Whether alert rewrites include the standalone link-writing rules block.
   private includeLinkWritingRules = signal<boolean>(true);
   getIncludeLinkWritingRules = computed(() => this.includeLinkWritingRules());
@@ -111,7 +96,6 @@ export class UploadStateService {
       this.storage.removeData(this.aiModelKey);
       this.storage.removeData(this.uploadDataKey);
       this.storage.removeData(this.includeAlertRewriteExamplesKey);
-      this.storage.removeData(this.includeBeforeTextInAlertRewriteExamplesKey);
       this.storage.removeData(this.includeLinkWritingRulesKey);
       this.storage.removeData('pageAssistant.useJsonAlertsIssuesPrompt');
       this.storage.removeData(this.useCompactAlertsPageContextKey);
@@ -191,7 +175,6 @@ export class UploadStateService {
     this.editPromptText.set('');
     this.selectedAlertRewriteMode.set(AlertRewriteMode.GoodResultsOnly);
     this.includeAlertRewriteExamples.set(true);
-    this.includeBeforeTextInAlertRewriteExamples.set(false);
     this.includeLinkWritingRules.set(true);
     this.useCompactAlertsPageContext.set(true);
     this.uploadData.set(null);
@@ -201,7 +184,6 @@ export class UploadStateService {
     this.storage.removeData(this.editPromptKey);
     this.storage.removeData(this.alertRewriteModeKey);
     this.storage.removeData(this.includeAlertRewriteExamplesKey);
-    this.storage.removeData(this.includeBeforeTextInAlertRewriteExamplesKey);
     this.storage.removeData(this.includeLinkWritingRulesKey);
     this.storage.removeData('pageAssistant.useJsonAlertsIssuesPrompt');
     this.storage.removeData(this.useCompactAlertsPageContextKey);
@@ -258,18 +240,6 @@ export class UploadStateService {
     ) {
       this.includeAlertRewriteExamples.set(
         storedIncludeAlertRewriteExamples === 'true',
-      );
-    }
-
-    const storedIncludeBeforeTextInExamples = this.storage.getData(
-      this.includeBeforeTextInAlertRewriteExamplesKey,
-    );
-    if (
-      storedIncludeBeforeTextInExamples === 'true' ||
-      storedIncludeBeforeTextInExamples === 'false'
-    ) {
-      this.includeBeforeTextInAlertRewriteExamples.set(
-        storedIncludeBeforeTextInExamples === 'true',
       );
     }
 

@@ -80,22 +80,9 @@
                         (onChange)="onIncludeAlertRewriteExamplesSelect(includeAlertRewriteExamples)"
                       />
                       <label for="includeAlertRewriteExamples" class="pl-2">
-                        Use "good" examples
+                        Use examples
                       </label>
                     </div>
-                    <div class="p-field-checkbox">
-                      <p-checkbox
-                        [(ngModel)]="includeBeforeTextInAlertRewriteExamples"
-                        [binary]="true"
-                        inputId="includeBeforeTextInAlertRewriteExamples"
-                        [disabled]="!includeAlertRewriteExamples"
-                        (onChange)="onIncludeBeforeTextInAlertRewriteExamplesSelect(includeBeforeTextInAlertRewriteExamples)"
-                      />
-                      <label for="includeBeforeTextInAlertRewriteExamples" class="pl-2">
-                        Include "before" text in examples
-                      </label>
-                    </div>
-                    <div class="border-top-1 mt-2" style="border-color: #d3d3d3;"></div>
                     <div class="p-field-checkbox mt-2">
                       <p-checkbox
                         [(ngModel)]="includeLinkWritingRules"
