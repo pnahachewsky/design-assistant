@@ -84,7 +84,7 @@ describe('AlertRewriteService', () => {
     );
 
     const messages = await service.buildAlertRewriteMessages({
-      mode: AlertRewriteMode.GoodResultsOnly,
+      mode: AlertRewriteMode.HeuristicPlanning,
       originalAlertText: 'Please upload your documents.',
       originalAlertHtml: '<section class="alert alert-info"><p>Please upload your documents.</p></section>',
       plan,
@@ -185,7 +185,7 @@ describe('AlertRewriteService', () => {
     );
 
     const messages = await service.buildAlertRewriteMessages({
-      mode: AlertRewriteMode.GoodResultsOnly,
+      mode: AlertRewriteMode.HeuristicPlanning,
       originalAlertText:
         'The rebate has received Royal Assent. First-time home buyers rebate',
       originalAlertHtml:
@@ -226,7 +226,7 @@ describe('AlertRewriteService', () => {
     ).toBeTrue();
 
     const misclassifiedMessages = await service.buildAlertRewriteMessages({
-      mode: AlertRewriteMode.GoodResultsOnly,
+      mode: AlertRewriteMode.HeuristicPlanning,
       originalAlertText: 'The rebate has received Royal Assent.',
       originalAlertHtml:
         '<section class="alert alert-info"><p>The rebate has received Royal Assent. <a href="/rebate.html">First-time home buyers rebate</a></p></section>',

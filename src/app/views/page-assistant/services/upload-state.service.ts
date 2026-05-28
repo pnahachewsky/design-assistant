@@ -42,9 +42,9 @@ export class UploadStateService {
     this.storage.saveData(this.editPromptKey, prompt ?? '');
   }
 
-  // Alert rewrite mode (plan-first vs direct rewrite).
+  // Alert rewrite mode (local heuristic plan vs extra model-generated plan).
   private selectedAlertRewriteMode = signal<AlertRewriteMode>(
-    AlertRewriteMode.GoodResultsOnly,
+    AlertRewriteMode.HeuristicPlanning,
   );
   getAlertRewriteMode = computed(() => this.selectedAlertRewriteMode());
   setAlertRewriteMode(mode: AlertRewriteMode) {
@@ -162,7 +162,7 @@ export class UploadStateService {
     this.selectedUploadType.set('url'); // default to URL
     this.selectedAiModel.set(AiModel.Gemini);
     this.editPromptText.set('');
-    this.selectedAlertRewriteMode.set(AlertRewriteMode.GoodResultsOnly);
+    this.selectedAlertRewriteMode.set(AlertRewriteMode.HeuristicPlanning);
     this.includeAlertRewriteExamples.set(true);
     this.useCompactAlertsPageContext.set(true);
     this.uploadData.set(null);
@@ -208,7 +208,9 @@ export class UploadStateService {
       this.editPromptText.set(storedEditPrompt);
     }
 
-    const storedAlertRewriteMode = this.storage.getData(this.alertRewriteModeKey);
+    const storedAlertRewriteMode = this.normalizeStoredAlertRewriteMode(
+      this.storage.getData(this.alertRewriteModeKey),
+    );
     if (
       storedAlertRewriteMode &&
       Object.values(AlertRewriteMode).includes(
@@ -252,6 +254,20 @@ export class UploadStateService {
     } catch (err) {
       console.warn('Failed to restore upload state:', err);
     }
+  }
+
+  private normalizeStoredAlertRewriteMode(value: unknown): AlertRewriteMode | null {
+    // Preserve sessions saved before the enum values were renamed.
+    if (value === AlertRewriteMode.ModelPlanning || value === 'ab') {
+      return AlertRewriteMode.ModelPlanning;
+    }
+    if (
+      value === AlertRewriteMode.HeuristicPlanning ||
+      value === 'good-results-only'
+    ) {
+      return AlertRewriteMode.HeuristicPlanning;
+    }
+    return null;
   }
 
   private isPageReload(): boolean {

@@ -538,7 +538,7 @@ export class PageAssistantCompareComponent
     this.selectedPromptKey = key;
   }
 
-  selectedAlertRewriteMode: AlertRewriteMode = AlertRewriteMode.GoodResultsOnly;
+  selectedAlertRewriteMode: AlertRewriteMode = AlertRewriteMode.HeuristicPlanning;
   onAlertRewriteModeChange(): void {
     this.selectedAlertRewriteMode = this.uploadState.getAlertRewriteMode();
   }
@@ -742,7 +742,7 @@ export class PageAssistantCompareComponent
   // UI-facing summary of the alert rewrite options currently active.
   private buildAlertRewriteStatusMessage(): string {
     const includeExamples = this.uploadState.getIncludeAlertRewriteExamples();
-    return `Generating alert rewrites (${this.selectedAlertRewriteMode === AlertRewriteMode.AB ? 'planning on' : 'planning off'}, ${includeExamples ? 'good examples on' : 'good examples off'}).`;
+    return `Generating alert rewrites (${this.selectedAlertRewriteMode === AlertRewriteMode.ModelPlanning ? 'planning on' : 'planning off'}, ${includeExamples ? 'good examples on' : 'good examples off'}).`;
   }
 
   // Thin component-level handoff into the extracted alert rewrite workflow.

@@ -92,10 +92,10 @@ export enum PromptKey {
   AlertsRecommendations = 'alertsRecommendations'
 }
 
-// Alert rewrite flow variants: plan first or rewrite directly.
+// Alert rewrite flow variants: local planning only or an extra model planning pass.
 export enum AlertRewriteMode {
-  AB = 'ab',
-  GoodResultsOnly = 'good-results-only',
+  ModelPlanning = 'model-planning',
+  HeuristicPlanning = 'heuristic-planning',
 }
 
 // OpenRouter model ids supported by the assistant UI.

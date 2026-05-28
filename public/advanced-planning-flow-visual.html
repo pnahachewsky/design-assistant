@@ -333,7 +333,7 @@ flowchart TD
           <span class="label">Advanced planning off</span>
           <h3>Rewrite payload uses a simpler plan</h3>
           <pre><code>{
-  "mode": "good-results-only",
+  "mode": "heuristic-planning",
   "plan": {
     "alertType": "warning",
     "domainTags": ["service"],
@@ -354,7 +354,7 @@ flowchart TD
           <span class="label">Advanced planning on</span>
           <h3>Rewrite payload uses a model-generated plan</h3>
           <pre><code>{
-  "mode": "ab",
+  "mode": "model-planning",
   "plan": {
     "alertType": "warning",
     "domainTags": ["cra-services", "account-access"],

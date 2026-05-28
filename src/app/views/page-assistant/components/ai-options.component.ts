@@ -99,11 +99,11 @@ export class AiOptionsComponent implements OnInit {
   selectedAi: AiModel = AiModel.Gemini;
   selectedAis: AiModel[] = [];
 
-  selectedAlertRewriteMode: AlertRewriteMode = AlertRewriteMode.GoodResultsOnly;
+  selectedAlertRewriteMode: AlertRewriteMode = AlertRewriteMode.HeuristicPlanning;
   includeAlertRewriteExamples = true;
   useCompactAlertsPageContext = true;
   get useAlertPlanning(): boolean {
-    return this.selectedAlertRewriteMode === AlertRewriteMode.AB;
+    return this.selectedAlertRewriteMode === AlertRewriteMode.ModelPlanning;
   }
   set useAlertPlanning(useAlertPlanning: boolean) {
     this.onUseAlertPlanningSelect(useAlertPlanning);
@@ -153,8 +153,8 @@ export class AiOptionsComponent implements OnInit {
   onUseAlertPlanningSelect(useAlertPlanning: boolean): void {
     // The checkbox maps directly to the persisted enum mode used by the rewrite workflow.
     const mode = useAlertPlanning
-      ? AlertRewriteMode.AB
-      : AlertRewriteMode.GoodResultsOnly;
+      ? AlertRewriteMode.ModelPlanning
+      : AlertRewriteMode.HeuristicPlanning;
     this.selectedAlertRewriteMode = mode;
     this.uploadState.setAlertRewriteMode(mode);
     this.alertRewriteModeChange.emit();

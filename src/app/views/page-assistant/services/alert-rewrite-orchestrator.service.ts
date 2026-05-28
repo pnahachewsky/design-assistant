@@ -192,7 +192,7 @@ export class AlertRewriteOrchestratorService {
       let planModelName = 'heuristic';
 
       // Advanced-planning mode adds a model-generated plan on top of the local heuristic plan.
-      if (params.mode === AlertRewriteMode.AB) {
+      if (params.mode === AlertRewriteMode.ModelPlanning) {
         timingStart = performance.now();
         const alertPlanningMessages =
           await this.alertRewrite.buildAlertPlanningMessages({

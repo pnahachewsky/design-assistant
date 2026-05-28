@@ -389,7 +389,7 @@ export class AlertRewriteService {
       .filter((issue): issue is NonNullable<typeof issue> => !!issue);
 
     const planPayload =
-      params.mode === AlertRewriteMode.AB
+      params.mode === AlertRewriteMode.ModelPlanning
         ? params.plan
         : {
             alertType: params.plan.alertType,
