@@ -1,0 +1,129 @@
+{
+  "version": "draft-2026-05-28",
+  "scope": "Issue analysis for GCWeb topic page doormats.",
+  "precondition": "Run this analysis only when AIDA heuristics have detected one or more doormat items. Missing doormat-section detection is handled before invoking this skill.",
+  "selectors": {
+    "preferred_doormat_container": ".gc-srvinfo",
+    "legacy_or_basic_wrapper": ".wb-eqht.row",
+    "expected_item": "section with heading link and paragraph description"
+  },
+  "issue_categories": [
+    {
+      "id": "incorrect-structure",
+      "label": "Incorrect doormat structure",
+      "severity": "High",
+      "condition": "A doormat does not use the expected GCWeb wrapper, column, section, heading link, and paragraph description structure.",
+      "recommendation": "Use the GCWeb doormat structure: container, column, section, heading link, and one paragraph description."
+    },
+    {
+      "id": "missing-link-text",
+      "label": "Missing link text",
+      "severity": "High",
+      "condition": "The doormat has no link text or only empty/placeholder text.",
+      "recommendation": "Add descriptive link text that summarizes the destination page."
+    },
+    {
+      "id": "non-descriptive-link-text",
+      "label": "Non-descriptive link text",
+      "severity": "High",
+      "condition": "The link text is vague, generic, duplicated, or does not indicate what users can find or do.",
+      "recommendation": "Use action verbs or concise keywords that summarize the destination page's information or tasks."
+    },
+    {
+      "id": "link-text-too-long",
+      "label": "Link text too long",
+      "severity": "Medium",
+      "condition": "The link text exceeds 75 characters, or exceeds the 45-character preferred length without a strong reason.",
+      "recommendation": "Shorten the link text. Aim for 45 characters or fewer and do not exceed 75 characters."
+    },
+    {
+      "id": "link-text-punctuation",
+      "label": "Link text has trailing punctuation",
+      "severity": "Low",
+      "condition": "The link text ends with a period, colon, question mark, exclamation mark, semicolon, or comma.",
+      "recommendation": "Remove trailing punctuation from the link text."
+    },
+    {
+      "id": "inconsistent-title-style",
+      "label": "Inconsistent title style",
+      "severity": "Medium",
+      "condition": "Doormat link texts mix grammatical styles, such as nouns, actions, audiences, or products in the same set.",
+      "recommendation": "Use one title style across the set, such as all noun topics or all action phrases."
+    },
+    {
+      "id": "missing-description",
+      "label": "Missing description",
+      "severity": "High",
+      "condition": "The doormat has no paragraph description.",
+      "recommendation": "Add a short description that helps users decide whether the linked page is relevant."
+    },
+    {
+      "id": "description-too-long",
+      "label": "Description too long",
+      "severity": "Medium",
+      "condition": "The description exceeds 120 characters, or exceeds the 100-character preferred length without a strong reason.",
+      "recommendation": "Shorten the description. Aim for fewer than 100 characters and do not exceed 120 characters."
+    },
+    {
+      "id": "generic-description",
+      "label": "Generic description",
+      "severity": "High",
+      "condition": "The description uses broad reusable text that does not distinguish this doormat from others.",
+      "recommendation": "Make the description specific to the destination page, audience, benefit, service, or task."
+    },
+    {
+      "id": "description-repeats-link-text",
+      "label": "Description repeats link text",
+      "severity": "Medium",
+      "condition": "The description repeats the same words or meaning already present in the link text.",
+      "recommendation": "Use the description to add distinct decision-making information instead of repeating the title."
+    },
+    {
+      "id": "introductory-phrase",
+      "label": "Description starts with an introductory phrase",
+      "severity": "Medium",
+      "condition": "The description starts with phrases such as Includes, Information on, Learn more about, Find information about, or similar filler.",
+      "recommendation": "Start directly with keywords, tasks, eligibility, services, or page-specific information."
+    },
+    {
+      "id": "description-punctuation",
+      "label": "Description has trailing punctuation",
+      "severity": "Low",
+      "condition": "The description ends with punctuation.",
+      "recommendation": "Remove final punctuation from the description."
+    },
+    {
+      "id": "description-markup",
+      "label": "Description contains markup or links",
+      "severity": "Medium",
+      "condition": "The paragraph description contains links, bold text, bullets, or other markup.",
+      "recommendation": "Keep the description as plain text in a single paragraph."
+    },
+    {
+      "id": "duplicate-or-near-duplicate-description",
+      "label": "Duplicate or near-duplicate description",
+      "severity": "High",
+      "condition": "Two or more doormats have identical or nearly identical descriptions.",
+      "recommendation": "Rewrite each description so users can tell the doormats apart."
+    },
+    {
+      "id": "inconsistent-description-style",
+      "label": "Inconsistent description style",
+      "severity": "Medium",
+      "condition": "Descriptions mix comma-separated keywords, complete sentences, task phrases, eligibility summaries, or marketing-style language inconsistently.",
+      "recommendation": "Use one description style across the set, preferably concise comma-separated keywords or task phrases."
+    },
+    {
+      "id": "promotional-language",
+      "label": "Promotional language",
+      "severity": "Medium",
+      "condition": "The doormat uses promotional, persuasive, or marketing-style wording instead of neutral service information.",
+      "recommendation": "Use neutral, task-focused language that describes what users can find or do."
+    }
+  ],
+  "severity_guidance": {
+    "High": "Blocks users from understanding or using the doormat correctly, or makes doormats indistinguishable.",
+    "Medium": "Reduces clarity, scannability, consistency, or compliance with GCWeb guidance.",
+    "Low": "Minor style or cleanup issue that should be fixed when editing the doormat."
+  }
+}

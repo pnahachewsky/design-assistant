@@ -1,0 +1,50 @@
+{
+  "type": "object",
+  "required": ["doormats"],
+  "properties": {
+    "page_summary": {
+      "type": "object",
+      "properties": {
+        "doormat_count": { "type": "integer", "minimum": 0 },
+        "detected_wrapper": { "type": "string" },
+        "overall_style": { "type": "string" },
+        "overall_assessment": { "type": "string" }
+      }
+    },
+    "doormats": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["doormat_index", "link_text", "href", "description", "issues"],
+        "properties": {
+          "doormat_index": { "type": "integer", "minimum": 1 },
+          "link_text": { "type": "string" },
+          "href": { "type": "string" },
+          "description": { "type": "string" },
+          "link_text_character_count": { "type": "integer", "minimum": 0 },
+          "description_character_count": { "type": "integer", "minimum": 0 },
+          "issues": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "issue_category",
+                "description",
+                "recommendation",
+                "severity"
+              ],
+              "properties": {
+                "issue_category": { "type": "string" },
+                "description": { "type": "string" },
+                "recommendation": { "type": "string" },
+                "severity": { "type": "string", "enum": ["High", "Medium", "Low"] },
+                "include": { "type": "boolean" },
+                "evidence": { "type": "string" }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

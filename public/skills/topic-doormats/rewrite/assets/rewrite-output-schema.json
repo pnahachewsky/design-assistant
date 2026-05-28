@@ -1,0 +1,36 @@
+{
+  "type": "object",
+  "required": ["replacements"],
+  "properties": {
+    "replacements": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "doormat_index",
+          "href",
+          "rewritten_link_text",
+          "rewritten_description",
+          "updated_html"
+        ],
+        "properties": {
+          "doormat_index": { "type": "integer", "minimum": 1 },
+          "href": { "type": "string" },
+          "rewritten_link_text": { "type": "string" },
+          "rewritten_description": { "type": "string" },
+          "link_text_character_count": { "type": "integer", "minimum": 0 },
+          "description_character_count": { "type": "integer", "minimum": 0 },
+          "updated_html": { "type": "string" },
+          "changes_made": {
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "unresolved_notes": {
+            "type": "array",
+            "items": { "type": "string" }
+          }
+        }
+      }
+    }
+  }
+}
