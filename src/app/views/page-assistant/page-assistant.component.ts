@@ -45,7 +45,7 @@ import { SkillManagerService } from './services/skill-manager.service';
 import { AlertContextService } from './services/alert-context.service';
 import {
   coerceInteractiveResultLeadIns,
-  getReportableAlerts,
+  getReportableAlertsFromHtml,
   removeNonReportableAlertsFromHtml,
 } from './services/alert-reportable.utils';
 import { AlertRewriteOrchestratorService } from './services/alert-rewrite-orchestrator.service';
@@ -738,6 +738,24 @@ export class PageAssistantCompareComponent
     return `Generating alert rewrites (${includeExamples ? 'good examples on' : 'good examples off'}).`;
   }
 
+  private getReportableAlertsFromHtml(html: string): HTMLElement[] {
+    return getReportableAlertsFromHtml(html, {
+      interactiveResultLeadIns: this.getInteractiveResultLeadIns(),
+    });
+  }
+
+  private showNoReportableAlertsMessage(): void {
+    this.statusSeverity = 'info';
+    this.statusMessage = 'No reportable alerts found on this page.';
+    this.messageService.add({
+      severity: 'info',
+      summary: 'No reportable alerts found',
+      detail:
+        'The alert flow was skipped because this page does not contain any reportable alerts.',
+      life: 5000,
+    });
+  }
+
   // Thin component-level handoff into the extracted alert rewrite workflow.
   // The component keeps status updates and final state writes, while the service
   // owns planning, retries, guards, and HTML rewrite orchestration.
@@ -763,19 +781,9 @@ export class PageAssistantCompareComponent
       return false;
     }
 
-    const alertDoc = new DOMParser().parseFromString(params.html, 'text/html');
-    const reportableAlerts = getReportableAlerts(alertDoc, {
-      interactiveResultLeadIns: this.getInteractiveResultLeadIns(),
-    });
+    const reportableAlerts = this.getReportableAlertsFromHtml(params.html);
     if (!reportableAlerts.length) {
-      this.statusSeverity = 'info';
-      this.statusMessage = 'No reportable alerts found on this page.';
-      this.messageService.add({
-        severity: 'info',
-        summary: 'No reportable alerts found',
-        detail: 'The alert rewrite flow was skipped because this page does not contain any reportable alerts.',
-        life: 5000,
-      });
+      this.showNoReportableAlertsMessage();
       return false;
     }
 
@@ -899,6 +907,7 @@ export class PageAssistantCompareComponent
     let usedCachedAlertIssues = false;
     let alertIssuesPromptSent = false;
     let alertRewriteRan = false;
+    let aiRequestStarted = false;
     this.isLoading = true;
     this.aiDisabled = 'Wait for response from AI';
     this.statusSeverity = 'info';
@@ -922,6 +931,13 @@ export class PageAssistantCompareComponent
       selectedPromptForTiming = this.selectedPromptKey;
       requestPromptForTiming = promptKeyForRequest;
       timingFlow = isAlertFlow ? 'alert-issues-and-rewrite' : 'single-prompt';
+
+      if (isAlertFlow && !this.getReportableAlertsFromHtml(html).length) {
+        timingFlow = 'no-reportable-alerts';
+        this.showNoReportableAlertsMessage();
+        return;
+      }
+
       const prompt = await this.getPromptForKey(promptKeyForRequest);
       const model = this.selectedAiModel;
       const requestedModelShort = this.getShortModelName(model);
@@ -1027,6 +1043,7 @@ export class PageAssistantCompareComponent
           });
         }
 
+        aiRequestStarted = true;
         const orResponse = await fetch(url, {
           method: 'POST',
           headers,
@@ -1299,14 +1316,16 @@ export class PageAssistantCompareComponent
         usedCachedAlertIssues,
         totalMs: Math.round(endTime - startTime),
       });
-      this.messageService.add({
-        severity: 'info',
-        summary: this.translate.instant('common.requestComplete'),
-        detail: this.translate.instant('common.totalTime', {
-          time: durationInSeconds,
-        }),
-        life: 10000,
-      });
+      if (aiRequestStarted) {
+        this.messageService.add({
+          severity: 'info',
+          summary: this.translate.instant('common.requestComplete'),
+          detail: this.translate.instant('common.totalTime', {
+            time: durationInSeconds,
+          }),
+          life: 10000,
+        });
+      }
     }
   }
 

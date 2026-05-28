@@ -20,6 +20,10 @@ import { UploadStateService } from '../../../services/upload-state.service';
 import { ValidatorService } from '../../../services/validator.service';
 import { AlertAiService } from '../../../services/alert-ai.service';
 import {
+  coerceInteractiveResultLeadIns,
+  getReportableAlertsFromHtml,
+} from '../../../services/alert-reportable.utils';
+import {
   ComponentAiService,
   ComponentAiInput,
   ComponentAiResult,
@@ -198,6 +202,7 @@ export class ComponentGuidanceComponent implements OnInit, OnDestroy {
     if (data?.originalHtml) {
       this.guidanceList = this.validator.collectGuidanceUrls(data.originalHtml);
       this.rows = this.buildRows(this.guidanceList);
+      this.removeAlertRowWhenNoReportableAlerts(data.originalHtml);
       this.syncAlertRowSelection();
     }
     this.applyCachedAlertIssues();
@@ -240,6 +245,24 @@ export class ComponentGuidanceComponent implements OnInit, OnDestroy {
       __urlKey: r.__urlKey,
       health: 'unknown',
     }));
+  }
+
+  private removeAlertRowWhenNoReportableAlerts(html: string): void {
+    const reportableAlerts = getReportableAlertsFromHtml(html, {
+      interactiveResultLeadIns: this.getInteractiveResultLeadIns(),
+    });
+    if (reportableAlerts.length) return;
+
+    this.rows = this.rows.filter((row) => row.__nameKey !== this.alertsNameKey);
+    this.selectedRows = this.selectedRows.filter(
+      (row) => row.__nameKey !== this.alertsNameKey,
+    );
+  }
+
+  private getInteractiveResultLeadIns(): string[] {
+    return coerceInteractiveResultLeadIns(
+      this.translate.instant('page.alerts.interactiveResultLeadIns'),
+    );
   }
 
   /** Click handler for the GenAI button. */

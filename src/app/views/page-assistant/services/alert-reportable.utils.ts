@@ -17,6 +17,16 @@ export function getReportableAlerts(
   );
 }
 
+export function getReportableAlertsFromHtml(
+  sourceHtml: string,
+  options?: AlertReportableOptions,
+): HTMLElement[] {
+  if (!sourceHtml) return [];
+
+  const doc = new DOMParser().parseFromString(sourceHtml, 'text/html');
+  return getReportableAlerts(doc, options);
+}
+
 export function removeNonReportableAlertsFromHtml(
   sourceHtml: string,
   options?: AlertReportableOptions,
