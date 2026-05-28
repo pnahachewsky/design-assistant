@@ -1,0 +1,50 @@
+// Archived from AlertRewriteOrchestratorService.generateRecommendations.
+// This branch ran between the local heuristic plan and rewrite prompt construction.
+
+const initialPlan = this.alertRewrite.buildHeuristicPlan({
+  alertHtml,
+  alertText,
+  alertType: this.alertRewrite.inferAlertType(alertHtml),
+  issues: relevantIssues,
+});
+let plan = initialPlan;
+let planModelName = 'heuristic';
+
+// Advanced-planning mode adds a model-generated plan on top of the local heuristic plan.
+if (params.mode === AlertRewriteMode.ModelPlanning) {
+  timingStart = performance.now();
+  const alertPlanningMessages =
+    await this.alertRewrite.buildAlertPlanningMessages({
+      alertHtml,
+      alertText,
+      alertType: initialPlan.alertType,
+      issues: relevantIssues,
+    });
+  this.addElapsed(timings, 'planningPromptMs', timingStart);
+
+  timingStart = performance.now();
+  const alertPlanningResponse = await params.callOpenRouterForMessages(
+    params.model,
+    params.headers,
+    params.url,
+    alertPlanningMessages,
+    `Alert ${alertIndex} alertPlanning`,
+  );
+  this.addElapsed(timings, 'planningAiMs', timingStart);
+  const parsedPlan = this.alertRewrite.parseAlertPlanningResponse(
+    alertPlanningResponse.text,
+    initialPlan,
+  );
+  if (parsedPlan) {
+    plan = parsedPlan;
+  }
+  planModelName = params.getShortModelName(alertPlanningResponse.usedModel);
+}
+
+const selectedExamples = params.includeExamples
+  ? this.alertRewrite.selectExamples(plan, examples, 2, {
+      originalHeading,
+      originalAlertText: alertText,
+    })
+  : [];
+

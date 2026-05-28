@@ -38502,11 +38502,6 @@ var PromptKey;
   PromptKey2["AlertsIssues"] = "alertsIssues";
   PromptKey2["AlertsRecommendations"] = "alertsRecommendations";
 })(PromptKey || (PromptKey = {}));
-var AlertRewriteMode;
-(function(AlertRewriteMode2) {
-  AlertRewriteMode2["AB"] = "ab";
-  AlertRewriteMode2["GoodResultsOnly"] = "good-results-only";
-})(AlertRewriteMode || (AlertRewriteMode = {}));
 var AiModel;
 (function(AiModel2) {
   AiModel2["NemotronSuper"] = "nvidia/nemotron-3-super-120b-a12b:free";
@@ -38553,10 +38548,7 @@ var UploadStateService = class _UploadStateService {
   uploadTypeKey = "pageAssistant.uploadType";
   aiModelKey = "pageAssistant.aiModel";
   editPromptKey = "pageAssistant.editPrompt";
-  alertRewriteModeKey = "pageAssistant.alertRewriteMode";
   includeAlertRewriteExamplesKey = "pageAssistant.includeAlertRewriteExamples";
-  includeBeforeTextInAlertRewriteExamplesKey = "pageAssistant.includeBeforeTextInAlertRewriteExamples";
-  includeLinkWritingRulesKey = "pageAssistant.includeLinkWritingRules";
   useCompactAlertsPageContextKey = "pageAssistant.useCompactAlertsPageContext";
   // Upload source chosen in the drawer.
   selectedUploadType = signal("url");
@@ -38579,33 +38571,12 @@ var UploadStateService = class _UploadStateService {
     this.editPromptText.set(prompt ?? "");
     this.storage.saveData(this.editPromptKey, prompt ?? "");
   }
-  // Alert rewrite mode (plan-first vs direct rewrite).
-  selectedAlertRewriteMode = signal(AlertRewriteMode.GoodResultsOnly);
-  getAlertRewriteMode = computed(() => this.selectedAlertRewriteMode());
-  setAlertRewriteMode(mode) {
-    this.selectedAlertRewriteMode.set(mode);
-    this.storage.saveData(this.alertRewriteModeKey, mode);
-  }
   // Whether rewrite prompts should include selected good examples.
   includeAlertRewriteExamples = signal(true);
   getIncludeAlertRewriteExamples = computed(() => this.includeAlertRewriteExamples());
   setIncludeAlertRewriteExamples(include) {
     this.includeAlertRewriteExamples.set(!!include);
     this.storage.saveData(this.includeAlertRewriteExamplesKey, String(!!include));
-  }
-  // Whether examples include the original "before" text as extra context.
-  includeBeforeTextInAlertRewriteExamples = signal(false);
-  getIncludeBeforeTextInAlertRewriteExamples = computed(() => this.includeBeforeTextInAlertRewriteExamples());
-  setIncludeBeforeTextInAlertRewriteExamples(include) {
-    this.includeBeforeTextInAlertRewriteExamples.set(!!include);
-    this.storage.saveData(this.includeBeforeTextInAlertRewriteExamplesKey, String(!!include));
-  }
-  // Whether alert rewrites include the standalone link-writing rules block.
-  includeLinkWritingRules = signal(true);
-  getIncludeLinkWritingRules = computed(() => this.includeLinkWritingRules());
-  setIncludeLinkWritingRules(include) {
-    this.includeLinkWritingRules.set(!!include);
-    this.storage.saveData(this.includeLinkWritingRulesKey, String(!!include));
   }
   // Whether alert issue analysis uses compact extracted page context instead of raw HTML.
   useCompactAlertsPageContext = signal(true);
@@ -38629,8 +38600,6 @@ var UploadStateService = class _UploadStateService {
       this.storage.removeData(this.aiModelKey);
       this.storage.removeData(this.uploadDataKey);
       this.storage.removeData(this.includeAlertRewriteExamplesKey);
-      this.storage.removeData(this.includeBeforeTextInAlertRewriteExamplesKey);
-      this.storage.removeData(this.includeLinkWritingRulesKey);
       this.storage.removeData("pageAssistant.useJsonAlertsIssuesPrompt");
       this.storage.removeData(this.useCompactAlertsPageContextKey);
       this.storage.removeData("pageAssistant.useSkillPrompts");
@@ -38694,20 +38663,14 @@ var UploadStateService = class _UploadStateService {
     this.selectedUploadType.set("url");
     this.selectedAiModel.set(AiModel.Gemini);
     this.editPromptText.set("");
-    this.selectedAlertRewriteMode.set(AlertRewriteMode.GoodResultsOnly);
     this.includeAlertRewriteExamples.set(true);
-    this.includeBeforeTextInAlertRewriteExamples.set(false);
-    this.includeLinkWritingRules.set(true);
     this.useCompactAlertsPageContext.set(true);
     this.uploadData.set(null);
     this.prevUploadData = [];
     this.storage.removeData(this.uploadTypeKey);
     this.storage.removeData(this.aiModelKey);
     this.storage.removeData(this.editPromptKey);
-    this.storage.removeData(this.alertRewriteModeKey);
     this.storage.removeData(this.includeAlertRewriteExamplesKey);
-    this.storage.removeData(this.includeBeforeTextInAlertRewriteExamplesKey);
-    this.storage.removeData(this.includeLinkWritingRulesKey);
     this.storage.removeData("pageAssistant.useJsonAlertsIssuesPrompt");
     this.storage.removeData(this.useCompactAlertsPageContextKey);
     this.storage.removeData("pageAssistant.useSkillPrompts");
@@ -38738,21 +38701,9 @@ var UploadStateService = class _UploadStateService {
     if (typeof storedEditPrompt === "string") {
       this.editPromptText.set(storedEditPrompt);
     }
-    const storedAlertRewriteMode = this.storage.getData(this.alertRewriteModeKey);
-    if (storedAlertRewriteMode && Object.values(AlertRewriteMode).includes(storedAlertRewriteMode)) {
-      this.selectedAlertRewriteMode.set(storedAlertRewriteMode);
-    }
     const storedIncludeAlertRewriteExamples = this.storage.getData(this.includeAlertRewriteExamplesKey);
     if (storedIncludeAlertRewriteExamples === "true" || storedIncludeAlertRewriteExamples === "false") {
       this.includeAlertRewriteExamples.set(storedIncludeAlertRewriteExamples === "true");
-    }
-    const storedIncludeBeforeTextInExamples = this.storage.getData(this.includeBeforeTextInAlertRewriteExamplesKey);
-    if (storedIncludeBeforeTextInExamples === "true" || storedIncludeBeforeTextInExamples === "false") {
-      this.includeBeforeTextInAlertRewriteExamples.set(storedIncludeBeforeTextInExamples === "true");
-    }
-    const storedIncludeLinkRules = this.storage.getData(this.includeLinkWritingRulesKey);
-    if (storedIncludeLinkRules === "true" || storedIncludeLinkRules === "false") {
-      this.includeLinkWritingRules.set(storedIncludeLinkRules === "true");
     }
     const storedUseCompactAlertsPageContext = this.storage.getData(this.useCompactAlertsPageContextKey);
     if (storedUseCompactAlertsPageContext === "true" || storedUseCompactAlertsPageContext === "false") {
@@ -100301,7 +100252,6 @@ export {
   SourceViewType,
   CompareTask,
   PromptKey,
-  AlertRewriteMode,
   AiModel,
   LocalStorageService,
   UploadStateService,
@@ -100412,4 +100362,4 @@ export {
    * License: MIT
    *)
 */
-//# sourceMappingURL=chunk-ADDQFKSU.js.map
+//# sourceMappingURL=chunk-BDC7DLB4.js.map
