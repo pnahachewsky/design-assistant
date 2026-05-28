@@ -71,28 +71,6 @@
 
                 @if (selectedPrompt === 'alertsRecommendations') {
                   <div class="flex flex-column gap-2 mt-3">
-                    <p class="font-bold m-0">Alert rewriting options</p>
-                    <div class="p-field-checkbox">
-                      <p-checkbox
-                        [(ngModel)]="includeAlertRewriteExamples"
-                        [binary]="true"
-                        inputId="includeAlertRewriteExamples"
-                        (onChange)="onIncludeAlertRewriteExamplesSelect(includeAlertRewriteExamples)"
-                      />
-                      <label for="includeAlertRewriteExamples" class="pl-2">
-                        Use examples
-                      </label>
-                    </div>
-                    <div class="p-field-checkbox mt-2">
-                      <p-checkbox
-                        [(ngModel)]="useAlertPlanning"
-                        [binary]="true"
-                        inputId="useAlertPlanning"
-                      />
-                      <label for="useAlertPlanning" class="pl-2">
-                        Advanced AI planning before rewrite
-                      </label>
-                    </div>
                     <div class="p-field-checkbox mt-2">
                       <p-checkbox
                         [(ngModel)]="useCompactAlertsPageContext"
@@ -102,6 +80,17 @@
                       />
                       <label for="useCompactAlertsPageContext" class="pl-2">
                         Compact context (smaller models, < 120B)
+                      </label>
+                    </div>
+                    <div class="p-field-checkbox">
+                      <p-checkbox
+                        [(ngModel)]="includeAlertRewriteExamples"
+                        [binary]="true"
+                        inputId="includeAlertRewriteExamples"
+                        (onChange)="onIncludeAlertRewriteExamplesSelect(includeAlertRewriteExamples)"
+                      />
+                      <label for="includeAlertRewriteExamples" class="pl-2">
+                        Use examples for rewriting
                       </label>
                     </div>
                   </div>

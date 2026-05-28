@@ -5,7 +5,6 @@ import {
   AlertRewritePlan,
   AlertRewriteService,
 } from './alert-rewrite.service';
-import { AlertRewriteMode } from '../data/data.model';
 
 describe('AlertRewriteService', () => {
   let service: AlertRewriteService;
@@ -55,12 +54,9 @@ describe('AlertRewriteService', () => {
         }
         if (url.includes('ai-prompts/alerts-rewrite-rules.json')) {
           return new Response(
-            JSON.stringify({
-              version: 'test',
-              alertPlanning: {
-                systemPromptLines: ['Plan alert rewrites.'],
-              },
-              alertRewrite: {
+              JSON.stringify({
+                version: 'test',
+                alertRewrite: {
                 styleRulesBase: ['Keep the alert scoped.'],
                 styleRulesWithExamples: [],
                 systemPromptWithExamplesLines: ['Rewrite alert with examples.'],
@@ -84,7 +80,6 @@ describe('AlertRewriteService', () => {
     );
 
     const messages = await service.buildAlertRewriteMessages({
-      mode: AlertRewriteMode.HeuristicPlanning,
       originalAlertText: 'Please upload your documents.',
       originalAlertHtml: '<section class="alert alert-info"><p>Please upload your documents.</p></section>',
       plan,
@@ -158,9 +153,6 @@ describe('AlertRewriteService', () => {
           return new Response(
             JSON.stringify({
               version: 'test',
-              alertPlanning: {
-                systemPromptLines: ['Plan alert rewrites.'],
-              },
               alertRewrite: {
                 styleRulesBase: ['Keep the alert scoped.'],
                 styleRulesWithExamples: [],
@@ -185,7 +177,6 @@ describe('AlertRewriteService', () => {
     );
 
     const messages = await service.buildAlertRewriteMessages({
-      mode: AlertRewriteMode.HeuristicPlanning,
       originalAlertText:
         'The rebate has received Royal Assent. First-time home buyers rebate',
       originalAlertHtml:
@@ -226,7 +217,6 @@ describe('AlertRewriteService', () => {
     ).toBeTrue();
 
     const misclassifiedMessages = await service.buildAlertRewriteMessages({
-      mode: AlertRewriteMode.HeuristicPlanning,
       originalAlertText: 'The rebate has received Royal Assent.',
       originalAlertHtml:
         '<section class="alert alert-info"><p>The rebate has received Royal Assent. <a href="/rebate.html">First-time home buyers rebate</a></p></section>',

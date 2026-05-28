@@ -1,5 +1,5 @@
 import { Injectable, signal, computed, inject } from '@angular/core';
-import { UploadData, ModifiedData, OriginalData, AiModel, AlertRewriteMode } from '../data/data.model'
+import { UploadData, ModifiedData, OriginalData, AiModel } from '../data/data.model'
 import { LocalStorageService } from '../../../services/local-storage.service';
 
 @Injectable({
@@ -12,7 +12,6 @@ export class UploadStateService {
   private readonly uploadTypeKey = 'pageAssistant.uploadType';
   private readonly aiModelKey = 'pageAssistant.aiModel';
   private readonly editPromptKey = 'pageAssistant.editPrompt';
-  private readonly alertRewriteModeKey = 'pageAssistant.alertRewriteMode';
   private readonly includeAlertRewriteExamplesKey =
     'pageAssistant.includeAlertRewriteExamples';
   private readonly useCompactAlertsPageContextKey =
@@ -40,16 +39,6 @@ export class UploadStateService {
   setEditPromptText(prompt: string) {
     this.editPromptText.set(prompt ?? '');
     this.storage.saveData(this.editPromptKey, prompt ?? '');
-  }
-
-  // Alert rewrite mode (local heuristic plan vs extra model-generated plan).
-  private selectedAlertRewriteMode = signal<AlertRewriteMode>(
-    AlertRewriteMode.HeuristicPlanning,
-  );
-  getAlertRewriteMode = computed(() => this.selectedAlertRewriteMode());
-  setAlertRewriteMode(mode: AlertRewriteMode) {
-    this.selectedAlertRewriteMode.set(mode);
-    this.storage.saveData(this.alertRewriteModeKey, mode);
   }
 
   // Whether rewrite prompts should include selected good examples.
@@ -162,7 +151,6 @@ export class UploadStateService {
     this.selectedUploadType.set('url'); // default to URL
     this.selectedAiModel.set(AiModel.Gemini);
     this.editPromptText.set('');
-    this.selectedAlertRewriteMode.set(AlertRewriteMode.HeuristicPlanning);
     this.includeAlertRewriteExamples.set(true);
     this.useCompactAlertsPageContext.set(true);
     this.uploadData.set(null);
@@ -170,7 +158,6 @@ export class UploadStateService {
     this.storage.removeData(this.uploadTypeKey);
     this.storage.removeData(this.aiModelKey);
     this.storage.removeData(this.editPromptKey);
-    this.storage.removeData(this.alertRewriteModeKey);
     this.storage.removeData(this.includeAlertRewriteExamplesKey);
     this.storage.removeData('pageAssistant.useJsonAlertsIssuesPrompt');
     this.storage.removeData(this.useCompactAlertsPageContextKey);
@@ -208,18 +195,6 @@ export class UploadStateService {
       this.editPromptText.set(storedEditPrompt);
     }
 
-    const storedAlertRewriteMode = this.normalizeStoredAlertRewriteMode(
-      this.storage.getData(this.alertRewriteModeKey),
-    );
-    if (
-      storedAlertRewriteMode &&
-      Object.values(AlertRewriteMode).includes(
-        storedAlertRewriteMode as AlertRewriteMode,
-      )
-    ) {
-      this.selectedAlertRewriteMode.set(storedAlertRewriteMode as AlertRewriteMode);
-    }
-
     const storedIncludeAlertRewriteExamples = this.storage.getData(
       this.includeAlertRewriteExamplesKey,
     );
@@ -254,20 +229,6 @@ export class UploadStateService {
     } catch (err) {
       console.warn('Failed to restore upload state:', err);
     }
-  }
-
-  private normalizeStoredAlertRewriteMode(value: unknown): AlertRewriteMode | null {
-    // Preserve sessions saved before the enum values were renamed.
-    if (value === AlertRewriteMode.ModelPlanning || value === 'ab') {
-      return AlertRewriteMode.ModelPlanning;
-    }
-    if (
-      value === AlertRewriteMode.HeuristicPlanning ||
-      value === 'good-results-only'
-    ) {
-      return AlertRewriteMode.HeuristicPlanning;
-    }
-    return null;
   }
 
   private isPageReload(): boolean {

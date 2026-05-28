@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { TranslateService } from '@ngx-translate/core';
 import { getAlertRewriteRules } from '../../../common/constants/alert-rewrite-rules.constants';
-import { AlertRewriteMode, AiModel } from '../data/data.model';
+import { AiModel } from '../data/data.model';
 import { UrlDataService } from './url-data.service';
 import {
   AlertRewriteIssueInput,
@@ -37,8 +37,6 @@ type AlertRewriteTimingKey =
   | 'parseAlertsMs'
   | 'loadExamplesMs'
   | 'buildCompactContextMs'
-  | 'planningPromptMs'
-  | 'planningAiMs'
   | 'rewritePromptMs'
   | 'rewriteAiMs'
   | 'parseAndGuardMs'
@@ -66,8 +64,6 @@ export class AlertRewriteOrchestratorService {
       parseAlertsMs: 0,
       loadExamplesMs: 0,
       buildCompactContextMs: 0,
-      planningPromptMs: 0,
-      planningAiMs: 0,
       rewritePromptMs: 0,
       rewriteAiMs: 0,
       parseAndGuardMs: 0,
@@ -113,7 +109,6 @@ export class AlertRewriteOrchestratorService {
     model: AiModel;
     headers: Record<string, string>;
     url: string;
-    mode: AlertRewriteMode;
     includeExamples: boolean;
     useCompactAlertsPageContext: boolean;
     forceLocalRepairForTesting: boolean;
@@ -188,42 +183,9 @@ export class AlertRewriteOrchestratorService {
         alertType: this.alertRewrite.inferAlertType(alertHtml),
         issues: relevantIssues,
       });
-      let plan = initialPlan;
-      let planModelName = 'heuristic';
-
-      // Advanced-planning mode adds a model-generated plan on top of the local heuristic plan.
-      if (params.mode === AlertRewriteMode.ModelPlanning) {
-        timingStart = performance.now();
-        const alertPlanningMessages =
-          await this.alertRewrite.buildAlertPlanningMessages({
-            alertHtml,
-            alertText,
-            alertType: initialPlan.alertType,
-            issues: relevantIssues,
-          });
-        this.addElapsed(timings, 'planningPromptMs', timingStart);
-
-        timingStart = performance.now();
-        const alertPlanningResponse = await params.callOpenRouterForMessages(
-          params.model,
-          params.headers,
-          params.url,
-          alertPlanningMessages,
-          `Alert ${alertIndex} alertPlanning`,
-        );
-        this.addElapsed(timings, 'planningAiMs', timingStart);
-        const parsedPlan = this.alertRewrite.parseAlertPlanningResponse(
-          alertPlanningResponse.text,
-          initialPlan,
-        );
-        if (parsedPlan) {
-          plan = parsedPlan;
-        }
-        planModelName = params.getShortModelName(alertPlanningResponse.usedModel);
-      }
 
       const selectedExamples = params.includeExamples
-        ? this.alertRewrite.selectExamples(plan, examples, 2, {
+        ? this.alertRewrite.selectExamples(initialPlan, examples, 2, {
             originalHeading,
             originalAlertText: alertText,
           })
@@ -239,7 +201,7 @@ export class AlertRewriteOrchestratorService {
       const originalHasAnchor = /<a\b/i.test(alertHtml);
       const allowLinkRemoval = this.alertRewriteGuard.shouldAllowAlertLinkRemoval(
         relevantIssues,
-        plan,
+        initialPlan,
       );
 
       // We allow one retry with additional corrective instructions before
@@ -250,12 +212,11 @@ export class AlertRewriteOrchestratorService {
         // are appended to the style rules seen by the model.
         timingStart = performance.now();
         const alertRewriteMessages = await this.alertRewrite.buildAlertRewriteMessages({
-          mode: params.mode,
           originalHeading,
           originalAlertText: alertText,
           originalAlertHtml: alertHtml,
           compactAlertPayload,
-          plan,
+          plan: initialPlan,
           issues: relevantIssues,
           examples: selectedExamples,
           retryInstructions: retryInstructionsForAttempt,
@@ -280,7 +241,7 @@ export class AlertRewriteOrchestratorService {
         timingStart = performance.now();
         const parsedResult = this.alertRewrite.parseAlertRewriteResponse(
           rewriteResponse.text,
-          plan,
+          initialPlan,
           selectedExamples,
         );
         this.debugLog('Alert rewrite parsed model output', {
@@ -407,7 +368,7 @@ export class AlertRewriteOrchestratorService {
                 ...parsedResult,
                 rewrittenAlertHtml: repairedHtml,
               }),
-              plan,
+              initialPlan,
               selectedExamples,
             );
             if (
@@ -488,7 +449,7 @@ export class AlertRewriteOrchestratorService {
           originalAlertHtml: alertHtml,
           originalHeading,
           originalAlertText: alertText,
-          plan,
+          plan: initialPlan,
           selectedExamples,
           allowLinkRemoval,
         });
@@ -584,9 +545,8 @@ export class AlertRewriteOrchestratorService {
       });
 
       this.debugLog('Alert rewrite iteration', {
-        mode: params.mode,
         alertIndex,
-        plan,
+        plan: initialPlan,
         selectedExampleIds: selectedExamples.map((example) => example.id),
         originalHeading,
         finalHeading: rewriteResult.rewrittenHeading,
@@ -594,7 +554,7 @@ export class AlertRewriteOrchestratorService {
         finalRewriteHtml: rewriteResult.rewrittenAlertHtml,
         appliedDirectives: rewriteResult.appliedDirectives,
         exampleIdsUsed: rewriteResult.exampleIdsUsed,
-        planModel: planModelName,
+        planModel: 'heuristic',
         rewriteModel: rewriteModelName,
         copyGuardTriggered,
         blockedExampleId,
@@ -617,7 +577,6 @@ export class AlertRewriteOrchestratorService {
       this.addElapsed(timings, 'formatHtmlMs', timingStart);
       console.info('Alert rewrite timing', {
         requestedModel: params.model,
-        mode: params.mode,
         rewrites: 0,
         totalMs: Math.round(performance.now() - start),
         timings: this.roundTimings(timings),
@@ -634,7 +593,6 @@ export class AlertRewriteOrchestratorService {
     this.addElapsed(timings, 'formatHtmlMs', timingStart);
     console.info('Alert rewrite timing', {
       requestedModel: params.model,
-      mode: params.mode,
       rewrites: rewrites.length,
       totalMs: Math.round(performance.now() - start),
       timings: this.roundTimings(timings),

@@ -1,8 +1,5 @@
 export interface AlertRewriteRulesJson {
   version: string;
-  alertPlanning: {
-    systemPromptLines: string[];
-  };
   alertRewrite: {
     styleRulesBase: string[];
     styleRulesWithExamples: string[];
@@ -27,9 +24,6 @@ const ALERT_REWRITE_RULES_PATH = new URL(
 
 const ALERT_REWRITE_RULES_FALLBACK: AlertRewriteRulesJson = {
   version: 'fallback-inline',
-  alertPlanning: {
-    systemPromptLines: [],
-  },
   alertRewrite: {
     styleRulesBase: [],
     styleRulesWithExamples: [],
@@ -60,17 +54,12 @@ function toValidatedRules(raw: unknown): AlertRewriteRulesJson | null {
   if (!raw || typeof raw !== 'object') return null;
   const root = raw as Record<string, unknown>;
   const version = typeof root['version'] === 'string' ? root['version'].trim() : '';
-  const alertPlanning =
-    root['alertPlanning'] && typeof root['alertPlanning'] === 'object'
-      ? (root['alertPlanning'] as Record<string, unknown>)
-      : null;
   const alertRewrite =
     root['alertRewrite'] && typeof root['alertRewrite'] === 'object'
       ? (root['alertRewrite'] as Record<string, unknown>)
       : null;
-  if (!version || !alertPlanning || !alertRewrite) return null;
+  if (!version || !alertRewrite) return null;
 
-  const alertPlanningSystem = alertPlanning['systemPromptLines'];
   const styleRulesBase = alertRewrite['styleRulesBase'];
   const styleRulesWithExamples = alertRewrite['styleRulesWithExamples'];
   const systemWithExamples = alertRewrite['systemPromptWithExamplesLines'];
@@ -81,7 +70,6 @@ function toValidatedRules(raw: unknown): AlertRewriteRulesJson | null {
       : null;
 
   if (
-    !isStringArray(alertPlanningSystem) ||
     !isStringArray(styleRulesBase) ||
     !isStringArray(styleRulesWithExamples) ||
     !isStringArray(systemWithExamples) ||
@@ -119,9 +107,6 @@ function toValidatedRules(raw: unknown): AlertRewriteRulesJson | null {
 
   return {
     version,
-    alertPlanning: {
-      systemPromptLines: alertPlanningSystem,
-    },
     alertRewrite: {
       styleRulesBase,
       styleRulesWithExamples,

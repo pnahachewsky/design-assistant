@@ -1,6 +1,5 @@
 import { Injectable, inject } from '@angular/core';
 import { ChatMessage } from './openrouter.service';
-import { AlertRewriteMode } from '../data/data.model';
 import { getAlertRewriteRules } from '../../../common/constants/alert-rewrite-rules.constants';
 import { getCanadaCaStyleRules } from '../../../common/constants/canada-ca-style.constants';
 import { LinkWritingRulesService } from './link-writing-rules.service';
@@ -168,75 +167,6 @@ export class AlertRewriteService {
     };
   }
 
-  async buildAlertPlanningMessages(
-    input: AlertRewriteInput,
-  ): Promise<ChatMessage[]> {
-    const rules = await getAlertRewriteRules();
-    const systemPrompt = rules.alertPlanning.systemPromptLines.join('\n');
-    const compactAlertText = this.toDescriptionSnippet(input.alertText, 500);
-    const linkCount = (input.alertHtml.match(/<a\b/gi) || []).length;
-    const issues = input.issues
-      .map((issue) => {
-        const category = this.cleanString(issue.category);
-        const severity = this.cleanString(issue.severity);
-        const description = this.cleanString(issue.description);
-        const descriptionSnippet =
-          category && this.shouldIncludePlanningDescriptionSnippet(category)
-            ? this.toDescriptionSnippet(description, 140)
-            : '';
-        return {
-          category,
-          severity,
-          ...(descriptionSnippet ? { descriptionSnippet } : {}),
-        };
-      })
-      .filter((issue) => issue.category || issue.severity || issue.descriptionSnippet);
-
-    const userPayload = {
-      alertText: compactAlertText,
-      alertType: input.alertType,
-      signals: {
-        hasHeading: /<h[1-6]\b/i.test(input.alertHtml || ''),
-        hasLink: linkCount > 0,
-        linkCount,
-        wordCount: this.tokenizeComparisonText(input.alertText || '').length,
-      },
-      issues,
-    };
-
-    return [
-      { role: 'system', content: systemPrompt },
-      { role: 'user', content: JSON.stringify(userPayload) },
-    ];
-  }
-
-  parseAlertPlanningResponse(
-    text: string,
-    fallback: AlertRewritePlan,
-  ): AlertRewritePlan | null {
-    const parsed = this.looseJsonParse(this.stripCodeFences(text));
-    if (!parsed || typeof parsed !== 'object') {
-      return null;
-    }
-    const root = parsed as Record<string, unknown>;
-    const alertType = this.cleanString(root['alertType']) || fallback.alertType;
-    const domainTags = this.toStringArray(root['domainTags']);
-    const purposeTags = this.toStringArray(root['purposeTags']);
-    const criteriaMatched = this.toStringArray(root['criteriaMatched']);
-    const rawDirectives = Array.isArray(root['directives']) ? root['directives'] : [];
-    const directives = rawDirectives
-      .map((raw) => this.toDirective(raw))
-      .filter((directive): directive is AlertRewriteDirective => !!directive);
-
-    return {
-      alertType,
-      domainTags: domainTags.length ? domainTags : fallback.domainTags,
-      purposeTags: purposeTags.length ? purposeTags : fallback.purposeTags,
-      criteriaMatched: criteriaMatched.length ? criteriaMatched : fallback.criteriaMatched,
-      directives: directives.length ? this.uniqueDirectives(directives) : fallback.directives,
-    };
-  }
-
   selectExamples(
     plan: AlertRewritePlan,
     examples: AlertRewriteExample[],
@@ -289,7 +219,6 @@ export class AlertRewriteService {
   }
 
   async buildAlertRewriteMessages(params: {
-    mode: AlertRewriteMode;
     originalAlertText: string;
     originalHeading?: string;
     originalAlertHtml: string;
@@ -388,17 +317,6 @@ export class AlertRewriteService {
       })
       .filter((issue): issue is NonNullable<typeof issue> => !!issue);
 
-    const planPayload =
-      params.mode === AlertRewriteMode.ModelPlanning
-        ? params.plan
-        : {
-            alertType: params.plan.alertType,
-            domainTags: params.plan.domainTags,
-            purposeTags: params.plan.purposeTags,
-            criteriaMatched: params.plan.criteriaMatched,
-            directives: [],
-          };
-
     const systemPrompt = (
       params.examples.length
         ? rules.alertRewrite.systemPromptWithExamplesLines
@@ -406,7 +324,6 @@ export class AlertRewriteService {
     ).join('\n');
 
     const userPayload = {
-      mode: params.mode,
       styleRules,
       examples: params.examples.map((example) => ({
         id: example.id,
@@ -418,7 +335,13 @@ export class AlertRewriteService {
         purposeTags: example.purposeTags || [],
         egLinks: example.egLinks || [],
       })),
-      plan: planPayload,
+      plan: {
+        alertType: params.plan.alertType,
+        domainTags: params.plan.domainTags,
+        purposeTags: params.plan.purposeTags,
+        criteriaMatched: params.plan.criteriaMatched,
+        directives: [],
+      },
       issues: rawIssues,
       originalHeading: (params.originalHeading || '').trim(),
       originalAlertText: (params.originalAlertText || '').trim(),
@@ -1200,24 +1123,6 @@ export class AlertRewriteService {
 
   private cleanString(value: unknown): string {
     return typeof value === 'string' ? value.trim() : '';
-  }
-
-  private shouldIncludePlanningDescriptionSnippet(category: string): boolean {
-    const lower = (category || '').toLowerCase();
-    if (!lower) return false;
-    return (
-      lower.includes('misuse') ||
-      lower.includes('wrong component') ||
-      lower.includes('wrong type') ||
-      lower.includes('wrong placement') ||
-      lower.includes('low relevance') ||
-      lower.includes('focus order') ||
-      lower.includes('content clarity') ||
-      lower.includes('non-text') ||
-      lower.includes('accessibility/code') ||
-      lower.includes('outdated') ||
-      lower.includes('incorrect hierarchy')
-    );
   }
 
   private toDescriptionSnippet(value: string, maxLength: number): string {

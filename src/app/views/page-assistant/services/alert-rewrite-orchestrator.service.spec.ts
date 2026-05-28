@@ -15,7 +15,7 @@ import {
   type AlertHtmlRewrite,
 } from './alert-rewrite-guard.service';
 import { UrlDataService } from './url-data.service';
-import { AiModel, AlertRewriteMode } from '../data/data.model';
+import { AiModel } from '../data/data.model';
 
 describe('AlertRewriteOrchestratorService', () => {
   let service: AlertRewriteOrchestratorService;
@@ -162,7 +162,6 @@ describe('AlertRewriteOrchestratorService', () => {
       model: AiModel.NemotronSuper,
       headers: {},
       url: 'https://example.test',
-      mode: AlertRewriteMode.HeuristicPlanning,
       includeExamples: false,
       useCompactAlertsPageContext: false,
       forceLocalRepairForTesting: false,
@@ -227,7 +226,6 @@ describe('AlertRewriteOrchestratorService', () => {
       model: AiModel.NemotronSuper,
       headers: {},
       url: 'https://example.test',
-      mode: AlertRewriteMode.HeuristicPlanning,
       includeExamples: false,
       useCompactAlertsPageContext: false,
       forceLocalRepairForTesting: false,
@@ -283,7 +281,6 @@ describe('AlertRewriteOrchestratorService', () => {
       model: AiModel.NemotronSuper,
       headers: {},
       url: 'https://example.test',
-      mode: AlertRewriteMode.HeuristicPlanning,
       includeExamples: false,
       useCompactAlertsPageContext: false,
       forceLocalRepairForTesting: false,
@@ -323,7 +320,6 @@ describe('AlertRewriteOrchestratorService', () => {
       model: AiModel.NemotronSuper,
       headers: {},
       url: 'https://example.test',
-      mode: AlertRewriteMode.HeuristicPlanning,
       includeExamples: false,
       useCompactAlertsPageContext: false,
       forceLocalRepairForTesting: false,

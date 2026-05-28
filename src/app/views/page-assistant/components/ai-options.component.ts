@@ -15,7 +15,7 @@ import { SliderModule } from 'primeng/slider';
 import { TranslateModule } from "@ngx-translate/core";
 
 //Services
-import { CompareTask, PromptKey, AiModel, AlertRewriteMode } from '../data/data.model'
+import { CompareTask, PromptKey, AiModel } from '../data/data.model'
 import { UploadStateService } from '../services/upload-state.service';
 import { UploadUrlComponent } from './upload/upload-url.component';
 import { UploadPasteComponent } from './upload/upload-paste.component';
@@ -36,7 +36,6 @@ export class AiOptionsComponent implements OnInit {
   @Output() customPrompt = new EventEmitter<string>();
   @Output() editPrompt = new EventEmitter<string>();
   @Output() aiChange = new EventEmitter<AiModel>();
-  @Output() alertRewriteModeChange = new EventEmitter<void>();
   @Output() aiSubmit = new EventEmitter<void>();
 
   visible = false;
@@ -99,15 +98,8 @@ export class AiOptionsComponent implements OnInit {
   selectedAi: AiModel = AiModel.Gemini;
   selectedAis: AiModel[] = [];
 
-  selectedAlertRewriteMode: AlertRewriteMode = AlertRewriteMode.HeuristicPlanning;
   includeAlertRewriteExamples = true;
   useCompactAlertsPageContext = true;
-  get useAlertPlanning(): boolean {
-    return this.selectedAlertRewriteMode === AlertRewriteMode.ModelPlanning;
-  }
-  set useAlertPlanning(useAlertPlanning: boolean) {
-    this.onUseAlertPlanningSelect(useAlertPlanning);
-  }
 
   // Free and paid model groups are rendered separately in the UI.
   freeAiOptions = [
@@ -132,7 +124,6 @@ export class AiOptionsComponent implements OnInit {
       this.selectedAi = this.freeAiOptions[0]?.id ?? this.selectedAi;
     }
     this.selectedAis = this.selectedAis.filter((id) => freeIds.has(id));
-    this.selectedAlertRewriteMode = this.uploadState.getAlertRewriteMode();
     this.includeAlertRewriteExamples =
       this.uploadState.getIncludeAlertRewriteExamples();
     this.useCompactAlertsPageContext =
@@ -148,16 +139,6 @@ export class AiOptionsComponent implements OnInit {
 
   onAiSelect(key: AiModel) {
     this.aiChange.emit(key);
-  }
-
-  onUseAlertPlanningSelect(useAlertPlanning: boolean): void {
-    // The checkbox maps directly to the persisted enum mode used by the rewrite workflow.
-    const mode = useAlertPlanning
-      ? AlertRewriteMode.ModelPlanning
-      : AlertRewriteMode.HeuristicPlanning;
-    this.selectedAlertRewriteMode = mode;
-    this.uploadState.setAlertRewriteMode(mode);
-    this.alertRewriteModeChange.emit();
   }
 
   onIncludeAlertRewriteExamplesSelect(include: boolean): void {

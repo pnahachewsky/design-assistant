@@ -58,7 +58,6 @@ import {
   SourceViewType,
   PromptKey,
   AiModel,
-  AlertRewriteMode,
 } from './data/data.model';
 import { getPromptTemplate } from './data/ai-prompts.constants';
 
@@ -386,7 +385,6 @@ export class PageAssistantCompareComponent
     this.observeDarkMode();
     this.uploadState.setSelectedAiModel(this.selectedAiModel);
     this.customEditText = this.uploadState.getEditPromptText();
-    this.selectedAlertRewriteMode = this.uploadState.getAlertRewriteMode();
 
     //Translations
     const undoText = this.translate.instant('page.compare.button.undo');
@@ -536,11 +534,6 @@ export class PageAssistantCompareComponent
   selectedPromptKey: PromptKey = PromptKey.AlertsRecommendations;
   onPromptChange(key: PromptKey) {
     this.selectedPromptKey = key;
-  }
-
-  selectedAlertRewriteMode: AlertRewriteMode = AlertRewriteMode.HeuristicPlanning;
-  onAlertRewriteModeChange(): void {
-    this.selectedAlertRewriteMode = this.uploadState.getAlertRewriteMode();
   }
 
   customPromptText = '';
@@ -742,7 +735,7 @@ export class PageAssistantCompareComponent
   // UI-facing summary of the alert rewrite options currently active.
   private buildAlertRewriteStatusMessage(): string {
     const includeExamples = this.uploadState.getIncludeAlertRewriteExamples();
-    return `Generating alert rewrites (${this.selectedAlertRewriteMode === AlertRewriteMode.ModelPlanning ? 'planning on' : 'planning off'}, ${includeExamples ? 'good examples on' : 'good examples off'}).`;
+    return `Generating alert rewrites (${includeExamples ? 'good examples on' : 'good examples off'}).`;
   }
 
   // Thin component-level handoff into the extracted alert rewrite workflow.
@@ -795,7 +788,6 @@ export class PageAssistantCompareComponent
         model: params.model,
         headers: params.headers,
         url: params.url,
-        mode: this.selectedAlertRewriteMode,
         includeExamples,
         useCompactAlertsPageContext: this.uploadState.getUseCompactAlertsPageContext(),
         forceLocalRepairForTesting: this.shouldForceLocalRepairForTesting(),

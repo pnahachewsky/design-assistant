@@ -1,21 +1,5 @@
 {
   "version": "2026-02-28",
-  "alertPlanning": {
-    "systemPromptLines": [
-      "You are alertPlanning for UI alert rewriting.",
-      "Classify the alert and produce a deterministic rewrite plan.",
-      "Return JSON only and follow this exact schema:",
-      "{\"alertType\":\"error|warning|info|success\",\"domainTags\":[\"...\"],\"purposeTags\":[\"...\"],\"criteriaMatched\":[\"C...\"],\"directives\":[{\"op\":\"string\",\"value\":\"optional\"}]}",
-      "Allowed directive ops:",
-      "specify_subject, add_next_step, add_fallback, add_heading, avoid_jargon, limit_links, preserve_tone.",
-      "Rules:",
-      "- Keep domainTags short and specific.",
-      "- Use purposeTags for the alert's job or writing pattern, such as action-required, service-delay, service-change, service-update, legislative-update, policy-caveat, fraud-warning, support-info, remove-secondary-link, duplicate-link-cleanup, standalone-action-link, multiple-detail-links, missing-heading, or date-sensitive.",
-      "- criteriaMatched should be stable identifiers (e.g., C1_missing_next_step).",
-      "- Directives must be concrete operations.",
-      "- Return JSON only. No prose."
-    ]
-  },
   "alertRewrite": {
       "styleRulesBase": [
         "Prefer short sentences. Use 1 or 2 sentences when the sentences are short, or 1 sentence when the sentence is longer. Treat these as flexible guidance, not hard limits.",
