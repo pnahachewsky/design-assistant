@@ -188,6 +188,52 @@ export class WebDiffService {
         width: 100%;
       }
 
+      /* Subway fallback for preview (WET JS does not run in shadow DOM) */
+      .rendered-content nav.gc-subway {
+        display: block !important;
+        border-color: #26374a !important;
+      }
+
+      .rendered-content nav.gc-subway dl {
+        margin-left: 0.5em;
+      }
+
+      .rendered-content nav.gc-subway dl dt,
+      .rendered-content nav.gc-subway dl dd {
+        border-left: 4px solid #26374a;
+        margin: 0;
+        padding-left: 1em;
+        position: relative;
+      }
+
+      .rendered-content nav.gc-subway dl dt {
+        font-weight: 400;
+      }
+
+      .rendered-content nav.gc-subway dl dd {
+        padding-bottom: 1.25em;
+        padding-top: 0.25em;
+      }
+
+      .rendered-content nav.gc-subway dl dd:last-of-type,
+      .rendered-content nav.gc-subway dl dt:last-of-type {
+        border-left-color: transparent;
+        padding-bottom: 0;
+      }
+
+      .rendered-content nav.gc-subway dl dt a::before {
+        background-color: #26374a;
+        border: 3px solid #26374a;
+        border-radius: 50%;
+        box-shadow: 0 0 0 10px #fff inset;
+        content: "";
+        height: 1.2em;
+        left: -0.7em;
+        position: absolute;
+        top: 0;
+        width: 1.2em;
+      }
+
       /* Optional connection type styling */
       .cnjnctn-type-or > [class*=cnjnctn-col]:not(:first-child):before {
         content: "or";

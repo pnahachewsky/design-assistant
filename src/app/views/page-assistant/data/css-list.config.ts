@@ -178,6 +178,7 @@ export const deprecatedClasses: (string | RegExp)[] = [
 
 //These patterns are for matching classes only. Use guidanceContentMap for elements.
 export const guidanceMap: {
+    id?: string;
     name: string;
     url: string;
     patterns: (string | RegExp)[];
@@ -193,9 +194,16 @@ export const guidanceMap: {
             patterns: [/^alert(-(danger|dismissable|dismissible|info|link|success|warning))?$/],
         },
         {
-            name: 'page.tools.guidance.craVariant.doormats.title',
+            id: 'topicDoormats',
+            name: 'page.tools.guidance.craVariant.topicDoormats.title',
             url: 'page.tools.guidance.craVariant.doormats.url',
-            patterns: [/^(gc-srvinfo|list-group)$/],
+            patterns: ['gc-srvinfo'],
+        },
+        {
+            id: 'subwayDoormats',
+            name: 'page.tools.guidance.craVariant.subwayDoormats.title',
+            url: 'page.tools.guidance.craVariant.doormats.url',
+            patterns: [],
         },
         {
             name: 'page.tools.guidance.craVariant.fieldflow.title',
@@ -330,6 +338,7 @@ export const guidanceMap: {
     ];
 
 export const guidanceExclusionMap: {
+    id?: string;
     name: string;
     url: string;
     patterns: (string | RegExp)[];
@@ -342,6 +351,7 @@ export const guidanceExclusionMap: {
     ];
 
 export const guidanceContentMap: {
+    id?: string;
     name: string;
     url: string;
     tag: (string | RegExp),
@@ -360,7 +370,8 @@ export const guidanceContentMap: {
             patterns: [/^On this page$/i, /^Table of contents$/i],
         },
         {
-            name: 'page.tools.guidance.craVariant.doormats.title',
+            id: 'topicDoormats',
+            name: 'page.tools.guidance.craVariant.topicDoormats.title',
             url: 'page.tools.guidance.craVariant.doormats.url',
             tag: 'section',
             patterns: [/^BANANA$/],

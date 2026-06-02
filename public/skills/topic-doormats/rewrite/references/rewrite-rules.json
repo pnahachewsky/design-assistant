@@ -3,6 +3,14 @@
   "scope": "Rewrite GCWeb topic page doormat link text and descriptions.",
   "rules": [
     {
+      "id": "rewrite-complete-set",
+      "text": "Rewrite the complete doormat set together. Do not optimize one doormat in isolation if that would create inconsistent title style, description style, ordering, or duplicate descriptions across the set."
+    },
+    {
+      "id": "return-full-updated-set",
+      "text": "Return updated HTML for the complete doormat set. When the input is a full HTML page, return the full page HTML with only the doormat section changed and preserve unrelated content exactly as provided."
+    },
+    {
       "id": "preserve-href",
       "text": "Preserve each original href unless the user explicitly asks to change destinations."
     },
@@ -49,6 +57,10 @@
     {
       "id": "no-final-punctuation",
       "text": "Do not end descriptions with punctuation."
+    },
+    {
+      "id": "remove-placeholders",
+      "text": "Do not leave generic placeholder link text or descriptions. Only include doormats that are customized from the supplied content or user instructions."
     }
   ],
   "preferred_html_shape": "<div class=\"wb-eqht row\"><div class=\"col-lg-4 col-md-6\"><section><h3><a href=\"[url]\">[Link text]</a></h3><p>[Description]</p></section></div></div>"

@@ -8,7 +8,7 @@ import { CheckboxModule } from 'primeng/checkbox';
 import { ChipModule } from 'primeng/chip';
 import { TooltipModule } from 'primeng/tooltip';
 import { TranslateService, TranslateModule } from '@ngx-translate/core';
-import { SortEvent } from 'primeng/api';
+import { MessageService, SortEvent } from 'primeng/api';
 import {
   AlertsGuidanceComponent,
   ALERT_SEVERITY_RANK,
@@ -33,6 +33,9 @@ import { HttpClient } from '@angular/common/http';
 import { Subscription, firstValueFrom } from 'rxjs';
 import { environment } from '../../../../../../environments/environment';
 import { ChangeDetectorRef } from '@angular/core';
+import { AiModel, PromptKey } from '../../../data/data.model';
+import { ChatMessage, OpenRouterService } from '../../../services/openrouter.service';
+import { SkillManagerService } from '../../../services/skill-manager.service';
 
 // UI shows these:
 type UiHealth = 'severe' | 'minor' | 'ok' | 'unknown';
@@ -49,6 +52,23 @@ interface GuidanceRow {
   // internal:
   __nameKey?: string;
   __urlKey?: string;
+  __id?: string;
+}
+
+interface TopicDoormatIssueRow {
+  include: boolean;
+  severity: string;
+  doormat: string;
+  issue: string;
+  evidence: string;
+  recommendation: string;
+  doormatIndex?: number;
+}
+
+interface TopicDoormatSummary {
+  index: number;
+  linkText: string;
+  href: string;
 }
 
 @Component({
@@ -158,11 +178,16 @@ export class ComponentGuidanceComponent implements OnInit, OnDestroy {
   private ai = inject(ComponentAiService);
   private alertAi = inject(AlertAiService);
   private cdr = inject(ChangeDetectorRef);
+  private openRouter = inject(OpenRouterService);
+  private skillManager = inject(SkillManagerService);
+  private messageService = inject(MessageService);
   private alertIssuesSub?: Subscription;
+  private readonly topicDoormatDebugStorageKey =
+    'pageAssistant.topicDoormatDebug';
 
   production: boolean = environment.production;
 
-  guidanceList: { name: string; url: string }[] = [];
+  guidanceList: { id?: string; name: string; url: string }[] = [];
   rows: GuidanceRow[] = [];
   alertCategories: { label: string; severity: string }[] = [];
   alertMaxSeverity: string | null = null;
@@ -172,6 +197,11 @@ export class ComponentGuidanceComponent implements OnInit, OnDestroy {
   alertDataLoaded = false;
   alertLoadAttempted = false;
   alertError = false;
+  topicDoormatIssuesLoading = false;
+  topicDoormatIssuesResponseReceived = false;
+  topicDoormatIssuesError = false;
+  topicDoormatIssuesErrorDetail = '';
+  topicDoormatIssueRows: TopicDoormatIssueRow[] = [];
   private prevAlertHasIssues = false;
 
   // multi-select
@@ -180,6 +210,8 @@ export class ComponentGuidanceComponent implements OnInit, OnDestroy {
   // controlled expansion keys for PrimeNG table
   expandedRows: Record<string, boolean> = {};
   readonly alertsNameKey = 'page.tools.guidance.craVariant.alerts.title';
+  readonly topicDoormatsId = 'topicDoormats';
+  readonly subwayDoormatsId = 'subwayDoormats';
 
   cols = [
     { field: 'order', header: 'Index' },
@@ -203,6 +235,7 @@ export class ComponentGuidanceComponent implements OnInit, OnDestroy {
       this.guidanceList = this.validator.collectGuidanceUrls(data.originalHtml);
       this.rows = this.buildRows(this.guidanceList);
       this.removeAlertRowWhenNoReportableAlerts(data.originalHtml);
+      this.removeTopicDoormatRowWhenNoTopicDoormats(data.originalHtml);
       this.syncAlertRowSelection();
     }
     this.applyCachedAlertIssues();
@@ -216,31 +249,39 @@ export class ComponentGuidanceComponent implements OnInit, OnDestroy {
   }
 
   /** Build sorted, de-duped table rows from validator findings. */
-  private buildRows(list: { name: string; url: string }[]): GuidanceRow[] {
-    const unique = new Map<string, { nameKey: string; urlKey: string }>();
+  private buildRows(list: { id?: string; name: string; url: string }[]): GuidanceRow[] {
+    const unique = new Map<string, { id?: string; nameKey: string; urlKey: string }>();
     for (const g of list) {
-      if (!unique.has(g.url)) {
-        unique.set(g.url, { nameKey: g.name, urlKey: g.url });
+      const key = `${g.id ?? g.name}|${g.name}|${g.url}`;
+      if (!unique.has(key)) {
+        unique.set(key, { id: g.id, nameKey: g.name, urlKey: g.url });
       }
     }
 
     const resolved = Array.from(unique.values()).map((it) => ({
       component: this.translate.instant(it.nameKey) || it.nameKey,
       url: this.translate.instant(it.urlKey) || it.urlKey,
+      __id: it.id,
       __nameKey: it.nameKey,
       __urlKey: it.urlKey,
     }));
 
-    resolved.sort((a, b) =>
-      a.component.localeCompare(b.component, undefined, {
+    resolved.sort((a, b) => {
+      const rankDiff =
+        this.getGuidanceSortRank(a.__nameKey, a.__id) -
+        this.getGuidanceSortRank(b.__nameKey, b.__id);
+      if (rankDiff !== 0) return rankDiff;
+
+      return a.component.localeCompare(b.component, undefined, {
         sensitivity: 'base',
-      }),
-    );
+      });
+    });
 
     return resolved.map((r, i) => ({
       order: i + 1,
       component: r.component,
       url: r.url,
+      __id: r.__id,
       __nameKey: r.__nameKey,
       __urlKey: r.__urlKey,
       health: 'unknown',
@@ -257,6 +298,32 @@ export class ComponentGuidanceComponent implements OnInit, OnDestroy {
     this.selectedRows = this.selectedRows.filter(
       (row) => row.__nameKey !== this.alertsNameKey,
     );
+    this.reindexRows();
+  }
+
+  private removeTopicDoormatRowWhenNoTopicDoormats(html: string): void {
+    const doc = new DOMParser().parseFromString(html, 'text/html');
+    if (doc.querySelector('.gc-srvinfo')) return;
+
+    this.rows = this.rows.filter(
+      (row) => row.__id !== this.topicDoormatsId,
+    );
+    this.selectedRows = this.selectedRows.filter(
+      (row) => row.__id !== this.topicDoormatsId,
+    );
+    this.reindexRows();
+  }
+
+  private getGuidanceSortRank(nameKey?: string, id?: string): number {
+    if (nameKey === this.alertsNameKey) return 0;
+    if (id === this.topicDoormatsId) return 1;
+    return 2;
+  }
+
+  private reindexRows(): void {
+    this.rows.forEach((row, index) => {
+      row.order = index + 1;
+    });
   }
 
   private getInteractiveResultLeadIns(): string[] {
@@ -415,6 +482,13 @@ export class ComponentGuidanceComponent implements OnInit, OnDestroy {
     this.cdr.markForCheck();
   }
 
+  isDoormatRow(row: GuidanceRow): boolean {
+    return (
+      row.__id === this.topicDoormatsId ||
+      row.__id === this.subwayDoormatsId
+    );
+  }
+
   // (leftover dev helper if you still need it)
   // TEMP FXN FOR BUILDING WHITELIST
   classes: string[] = [];
@@ -439,6 +513,9 @@ export class ComponentGuidanceComponent implements OnInit, OnDestroy {
     const key = event?.data?.url;
     if (!key) return;
     this.expandedRows = { ...this.expandedRows, [key]: true };
+    if (event?.data?.__id === this.topicDoormatsId) {
+      void this.analyzeTopicDoormatIssues();
+    }
   }
 
   onRowCollapse(event: any): void {
@@ -455,6 +532,460 @@ export class ComponentGuidanceComponent implements OnInit, OnDestroy {
 
   collapseAll(): void {
     this.expandedRows = {};
+  }
+
+  private async analyzeTopicDoormatIssues(): Promise<void> {
+    if (
+      this.topicDoormatIssuesLoading ||
+      this.topicDoormatIssuesResponseReceived
+    ) {
+      return;
+    }
+
+    const html = this.uploadState.getUploadData()?.originalHtml || '';
+    const doormatSets = this.extractTopicDoormatSets(html);
+    if (!doormatSets.length) return;
+    const analysisStart = performance.now();
+    const mostRequestedLinks = this.extractMostRequestedLinks(html);
+    const doormatSummaries = this.extractTopicDoormatSummaries(html);
+
+    this.topicDoormatIssuesLoading = true;
+    this.topicDoormatIssuesError = false;
+    this.topicDoormatIssuesErrorDetail = '';
+
+    try {
+      const composed = await this.skillManager.composePrompt({
+        basePrompt: '',
+        queryText:
+          'analyze topic doormats gc-srvinfo issue report for each doormat',
+        promptKey: PromptKey.Doormats,
+        outputMode: 'json',
+        includeReferences: true,
+        includeAssets: true,
+        requireSkill: true,
+      });
+
+      const messages: ChatMessage[] = [
+        { role: 'system', content: composed.prompt },
+        {
+          role: 'user',
+          content: JSON.stringify({
+            doormatSets,
+            mostRequestedLinks,
+          }),
+        },
+      ];
+      const selectedModel = this.uploadState.getSelectedAiModel();
+      const modelRotation = this.buildTopicDoormatModelRotation(selectedModel);
+      this.debugTopicDoormatIssues('request prepared', {
+        selectedModel,
+        modelRotation,
+        doormatSetCount: doormatSets.length,
+        mostRequestedLinkCount: mostRequestedLinks.length,
+        loadedSkillResources: composed.loadedPaths,
+        estimatedSystemPromptTokens: composed.estimatedPromptTokens,
+        systemPromptCharacters: composed.prompt.length,
+        userPayloadCharacters: messages[1].content.length,
+        totalMessageCharacters: messages.reduce(
+          (total, message) => total + message.content.length,
+          0,
+        ),
+      });
+
+      const { text, model } = await this.callTopicDoormatIssuesWithFallback(
+        messages,
+        modelRotation,
+      );
+      this.topicDoormatIssuesResponseReceived = !!text;
+      if (text) {
+        this.messageService.add({
+          severity: 'info',
+          summary: this.translate.instant('common.ai.generating'),
+          life: 2000,
+        });
+      }
+      this.topicDoormatIssueRows = text
+        ? this.parseTopicDoormatIssueRows(text, doormatSummaries)
+        : [];
+      this.debugTopicDoormatIssues('response parsed', {
+        model,
+        responseCharacters: text.length,
+        parsedIssueRows: this.topicDoormatIssueRows.length,
+        totalElapsedMs: Math.round(performance.now() - analysisStart),
+      });
+      if (!text) {
+        this.topicDoormatIssuesError = true;
+        this.topicDoormatIssuesErrorDetail =
+          'The model response was empty or did not include message content.';
+      } else {
+        this.messageService.add({
+          severity: 'info',
+          summary: this.translate.instant('common.ai.topicDoormatIssuesReceived', {
+            model: this.getShortModelName(model),
+          }),
+          sticky: true,
+        });
+        const primaryModel = modelRotation[0];
+        if (model !== primaryModel) {
+          this.messageService.add({
+            severity: 'warn',
+            summary: this.translate.instant('common.ai.fallback.summary'),
+            detail: this.translate.instant('common.ai.fallback.detail', {
+              requested: primaryModel,
+              used: model,
+            }),
+            sticky: true,
+          });
+        }
+        this.messageService.add({
+          severity: 'success',
+          summary: this.translate.instant('common.ai.responseReceived.summary'),
+          detail: this.translate.instant('common.ai.responseReceived.detail'),
+          sticky: true,
+        });
+      }
+    } catch (err) {
+      this.topicDoormatIssuesError = true;
+      const detail =
+        err instanceof Error
+          ? err.message
+          : this.translate.instant('common.ai.requestFailed.detailUnknown');
+      this.debugTopicDoormatIssues('request failed', {
+        error: detail,
+        totalElapsedMs: Math.round(performance.now() - analysisStart),
+      });
+      this.topicDoormatIssuesErrorDetail = detail;
+      this.messageService.add({
+        severity: 'error',
+        summary: this.translate.instant('common.ai.requestFailed.summary'),
+        detail,
+        sticky: true,
+      });
+    } finally {
+      this.topicDoormatIssuesLoading = false;
+      this.cdr.markForCheck();
+    }
+  }
+
+  private async callTopicDoormatIssuesWithFallback(
+    messages: ChatMessage[],
+    models: string[],
+  ): Promise<{ text: string; model: string }> {
+    let lastError: unknown;
+
+    for (let index = 0; index < models.length; index += 1) {
+      const model = models[index];
+      const modelStart = performance.now();
+      try {
+        this.debugTopicDoormatIssues('model attempt started', {
+          attempt: index + 1,
+          totalAttempts: models.length,
+          model,
+        });
+        const resp = await this.openRouter.call(model, messages, {
+          temperature: 0,
+          title: 'Content Assistant - Topic Doormat Issues',
+          throwOnError: true,
+        });
+        const text = resp?.choices?.[0]?.message?.content?.trim() || '';
+        if (text) {
+          this.debugTopicDoormatIssues('model attempt succeeded', {
+            attempt: index + 1,
+            model,
+            elapsedMs: Math.round(performance.now() - modelStart),
+            responseCharacters: text.length,
+          });
+          return { text, model };
+        }
+        this.debugTopicDoormatIssues('model attempt returned empty content', {
+          attempt: index + 1,
+          model,
+          elapsedMs: Math.round(performance.now() - modelStart),
+        });
+      } catch (err) {
+        lastError = err;
+        this.debugTopicDoormatIssues('model attempt failed', {
+          attempt: index + 1,
+          model,
+          elapsedMs: Math.round(performance.now() - modelStart),
+          error: err instanceof Error ? err.message : String(err),
+        });
+      }
+    }
+
+    throw lastError instanceof Error
+      ? lastError
+      : new Error(this.translate.instant('common.ai.errorCommunicatingOpenRouter'));
+  }
+
+  private buildTopicDoormatModelRotation(requested?: string): string[] {
+    const available = this.openRouter.models;
+    if (requested && available.includes(requested)) {
+      return [requested, ...available.filter((candidate) => candidate !== requested)];
+    }
+    return available;
+  }
+
+  private getShortModelName(model: string): string {
+    const normalizedModel = (model || '')
+      .replace(/-\d{4}-\d{2}-\d{2}$/, '')
+      .replace(/:free$/, ':free');
+    const modelKey = (Object.keys(AiModel) as Array<keyof typeof AiModel>).find(
+      (key) =>
+        AiModel[key] === model ||
+        AiModel[key] === normalizedModel ||
+        model.startsWith(AiModel[key]),
+    );
+    return modelKey
+      ? this.translate.instant(`page.ai-options.model.short.${modelKey}`)
+      : model;
+  }
+
+  private debugTopicDoormatIssues(
+    event: string,
+    details: Record<string, unknown>,
+  ): void {
+    if (!this.isTopicDoormatDebugEnabled()) return;
+    console.debug(`[TopicDoormatIssues] ${event}`, details);
+  }
+
+  private isTopicDoormatDebugEnabled(): boolean {
+    try {
+      return localStorage.getItem(this.topicDoormatDebugStorageKey) === 'true';
+    } catch {
+      return false;
+    }
+  }
+
+  private parseTopicDoormatIssueRows(
+    text: string,
+    doormatSummaries: TopicDoormatSummary[] = [],
+  ): TopicDoormatIssueRow[] {
+    const parsed = this.looseJsonParse(this.stripCodeFences(text));
+    if (!parsed || typeof parsed !== 'object') return [];
+    const root = parsed as Record<string, unknown>;
+    const doormats = Array.isArray(root['doormats']) ? root['doormats'] : [];
+
+    const rows: TopicDoormatIssueRow[] = doormats.flatMap((rawDoormat) => {
+      if (!rawDoormat || typeof rawDoormat !== 'object') return [];
+      const doormat = rawDoormat as Record<string, unknown>;
+      const index = this.toNumber(doormat['doormat_index']);
+      const linkText = this.cleanString(doormat['link_text']);
+      const href = this.cleanString(doormat['href']);
+      const issues = Array.isArray(doormat['issues']) ? doormat['issues'] : [];
+      const label = [index ? `${index}.` : '', linkText || href || 'Doormat']
+        .filter(Boolean)
+        .join(' ');
+
+      if (!issues.length) {
+        return [
+          this.buildTopicDoormatNoIssueRow({
+            index: index ?? 0,
+            linkText,
+            href,
+          }),
+        ];
+      }
+
+      return issues
+        .map((rawIssue): TopicDoormatIssueRow | null => {
+          if (!rawIssue || typeof rawIssue !== 'object') return null;
+          const issue = rawIssue as Record<string, unknown>;
+          const evidence = this.buildTopicDoormatEvidence(issue);
+          return {
+            include:
+              typeof issue['include'] === 'boolean'
+                ? issue['include']
+                : true,
+            severity: this.cleanString(issue['severity']) || 'Unknown',
+            doormat: label,
+            issue: this.cleanString(issue['issue_category']) || 'Issue',
+            evidence,
+            recommendation: this.cleanString(issue['recommendation']),
+            doormatIndex: index ?? undefined,
+          } satisfies TopicDoormatIssueRow;
+        })
+        .filter((row): row is TopicDoormatIssueRow => row !== null);
+    });
+
+    const representedIndexes = new Set(
+      rows
+        .map((row) => row.doormatIndex)
+        .filter((index): index is number => typeof index === 'number' && index > 0),
+    );
+    const missingNoIssueRows = doormatSummaries
+      .filter((summary) => !representedIndexes.has(summary.index))
+      .map((summary) => this.buildTopicDoormatNoIssueRow(summary));
+
+    return [...rows, ...missingNoIssueRows].sort((a, b) => {
+      const aIndex = a.doormatIndex ?? Number.MAX_SAFE_INTEGER;
+      const bIndex = b.doormatIndex ?? Number.MAX_SAFE_INTEGER;
+      return aIndex - bIndex;
+    });
+  }
+
+  private buildTopicDoormatNoIssueRow(
+    doormat: TopicDoormatSummary,
+  ): TopicDoormatIssueRow {
+    const label = [
+      doormat.index ? `${doormat.index}.` : '',
+      doormat.linkText || doormat.href || 'Doormat',
+    ]
+      .filter(Boolean)
+      .join(' ');
+    return {
+      include: false,
+      severity: 'OK',
+      doormat: label,
+      issue: 'No issues',
+      evidence: 'No issues reported by AI.',
+      recommendation: '',
+      doormatIndex: doormat.index || undefined,
+    };
+  }
+
+  private buildTopicDoormatEvidence(issue: Record<string, unknown>): string {
+    const evidence = this.cleanString(issue['evidence']);
+    const issueCategory = this.cleanString(issue['issue_category']);
+    const details =
+      issue['evidence_details'] && typeof issue['evidence_details'] === 'object'
+        ? (issue['evidence_details'] as Record<string, unknown>)
+        : null;
+    const detailParts: string[] = [];
+
+    if (details) {
+      const count = this.toNumber(details['actual_character_count']);
+      const limit = this.toNumber(details['character_limit']);
+      if (count != null && limit != null) {
+        detailParts.push(`${count}/${limit} characters`);
+      }
+
+      const doormatHref = this.cleanString(details['doormat_href']);
+      const mostRequestedHref = this.cleanString(details['most_requested_href']);
+      if (doormatHref || mostRequestedHref) {
+        detailParts.push(
+          `Doormat: ${doormatHref || 'n/a'}; Most requested: ${
+            mostRequestedHref || 'n/a'
+          }`,
+        );
+      }
+
+      const destinationTitle = this.cleanString(details['destination_page_title']);
+      if (destinationTitle) {
+        detailParts.push(`Destination title: ${destinationTitle}`);
+      }
+    }
+
+    const builtEvidence = [evidence, ...detailParts].filter(Boolean).join(' ');
+    if (builtEvidence) return builtEvidence;
+
+    if (issueCategory === 'duplicate-link-in-most-requested') {
+      return 'Link also appears in Most requested';
+    }
+
+    return '';
+  }
+
+  private stripCodeFences(value: string): string {
+    return value
+      .replace(/^```(?:json)?\s*/i, '')
+      .replace(/\s*```$/i, '')
+      .trim();
+  }
+
+  private looseJsonParse(value: string): unknown | null {
+    try {
+      return JSON.parse(value);
+    } catch {
+      const match = value.match(/\{[\s\S]*\}/);
+      if (!match) return null;
+      try {
+        return JSON.parse(match[0]);
+      } catch {
+        return null;
+      }
+    }
+  }
+
+  private toNumber(value: unknown): number | null {
+    const num =
+      typeof value === 'number'
+        ? value
+        : typeof value === 'string'
+          ? Number.parseInt(value, 10)
+          : Number.NaN;
+    return Number.isFinite(num) ? num : null;
+  }
+
+  private cleanString(value: unknown): string {
+    return typeof value === 'string' ? value.trim() : '';
+  }
+
+  private extractTopicDoormatSets(html: string): string[] {
+    if (!html) return [];
+    try {
+      const doc = new DOMParser().parseFromString(html, 'text/html');
+      return Array.from(doc.querySelectorAll<HTMLElement>('.gc-srvinfo')).map(
+        (set) => set.outerHTML,
+      );
+    } catch {
+      return [];
+    }
+  }
+
+  private extractTopicDoormatSummaries(html: string): TopicDoormatSummary[] {
+    if (!html) return [];
+    try {
+      const doc = new DOMParser().parseFromString(html, 'text/html');
+      const seen = new Set<string>();
+      const summaries: TopicDoormatSummary[] = [];
+      const links = Array.from(
+        doc.querySelectorAll<HTMLAnchorElement>('.gc-srvinfo h2 a, .gc-srvinfo h3 a'),
+      );
+
+      for (const link of links) {
+        const linkText = this.cleanString(link.textContent || '');
+        const href = link.getAttribute('href') || '';
+        const key = `${href}|${linkText}`;
+        if (!linkText && !href) continue;
+        if (seen.has(key)) continue;
+        seen.add(key);
+        summaries.push({
+          index: summaries.length + 1,
+          linkText,
+          href,
+        });
+      }
+
+      return summaries;
+    } catch {
+      return [];
+    }
+  }
+
+  private extractMostRequestedLinks(html: string): {
+    text: string;
+    href: string;
+  }[] {
+    if (!html) return [];
+    try {
+      const doc = new DOMParser().parseFromString(html, 'text/html');
+      const selectors = [
+        '.gc-most-requested a',
+        '.most-requested a',
+        '.most-requested-bullets a',
+      ];
+      return selectors.flatMap((selector) =>
+        Array.from(doc.querySelectorAll<HTMLAnchorElement>(selector)).map(
+          (link) => ({
+            text: this.cleanString(link.textContent || ''),
+            href: link.getAttribute('href') || '',
+          }),
+        ),
+      );
+    } catch {
+      return [];
+    }
   }
 
   onSelectionChange(selection: GuidanceRow[]): void {
@@ -566,10 +1097,15 @@ export class ComponentGuidanceComponent implements OnInit, OnDestroy {
 
   severityChip(severity: string | undefined | null): string {
     const s = (severity || '').toLowerCase();
+    if (s === 'ok') return 'chip-ok';
     if (s === 'low') return 'chip-minor';
     if (s === 'medium') return 'chip-med';
     if (s === 'high') return 'chip-severe';
     return 'chip-unk';
+  }
+
+  isNoIssueRow(issue: TopicDoormatIssueRow): boolean {
+    return issue.issue === 'No issues';
   }
 
   alertHealthLabel(severity: string | null): string {

@@ -1,6 +1,12 @@
 import { Injectable } from '@angular/core';
 import { allowedElements, allowedClasses, disallowedAttributes, guidanceMap, guidanceExclusionMap, guidanceContentMap } from '../data/css-list.config';
 
+const SUBWAY_DOORMATS_GUIDANCE = {
+  id: 'subwayDoormats',
+  name: 'page.tools.guidance.craVariant.subwayDoormats.title',
+  url: 'page.tools.guidance.craVariant.doormats.url',
+};
+
 @Injectable({
   providedIn: 'root'
 })
@@ -77,26 +83,39 @@ export class ValidatorService {
     });
   }
 
-  collectGuidanceUrls(html: string): { name: string; url: string }[] {
+  collectGuidanceUrls(html: string): { id?: string; name: string; url: string }[] {
     const parser = new DOMParser();
     const doc = parser.parseFromString(html, 'text/html');
-    const found = new Map<string, { name: string; url: string }>();
+    const found = new Map<string, { id?: string; name: string; url: string }>();
 
     this.walkForGuidance(doc.body, found);
     this.walkForContentGuidance(doc.body, found);
+    this.collectStructuralGuidance(doc.body, found);
     this.walkForGuidanceByExclusion(doc.body, found);
 
     return Array.from(found.values()); // unique by url
   }
 
-  private walkForGuidance(node: Element, found: Map<string, { name: string; url: string }>) {
+  private collectStructuralGuidance(
+    root: Element,
+    found: Map<string, { id?: string; name: string; url: string }>
+  ): void {
+    if (
+      root.querySelector('nav.gc-subway dl dt a') &&
+      root.querySelector('nav.gc-subway dl dd')
+    ) {
+      this.addGuidance(found, SUBWAY_DOORMATS_GUIDANCE);
+    }
+  }
+
+  private walkForGuidance(node: Element, found: Map<string, { id?: string; name: string; url: string }>) {
     if (node.nodeType === Node.ELEMENT_NODE) {
       node.classList.forEach(cls => {
         for (const group of guidanceMap) {
           if (group.patterns.some(pat =>
             typeof pat === 'string' ? pat === cls : pat.test(cls)
           )) {
-            found.set(group.url, { name: group.name, url: group.url });
+            this.addGuidance(found, group);
           }
         }
       });
@@ -111,7 +130,7 @@ export class ValidatorService {
 
   private walkForContentGuidance(
     node: Element,
-    found: Map<string, { name: string; url: string }>
+    found: Map<string, { id?: string; name: string; url: string }>
   ) {
     if (node.nodeType === Node.ELEMENT_NODE) {
       const tagName = node.tagName.toLowerCase();
@@ -129,7 +148,7 @@ export class ValidatorService {
               typeof pat === 'string' ? pat === text : pat.test(text)
             )
           ) {
-            found.set(group.url, { name: group.name, url: group.url });
+            this.addGuidance(found, group);
           }
         }
       }
@@ -145,7 +164,7 @@ export class ValidatorService {
   //Adds guidance if specific classes aren't found (example: it's probably a basic page if no doormats or subway pattern detected)
   private walkForGuidanceByExclusion(
     root: Element,
-    found: Map<string, { name: string; url: string }>
+    found: Map<string, { id?: string; name: string; url: string }>
   ) {
     for (const group of guidanceExclusionMap) {
 
@@ -160,9 +179,20 @@ export class ValidatorService {
       });
 
       if (!hasExclusion) {
-        found.set(group.url, { name: group.name, url: group.url });
+        this.addGuidance(found, group);
       }
     }
+  }
+
+  private addGuidance(
+    found: Map<string, { id?: string; name: string; url: string }>,
+    group: { id?: string; name: string; url: string }
+  ): void {
+    found.set(`${group.id ?? group.name}|${group.name}|${group.url}`, {
+      id: group.id,
+      name: group.name,
+      url: group.url,
+    });
   }
 
 }

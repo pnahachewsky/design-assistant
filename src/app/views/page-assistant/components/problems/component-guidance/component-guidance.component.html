@@ -185,6 +185,8 @@
           } @else {
             <span class="muted">Expand this row to explore alert pain points</span>
           }
+        } @else if (isDoormatRow(row)) {
+          <span class="muted">Expand this row to explore doormat pain points</span>
         } @else {
           @if ((row.issues?.length || 0) > 0) {
             <div class="chip-list">
@@ -220,24 +222,91 @@
               (issuesCleared)="onAlertIssuesCleared()"
             ></ca-alerts-guidance>
           } @else {
-            <p-table styleClass="p-datatable-sm expansion-table">
-              <ng-template pTemplate="header">
-                <tr>
-                  <th>Column 1</th>
-                  <th>Column 2</th>
-                  <th>Column 3</th>
-                  <th>Column 4</th>
-                </tr>
-              </ng-template>
-              <ng-template pTemplate="body">
-                <tr>
-                  <td>Data 1</td>
-                  <td>Data 2</td>
-                  <td>Data 3</td>
-                  <td>Data 4</td>
-                </tr>
-              </ng-template>
-            </p-table>
+            @if (row.__id === topicDoormatsId) {
+              <div class="mb-3">
+                @if (topicDoormatIssuesLoading) {
+                  <span class="muted">
+                    <i class="pi pi-spinner pi-spin" aria-hidden="true"></i>
+                    Analyzing topic doormats
+                  </span>
+                } @else if (topicDoormatIssuesResponseReceived) {
+                  <span>AI response received.</span>
+                } @else if (topicDoormatIssuesError) {
+                  <div>
+                    <span class="text-danger">AI error</span>
+                    @if (topicDoormatIssuesErrorDetail) {
+                      <div class="muted">{{ topicDoormatIssuesErrorDetail }}</div>
+                    }
+                  </div>
+                }
+              </div>
+              <p-table
+                [value]="topicDoormatIssueRows"
+                styleClass="p-datatable-sm expansion-table">
+                <ng-template pTemplate="header">
+                  <tr>
+                    <th style="width: 3rem">Include</th>
+                    <th style="width: 8rem">Severity</th>
+                    <th>Doormat</th>
+                    <th>Issue</th>
+                    <th>Evidence</th>
+                    <th>Recommendation</th>
+                  </tr>
+                </ng-template>
+                <ng-template pTemplate="body" let-issue>
+                  <tr>
+                    <td>
+                      <p-checkbox
+                        [binary]="true"
+	                        [(ngModel)]="issue.include"
+	                        [disabled]="isNoIssueRow(issue)">
+                      </p-checkbox>
+                    </td>
+                    <td>
+                      <span class="chip" [ngClass]="severityChip(issue.severity)">
+                        {{ issue.severity }}
+                      </span>
+                    </td>
+                    <td>{{ issue.doormat }}</td>
+                    <td>{{ issue.issue }}</td>
+                    <td>{{ issue.evidence || '—' }}</td>
+	                    <td>{{ issue.recommendation || '-' }}</td>
+                  </tr>
+                </ng-template>
+                <ng-template pTemplate="emptymessage">
+                  <tr>
+                    <td colspan="6">
+                      @if (topicDoormatIssuesLoading) {
+                        <span class="muted">Waiting for AI response</span>
+                      } @else if (topicDoormatIssuesResponseReceived) {
+                        <span class="muted">No issues returned</span>
+                      } @else {
+                        <span class="muted">Expand this row to analyze topic doormats</span>
+                      }
+                    </td>
+                  </tr>
+                </ng-template>
+              </p-table>
+            } @else {
+              <p-table styleClass="p-datatable-sm expansion-table">
+                <ng-template pTemplate="header">
+                  <tr>
+                    <th>Column 1</th>
+                    <th>Column 2</th>
+                    <th>Column 3</th>
+                    <th>Column 4</th>
+                  </tr>
+                </ng-template>
+                <ng-template pTemplate="body">
+                  <tr>
+                    <td>Data 1</td>
+                    <td>Data 2</td>
+                    <td>Data 3</td>
+                    <td>Data 4</td>
+                  </tr>
+                </ng-template>
+              </p-table>
+            }
           }
         </div>
       </td>

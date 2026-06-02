@@ -1,57 +1,226 @@
 {
-  "version": "draft-2026-05-28",
+  "version": "draft-2026-06-01",
   "scope": "Issue analysis for GCWeb topic page doormats.",
-  "precondition": "Run this analysis only when AIDA heuristics have detected one or more doormat items. Missing doormat-section detection is handled before invoking this skill.",
+  "precondition": "Run this analysis only when AIDA heuristics have detected one or more topic doormat items. Missing doormat-section detection is handled before invoking this skill.",
+  "analysis_unit": "Analyze one complete topic doormat set at a time. Compare all doormats in the set before assigning issues.",
+  "reporting_unit": "Return issue reports for each affected doormat item. If a set-level issue affects multiple doormats, report the issue on each affected doormat. For style consistency issues, report only the outlier doormats that differ from a clear dominant style.",
+  "language_thresholds": {
+    "en": {
+      "link_text_ideal_max_characters": 35,
+      "description_max_characters": 90
+    },
+    "fr": {
+      "link_text_ideal_max_characters": 45,
+      "description_max_characters": 120
+    }
+  },
+  "style_detection": {
+    "required": true,
+    "link_text_styles": [
+      "action-verb",
+      "noun-topic",
+      "product-or-service",
+      "audience-group",
+      "mixed-or-unclear"
+    ],
+    "description_styles": [
+      "action-verb-task-summary",
+      "noun-topic-summary",
+      "keyword-list",
+      "task-list",
+      "eligibility-or-benefit-summary",
+      "mixed-or-unclear"
+    ],
+    "instruction": "Identify the detected link text style and detected description style for each doormat. Do not enforce one universal style across all pages. Flag set-level style inconsistency only when there is a clear dominant style and one or more clear outliers."
+  },
+  "style_inconsistency_reporting": {
+    "minimum_standard": "Do not report a style inconsistency just because descriptions are not identical. Report it only when one dominant style is used by most doormats and a smaller number of outliers use a clearly different style.",
+    "dominant_style_required": true,
+    "outlier_only_reporting": true,
+    "different_style_required": true,
+    "same_style_is_not_inconsistent": "If dominant_style and outlier_style are the same style label, do not report inconsistent-link-name-style or inconsistent-description-style.",
+    "style_issue_must_survive_length_fix": "If the doormat already has description-too-long, do not also report inconsistent-description-style unless the style problem would still exist after shortening the description.",
+    "forbidden_style_evidence_terms": [
+      "verbose",
+      "longer",
+      "more detailed",
+      "more complex",
+      "length",
+      "too long",
+      "long"
+    ],
+    "do_not_report_when": [
+      "The whole set is mixed and no dominant style is clear.",
+      "Most or all doormats would receive the same style inconsistency issue.",
+      "The only evidence is that descriptions have different topics, lengths, or wording.",
+      "The only evidence is that one description is longer, more detailed, or more complex than descriptions in the same style category.",
+      "The doormat has description-too-long and the style concern depends on the description being long, verbose, detailed, or complex.",
+      "The style difference does not reduce clarity, scannability, or the user's ability to compare choices."
+    ],
+    "use_other_issue_instead": [
+      "Use description-too-long for length issues; do not also report inconsistent-description-style for the same length evidence.",
+      "Use description-lacks-clarity or description-missing-needed-information for unclear or incomplete descriptions; do not use inconsistent-description-style as a substitute.",
+      "Use description-incorrect-style only when the description does not fit any accepted style."
+    ],
+    "evidence_required": [
+      "dominant_style",
+      "outlier_style",
+      "why_this_doormat_is_an_outlier"
+    ],
+    "evidence_format": "Evidence for style inconsistency must explicitly state dominant_style and outlier_style using two different values from the allowed style list. Do not use length, verbosity, detail level, or complexity as the reason.",
+    "severity_default": "Low",
+    "severity_escalation": "Use Medium only when the outlier style makes the doormat harder to compare with the rest of the set."
+  },
+  "set_level_checks": [
+    "Check whether link texts use one grammatical style across the set, but report only clear outliers from a dominant style.",
+    "Check whether descriptions use one description style across the set, but report only clear outliers from a dominant style.",
+    "Check whether each description is specific enough to distinguish its doormat from the others.",
+    "Check for duplicate or near-duplicate descriptions across the set.",
+    "Check for repeated generic task lists across the set.",
+    "Check whether any topic doormat section contains more than 9 doormats. If it does, report too-many-doormats-in-section only on doormats after the ninth item.",
+    "Check whether any doormat link is repeated in the page's Most requested section.",
+    "Check whether the set is missing a needed doormat based on the supplied page context.",
+    "Check whether the set includes an unnecessary or badly chosen doormat.",
+    "Check whether the doormat order prioritizes the most visited information and services only when supplied page context includes visit data, explicit priority evidence, or another concrete signal for order."
+  ],
+  "order_issue_reporting": {
+    "minimum_standard": "Do not guess doormat priority from topic names alone.",
+    "evidence_required": [
+      "visit_data",
+      "explicit_priority_signal",
+      "page_context_signal"
+    ],
+    "do_not_report_when": [
+      "No traffic, priority, or demand evidence is supplied.",
+      "The only evidence is the model's general assumption that one topic is probably more important than another.",
+      "The current order could reasonably reflect an editorial or business priority not visible in the supplied context."
+    ]
+  },
   "selectors": {
     "preferred_doormat_container": ".gc-srvinfo",
     "legacy_or_basic_wrapper": ".wb-eqht.row",
-    "expected_item": "section with heading link and paragraph description"
+    "expected_item": "section with heading link and paragraph description",
+    "most_requested_candidates": [
+      ".gc-most-requested a",
+      ".most-requested a",
+      ".most-requested-bullets a"
+    ]
   },
   "issue_categories": [
     {
-      "id": "incorrect-structure",
-      "label": "Incorrect doormat structure",
+      "id": "broken-link",
+      "group": "Link code issue",
+      "label": "Broken link",
       "severity": "High",
-      "condition": "A doormat does not use the expected GCWeb wrapper, column, section, heading link, and paragraph description structure.",
-      "recommendation": "Use the GCWeb doormat structure: container, column, section, heading link, and one paragraph description."
+      "condition": "The doormat link is empty, malformed, points to a known missing destination, or otherwise appears broken from the supplied page context.",
+      "recommendation": "Replace the link with a valid destination URL."
     },
     {
-      "id": "missing-link-text",
-      "label": "Missing link text",
+      "id": "misdirected-link",
+      "group": "Link code issue",
+      "label": "Misdirected link",
       "severity": "High",
-      "condition": "The doormat has no link text or only empty/placeholder text.",
-      "recommendation": "Add descriptive link text that summarizes the destination page."
+      "condition": "The doormat link points to the wrong page or wrong anchored location for the link text and description.",
+      "recommendation": "Update the href so the doormat points to the intended destination page or anchor."
     },
     {
-      "id": "non-descriptive-link-text",
-      "label": "Non-descriptive link text",
+      "id": "multiple-links",
+      "group": "Link code issue",
+      "label": "More than one link",
       "severity": "High",
-      "condition": "The link text is vague, generic, duplicated, or does not indicate what users can find or do.",
-      "recommendation": "Use action verbs or concise keywords that summarize the destination page's information or tasks."
+      "condition": "A single doormat item contains more than one link.",
+      "recommendation": "Use one link per doormat. Move any extra destination to a separate doormat if it is needed."
     },
     {
-      "id": "link-text-too-long",
-      "label": "Link text too long",
+      "id": "link-name-lacks-clarity",
+      "group": "Link name",
+      "label": "Link name lacks clarity",
+      "severity": "High",
+      "condition": "The link text does not provide a clear choice or does not help users decide whether the destination is relevant.",
+      "recommendation": "Rewrite the link text so it clearly identifies the destination information, service, task, or audience."
+    },
+    {
+      "id": "link-name-not-unique",
+      "group": "Link name",
+      "label": "Link name is not descriptive or unique",
+      "severity": "High",
+      "condition": "The link text is vague, duplicated, or too similar to another link on the page.",
+      "recommendation": "Use unique link text that distinguishes this doormat from the other page links."
+    },
+    {
+      "id": "link-name-too-long",
+      "group": "Link name",
+      "label": "Link name is too long",
       "severity": "Medium",
-      "condition": "The link text exceeds 75 characters, or exceeds the 45-character preferred length without a strong reason.",
-      "recommendation": "Shorten the link text. Aim for 45 characters or fewer and do not exceed 75 characters."
+      "condition": "The English link text exceeds 35 characters, or the French link text exceeds 45 characters, including spaces.",
+      "recommendation": "Shorten the link text. Aim for under 35 characters in English and under 45 characters in French.",
+      "severity_override": {
+        "Low": "Use Low when the link text is 1 to 5 characters over the limit.",
+        "Medium": "Use Medium when the link text is 6 or more characters over the limit."
+      }
     },
     {
-      "id": "link-text-punctuation",
-      "label": "Link text has trailing punctuation",
+      "id": "link-name-too-different-from-destination-title",
+      "group": "Link name",
+      "label": "Link name is too different from destination title",
+      "severity": "Medium",
+      "condition": "The link text does not need to exactly match the destination page title, but it conveys a substantially different idea.",
+      "recommendation": "Align the link text with the destination page title or purpose while keeping it concise."
+    },
+    {
+      "id": "duplicate-link-in-most-requested",
+      "group": "Link name",
+      "label": "Doormat link repeated in Most requested",
+      "severity": "Medium",
+      "condition": "A doormat links to the same destination as an item in the page's Most requested section.",
+      "recommendation": "Flag for manual review. In most cases, remove the duplicate from Most requested unless there is a strong page-specific reason to keep it.",
+      "evidence_required": [
+        "doormat_href",
+        "most_requested_href",
+        "doormat_link_text",
+        "most_requested_link_text"
+      ]
+    },
+    {
+      "id": "link-name-trailing-punctuation",
+      "group": "Link name",
+      "label": "Link name has trailing punctuation",
       "severity": "Low",
       "condition": "The link text ends with a period, colon, question mark, exclamation mark, semicolon, or comma.",
       "recommendation": "Remove trailing punctuation from the link text."
     },
     {
-      "id": "inconsistent-title-style",
-      "label": "Inconsistent title style",
-      "severity": "Medium",
-      "condition": "Doormat link texts mix grammatical styles, such as nouns, actions, audiences, or products in the same set.",
-      "recommendation": "Use one title style across the set, such as all noun topics or all action phrases."
+      "id": "inconsistent-link-name-style",
+      "group": "Link name",
+      "label": "Inconsistent link name style",
+      "severity": "Low",
+      "condition": "One or more doormat link texts are clear outliers from a dominant link text style used by the rest of the set, such as a lone action verb among noun/topic links.",
+      "recommendation": "Use the dominant link text style for this outlier unless the page context clearly justifies the exception.",
+      "evidence_required": [
+        "dominant_style",
+        "outlier_style",
+        "why_this_doormat_is_an_outlier"
+      ]
+    },
+    {
+      "id": "description-lacks-clarity",
+      "group": "Description clarity",
+      "label": "Description lacks clarity",
+      "severity": "High",
+      "condition": "The description is unclear or does not help users decide whether to follow the link.",
+      "recommendation": "Rewrite the description with specific information, tasks, services, audiences, or benefits found on the destination page."
+    },
+    {
+      "id": "description-missing-needed-information",
+      "group": "Description clarity",
+      "label": "Description is missing needed information",
+      "severity": "High",
+      "condition": "The description has a content gap that prevents users from understanding the destination or choosing between doormats.",
+      "recommendation": "Add the missing decision-making detail while keeping the description concise."
     },
     {
       "id": "missing-description",
+      "group": "Description clarity",
       "label": "Missing description",
       "severity": "High",
       "condition": "The doormat has no paragraph description.",
@@ -59,48 +228,35 @@
     },
     {
       "id": "description-too-long",
-      "label": "Description too long",
+      "group": "Description clarity",
+      "label": "Description is too long",
       "severity": "Medium",
-      "condition": "The description exceeds 120 characters, or exceeds the 100-character preferred length without a strong reason.",
-      "recommendation": "Shorten the description. Aim for fewer than 100 characters and do not exceed 120 characters."
+      "condition": "The English description exceeds 90 characters, or the French description exceeds 120 characters, including spaces.",
+      "recommendation": "Shorten the description. Keep English descriptions under 90 characters and French descriptions under 120 characters.",
+      "severity_override": {
+        "Low": "Use Low when the description is 1 to 10 characters over the limit.",
+        "Medium": "Use Medium when the description is 11 or more characters over the limit."
+      }
     },
     {
-      "id": "generic-description",
-      "label": "Generic description",
-      "severity": "High",
-      "condition": "The description uses broad reusable text that does not distinguish this doormat from others.",
-      "recommendation": "Make the description specific to the destination page, audience, benefit, service, or task."
+      "id": "description-incorrect-style",
+      "group": "Description clarity",
+      "label": "Description has incorrect style",
+      "severity": "Medium",
+      "condition": "The description style does not fit one of the accepted styles: action verbs that summarize what can be done, keywords that summarize page information, or tasks that can be accomplished.",
+      "recommendation": "Rewrite using one accepted style and keep that style consistent across the set."
     },
     {
       "id": "description-repeats-link-text",
+      "group": "Description clarity",
       "label": "Description repeats link text",
       "severity": "Medium",
       "condition": "The description repeats the same words or meaning already present in the link text.",
       "recommendation": "Use the description to add distinct decision-making information instead of repeating the title."
     },
     {
-      "id": "introductory-phrase",
-      "label": "Description starts with an introductory phrase",
-      "severity": "Medium",
-      "condition": "The description starts with phrases such as Includes, Information on, Learn more about, Find information about, or similar filler.",
-      "recommendation": "Start directly with keywords, tasks, eligibility, services, or page-specific information."
-    },
-    {
-      "id": "description-punctuation",
-      "label": "Description has trailing punctuation",
-      "severity": "Low",
-      "condition": "The description ends with punctuation.",
-      "recommendation": "Remove final punctuation from the description."
-    },
-    {
-      "id": "description-markup",
-      "label": "Description contains markup or links",
-      "severity": "Medium",
-      "condition": "The paragraph description contains links, bold text, bullets, or other markup.",
-      "recommendation": "Keep the description as plain text in a single paragraph."
-    },
-    {
       "id": "duplicate-or-near-duplicate-description",
+      "group": "Description clarity",
       "label": "Duplicate or near-duplicate description",
       "severity": "High",
       "condition": "Two or more doormats have identical or nearly identical descriptions.",
@@ -108,17 +264,136 @@
     },
     {
       "id": "inconsistent-description-style",
+      "group": "Description clarity",
       "label": "Inconsistent description style",
-      "severity": "Medium",
-      "condition": "Descriptions mix comma-separated keywords, complete sentences, task phrases, eligibility summaries, or marketing-style language inconsistently.",
-      "recommendation": "Use one description style across the set, preferably concise comma-separated keywords or task phrases."
+      "severity": "Low",
+      "condition": "One or more descriptions are clear outliers from a dominant description style used by the rest of the set, such as a lone sentence-style benefit summary among keyword-list descriptions.",
+      "recommendation": "Use the dominant description style for this outlier unless the page context clearly justifies the exception.",
+      "evidence_required": [
+        "dominant_style",
+        "outlier_style",
+        "why_this_doormat_is_an_outlier"
+      ]
     },
     {
-      "id": "promotional-language",
-      "label": "Promotional language",
+      "id": "description-uses-and-before-final-item",
+      "group": "Description formatting",
+      "label": "Description uses and before final item",
+      "severity": "Low",
+      "condition": "A comma-separated description uses 'and' as a serial-list connector before the final listed item.",
+      "recommendation": "Remove 'and' before the final listed item and separate listed items with commas.",
+      "do_not_report_when": [
+        "The word 'and' is part of a fixed phrase, program name, service name, or common concept such as benefits and allowances.",
+        "The phrase containing 'and' is a single combined concept rather than the final item in a comma-separated list.",
+        "There is no comma-separated list structure."
+      ]
+    },
+    {
+      "id": "description-uses-icons-or-images",
+      "group": "Description formatting",
+      "label": "Description uses icons or images",
       "severity": "Medium",
-      "condition": "The doormat uses promotional, persuasive, or marketing-style wording instead of neutral service information.",
-      "recommendation": "Use neutral, task-focused language that describes what users can find or do."
+      "condition": "The description contains icons, images, or image-like decorative content.",
+      "recommendation": "Use plain text only in the description."
+    },
+    {
+      "id": "description-special-formatting",
+      "group": "Description formatting",
+      "label": "Description uses special formatting",
+      "severity": "Medium",
+      "condition": "The description contains bold, italics, bullets, or other special formatting.",
+      "recommendation": "Keep the description as plain text in a single paragraph."
+    },
+    {
+      "id": "description-capitalization",
+      "group": "Description formatting",
+      "label": "Description capitalization issue",
+      "severity": "Low",
+      "condition": "The first word of the description is not capitalized when it should be.",
+      "recommendation": "Capitalize the first word of the description and any proper nouns."
+    },
+    {
+      "id": "description-list-separators",
+      "group": "Description formatting",
+      "label": "Description list separators issue",
+      "severity": "Low",
+      "condition": "A list-style description does not use commas to separate listed items or phrases.",
+      "recommendation": "Use commas to separate listed items or phrases."
+    },
+    {
+      "id": "description-trailing-punctuation",
+      "group": "Description formatting",
+      "label": "Description has trailing punctuation",
+      "severity": "Low",
+      "condition": "The description ends with punctuation.",
+      "recommendation": "Remove final punctuation from the description."
+    },
+    {
+      "id": "description-contains-link",
+      "group": "Description formatting",
+      "label": "Description contains a link",
+      "severity": "Medium",
+      "condition": "The paragraph description contains one or more links.",
+      "recommendation": "Remove links from the description. The doormat heading should contain the only link."
+    },
+    {
+      "id": "enhancement-label-not-needed",
+      "group": "Enhancement label",
+      "label": "Enhancement label is not needed",
+      "severity": "Medium",
+      "condition": "A doormat uses an enhancement/status label such as New or Closed when there is no recent change or temporary status to justify it.",
+      "recommendation": "Remove the label unless it identifies a recent change or valid temporary status."
+    },
+    {
+      "id": "enhancement-label-wrong-type",
+      "group": "Enhancement label",
+      "label": "Enhancement label type is wrong",
+      "severity": "Medium",
+      "condition": "A doormat uses the wrong enhancement label type for the status, such as an info label where a danger label is needed.",
+      "recommendation": "Use the correct label type for the actual status, such as New for recent additions or Closed for ended programs."
+    },
+    {
+      "id": "missing-needed-doormat",
+      "group": "Choice of doormats",
+      "label": "Missing a needed doormat",
+      "severity": "High",
+      "condition": "The page context suggests an important user task, service, or high-demand destination is missing from the doormat set.",
+      "recommendation": "Flag for manual review and consider adding a doormat for the missing destination."
+    },
+    {
+      "id": "unnecessary-doormat",
+      "group": "Choice of doormats",
+      "label": "Extra doormat is not needed",
+      "severity": "Medium",
+      "condition": "The doormat appears unnecessary, low-value, redundant, or badly chosen for the page context.",
+      "recommendation": "Flag for manual review and consider removing or replacing the doormat."
+    },
+    {
+      "id": "too-many-doormats-in-section",
+      "group": "Choice of doormats",
+      "label": "Too many doormats in section",
+      "severity": "Medium",
+      "condition": "A single topic doormat section contains more than 9 doormats.",
+      "recommendation": "Reduce the section to 9 doormats or split lower-priority destinations into another section.",
+      "reporting": "Report this issue only on doormats after the ninth item in the section. Do not report it on every doormat.",
+      "evidence_required": [
+        "section_doormat_count",
+        "maximum_allowed",
+        "doormat_index"
+      ]
+    },
+    {
+      "id": "wrong-doormat-order",
+      "group": "Choice of doormats",
+      "label": "Wrong doormat order",
+      "severity": "Medium",
+      "condition": "The doormat order conflicts with supplied evidence about the most visited information, priority services, explicit page hierarchy, or another concrete ordering signal.",
+      "recommendation": "Reorder doormats so the highest-demand or highest-priority information and services come first.",
+      "evidence_required": [
+        "visit_data",
+        "explicit_priority_signal",
+        "page_context_signal"
+      ]
     }
   ],
   "severity_guidance": {

@@ -1,8 +1,18 @@
 {
   "type": "object",
-  "required": ["replacements"],
+  "required": ["rewritten_doormat_set_html", "doormats"],
   "properties": {
-    "replacements": {
+    "rewritten_doormat_set_html": {
+      "type": "string"
+    },
+    "full_updated_html": {
+      "type": "string"
+    },
+    "set_level_changes": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "doormats": {
       "type": "array",
       "items": {
         "type": "object",
@@ -10,8 +20,7 @@
           "doormat_index",
           "href",
           "rewritten_link_text",
-          "rewritten_description",
-          "updated_html"
+          "rewritten_description"
         ],
         "properties": {
           "doormat_index": { "type": "integer", "minimum": 1 },
