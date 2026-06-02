@@ -1,0 +1,67 @@
+{
+  "version": "draft-2026-05-28",
+  "scope": "Rewrite GCWeb topic page doormat link text and descriptions.",
+  "rules": [
+    {
+      "id": "rewrite-complete-set",
+      "text": "Rewrite the complete doormat set together. Do not optimize one doormat in isolation if that would create inconsistent title style, description style, ordering, or duplicate descriptions across the set."
+    },
+    {
+      "id": "return-full-updated-set",
+      "text": "Return updated HTML for the complete doormat set. When the input is a full HTML page, return the full page HTML with only the doormat section changed and preserve unrelated content exactly as provided."
+    },
+    {
+      "id": "preserve-href",
+      "text": "Preserve each original href unless the user explicitly asks to change destinations."
+    },
+    {
+      "id": "preserve-valid-structure",
+      "text": "Preserve existing valid doormat structure. Only repair structure when the issue report identifies a structure problem or the user asks for HTML repair."
+    },
+    {
+      "id": "link-text-descriptive",
+      "text": "Use descriptive link text. Prefer action verbs or concise keywords that summarize the information or tasks available on the destination page."
+    },
+    {
+      "id": "link-text-length",
+      "text": "Keep link text under 75 characters. Aim for 45 characters or fewer when possible."
+    },
+    {
+      "id": "link-text-style",
+      "text": "Use sentence case, no trailing punctuation, and one grammatical style across the doormat set."
+    },
+    {
+      "id": "description-purpose",
+      "text": "Use the description to help users decide whether the link is relevant. Add information not already present in the link text."
+    },
+    {
+      "id": "description-length",
+      "text": "Keep descriptions under 120 characters. Aim for fewer than 100 characters when possible."
+    },
+    {
+      "id": "description-style",
+      "text": "Prefer concise comma-separated keywords or task phrases. Use one description style across the set."
+    },
+    {
+      "id": "avoid-filler",
+      "text": "Do not start descriptions with filler phrases such as Includes, Information on, Learn more about, or Find information about."
+    },
+    {
+      "id": "avoid-duplicates",
+      "text": "Do not reuse identical or near-identical descriptions across doormats. Make each description specific to its destination."
+    },
+    {
+      "id": "plain-description",
+      "text": "Descriptions must be plain text only: no links, bold text, bullets, or markup inside the paragraph."
+    },
+    {
+      "id": "no-final-punctuation",
+      "text": "Do not end descriptions with punctuation."
+    },
+    {
+      "id": "remove-placeholders",
+      "text": "Do not leave generic placeholder link text or descriptions. Only include doormats that are customized from the supplied content or user instructions."
+    }
+  ],
+  "preferred_html_shape": "<div class=\"wb-eqht row\"><div class=\"col-lg-4 col-md-6\"><section><h3><a href=\"[url]\">[Link text]</a></h3><p>[Description]</p></section></div></div>"
+}

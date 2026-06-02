@@ -1,0 +1,179 @@
+{
+  "type": "object",
+  "required": ["doormats"],
+  "properties": {
+    "page_summary": {
+      "type": "object",
+      "properties": {
+        "language": {
+          "type": "string",
+          "enum": ["en", "fr", "unknown"]
+        },
+        "doormat_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "detected_wrapper": {
+          "type": "string"
+        },
+        "detected_link_text_style": {
+          "type": "string",
+          "enum": [
+            "action-verb",
+            "noun-topic",
+            "product-or-service",
+            "audience-group",
+            "mixed-or-unclear"
+          ]
+        },
+        "detected_description_style": {
+          "type": "string",
+          "enum": [
+            "action-verb-task-summary",
+            "noun-topic-summary",
+            "keyword-list",
+            "task-list",
+            "eligibility-or-benefit-summary",
+            "mixed-or-unclear"
+          ]
+        },
+        "set_level_issues": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "overall_assessment": {
+          "type": "string"
+        }
+      }
+    },
+    "doormats": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "doormat_index",
+          "link_text",
+          "href",
+          "description",
+          "issues"
+        ],
+        "properties": {
+          "doormat_index": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "link_text": {
+            "type": "string"
+          },
+          "href": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "link_text_character_count": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "description_character_count": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "detected_link_text_style": {
+            "type": "string",
+            "enum": [
+              "action-verb",
+              "noun-topic",
+              "product-or-service",
+              "audience-group",
+              "mixed-or-unclear"
+            ]
+          },
+          "detected_description_style": {
+            "type": "string",
+            "enum": [
+              "action-verb-task-summary",
+              "noun-topic-summary",
+              "keyword-list",
+              "task-list",
+              "eligibility-or-benefit-summary",
+              "mixed-or-unclear"
+            ]
+          },
+          "issues": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "issue_category",
+                "description",
+                "recommendation",
+                "severity"
+              ],
+              "properties": {
+                "issue_category": {
+                  "type": "string"
+                },
+                "issue_group": {
+                  "type": "string",
+                  "enum": [
+                    "Link code issue",
+                    "Link name",
+                    "Description clarity",
+                    "Description formatting",
+                    "Enhancement label",
+                    "Choice of doormats"
+                  ]
+                },
+                "description": {
+                  "type": "string"
+                },
+                "recommendation": {
+                  "type": "string"
+                },
+                "severity": {
+                  "type": "string",
+                  "enum": ["High", "Medium", "Low"]
+                },
+                "include": {
+                  "type": "boolean"
+                },
+                "evidence": {
+                  "type": "string"
+                },
+                "evidence_details": {
+                  "type": "object",
+                  "properties": {
+                    "doormat_href": {
+                      "type": "string"
+                    },
+                    "most_requested_href": {
+                      "type": "string"
+                    },
+                    "doormat_link_text": {
+                      "type": "string"
+                    },
+                    "most_requested_link_text": {
+                      "type": "string"
+                    },
+                    "destination_page_title": {
+                      "type": "string"
+                    },
+                    "character_limit": {
+                      "type": "integer"
+                    },
+                    "actual_character_count": {
+                      "type": "integer"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

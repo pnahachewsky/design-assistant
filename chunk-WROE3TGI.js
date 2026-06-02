@@ -20842,6 +20842,52 @@ var WebDiffService = class _WebDiffService {
         width: 100%;
       }
 
+      /* Subway fallback for preview (WET JS does not run in shadow DOM) */
+      .rendered-content nav.gc-subway {
+        display: block !important;
+        border-color: #26374a !important;
+      }
+
+      .rendered-content nav.gc-subway dl {
+        margin-left: 0.5em;
+      }
+
+      .rendered-content nav.gc-subway dl dt,
+      .rendered-content nav.gc-subway dl dd {
+        border-left: 4px solid #26374a;
+        margin: 0;
+        padding-left: 1em;
+        position: relative;
+      }
+
+      .rendered-content nav.gc-subway dl dt {
+        font-weight: 400;
+      }
+
+      .rendered-content nav.gc-subway dl dd {
+        padding-bottom: 1.25em;
+        padding-top: 0.25em;
+      }
+
+      .rendered-content nav.gc-subway dl dd:last-of-type,
+      .rendered-content nav.gc-subway dl dt:last-of-type {
+        border-left-color: transparent;
+        padding-bottom: 0;
+      }
+
+      .rendered-content nav.gc-subway dl dt a::before {
+        background-color: #26374a;
+        border: 3px solid #26374a;
+        border-radius: 50%;
+        box-shadow: 0 0 0 10px #fff inset;
+        content: "";
+        height: 1.2em;
+        left: -0.7em;
+        position: absolute;
+        top: 0;
+        width: 1.2em;
+      }
+
       /* Optional connection type styling */
       .cnjnctn-type-or > [class*=cnjnctn-col]:not(:first-child):before {
         content: "or";
@@ -21691,6 +21737,12 @@ var HIDDEN_CLASS_NAMES = /* @__PURE__ */ new Set(["hidden", "hide", "d-none", "i
 var IGNORED_ALERT_IDS = /* @__PURE__ */ new Set(["norun"]);
 function getReportableAlerts(root, options) {
   return Array.from(root.querySelectorAll(".alert")).filter((alert) => !isConditionalInteractiveAlert(alert, options));
+}
+function getReportableAlertsFromHtml(sourceHtml, options) {
+  if (!sourceHtml)
+    return [];
+  const doc = new DOMParser().parseFromString(sourceHtml, "text/html");
+  return getReportableAlerts(doc, options);
 }
 function removeNonReportableAlertsFromHtml(sourceHtml, options) {
   if (!sourceHtml)
@@ -28448,9 +28500,16 @@ var guidanceMap = [
     patterns: [/^alert(-(danger|dismissable|dismissible|info|link|success|warning))?$/]
   },
   {
-    name: "page.tools.guidance.craVariant.doormats.title",
+    id: "topicDoormats",
+    name: "page.tools.guidance.craVariant.topicDoormats.title",
     url: "page.tools.guidance.craVariant.doormats.url",
-    patterns: [/^(gc-srvinfo|list-group)$/]
+    patterns: ["gc-srvinfo"]
+  },
+  {
+    id: "subwayDoormats",
+    name: "page.tools.guidance.craVariant.subwayDoormats.title",
+    url: "page.tools.guidance.craVariant.doormats.url",
+    patterns: []
   },
   {
     name: "page.tools.guidance.craVariant.fieldflow.title",
@@ -28615,7 +28674,8 @@ var guidanceContentMap = [
     patterns: [/^On this page$/i, /^Table of contents$/i]
   },
   {
-    name: "page.tools.guidance.craVariant.doormats.title",
+    id: "topicDoormats",
+    name: "page.tools.guidance.craVariant.topicDoormats.title",
     url: "page.tools.guidance.craVariant.doormats.url",
     tag: "section",
     patterns: [/^BANANA$/]
@@ -28665,6 +28725,11 @@ var guidanceContentMap = [
 ];
 
 // src/app/views/page-assistant/services/validator.service.ts
+var SUBWAY_DOORMATS_GUIDANCE = {
+  id: "subwayDoormats",
+  name: "page.tools.guidance.craVariant.subwayDoormats.title",
+  url: "page.tools.guidance.craVariant.doormats.url"
+};
 var ValidatorService = class _ValidatorService {
   validateHtml(html) {
     const parser = new DOMParser();
@@ -28732,15 +28797,21 @@ var ValidatorService = class _ValidatorService {
     const found = /* @__PURE__ */ new Map();
     this.walkForGuidance(doc.body, found);
     this.walkForContentGuidance(doc.body, found);
+    this.collectStructuralGuidance(doc.body, found);
     this.walkForGuidanceByExclusion(doc.body, found);
     return Array.from(found.values());
+  }
+  collectStructuralGuidance(root, found) {
+    if (root.querySelector("nav.gc-subway dl dt a") && root.querySelector("nav.gc-subway dl dd")) {
+      this.addGuidance(found, SUBWAY_DOORMATS_GUIDANCE);
+    }
   }
   walkForGuidance(node, found) {
     if (node.nodeType === Node.ELEMENT_NODE) {
       node.classList.forEach((cls) => {
         for (const group of guidanceMap) {
           if (group.patterns.some((pat) => typeof pat === "string" ? pat === cls : pat.test(cls))) {
-            found.set(group.url, { name: group.name, url: group.url });
+            this.addGuidance(found, group);
           }
         }
       });
@@ -28759,7 +28830,7 @@ var ValidatorService = class _ValidatorService {
         for (const group of guidanceContentMap) {
           const tagMatches = typeof group.tag === "string" ? group.tag === tagName : group.tag.test(tagName);
           if (tagMatches && group.patterns.some((pat) => typeof pat === "string" ? pat === text : pat.test(text))) {
-            found.set(group.url, { name: group.name, url: group.url });
+            this.addGuidance(found, group);
           }
         }
       }
@@ -28781,9 +28852,16 @@ var ValidatorService = class _ValidatorService {
         }
       });
       if (!hasExclusion) {
-        found.set(group.url, { name: group.name, url: group.url });
+        this.addGuidance(found, group);
       }
     }
+  }
+  addGuidance(found, group) {
+    found.set(`${group.id ?? group.name}|${group.name}|${group.url}`, {
+      id: group.id,
+      name: group.name,
+      url: group.url
+    });
   }
   static \u0275fac = function ValidatorService_Factory(__ngFactoryType__) {
     return new (__ngFactoryType__ || _ValidatorService)();
@@ -28970,7 +29048,7 @@ function ComponentGuidanceComponent_ng_template_3_Template(rf, ctx) {
 }
 function ComponentGuidanceComponent_ng_template_4_Conditional_12_Conditional_0_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275element(0, "p-chip", 25);
+    \u0275\u0275element(0, "p-chip", 26);
   }
   if (rf & 2) {
     const ctx_r2 = \u0275\u0275nextContext(3);
@@ -28979,7 +29057,7 @@ function ComponentGuidanceComponent_ng_template_4_Conditional_12_Conditional_0_T
 }
 function ComponentGuidanceComponent_ng_template_4_Conditional_12_Conditional_1_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275element(0, "p-chip", 25);
+    \u0275\u0275element(0, "p-chip", 26);
   }
   if (rf & 2) {
     const ctx_r2 = \u0275\u0275nextContext(3);
@@ -28997,7 +29075,7 @@ function ComponentGuidanceComponent_ng_template_4_Conditional_12_Conditional_2_C
 }
 function ComponentGuidanceComponent_ng_template_4_Conditional_12_Conditional_2_Conditional_1_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275element(0, "p-chip", 25);
+    \u0275\u0275element(0, "p-chip", 26);
   }
   if (rf & 2) {
     const ctx_r2 = \u0275\u0275nextContext(4);
@@ -29006,7 +29084,7 @@ function ComponentGuidanceComponent_ng_template_4_Conditional_12_Conditional_2_C
 }
 function ComponentGuidanceComponent_ng_template_4_Conditional_12_Conditional_2_Conditional_2_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275element(0, "p-chip", 25);
+    \u0275\u0275element(0, "p-chip", 26);
   }
   if (rf & 2) {
     const ctx_r2 = \u0275\u0275nextContext(4);
@@ -29015,12 +29093,12 @@ function ComponentGuidanceComponent_ng_template_4_Conditional_12_Conditional_2_C
 }
 function ComponentGuidanceComponent_ng_template_4_Conditional_12_Conditional_2_Conditional_3_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275element(0, "p-chip", 26);
+    \u0275\u0275element(0, "p-chip", 27);
   }
 }
 function ComponentGuidanceComponent_ng_template_4_Conditional_12_Conditional_2_Conditional_4_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275element(0, "p-chip", 25);
+    \u0275\u0275element(0, "p-chip", 26);
   }
   if (rf & 2) {
     const ctx_r2 = \u0275\u0275nextContext(4);
@@ -29029,7 +29107,7 @@ function ComponentGuidanceComponent_ng_template_4_Conditional_12_Conditional_2_C
 }
 function ComponentGuidanceComponent_ng_template_4_Conditional_12_Conditional_2_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275template(0, ComponentGuidanceComponent_ng_template_4_Conditional_12_Conditional_2_Conditional_0_Template, 1, 3, "p-chip", 24)(1, ComponentGuidanceComponent_ng_template_4_Conditional_12_Conditional_2_Conditional_1_Template, 1, 1, "p-chip", 25)(2, ComponentGuidanceComponent_ng_template_4_Conditional_12_Conditional_2_Conditional_2_Template, 1, 1, "p-chip", 25)(3, ComponentGuidanceComponent_ng_template_4_Conditional_12_Conditional_2_Conditional_3_Template, 1, 0, "p-chip", 26)(4, ComponentGuidanceComponent_ng_template_4_Conditional_12_Conditional_2_Conditional_4_Template, 1, 1, "p-chip", 25);
+    \u0275\u0275template(0, ComponentGuidanceComponent_ng_template_4_Conditional_12_Conditional_2_Conditional_0_Template, 1, 3, "p-chip", 24)(1, ComponentGuidanceComponent_ng_template_4_Conditional_12_Conditional_2_Conditional_1_Template, 1, 1, "p-chip", 26)(2, ComponentGuidanceComponent_ng_template_4_Conditional_12_Conditional_2_Conditional_2_Template, 1, 1, "p-chip", 26)(3, ComponentGuidanceComponent_ng_template_4_Conditional_12_Conditional_2_Conditional_3_Template, 1, 0, "p-chip", 27)(4, ComponentGuidanceComponent_ng_template_4_Conditional_12_Conditional_2_Conditional_4_Template, 1, 1, "p-chip", 26);
   }
   if (rf & 2) {
     const ctx_r2 = \u0275\u0275nextContext(3);
@@ -29038,7 +29116,7 @@ function ComponentGuidanceComponent_ng_template_4_Conditional_12_Conditional_2_T
 }
 function ComponentGuidanceComponent_ng_template_4_Conditional_12_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275template(0, ComponentGuidanceComponent_ng_template_4_Conditional_12_Conditional_0_Template, 1, 1, "p-chip", 25)(1, ComponentGuidanceComponent_ng_template_4_Conditional_12_Conditional_1_Template, 1, 1, "p-chip", 25)(2, ComponentGuidanceComponent_ng_template_4_Conditional_12_Conditional_2_Template, 5, 1);
+    \u0275\u0275template(0, ComponentGuidanceComponent_ng_template_4_Conditional_12_Conditional_0_Template, 1, 1, "p-chip", 26)(1, ComponentGuidanceComponent_ng_template_4_Conditional_12_Conditional_1_Template, 1, 1, "p-chip", 26)(2, ComponentGuidanceComponent_ng_template_4_Conditional_12_Conditional_2_Template, 5, 1);
   }
   if (rf & 2) {
     const ctx_r2 = \u0275\u0275nextContext(2);
@@ -29057,7 +29135,7 @@ function ComponentGuidanceComponent_ng_template_4_Conditional_13_Template(rf, ct
 }
 function ComponentGuidanceComponent_ng_template_4_Conditional_15_Conditional_0_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275elementStart(0, "div", 27);
+    \u0275\u0275elementStart(0, "div", 28);
     \u0275\u0275element(1, "i", 31);
     \u0275\u0275elementStart(2, "span", 8);
     \u0275\u0275text(3, "Loading alerts");
@@ -29066,7 +29144,7 @@ function ComponentGuidanceComponent_ng_template_4_Conditional_15_Conditional_0_T
 }
 function ComponentGuidanceComponent_ng_template_4_Conditional_15_Conditional_1_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275elementStart(0, "span", 28);
+    \u0275\u0275elementStart(0, "span", 29);
     \u0275\u0275text(1, "AI error");
     \u0275\u0275elementEnd();
   }
@@ -29083,7 +29161,7 @@ function ComponentGuidanceComponent_ng_template_4_Conditional_15_Conditional_2_p
 }
 function ComponentGuidanceComponent_ng_template_4_Conditional_15_Conditional_2_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275elementStart(0, "div", 29);
+    \u0275\u0275elementStart(0, "div", 30);
     \u0275\u0275template(1, ComponentGuidanceComponent_ng_template_4_Conditional_15_Conditional_2_p_chip_1_Template, 1, 2, "p-chip", 32);
     \u0275\u0275elementEnd();
   }
@@ -29095,21 +29173,21 @@ function ComponentGuidanceComponent_ng_template_4_Conditional_15_Conditional_2_T
 }
 function ComponentGuidanceComponent_ng_template_4_Conditional_15_Conditional_3_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275elementStart(0, "span", 30);
+    \u0275\u0275elementStart(0, "span", 25);
     \u0275\u0275text(1, "No pain points found");
     \u0275\u0275elementEnd();
   }
 }
 function ComponentGuidanceComponent_ng_template_4_Conditional_15_Conditional_4_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275elementStart(0, "span", 30);
+    \u0275\u0275elementStart(0, "span", 25);
     \u0275\u0275text(1, "Expand this row to explore alert pain points");
     \u0275\u0275elementEnd();
   }
 }
 function ComponentGuidanceComponent_ng_template_4_Conditional_15_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275template(0, ComponentGuidanceComponent_ng_template_4_Conditional_15_Conditional_0_Template, 4, 0, "div", 27)(1, ComponentGuidanceComponent_ng_template_4_Conditional_15_Conditional_1_Template, 2, 0, "span", 28)(2, ComponentGuidanceComponent_ng_template_4_Conditional_15_Conditional_2_Template, 2, 1, "div", 29)(3, ComponentGuidanceComponent_ng_template_4_Conditional_15_Conditional_3_Template, 2, 0, "span", 30)(4, ComponentGuidanceComponent_ng_template_4_Conditional_15_Conditional_4_Template, 2, 0, "span", 30);
+    \u0275\u0275template(0, ComponentGuidanceComponent_ng_template_4_Conditional_15_Conditional_0_Template, 4, 0, "div", 28)(1, ComponentGuidanceComponent_ng_template_4_Conditional_15_Conditional_1_Template, 2, 0, "span", 29)(2, ComponentGuidanceComponent_ng_template_4_Conditional_15_Conditional_2_Template, 2, 1, "div", 30)(3, ComponentGuidanceComponent_ng_template_4_Conditional_15_Conditional_3_Template, 2, 0, "span", 25)(4, ComponentGuidanceComponent_ng_template_4_Conditional_15_Conditional_4_Template, 2, 0, "span", 25);
   }
   if (rf & 2) {
     const expanded_r6 = \u0275\u0275nextContext().expanded;
@@ -29117,7 +29195,14 @@ function ComponentGuidanceComponent_ng_template_4_Conditional_15_Template(rf, ct
     \u0275\u0275conditional(expanded_r6 && ctx_r2.alertLoading ? 0 : ctx_r2.alertError ? 1 : ctx_r2.alertDataLoaded && ctx_r2.alertCategories.length ? 2 : ctx_r2.alertDataLoaded ? 3 : 4);
   }
 }
-function ComponentGuidanceComponent_ng_template_4_Conditional_16_Conditional_0_p_chip_1_Template(rf, ctx) {
+function ComponentGuidanceComponent_ng_template_4_Conditional_16_Template(rf, ctx) {
+  if (rf & 1) {
+    \u0275\u0275elementStart(0, "span", 25);
+    \u0275\u0275text(1, "Expand this row to explore doormat pain points");
+    \u0275\u0275elementEnd();
+  }
+}
+function ComponentGuidanceComponent_ng_template_4_Conditional_17_Conditional_0_p_chip_1_Template(rf, ctx) {
   if (rf & 1) {
     \u0275\u0275element(0, "p-chip", 35);
   }
@@ -29126,9 +29211,9 @@ function ComponentGuidanceComponent_ng_template_4_Conditional_16_Conditional_0_p
     \u0275\u0275property("label", it_r7);
   }
 }
-function ComponentGuidanceComponent_ng_template_4_Conditional_16_Conditional_0_Conditional_2_Template(rf, ctx) {
+function ComponentGuidanceComponent_ng_template_4_Conditional_17_Conditional_0_Conditional_2_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275elementStart(0, "div", 30);
+    \u0275\u0275elementStart(0, "div", 25);
     \u0275\u0275text(1);
     \u0275\u0275elementEnd();
   }
@@ -29138,12 +29223,12 @@ function ComponentGuidanceComponent_ng_template_4_Conditional_16_Conditional_0_C
     \u0275\u0275textInterpolate(row_r4.rationale);
   }
 }
-function ComponentGuidanceComponent_ng_template_4_Conditional_16_Conditional_0_Template(rf, ctx) {
+function ComponentGuidanceComponent_ng_template_4_Conditional_17_Conditional_0_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275elementStart(0, "div", 29);
-    \u0275\u0275template(1, ComponentGuidanceComponent_ng_template_4_Conditional_16_Conditional_0_p_chip_1_Template, 1, 1, "p-chip", 34);
+    \u0275\u0275elementStart(0, "div", 30);
+    \u0275\u0275template(1, ComponentGuidanceComponent_ng_template_4_Conditional_17_Conditional_0_p_chip_1_Template, 1, 1, "p-chip", 34);
     \u0275\u0275elementEnd();
-    \u0275\u0275template(2, ComponentGuidanceComponent_ng_template_4_Conditional_16_Conditional_0_Conditional_2_Template, 2, 1, "div", 30);
+    \u0275\u0275template(2, ComponentGuidanceComponent_ng_template_4_Conditional_17_Conditional_0_Conditional_2_Template, 2, 1, "div", 25);
   }
   if (rf & 2) {
     const row_r4 = \u0275\u0275nextContext(2).$implicit;
@@ -29153,7 +29238,7 @@ function ComponentGuidanceComponent_ng_template_4_Conditional_16_Conditional_0_T
     \u0275\u0275conditional(row_r4.rationale ? 2 : -1);
   }
 }
-function ComponentGuidanceComponent_ng_template_4_Conditional_16_Conditional_1_Template(rf, ctx) {
+function ComponentGuidanceComponent_ng_template_4_Conditional_17_Conditional_1_Template(rf, ctx) {
   if (rf & 1) {
     \u0275\u0275elementStart(0, "span");
     \u0275\u0275text(1);
@@ -29165,9 +29250,9 @@ function ComponentGuidanceComponent_ng_template_4_Conditional_16_Conditional_1_T
     \u0275\u0275textInterpolate(row_r4.rationale || "?");
   }
 }
-function ComponentGuidanceComponent_ng_template_4_Conditional_16_Template(rf, ctx) {
+function ComponentGuidanceComponent_ng_template_4_Conditional_17_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275template(0, ComponentGuidanceComponent_ng_template_4_Conditional_16_Conditional_0_Template, 3, 2)(1, ComponentGuidanceComponent_ng_template_4_Conditional_16_Conditional_1_Template, 2, 1, "span");
+    \u0275\u0275template(0, ComponentGuidanceComponent_ng_template_4_Conditional_17_Conditional_0_Template, 3, 2)(1, ComponentGuidanceComponent_ng_template_4_Conditional_17_Conditional_1_Template, 2, 1, "span");
   }
   if (rf & 2) {
     const row_r4 = \u0275\u0275nextContext().$implicit;
@@ -29192,7 +29277,7 @@ function ComponentGuidanceComponent_ng_template_4_Template(rf, ctx) {
     \u0275\u0275template(12, ComponentGuidanceComponent_ng_template_4_Conditional_12_Template, 3, 1)(13, ComponentGuidanceComponent_ng_template_4_Conditional_13_Template, 1, 3, "p-chip", 24);
     \u0275\u0275elementEnd();
     \u0275\u0275elementStart(14, "td");
-    \u0275\u0275template(15, ComponentGuidanceComponent_ng_template_4_Conditional_15_Template, 5, 1)(16, ComponentGuidanceComponent_ng_template_4_Conditional_16_Template, 2, 1);
+    \u0275\u0275template(15, ComponentGuidanceComponent_ng_template_4_Conditional_15_Template, 5, 1)(16, ComponentGuidanceComponent_ng_template_4_Conditional_16_Template, 2, 0, "span", 25)(17, ComponentGuidanceComponent_ng_template_4_Conditional_17_Template, 2, 1);
     \u0275\u0275elementEnd()();
   }
   if (rf & 2) {
@@ -29215,13 +29300,13 @@ function ComponentGuidanceComponent_ng_template_4_Template(rf, ctx) {
     \u0275\u0275advance(2);
     \u0275\u0275conditional(row_r4.__nameKey === ctx_r2.alertsNameKey ? 12 : 13);
     \u0275\u0275advance(3);
-    \u0275\u0275conditional(row_r4.__nameKey === ctx_r2.alertsNameKey ? 15 : 16);
+    \u0275\u0275conditional(row_r4.__nameKey === ctx_r2.alertsNameKey ? 15 : ctx_r2.isDoormatRow(row_r4) ? 16 : 17);
   }
 }
 function ComponentGuidanceComponent_ng_template_5_Conditional_3_Template(rf, ctx) {
   if (rf & 1) {
     const _r8 = \u0275\u0275getCurrentView();
-    \u0275\u0275elementStart(0, "ca-alerts-guidance", 40);
+    \u0275\u0275elementStart(0, "ca-alerts-guidance", 39);
     \u0275\u0275listener("maxSeverityChange", function ComponentGuidanceComponent_ng_template_5_Conditional_3_Template_ca_alerts_guidance_maxSeverityChange_0_listener($event) {
       \u0275\u0275restoreView(_r8);
       const ctx_r2 = \u0275\u0275nextContext(2);
@@ -29250,7 +29335,167 @@ function ComponentGuidanceComponent_ng_template_5_Conditional_3_Template(rf, ctx
     \u0275\u0275property("selectAll", ctx_r2.alertSelectAll);
   }
 }
-function ComponentGuidanceComponent_ng_template_5_Conditional_4_ng_template_1_Template(rf, ctx) {
+function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_1_Template(rf, ctx) {
+  if (rf & 1) {
+    \u0275\u0275elementStart(0, "span", 25);
+    \u0275\u0275element(1, "i", 31);
+    \u0275\u0275text(2, " Analyzing topic doormats ");
+    \u0275\u0275elementEnd();
+  }
+}
+function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_2_Template(rf, ctx) {
+  if (rf & 1) {
+    \u0275\u0275elementStart(0, "span");
+    \u0275\u0275text(1, "AI response received.");
+    \u0275\u0275elementEnd();
+  }
+}
+function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_3_Conditional_3_Template(rf, ctx) {
+  if (rf & 1) {
+    \u0275\u0275elementStart(0, "div", 25);
+    \u0275\u0275text(1);
+    \u0275\u0275elementEnd();
+  }
+  if (rf & 2) {
+    const ctx_r2 = \u0275\u0275nextContext(5);
+    \u0275\u0275advance();
+    \u0275\u0275textInterpolate(ctx_r2.topicDoormatIssuesErrorDetail);
+  }
+}
+function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_3_Template(rf, ctx) {
+  if (rf & 1) {
+    \u0275\u0275elementStart(0, "div")(1, "span", 29);
+    \u0275\u0275text(2, "AI error");
+    \u0275\u0275elementEnd();
+    \u0275\u0275template(3, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_3_Conditional_3_Template, 2, 1, "div", 25);
+    \u0275\u0275elementEnd();
+  }
+  if (rf & 2) {
+    const ctx_r2 = \u0275\u0275nextContext(4);
+    \u0275\u0275advance(3);
+    \u0275\u0275conditional(ctx_r2.topicDoormatIssuesErrorDetail ? 3 : -1);
+  }
+}
+function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_ng_template_5_Template(rf, ctx) {
+  if (rf & 1) {
+    \u0275\u0275elementStart(0, "tr")(1, "th", 44);
+    \u0275\u0275text(2, "Include");
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(3, "th", 45);
+    \u0275\u0275text(4, "Severity");
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(5, "th");
+    \u0275\u0275text(6, "Doormat");
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(7, "th");
+    \u0275\u0275text(8, "Issue");
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(9, "th");
+    \u0275\u0275text(10, "Evidence");
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(11, "th");
+    \u0275\u0275text(12, "Recommendation");
+    \u0275\u0275elementEnd()();
+  }
+}
+function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_ng_template_6_Template(rf, ctx) {
+  if (rf & 1) {
+    const _r9 = \u0275\u0275getCurrentView();
+    \u0275\u0275elementStart(0, "tr")(1, "td")(2, "p-checkbox", 46);
+    \u0275\u0275twoWayListener("ngModelChange", function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_ng_template_6_Template_p_checkbox_ngModelChange_2_listener($event) {
+      const issue_r10 = \u0275\u0275restoreView(_r9).$implicit;
+      \u0275\u0275twoWayBindingSet(issue_r10.include, $event) || (issue_r10.include = $event);
+      return \u0275\u0275resetView($event);
+    });
+    \u0275\u0275elementEnd()();
+    \u0275\u0275elementStart(3, "td")(4, "span", 47);
+    \u0275\u0275text(5);
+    \u0275\u0275elementEnd()();
+    \u0275\u0275elementStart(6, "td");
+    \u0275\u0275text(7);
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(8, "td");
+    \u0275\u0275text(9);
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(10, "td");
+    \u0275\u0275text(11);
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(12, "td");
+    \u0275\u0275text(13);
+    \u0275\u0275elementEnd()();
+  }
+  if (rf & 2) {
+    const issue_r10 = ctx.$implicit;
+    const ctx_r2 = \u0275\u0275nextContext(4);
+    \u0275\u0275advance(2);
+    \u0275\u0275property("binary", true);
+    \u0275\u0275twoWayProperty("ngModel", issue_r10.include);
+    \u0275\u0275property("disabled", ctx_r2.isNoIssueRow(issue_r10));
+    \u0275\u0275advance(2);
+    \u0275\u0275property("ngClass", ctx_r2.severityChip(issue_r10.severity));
+    \u0275\u0275advance();
+    \u0275\u0275textInterpolate1(" ", issue_r10.severity, " ");
+    \u0275\u0275advance(2);
+    \u0275\u0275textInterpolate(issue_r10.doormat);
+    \u0275\u0275advance(2);
+    \u0275\u0275textInterpolate(issue_r10.issue);
+    \u0275\u0275advance(2);
+    \u0275\u0275textInterpolate(issue_r10.evidence || "\u2014");
+    \u0275\u0275advance(2);
+    \u0275\u0275textInterpolate(issue_r10.recommendation || "-");
+  }
+}
+function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_ng_template_7_Conditional_2_Template(rf, ctx) {
+  if (rf & 1) {
+    \u0275\u0275elementStart(0, "span", 25);
+    \u0275\u0275text(1, "Waiting for AI response");
+    \u0275\u0275elementEnd();
+  }
+}
+function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_ng_template_7_Conditional_3_Template(rf, ctx) {
+  if (rf & 1) {
+    \u0275\u0275elementStart(0, "span", 25);
+    \u0275\u0275text(1, "No issues returned");
+    \u0275\u0275elementEnd();
+  }
+}
+function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_ng_template_7_Conditional_4_Template(rf, ctx) {
+  if (rf & 1) {
+    \u0275\u0275elementStart(0, "span", 25);
+    \u0275\u0275text(1, "Expand this row to analyze topic doormats");
+    \u0275\u0275elementEnd();
+  }
+}
+function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_ng_template_7_Template(rf, ctx) {
+  if (rf & 1) {
+    \u0275\u0275elementStart(0, "tr")(1, "td", 36);
+    \u0275\u0275template(2, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_ng_template_7_Conditional_2_Template, 2, 0, "span", 25)(3, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_ng_template_7_Conditional_3_Template, 2, 0, "span", 25)(4, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_ng_template_7_Conditional_4_Template, 2, 0, "span", 25);
+    \u0275\u0275elementEnd()();
+  }
+  if (rf & 2) {
+    const ctx_r2 = \u0275\u0275nextContext(4);
+    \u0275\u0275advance(2);
+    \u0275\u0275conditional(ctx_r2.topicDoormatIssuesLoading ? 2 : ctx_r2.topicDoormatIssuesResponseReceived ? 3 : 4);
+  }
+}
+function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Template(rf, ctx) {
+  if (rf & 1) {
+    \u0275\u0275elementStart(0, "div", 41);
+    \u0275\u0275template(1, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_1_Template, 3, 0, "span", 25)(2, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_2_Template, 2, 0, "span")(3, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_3_Template, 4, 1, "div");
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(4, "p-table", 42);
+    \u0275\u0275template(5, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_ng_template_5_Template, 13, 0, "ng-template", 3)(6, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_ng_template_6_Template, 14, 9, "ng-template", 4)(7, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_ng_template_7_Template, 5, 1, "ng-template", 43);
+    \u0275\u0275elementEnd();
+  }
+  if (rf & 2) {
+    const ctx_r2 = \u0275\u0275nextContext(3);
+    \u0275\u0275advance();
+    \u0275\u0275conditional(ctx_r2.topicDoormatIssuesLoading ? 1 : ctx_r2.topicDoormatIssuesResponseReceived ? 2 : ctx_r2.topicDoormatIssuesError ? 3 : -1);
+    \u0275\u0275advance(3);
+    \u0275\u0275property("value", ctx_r2.topicDoormatIssueRows);
+  }
+}
+function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_1_ng_template_1_Template(rf, ctx) {
   if (rf & 1) {
     \u0275\u0275elementStart(0, "tr")(1, "th");
     \u0275\u0275text(2, "Column 1");
@@ -29266,7 +29511,7 @@ function ComponentGuidanceComponent_ng_template_5_Conditional_4_ng_template_1_Te
     \u0275\u0275elementEnd()();
   }
 }
-function ComponentGuidanceComponent_ng_template_5_Conditional_4_ng_template_2_Template(rf, ctx) {
+function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_1_ng_template_2_Template(rf, ctx) {
   if (rf & 1) {
     \u0275\u0275elementStart(0, "tr")(1, "td");
     \u0275\u0275text(2, "Data 1");
@@ -29282,23 +29527,33 @@ function ComponentGuidanceComponent_ng_template_5_Conditional_4_ng_template_2_Te
     \u0275\u0275elementEnd()();
   }
 }
+function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_1_Template(rf, ctx) {
+  if (rf & 1) {
+    \u0275\u0275elementStart(0, "p-table", 40);
+    \u0275\u0275template(1, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_1_ng_template_1_Template, 9, 0, "ng-template", 3)(2, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_1_ng_template_2_Template, 9, 0, "ng-template", 4);
+    \u0275\u0275elementEnd();
+  }
+}
 function ComponentGuidanceComponent_ng_template_5_Conditional_4_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275elementStart(0, "p-table", 39);
-    \u0275\u0275template(1, ComponentGuidanceComponent_ng_template_5_Conditional_4_ng_template_1_Template, 9, 0, "ng-template", 3)(2, ComponentGuidanceComponent_ng_template_5_Conditional_4_ng_template_2_Template, 9, 0, "ng-template", 4);
-    \u0275\u0275elementEnd();
+    \u0275\u0275template(0, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Template, 8, 2)(1, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_1_Template, 3, 0, "p-table", 40);
+  }
+  if (rf & 2) {
+    const row_r11 = \u0275\u0275nextContext().$implicit;
+    const ctx_r2 = \u0275\u0275nextContext();
+    \u0275\u0275conditional(row_r11.__id === ctx_r2.topicDoormatsId ? 0 : 1);
   }
 }
 function ComponentGuidanceComponent_ng_template_5_Template(rf, ctx) {
   if (rf & 1) {
     \u0275\u0275elementStart(0, "tr")(1, "td", 36)(2, "div", 37);
-    \u0275\u0275template(3, ComponentGuidanceComponent_ng_template_5_Conditional_3_Template, 1, 1, "ca-alerts-guidance", 38)(4, ComponentGuidanceComponent_ng_template_5_Conditional_4_Template, 3, 0, "p-table", 39);
+    \u0275\u0275template(3, ComponentGuidanceComponent_ng_template_5_Conditional_3_Template, 1, 1, "ca-alerts-guidance", 38)(4, ComponentGuidanceComponent_ng_template_5_Conditional_4_Template, 2, 1);
     \u0275\u0275elementEnd()()();
   }
   if (rf & 2) {
-    const row_r9 = ctx.$implicit;
+    const row_r11 = ctx.$implicit;
     \u0275\u0275advance(3);
-    \u0275\u0275conditional(row_r9.__nameKey === "page.tools.guidance.craVariant.alerts.title" ? 3 : 4);
+    \u0275\u0275conditional(row_r11.__nameKey === "page.tools.guidance.craVariant.alerts.title" ? 3 : 4);
   }
 }
 var ComponentGuidanceComponent = class _ComponentGuidanceComponent {
@@ -29309,7 +29564,11 @@ var ComponentGuidanceComponent = class _ComponentGuidanceComponent {
   ai = inject(ComponentAiService);
   alertAi = inject(AlertAiService);
   cdr = inject(ChangeDetectorRef);
+  openRouter = inject(OpenRouterService);
+  skillManager = inject(SkillManagerService);
+  messageService = inject(MessageService);
   alertIssuesSub;
+  topicDoormatDebugStorageKey = "pageAssistant.topicDoormatDebug";
   production = environment.production;
   guidanceList = [];
   rows = [];
@@ -29321,6 +29580,11 @@ var ComponentGuidanceComponent = class _ComponentGuidanceComponent {
   alertDataLoaded = false;
   alertLoadAttempted = false;
   alertError = false;
+  topicDoormatIssuesLoading = false;
+  topicDoormatIssuesResponseReceived = false;
+  topicDoormatIssuesError = false;
+  topicDoormatIssuesErrorDetail = "";
+  topicDoormatIssueRows = [];
   prevAlertHasIssues = false;
   // multi-select
   selectedRows = [];
@@ -29328,6 +29592,8 @@ var ComponentGuidanceComponent = class _ComponentGuidanceComponent {
   // controlled expansion keys for PrimeNG table
   expandedRows = {};
   alertsNameKey = "page.tools.guidance.craVariant.alerts.title";
+  topicDoormatsId = "topicDoormats";
+  subwayDoormatsId = "subwayDoormats";
   cols = [
     { field: "order", header: "Index" },
     { field: "component", header: "Component" },
@@ -29347,6 +29613,8 @@ var ComponentGuidanceComponent = class _ComponentGuidanceComponent {
     if (data?.originalHtml) {
       this.guidanceList = this.validator.collectGuidanceUrls(data.originalHtml);
       this.rows = this.buildRows(this.guidanceList);
+      this.removeAlertRowWhenNoReportableAlerts(data.originalHtml);
+      this.removeTopicDoormatRowWhenNoTopicDoormats(data.originalHtml);
       this.syncAlertRowSelection();
     }
     this.applyCachedAlertIssues();
@@ -29361,27 +29629,68 @@ var ComponentGuidanceComponent = class _ComponentGuidanceComponent {
   buildRows(list) {
     const unique = /* @__PURE__ */ new Map();
     for (const g of list) {
-      if (!unique.has(g.url)) {
-        unique.set(g.url, { nameKey: g.name, urlKey: g.url });
+      const key2 = `${g.id ?? g.name}|${g.name}|${g.url}`;
+      if (!unique.has(key2)) {
+        unique.set(key2, { id: g.id, nameKey: g.name, urlKey: g.url });
       }
     }
     const resolved = Array.from(unique.values()).map((it) => ({
       component: this.translate.instant(it.nameKey) || it.nameKey,
       url: this.translate.instant(it.urlKey) || it.urlKey,
+      __id: it.id,
       __nameKey: it.nameKey,
       __urlKey: it.urlKey
     }));
-    resolved.sort((a, b) => a.component.localeCompare(b.component, void 0, {
-      sensitivity: "base"
-    }));
+    resolved.sort((a, b) => {
+      const rankDiff = this.getGuidanceSortRank(a.__nameKey, a.__id) - this.getGuidanceSortRank(b.__nameKey, b.__id);
+      if (rankDiff !== 0)
+        return rankDiff;
+      return a.component.localeCompare(b.component, void 0, {
+        sensitivity: "base"
+      });
+    });
     return resolved.map((r, i) => ({
       order: i + 1,
       component: r.component,
       url: r.url,
+      __id: r.__id,
       __nameKey: r.__nameKey,
       __urlKey: r.__urlKey,
       health: "unknown"
     }));
+  }
+  removeAlertRowWhenNoReportableAlerts(html) {
+    const reportableAlerts = getReportableAlertsFromHtml(html, {
+      interactiveResultLeadIns: this.getInteractiveResultLeadIns()
+    });
+    if (reportableAlerts.length)
+      return;
+    this.rows = this.rows.filter((row) => row.__nameKey !== this.alertsNameKey);
+    this.selectedRows = this.selectedRows.filter((row) => row.__nameKey !== this.alertsNameKey);
+    this.reindexRows();
+  }
+  removeTopicDoormatRowWhenNoTopicDoormats(html) {
+    const doc = new DOMParser().parseFromString(html, "text/html");
+    if (doc.querySelector(".gc-srvinfo"))
+      return;
+    this.rows = this.rows.filter((row) => row.__id !== this.topicDoormatsId);
+    this.selectedRows = this.selectedRows.filter((row) => row.__id !== this.topicDoormatsId);
+    this.reindexRows();
+  }
+  getGuidanceSortRank(nameKey, id) {
+    if (nameKey === this.alertsNameKey)
+      return 0;
+    if (id === this.topicDoormatsId)
+      return 1;
+    return 2;
+  }
+  reindexRows() {
+    this.rows.forEach((row, index) => {
+      row.order = index + 1;
+    });
+  }
+  getInteractiveResultLeadIns() {
+    return coerceInteractiveResultLeadIns(this.translate.instant("page.alerts.interactiveResultLeadIns"));
   }
   /** Click handler for the GenAI button. */
   sendToAI() {
@@ -29503,6 +29812,9 @@ var ComponentGuidanceComponent = class _ComponentGuidanceComponent {
     this.prevAlertHasIssues = this.alertHasIssues;
     this.cdr.markForCheck();
   }
+  isDoormatRow(row) {
+    return row.__id === this.topicDoormatsId || row.__id === this.subwayDoormatsId;
+  }
   // (leftover dev helper if you still need it)
   // TEMP FXN FOR BUILDING WHITELIST
   classes = [];
@@ -29527,6 +29839,9 @@ var ComponentGuidanceComponent = class _ComponentGuidanceComponent {
     if (!key2)
       return;
     this.expandedRows = __spreadProps(__spreadValues({}, this.expandedRows), { [key2]: true });
+    if (event?.data?.__id === this.topicDoormatsId) {
+      void this.analyzeTopicDoormatIssues();
+    }
   }
   onRowCollapse(event) {
     const key2 = event?.data?.url;
@@ -29541,6 +29856,361 @@ var ComponentGuidanceComponent = class _ComponentGuidanceComponent {
   }
   collapseAll() {
     this.expandedRows = {};
+  }
+  analyzeTopicDoormatIssues() {
+    return __async(this, null, function* () {
+      if (this.topicDoormatIssuesLoading || this.topicDoormatIssuesResponseReceived) {
+        return;
+      }
+      const html = this.uploadState.getUploadData()?.originalHtml || "";
+      const doormatSets = this.extractTopicDoormatSets(html);
+      if (!doormatSets.length)
+        return;
+      const analysisStart = performance.now();
+      const mostRequestedLinks = this.extractMostRequestedLinks(html);
+      const doormatSummaries = this.extractTopicDoormatSummaries(html);
+      this.topicDoormatIssuesLoading = true;
+      this.topicDoormatIssuesError = false;
+      this.topicDoormatIssuesErrorDetail = "";
+      try {
+        const composed = yield this.skillManager.composePrompt({
+          basePrompt: "",
+          queryText: "analyze topic doormats gc-srvinfo issue report for each doormat",
+          promptKey: PromptKey.Doormats,
+          outputMode: "json",
+          includeReferences: true,
+          includeAssets: true,
+          requireSkill: true
+        });
+        const messages = [
+          { role: "system", content: composed.prompt },
+          {
+            role: "user",
+            content: JSON.stringify({
+              doormatSets,
+              mostRequestedLinks
+            })
+          }
+        ];
+        const selectedModel = this.uploadState.getSelectedAiModel();
+        const modelRotation = this.buildTopicDoormatModelRotation(selectedModel);
+        this.debugTopicDoormatIssues("request prepared", {
+          selectedModel,
+          modelRotation,
+          doormatSetCount: doormatSets.length,
+          mostRequestedLinkCount: mostRequestedLinks.length,
+          loadedSkillResources: composed.loadedPaths,
+          estimatedSystemPromptTokens: composed.estimatedPromptTokens,
+          systemPromptCharacters: composed.prompt.length,
+          userPayloadCharacters: messages[1].content.length,
+          totalMessageCharacters: messages.reduce((total, message) => total + message.content.length, 0)
+        });
+        const { text, model } = yield this.callTopicDoormatIssuesWithFallback(messages, modelRotation);
+        this.topicDoormatIssuesResponseReceived = !!text;
+        if (text) {
+          this.messageService.add({
+            severity: "info",
+            summary: this.translate.instant("common.ai.generating"),
+            life: 2e3
+          });
+        }
+        this.topicDoormatIssueRows = text ? this.parseTopicDoormatIssueRows(text, doormatSummaries) : [];
+        this.debugTopicDoormatIssues("response parsed", {
+          model,
+          responseCharacters: text.length,
+          parsedIssueRows: this.topicDoormatIssueRows.length,
+          totalElapsedMs: Math.round(performance.now() - analysisStart)
+        });
+        if (!text) {
+          this.topicDoormatIssuesError = true;
+          this.topicDoormatIssuesErrorDetail = "The model response was empty or did not include message content.";
+        } else {
+          this.messageService.add({
+            severity: "info",
+            summary: this.translate.instant("common.ai.topicDoormatIssuesReceived", {
+              model: this.getShortModelName(model)
+            }),
+            sticky: true
+          });
+          const primaryModel = modelRotation[0];
+          if (model !== primaryModel) {
+            this.messageService.add({
+              severity: "warn",
+              summary: this.translate.instant("common.ai.fallback.summary"),
+              detail: this.translate.instant("common.ai.fallback.detail", {
+                requested: primaryModel,
+                used: model
+              }),
+              sticky: true
+            });
+          }
+          this.messageService.add({
+            severity: "success",
+            summary: this.translate.instant("common.ai.responseReceived.summary"),
+            detail: this.translate.instant("common.ai.responseReceived.detail"),
+            sticky: true
+          });
+        }
+      } catch (err) {
+        this.topicDoormatIssuesError = true;
+        const detail = err instanceof Error ? err.message : this.translate.instant("common.ai.requestFailed.detailUnknown");
+        this.debugTopicDoormatIssues("request failed", {
+          error: detail,
+          totalElapsedMs: Math.round(performance.now() - analysisStart)
+        });
+        this.topicDoormatIssuesErrorDetail = detail;
+        this.messageService.add({
+          severity: "error",
+          summary: this.translate.instant("common.ai.requestFailed.summary"),
+          detail,
+          sticky: true
+        });
+      } finally {
+        this.topicDoormatIssuesLoading = false;
+        this.cdr.markForCheck();
+      }
+    });
+  }
+  callTopicDoormatIssuesWithFallback(messages, models) {
+    return __async(this, null, function* () {
+      let lastError;
+      for (let index = 0; index < models.length; index += 1) {
+        const model = models[index];
+        const modelStart = performance.now();
+        try {
+          this.debugTopicDoormatIssues("model attempt started", {
+            attempt: index + 1,
+            totalAttempts: models.length,
+            model
+          });
+          const resp = yield this.openRouter.call(model, messages, {
+            temperature: 0,
+            title: "Content Assistant - Topic Doormat Issues",
+            throwOnError: true
+          });
+          const text = resp?.choices?.[0]?.message?.content?.trim() || "";
+          if (text) {
+            this.debugTopicDoormatIssues("model attempt succeeded", {
+              attempt: index + 1,
+              model,
+              elapsedMs: Math.round(performance.now() - modelStart),
+              responseCharacters: text.length
+            });
+            return { text, model };
+          }
+          this.debugTopicDoormatIssues("model attempt returned empty content", {
+            attempt: index + 1,
+            model,
+            elapsedMs: Math.round(performance.now() - modelStart)
+          });
+        } catch (err) {
+          lastError = err;
+          this.debugTopicDoormatIssues("model attempt failed", {
+            attempt: index + 1,
+            model,
+            elapsedMs: Math.round(performance.now() - modelStart),
+            error: err instanceof Error ? err.message : String(err)
+          });
+        }
+      }
+      throw lastError instanceof Error ? lastError : new Error(this.translate.instant("common.ai.errorCommunicatingOpenRouter"));
+    });
+  }
+  buildTopicDoormatModelRotation(requested) {
+    const available = this.openRouter.models;
+    if (requested && available.includes(requested)) {
+      return [requested, ...available.filter((candidate) => candidate !== requested)];
+    }
+    return available;
+  }
+  getShortModelName(model) {
+    const normalizedModel = (model || "").replace(/-\d{4}-\d{2}-\d{2}$/, "").replace(/:free$/, ":free");
+    const modelKey = Object.keys(AiModel).find((key2) => AiModel[key2] === model || AiModel[key2] === normalizedModel || model.startsWith(AiModel[key2]));
+    return modelKey ? this.translate.instant(`page.ai-options.model.short.${modelKey}`) : model;
+  }
+  debugTopicDoormatIssues(event, details) {
+    if (!this.isTopicDoormatDebugEnabled())
+      return;
+    console.debug(`[TopicDoormatIssues] ${event}`, details);
+  }
+  isTopicDoormatDebugEnabled() {
+    try {
+      return localStorage.getItem(this.topicDoormatDebugStorageKey) === "true";
+    } catch {
+      return false;
+    }
+  }
+  parseTopicDoormatIssueRows(text, doormatSummaries = []) {
+    const parsed = this.looseJsonParse(this.stripCodeFences(text));
+    if (!parsed || typeof parsed !== "object")
+      return [];
+    const root = parsed;
+    const doormats = Array.isArray(root["doormats"]) ? root["doormats"] : [];
+    const rows = doormats.flatMap((rawDoormat) => {
+      if (!rawDoormat || typeof rawDoormat !== "object")
+        return [];
+      const doormat = rawDoormat;
+      const index = this.toNumber(doormat["doormat_index"]);
+      const linkText = this.cleanString(doormat["link_text"]);
+      const href = this.cleanString(doormat["href"]);
+      const issues = Array.isArray(doormat["issues"]) ? doormat["issues"] : [];
+      const label = [index ? `${index}.` : "", linkText || href || "Doormat"].filter(Boolean).join(" ");
+      if (!issues.length) {
+        return [
+          this.buildTopicDoormatNoIssueRow({
+            index: index ?? 0,
+            linkText,
+            href
+          })
+        ];
+      }
+      return issues.map((rawIssue) => {
+        if (!rawIssue || typeof rawIssue !== "object")
+          return null;
+        const issue = rawIssue;
+        const evidence = this.buildTopicDoormatEvidence(issue);
+        return {
+          include: typeof issue["include"] === "boolean" ? issue["include"] : true,
+          severity: this.cleanString(issue["severity"]) || "Unknown",
+          doormat: label,
+          issue: this.cleanString(issue["issue_category"]) || "Issue",
+          evidence,
+          recommendation: this.cleanString(issue["recommendation"]),
+          doormatIndex: index ?? void 0
+        };
+      }).filter((row) => row !== null);
+    });
+    const representedIndexes = new Set(rows.map((row) => row.doormatIndex).filter((index) => typeof index === "number" && index > 0));
+    const missingNoIssueRows = doormatSummaries.filter((summary) => !representedIndexes.has(summary.index)).map((summary) => this.buildTopicDoormatNoIssueRow(summary));
+    return [...rows, ...missingNoIssueRows].sort((a, b) => {
+      const aIndex = a.doormatIndex ?? Number.MAX_SAFE_INTEGER;
+      const bIndex = b.doormatIndex ?? Number.MAX_SAFE_INTEGER;
+      return aIndex - bIndex;
+    });
+  }
+  buildTopicDoormatNoIssueRow(doormat) {
+    const label = [
+      doormat.index ? `${doormat.index}.` : "",
+      doormat.linkText || doormat.href || "Doormat"
+    ].filter(Boolean).join(" ");
+    return {
+      include: false,
+      severity: "OK",
+      doormat: label,
+      issue: "No issues",
+      evidence: "No issues reported by AI.",
+      recommendation: "",
+      doormatIndex: doormat.index || void 0
+    };
+  }
+  buildTopicDoormatEvidence(issue) {
+    const evidence = this.cleanString(issue["evidence"]);
+    const issueCategory = this.cleanString(issue["issue_category"]);
+    const details = issue["evidence_details"] && typeof issue["evidence_details"] === "object" ? issue["evidence_details"] : null;
+    const detailParts = [];
+    if (details) {
+      const count = this.toNumber(details["actual_character_count"]);
+      const limit = this.toNumber(details["character_limit"]);
+      if (count != null && limit != null) {
+        detailParts.push(`${count}/${limit} characters`);
+      }
+      const doormatHref = this.cleanString(details["doormat_href"]);
+      const mostRequestedHref = this.cleanString(details["most_requested_href"]);
+      if (doormatHref || mostRequestedHref) {
+        detailParts.push(`Doormat: ${doormatHref || "n/a"}; Most requested: ${mostRequestedHref || "n/a"}`);
+      }
+      const destinationTitle = this.cleanString(details["destination_page_title"]);
+      if (destinationTitle) {
+        detailParts.push(`Destination title: ${destinationTitle}`);
+      }
+    }
+    const builtEvidence = [evidence, ...detailParts].filter(Boolean).join(" ");
+    if (builtEvidence)
+      return builtEvidence;
+    if (issueCategory === "duplicate-link-in-most-requested") {
+      return "Link also appears in Most requested";
+    }
+    return "";
+  }
+  stripCodeFences(value) {
+    return value.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/i, "").trim();
+  }
+  looseJsonParse(value) {
+    try {
+      return JSON.parse(value);
+    } catch {
+      const match = value.match(/\{[\s\S]*\}/);
+      if (!match)
+        return null;
+      try {
+        return JSON.parse(match[0]);
+      } catch {
+        return null;
+      }
+    }
+  }
+  toNumber(value) {
+    const num = typeof value === "number" ? value : typeof value === "string" ? Number.parseInt(value, 10) : Number.NaN;
+    return Number.isFinite(num) ? num : null;
+  }
+  cleanString(value) {
+    return typeof value === "string" ? value.trim() : "";
+  }
+  extractTopicDoormatSets(html) {
+    if (!html)
+      return [];
+    try {
+      const doc = new DOMParser().parseFromString(html, "text/html");
+      return Array.from(doc.querySelectorAll(".gc-srvinfo")).map((set) => set.outerHTML);
+    } catch {
+      return [];
+    }
+  }
+  extractTopicDoormatSummaries(html) {
+    if (!html)
+      return [];
+    try {
+      const doc = new DOMParser().parseFromString(html, "text/html");
+      const seen = /* @__PURE__ */ new Set();
+      const summaries = [];
+      const links = Array.from(doc.querySelectorAll(".gc-srvinfo h2 a, .gc-srvinfo h3 a"));
+      for (const link of links) {
+        const linkText = this.cleanString(link.textContent || "");
+        const href = link.getAttribute("href") || "";
+        const key2 = `${href}|${linkText}`;
+        if (!linkText && !href)
+          continue;
+        if (seen.has(key2))
+          continue;
+        seen.add(key2);
+        summaries.push({
+          index: summaries.length + 1,
+          linkText,
+          href
+        });
+      }
+      return summaries;
+    } catch {
+      return [];
+    }
+  }
+  extractMostRequestedLinks(html) {
+    if (!html)
+      return [];
+    try {
+      const doc = new DOMParser().parseFromString(html, "text/html");
+      const selectors = [
+        ".gc-most-requested a",
+        ".most-requested a",
+        ".most-requested-bullets a"
+      ];
+      return selectors.flatMap((selector) => Array.from(doc.querySelectorAll(selector)).map((link) => ({
+        text: this.cleanString(link.textContent || ""),
+        href: link.getAttribute("href") || ""
+      })));
+    } catch {
+      return [];
+    }
   }
   onSelectionChange(selection) {
     this.selectedRows = selection;
@@ -29637,6 +30307,8 @@ var ComponentGuidanceComponent = class _ComponentGuidanceComponent {
   }
   severityChip(severity) {
     const s = (severity || "").toLowerCase();
+    if (s === "ok")
+      return "chip-ok";
     if (s === "low")
       return "chip-minor";
     if (s === "medium")
@@ -29644,6 +30316,9 @@ var ComponentGuidanceComponent = class _ComponentGuidanceComponent {
     if (s === "high")
       return "chip-severe";
     return "chip-unk";
+  }
+  isNoIssueRow(issue) {
+    return issue.issue === "No issues";
   }
   alertHealthLabel(severity) {
     const s = (severity || "").toLowerCase();
@@ -29670,7 +30345,7 @@ var ComponentGuidanceComponent = class _ComponentGuidanceComponent {
   static \u0275fac = function ComponentGuidanceComponent_Factory(__ngFactoryType__) {
     return new (__ngFactoryType__ || _ComponentGuidanceComponent)();
   };
-  static \u0275cmp = /* @__PURE__ */ \u0275\u0275defineComponent({ type: _ComponentGuidanceComponent, selectors: [["ca-component-guidance"]], decls: 10, vars: 10, consts: [["dt", ""], ["dataKey", "url", "styleClass", "p-datatable-sm", "selectionMode", "multiple", "expandableRows", "", 3, "selectionChange", "sortFunction", "onRowExpand", "onRowCollapse", "value", "selection", "customSort", "resizableColumns", "expandedRowKeys"], ["pTemplate", "caption"], ["pTemplate", "header"], ["pTemplate", "body"], ["pTemplate", "expandedrow"], [1, "mt-3"], ["pButton", "", "type", "button", "aria-label", "Get GenAI recommendations based on user data", "pTooltip", "Select one or more components", 1, "ai-btn", 3, "click", "label", "icon", "disabled", "showDelay", "hideDelay"], [1, "sr-only"], [1, "caption-actions"], ["pButton", "", "type", "button", "label", "Expand All", "icon", "pi pi-plus", 1, "p-button-text", 3, "click"], ["pButton", "", "type", "button", "label", "Collapse All", "icon", "pi pi-minus", 1, "p-button-text", 3, "click"], [2, "width", "3rem", "text-align", "center"], ["pSortableColumn", "order"], ["field", "order"], ["pSortableColumn", "health", 1, "health-col"], ["field", "health"], [3, "pSelectableRow"], [2, "text-align", "center"], ["pButton", "", "type", "button", "aria-label", "Toggle row", 1, "p-button-text", "p-button-rounded", "p-button-plain", 3, "pRowToggler"], ["aria-hidden", "true", 1, "pi", 3, "ngClass"], [3, "value"], ["target", "_blank", "rel", "noopener", 3, "href"], [1, "health-cell", "health-col"], [3, "label", "icon", "styleClass"], ["icon", "pi pi-question-circle", "styleClass", "chip chip-unk", 3, "label"], ["label", "OK", "icon", "pi pi-check-circle", "styleClass", "chip chip-ok"], [1, "alert-loading"], [1, "text-danger"], [1, "chip-list"], [1, "muted"], ["aria-hidden", "true", 1, "pi", "pi-spinner", "pi-spin"], [3, "label", "styleClass", 4, "ngFor", "ngForOf"], [3, "label", "styleClass"], ["styleClass", "chip chip-hghlght", 3, "label", 4, "ngFor", "ngForOf"], ["styleClass", "chip chip-hghlght", 3, "label"], ["colspan", "6"], [1, "p-3"], [1, "expansion-table", 3, "selectAll"], ["styleClass", "p-datatable-sm expansion-table"], [1, "expansion-table", 3, "maxSeverityChange", "categoriesChange", "loadingChange", "errorChange", "issuesCleared", "selectAll"]], template: function ComponentGuidanceComponent_Template(rf, ctx) {
+  static \u0275cmp = /* @__PURE__ */ \u0275\u0275defineComponent({ type: _ComponentGuidanceComponent, selectors: [["ca-component-guidance"]], decls: 10, vars: 10, consts: [["dt", ""], ["dataKey", "url", "styleClass", "p-datatable-sm", "selectionMode", "multiple", "expandableRows", "", 3, "selectionChange", "sortFunction", "onRowExpand", "onRowCollapse", "value", "selection", "customSort", "resizableColumns", "expandedRowKeys"], ["pTemplate", "caption"], ["pTemplate", "header"], ["pTemplate", "body"], ["pTemplate", "expandedrow"], [1, "mt-3"], ["pButton", "", "type", "button", "aria-label", "Get GenAI recommendations based on user data", "pTooltip", "Select one or more components", 1, "ai-btn", 3, "click", "label", "icon", "disabled", "showDelay", "hideDelay"], [1, "sr-only"], [1, "caption-actions"], ["pButton", "", "type", "button", "label", "Expand All", "icon", "pi pi-plus", 1, "p-button-text", 3, "click"], ["pButton", "", "type", "button", "label", "Collapse All", "icon", "pi pi-minus", 1, "p-button-text", 3, "click"], [2, "width", "3rem", "text-align", "center"], ["pSortableColumn", "order"], ["field", "order"], ["pSortableColumn", "health", 1, "health-col"], ["field", "health"], [3, "pSelectableRow"], [2, "text-align", "center"], ["pButton", "", "type", "button", "aria-label", "Toggle row", 1, "p-button-text", "p-button-rounded", "p-button-plain", 3, "pRowToggler"], ["aria-hidden", "true", 1, "pi", 3, "ngClass"], [3, "value"], ["target", "_blank", "rel", "noopener", 3, "href"], [1, "health-cell", "health-col"], [3, "label", "icon", "styleClass"], [1, "muted"], ["icon", "pi pi-question-circle", "styleClass", "chip chip-unk", 3, "label"], ["label", "OK", "icon", "pi pi-check-circle", "styleClass", "chip chip-ok"], [1, "alert-loading"], [1, "text-danger"], [1, "chip-list"], ["aria-hidden", "true", 1, "pi", "pi-spinner", "pi-spin"], [3, "label", "styleClass", 4, "ngFor", "ngForOf"], [3, "label", "styleClass"], ["styleClass", "chip chip-hghlght", 3, "label", 4, "ngFor", "ngForOf"], ["styleClass", "chip chip-hghlght", 3, "label"], ["colspan", "6"], [1, "p-3"], [1, "expansion-table", 3, "selectAll"], [1, "expansion-table", 3, "maxSeverityChange", "categoriesChange", "loadingChange", "errorChange", "issuesCleared", "selectAll"], ["styleClass", "p-datatable-sm expansion-table"], [1, "mb-3"], ["styleClass", "p-datatable-sm expansion-table", 3, "value"], ["pTemplate", "emptymessage"], [2, "width", "3rem"], [2, "width", "8rem"], [3, "ngModelChange", "binary", "ngModel", "disabled"], [1, "chip", 3, "ngClass"]], template: function ComponentGuidanceComponent_Template(rf, ctx) {
     if (rf & 1) {
       const _r1 = \u0275\u0275getCurrentView();
       \u0275\u0275elementStart(0, "p-table", 1, 0);
@@ -29692,7 +30367,7 @@ var ComponentGuidanceComponent = class _ComponentGuidanceComponent {
         \u0275\u0275restoreView(_r1);
         return \u0275\u0275resetView(ctx.onRowCollapse($event));
       });
-      \u0275\u0275template(2, ComponentGuidanceComponent_ng_template_2_Template, 3, 0, "ng-template", 2)(3, ComponentGuidanceComponent_ng_template_3_Template, 17, 0, "ng-template", 3)(4, ComponentGuidanceComponent_ng_template_4_Template, 17, 12, "ng-template", 4)(5, ComponentGuidanceComponent_ng_template_5_Template, 5, 1, "ng-template", 5);
+      \u0275\u0275template(2, ComponentGuidanceComponent_ng_template_2_Template, 3, 0, "ng-template", 2)(3, ComponentGuidanceComponent_ng_template_3_Template, 17, 0, "ng-template", 3)(4, ComponentGuidanceComponent_ng_template_4_Template, 18, 12, "ng-template", 4)(5, ComponentGuidanceComponent_ng_template_5_Template, 5, 1, "ng-template", 5);
       \u0275\u0275elementEnd();
       \u0275\u0275elementStart(6, "div", 6)(7, "button", 7);
       \u0275\u0275listener("click", function ComponentGuidanceComponent_Template_button_click_7_listener() {
@@ -29715,6 +30390,8 @@ var ComponentGuidanceComponent = class _ComponentGuidanceComponent {
     NgClass,
     NgForOf,
     FormsModule,
+    NgControlStatus,
+    NgModel,
     TableModule,
     Table,
     PrimeTemplate,
@@ -29727,6 +30404,7 @@ var ComponentGuidanceComponent = class _ComponentGuidanceComponent {
     ButtonModule,
     ButtonDirective,
     CheckboxModule,
+    Checkbox,
     ChipModule,
     Chip,
     TooltipModule,
@@ -29935,6 +30613,8 @@ var ComponentGuidanceComponent = class _ComponentGuidanceComponent {
           } @else {
             <span class="muted">Expand this row to explore alert pain points</span>
           }
+        } @else if (isDoormatRow(row)) {
+          <span class="muted">Expand this row to explore doormat pain points</span>
         } @else {
           @if ((row.issues?.length || 0) > 0) {
             <div class="chip-list">
@@ -29970,24 +30650,91 @@ var ComponentGuidanceComponent = class _ComponentGuidanceComponent {
               (issuesCleared)="onAlertIssuesCleared()"
             ></ca-alerts-guidance>
           } @else {
-            <p-table styleClass="p-datatable-sm expansion-table">
-              <ng-template pTemplate="header">
-                <tr>
-                  <th>Column 1</th>
-                  <th>Column 2</th>
-                  <th>Column 3</th>
-                  <th>Column 4</th>
-                </tr>
-              </ng-template>
-              <ng-template pTemplate="body">
-                <tr>
-                  <td>Data 1</td>
-                  <td>Data 2</td>
-                  <td>Data 3</td>
-                  <td>Data 4</td>
-                </tr>
-              </ng-template>
-            </p-table>
+            @if (row.__id === topicDoormatsId) {
+              <div class="mb-3">
+                @if (topicDoormatIssuesLoading) {
+                  <span class="muted">
+                    <i class="pi pi-spinner pi-spin" aria-hidden="true"></i>
+                    Analyzing topic doormats
+                  </span>
+                } @else if (topicDoormatIssuesResponseReceived) {
+                  <span>AI response received.</span>
+                } @else if (topicDoormatIssuesError) {
+                  <div>
+                    <span class="text-danger">AI error</span>
+                    @if (topicDoormatIssuesErrorDetail) {
+                      <div class="muted">{{ topicDoormatIssuesErrorDetail }}</div>
+                    }
+                  </div>
+                }
+              </div>
+              <p-table
+                [value]="topicDoormatIssueRows"
+                styleClass="p-datatable-sm expansion-table">
+                <ng-template pTemplate="header">
+                  <tr>
+                    <th style="width: 3rem">Include</th>
+                    <th style="width: 8rem">Severity</th>
+                    <th>Doormat</th>
+                    <th>Issue</th>
+                    <th>Evidence</th>
+                    <th>Recommendation</th>
+                  </tr>
+                </ng-template>
+                <ng-template pTemplate="body" let-issue>
+                  <tr>
+                    <td>
+                      <p-checkbox
+                        [binary]="true"
+	                        [(ngModel)]="issue.include"
+	                        [disabled]="isNoIssueRow(issue)">
+                      </p-checkbox>
+                    </td>
+                    <td>
+                      <span class="chip" [ngClass]="severityChip(issue.severity)">
+                        {{ issue.severity }}
+                      </span>
+                    </td>
+                    <td>{{ issue.doormat }}</td>
+                    <td>{{ issue.issue }}</td>
+                    <td>{{ issue.evidence || '\u2014' }}</td>
+	                    <td>{{ issue.recommendation || '-' }}</td>
+                  </tr>
+                </ng-template>
+                <ng-template pTemplate="emptymessage">
+                  <tr>
+                    <td colspan="6">
+                      @if (topicDoormatIssuesLoading) {
+                        <span class="muted">Waiting for AI response</span>
+                      } @else if (topicDoormatIssuesResponseReceived) {
+                        <span class="muted">No issues returned</span>
+                      } @else {
+                        <span class="muted">Expand this row to analyze topic doormats</span>
+                      }
+                    </td>
+                  </tr>
+                </ng-template>
+              </p-table>
+            } @else {
+              <p-table styleClass="p-datatable-sm expansion-table">
+                <ng-template pTemplate="header">
+                  <tr>
+                    <th>Column 1</th>
+                    <th>Column 2</th>
+                    <th>Column 3</th>
+                    <th>Column 4</th>
+                  </tr>
+                </ng-template>
+                <ng-template pTemplate="body">
+                  <tr>
+                    <td>Data 1</td>
+                    <td>Data 2</td>
+                    <td>Data 3</td>
+                    <td>Data 4</td>
+                  </tr>
+                </ng-template>
+              </p-table>
+            }
           }
         </div>
       </td>
@@ -30017,7 +30764,7 @@ var ComponentGuidanceComponent = class _ComponentGuidanceComponent {
   }], null, null);
 })();
 (() => {
-  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(ComponentGuidanceComponent, { className: "ComponentGuidanceComponent", filePath: "app/views/page-assistant/components/problems/component-guidance/component-guidance.component.ts", lineNumber: 149 });
+  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(ComponentGuidanceComponent, { className: "ComponentGuidanceComponent", filePath: "app/views/page-assistant/components/problems/component-guidance/component-guidance.component.ts", lineNumber: 173 });
 })();
 
 // src/app/views/page-assistant/components/problems/seo.component.ts
@@ -42383,6 +43130,21 @@ ${custom}` : promptBody;
     const includeExamples = this.uploadState.getIncludeAlertRewriteExamples();
     return `Generating alert rewrites (${includeExamples ? "good examples on" : "good examples off"}).`;
   }
+  getReportableAlertsFromHtml(html) {
+    return getReportableAlertsFromHtml(html, {
+      interactiveResultLeadIns: this.getInteractiveResultLeadIns()
+    });
+  }
+  showNoReportableAlertsMessage() {
+    this.statusSeverity = "info";
+    this.statusMessage = "No reportable alerts found on this page.";
+    this.messageService.add({
+      severity: "info",
+      summary: "No reportable alerts found",
+      detail: "The alert flow was skipped because this page does not contain any reportable alerts.",
+      life: 5e3
+    });
+  }
   // Thin component-level handoff into the extracted alert rewrite workflow.
   // The component keeps status updates and final state writes, while the service
   // owns planning, retries, guards, and HTML rewrite orchestration.
@@ -42400,19 +43162,9 @@ ${custom}` : promptBody;
         });
         return false;
       }
-      const alertDoc = new DOMParser().parseFromString(params.html, "text/html");
-      const reportableAlerts = getReportableAlerts(alertDoc, {
-        interactiveResultLeadIns: this.getInteractiveResultLeadIns()
-      });
+      const reportableAlerts = this.getReportableAlertsFromHtml(params.html);
       if (!reportableAlerts.length) {
-        this.statusSeverity = "info";
-        this.statusMessage = "No reportable alerts found on this page.";
-        this.messageService.add({
-          severity: "info",
-          summary: "No reportable alerts found",
-          detail: "The alert rewrite flow was skipped because this page does not contain any reportable alerts.",
-          life: 5e3
-        });
+        this.showNoReportableAlertsMessage();
         return false;
       }
       this.statusMessage = this.buildAlertRewriteStatusMessage();
@@ -42505,6 +43257,7 @@ ${custom}` : promptBody;
       let usedCachedAlertIssues = false;
       let alertIssuesPromptSent = false;
       let alertRewriteRan = false;
+      let aiRequestStarted = false;
       this.isLoading = true;
       this.aiDisabled = "Wait for response from AI";
       this.statusSeverity = "info";
@@ -42524,6 +43277,11 @@ ${custom}` : promptBody;
         selectedPromptForTiming = this.selectedPromptKey;
         requestPromptForTiming = promptKeyForRequest;
         timingFlow = isAlertFlow ? "alert-issues-and-rewrite" : "single-prompt";
+        if (isAlertFlow && !this.getReportableAlertsFromHtml(html).length) {
+          timingFlow = "no-reportable-alerts";
+          this.showNoReportableAlertsMessage();
+          return;
+        }
         const prompt = yield this.getPromptForKey(promptKeyForRequest);
         const model = this.selectedAiModel;
         const requestedModelShort = this.getShortModelName(model);
@@ -42606,6 +43364,7 @@ ${custom}` : promptBody;
               prompt: promptKeyForRequest
             });
           }
+          aiRequestStarted = true;
           const orResponse = yield fetch(url, {
             method: "POST",
             headers,
@@ -42801,14 +43560,16 @@ ${custom}` : promptBody;
           usedCachedAlertIssues,
           totalMs: Math.round(endTime - startTime)
         });
-        this.messageService.add({
-          severity: "info",
-          summary: this.translate.instant("common.requestComplete"),
-          detail: this.translate.instant("common.totalTime", {
-            time: durationInSeconds
-          }),
-          life: 1e4
-        });
+        if (aiRequestStarted) {
+          this.messageService.add({
+            severity: "info",
+            summary: this.translate.instant("common.requestComplete"),
+            detail: this.translate.instant("common.totalTime", {
+              time: durationInSeconds
+            }),
+            life: 1e4
+          });
+        }
       }
     });
   }
@@ -43563,4 +44324,4 @@ ${custom}` : promptBody;
 export {
   PageAssistantCompareComponent
 };
-//# sourceMappingURL=chunk-3IKM2U7R.js.map
+//# sourceMappingURL=chunk-WROE3TGI.js.map

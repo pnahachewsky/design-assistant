@@ -102,9 +102,29 @@
         "landing page links",
         "subway index"
       ],
+      "promptKeys": [
+        "doormats"
+      ],
       "outputModes": [
-        "html"
-      ]
+        "html",
+        "json"
+      ],
+      "defaultReferencePaths": [
+        "skills/topic-doormats/issues/references/issue-taxonomy.json"
+      ],
+      "defaultAssetPaths": [
+        "skills/topic-doormats/issues/assets/issues-output-schema.json"
+      ],
+      "referencePathsByPromptKey": {
+        "doormats": [
+          "skills/topic-doormats/issues/references/issue-taxonomy.json"
+        ]
+      },
+      "assetPathsByPromptKey": {
+        "doormats": [
+          "skills/topic-doormats/issues/assets/issues-output-schema.json"
+        ]
+      }
     }
   ]
 }
