@@ -4,15 +4,93 @@
   "precondition": "Run this analysis only when AIDA heuristics have detected one or more topic doormat items. Missing doormat-section detection is handled before invoking this skill.",
   "analysis_unit": "Analyze one complete topic doormat set at a time. Compare all doormats in the set before assigning issues.",
   "reporting_unit": "Return issue reports for each affected doormat item. If a set-level issue affects multiple doormats, report the issue on each affected doormat. For style consistency issues, report only the outlier doormats that differ from a clear dominant style.",
+  "analysis_sequence": [
+    {
+      "pass": "deterministic_structural_checks",
+      "instruction": "Run these checks first. Do not return the response until every deterministic structural check has been evaluated for every doormat and every complete doormat section.",
+      "issue_ids": [
+        "too-many-doormats-in-section",
+        "multiple-links",
+        "missing-description",
+        "link-name-too-long",
+        "description-too-long",
+        "duplicate-link-in-most-requested",
+        "description-contains-link",
+        "description-uses-icons-or-images",
+        "description-special-formatting",
+        "link-name-trailing-punctuation",
+        "description-trailing-punctuation",
+        "description-capitalization",
+        "description-list-separators",
+        "description-uses-and-before-final-item"
+      ]
+    },
+    {
+      "pass": "judgment_editorial_checks",
+      "instruction": "Run these checks after the deterministic pass. Use only evidence available in the supplied doormat set, most requested links, destination context, or explicit page context. Do not guess missing traffic, priority, or destination facts.",
+      "issue_ids": [
+        "broken-link",
+        "misdirected-link",
+        "link-name-lacks-clarity",
+        "link-name-not-unique",
+        "link-name-too-different-from-destination-title",
+        "description-lacks-clarity",
+        "description-missing-needed-information",
+        "description-incorrect-style",
+        "description-repeats-link-text",
+        "duplicate-or-near-duplicate-description",
+        "mixed-description-style-in-section",
+        "inconsistent-link-name-style",
+        "inconsistent-description-style",
+        "enhancement-label-not-needed",
+        "enhancement-label-wrong-type",
+        "missing-needed-doormat",
+        "unnecessary-doormat",
+        "wrong-doormat-order"
+      ]
+    }
+  ],
+  "check_group_guidance": {
+    "deterministic_structural_checks": "These checks are objective. Apply them even when the doormat content appears clear or comes from a live Canada.ca page.",
+    "judgment_editorial_checks": "These checks require editorial judgment. Report them only when the evidence is concrete enough to justify a recommendation."
+  },
+  "mandatory_description_style_audit": {
+    "instruction": "Always audit description style for each complete doormat section during the judgment/editorial pass. If a section contains two or more clearly different description-start or grammatical styles, evaluate mixed-description-style-in-section. Do not treat a live Canada.ca page as acceptable by default.",
+    "style_groups_to_compare": [
+      "noun/topic keyword-list descriptions",
+      "action-verb task phrases",
+      "How to phrases",
+      "audience or benefit summaries",
+      "sentence-style explanations",
+      "short keyword fragments"
+    ],
+    "must_flag_when": [
+      "The section mixes noun/topic keyword-list descriptions with action-verb task phrases.",
+      "The section mixes How to descriptions with noun/topic keyword-list descriptions.",
+      "The section mixes short keyword fragments with sentence-style explanations or benefit summaries.",
+      "The section starts some descriptions with verbs and others with nouns or topic labels in a way that makes the set feel inconsistent."
+    ],
+    "reporting": "When mixed-description-style-in-section applies, report representative doormats from each style group. Do not require one dominant style or rare outliers for this issue.",
+    "do_not_dismiss_because": [
+      "The page is a live Canada.ca page.",
+      "Each individual description is understandable on its own.",
+      "The descriptions are all short or under the character limit.",
+      "There is no single dominant style."
+    ]
+  },
   "language_thresholds": {
     "en": {
-      "link_text_ideal_max_characters": 35,
-      "description_max_characters": 90
+      "link_text_max_characters": 35,
+      "description_max_characters": 120
     },
     "fr": {
-      "link_text_ideal_max_characters": 45,
+      "link_text_max_characters": 45,
       "description_max_characters": 120
     }
+  },
+  "character_count_source": {
+    "instruction": "When the caller provides structured doormat fields with linkTextCharacterCount and descriptionCharacterCount, use those values as authoritative. Do not recalculate character counts from HTML or visible text.",
+    "fallback": "If caller-provided counts are missing, estimate only when needed and include the estimate as evidence_details.actual_character_count."
   },
   "style_detection": {
     "required": true,
@@ -31,12 +109,13 @@
       "eligibility-or-benefit-summary",
       "mixed-or-unclear"
     ],
-    "instruction": "Identify the detected link text style and detected description style for each doormat. Do not enforce one universal style across all pages. Flag set-level style inconsistency only when there is a clear dominant style and one or more clear outliers."
+    "instruction": "Identify the detected link text style and detected description style for each doormat. Do not enforce one universal style across all pages. Flag outlier style inconsistency when there is a clear dominant style and one or more clear outliers. Flag mixed-description-style-in-section when the complete section mixes description styles enough to reduce scannability or make doormats harder to compare."
   },
   "style_inconsistency_reporting": {
-    "minimum_standard": "Do not report a style inconsistency just because descriptions are not identical. Report it only when one dominant style is used by most doormats and a smaller number of outliers use a clearly different style.",
+    "minimum_standard": "Do not report a style inconsistency just because descriptions are not identical. Use inconsistent-description-style for clear outliers from a dominant style. Use mixed-description-style-in-section when the whole section has no stable description style and the mix reduces scannability or comparability.",
     "dominant_style_required": true,
     "outlier_only_reporting": true,
+    "mixed_section_reporting_allowed": true,
     "different_style_required": true,
     "same_style_is_not_inconsistent": "If dominant_style and outlier_style are the same style label, do not report inconsistent-link-name-style or inconsistent-description-style.",
     "style_issue_must_survive_length_fix": "If the doormat already has description-too-long, do not also report inconsistent-description-style unless the style problem would still exist after shortening the description.",
@@ -50,7 +129,6 @@
       "long"
     ],
     "do_not_report_when": [
-      "The whole set is mixed and no dominant style is clear.",
       "Most or all doormats would receive the same style inconsistency issue.",
       "The only evidence is that descriptions have different topics, lengths, or wording.",
       "The only evidence is that one description is longer, more detailed, or more complex than descriptions in the same style category.",
@@ -60,6 +138,7 @@
     "use_other_issue_instead": [
       "Use description-too-long for length issues; do not also report inconsistent-description-style for the same length evidence.",
       "Use description-lacks-clarity or description-missing-needed-information for unclear or incomplete descriptions; do not use inconsistent-description-style as a substitute.",
+      "Use mixed-description-style-in-section when the whole section mixes description styles and there is no clear dominant style.",
       "Use description-incorrect-style only when the description does not fit any accepted style."
     ],
     "evidence_required": [
@@ -67,7 +146,7 @@
       "outlier_style",
       "why_this_doormat_is_an_outlier"
     ],
-    "evidence_format": "Evidence for style inconsistency must explicitly state dominant_style and outlier_style using two different values from the allowed style list. Do not use length, verbosity, detail level, or complexity as the reason.",
+    "evidence_format": "Evidence for outlier style inconsistency must explicitly state dominant_style and outlier_style using two different values from the allowed style list. Evidence for mixed-description-style-in-section must list the mixed style types found in the section. Do not use length, verbosity, detail level, or complexity as the reason.",
     "severity_default": "Low",
     "severity_escalation": "Use Medium only when the outlier style makes the doormat harder to compare with the rest of the set."
   },
@@ -152,8 +231,8 @@
       "group": "Link name",
       "label": "Link name is too long",
       "severity": "Medium",
-      "condition": "The English link text exceeds 35 characters, or the French link text exceeds 45 characters, including spaces.",
-      "recommendation": "Shorten the link text. Aim for under 35 characters in English and under 45 characters in French.",
+      "condition": "The link text exceeds 35 characters, including spaces.",
+      "recommendation": "Shorten the link text. Keep link text under 35 characters.",
       "severity_override": {
         "Low": "Use Low when the link text is 1 to 5 characters over the limit.",
         "Medium": "Use Medium when the link text is 6 or more characters over the limit."
@@ -231,8 +310,8 @@
       "group": "Description clarity",
       "label": "Description is too long",
       "severity": "Medium",
-      "condition": "The English description exceeds 90 characters, or the French description exceeds 120 characters, including spaces.",
-      "recommendation": "Shorten the description. Keep English descriptions under 90 characters and French descriptions under 120 characters.",
+      "condition": "The description exceeds 120 characters, including spaces.",
+      "recommendation": "Shorten the description. Keep descriptions under 120 characters.",
       "severity_override": {
         "Low": "Use Low when the description is 1 to 10 characters over the limit.",
         "Medium": "Use Medium when the description is 11 or more characters over the limit."
@@ -263,6 +342,20 @@
       "recommendation": "Rewrite each description so users can tell the doormats apart."
     },
     {
+      "id": "mixed-description-style-in-section",
+      "group": "Description clarity",
+      "label": "Mixed description styles in section",
+      "severity": "Medium",
+      "condition": "The doormat section mixes two or more description styles, such as noun/topic keyword lists, action-verb task phrases, How to phrases, audience or benefit summaries, sentence-style explanations, or short keyword fragments.",
+      "recommendation": "Rewrite the descriptions so they use one consistent description style across the section.",
+      "reporting": "Report this issue on representative doormats from each style group. Do not require a dominant style, rare outliers, or a character-length problem. If the whole section is mixed, report the clearest examples from each style group rather than every doormat.",
+      "evidence_required": [
+        "section_description_styles",
+        "this_doormat_style",
+        "why_the_mix_reduces_scannability"
+      ]
+    },
+    {
       "id": "inconsistent-description-style",
       "group": "Description clarity",
       "label": "Inconsistent description style",
@@ -280,12 +373,20 @@
       "group": "Description formatting",
       "label": "Description uses and before final item",
       "severity": "Low",
-      "condition": "A comma-separated description uses 'and' as a serial-list connector before the final listed item.",
-      "recommendation": "Remove 'and' before the final listed item and separate listed items with commas.",
+      "condition": "A description is clearly a comma-separated list of parallel items, and the final item is introduced only by 'and' as a serial-list connector.",
+      "recommendation": "Remove 'and' before the final listed item only when it is a plain serial-list connector. Keep fixed phrases and combined concepts intact.",
+      "must_report_only_when": [
+        "The description has at least three parallel comma-separated list items.",
+        "The final 'and' introduces a standalone final list item.",
+        "Removing 'and' would not change the meaning of a fixed phrase, service name, program name, or combined concept."
+      ],
       "do_not_report_when": [
         "The word 'and' is part of a fixed phrase, program name, service name, or common concept such as benefits and allowances.",
         "The phrase containing 'and' is a single combined concept rather than the final item in a comma-separated list.",
-        "There is no comma-separated list structure."
+        "There is no comma-separated list structure.",
+        "The description uses 'and' inside a task phrase, such as collect and remit, register and run, or receive and pay.",
+        "The description uses 'and' inside a topic label or combined service area, such as charities and giving, savings and pension plans, compliance and enforcement, deductions and contributions, benefits and allowances, scams and fraud, or objections or appeals.",
+        "The evidence is only that the description contains the word 'and'."
       ]
     },
     {

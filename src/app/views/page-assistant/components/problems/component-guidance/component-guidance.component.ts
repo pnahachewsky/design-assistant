@@ -69,6 +69,12 @@ interface TopicDoormatSummary {
   index: number;
   linkText: string;
   href: string;
+  description: string;
+  linkTextCharacterCount: number;
+  descriptionCharacterCount: number;
+  sectionIndex: number;
+  sectionItemIndex: number;
+  sectionDoormatCount: number;
 }
 
 @Component({
@@ -184,6 +190,10 @@ export class ComponentGuidanceComponent implements OnInit, OnDestroy {
   private alertIssuesSub?: Subscription;
   private readonly topicDoormatDebugStorageKey =
     'pageAssistant.topicDoormatDebug';
+  private readonly topicDoormatIssueLengthLimits: Record<string, number> = {
+    'link-name-too-long': 35,
+    'description-too-long': 120,
+  };
 
   production: boolean = environment.production;
 
@@ -571,6 +581,7 @@ export class ComponentGuidanceComponent implements OnInit, OnDestroy {
           role: 'user',
           content: JSON.stringify({
             doormatSets,
+            doormats: doormatSummaries,
             mostRequestedLinks,
           }),
         },
@@ -581,6 +592,19 @@ export class ComponentGuidanceComponent implements OnInit, OnDestroy {
         selectedModel,
         modelRotation,
         doormatSetCount: doormatSets.length,
+        doormatSummaryCount: doormatSummaries.length,
+        sectionCounts: this.buildTopicDoormatSectionCounts(doormatSummaries),
+        overLimitSummaryIndexes:
+          this.getTopicDoormatOverLimitSectionIndexes(doormatSummaries),
+        doormatSummaries: doormatSummaries.map((summary) => ({
+          index: summary.index,
+          linkText: summary.linkText,
+          linkTextCharacterCount: summary.linkTextCharacterCount,
+          descriptionCharacterCount: summary.descriptionCharacterCount,
+          sectionIndex: summary.sectionIndex,
+          sectionItemIndex: summary.sectionItemIndex,
+          sectionDoormatCount: summary.sectionDoormatCount,
+        })),
         mostRequestedLinkCount: mostRequestedLinks.length,
         loadedSkillResources: composed.loadedPaths,
         estimatedSystemPromptTokens: composed.estimatedPromptTokens,
@@ -719,11 +743,14 @@ export class ComponentGuidanceComponent implements OnInit, OnDestroy {
   }
 
   private buildTopicDoormatModelRotation(requested?: string): string[] {
-    const available = this.openRouter.models;
-    if (requested && available.includes(requested)) {
-      return [requested, ...available.filter((candidate) => candidate !== requested)];
+    const freeModels = this.openRouter.freeModels;
+    if (requested && this.openRouter.models.includes(requested)) {
+      return [
+        requested,
+        ...freeModels.filter((candidate) => candidate !== requested),
+      ];
     }
-    return available;
+    return freeModels;
   }
 
   private getShortModelName(model: string): string {
@@ -762,9 +789,21 @@ export class ComponentGuidanceComponent implements OnInit, OnDestroy {
     doormatSummaries: TopicDoormatSummary[] = [],
   ): TopicDoormatIssueRow[] {
     const parsed = this.looseJsonParse(this.stripCodeFences(text));
-    if (!parsed || typeof parsed !== 'object') return [];
+    if (!parsed || typeof parsed !== 'object') {
+      const fallbackRows = this.buildTopicDoormatFallbackRows(doormatSummaries);
+      this.debugTopicDoormatIssues('response parse fallback', {
+        reason: 'invalid-json-or-non-object',
+        doormatSummaryCount: doormatSummaries.length,
+        fallbackRows: fallbackRows.length,
+      });
+      return fallbackRows;
+    }
     const root = parsed as Record<string, unknown>;
     const doormats = Array.isArray(root['doormats']) ? root['doormats'] : [];
+
+    const summariesByIndex = new Map(
+      doormatSummaries.map((summary) => [summary.index, summary]),
+    );
 
     const rows: TopicDoormatIssueRow[] = doormats.flatMap((rawDoormat) => {
       if (!rawDoormat || typeof rawDoormat !== 'object') return [];
@@ -773,17 +812,26 @@ export class ComponentGuidanceComponent implements OnInit, OnDestroy {
       const linkText = this.cleanString(doormat['link_text']);
       const href = this.cleanString(doormat['href']);
       const issues = Array.isArray(doormat['issues']) ? doormat['issues'] : [];
+      const summary = index ? summariesByIndex.get(index) : undefined;
       const label = [index ? `${index}.` : '', linkText || href || 'Doormat']
         .filter(Boolean)
         .join(' ');
 
       if (!issues.length) {
         return [
-          this.buildTopicDoormatNoIssueRow({
-            index: index ?? 0,
-            linkText,
-            href,
-          }),
+          this.buildTopicDoormatNoIssueRow(
+            summary ?? {
+              index: index ?? 0,
+              linkText,
+              href,
+              description: '',
+              linkTextCharacterCount: linkText.length,
+              descriptionCharacterCount: 0,
+              sectionIndex: 0,
+              sectionItemIndex: 0,
+              sectionDoormatCount: 0,
+            },
+          ),
         ];
       }
 
@@ -791,7 +839,8 @@ export class ComponentGuidanceComponent implements OnInit, OnDestroy {
         .map((rawIssue): TopicDoormatIssueRow | null => {
           if (!rawIssue || typeof rawIssue !== 'object') return null;
           const issue = rawIssue as Record<string, unknown>;
-          const evidence = this.buildTopicDoormatEvidence(issue);
+          if (!this.isReportableTopicDoormatIssue(issue, summary)) return null;
+          const evidence = this.buildTopicDoormatEvidence(issue, summary);
           return {
             include:
               typeof issue['include'] === 'boolean'
@@ -808,8 +857,13 @@ export class ComponentGuidanceComponent implements OnInit, OnDestroy {
         .filter((row): row is TopicDoormatIssueRow => row !== null);
     });
 
+    const deterministicRows = this.buildDeterministicTopicDoormatIssueRows(
+      doormatSummaries,
+      rows,
+    );
+
     const representedIndexes = new Set(
-      rows
+      [...rows, ...deterministicRows]
         .map((row) => row.doormatIndex)
         .filter((index): index is number => typeof index === 'number' && index > 0),
     );
@@ -817,26 +871,123 @@ export class ComponentGuidanceComponent implements OnInit, OnDestroy {
       .filter((summary) => !representedIndexes.has(summary.index))
       .map((summary) => this.buildTopicDoormatNoIssueRow(summary));
 
-    return [...rows, ...missingNoIssueRows].sort((a, b) => {
+    const resolvedRows = this.removeConflictingTopicDoormatNoIssueRows([
+      ...rows,
+      ...deterministicRows,
+      ...missingNoIssueRows,
+    ].sort((a, b) => {
       const aIndex = a.doormatIndex ?? Number.MAX_SAFE_INTEGER;
       const bIndex = b.doormatIndex ?? Number.MAX_SAFE_INTEGER;
       return aIndex - bIndex;
+    }));
+    this.debugTopicDoormatIssues('response row resolution', {
+      modelDoormatCount: doormats.length,
+      doormatSummaryCount: doormatSummaries.length,
+      sectionCounts: this.buildTopicDoormatSectionCounts(doormatSummaries),
+      overLimitSummaryIndexes:
+        this.getTopicDoormatOverLimitSectionIndexes(doormatSummaries),
+      parsedIssueRows: rows.length,
+      fallbackNoIssueRows: missingNoIssueRows.length,
+      deterministicRows: deterministicRows.length,
+      resolvedRows: resolvedRows.length,
     });
+    return resolvedRows;
+  }
+
+  private removeConflictingTopicDoormatNoIssueRows(
+    rows: TopicDoormatIssueRow[],
+  ): TopicDoormatIssueRow[] {
+    const indexesWithIssues = new Set(
+      rows
+        .filter((row) => !this.isNoIssueRow(row))
+        .map((row) => row.doormatIndex)
+        .filter((index): index is number => typeof index === 'number' && index > 0),
+    );
+
+    return rows.filter(
+      (row) =>
+        !this.isNoIssueRow(row) ||
+        !row.doormatIndex ||
+        !indexesWithIssues.has(row.doormatIndex),
+    );
+  }
+
+  private buildTopicDoormatFallbackRows(
+    doormatSummaries: TopicDoormatSummary[],
+  ): TopicDoormatIssueRow[] {
+    return doormatSummaries.map((summary) =>
+      this.buildTopicDoormatNoIssueRow(summary),
+    );
+  }
+
+  private buildDeterministicTopicDoormatIssueRows(
+    doormatSummaries: TopicDoormatSummary[],
+    existingRows: TopicDoormatIssueRow[],
+  ): TopicDoormatIssueRow[] {
+    const existingIssueKeys = new Set(
+      existingRows.map((row) => `${row.doormatIndex ?? 0}|${row.issue}`),
+    );
+
+    return doormatSummaries.flatMap((summary) => {
+      if (
+        summary.sectionDoormatCount <= 9 ||
+        summary.sectionItemIndex <= 9 ||
+        existingIssueKeys.has(
+          `${summary.index}|too-many-doormats-in-section`,
+        )
+      ) {
+        return [];
+      }
+
+      return [
+        {
+          include: true,
+          severity: 'Medium',
+          doormat: this.buildTopicDoormatLabel(summary),
+          issue: 'too-many-doormats-in-section',
+          evidence: `${summary.sectionDoormatCount}/9 doormats in section ${summary.sectionIndex}; item ${summary.sectionItemIndex}`,
+          recommendation:
+            'Reduce the section to 9 doormats or split lower-priority destinations into another section.',
+          doormatIndex: summary.index,
+        } satisfies TopicDoormatIssueRow,
+      ];
+    });
+  }
+
+  private buildTopicDoormatSectionCounts(
+    doormatSummaries: TopicDoormatSummary[],
+  ): { sectionIndex: number; count: number }[] {
+    const counts = new Map<number, number>();
+    doormatSummaries.forEach((summary) => {
+      if (!summary.sectionIndex) return;
+      counts.set(
+        summary.sectionIndex,
+        Math.max(counts.get(summary.sectionIndex) ?? 0, summary.sectionDoormatCount),
+      );
+    });
+    return Array.from(counts.entries())
+      .map(([sectionIndex, count]) => ({ sectionIndex, count }))
+      .sort((a, b) => a.sectionIndex - b.sectionIndex);
+  }
+
+  private getTopicDoormatOverLimitSectionIndexes(
+    doormatSummaries: TopicDoormatSummary[],
+  ): number[] {
+    return doormatSummaries
+      .filter(
+        (summary) =>
+          summary.sectionDoormatCount > 9 && summary.sectionItemIndex > 9,
+      )
+      .map((summary) => summary.index);
   }
 
   private buildTopicDoormatNoIssueRow(
     doormat: TopicDoormatSummary,
   ): TopicDoormatIssueRow {
-    const label = [
-      doormat.index ? `${doormat.index}.` : '',
-      doormat.linkText || doormat.href || 'Doormat',
-    ]
-      .filter(Boolean)
-      .join(' ');
     return {
       include: false,
       severity: 'OK',
-      doormat: label,
+      doormat: this.buildTopicDoormatLabel(doormat),
       issue: 'No issues',
       evidence: 'No issues reported by AI.',
       recommendation: '',
@@ -844,7 +995,49 @@ export class ComponentGuidanceComponent implements OnInit, OnDestroy {
     };
   }
 
-  private buildTopicDoormatEvidence(issue: Record<string, unknown>): string {
+  private buildTopicDoormatLabel(doormat: TopicDoormatSummary): string {
+    return [
+      doormat.index ? `${doormat.index}.` : '',
+      doormat.linkText || doormat.href || 'Doormat',
+    ]
+      .filter(Boolean)
+      .join(' ');
+  }
+
+  private isReportableTopicDoormatIssue(
+    issue: Record<string, unknown>,
+    doormat?: TopicDoormatSummary,
+  ): boolean {
+    const issueCategory = this.cleanString(issue['issue_category']);
+    if (
+      issueCategory !== 'link-name-too-long' &&
+      issueCategory !== 'description-too-long'
+    ) {
+      return true;
+    }
+
+    const exactCount = this.getTopicDoormatExactCharacterCount(
+      issueCategory,
+      doormat,
+    );
+    if (exactCount == null) return true;
+
+    const details =
+      issue['evidence_details'] && typeof issue['evidence_details'] === 'object'
+        ? (issue['evidence_details'] as Record<string, unknown>)
+        : null;
+    const limit =
+      this.toNumber(details?.['character_limit']) ??
+      this.topicDoormatIssueLengthLimits[issueCategory];
+    if (limit == null) return true;
+
+    return exactCount > limit;
+  }
+
+  private buildTopicDoormatEvidence(
+    issue: Record<string, unknown>,
+    doormat?: TopicDoormatSummary,
+  ): string {
     const evidence = this.cleanString(issue['evidence']);
     const issueCategory = this.cleanString(issue['issue_category']);
     const details =
@@ -854,7 +1047,9 @@ export class ComponentGuidanceComponent implements OnInit, OnDestroy {
     const detailParts: string[] = [];
 
     if (details) {
-      const count = this.toNumber(details['actual_character_count']);
+      const count =
+        this.getTopicDoormatExactCharacterCount(issueCategory, doormat) ??
+        this.toNumber(details['actual_character_count']);
       const limit = this.toNumber(details['character_limit']);
       if (count != null && limit != null) {
         detailParts.push(`${count}/${limit} characters`);
@@ -884,6 +1079,20 @@ export class ComponentGuidanceComponent implements OnInit, OnDestroy {
     }
 
     return '';
+  }
+
+  private getTopicDoormatExactCharacterCount(
+    issueCategory: string,
+    doormat?: TopicDoormatSummary,
+  ): number | null {
+    if (!doormat) return null;
+    if (issueCategory === 'link-name-too-long') {
+      return doormat.linkTextCharacterCount;
+    }
+    if (issueCategory === 'description-too-long') {
+      return doormat.descriptionCharacterCount;
+    }
+    return null;
   }
 
   private stripCodeFences(value: string): string {
@@ -921,6 +1130,10 @@ export class ComponentGuidanceComponent implements OnInit, OnDestroy {
     return typeof value === 'string' ? value.trim() : '';
   }
 
+  private cleanVisibleText(value: string | null | undefined): string {
+    return (value || '').replace(/\s+/g, ' ').trim();
+  }
+
   private extractTopicDoormatSets(html: string): string[] {
     if (!html) return [];
     try {
@@ -939,28 +1152,57 @@ export class ComponentGuidanceComponent implements OnInit, OnDestroy {
       const doc = new DOMParser().parseFromString(html, 'text/html');
       const seen = new Set<string>();
       const summaries: TopicDoormatSummary[] = [];
-      const links = Array.from(
-        doc.querySelectorAll<HTMLAnchorElement>('.gc-srvinfo h2 a, .gc-srvinfo h3 a'),
-      );
+      const sections = Array.from(doc.querySelectorAll<HTMLElement>('.gc-srvinfo'));
 
-      for (const link of links) {
-        const linkText = this.cleanString(link.textContent || '');
-        const href = link.getAttribute('href') || '';
-        const key = `${href}|${linkText}`;
-        if (!linkText && !href) continue;
-        if (seen.has(key)) continue;
-        seen.add(key);
-        summaries.push({
-          index: summaries.length + 1,
-          linkText,
-          href,
+      sections.forEach((section, sectionIndex) => {
+        const links = Array.from(
+          section.querySelectorAll<HTMLAnchorElement>('h2 a, h3 a'),
+        );
+        const sectionSummaries: TopicDoormatSummary[] = [];
+
+        for (const link of links) {
+          const linkText = this.cleanVisibleText(link.textContent);
+          const href = link.getAttribute('href') || '';
+          const key = `${href}|${linkText}`;
+          if (!linkText && !href) continue;
+          if (seen.has(key)) continue;
+          seen.add(key);
+          const item = this.findTopicDoormatItem(link);
+          const description = this.cleanVisibleText(
+            item?.querySelector('p')?.textContent,
+          );
+          sectionSummaries.push({
+            index: summaries.length + sectionSummaries.length + 1,
+            linkText,
+            href,
+            description,
+            linkTextCharacterCount: linkText.length,
+            descriptionCharacterCount: description.length,
+            sectionIndex: sectionIndex + 1,
+            sectionItemIndex: sectionSummaries.length + 1,
+            sectionDoormatCount: 0,
+          });
+        }
+
+        sectionSummaries.forEach((summary) => {
+          summary.sectionDoormatCount = sectionSummaries.length;
+          summaries.push(summary);
         });
-      }
+      });
 
       return summaries;
     } catch {
       return [];
     }
+  }
+
+  private findTopicDoormatItem(link: HTMLAnchorElement): HTMLElement | null {
+    let current: HTMLElement | null = link;
+    while (current && !current.classList.contains('gc-srvinfo')) {
+      if (current !== link && current.querySelector('p')) return current;
+      current = current.parentElement;
+    }
+    return null;
   }
 
   private extractMostRequestedLinks(html: string): {

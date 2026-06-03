@@ -27,9 +27,10 @@ export class OpenRouterService {
 
   private readonly openRouterApiUrl = 'https://openrouter.ai/api/v1/chat/completions';
   private readonly freeModelSet = new Set<string>([
-    AiModel.NemotronSuper,
     AiModel.Zai,
+    AiModel.NemotronNano,
     AiModel.GptOSSFree,
+    AiModel.NemotronSuper,
   ]);
   // Canonical model lists used by the assistant UI and fallback helpers.
   readonly models: string[] = Object.values(AiModel);
