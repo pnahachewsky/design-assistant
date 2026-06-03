@@ -576,10 +576,12 @@ export class ComponentGuidanceComponent implements OnInit, OnDestroy {
     }
 
     const html = this.uploadState.getUploadData()?.originalHtml || '';
-    const doormatSummaries = this.extractTopicDoormatSummaries(html);
+    const doc = this.parseHtmlDocument(html);
+    if (!doc) return;
+    const doormatSummaries = this.extractTopicDoormatSummaries(doc);
     if (!doormatSummaries.length) return;
     const analysisStart = performance.now();
-    const mostRequestedLinks = this.extractMostRequestedLinks(html);
+    const mostRequestedLinks = this.extractMostRequestedLinks(doc);
 
     this.topicDoormatIssuesLoading = true;
     this.topicDoormatIssuesError = false;
@@ -1430,10 +1432,17 @@ export class ComponentGuidanceComponent implements OnInit, OnDestroy {
     return (value || '').replace(/\s+/g, ' ').trim();
   }
 
-  private extractTopicDoormatSummaries(html: string): TopicDoormatSummary[] {
-    if (!html) return [];
+  private parseHtmlDocument(html: string): Document | null {
+    if (!html) return null;
     try {
-      const doc = new DOMParser().parseFromString(html, 'text/html');
+      return new DOMParser().parseFromString(html, 'text/html');
+    } catch {
+      return null;
+    }
+  }
+
+  private extractTopicDoormatSummaries(doc: Document): TopicDoormatSummary[] {
+    try {
       const seen = new Set<string>();
       const summaries: TopicDoormatSummary[] = [];
       const sections = Array.from(doc.querySelectorAll<HTMLElement>('.gc-srvinfo'));
@@ -1507,13 +1516,11 @@ export class ComponentGuidanceComponent implements OnInit, OnDestroy {
     return null;
   }
 
-  private extractMostRequestedLinks(html: string): {
+  private extractMostRequestedLinks(doc: Document): {
     text: string;
     href: string;
   }[] {
-    if (!html) return [];
     try {
-      const doc = new DOMParser().parseFromString(html, 'text/html');
       const selectors = [
         '.gc-most-requested a',
         '.most-requested a',

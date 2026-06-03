@@ -35,7 +35,9 @@ For issue analysis:
   them on each doormat
 - Include evidence whenever the taxonomy asks for evidence
 - Keep evidence concise. For section-level issues, summarize the pattern and
-  representative doormat numbers instead of quoting full descriptions
+  include only representative doormat numbers instead of quoting full
+  descriptions. For mixed description style, include 2 to 4 representative
+  doormat numbers per style group and do not list every doormat
 
 Do not invent issue categories outside the taxonomy unless the issue is
 important and no existing category fits.

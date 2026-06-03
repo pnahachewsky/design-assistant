@@ -26,18 +26,16 @@ export class OpenRouterService {
   private readonly apiKeyService = inject(ApiKeyService);
 
   private readonly openRouterApiUrl = 'https://openrouter.ai/api/v1/chat/completions';
-  private readonly freeModelSet = new Set<string>([
+  private readonly freeModelOrder: string[] = [
     AiModel.OwlAlpha,
     AiModel.Zai,
     AiModel.NemotronNano,
     AiModel.GptOSSFree,
     AiModel.NemotronSuper,
-  ]);
+  ];
   // Canonical model lists used by the assistant UI and fallback helpers.
   readonly models: string[] = Object.values(AiModel);
-  readonly freeModels: string[] = this.models.filter((model) =>
-    this.freeModelSet.has(model),
-  );
+  readonly freeModels: string[] = [...this.freeModelOrder];
 
   get hasApiKey(): boolean {
     return !!this.apiKeyService.getCurrentKey();
