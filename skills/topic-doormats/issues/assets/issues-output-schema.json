@@ -37,15 +37,30 @@
             "mixed-or-unclear"
           ]
         },
-        "set_level_issues": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        },
         "overall_assessment": {
           "type": "string"
         }
+      }
+    },
+    "section_issues": {
+      "type": "array",
+      "description": "Issues that apply to a whole doormat section rather than one individual doormat.",
+      "items": {
+        "allOf": [
+          {
+            "$ref": "#/$defs/issue"
+          },
+          {
+            "type": "object",
+            "required": ["section_index"],
+            "properties": {
+              "section_index": {
+                "type": "integer",
+                "minimum": 1
+              }
+            }
+          }
+        ]
       }
     },
     "doormats": {
@@ -105,71 +120,97 @@
           "issues": {
             "type": "array",
             "items": {
-              "type": "object",
-              "required": [
-                "issue_category",
-                "description",
-                "recommendation",
-                "severity"
-              ],
-              "properties": {
-                "issue_category": {
-                  "type": "string"
-                },
-                "issue_group": {
-                  "type": "string",
-                  "enum": [
-                    "Link code issue",
-                    "Link name",
-                    "Description clarity",
-                    "Description formatting",
-                    "Enhancement label",
-                    "Choice of doormats"
-                  ]
-                },
-                "description": {
-                  "type": "string"
-                },
-                "recommendation": {
-                  "type": "string"
-                },
-                "severity": {
-                  "type": "string",
-                  "enum": ["High", "Medium", "Low"]
-                },
-                "include": {
-                  "type": "boolean"
-                },
-                "evidence": {
-                  "type": "string"
-                },
-                "evidence_details": {
-                  "type": "object",
-                  "properties": {
-                    "doormat_href": {
-                      "type": "string"
-                    },
-                    "most_requested_href": {
-                      "type": "string"
-                    },
-                    "doormat_link_text": {
-                      "type": "string"
-                    },
-                    "most_requested_link_text": {
-                      "type": "string"
-                    },
-                    "destination_page_title": {
-                      "type": "string"
-                    },
-                    "character_limit": {
-                      "type": "integer"
-                    },
-                    "actual_character_count": {
-                      "type": "integer"
-                    }
-                  }
-                }
+              "$ref": "#/$defs/issue"
+            }
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "issue": {
+      "type": "object",
+      "required": [
+        "issue_category",
+        "description",
+        "recommendation",
+        "severity"
+      ],
+      "properties": {
+        "issue_category": {
+          "type": "string"
+        },
+        "issue_group": {
+          "type": "string",
+          "enum": [
+            "Link code issue",
+            "Link name",
+            "Description clarity",
+            "Description formatting",
+            "Enhancement label",
+            "Choice of doormats"
+          ]
+        },
+        "description": {
+          "type": "string"
+        },
+        "recommendation": {
+          "type": "string"
+        },
+        "severity": {
+          "type": "string",
+          "enum": ["High", "Medium", "Low"]
+        },
+        "include": {
+          "type": "boolean"
+        },
+        "evidence": {
+          "type": "string"
+        },
+        "evidence_details": {
+          "type": "object",
+          "properties": {
+            "section_index": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "section_doormat_count": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "section_description_styles": {
+              "type": "array",
+              "items": {
+                "type": "string"
               }
+            },
+            "representative_doormat_indexes": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "minimum": 1
+              }
+            },
+            "doormat_href": {
+              "type": "string"
+            },
+            "most_requested_href": {
+              "type": "string"
+            },
+            "doormat_link_text": {
+              "type": "string"
+            },
+            "most_requested_link_text": {
+              "type": "string"
+            },
+            "destination_page_title": {
+              "type": "string"
+            },
+            "character_limit": {
+              "type": "integer"
+            },
+            "actual_character_count": {
+              "type": "integer"
             }
           }
         }

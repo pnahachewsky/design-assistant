@@ -137,7 +137,7 @@ import {
   unblockBodyScroll,
   uuid,
   zindexutils
-} from "./chunk-O4JS73JY.js";
+} from "./chunk-AGQQOFWL.js";
 import {
   ChangeDetectionStrategy,
   ChangeDetectorRef,
@@ -21323,15 +21323,16 @@ var OpenRouterService = class _OpenRouterService {
   http = inject(HttpClient);
   apiKeyService = inject(ApiKeyService);
   openRouterApiUrl = "https://openrouter.ai/api/v1/chat/completions";
-  freeModelSet = /* @__PURE__ */ new Set([
+  freeModelOrder = [
+    AiModel.OwlAlpha,
     AiModel.Zai,
     AiModel.NemotronNano,
     AiModel.GptOSSFree,
     AiModel.NemotronSuper
-  ]);
+  ];
   // Canonical model lists used by the assistant UI and fallback helpers.
   models = Object.values(AiModel);
-  freeModels = this.models.filter((model) => this.freeModelSet.has(model));
+  freeModels = [...this.freeModelOrder];
   get hasApiKey() {
     return !!this.apiKeyService.getCurrentKey();
   }
@@ -27439,12 +27440,13 @@ var AiOptionsComponent = class _AiOptionsComponent {
     this.promptChange.emit(key2);
   }
   // Model and alert-specific options persisted through UploadStateService.
-  selectedAi = AiModel.Zai;
+  selectedAi = AiModel.OwlAlpha;
   selectedAis = [];
   includeAlertRewriteExamples = true;
   useCompactAlertsPageContext = true;
   // Free and paid model groups are rendered separately in the UI.
   freeAiOptions = [
+    { id: AiModel.OwlAlpha, label: "page.ai-options.model.OwlAlpha", disabled: false },
     { id: AiModel.Zai, label: "page.ai-options.model.Zai", disabled: false },
     { id: AiModel.NemotronNano, label: "page.ai-options.model.NemotronNano", disabled: false },
     { id: AiModel.GptOSSFree, label: "page.ai-options.model.GptOSSFree", disabled: false },
@@ -27452,6 +27454,7 @@ var AiOptionsComponent = class _AiOptionsComponent {
   ];
   paidAiOptions = [
     { id: AiModel.Gemini, label: "page.ai-options.model.Gemini", disabled: false },
+    { id: AiModel.GptOSS20B, label: "page.ai-options.model.GptOSS20B", disabled: false },
     { id: AiModel.GPT5Mini, label: "page.ai-options.model.GPT5Mini", disabled: false },
     { id: AiModel.DeepSeek, label: "page.ai-options.model.DeepSeek", disabled: false }
   ];
@@ -29571,10 +29574,14 @@ var ComponentGuidanceComponent = class _ComponentGuidanceComponent {
   messageService = inject(MessageService);
   alertIssuesSub;
   topicDoormatDebugStorageKey = "pageAssistant.topicDoormatDebug";
+  topicDoormatIssueTaxonomyPath = "skills/topic-doormats/issues/references/issue-taxonomy.json";
   topicDoormatIssueLengthLimits = {
     "link-name-too-long": 35,
     "description-too-long": 120
   };
+  topicDoormatIssueTaxonomyLoad;
+  topicDoormatIssueIdToLabel = /* @__PURE__ */ new Map();
+  topicDoormatIssueAliasToId = /* @__PURE__ */ new Map();
   production = environment.production;
   guidanceList = [];
   rows = [];
@@ -29869,16 +29876,19 @@ var ComponentGuidanceComponent = class _ComponentGuidanceComponent {
         return;
       }
       const html = this.uploadState.getUploadData()?.originalHtml || "";
-      const doormatSets = this.extractTopicDoormatSets(html);
-      if (!doormatSets.length)
+      const doc = this.parseHtmlDocument(html);
+      if (!doc)
+        return;
+      const doormatSummaries = this.extractTopicDoormatSummaries(doc);
+      if (!doormatSummaries.length)
         return;
       const analysisStart = performance.now();
-      const mostRequestedLinks = this.extractMostRequestedLinks(html);
-      const doormatSummaries = this.extractTopicDoormatSummaries(html);
+      const mostRequestedLinks = this.extractMostRequestedLinks(doc);
       this.topicDoormatIssuesLoading = true;
       this.topicDoormatIssuesError = false;
       this.topicDoormatIssuesErrorDetail = "";
       try {
+        yield this.loadTopicDoormatIssueTaxonomy();
         const composed = yield this.skillManager.composePrompt({
           basePrompt: "",
           queryText: "analyze topic doormats gc-srvinfo issue report for each doormat",
@@ -29893,7 +29903,6 @@ var ComponentGuidanceComponent = class _ComponentGuidanceComponent {
           {
             role: "user",
             content: JSON.stringify({
-              doormatSets,
               doormats: doormatSummaries,
               mostRequestedLinks
             })
@@ -29904,7 +29913,6 @@ var ComponentGuidanceComponent = class _ComponentGuidanceComponent {
         this.debugTopicDoormatIssues("request prepared", {
           selectedModel,
           modelRotation,
-          doormatSetCount: doormatSets.length,
           doormatSummaryCount: doormatSummaries.length,
           sectionCounts: this.buildTopicDoormatSectionCounts(doormatSummaries),
           overLimitSummaryIndexes: this.getTopicDoormatOverLimitSectionIndexes(doormatSummaries),
@@ -29913,12 +29921,19 @@ var ComponentGuidanceComponent = class _ComponentGuidanceComponent {
             linkText: summary.linkText,
             linkTextCharacterCount: summary.linkTextCharacterCount,
             descriptionCharacterCount: summary.descriptionCharacterCount,
+            headingLevel: summary.headingLevel,
+            itemLinkCount: summary.itemLinkCount,
+            descriptionLinkCount: summary.descriptionLinkCount,
+            hasDescriptionLink: summary.hasDescriptionLink,
+            hasDescriptionIconOrImage: summary.hasDescriptionIconOrImage,
+            hasDescriptionSpecialFormatting: summary.hasDescriptionSpecialFormatting,
             sectionIndex: summary.sectionIndex,
             sectionItemIndex: summary.sectionItemIndex,
             sectionDoormatCount: summary.sectionDoormatCount
           })),
           mostRequestedLinkCount: mostRequestedLinks.length,
           loadedSkillResources: composed.loadedPaths,
+          loadedIssueTaxonomyLabels: this.topicDoormatIssueIdToLabel.size,
           estimatedSystemPromptTokens: composed.estimatedPromptTokens,
           systemPromptCharacters: composed.prompt.length,
           userPayloadCharacters: messages[1].content.length,
@@ -29937,7 +29952,7 @@ var ComponentGuidanceComponent = class _ComponentGuidanceComponent {
         this.debugTopicDoormatIssues("response parsed", {
           model,
           responseCharacters: text.length,
-          parsedIssueRows: this.topicDoormatIssueRows.length,
+          displayedRows: this.topicDoormatIssueRows.length,
           totalElapsedMs: Math.round(performance.now() - analysisStart)
         });
         if (!text) {
@@ -30075,6 +30090,8 @@ var ComponentGuidanceComponent = class _ComponentGuidanceComponent {
     }
     const root = parsed;
     const doormats = Array.isArray(root["doormats"]) ? root["doormats"] : [];
+    const sectionIssueRows = this.parseTopicDoormatSectionIssueRows(root["section_issues"], doormatSummaries);
+    const sectionIssueKeys = new Set(sectionIssueRows.map((row) => `${row.sectionIndex ?? 0}|${row.issueId}`));
     const summariesByIndex = new Map(doormatSummaries.map((summary) => [summary.index, summary]));
     const rows = doormats.flatMap((rawDoormat) => {
       if (!rawDoormat || typeof rawDoormat !== "object")
@@ -30093,6 +30110,13 @@ var ComponentGuidanceComponent = class _ComponentGuidanceComponent {
             linkText,
             href,
             description: "",
+            headingLevel: null,
+            itemLinkCount: 0,
+            descriptionLinkCount: 0,
+            hasDescriptionLink: false,
+            hasDescriptionIconOrImage: false,
+            hasDescriptionSpecialFormatting: false,
+            rawItemText: "",
             linkTextCharacterCount: linkText.length,
             descriptionCharacterCount: 0,
             sectionIndex: 0,
@@ -30105,30 +30129,51 @@ var ComponentGuidanceComponent = class _ComponentGuidanceComponent {
         if (!rawIssue || typeof rawIssue !== "object")
           return null;
         const issue = rawIssue;
+        const issueId = this.getTopicDoormatIssueId(issue);
         if (!this.isReportableTopicDoormatIssue(issue, summary))
           return null;
+        if (issueId === "mixed-description-style-in-section") {
+          const sectionRow = this.buildTopicDoormatSectionIssueRow(issue, summary?.sectionIndex);
+          const sectionKey = `${sectionRow.sectionIndex ?? 0}|${sectionRow.issueId}`;
+          if (!sectionIssueKeys.has(sectionKey)) {
+            sectionIssueRows.push(sectionRow);
+            sectionIssueKeys.add(sectionKey);
+          }
+          return null;
+        }
+        if (!this.hasValidTopicDoormatObjectiveEvidence(issueId, summary)) {
+          return null;
+        }
         const evidence = this.buildTopicDoormatEvidence(issue, summary);
         return {
           include: typeof issue["include"] === "boolean" ? issue["include"] : true,
           severity: this.cleanString(issue["severity"]) || "Unknown",
           doormat: label,
-          issue: this.cleanString(issue["issue_category"]) || "Issue",
+          issueId,
+          issue: this.getTopicDoormatIssueLabel(issueId),
           evidence,
           recommendation: this.cleanString(issue["recommendation"]),
-          doormatIndex: index ?? void 0
+          doormatIndex: index ?? void 0,
+          sectionIndex: summary?.sectionIndex
         };
       }).filter((row) => row !== null);
     });
-    const deterministicRows = this.buildDeterministicTopicDoormatIssueRows(doormatSummaries, rows);
-    const representedIndexes = new Set([...rows, ...deterministicRows].map((row) => row.doormatIndex).filter((index) => typeof index === "number" && index > 0));
+    const suppressedSectionIssueRows = sectionIssueRows.filter((row) => row.issueId === "too-many-doormats-in-section");
+    const reportableSectionIssueRows = sectionIssueRows.filter((row) => row.issueId !== "too-many-doormats-in-section");
+    const mixedDescriptionStyleSectionIndexes = new Set(reportableSectionIssueRows.filter((row) => row.issueId === "mixed-description-style-in-section").map((row) => row.sectionIndex).filter((index) => typeof index === "number" && index > 0));
+    const suppressedModelIssueRows = rows.filter((row) => row.issueId === "inconsistent-description-style" && !!row.sectionIndex && mixedDescriptionStyleSectionIndexes.has(row.sectionIndex));
+    const modelIssueRows = rows.filter((row) => !suppressedModelIssueRows.includes(row));
+    const deterministicRows = this.buildDeterministicTopicDoormatIssueRows(doormatSummaries, modelIssueRows);
+    const representedIndexes = new Set([...modelIssueRows, ...deterministicRows, ...reportableSectionIssueRows].map((row) => row.doormatIndex).filter((index) => typeof index === "number" && index > 0));
     const missingNoIssueRows = doormatSummaries.filter((summary) => !representedIndexes.has(summary.index)).map((summary) => this.buildTopicDoormatNoIssueRow(summary));
     const resolvedRows = this.removeConflictingTopicDoormatNoIssueRows([
-      ...rows,
+      ...modelIssueRows,
       ...deterministicRows,
+      ...reportableSectionIssueRows,
       ...missingNoIssueRows
     ].sort((a, b) => {
-      const aIndex = a.doormatIndex ?? Number.MAX_SAFE_INTEGER;
-      const bIndex = b.doormatIndex ?? Number.MAX_SAFE_INTEGER;
+      const aIndex = this.getTopicDoormatRowSortIndex(a, doormatSummaries);
+      const bIndex = this.getTopicDoormatRowSortIndex(b, doormatSummaries);
       return aIndex - bIndex;
     }));
     this.debugTopicDoormatIssues("response row resolution", {
@@ -30136,12 +30181,45 @@ var ComponentGuidanceComponent = class _ComponentGuidanceComponent {
       doormatSummaryCount: doormatSummaries.length,
       sectionCounts: this.buildTopicDoormatSectionCounts(doormatSummaries),
       overLimitSummaryIndexes: this.getTopicDoormatOverLimitSectionIndexes(doormatSummaries),
-      parsedIssueRows: rows.length,
+      modelRawIssueRows: rows.length,
+      modelRawIssueBreakdown: this.countTopicDoormatRowsByIssue(rows),
+      modelDisplayedIssueRows: modelIssueRows.length,
+      modelDisplayedIssueBreakdown: this.countTopicDoormatRowsByIssue(modelIssueRows),
+      suppressedModelIssueRows: suppressedModelIssueRows.length,
+      suppressedModelIssueBreakdown: this.countTopicDoormatRowsByIssue(suppressedModelIssueRows),
+      modelRawSectionIssueRows: sectionIssueRows.length,
+      modelDisplayedSectionIssueRows: reportableSectionIssueRows.length,
+      suppressedSectionIssueRows: suppressedSectionIssueRows.length,
+      suppressedSectionIssueBreakdown: this.countTopicDoormatRowsByIssue(suppressedSectionIssueRows),
       fallbackNoIssueRows: missingNoIssueRows.length,
       deterministicRows: deterministicRows.length,
-      resolvedRows: resolvedRows.length
+      displayedRows: resolvedRows.length
     });
     return resolvedRows;
+  }
+  parseTopicDoormatSectionIssueRows(rawSectionIssues, doormatSummaries) {
+    if (!Array.isArray(rawSectionIssues))
+      return [];
+    return rawSectionIssues.map((rawIssue) => {
+      if (!rawIssue || typeof rawIssue !== "object")
+        return null;
+      const issue = rawIssue;
+      return this.buildTopicDoormatSectionIssueRow(issue, void 0, doormatSummaries);
+    }).filter((row) => row !== null);
+  }
+  buildTopicDoormatSectionIssueRow(issue, fallbackSectionIndex, doormatSummaries = []) {
+    const details = issue["evidence_details"] && typeof issue["evidence_details"] === "object" ? issue["evidence_details"] : null;
+    const sectionIndex = this.toNumber(issue["section_index"]) ?? this.toNumber(details?.["section_index"]) ?? fallbackSectionIndex ?? this.buildTopicDoormatSectionCounts(doormatSummaries)[0]?.sectionIndex ?? 1;
+    return {
+      include: typeof issue["include"] === "boolean" ? issue["include"] : true,
+      severity: this.cleanString(issue["severity"]) || "Unknown",
+      doormat: `Section ${sectionIndex}`,
+      issueId: this.getTopicDoormatIssueId(issue),
+      issue: this.getTopicDoormatIssueLabel(this.getTopicDoormatIssueId(issue)),
+      evidence: this.buildTopicDoormatEvidence(issue),
+      recommendation: this.cleanString(issue["recommendation"]),
+      sectionIndex
+    };
   }
   removeConflictingTopicDoormatNoIssueRows(rows) {
     const indexesWithIssues = new Set(rows.filter((row) => !this.isNoIssueRow(row)).map((row) => row.doormatIndex).filter((index) => typeof index === "number" && index > 0));
@@ -30151,7 +30229,7 @@ var ComponentGuidanceComponent = class _ComponentGuidanceComponent {
     return doormatSummaries.map((summary) => this.buildTopicDoormatNoIssueRow(summary));
   }
   buildDeterministicTopicDoormatIssueRows(doormatSummaries, existingRows) {
-    const existingIssueKeys = new Set(existingRows.map((row) => `${row.doormatIndex ?? 0}|${row.issue}`));
+    const existingIssueKeys = new Set(existingRows.map((row) => `${row.doormatIndex ?? 0}|${row.issueId}`));
     return doormatSummaries.flatMap((summary) => {
       if (summary.sectionDoormatCount <= 9 || summary.sectionItemIndex <= 9 || existingIssueKeys.has(`${summary.index}|too-many-doormats-in-section`)) {
         return [];
@@ -30161,10 +30239,12 @@ var ComponentGuidanceComponent = class _ComponentGuidanceComponent {
           include: true,
           severity: "Medium",
           doormat: this.buildTopicDoormatLabel(summary),
-          issue: "too-many-doormats-in-section",
-          evidence: `${summary.sectionDoormatCount}/9 doormats in section ${summary.sectionIndex}; item ${summary.sectionItemIndex}`,
+          issueId: "too-many-doormats-in-section",
+          issue: this.getTopicDoormatIssueLabel("too-many-doormats-in-section"),
+          evidence: this.buildTooManyTopicDoormatsEvidence(summary),
           recommendation: "Reduce the section to 9 doormats or split lower-priority destinations into another section.",
-          doormatIndex: summary.index
+          doormatIndex: summary.index,
+          sectionIndex: summary.sectionIndex
         }
       ];
     });
@@ -30178,6 +30258,14 @@ var ComponentGuidanceComponent = class _ComponentGuidanceComponent {
     });
     return Array.from(counts.entries()).map(([sectionIndex, count]) => ({ sectionIndex, count })).sort((a, b) => a.sectionIndex - b.sectionIndex);
   }
+  getTopicDoormatRowSortIndex(row, doormatSummaries) {
+    if (row.doormatIndex)
+      return row.doormatIndex;
+    if (!row.sectionIndex)
+      return Number.MAX_SAFE_INTEGER;
+    const firstSectionItem = doormatSummaries.find((summary) => summary.sectionIndex === row.sectionIndex);
+    return (firstSectionItem?.index ?? row.sectionIndex) - 0.5;
+  }
   getTopicDoormatOverLimitSectionIndexes(doormatSummaries) {
     return doormatSummaries.filter((summary) => summary.sectionDoormatCount > 9 && summary.sectionItemIndex > 9).map((summary) => summary.index);
   }
@@ -30186,11 +30274,89 @@ var ComponentGuidanceComponent = class _ComponentGuidanceComponent {
       include: false,
       severity: "OK",
       doormat: this.buildTopicDoormatLabel(doormat),
+      issueId: "no-issues",
       issue: "No issues",
       evidence: "No issues reported by AI.",
       recommendation: "",
-      doormatIndex: doormat.index || void 0
+      doormatIndex: doormat.index || void 0,
+      sectionIndex: doormat.sectionIndex || void 0
     };
+  }
+  countTopicDoormatRowsByIssue(rows) {
+    return rows.reduce((counts, row) => {
+      counts[row.issueId] = (counts[row.issueId] ?? 0) + 1;
+      return counts;
+    }, {});
+  }
+  getTopicDoormatIssueId(issue) {
+    const rawCategory = this.cleanString(issue["issue_category"]);
+    return this.getTopicDoormatIssueIdFromText(rawCategory) || "issue";
+  }
+  loadTopicDoormatIssueTaxonomy() {
+    return __async(this, null, function* () {
+      if (!this.topicDoormatIssueTaxonomyLoad) {
+        this.topicDoormatIssueTaxonomyLoad = firstValueFrom(this.http.get(this.topicDoormatIssueTaxonomyPath)).then((taxonomy) => {
+          const categories = Array.isArray(taxonomy.issue_categories) ? taxonomy.issue_categories : [];
+          categories.forEach((rawCategory) => {
+            if (!rawCategory || typeof rawCategory !== "object")
+              return;
+            const category = rawCategory;
+            const id = this.cleanString(category.id);
+            const label = this.cleanString(category.label);
+            if (!id)
+              return;
+            this.topicDoormatIssueIdToLabel.set(id, label || this.toTitleCase(id.replace(/-/g, " ")));
+            this.registerTopicDoormatIssueAlias(id, id);
+            if (label) {
+              this.registerTopicDoormatIssueAlias(label, id);
+            }
+          });
+          this.registerTopicDoormatIssueAlias("No issues", "no-issues");
+        }).catch((err) => {
+          this.debugTopicDoormatIssues("issue taxonomy load failed", {
+            path: this.topicDoormatIssueTaxonomyPath,
+            error: err instanceof Error ? err.message : String(err)
+          });
+        });
+      }
+      yield this.topicDoormatIssueTaxonomyLoad;
+    });
+  }
+  registerTopicDoormatIssueAlias(alias, issueId) {
+    const key2 = this.normalizeTopicDoormatIssueKey(alias);
+    if (key2) {
+      this.topicDoormatIssueAliasToId.set(key2, issueId);
+    }
+  }
+  getTopicDoormatIssueIdFromText(rawCategory) {
+    const normalized = this.normalizeTopicDoormatIssueKey(rawCategory);
+    if (!normalized)
+      return "";
+    return this.topicDoormatIssueAliasToId.get(normalized) ?? normalized;
+  }
+  normalizeTopicDoormatIssueKey(value) {
+    return value.trim().toLowerCase().replace(/[']/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+  }
+  normalizeTopicDoormatIssueId(rawCategory) {
+    const normalized = rawCategory.trim().toLowerCase().replace(/[’']/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+    if (!normalized)
+      return "";
+    return this.topicDoormatIssueAliasToId.get(normalized) ?? normalized;
+  }
+  getTopicDoormatIssueLabel(issueId) {
+    if (issueId === "no-issues")
+      return "No issues";
+    return this.topicDoormatIssueIdToLabel.get(issueId) ?? this.toTitleCase(issueId.replace(/-/g, " "));
+  }
+  toTitleCase(value) {
+    return value.replace(/\b\w/g, (match) => match.toUpperCase());
+  }
+  hasValidTopicDoormatObjectiveEvidence(issueId, doormat) {
+    if (issueId !== "description-trailing-punctuation")
+      return true;
+    if (!doormat?.description)
+      return false;
+    return /[.:;?!,]$/.test(doormat.description.trim());
   }
   buildTopicDoormatLabel(doormat) {
     return [
@@ -30199,7 +30365,7 @@ var ComponentGuidanceComponent = class _ComponentGuidanceComponent {
     ].filter(Boolean).join(" ");
   }
   isReportableTopicDoormatIssue(issue, doormat) {
-    const issueCategory = this.cleanString(issue["issue_category"]);
+    const issueCategory = this.getTopicDoormatIssueId(issue);
     if (issueCategory !== "link-name-too-long" && issueCategory !== "description-too-long") {
       return true;
     }
@@ -30214,9 +30380,14 @@ var ComponentGuidanceComponent = class _ComponentGuidanceComponent {
   }
   buildTopicDoormatEvidence(issue, doormat) {
     const evidence = this.cleanString(issue["evidence"]);
-    const issueCategory = this.cleanString(issue["issue_category"]);
+    const issueCategory = this.getTopicDoormatIssueId(issue);
     const details = issue["evidence_details"] && typeof issue["evidence_details"] === "object" ? issue["evidence_details"] : null;
     const detailParts = [];
+    if (issueCategory === "too-many-doormats-in-section") {
+      const normalizedEvidence = this.buildTooManyTopicDoormatsEvidence(doormat);
+      if (normalizedEvidence)
+        return normalizedEvidence;
+    }
     if (details) {
       const count = this.getTopicDoormatExactCharacterCount(issueCategory, doormat) ?? this.toNumber(details["actual_character_count"]);
       const limit = this.toNumber(details["character_limit"]);
@@ -30240,6 +30411,12 @@ var ComponentGuidanceComponent = class _ComponentGuidanceComponent {
       return "Link also appears in Most requested";
     }
     return "";
+  }
+  buildTooManyTopicDoormatsEvidence(doormat) {
+    if (!doormat?.sectionDoormatCount || !doormat.sectionIndex || !doormat.sectionItemIndex) {
+      return "";
+    }
+    return `${doormat.sectionDoormatCount}/9 doormats in section ${doormat.sectionIndex}; item ${doormat.sectionItemIndex}`;
   }
   getTopicDoormatExactCharacterCount(issueCategory, doormat) {
     if (!doormat)
@@ -30279,21 +30456,17 @@ var ComponentGuidanceComponent = class _ComponentGuidanceComponent {
   cleanVisibleText(value) {
     return (value || "").replace(/\s+/g, " ").trim();
   }
-  extractTopicDoormatSets(html) {
+  parseHtmlDocument(html) {
     if (!html)
-      return [];
+      return null;
     try {
-      const doc = new DOMParser().parseFromString(html, "text/html");
-      return Array.from(doc.querySelectorAll(".gc-srvinfo")).map((set) => set.outerHTML);
+      return new DOMParser().parseFromString(html, "text/html");
     } catch {
-      return [];
+      return null;
     }
   }
-  extractTopicDoormatSummaries(html) {
-    if (!html)
-      return [];
+  extractTopicDoormatSummaries(doc) {
     try {
-      const doc = new DOMParser().parseFromString(html, "text/html");
       const seen = /* @__PURE__ */ new Set();
       const summaries = [];
       const sections = Array.from(doc.querySelectorAll(".gc-srvinfo"));
@@ -30310,12 +30483,21 @@ var ComponentGuidanceComponent = class _ComponentGuidanceComponent {
             continue;
           seen.add(key2);
           const item = this.findTopicDoormatItem(link);
-          const description = this.cleanVisibleText(item?.querySelector("p")?.textContent);
+          const descriptionElement = item?.querySelector("p") ?? null;
+          const description = this.cleanVisibleText(descriptionElement?.textContent);
+          const heading = link.closest("h2, h3");
           sectionSummaries.push({
             index: summaries.length + sectionSummaries.length + 1,
             linkText,
             href,
             description,
+            headingLevel: heading ? this.toNumber(heading.tagName.slice(1)) : null,
+            itemLinkCount: item ? item.querySelectorAll("a[href]").length : 0,
+            descriptionLinkCount: descriptionElement ? descriptionElement.querySelectorAll("a[href]").length : 0,
+            hasDescriptionLink: !!descriptionElement?.querySelector("a[href]"),
+            hasDescriptionIconOrImage: !!descriptionElement?.querySelector('img, svg, i[class*="glyphicon"], i[class*="fa"], span[class*="glyphicon"], span[class*="fa"]'),
+            hasDescriptionSpecialFormatting: !!descriptionElement?.querySelector("strong, b, em, i, ul, ol, li, mark, code"),
+            rawItemText: this.cleanVisibleText(item?.textContent).slice(0, 500),
             linkTextCharacterCount: linkText.length,
             descriptionCharacterCount: description.length,
             sectionIndex: sectionIndex + 1,
@@ -30342,11 +30524,8 @@ var ComponentGuidanceComponent = class _ComponentGuidanceComponent {
     }
     return null;
   }
-  extractMostRequestedLinks(html) {
-    if (!html)
-      return [];
+  extractMostRequestedLinks(doc) {
     try {
-      const doc = new DOMParser().parseFromString(html, "text/html");
       const selectors = [
         ".gc-most-requested a",
         ".most-requested a",
@@ -30466,7 +30645,7 @@ var ComponentGuidanceComponent = class _ComponentGuidanceComponent {
     return "chip-unk";
   }
   isNoIssueRow(issue) {
-    return issue.issue === "No issues";
+    return issue.issueId === "no-issues";
   }
   alertHealthLabel(severity) {
     const s = (severity || "").toLowerCase();
@@ -30912,7 +31091,7 @@ var ComponentGuidanceComponent = class _ComponentGuidanceComponent {
   }], null, null);
 })();
 (() => {
-  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(ComponentGuidanceComponent, { className: "ComponentGuidanceComponent", filePath: "app/views/page-assistant/components/problems/component-guidance/component-guidance.component.ts", lineNumber: 179 });
+  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(ComponentGuidanceComponent, { className: "ComponentGuidanceComponent", filePath: "app/views/page-assistant/components/problems/component-guidance/component-guidance.component.ts", lineNumber: 197 });
 })();
 
 // src/app/views/page-assistant/components/problems/seo.component.ts
@@ -43345,7 +43524,7 @@ ${custom}` : promptBody;
     });
   }
   //AI Model
-  selectedAiModel = AiModel.Zai;
+  selectedAiModel = AiModel.OwlAlpha;
   onAiChange(key2) {
     this.selectedAiModel = key2;
     this.uploadState.setSelectedAiModel(key2);
@@ -43383,6 +43562,7 @@ ${custom}` : promptBody;
   }
   buildModelRotation(model) {
     const fallbackOrder = [
+      AiModel.OwlAlpha,
       AiModel.Zai,
       AiModel.NemotronNano,
       AiModel.GptOSSFree,
@@ -44477,4 +44657,4 @@ ${custom}` : promptBody;
 export {
   PageAssistantCompareComponent
 };
-//# sourceMappingURL=chunk-LRSNMZ2O.js.map
+//# sourceMappingURL=chunk-JYKBKKQD.js.map

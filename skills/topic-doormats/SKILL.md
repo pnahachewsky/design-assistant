@@ -20,37 +20,16 @@ Do not analyze or rewrite one doormat in isolation when the full set is
 available. Compare link text, descriptions, style, order, and destination
 choices across the set before reporting issues or making recommendations.
 
-## Issue Analysis
-
-For issue analysis:
-- Use the issue taxonomy resource as the authoritative ruleset
-- Use the issues output schema as the required response shape
-- Run deterministic structural checks first, then judgment/editorial checks
-- Use caller-provided `linkTextCharacterCount` and
-  `descriptionCharacterCount` values when present; do not recalculate
-  character counts from HTML
-- Return JSON only
-- Report issues per affected doormat
-- Include set-level problems on each affected doormat when appropriate
-- Include evidence whenever the taxonomy asks for evidence
-
-Do not invent issue categories outside the taxonomy unless the issue is
-important and no existing category fits.
-
-## Rewrite
-
-For rewrite tasks:
-- Use the rewrite rules resource as the authoritative ruleset
-- Use the rewrite output schema as the required response shape
-- Preserve all unrelated page HTML
-- Rewrite the doormat set consistently
-
 ## Resource Authority
 
-Detailed rules live in JSON resources, not in this file:
+Detailed task rules live in task-specific skill files and JSON resources, not
+in this shared file:
+- Issue analysis instructions: `issues/SKILL.md`
 - Issue analysis rules: `issues/references/issue-taxonomy.json`
 - Issue output shape: `issues/assets/issues-output-schema.json`
+- Rewrite instructions: `rewrite/SKILL.md`
 - Rewrite rules: `rewrite/references/rewrite-rules.json`
 - Rewrite output shape: `rewrite/assets/rewrite-output-schema.json`
 
-If this file conflicts with a loaded JSON resource, follow the JSON resource.
+If this file conflicts with a loaded task-specific skill or JSON resource,
+follow the task-specific skill or JSON resource.

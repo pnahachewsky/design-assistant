@@ -90,11 +90,28 @@
     {
       "id": "topic-doormats",
       "name": "topic-doormats",
-      "description": "Generates GCWeb doormat navigation patterns for Canada.ca and CRA pages, including linked tiles with short descriptions for topic, landing, and index pages.",
+      "description": "Shared GCWeb topic doormat guidance for Canada.ca and CRA pages, including linked tiles with short descriptions for topic, landing, and index pages.",
       "skillMdPath": "skills/topic-doormats/SKILL.md",
+      "selectable": false,
+      "triggerPhrases": []
+    },
+    {
+      "id": "topic-doormats-issues",
+      "name": "topic-doormats-issues",
+      "description": "Analyzes GCWeb topic doormats for content, structure, consistency, and destination issues. Use for diagnosis and issue reporting only.",
+      "skillMdPath": "skills/topic-doormats/issues/SKILL.md",
+      "includedSkillIds": [
+        "topic-doormats"
+      ],
       "triggerPhrases": [
         "doormat",
         "doormats",
+        "topic doormat",
+        "gc-srvinfo",
+        "analyze topic doormats",
+        "issue report",
+        "issue reports",
+        "issues",
         "doormat pattern",
         "navigation tiles",
         "link tiles",
@@ -123,6 +140,49 @@
       "assetPathsByPromptKey": {
         "doormats": [
           "skills/topic-doormats/issues/assets/issues-output-schema.json"
+        ]
+      }
+    },
+    {
+      "id": "topic-doormats-rewrite",
+      "name": "topic-doormats-rewrite",
+      "description": "Rewrites GCWeb topic doormats into consistent, concise link text and descriptions. Use for rewrite generation only.",
+      "skillMdPath": "skills/topic-doormats/rewrite/SKILL.md",
+      "includedSkillIds": [
+        "topic-doormats"
+      ],
+      "triggerPhrases": [
+        "doormat",
+        "doormats",
+        "topic doormat",
+        "rewrite doormat",
+        "rewrite doormats",
+        "rewrite",
+        "replacement",
+        "updated html",
+        "recommendations"
+      ],
+      "promptKeys": [
+        "doormats"
+      ],
+      "outputModes": [
+        "json",
+        "html"
+      ],
+      "defaultReferencePaths": [
+        "skills/topic-doormats/rewrite/references/rewrite-rules.json"
+      ],
+      "defaultAssetPaths": [
+        "skills/topic-doormats/rewrite/assets/rewrite-output-schema.json"
+      ],
+      "referencePathsByPromptKey": {
+        "doormats": [
+          "skills/topic-doormats/rewrite/references/rewrite-rules.json"
+        ]
+      },
+      "assetPathsByPromptKey": {
+        "doormats": [
+          "skills/topic-doormats/rewrite/assets/rewrite-output-schema.json"
         ]
       }
     }
