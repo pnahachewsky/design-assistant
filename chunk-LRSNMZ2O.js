@@ -137,7 +137,7 @@ import {
   unblockBodyScroll,
   uuid,
   zindexutils
-} from "./chunk-BDC7DLB4.js";
+} from "./chunk-O4JS73JY.js";
 import {
   ChangeDetectionStrategy,
   ChangeDetectorRef,
@@ -21324,9 +21324,10 @@ var OpenRouterService = class _OpenRouterService {
   apiKeyService = inject(ApiKeyService);
   openRouterApiUrl = "https://openrouter.ai/api/v1/chat/completions";
   freeModelSet = /* @__PURE__ */ new Set([
-    AiModel.NemotronSuper,
     AiModel.Zai,
-    AiModel.GptOSSFree
+    AiModel.NemotronNano,
+    AiModel.GptOSSFree,
+    AiModel.NemotronSuper
   ]);
   // Canonical model lists used by the assistant UI and fallback helpers.
   models = Object.values(AiModel);
@@ -27438,15 +27439,16 @@ var AiOptionsComponent = class _AiOptionsComponent {
     this.promptChange.emit(key2);
   }
   // Model and alert-specific options persisted through UploadStateService.
-  selectedAi = AiModel.Gemini;
+  selectedAi = AiModel.Zai;
   selectedAis = [];
   includeAlertRewriteExamples = true;
   useCompactAlertsPageContext = true;
   // Free and paid model groups are rendered separately in the UI.
   freeAiOptions = [
-    { id: AiModel.NemotronSuper, label: "page.ai-options.model.NemotronSuper", disabled: false },
     { id: AiModel.Zai, label: "page.ai-options.model.Zai", disabled: false },
-    { id: AiModel.GptOSSFree, label: "page.ai-options.model.GptOSSFree", disabled: false }
+    { id: AiModel.NemotronNano, label: "page.ai-options.model.NemotronNano", disabled: false },
+    { id: AiModel.GptOSSFree, label: "page.ai-options.model.GptOSSFree", disabled: false },
+    { id: AiModel.NemotronSuper, label: "page.ai-options.model.NemotronSuper", disabled: false }
   ];
   paidAiOptions = [
     { id: AiModel.Gemini, label: "page.ai-options.model.Gemini", disabled: false },
@@ -29569,6 +29571,10 @@ var ComponentGuidanceComponent = class _ComponentGuidanceComponent {
   messageService = inject(MessageService);
   alertIssuesSub;
   topicDoormatDebugStorageKey = "pageAssistant.topicDoormatDebug";
+  topicDoormatIssueLengthLimits = {
+    "link-name-too-long": 35,
+    "description-too-long": 120
+  };
   production = environment.production;
   guidanceList = [];
   rows = [];
@@ -29888,6 +29894,7 @@ var ComponentGuidanceComponent = class _ComponentGuidanceComponent {
             role: "user",
             content: JSON.stringify({
               doormatSets,
+              doormats: doormatSummaries,
               mostRequestedLinks
             })
           }
@@ -29898,6 +29905,18 @@ var ComponentGuidanceComponent = class _ComponentGuidanceComponent {
           selectedModel,
           modelRotation,
           doormatSetCount: doormatSets.length,
+          doormatSummaryCount: doormatSummaries.length,
+          sectionCounts: this.buildTopicDoormatSectionCounts(doormatSummaries),
+          overLimitSummaryIndexes: this.getTopicDoormatOverLimitSectionIndexes(doormatSummaries),
+          doormatSummaries: doormatSummaries.map((summary) => ({
+            index: summary.index,
+            linkText: summary.linkText,
+            linkTextCharacterCount: summary.linkTextCharacterCount,
+            descriptionCharacterCount: summary.descriptionCharacterCount,
+            sectionIndex: summary.sectionIndex,
+            sectionItemIndex: summary.sectionItemIndex,
+            sectionDoormatCount: summary.sectionDoormatCount
+          })),
           mostRequestedLinkCount: mostRequestedLinks.length,
           loadedSkillResources: composed.loadedPaths,
           estimatedSystemPromptTokens: composed.estimatedPromptTokens,
@@ -30017,11 +30036,14 @@ var ComponentGuidanceComponent = class _ComponentGuidanceComponent {
     });
   }
   buildTopicDoormatModelRotation(requested) {
-    const available = this.openRouter.models;
-    if (requested && available.includes(requested)) {
-      return [requested, ...available.filter((candidate) => candidate !== requested)];
+    const freeModels = this.openRouter.freeModels;
+    if (requested && this.openRouter.models.includes(requested)) {
+      return [
+        requested,
+        ...freeModels.filter((candidate) => candidate !== requested)
+      ];
     }
-    return available;
+    return freeModels;
   }
   getShortModelName(model) {
     const normalizedModel = (model || "").replace(/-\d{4}-\d{2}-\d{2}$/, "").replace(/:free$/, ":free");
@@ -30042,10 +30064,18 @@ var ComponentGuidanceComponent = class _ComponentGuidanceComponent {
   }
   parseTopicDoormatIssueRows(text, doormatSummaries = []) {
     const parsed = this.looseJsonParse(this.stripCodeFences(text));
-    if (!parsed || typeof parsed !== "object")
-      return [];
+    if (!parsed || typeof parsed !== "object") {
+      const fallbackRows = this.buildTopicDoormatFallbackRows(doormatSummaries);
+      this.debugTopicDoormatIssues("response parse fallback", {
+        reason: "invalid-json-or-non-object",
+        doormatSummaryCount: doormatSummaries.length,
+        fallbackRows: fallbackRows.length
+      });
+      return fallbackRows;
+    }
     const root = parsed;
     const doormats = Array.isArray(root["doormats"]) ? root["doormats"] : [];
+    const summariesByIndex = new Map(doormatSummaries.map((summary) => [summary.index, summary]));
     const rows = doormats.flatMap((rawDoormat) => {
       if (!rawDoormat || typeof rawDoormat !== "object")
         return [];
@@ -30054,13 +30084,20 @@ var ComponentGuidanceComponent = class _ComponentGuidanceComponent {
       const linkText = this.cleanString(doormat["link_text"]);
       const href = this.cleanString(doormat["href"]);
       const issues = Array.isArray(doormat["issues"]) ? doormat["issues"] : [];
+      const summary = index ? summariesByIndex.get(index) : void 0;
       const label = [index ? `${index}.` : "", linkText || href || "Doormat"].filter(Boolean).join(" ");
       if (!issues.length) {
         return [
-          this.buildTopicDoormatNoIssueRow({
+          this.buildTopicDoormatNoIssueRow(summary ?? {
             index: index ?? 0,
             linkText,
-            href
+            href,
+            description: "",
+            linkTextCharacterCount: linkText.length,
+            descriptionCharacterCount: 0,
+            sectionIndex: 0,
+            sectionItemIndex: 0,
+            sectionDoormatCount: 0
           })
         ];
       }
@@ -30068,7 +30105,9 @@ var ComponentGuidanceComponent = class _ComponentGuidanceComponent {
         if (!rawIssue || typeof rawIssue !== "object")
           return null;
         const issue = rawIssue;
-        const evidence = this.buildTopicDoormatEvidence(issue);
+        if (!this.isReportableTopicDoormatIssue(issue, summary))
+          return null;
+        const evidence = this.buildTopicDoormatEvidence(issue, summary);
         return {
           include: typeof issue["include"] === "boolean" ? issue["include"] : true,
           severity: this.cleanString(issue["severity"]) || "Unknown",
@@ -30080,36 +30119,106 @@ var ComponentGuidanceComponent = class _ComponentGuidanceComponent {
         };
       }).filter((row) => row !== null);
     });
-    const representedIndexes = new Set(rows.map((row) => row.doormatIndex).filter((index) => typeof index === "number" && index > 0));
+    const deterministicRows = this.buildDeterministicTopicDoormatIssueRows(doormatSummaries, rows);
+    const representedIndexes = new Set([...rows, ...deterministicRows].map((row) => row.doormatIndex).filter((index) => typeof index === "number" && index > 0));
     const missingNoIssueRows = doormatSummaries.filter((summary) => !representedIndexes.has(summary.index)).map((summary) => this.buildTopicDoormatNoIssueRow(summary));
-    return [...rows, ...missingNoIssueRows].sort((a, b) => {
+    const resolvedRows = this.removeConflictingTopicDoormatNoIssueRows([
+      ...rows,
+      ...deterministicRows,
+      ...missingNoIssueRows
+    ].sort((a, b) => {
       const aIndex = a.doormatIndex ?? Number.MAX_SAFE_INTEGER;
       const bIndex = b.doormatIndex ?? Number.MAX_SAFE_INTEGER;
       return aIndex - bIndex;
+    }));
+    this.debugTopicDoormatIssues("response row resolution", {
+      modelDoormatCount: doormats.length,
+      doormatSummaryCount: doormatSummaries.length,
+      sectionCounts: this.buildTopicDoormatSectionCounts(doormatSummaries),
+      overLimitSummaryIndexes: this.getTopicDoormatOverLimitSectionIndexes(doormatSummaries),
+      parsedIssueRows: rows.length,
+      fallbackNoIssueRows: missingNoIssueRows.length,
+      deterministicRows: deterministicRows.length,
+      resolvedRows: resolvedRows.length
+    });
+    return resolvedRows;
+  }
+  removeConflictingTopicDoormatNoIssueRows(rows) {
+    const indexesWithIssues = new Set(rows.filter((row) => !this.isNoIssueRow(row)).map((row) => row.doormatIndex).filter((index) => typeof index === "number" && index > 0));
+    return rows.filter((row) => !this.isNoIssueRow(row) || !row.doormatIndex || !indexesWithIssues.has(row.doormatIndex));
+  }
+  buildTopicDoormatFallbackRows(doormatSummaries) {
+    return doormatSummaries.map((summary) => this.buildTopicDoormatNoIssueRow(summary));
+  }
+  buildDeterministicTopicDoormatIssueRows(doormatSummaries, existingRows) {
+    const existingIssueKeys = new Set(existingRows.map((row) => `${row.doormatIndex ?? 0}|${row.issue}`));
+    return doormatSummaries.flatMap((summary) => {
+      if (summary.sectionDoormatCount <= 9 || summary.sectionItemIndex <= 9 || existingIssueKeys.has(`${summary.index}|too-many-doormats-in-section`)) {
+        return [];
+      }
+      return [
+        {
+          include: true,
+          severity: "Medium",
+          doormat: this.buildTopicDoormatLabel(summary),
+          issue: "too-many-doormats-in-section",
+          evidence: `${summary.sectionDoormatCount}/9 doormats in section ${summary.sectionIndex}; item ${summary.sectionItemIndex}`,
+          recommendation: "Reduce the section to 9 doormats or split lower-priority destinations into another section.",
+          doormatIndex: summary.index
+        }
+      ];
     });
   }
+  buildTopicDoormatSectionCounts(doormatSummaries) {
+    const counts = /* @__PURE__ */ new Map();
+    doormatSummaries.forEach((summary) => {
+      if (!summary.sectionIndex)
+        return;
+      counts.set(summary.sectionIndex, Math.max(counts.get(summary.sectionIndex) ?? 0, summary.sectionDoormatCount));
+    });
+    return Array.from(counts.entries()).map(([sectionIndex, count]) => ({ sectionIndex, count })).sort((a, b) => a.sectionIndex - b.sectionIndex);
+  }
+  getTopicDoormatOverLimitSectionIndexes(doormatSummaries) {
+    return doormatSummaries.filter((summary) => summary.sectionDoormatCount > 9 && summary.sectionItemIndex > 9).map((summary) => summary.index);
+  }
   buildTopicDoormatNoIssueRow(doormat) {
-    const label = [
-      doormat.index ? `${doormat.index}.` : "",
-      doormat.linkText || doormat.href || "Doormat"
-    ].filter(Boolean).join(" ");
     return {
       include: false,
       severity: "OK",
-      doormat: label,
+      doormat: this.buildTopicDoormatLabel(doormat),
       issue: "No issues",
       evidence: "No issues reported by AI.",
       recommendation: "",
       doormatIndex: doormat.index || void 0
     };
   }
-  buildTopicDoormatEvidence(issue) {
+  buildTopicDoormatLabel(doormat) {
+    return [
+      doormat.index ? `${doormat.index}.` : "",
+      doormat.linkText || doormat.href || "Doormat"
+    ].filter(Boolean).join(" ");
+  }
+  isReportableTopicDoormatIssue(issue, doormat) {
+    const issueCategory = this.cleanString(issue["issue_category"]);
+    if (issueCategory !== "link-name-too-long" && issueCategory !== "description-too-long") {
+      return true;
+    }
+    const exactCount = this.getTopicDoormatExactCharacterCount(issueCategory, doormat);
+    if (exactCount == null)
+      return true;
+    const details = issue["evidence_details"] && typeof issue["evidence_details"] === "object" ? issue["evidence_details"] : null;
+    const limit = this.toNumber(details?.["character_limit"]) ?? this.topicDoormatIssueLengthLimits[issueCategory];
+    if (limit == null)
+      return true;
+    return exactCount > limit;
+  }
+  buildTopicDoormatEvidence(issue, doormat) {
     const evidence = this.cleanString(issue["evidence"]);
     const issueCategory = this.cleanString(issue["issue_category"]);
     const details = issue["evidence_details"] && typeof issue["evidence_details"] === "object" ? issue["evidence_details"] : null;
     const detailParts = [];
     if (details) {
-      const count = this.toNumber(details["actual_character_count"]);
+      const count = this.getTopicDoormatExactCharacterCount(issueCategory, doormat) ?? this.toNumber(details["actual_character_count"]);
       const limit = this.toNumber(details["character_limit"]);
       if (count != null && limit != null) {
         detailParts.push(`${count}/${limit} characters`);
@@ -30131,6 +30240,17 @@ var ComponentGuidanceComponent = class _ComponentGuidanceComponent {
       return "Link also appears in Most requested";
     }
     return "";
+  }
+  getTopicDoormatExactCharacterCount(issueCategory, doormat) {
+    if (!doormat)
+      return null;
+    if (issueCategory === "link-name-too-long") {
+      return doormat.linkTextCharacterCount;
+    }
+    if (issueCategory === "description-too-long") {
+      return doormat.descriptionCharacterCount;
+    }
+    return null;
   }
   stripCodeFences(value) {
     return value.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/i, "").trim();
@@ -30156,6 +30276,9 @@ var ComponentGuidanceComponent = class _ComponentGuidanceComponent {
   cleanString(value) {
     return typeof value === "string" ? value.trim() : "";
   }
+  cleanVisibleText(value) {
+    return (value || "").replace(/\s+/g, " ").trim();
+  }
   extractTopicDoormatSets(html) {
     if (!html)
       return [];
@@ -30173,26 +30296,51 @@ var ComponentGuidanceComponent = class _ComponentGuidanceComponent {
       const doc = new DOMParser().parseFromString(html, "text/html");
       const seen = /* @__PURE__ */ new Set();
       const summaries = [];
-      const links = Array.from(doc.querySelectorAll(".gc-srvinfo h2 a, .gc-srvinfo h3 a"));
-      for (const link of links) {
-        const linkText = this.cleanString(link.textContent || "");
-        const href = link.getAttribute("href") || "";
-        const key2 = `${href}|${linkText}`;
-        if (!linkText && !href)
-          continue;
-        if (seen.has(key2))
-          continue;
-        seen.add(key2);
-        summaries.push({
-          index: summaries.length + 1,
-          linkText,
-          href
+      const sections = Array.from(doc.querySelectorAll(".gc-srvinfo"));
+      sections.forEach((section, sectionIndex) => {
+        const links = Array.from(section.querySelectorAll("h2 a, h3 a"));
+        const sectionSummaries = [];
+        for (const link of links) {
+          const linkText = this.cleanVisibleText(link.textContent);
+          const href = link.getAttribute("href") || "";
+          const key2 = `${href}|${linkText}`;
+          if (!linkText && !href)
+            continue;
+          if (seen.has(key2))
+            continue;
+          seen.add(key2);
+          const item = this.findTopicDoormatItem(link);
+          const description = this.cleanVisibleText(item?.querySelector("p")?.textContent);
+          sectionSummaries.push({
+            index: summaries.length + sectionSummaries.length + 1,
+            linkText,
+            href,
+            description,
+            linkTextCharacterCount: linkText.length,
+            descriptionCharacterCount: description.length,
+            sectionIndex: sectionIndex + 1,
+            sectionItemIndex: sectionSummaries.length + 1,
+            sectionDoormatCount: 0
+          });
+        }
+        sectionSummaries.forEach((summary) => {
+          summary.sectionDoormatCount = sectionSummaries.length;
+          summaries.push(summary);
         });
-      }
+      });
       return summaries;
     } catch {
       return [];
     }
+  }
+  findTopicDoormatItem(link) {
+    let current = link;
+    while (current && !current.classList.contains("gc-srvinfo")) {
+      if (current !== link && current.querySelector("p"))
+        return current;
+      current = current.parentElement;
+    }
+    return null;
   }
   extractMostRequestedLinks(html) {
     if (!html)
@@ -30764,7 +30912,7 @@ var ComponentGuidanceComponent = class _ComponentGuidanceComponent {
   }], null, null);
 })();
 (() => {
-  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(ComponentGuidanceComponent, { className: "ComponentGuidanceComponent", filePath: "app/views/page-assistant/components/problems/component-guidance/component-guidance.component.ts", lineNumber: 173 });
+  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(ComponentGuidanceComponent, { className: "ComponentGuidanceComponent", filePath: "app/views/page-assistant/components/problems/component-guidance/component-guidance.component.ts", lineNumber: 179 });
 })();
 
 // src/app/views/page-assistant/components/problems/seo.component.ts
@@ -43197,7 +43345,7 @@ ${custom}` : promptBody;
     });
   }
   //AI Model
-  selectedAiModel = AiModel.Gemini;
+  selectedAiModel = AiModel.Zai;
   onAiChange(key2) {
     this.selectedAiModel = key2;
     this.uploadState.setSelectedAiModel(key2);
@@ -43234,7 +43382,12 @@ ${custom}` : promptBody;
     return coerceInteractiveResultLeadIns(this.translate.instant("page.alerts.interactiveResultLeadIns"));
   }
   buildModelRotation(model) {
-    const fallbackOrder = [AiModel.GptOSSFree, AiModel.Zai, AiModel.NemotronSuper];
+    const fallbackOrder = [
+      AiModel.Zai,
+      AiModel.NemotronNano,
+      AiModel.GptOSSFree,
+      AiModel.NemotronSuper
+    ];
     const available = new Set(this.openRouter.freeModels);
     const rotation = [model];
     for (const candidate of fallbackOrder) {
@@ -44324,4 +44477,4 @@ ${custom}` : promptBody;
 export {
   PageAssistantCompareComponent
 };
-//# sourceMappingURL=chunk-WROE3TGI.js.map
+//# sourceMappingURL=chunk-LRSNMZ2O.js.map

@@ -25,6 +25,10 @@ choices across the set before reporting issues or making recommendations.
 For issue analysis:
 - Use the issue taxonomy resource as the authoritative ruleset
 - Use the issues output schema as the required response shape
+- Run deterministic structural checks first, then judgment/editorial checks
+- Use caller-provided `linkTextCharacterCount` and
+  `descriptionCharacterCount` values when present; do not recalculate
+  character counts from HTML
 - Return JSON only
 - Report issues per affected doormat
 - Include set-level problems on each affected doormat when appropriate

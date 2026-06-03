@@ -138,6 +138,8 @@
   "page.ai-options.model.paidBadge": "Paid",
   "page.ai-options.model.Zai": "Z.AI: GLM 4.5 Air (free)",
   "page.ai-options.model.short.Zai": "Z.AI",
+  "page.ai-options.model.NemotronNano": "NVIDIA: Nemotron 3 Nano 30B (free)",
+  "page.ai-options.model.short.NemotronNano": "Nemotron Nano",
   "page.ai-options.model.NemotronSuper": "NVIDIA: Nemotron 3 Super 120B (free)",
   "page.ai-options.model.short.NemotronSuper": "Nemotron 120B",
   "page.ai-options.model.GptOSSFree": "OpenAI: gpt-oss-120b (free)",
