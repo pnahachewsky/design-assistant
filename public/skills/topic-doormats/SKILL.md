@@ -34,6 +34,8 @@ For issue analysis:
 - Report section-level problems in `section_issues` rather than repeating
   them on each doormat
 - Include evidence whenever the taxonomy asks for evidence
+- Keep evidence concise. For section-level issues, summarize the pattern and
+  representative doormat numbers instead of quoting full descriptions
 
 Do not invent issue categories outside the taxonomy unless the issue is
 important and no existing category fits.

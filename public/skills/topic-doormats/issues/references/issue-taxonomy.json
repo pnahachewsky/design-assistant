@@ -54,6 +54,12 @@
     "deterministic_structural_checks": "These checks are objective. Apply them even when the doormat content appears clear or comes from a live Canada.ca page.",
     "judgment_editorial_checks": "These checks require editorial judgment. Report them only when the evidence is concrete enough to justify a recommendation."
   },
+  "evidence_style": {
+    "instruction": "Keep evidence concise. Do not quote full doormat descriptions unless the exact wording is needed to prove the issue.",
+    "section_level_issues": "Aim for under 180 characters. Summarize the pattern and include representative doormat numbers.",
+    "doormat_level_issues": "Aim for under 120 characters. State the concrete fact and avoid repeating full link text or description text unless needed.",
+    "mixed_description_style": "For mixed-description-style-in-section, name the style groups and representative doormat indexes only. Do not quote full descriptions. Example: Mixes keyword-list and action-verb descriptions. Examples: 1, 2, 5, 6, 10."
+  },
   "mandatory_description_style_audit": {
     "instruction": "Always audit description style for each complete doormat section during the judgment/editorial pass. If a section contains two or more clearly different description-start or grammatical styles, evaluate mixed-description-style-in-section. Do not treat a live Canada.ca page as acceptable by default.",
     "style_groups_to_compare": [
@@ -70,7 +76,7 @@
       "The section mixes short keyword fragments with sentence-style explanations or benefit summaries.",
       "The section starts some descriptions with verbs and others with nouns or topic labels in a way that makes the set feel inconsistent."
     ],
-    "reporting": "When mixed-description-style-in-section applies, return one section_issues item for the affected section. Do not report it under individual doormats. Do not require one dominant style or rare outliers for this issue.",
+    "reporting": "When mixed-description-style-in-section applies, return one section_issues item for the affected section. Do not report it under individual doormats. Do not require one dominant style or rare outliers for this issue. Keep evidence concise: list style groups and representative doormat numbers only, without quoting full descriptions.",
     "do_not_dismiss_because": [
       "The page is a live Canada.ca page.",
       "Each individual description is understandable on its own.",
@@ -147,7 +153,7 @@
       "outlier_style",
       "why_this_doormat_is_an_outlier"
     ],
-    "evidence_format": "Evidence for outlier style inconsistency must explicitly state dominant_style and outlier_style using two different values from the allowed style list. Evidence for mixed-description-style-in-section must list the mixed style types found in the section and should include representative doormat indexes in evidence_details.representative_doormat_indexes. Do not use length, verbosity, detail level, or complexity as the reason.",
+    "evidence_format": "Evidence for outlier style inconsistency must explicitly state dominant_style and outlier_style using two different values from the allowed style list. Keep evidence concise. Evidence for mixed-description-style-in-section must list the mixed style types found in the section and should include representative doormat indexes in evidence_details.representative_doormat_indexes. Do not quote full descriptions. Do not use length, verbosity, detail level, or complexity as the reason.",
     "severity_default": "Low",
     "severity_escalation": "Use Medium only when the outlier style makes the doormat harder to compare with the rest of the set."
   },
@@ -349,7 +355,7 @@
       "severity": "Medium",
       "condition": "The doormat section mixes two or more description styles, such as noun/topic keyword lists, action-verb task phrases, How to phrases, audience or benefit summaries, sentence-style explanations, or short keyword fragments.",
       "recommendation": "Rewrite the descriptions so they use one consistent description style across the section.",
-      "reporting": "Report this issue once in section_issues for the affected section. Do not report it under individual doormats. Do not require a dominant style, rare outliers, or a character-length problem. Include the mixed style types and representative doormat indexes as evidence.",
+      "reporting": "Report this issue once in section_issues for the affected section. Do not report it under individual doormats. Do not require a dominant style, rare outliers, or a character-length problem. Evidence must be concise: include the mixed style types and representative doormat indexes, but do not quote full descriptions.",
       "evidence_required": [
         "section_description_styles",
         "representative_doormat_indexes",

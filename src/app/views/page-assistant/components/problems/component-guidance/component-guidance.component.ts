@@ -72,6 +72,13 @@ interface TopicDoormatSummary {
   linkText: string;
   href: string;
   description: string;
+  headingLevel: number | null;
+  itemLinkCount: number;
+  descriptionLinkCount: number;
+  hasDescriptionLink: boolean;
+  hasDescriptionIconOrImage: boolean;
+  hasDescriptionSpecialFormatting: boolean;
+  rawItemText: string;
   linkTextCharacterCount: number;
   descriptionCharacterCount: number;
   sectionIndex: number;
@@ -569,11 +576,10 @@ export class ComponentGuidanceComponent implements OnInit, OnDestroy {
     }
 
     const html = this.uploadState.getUploadData()?.originalHtml || '';
-    const doormatSets = this.extractTopicDoormatSets(html);
-    if (!doormatSets.length) return;
+    const doormatSummaries = this.extractTopicDoormatSummaries(html);
+    if (!doormatSummaries.length) return;
     const analysisStart = performance.now();
     const mostRequestedLinks = this.extractMostRequestedLinks(html);
-    const doormatSummaries = this.extractTopicDoormatSummaries(html);
 
     this.topicDoormatIssuesLoading = true;
     this.topicDoormatIssuesError = false;
@@ -597,7 +603,6 @@ export class ComponentGuidanceComponent implements OnInit, OnDestroy {
         {
           role: 'user',
           content: JSON.stringify({
-            doormatSets,
             doormats: doormatSummaries,
             mostRequestedLinks,
           }),
@@ -608,7 +613,6 @@ export class ComponentGuidanceComponent implements OnInit, OnDestroy {
       this.debugTopicDoormatIssues('request prepared', {
         selectedModel,
         modelRotation,
-        doormatSetCount: doormatSets.length,
         doormatSummaryCount: doormatSummaries.length,
         sectionCounts: this.buildTopicDoormatSectionCounts(doormatSummaries),
         overLimitSummaryIndexes:
@@ -618,6 +622,13 @@ export class ComponentGuidanceComponent implements OnInit, OnDestroy {
           linkText: summary.linkText,
           linkTextCharacterCount: summary.linkTextCharacterCount,
           descriptionCharacterCount: summary.descriptionCharacterCount,
+          headingLevel: summary.headingLevel,
+          itemLinkCount: summary.itemLinkCount,
+          descriptionLinkCount: summary.descriptionLinkCount,
+          hasDescriptionLink: summary.hasDescriptionLink,
+          hasDescriptionIconOrImage: summary.hasDescriptionIconOrImage,
+          hasDescriptionSpecialFormatting:
+            summary.hasDescriptionSpecialFormatting,
           sectionIndex: summary.sectionIndex,
           sectionItemIndex: summary.sectionItemIndex,
           sectionDoormatCount: summary.sectionDoormatCount,
@@ -852,6 +863,13 @@ export class ComponentGuidanceComponent implements OnInit, OnDestroy {
               linkText,
               href,
               description: '',
+              headingLevel: null,
+              itemLinkCount: 0,
+              descriptionLinkCount: 0,
+              hasDescriptionLink: false,
+              hasDescriptionIconOrImage: false,
+              hasDescriptionSpecialFormatting: false,
+              rawItemText: '',
               linkTextCharacterCount: linkText.length,
               descriptionCharacterCount: 0,
               sectionIndex: 0,
@@ -1412,18 +1430,6 @@ export class ComponentGuidanceComponent implements OnInit, OnDestroy {
     return (value || '').replace(/\s+/g, ' ').trim();
   }
 
-  private extractTopicDoormatSets(html: string): string[] {
-    if (!html) return [];
-    try {
-      const doc = new DOMParser().parseFromString(html, 'text/html');
-      return Array.from(doc.querySelectorAll<HTMLElement>('.gc-srvinfo')).map(
-        (set) => set.outerHTML,
-      );
-    } catch {
-      return [];
-    }
-  }
-
   private extractTopicDoormatSummaries(html: string): TopicDoormatSummary[] {
     if (!html) return [];
     try {
@@ -1446,14 +1452,32 @@ export class ComponentGuidanceComponent implements OnInit, OnDestroy {
           if (seen.has(key)) continue;
           seen.add(key);
           const item = this.findTopicDoormatItem(link);
+          const descriptionElement = item?.querySelector('p') ?? null;
           const description = this.cleanVisibleText(
-            item?.querySelector('p')?.textContent,
+            descriptionElement?.textContent,
           );
+          const heading = link.closest('h2, h3');
           sectionSummaries.push({
             index: summaries.length + sectionSummaries.length + 1,
             linkText,
             href,
             description,
+            headingLevel: heading ? this.toNumber(heading.tagName.slice(1)) : null,
+            itemLinkCount: item
+              ? item.querySelectorAll('a[href]').length
+              : 0,
+            descriptionLinkCount: descriptionElement
+              ? descriptionElement.querySelectorAll('a[href]').length
+              : 0,
+            hasDescriptionLink: !!descriptionElement?.querySelector('a[href]'),
+            hasDescriptionIconOrImage: !!descriptionElement?.querySelector(
+              'img, svg, i[class*="glyphicon"], i[class*="fa"], span[class*="glyphicon"], span[class*="fa"]',
+            ),
+            hasDescriptionSpecialFormatting:
+              !!descriptionElement?.querySelector(
+                'strong, b, em, i, ul, ol, li, mark, code',
+              ),
+            rawItemText: this.cleanVisibleText(item?.textContent).slice(0, 500),
             linkTextCharacterCount: linkText.length,
             descriptionCharacterCount: description.length,
             sectionIndex: sectionIndex + 1,
