@@ -59,10 +59,12 @@ interface TopicDoormatIssueRow {
   include: boolean;
   severity: string;
   doormat: string;
+  issueId: string;
   issue: string;
   evidence: string;
   recommendation: string;
   doormatIndex?: number;
+  sectionIndex?: number;
 }
 
 interface TopicDoormatSummary {
@@ -634,7 +636,7 @@ export class ComponentGuidanceComponent implements OnInit, OnDestroy {
       this.debugTopicDoormatIssues('response parsed', {
         model,
         responseCharacters: text.length,
-        parsedIssueRows: this.topicDoormatIssueRows.length,
+        displayedRows: this.topicDoormatIssueRows.length,
         totalElapsedMs: Math.round(performance.now() - analysisStart),
       });
       if (!text) {
@@ -800,6 +802,15 @@ export class ComponentGuidanceComponent implements OnInit, OnDestroy {
     }
     const root = parsed as Record<string, unknown>;
     const doormats = Array.isArray(root['doormats']) ? root['doormats'] : [];
+    const sectionIssueRows = this.parseTopicDoormatSectionIssueRows(
+      root['section_issues'],
+      doormatSummaries,
+    );
+    const sectionIssueKeys = new Set(
+      sectionIssueRows.map(
+      (row) => `${row.sectionIndex ?? 0}|${row.issueId}`,
+      ),
+    );
 
     const summariesByIndex = new Map(
       doormatSummaries.map((summary) => [summary.index, summary]),
@@ -839,7 +850,27 @@ export class ComponentGuidanceComponent implements OnInit, OnDestroy {
         .map((rawIssue): TopicDoormatIssueRow | null => {
           if (!rawIssue || typeof rawIssue !== 'object') return null;
           const issue = rawIssue as Record<string, unknown>;
+          const issueId = this.getTopicDoormatIssueId(issue);
           if (!this.isReportableTopicDoormatIssue(issue, summary)) return null;
+          if (
+            issueId === 'mixed-description-style-in-section'
+          ) {
+            const sectionRow = this.buildTopicDoormatSectionIssueRow(
+              issue,
+              summary?.sectionIndex,
+            );
+            const sectionKey = `${sectionRow.sectionIndex ?? 0}|${
+              sectionRow.issueId
+            }`;
+            if (!sectionIssueKeys.has(sectionKey)) {
+              sectionIssueRows.push(sectionRow);
+              sectionIssueKeys.add(sectionKey);
+            }
+            return null;
+          }
+          if (!this.hasValidTopicDoormatObjectiveEvidence(issueId, summary)) {
+            return null;
+          }
           const evidence = this.buildTopicDoormatEvidence(issue, summary);
           return {
             include:
@@ -848,22 +879,46 @@ export class ComponentGuidanceComponent implements OnInit, OnDestroy {
                 : true,
             severity: this.cleanString(issue['severity']) || 'Unknown',
             doormat: label,
-            issue: this.cleanString(issue['issue_category']) || 'Issue',
+            issueId,
+            issue: this.getTopicDoormatIssueLabel(issueId),
             evidence,
             recommendation: this.cleanString(issue['recommendation']),
             doormatIndex: index ?? undefined,
+            sectionIndex: summary?.sectionIndex,
           } satisfies TopicDoormatIssueRow;
         })
         .filter((row): row is TopicDoormatIssueRow => row !== null);
     });
 
+    const suppressedSectionIssueRows = sectionIssueRows.filter(
+      (row) => row.issueId === 'too-many-doormats-in-section',
+    );
+    const reportableSectionIssueRows = sectionIssueRows.filter(
+      (row) => row.issueId !== 'too-many-doormats-in-section',
+    );
+    const mixedDescriptionStyleSectionIndexes = new Set(
+      reportableSectionIssueRows
+        .filter((row) => row.issueId === 'mixed-description-style-in-section')
+        .map((row) => row.sectionIndex)
+        .filter((index): index is number => typeof index === 'number' && index > 0),
+    );
+    const suppressedModelIssueRows = rows.filter(
+      (row) =>
+        row.issueId === 'inconsistent-description-style' &&
+        !!row.sectionIndex &&
+        mixedDescriptionStyleSectionIndexes.has(row.sectionIndex),
+    );
+    const modelIssueRows = rows.filter(
+      (row) => !suppressedModelIssueRows.includes(row),
+    );
+
     const deterministicRows = this.buildDeterministicTopicDoormatIssueRows(
       doormatSummaries,
-      rows,
+      modelIssueRows,
     );
 
     const representedIndexes = new Set(
-      [...rows, ...deterministicRows]
+      [...modelIssueRows, ...deterministicRows, ...reportableSectionIssueRows]
         .map((row) => row.doormatIndex)
         .filter((index): index is number => typeof index === 'number' && index > 0),
     );
@@ -872,12 +927,13 @@ export class ComponentGuidanceComponent implements OnInit, OnDestroy {
       .map((summary) => this.buildTopicDoormatNoIssueRow(summary));
 
     const resolvedRows = this.removeConflictingTopicDoormatNoIssueRows([
-      ...rows,
+      ...modelIssueRows,
       ...deterministicRows,
+      ...reportableSectionIssueRows,
       ...missingNoIssueRows,
     ].sort((a, b) => {
-      const aIndex = a.doormatIndex ?? Number.MAX_SAFE_INTEGER;
-      const bIndex = b.doormatIndex ?? Number.MAX_SAFE_INTEGER;
+      const aIndex = this.getTopicDoormatRowSortIndex(a, doormatSummaries);
+      const bIndex = this.getTopicDoormatRowSortIndex(b, doormatSummaries);
       return aIndex - bIndex;
     }));
     this.debugTopicDoormatIssues('response row resolution', {
@@ -886,12 +942,72 @@ export class ComponentGuidanceComponent implements OnInit, OnDestroy {
       sectionCounts: this.buildTopicDoormatSectionCounts(doormatSummaries),
       overLimitSummaryIndexes:
         this.getTopicDoormatOverLimitSectionIndexes(doormatSummaries),
-      parsedIssueRows: rows.length,
+      modelRawIssueRows: rows.length,
+      modelRawIssueBreakdown: this.countTopicDoormatRowsByIssue(rows),
+      modelDisplayedIssueRows: modelIssueRows.length,
+      modelDisplayedIssueBreakdown:
+        this.countTopicDoormatRowsByIssue(modelIssueRows),
+      suppressedModelIssueRows: suppressedModelIssueRows.length,
+      suppressedModelIssueBreakdown: this.countTopicDoormatRowsByIssue(
+        suppressedModelIssueRows,
+      ),
+      modelRawSectionIssueRows: sectionIssueRows.length,
+      modelDisplayedSectionIssueRows: reportableSectionIssueRows.length,
+      suppressedSectionIssueRows: suppressedSectionIssueRows.length,
+      suppressedSectionIssueBreakdown: this.countTopicDoormatRowsByIssue(
+        suppressedSectionIssueRows,
+      ),
       fallbackNoIssueRows: missingNoIssueRows.length,
       deterministicRows: deterministicRows.length,
-      resolvedRows: resolvedRows.length,
+      displayedRows: resolvedRows.length,
     });
     return resolvedRows;
+  }
+
+  private parseTopicDoormatSectionIssueRows(
+    rawSectionIssues: unknown,
+    doormatSummaries: TopicDoormatSummary[],
+  ): TopicDoormatIssueRow[] {
+    if (!Array.isArray(rawSectionIssues)) return [];
+
+    return rawSectionIssues
+      .map((rawIssue): TopicDoormatIssueRow | null => {
+        if (!rawIssue || typeof rawIssue !== 'object') return null;
+        const issue = rawIssue as Record<string, unknown>;
+        return this.buildTopicDoormatSectionIssueRow(issue, undefined, doormatSummaries);
+      })
+      .filter((row): row is TopicDoormatIssueRow => row !== null);
+  }
+
+  private buildTopicDoormatSectionIssueRow(
+    issue: Record<string, unknown>,
+    fallbackSectionIndex?: number,
+    doormatSummaries: TopicDoormatSummary[] = [],
+  ): TopicDoormatIssueRow {
+    const details =
+      issue['evidence_details'] && typeof issue['evidence_details'] === 'object'
+        ? (issue['evidence_details'] as Record<string, unknown>)
+        : null;
+    const sectionIndex =
+      this.toNumber(issue['section_index']) ??
+      this.toNumber(details?.['section_index']) ??
+      fallbackSectionIndex ??
+      this.buildTopicDoormatSectionCounts(doormatSummaries)[0]?.sectionIndex ??
+      1;
+
+    return {
+      include:
+        typeof issue['include'] === 'boolean' ? issue['include'] : true,
+      severity: this.cleanString(issue['severity']) || 'Unknown',
+      doormat: `Section ${sectionIndex}`,
+      issueId: this.getTopicDoormatIssueId(issue),
+      issue: this.getTopicDoormatIssueLabel(
+        this.getTopicDoormatIssueId(issue),
+      ),
+      evidence: this.buildTopicDoormatEvidence(issue),
+      recommendation: this.cleanString(issue['recommendation']),
+      sectionIndex,
+    };
   }
 
   private removeConflictingTopicDoormatNoIssueRows(
@@ -925,7 +1041,7 @@ export class ComponentGuidanceComponent implements OnInit, OnDestroy {
     existingRows: TopicDoormatIssueRow[],
   ): TopicDoormatIssueRow[] {
     const existingIssueKeys = new Set(
-      existingRows.map((row) => `${row.doormatIndex ?? 0}|${row.issue}`),
+      existingRows.map((row) => `${row.doormatIndex ?? 0}|${row.issueId}`),
     );
 
     return doormatSummaries.flatMap((summary) => {
@@ -944,11 +1060,13 @@ export class ComponentGuidanceComponent implements OnInit, OnDestroy {
           include: true,
           severity: 'Medium',
           doormat: this.buildTopicDoormatLabel(summary),
-          issue: 'too-many-doormats-in-section',
+          issueId: 'too-many-doormats-in-section',
+          issue: this.getTopicDoormatIssueLabel('too-many-doormats-in-section'),
           evidence: `${summary.sectionDoormatCount}/9 doormats in section ${summary.sectionIndex}; item ${summary.sectionItemIndex}`,
           recommendation:
             'Reduce the section to 9 doormats or split lower-priority destinations into another section.',
           doormatIndex: summary.index,
+          sectionIndex: summary.sectionIndex,
         } satisfies TopicDoormatIssueRow,
       ];
     });
@@ -970,6 +1088,19 @@ export class ComponentGuidanceComponent implements OnInit, OnDestroy {
       .sort((a, b) => a.sectionIndex - b.sectionIndex);
   }
 
+  private getTopicDoormatRowSortIndex(
+    row: TopicDoormatIssueRow,
+    doormatSummaries: TopicDoormatSummary[],
+  ): number {
+    if (row.doormatIndex) return row.doormatIndex;
+    if (!row.sectionIndex) return Number.MAX_SAFE_INTEGER;
+
+    const firstSectionItem = doormatSummaries.find(
+      (summary) => summary.sectionIndex === row.sectionIndex,
+    );
+    return (firstSectionItem?.index ?? row.sectionIndex) - 0.5;
+  }
+
   private getTopicDoormatOverLimitSectionIndexes(
     doormatSummaries: TopicDoormatSummary[],
   ): number[] {
@@ -988,11 +1119,161 @@ export class ComponentGuidanceComponent implements OnInit, OnDestroy {
       include: false,
       severity: 'OK',
       doormat: this.buildTopicDoormatLabel(doormat),
+      issueId: 'no-issues',
       issue: 'No issues',
       evidence: 'No issues reported by AI.',
       recommendation: '',
       doormatIndex: doormat.index || undefined,
+      sectionIndex: doormat.sectionIndex || undefined,
     };
+  }
+
+  private countTopicDoormatRowsByIssue(
+    rows: TopicDoormatIssueRow[],
+  ): Record<string, number> {
+    return rows.reduce<Record<string, number>>((counts, row) => {
+      counts[row.issueId] = (counts[row.issueId] ?? 0) + 1;
+      return counts;
+    }, {});
+  }
+
+  private getTopicDoormatIssueId(issue: Record<string, unknown>): string {
+    const rawCategory = this.cleanString(issue['issue_category']);
+    return this.normalizeTopicDoormatIssueId(rawCategory) || 'issue';
+  }
+
+  private normalizeTopicDoormatIssueId(rawCategory: string): string {
+    const normalized = rawCategory
+      .trim()
+      .toLowerCase()
+      .replace(/[’']/g, '')
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '');
+
+    const issueMap: Record<string, string> = {
+      'broken-link': 'broken-link',
+      'misdirected-link': 'misdirected-link',
+      'more-than-one-link': 'multiple-links',
+      'multiple-links': 'multiple-links',
+      'link-name-lacks-clarity': 'link-name-lacks-clarity',
+      'link-name-is-not-descriptive-or-unique': 'link-name-not-unique',
+      'link-name-not-unique': 'link-name-not-unique',
+      'link-name-is-too-long': 'link-name-too-long',
+      'link-name-too-long': 'link-name-too-long',
+      'link-name-is-too-different-from-destination-title':
+        'link-name-too-different-from-destination-title',
+      'link-name-too-different-from-destination-title':
+        'link-name-too-different-from-destination-title',
+      'doormat-link-repeated-in-most-requested':
+        'duplicate-link-in-most-requested',
+      'duplicate-link-in-most-requested': 'duplicate-link-in-most-requested',
+      'link-name-has-trailing-punctuation': 'link-name-trailing-punctuation',
+      'link-name-trailing-punctuation': 'link-name-trailing-punctuation',
+      'inconsistent-link-name-style': 'inconsistent-link-name-style',
+      'description-lacks-clarity': 'description-lacks-clarity',
+      'description-is-missing-needed-information':
+        'description-missing-needed-information',
+      'description-missing-needed-information':
+        'description-missing-needed-information',
+      'missing-description': 'missing-description',
+      'description-is-too-long': 'description-too-long',
+      'description-too-long': 'description-too-long',
+      'description-has-incorrect-style': 'description-incorrect-style',
+      'description-incorrect-style': 'description-incorrect-style',
+      'description-repeats-link-text': 'description-repeats-link-text',
+      'duplicate-or-near-duplicate-description':
+        'duplicate-or-near-duplicate-description',
+      'mixed-description-styles-in-section':
+        'mixed-description-style-in-section',
+      'mixed-description-style-in-section':
+        'mixed-description-style-in-section',
+      'inconsistent-description-style': 'inconsistent-description-style',
+      'description-uses-and-before-final-item':
+        'description-uses-and-before-final-item',
+      'description-uses-icons-or-images': 'description-uses-icons-or-images',
+      'description-uses-special-formatting': 'description-special-formatting',
+      'description-special-formatting': 'description-special-formatting',
+      'description-capitalization-issue': 'description-capitalization',
+      'description-capitalization': 'description-capitalization',
+      'description-list-separators-issue': 'description-list-separators',
+      'description-list-separators': 'description-list-separators',
+      'description-has-trailing-punctuation':
+        'description-trailing-punctuation',
+      'description-trailing-punctuation': 'description-trailing-punctuation',
+      'description-contains-a-link': 'description-contains-link',
+      'description-contains-link': 'description-contains-link',
+      'enhancement-label-is-not-needed': 'enhancement-label-not-needed',
+      'enhancement-label-not-needed': 'enhancement-label-not-needed',
+      'enhancement-label-type-is-wrong': 'enhancement-label-wrong-type',
+      'enhancement-label-wrong-type': 'enhancement-label-wrong-type',
+      'missing-a-needed-doormat': 'missing-needed-doormat',
+      'missing-needed-doormat': 'missing-needed-doormat',
+      'extra-doormat-is-not-needed': 'unnecessary-doormat',
+      'unnecessary-doormat': 'unnecessary-doormat',
+      'too-many-doormats-in-section': 'too-many-doormats-in-section',
+      'wrong-doormat-order': 'wrong-doormat-order',
+      'no-issues': 'no-issues',
+    };
+
+    return issueMap[normalized] ?? normalized;
+  }
+
+  private getTopicDoormatIssueLabel(issueId: string): string {
+    const labelMap: Record<string, string> = {
+      'broken-link': 'Broken link',
+      'misdirected-link': 'Misdirected link',
+      'multiple-links': 'More than one link',
+      'link-name-lacks-clarity': 'Link name lacks clarity',
+      'link-name-not-unique': 'Link name is not descriptive or unique',
+      'link-name-too-long': 'Link name is too long',
+      'link-name-too-different-from-destination-title':
+        'Link name is too different from destination title',
+      'duplicate-link-in-most-requested': 'Doormat link repeated in Most requested',
+      'link-name-trailing-punctuation': 'Link name has trailing punctuation',
+      'inconsistent-link-name-style': 'Inconsistent link name style',
+      'description-lacks-clarity': 'Description lacks clarity',
+      'description-missing-needed-information':
+        'Description is missing needed information',
+      'missing-description': 'Missing description',
+      'description-too-long': 'Description is too long',
+      'description-incorrect-style': 'Description has incorrect style',
+      'description-repeats-link-text': 'Description repeats link text',
+      'duplicate-or-near-duplicate-description':
+        'Duplicate or near-duplicate description',
+      'mixed-description-style-in-section':
+        'Mixed description styles in section',
+      'inconsistent-description-style': 'Inconsistent description style',
+      'description-uses-and-before-final-item':
+        'Description uses and before final item',
+      'description-uses-icons-or-images': 'Description uses icons or images',
+      'description-special-formatting': 'Description uses special formatting',
+      'description-capitalization': 'Description capitalization issue',
+      'description-list-separators': 'Description list separators issue',
+      'description-trailing-punctuation': 'Description has trailing punctuation',
+      'description-contains-link': 'Description contains a link',
+      'enhancement-label-not-needed': 'Enhancement label is not needed',
+      'enhancement-label-wrong-type': 'Enhancement label type is wrong',
+      'missing-needed-doormat': 'Missing a needed doormat',
+      'unnecessary-doormat': 'Extra doormat is not needed',
+      'too-many-doormats-in-section': 'Too many doormats in section',
+      'wrong-doormat-order': 'Wrong doormat order',
+      'no-issues': 'No issues',
+    };
+
+    return labelMap[issueId] ?? this.toTitleCase(issueId.replace(/-/g, ' '));
+  }
+
+  private toTitleCase(value: string): string {
+    return value.replace(/\b\w/g, (match) => match.toUpperCase());
+  }
+
+  private hasValidTopicDoormatObjectiveEvidence(
+    issueId: string,
+    doormat?: TopicDoormatSummary,
+  ): boolean {
+    if (issueId !== 'description-trailing-punctuation') return true;
+    if (!doormat?.description) return false;
+    return /[.:;?!,]$/.test(doormat.description.trim());
   }
 
   private buildTopicDoormatLabel(doormat: TopicDoormatSummary): string {
@@ -1008,7 +1289,7 @@ export class ComponentGuidanceComponent implements OnInit, OnDestroy {
     issue: Record<string, unknown>,
     doormat?: TopicDoormatSummary,
   ): boolean {
-    const issueCategory = this.cleanString(issue['issue_category']);
+    const issueCategory = this.getTopicDoormatIssueId(issue);
     if (
       issueCategory !== 'link-name-too-long' &&
       issueCategory !== 'description-too-long'
@@ -1039,7 +1320,7 @@ export class ComponentGuidanceComponent implements OnInit, OnDestroy {
     doormat?: TopicDoormatSummary,
   ): string {
     const evidence = this.cleanString(issue['evidence']);
-    const issueCategory = this.cleanString(issue['issue_category']);
+    const issueCategory = this.getTopicDoormatIssueId(issue);
     const details =
       issue['evidence_details'] && typeof issue['evidence_details'] === 'object'
         ? (issue['evidence_details'] as Record<string, unknown>)
@@ -1347,7 +1628,7 @@ export class ComponentGuidanceComponent implements OnInit, OnDestroy {
   }
 
   isNoIssueRow(issue: TopicDoormatIssueRow): boolean {
-    return issue.issue === 'No issues';
+    return issue.issueId === 'no-issues';
   }
 
   alertHealthLabel(severity: string | null): string {

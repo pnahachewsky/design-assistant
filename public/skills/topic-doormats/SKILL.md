@@ -31,7 +31,8 @@ For issue analysis:
   character counts from HTML
 - Return JSON only
 - Report issues per affected doormat
-- Include set-level problems on each affected doormat when appropriate
+- Report section-level problems in `section_issues` rather than repeating
+  them on each doormat
 - Include evidence whenever the taxonomy asks for evidence
 
 Do not invent issue categories outside the taxonomy unless the issue is

@@ -96,12 +96,14 @@ export enum PromptKey {
 // These values are also the canonical ids used for friendly-name resolution.
 export enum AiModel {
   // Free models
+  OwlAlpha = 'openrouter/owl-alpha', //1M context, free alpha model
   Zai = 'z-ai/glm-4.5-air:free', //131k context, 57B
   NemotronNano = 'nvidia/nemotron-3-nano-30b-a3b:free', //256k context, 30B parameters
   GptOSSFree = 'openai/gpt-oss-120b:free', //131k context free
   NemotronSuper = 'nvidia/nemotron-3-super-120b-a12b:free', //262k context, 263B weekly, 120B parameters
   // Paid models
   GPT5Mini = 'openai/gpt-5-mini', // 400k context paid
+  GptOSS20B = 'openai/gpt-oss-20b', // 131k context paid
   DeepSeek = 'deepseek/deepseek-v3.2',
   Gemini = 'google/gemini-2.5-flash-lite', // 1.05M context paid - $0.10/M input, $0.40/M output
 }

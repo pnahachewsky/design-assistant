@@ -48,6 +48,82 @@
         }
       }
     },
+    "section_issues": {
+      "type": "array",
+      "description": "Issues that apply to a whole doormat section rather than one individual doormat.",
+      "items": {
+        "type": "object",
+        "required": [
+          "section_index",
+          "issue_category",
+          "description",
+          "recommendation",
+          "severity"
+        ],
+        "properties": {
+          "section_index": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "issue_category": {
+            "type": "string"
+          },
+          "issue_group": {
+            "type": "string",
+            "enum": [
+              "Link code issue",
+              "Link name",
+              "Description clarity",
+              "Description formatting",
+              "Enhancement label",
+              "Choice of doormats"
+            ]
+          },
+          "description": {
+            "type": "string"
+          },
+          "recommendation": {
+            "type": "string"
+          },
+          "severity": {
+            "type": "string",
+            "enum": ["High", "Medium", "Low"]
+          },
+          "include": {
+            "type": "boolean"
+          },
+          "evidence": {
+            "type": "string"
+          },
+          "evidence_details": {
+            "type": "object",
+            "properties": {
+              "section_index": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "section_doormat_count": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "section_description_styles": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "representative_doormat_indexes": {
+                "type": "array",
+                "items": {
+                  "type": "integer",
+                  "minimum": 1
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "doormats": {
       "type": "array",
       "items": {

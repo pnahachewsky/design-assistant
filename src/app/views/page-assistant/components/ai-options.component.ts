@@ -95,7 +95,7 @@ export class AiOptionsComponent implements OnInit {
   }
 
   // Model and alert-specific options persisted through UploadStateService.
-  selectedAi: AiModel = AiModel.Zai;
+  selectedAi: AiModel = AiModel.OwlAlpha;
   selectedAis: AiModel[] = [];
 
   includeAlertRewriteExamples = true;
@@ -103,6 +103,7 @@ export class AiOptionsComponent implements OnInit {
 
   // Free and paid model groups are rendered separately in the UI.
   freeAiOptions = [
+    { id: AiModel.OwlAlpha, label: 'page.ai-options.model.OwlAlpha', disabled: false },
     { id: AiModel.Zai, label: 'page.ai-options.model.Zai', disabled: false },
     { id: AiModel.NemotronNano, label: 'page.ai-options.model.NemotronNano', disabled: false },
     { id: AiModel.GptOSSFree, label: 'page.ai-options.model.GptOSSFree', disabled: false },
@@ -110,6 +111,7 @@ export class AiOptionsComponent implements OnInit {
   ];
   paidAiOptions = [
     { id: AiModel.Gemini, label: 'page.ai-options.model.Gemini', disabled: false },
+    { id: AiModel.GptOSS20B, label: 'page.ai-options.model.GptOSS20B', disabled: false },
     { id: AiModel.GPT5Mini, label: 'page.ai-options.model.GPT5Mini', disabled: false },
     { id: AiModel.DeepSeek, label: 'page.ai-options.model.DeepSeek', disabled: false },
   ];
