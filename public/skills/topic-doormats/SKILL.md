@@ -38,6 +38,9 @@ For issue analysis:
   include only representative doormat numbers instead of quoting full
   descriptions. For mixed description style, include 2 to 4 representative
   doormat numbers per style group and do not list every doormat
+- Do not include destination URLs or "Most requested: n/a" in evidence unless
+  the issue depends on links, destination matching, duplicate links, or
+  destination context
 
 Do not invent issue categories outside the taxonomy unless the issue is
 important and no existing category fits.
