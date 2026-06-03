@@ -79,6 +79,15 @@ interface TopicDoormatSummary {
   sectionDoormatCount: number;
 }
 
+interface TopicDoormatIssueCategory {
+  id?: unknown;
+  label?: unknown;
+}
+
+interface TopicDoormatIssueTaxonomy {
+  issue_categories?: unknown;
+}
+
 @Component({
   selector: 'ca-component-guidance',
   standalone: true,
@@ -192,10 +201,15 @@ export class ComponentGuidanceComponent implements OnInit, OnDestroy {
   private alertIssuesSub?: Subscription;
   private readonly topicDoormatDebugStorageKey =
     'pageAssistant.topicDoormatDebug';
+  private readonly topicDoormatIssueTaxonomyPath =
+    'skills/topic-doormats/issues/references/issue-taxonomy.json';
   private readonly topicDoormatIssueLengthLimits: Record<string, number> = {
     'link-name-too-long': 35,
     'description-too-long': 120,
   };
+  private topicDoormatIssueTaxonomyLoad?: Promise<void>;
+  private topicDoormatIssueIdToLabel = new Map<string, string>();
+  private topicDoormatIssueAliasToId = new Map<string, string>();
 
   production: boolean = environment.production;
 
@@ -566,6 +580,7 @@ export class ComponentGuidanceComponent implements OnInit, OnDestroy {
     this.topicDoormatIssuesErrorDetail = '';
 
     try {
+      await this.loadTopicDoormatIssueTaxonomy();
       const composed = await this.skillManager.composePrompt({
         basePrompt: '',
         queryText:
@@ -609,6 +624,7 @@ export class ComponentGuidanceComponent implements OnInit, OnDestroy {
         })),
         mostRequestedLinkCount: mostRequestedLinks.length,
         loadedSkillResources: composed.loadedPaths,
+        loadedIssueTaxonomyLabels: this.topicDoormatIssueIdToLabel.size,
         estimatedSystemPromptTokens: composed.estimatedPromptTokens,
         systemPromptCharacters: composed.prompt.length,
         userPayloadCharacters: messages[1].content.length,
@@ -1062,7 +1078,7 @@ export class ComponentGuidanceComponent implements OnInit, OnDestroy {
           doormat: this.buildTopicDoormatLabel(summary),
           issueId: 'too-many-doormats-in-section',
           issue: this.getTopicDoormatIssueLabel('too-many-doormats-in-section'),
-          evidence: `${summary.sectionDoormatCount}/9 doormats in section ${summary.sectionIndex}; item ${summary.sectionItemIndex}`,
+          evidence: this.buildTooManyTopicDoormatsEvidence(summary),
           recommendation:
             'Reduce the section to 9 doormats or split lower-priority destinations into another section.',
           doormatIndex: summary.index,
@@ -1139,7 +1155,69 @@ export class ComponentGuidanceComponent implements OnInit, OnDestroy {
 
   private getTopicDoormatIssueId(issue: Record<string, unknown>): string {
     const rawCategory = this.cleanString(issue['issue_category']);
-    return this.normalizeTopicDoormatIssueId(rawCategory) || 'issue';
+    return this.getTopicDoormatIssueIdFromText(rawCategory) || 'issue';
+  }
+
+  private async loadTopicDoormatIssueTaxonomy(): Promise<void> {
+    if (!this.topicDoormatIssueTaxonomyLoad) {
+      this.topicDoormatIssueTaxonomyLoad = firstValueFrom(
+        this.http.get<TopicDoormatIssueTaxonomy>(
+          this.topicDoormatIssueTaxonomyPath,
+        ),
+      )
+        .then((taxonomy) => {
+          const categories = Array.isArray(taxonomy.issue_categories)
+            ? taxonomy.issue_categories
+            : [];
+          categories.forEach((rawCategory) => {
+            if (!rawCategory || typeof rawCategory !== 'object') return;
+            const category = rawCategory as TopicDoormatIssueCategory;
+            const id = this.cleanString(category.id);
+            const label = this.cleanString(category.label);
+            if (!id) return;
+
+            this.topicDoormatIssueIdToLabel.set(
+              id,
+              label || this.toTitleCase(id.replace(/-/g, ' ')),
+            );
+            this.registerTopicDoormatIssueAlias(id, id);
+            if (label) {
+              this.registerTopicDoormatIssueAlias(label, id);
+            }
+          });
+          this.registerTopicDoormatIssueAlias('No issues', 'no-issues');
+        })
+        .catch((err: unknown) => {
+          this.debugTopicDoormatIssues('issue taxonomy load failed', {
+            path: this.topicDoormatIssueTaxonomyPath,
+            error: err instanceof Error ? err.message : String(err),
+          });
+        });
+    }
+
+    await this.topicDoormatIssueTaxonomyLoad;
+  }
+
+  private registerTopicDoormatIssueAlias(alias: string, issueId: string): void {
+    const key = this.normalizeTopicDoormatIssueKey(alias);
+    if (key) {
+      this.topicDoormatIssueAliasToId.set(key, issueId);
+    }
+  }
+
+  private getTopicDoormatIssueIdFromText(rawCategory: string): string {
+    const normalized = this.normalizeTopicDoormatIssueKey(rawCategory);
+    if (!normalized) return '';
+    return this.topicDoormatIssueAliasToId.get(normalized) ?? normalized;
+  }
+
+  private normalizeTopicDoormatIssueKey(value: string): string {
+    return value
+      .trim()
+      .toLowerCase()
+      .replace(/[']/g, '')
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '');
   }
 
   private normalizeTopicDoormatIssueId(rawCategory: string): string {
@@ -1150,117 +1228,16 @@ export class ComponentGuidanceComponent implements OnInit, OnDestroy {
       .replace(/[^a-z0-9]+/g, '-')
       .replace(/^-+|-+$/g, '');
 
-    const issueMap: Record<string, string> = {
-      'broken-link': 'broken-link',
-      'misdirected-link': 'misdirected-link',
-      'more-than-one-link': 'multiple-links',
-      'multiple-links': 'multiple-links',
-      'link-name-lacks-clarity': 'link-name-lacks-clarity',
-      'link-name-is-not-descriptive-or-unique': 'link-name-not-unique',
-      'link-name-not-unique': 'link-name-not-unique',
-      'link-name-is-too-long': 'link-name-too-long',
-      'link-name-too-long': 'link-name-too-long',
-      'link-name-is-too-different-from-destination-title':
-        'link-name-too-different-from-destination-title',
-      'link-name-too-different-from-destination-title':
-        'link-name-too-different-from-destination-title',
-      'doormat-link-repeated-in-most-requested':
-        'duplicate-link-in-most-requested',
-      'duplicate-link-in-most-requested': 'duplicate-link-in-most-requested',
-      'link-name-has-trailing-punctuation': 'link-name-trailing-punctuation',
-      'link-name-trailing-punctuation': 'link-name-trailing-punctuation',
-      'inconsistent-link-name-style': 'inconsistent-link-name-style',
-      'description-lacks-clarity': 'description-lacks-clarity',
-      'description-is-missing-needed-information':
-        'description-missing-needed-information',
-      'description-missing-needed-information':
-        'description-missing-needed-information',
-      'missing-description': 'missing-description',
-      'description-is-too-long': 'description-too-long',
-      'description-too-long': 'description-too-long',
-      'description-has-incorrect-style': 'description-incorrect-style',
-      'description-incorrect-style': 'description-incorrect-style',
-      'description-repeats-link-text': 'description-repeats-link-text',
-      'duplicate-or-near-duplicate-description':
-        'duplicate-or-near-duplicate-description',
-      'mixed-description-styles-in-section':
-        'mixed-description-style-in-section',
-      'mixed-description-style-in-section':
-        'mixed-description-style-in-section',
-      'inconsistent-description-style': 'inconsistent-description-style',
-      'description-uses-and-before-final-item':
-        'description-uses-and-before-final-item',
-      'description-uses-icons-or-images': 'description-uses-icons-or-images',
-      'description-uses-special-formatting': 'description-special-formatting',
-      'description-special-formatting': 'description-special-formatting',
-      'description-capitalization-issue': 'description-capitalization',
-      'description-capitalization': 'description-capitalization',
-      'description-list-separators-issue': 'description-list-separators',
-      'description-list-separators': 'description-list-separators',
-      'description-has-trailing-punctuation':
-        'description-trailing-punctuation',
-      'description-trailing-punctuation': 'description-trailing-punctuation',
-      'description-contains-a-link': 'description-contains-link',
-      'description-contains-link': 'description-contains-link',
-      'enhancement-label-is-not-needed': 'enhancement-label-not-needed',
-      'enhancement-label-not-needed': 'enhancement-label-not-needed',
-      'enhancement-label-type-is-wrong': 'enhancement-label-wrong-type',
-      'enhancement-label-wrong-type': 'enhancement-label-wrong-type',
-      'missing-a-needed-doormat': 'missing-needed-doormat',
-      'missing-needed-doormat': 'missing-needed-doormat',
-      'extra-doormat-is-not-needed': 'unnecessary-doormat',
-      'unnecessary-doormat': 'unnecessary-doormat',
-      'too-many-doormats-in-section': 'too-many-doormats-in-section',
-      'wrong-doormat-order': 'wrong-doormat-order',
-      'no-issues': 'no-issues',
-    };
-
-    return issueMap[normalized] ?? normalized;
+    if (!normalized) return '';
+    return this.topicDoormatIssueAliasToId.get(normalized) ?? normalized;
   }
 
   private getTopicDoormatIssueLabel(issueId: string): string {
-    const labelMap: Record<string, string> = {
-      'broken-link': 'Broken link',
-      'misdirected-link': 'Misdirected link',
-      'multiple-links': 'More than one link',
-      'link-name-lacks-clarity': 'Link name lacks clarity',
-      'link-name-not-unique': 'Link name is not descriptive or unique',
-      'link-name-too-long': 'Link name is too long',
-      'link-name-too-different-from-destination-title':
-        'Link name is too different from destination title',
-      'duplicate-link-in-most-requested': 'Doormat link repeated in Most requested',
-      'link-name-trailing-punctuation': 'Link name has trailing punctuation',
-      'inconsistent-link-name-style': 'Inconsistent link name style',
-      'description-lacks-clarity': 'Description lacks clarity',
-      'description-missing-needed-information':
-        'Description is missing needed information',
-      'missing-description': 'Missing description',
-      'description-too-long': 'Description is too long',
-      'description-incorrect-style': 'Description has incorrect style',
-      'description-repeats-link-text': 'Description repeats link text',
-      'duplicate-or-near-duplicate-description':
-        'Duplicate or near-duplicate description',
-      'mixed-description-style-in-section':
-        'Mixed description styles in section',
-      'inconsistent-description-style': 'Inconsistent description style',
-      'description-uses-and-before-final-item':
-        'Description uses and before final item',
-      'description-uses-icons-or-images': 'Description uses icons or images',
-      'description-special-formatting': 'Description uses special formatting',
-      'description-capitalization': 'Description capitalization issue',
-      'description-list-separators': 'Description list separators issue',
-      'description-trailing-punctuation': 'Description has trailing punctuation',
-      'description-contains-link': 'Description contains a link',
-      'enhancement-label-not-needed': 'Enhancement label is not needed',
-      'enhancement-label-wrong-type': 'Enhancement label type is wrong',
-      'missing-needed-doormat': 'Missing a needed doormat',
-      'unnecessary-doormat': 'Extra doormat is not needed',
-      'too-many-doormats-in-section': 'Too many doormats in section',
-      'wrong-doormat-order': 'Wrong doormat order',
-      'no-issues': 'No issues',
-    };
-
-    return labelMap[issueId] ?? this.toTitleCase(issueId.replace(/-/g, ' '));
+    if (issueId === 'no-issues') return 'No issues';
+    return (
+      this.topicDoormatIssueIdToLabel.get(issueId) ??
+      this.toTitleCase(issueId.replace(/-/g, ' '))
+    );
   }
 
   private toTitleCase(value: string): string {
@@ -1327,6 +1304,12 @@ export class ComponentGuidanceComponent implements OnInit, OnDestroy {
         : null;
     const detailParts: string[] = [];
 
+    if (issueCategory === 'too-many-doormats-in-section') {
+      const normalizedEvidence =
+        this.buildTooManyTopicDoormatsEvidence(doormat);
+      if (normalizedEvidence) return normalizedEvidence;
+    }
+
     if (details) {
       const count =
         this.getTopicDoormatExactCharacterCount(issueCategory, doormat) ??
@@ -1360,6 +1343,20 @@ export class ComponentGuidanceComponent implements OnInit, OnDestroy {
     }
 
     return '';
+  }
+
+  private buildTooManyTopicDoormatsEvidence(
+    doormat?: TopicDoormatSummary,
+  ): string {
+    if (
+      !doormat?.sectionDoormatCount ||
+      !doormat.sectionIndex ||
+      !doormat.sectionItemIndex
+    ) {
+      return '';
+    }
+
+    return `${doormat.sectionDoormatCount}/9 doormats in section ${doormat.sectionIndex}; item ${doormat.sectionItemIndex}`;
   }
 
   private getTopicDoormatExactCharacterCount(
