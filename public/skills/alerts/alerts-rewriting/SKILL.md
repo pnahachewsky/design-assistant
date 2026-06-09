@@ -14,6 +14,7 @@ Use this skill only for alert rewriting. Do not return issue-analysis payloads.
 
 ## Resources
 - Read `references/rewrite-instructions.json` for rewrite rules, style rules, markup rules, link rules, and output rules.
+- Read `references/runtime-rewrite-rules.json` for the active AIDA runtime prompt lines, style rules, example rules, and retry instructions.
 - Read `references/rubric-and-guidelines.json` for the structured rewriting rubric and self-check guidance.
 - Use `references/examples.json` for pattern guidance only. Do not copy wording.
 - Apply the included `link-writing` skill for reusable link-writing rules.

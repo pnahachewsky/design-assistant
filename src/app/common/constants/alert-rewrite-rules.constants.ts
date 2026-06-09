@@ -18,7 +18,7 @@ export interface AlertRewriteRulesJson {
 }
 
 const ALERT_REWRITE_RULES_PATH = new URL(
-  'ai-prompts/alerts-rewrite-rules.json',
+  'skills/alerts/alerts-rewriting/references/runtime-rewrite-rules.json',
   document.baseURI,
 ).toString();
 

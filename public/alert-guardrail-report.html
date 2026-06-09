@@ -798,7 +798,7 @@
             <div class="source-note">
               <p class="source-note-label">Prompt paths:</p>
               <ul class="source-list">
-                <li><a href="./ai-prompts/alerts-rewrite-rules.json">ai-prompts/alerts-rewrite-rules.json</a></li>
+                <li><a href="./skills/alerts/alerts-rewriting/references/runtime-rewrite-rules.json">skills/alerts/alerts-rewriting/references/runtime-rewrite-rules.json</a></li>
                 <li><a href="./skills/link-writing/references/link-writing-rules.json">skills/link-writing/references/link-writing-rules.json</a></li>
               </ul>
             </div>
@@ -818,7 +818,7 @@
             <div class="source-note">
               <p class="source-note-label">Prompt paths:</p>
               <ul class="source-list">
-                <li><a href="./ai-prompts/alerts-rewrite-rules.json">ai-prompts/alerts-rewrite-rules.json</a></li>
+                <li><a href="./skills/alerts/alerts-rewriting/references/runtime-rewrite-rules.json">skills/alerts/alerts-rewriting/references/runtime-rewrite-rules.json</a></li>
                 <li><a href="./skills/link-writing/references/link-writing-rules.json">skills/link-writing/references/link-writing-rules.json</a></li>
               </ul>
             </div>
@@ -1050,7 +1050,7 @@
     </section>
   </main>
   <script>
-    const alertRulesUrl = './ai-prompts/alerts-rewrite-rules.json';
+    const alertRulesUrl = './skills/alerts/alerts-rewriting/references/runtime-rewrite-rules.json';
     const linkRulesUrl = './skills/link-writing/references/link-writing-rules.json';
 
     function setListItems(container, items, emptyText) {
@@ -1274,7 +1274,7 @@
         }
         if (sourceNote) {
           sourceNote.textContent =
-            `Prompt-derived details in this report are loaded live from alerts-rewrite-rules.json and link-writing-rules.json. Current prompt rules version: ${promptVersion}.`;
+            `Prompt-derived details in this report are loaded live from runtime-rewrite-rules.json and link-writing-rules.json. Current prompt rules version: ${promptVersion}.`;
         }
 
         const styleRules = alertRules?.alertRewrite?.styleRulesBase || [];

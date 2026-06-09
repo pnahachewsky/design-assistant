@@ -52,7 +52,11 @@ describe('AlertRewriteService', () => {
             { status: 200 },
           );
         }
-        if (url.includes('ai-prompts/alerts-rewrite-rules.json')) {
+        if (
+          url.includes(
+            'skills/alerts/alerts-rewriting/references/runtime-rewrite-rules.json',
+          )
+        ) {
           return new Response(
               JSON.stringify({
                 version: 'test',
@@ -149,7 +153,11 @@ describe('AlertRewriteService', () => {
             { status: 200 },
           );
         }
-        if (url.includes('ai-prompts/alerts-rewrite-rules.json')) {
+        if (
+          url.includes(
+            'skills/alerts/alerts-rewriting/references/runtime-rewrite-rules.json',
+          )
+        ) {
           return new Response(
             JSON.stringify({
               version: 'test',

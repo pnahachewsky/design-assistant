@@ -96,7 +96,7 @@ export interface AlertRewriteInput {
 export class AlertRewriteService {
   private readonly linkWritingRules = inject(LinkWritingRulesService);
   private readonly examplesPath = new URL(
-    'ai-prompts/alerts-rewrite-examples.json',
+    'skills/alerts/alerts-rewriting/references/examples.json',
     document.baseURI,
   ).toString();
   private examplesCache: AlertRewriteExample[] | null = null;
