@@ -40303,7 +40303,9 @@ var FetchService = class _FetchService {
   protoHosts = /* @__PURE__ */ new Set([
     "proto-cra.github.io",
     "cra-design.github.io",
-    //"cra-proto.github.io", //Currently blocked by browser because it looks like a phishing site
+    "cra-test-arc.canada.ca",
+    "cra-proto.github.io",
+    //Currently blocked by browser because it looks like a phishing site
     //"gc-proto.github.io", //CORS error but redirects to test.canada.ca which works
     "test.canada.ca"
   ]);
@@ -100365,4 +100367,4 @@ export {
    * License: MIT
    *)
 */
-//# sourceMappingURL=chunk-AGQQOFWL.js.map
+//# sourceMappingURL=chunk-VBSMZM64.js.map
