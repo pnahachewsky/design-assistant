@@ -101,6 +101,7 @@
   "selfCheck": [
     "If wrapper HTML is invalid, regenerate updated_html as a full .alert wrapper element.",
     "If placeholder link tokens remain, replace them with real HTML anchors.",
+    "If a relevant selected issue did not cause a material HTML change for the affected alert, revise updated_html so the issue is addressed while preserving the original meaning.",
     "If the original alert has no links, remove all added hyperlinks.",
     "If the original alert has a link, keep at least one real hyperlink unless a too-many-links issue justifies removing extras.",
     "If output wording copies examples too closely, rewrite using the input alert's own facts and wording."

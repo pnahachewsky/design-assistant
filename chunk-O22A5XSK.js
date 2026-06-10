@@ -24570,8 +24570,7 @@ var PROMPT_BASE_URL = new URL("ai-prompts/", document.baseURI);
 var promptFiles = {
   [PromptKey.Headings]: new URL("headings.txt", PROMPT_BASE_URL).toString(),
   [PromptKey.Doormats]: new URL("doormats.txt", PROMPT_BASE_URL).toString(),
-  [PromptKey.PlainLanguage]: new URL("plain-language.txt", PROMPT_BASE_URL).toString(),
-  [PromptKey.AlertsRecommendations]: new URL("alerts-rewriting.txt", PROMPT_BASE_URL).toString()
+  [PromptKey.PlainLanguage]: new URL("plain-language.txt", PROMPT_BASE_URL).toString()
 };
 var commsObjectivePath = new URL("comms-objective.txt", PROMPT_BASE_URL).toString();
 var promptCache = /* @__PURE__ */ new Map();
@@ -43360,7 +43359,7 @@ var PageAssistantCompareComponent = class _PageAssistantCompareComponent {
   getPromptForKey(key2) {
     return __async(this, null, function* () {
       const custom = this.customPromptText.trim();
-      if (key2 === PromptKey.AlertsIssues) {
+      if (key2 === PromptKey.AlertsIssues || key2 === PromptKey.AlertsRecommendations) {
         const composed = yield this.skillManager.composePrompt({
           basePrompt: "",
           queryText: this.buildSkillQueryText(key2, custom),
@@ -43375,8 +43374,7 @@ var PageAssistantCompareComponent = class _PageAssistantCompareComponent {
 ${custom}` : composed.prompt;
       }
       const base = yield getPromptTemplate(key2);
-      const includeEditPrompt = key2 !== PromptKey.AlertsRecommendations;
-      const editPrefix = includeEditPrompt ? this.customEditText : "";
+      const editPrefix = this.customEditText;
       const promptBody = editPrefix ? `${editPrefix}
 
 ${base}` : base;
@@ -44694,4 +44692,4 @@ ${custom}` : promptBody;
 export {
   PageAssistantCompareComponent
 };
-//# sourceMappingURL=chunk-6F22D2VF.js.map
+//# sourceMappingURL=chunk-O22A5XSK.js.map
