@@ -176,6 +176,12 @@
       gap: 14px;
     }
 
+    .three-col-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 14px;
+    }
+
     .two-col {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
@@ -281,6 +287,10 @@
       .mermaid {
         min-width: 680px;
       }
+
+      .three-col-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
     }
 
     @media (max-width: 760px) {
@@ -295,6 +305,10 @@
 
       .diagram {
         padding: 10px;
+      }
+
+      .three-col-grid {
+        grid-template-columns: 1fr;
       }
     }
 
@@ -360,7 +374,7 @@
         <div class="mermaid">
 flowchart TD
     A["Page HTML"] --> B{"Compact context<br>enabled?"}
-    B -->|"Default yes"| C["Build compact page<br>and alert signals"]
+    B -->|"Yes (default)"| C["Build compact page<br>and alert signals"]
     B -->|"No"| D["Use sanitized<br>alert HTML"]
     C --> E["Alert issue<br>analysis"]
     D --> E
@@ -368,7 +382,7 @@ flowchart TD
     H -->|"No"| Y["Updated page<br>HTML"]
     H -->|"Yes"| J["Prepare per-alert<br>rewrite"]
     J --> K{"Examples<br>enabled?"}
-    K -->|"Default yes"| L["Add selected examples<br>as pattern guidance"]
+    K -->|"Yes (default)"| L["Add selected examples<br>as pattern guidance"]
     K -->|"No"| M["Continue without<br>examples"]
     L --> N["Model draft<br>rewrite"]
     M --> N
@@ -451,7 +465,8 @@ flowchart TD
     <section class="panel" id="quality-checks">
       <h2>Main checks</h2>
       <p class="intro">
-        These are the main things AIDA checks before a rewritten alert can be applied to the page.
+        These are the main things AIDA checks before a rewritten alert can be applied to the page. The next section explains how
+        AIDA responds when one of these checks needs action.
       </p>
       <div class="grid">
         <article class="card">
@@ -480,13 +495,14 @@ flowchart TD
     <section class="panel" id="detailed-guardrails">
       <h2>Detailed guardrail logic</h2>
       <p class="intro">
-        This section explains what AIDA does when a rewritten alert needs more work before it can be applied.
+        This section expands on the main checks. AIDA uses both preventive guidance and after-the-fact checks. The guidance steers
+        the model before it writes. The checks decide what happens after AIDA receives a draft.
       </p>
 
-      <div class="grid">
+      <div class="three-col-grid">
         <article class="card">
-          <span class="label label-blue">Prompt guidance</span>
-          <h3>Start with specific instructions</h3>
+          <span class="label label-blue">Preventive guidance</span>
+          <h3>Key instructions for rewriting</h3>
           <ul>
             <li>Keep the edit inside the existing alert container.</li>
             <li>Preserve the original meaning, facts, dates, program names, and source links.</li>
@@ -501,7 +517,6 @@ flowchart TD
           <h3>Reject unsafe drafts</h3>
           <ul>
             <li>Invalid or incomplete alert wrapper HTML.</li>
-            <li>Placeholder link tokens such as <span class="inline-code">[LINK]</span> or <span class="inline-code">[END LINK]</span>.</li>
             <li>New hyperlinks when the original alert did not have links.</li>
             <li>Removed required links when link removal was not justified by the selected issue.</li>
             <li>Example wording copied too closely into the rewrite, unless the example is also very close to the original alert.</li>
