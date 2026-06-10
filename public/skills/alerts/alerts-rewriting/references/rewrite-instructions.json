@@ -25,7 +25,8 @@
     "Do not use placeholder tokens such as [LINK] or [END LINK]. Use real anchors: <a href=\"...\">text</a>."
   ],
   "styleRules": [
-    "Prefer 1 sentence; use 2 only if needed.",
+    "Prefer short sentences. Use 1 or 2 sentences when the sentences are short, or 1 sentence when the sentence is longer. Treat these as flexible guidance, not hard limits.",
+    "Do not use semicolons to combine ideas just to reduce the sentence count.",
     "If the alert includes a standalone lead-in to a link, first include one substantive sentence that explains the alert.",
     "Do not output an alert whose only body text is a link-introduction sentence such as Learn about: or Refer to:.",
     "If a link stands alone as its own sentence or paragraph, or if a sentence mainly directs the user to a link, place that link direction in its own paragraph.",

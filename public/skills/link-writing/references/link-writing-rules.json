@@ -34,7 +34,7 @@
     {
       "id": "L6a_short_sentences_no_semicolons",
       "condition": "always",
-      "text": "Prefer short sentences. Use 1 or 2 sentences when the sentences are short, or 1 sentence when the sentence is longer. Treat these as flexible guidance, not hard limits. Avoid semicolons, and do not use semicolons to combine ideas just to reduce the sentence count."
+      "text": "Prefer short sentences. Use 1 or 2 sentences when the sentences are short, or 1 sentence when the sentence is longer. Treat these as flexible guidance, not hard limits. Do not use semicolons to combine ideas just to reduce the sentence count."
     },
     {
       "id": "L7_learn_more_fallback",

@@ -3,7 +3,7 @@
   "alertRewrite": {
       "styleRulesBase": [
         "Prefer short sentences. Use 1 or 2 sentences when the sentences are short, or 1 sentence when the sentence is longer. Treat these as flexible guidance, not hard limits.",
-        "Avoid semicolons. Do not use semicolons to combine ideas just to reduce the sentence count.",
+        "Do not use semicolons to combine ideas just to reduce the sentence count.",
         "If the alert includes a standalone lead-in to a link, first include one substantive sentence that explains the alert. Do not output an alert whose only body text is a link-introduction sentence such as \"Refer to:\" or \"For details:\".",
         "If you use a standalone link sentence or paragraph, place it as the last sentence and last paragraph of the alert content when possible.",
         "When more than one standalone link must be kept at the end of an alert, use one lead-in paragraph followed by <ul class=\"list-unstyled\"> with one link per <li>. Do not use separate standalone link paragraphs for multiple final links.",
