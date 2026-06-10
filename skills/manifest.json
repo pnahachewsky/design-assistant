@@ -56,7 +56,7 @@
         "json"
       ],
       "defaultReferencePaths": [
-        "skills/alerts/alerts-rewriting/references/rewrite-instructions.json"
+        "skills/alerts/alerts-rewriting/references/runtime-rewrite-rules.json"
       ],
       "optionalReferencePaths": [
         "skills/alerts/alerts-rewriting/references/examples.json"

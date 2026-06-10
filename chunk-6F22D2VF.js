@@ -22470,7 +22470,7 @@ H2 headings (${context.h2Headings.length}): ${context.h2Headings.join(" | ") || 
 })();
 
 // src/app/common/constants/alert-rewrite-rules.constants.ts
-var ALERT_REWRITE_RULES_PATH = new URL("ai-prompts/alerts-rewrite-rules.json", document.baseURI).toString();
+var ALERT_REWRITE_RULES_PATH = new URL("skills/alerts/alerts-rewriting/references/runtime-rewrite-rules.json", document.baseURI).toString();
 var ALERT_REWRITE_RULES_FALLBACK = {
   version: "fallback-inline",
   alertRewrite: {
@@ -22753,7 +22753,7 @@ var LinkWritingRulesService = class _LinkWritingRulesService {
 // src/app/views/page-assistant/services/alert-rewrite.service.ts
 var AlertRewriteService = class _AlertRewriteService {
   linkWritingRules = inject(LinkWritingRulesService);
-  examplesPath = new URL("ai-prompts/alerts-rewrite-examples.json", document.baseURI).toString();
+  examplesPath = new URL("skills/alerts/alerts-rewriting/references/examples.json", document.baseURI).toString();
   examplesCache = null;
   loadExamples() {
     return __async(this, null, function* () {
@@ -22921,9 +22921,29 @@ var AlertRewriteService = class _AlertRewriteService {
         originalAlertHtml: (params.originalAlertHtml || "").trim(),
         linkManifest
       }, params.compactAlertPayload ? { compactAlertPayload: params.compactAlertPayload } : {});
+      const serializedUserPayload = JSON.stringify(userPayload);
+      this.debugLog("Alert rewrite prompt payload", {
+        rulesVersion: rules.version,
+        examplesProvided: params.examples.length,
+        selectedExampleIds: params.examples.map((example) => example.id),
+        retryInstructionCount: retryInstructions.length,
+        baseStyleRuleCount: rules.alertRewrite.styleRulesBase.length,
+        canadaCaStyleRuleCount: canadaCaStyleRules.length,
+        linkRuleCount: linkRules.length,
+        exampleStyleRuleCount: params.examples.length ? rules.alertRewrite.styleRulesWithExamples.length : 0,
+        finalStyleRuleCount: styleRules.length,
+        systemPromptCharacters: systemPrompt.length,
+        userPayloadCharacters: serializedUserPayload.length,
+        originalAlertHtmlCharacters: (params.originalAlertHtml || "").length,
+        originalAlertTextCharacters: (params.originalAlertText || "").length,
+        compactAlertPayloadIncluded: !!params.compactAlertPayload,
+        linkManifestCount: linkManifest.count,
+        linkManifestMustPreserveAtLeastOne: linkManifest.mustPreserveAtLeastOne,
+        linkManifestAllowRemoval: linkManifest.allowRemoval
+      });
       return [
         { role: "system", content: systemPrompt },
-        { role: "user", content: JSON.stringify(userPayload) }
+        { role: "user", content: serializedUserPayload }
       ];
     });
   }
@@ -24250,6 +24270,7 @@ var AlertRewriteOrchestratorService = class _AlertRewriteOrchestratorService {
         let softRejectedResult = null;
         let softRejectedReasons = [];
         let lastRetryReasons = [];
+        let rewriteResultSource = "model";
         const originalHasAnchor = /<a\b/i.test(alertHtml);
         const allowLinkRemoval = this.alertRewriteGuard.shouldAllowAlertLinkRemoval(relevantIssues, initialPlan);
         let retryInstructionsForAttempt = [];
@@ -24268,8 +24289,17 @@ var AlertRewriteOrchestratorService = class _AlertRewriteOrchestratorService {
           this.addElapsed(timings, "rewritePromptMs", timingStart);
           timingStart = performance.now();
           const rewriteResponse = yield params.callOpenRouterForMessages(params.model, params.headers, params.url, alertRewriteMessages, `Alert ${alertIndex} alertRewrite`, attempt > 0 ? 0.2 : 0);
-          this.addElapsed(timings, "rewriteAiMs", timingStart);
+          const rewriteAiElapsedMs = performance.now() - timingStart;
+          timings.rewriteAiMs += rewriteAiElapsedMs;
           rewriteModelName = params.getShortModelName(rewriteResponse.usedModel);
+          this.debugLog("Alert rewrite AI call timing", {
+            alertIndex,
+            attempt: attempt + 1,
+            requestedModel: params.model,
+            usedModel: rewriteModelName,
+            elapsedMs: Math.round(rewriteAiElapsedMs),
+            responseCharacters: rewriteResponse.text.length
+          });
           timingStart = performance.now();
           const parsedResult = this.alertRewrite.parseAlertRewriteResponse(rewriteResponse.text, initialPlan, selectedExamples);
           this.debugLog("Alert rewrite parsed model output", {
@@ -24382,6 +24412,7 @@ var AlertRewriteOrchestratorService = class _AlertRewriteOrchestratorService {
               break;
             }
             rewriteResult = parsedResult;
+            rewriteResultSource = "model";
             this.addElapsed(timings, "parseAndGuardMs", timingStart);
             break;
           }
@@ -24405,6 +24436,9 @@ var AlertRewriteOrchestratorService = class _AlertRewriteOrchestratorService {
             selectedExamples,
             allowLinkRemoval
           });
+          if (rewriteResult) {
+            rewriteResultSource = "local-repair";
+          }
           this.addElapsed(timings, "localRepairMs", timingStart);
         }
         if (!rewriteResult && softRejectedResult) {
@@ -24415,6 +24449,7 @@ var AlertRewriteOrchestratorService = class _AlertRewriteOrchestratorService {
             willRetryWithNewModelCall: false
           });
           rewriteResult = softRejectedResult;
+          rewriteResultSource = "soft-failure-candidate";
           lastRetryReasons = [...softRejectedReasons];
         }
         if (!rewriteResult) {
@@ -24429,6 +24464,7 @@ var AlertRewriteOrchestratorService = class _AlertRewriteOrchestratorService {
             originalHeading,
             originalAlertText: alertText
           });
+          rewriteResultSource = "passthrough";
           fallbackNotices.push({
             alertIndex,
             reasons: [...lastRetryReasons]
@@ -24466,6 +24502,7 @@ var AlertRewriteOrchestratorService = class _AlertRewriteOrchestratorService {
         });
         this.debugLog("Alert rewrite iteration", {
           alertIndex,
+          resultSource: rewriteResultSource,
           plan: initialPlan,
           selectedExampleIds: selectedExamples.map((example) => example.id),
           originalHeading,
@@ -44657,4 +44694,4 @@ ${custom}` : promptBody;
 export {
   PageAssistantCompareComponent
 };
-//# sourceMappingURL=chunk-SSN5BKQT.js.map
+//# sourceMappingURL=chunk-6F22D2VF.js.map

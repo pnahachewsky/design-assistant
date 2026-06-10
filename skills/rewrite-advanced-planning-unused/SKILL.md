@@ -54,7 +54,7 @@ The active implementation previously included:
 - `AlertRewriteService.buildAlertPlanningMessages`
 - `AlertRewriteService.parseAlertPlanningResponse`
 - the model-planning branch inside `AlertRewriteOrchestratorService.generateRecommendations`
-- `alertPlanning.systemPromptLines` in `public/ai-prompts/alerts-rewrite-rules.json`
+- `alertPlanning.systemPromptLines` in `public/skills/alerts/alerts-rewriting/references/runtime-rewrite-rules.json`
 
 ## Documentation
 
