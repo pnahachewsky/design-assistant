@@ -104,6 +104,128 @@ describe('AlertRewriteService', () => {
     );
   });
 
+  it('adds preservation guidance when the original alert ends with for details', async () => {
+    spyOn(window, 'fetch').and.callFake(
+      async (input: RequestInfo | URL): Promise<Response> => {
+        const url = String(input);
+        if (url.includes('skills/canada-ca-style/references/writing-rules.json')) {
+          return new Response(
+            JSON.stringify({ version: 'test', rules: [], examples: [] }),
+            { status: 200 },
+          );
+        }
+        if (
+          url.includes(
+            'skills/alerts/alerts-rewriting/references/runtime-rewrite-rules.json',
+          )
+        ) {
+          return new Response(
+            JSON.stringify({
+              version: 'test',
+              alertRewrite: {
+                styleRulesBase: ['Keep the alert scoped.'],
+                styleRulesWithExamples: [],
+                systemPromptWithExamplesLines: ['Rewrite alert with examples.'],
+                systemPromptWithoutExamplesLines: ['Rewrite alert.'],
+                retryInstructions: {
+                  invalidWrapperHtml: 'Return one valid alert wrapper.',
+                  placeholderLinks: 'Do not use placeholder links.',
+                  noLinksAllowed: 'Do not add links.',
+                  mustKeepLink: 'Keep required links.',
+                  mustHaveHeading: 'Include a heading.',
+                  avoidExampleCopy: 'Do not copy examples.',
+                  fullSentenceLinksNeedLeadIn: 'Use a clear link lead-in.',
+                },
+              },
+            }),
+            { status: 200 },
+          );
+        }
+        return new Response('Not found', { status: 404 });
+      },
+    );
+
+    const messages = await service.buildAlertRewriteMessages({
+      originalAlertText: 'Benefit payment details are available.',
+      originalAlertHtml:
+        '<section class="alert alert-info"><h2 class="h3">Benefit details</h2><p>Benefit payment details are available.</p><p>For details: <a href="/benefit">benefit details</a></p></section>',
+      plan,
+      issues: [],
+      examples: [],
+    });
+
+    const userPayload = JSON.parse(messages[1]?.content || '{}') as {
+      styleRules: string[];
+    };
+
+    expect(
+      userPayload.styleRules.some((rule) =>
+        rule.includes('Do not rewrite a valid existing lead-in such as "For details:"'),
+      ),
+    ).toBeTrue();
+  });
+
+  it('adds preservation guidance when the original alert ends with a for details link list', async () => {
+    spyOn(window, 'fetch').and.callFake(
+      async (input: RequestInfo | URL): Promise<Response> => {
+        const url = String(input);
+        if (url.includes('skills/canada-ca-style/references/writing-rules.json')) {
+          return new Response(
+            JSON.stringify({ version: 'test', rules: [], examples: [] }),
+            { status: 200 },
+          );
+        }
+        if (
+          url.includes(
+            'skills/alerts/alerts-rewriting/references/runtime-rewrite-rules.json',
+          )
+        ) {
+          return new Response(
+            JSON.stringify({
+              version: 'test',
+              alertRewrite: {
+                styleRulesBase: ['Keep the alert scoped.'],
+                styleRulesWithExamples: [],
+                systemPromptWithExamplesLines: ['Rewrite alert with examples.'],
+                systemPromptWithoutExamplesLines: ['Rewrite alert.'],
+                retryInstructions: {
+                  invalidWrapperHtml: 'Return one valid alert wrapper.',
+                  placeholderLinks: 'Do not use placeholder links.',
+                  noLinksAllowed: 'Do not add links.',
+                  mustKeepLink: 'Keep required links.',
+                  mustHaveHeading: 'Include a heading.',
+                  avoidExampleCopy: 'Do not copy examples.',
+                  fullSentenceLinksNeedLeadIn: 'Use a clear link lead-in.',
+                },
+              },
+            }),
+            { status: 200 },
+          );
+        }
+        return new Response('Not found', { status: 404 });
+      },
+    );
+
+    const messages = await service.buildAlertRewriteMessages({
+      originalAlertText: 'Benefit payment details are available.',
+      originalAlertHtml:
+        '<section class="alert alert-info"><h2 class="h3">Benefit details</h2><p>Benefit payment details are available.</p><p>For details:</p><ul><li><a href="/benefit">benefit details</a></li><li><a href="/payment">payment details</a></li></ul></section>',
+      plan,
+      issues: [],
+      examples: [],
+    });
+
+    const userPayload = JSON.parse(messages[1]?.content || '{}') as {
+      styleRules: string[];
+    };
+
+    expect(
+      userPayload.styleRules.some((rule) =>
+        rule.includes('Do not rewrite a valid existing lead-in such as "For details:"'),
+      ),
+    ).toBeTrue();
+  });
+
   it('includes a deterministic link manifest in alert rewrite messages', async () => {
     spyOn(window, 'fetch').and.callFake(
       async (input: RequestInfo | URL): Promise<Response> => {

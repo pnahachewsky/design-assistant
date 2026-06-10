@@ -469,6 +469,7 @@ export class AlertRewriteGuardService {
 
     if (
       normalized === 'refer to:' ||
+      normalized === 'for details:' ||
       normalized === 'learn more:' ||
       /^learn about(?: the)?$/.test(normalized)
     ) {
@@ -485,7 +486,7 @@ export class AlertRewriteGuardService {
     );
     if (!normalized) return false;
 
-    return /\blearn more\b/.test(normalized);
+    return /\b(?:for details|learn more)\b/.test(normalized);
   }
 
   private hasStandaloneActionVerbLinkText(
@@ -534,7 +535,11 @@ export class AlertRewriteGuardService {
         beforeRange.setEndBefore(anchor);
         const beforeText = this.normalizeLeadInText(beforeRange.toString());
         beforeRange.detach();
-        if (beforeText !== 'refer to:' && beforeText !== 'learn more:') return;
+        if (
+          beforeText !== 'refer to:' &&
+          beforeText !== 'for details:' &&
+          beforeText !== 'learn more:'
+        ) return;
 
         const afterRange = doc.createRange();
         afterRange.setStartAfter(anchor);

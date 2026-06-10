@@ -264,7 +264,7 @@ export class AlertRewriteService {
     ];
     if (this.hasAcceptableFinalStandaloneLinkSentence(params.originalAlertHtml)) {
       styleRules.push(
-        'The original alert already ends with an acceptable standalone final link sentence or paragraph. Preserve that wording and placement unless a selected issue clearly requires a change.',
+        'The original alert already ends with an acceptable standalone final link sentence or paragraph. Preserve that wording and placement unless a selected issue clearly requires a change. Do not rewrite a valid existing lead-in such as "For details:" to "Refer to:" when it already reads naturally.',
       );
     }
     if (linkManifest.hasLinks) {
@@ -404,6 +404,9 @@ export class AlertRewriteService {
       const paragraphs = Array.from(root.querySelectorAll('p'));
       const lastParagraph = paragraphs[paragraphs.length - 1];
       if (!lastParagraph) return false;
+      if (this.hasAcceptableFinalStandaloneLinkList(root, lastParagraph)) {
+        return true;
+      }
 
       const anchors = Array.from(lastParagraph.querySelectorAll('a'));
       if (!anchors.length) return false;
@@ -437,12 +440,45 @@ export class AlertRewriteService {
       return (
         /^find out\s+\[\[link:[^\]]+\]\][.!?]?$/.test(paragraphWithMarkers) ||
         /^learn about(?: the)?\s+\[\[link:[^\]]+\]\][.!?]?$/.test(paragraphWithMarkers) ||
+        /^for details:\s*\[\[link:[^\]]+\]\][.!?]?$/.test(paragraphWithMarkers) ||
         /^refer to:\s*\[\[link:[^\]]+\]\][.!?]?$/.test(paragraphWithMarkers) ||
         /^learn more:\s*\[\[link:[^\]]+\]\][.!?]?$/.test(paragraphWithMarkers)
       );
     } catch {
       return false;
     }
+  }
+
+  private hasAcceptableFinalStandaloneLinkList(
+    root: Element,
+    leadInParagraph: Element,
+  ): boolean {
+    const leadInText = (leadInParagraph.textContent || '')
+      .replace(/\s+/g, ' ')
+      .trim()
+      .toLowerCase();
+    if (
+      leadInText !== 'for details:' &&
+      leadInText !== 'refer to:' &&
+      leadInText !== 'learn more:'
+    ) {
+      return false;
+    }
+
+    let next = leadInParagraph.nextElementSibling;
+    while (next && !next.textContent?.trim()) {
+      next = next.nextElementSibling;
+    }
+    if (!next || !['ul', 'ol'].includes(next.tagName.toLowerCase())) {
+      return false;
+    }
+    if (!next.querySelector('a')) return false;
+
+    let trailing = next.nextElementSibling;
+    while (trailing && !trailing.textContent?.trim()) {
+      trailing = trailing.nextElementSibling;
+    }
+    return !trailing && next.parentElement === root;
   }
 
   private buildAlertLinkManifest(
