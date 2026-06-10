@@ -198,6 +198,11 @@ export class AlertRewriteOrchestratorService {
       let softRejectedResult: AlertRewriteResult | null = null;
       let softRejectedReasons: string[] = [];
       let lastRetryReasons: string[] = [];
+      let rewriteResultSource:
+        | 'model'
+        | 'local-repair'
+        | 'soft-failure-candidate'
+        | 'passthrough' = 'model';
       const originalHasAnchor = /<a\b/i.test(alertHtml);
       const allowLinkRemoval = this.alertRewriteGuard.shouldAllowAlertLinkRemoval(
         relevantIssues,
@@ -232,8 +237,17 @@ export class AlertRewriteOrchestratorService {
           `Alert ${alertIndex} alertRewrite`,
           attempt > 0 ? 0.2 : 0,
         );
-        this.addElapsed(timings, 'rewriteAiMs', timingStart);
+        const rewriteAiElapsedMs = performance.now() - timingStart;
+        timings.rewriteAiMs += rewriteAiElapsedMs;
         rewriteModelName = params.getShortModelName(rewriteResponse.usedModel);
+        this.debugLog('Alert rewrite AI call timing', {
+          alertIndex,
+          attempt: attempt + 1,
+          requestedModel: params.model,
+          usedModel: rewriteModelName,
+          elapsedMs: Math.round(rewriteAiElapsedMs),
+          responseCharacters: rewriteResponse.text.length,
+        });
 
         // Parse the model response back into the normalized rewrite contract
         // used by the rest of the pipeline. If parsing fails we cannot safely
@@ -425,6 +439,7 @@ export class AlertRewriteOrchestratorService {
             break;
           }
           rewriteResult = parsedResult;
+          rewriteResultSource = 'model';
           this.addElapsed(timings, 'parseAndGuardMs', timingStart);
           break;
         }
@@ -453,6 +468,9 @@ export class AlertRewriteOrchestratorService {
           selectedExamples,
           allowLinkRemoval,
         });
+        if (rewriteResult) {
+          rewriteResultSource = 'local-repair';
+        }
         this.addElapsed(timings, 'localRepairMs', timingStart);
       }
 
@@ -467,6 +485,7 @@ export class AlertRewriteOrchestratorService {
           },
         );
         rewriteResult = softRejectedResult;
+        rewriteResultSource = 'soft-failure-candidate';
         lastRetryReasons = [...softRejectedReasons];
       }
 
@@ -486,6 +505,7 @@ export class AlertRewriteOrchestratorService {
           originalHeading,
           originalAlertText: alertText,
         });
+        rewriteResultSource = 'passthrough';
         fallbackNotices.push({
           alertIndex,
           reasons: [...lastRetryReasons],
@@ -546,6 +566,7 @@ export class AlertRewriteOrchestratorService {
 
       this.debugLog('Alert rewrite iteration', {
         alertIndex,
+        resultSource: rewriteResultSource,
         plan: initialPlan,
         selectedExampleIds: selectedExamples.map((example) => example.id),
         originalHeading,

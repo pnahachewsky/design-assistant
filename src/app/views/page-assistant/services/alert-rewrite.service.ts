@@ -351,10 +351,33 @@ export class AlertRewriteService {
         ? { compactAlertPayload: params.compactAlertPayload }
         : {}),
     };
+    const serializedUserPayload = JSON.stringify(userPayload);
+
+    this.debugLog('Alert rewrite prompt payload', {
+      rulesVersion: rules.version,
+      examplesProvided: params.examples.length,
+      selectedExampleIds: params.examples.map((example) => example.id),
+      retryInstructionCount: retryInstructions.length,
+      baseStyleRuleCount: rules.alertRewrite.styleRulesBase.length,
+      canadaCaStyleRuleCount: canadaCaStyleRules.length,
+      linkRuleCount: linkRules.length,
+      exampleStyleRuleCount: params.examples.length
+        ? rules.alertRewrite.styleRulesWithExamples.length
+        : 0,
+      finalStyleRuleCount: styleRules.length,
+      systemPromptCharacters: systemPrompt.length,
+      userPayloadCharacters: serializedUserPayload.length,
+      originalAlertHtmlCharacters: (params.originalAlertHtml || '').length,
+      originalAlertTextCharacters: (params.originalAlertText || '').length,
+      compactAlertPayloadIncluded: !!params.compactAlertPayload,
+      linkManifestCount: linkManifest.count,
+      linkManifestMustPreserveAtLeastOne: linkManifest.mustPreserveAtLeastOne,
+      linkManifestAllowRemoval: linkManifest.allowRemoval,
+    });
 
     return [
       { role: 'system', content: systemPrompt },
-      { role: 'user', content: JSON.stringify(userPayload) },
+      { role: 'user', content: serializedUserPayload },
     ];
   }
 

@@ -1,13 +1,15 @@
 import { PromptKey } from './data.model';
 
 const PROMPT_BASE_URL = new URL('ai-prompts/', document.baseURI);
-type StaticPromptKey = Exclude<PromptKey, PromptKey.AlertsIssues>;
+type StaticPromptKey = Exclude<
+  PromptKey,
+  PromptKey.AlertsIssues | PromptKey.AlertsRecommendations
+>;
 
 const promptFiles: Record<StaticPromptKey, string> = {
   [PromptKey.Headings]: new URL('headings.txt', PROMPT_BASE_URL).toString(),
   [PromptKey.Doormats]: new URL('doormats.txt', PROMPT_BASE_URL).toString(),
   [PromptKey.PlainLanguage]: new URL('plain-language.txt', PROMPT_BASE_URL).toString(),
-  [PromptKey.AlertsRecommendations]: new URL('alerts-rewriting.txt', PROMPT_BASE_URL).toString(),
 };
 
 const commsObjectivePath = new URL('comms-objective.txt', PROMPT_BASE_URL).toString();

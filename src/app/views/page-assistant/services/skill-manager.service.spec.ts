@@ -33,6 +33,7 @@ describe('SkillManagerService', () => {
         outputModes: ['json'],
         defaultReferencePaths: [
           'skills/alerts/alerts-rewriting/references/rewrite-instructions.json',
+          'skills/alerts/alerts-rewriting/references/runtime-rewrite-rules.json',
         ],
         optionalReferencePaths: ['skills/alerts/alerts-rewriting/references/examples.json'],
         defaultAssetPaths: ['skills/alerts/alerts-rewriting/assets/rewriting-output-schema.json'],
@@ -112,6 +113,21 @@ describe('SkillManagerService', () => {
         if (url.includes('rewrite-instructions.json')) {
           return new Response('{"rewriteRules":["Use one link max."]}', { status: 200 });
         }
+        if (url.includes('runtime-rewrite-rules.json')) {
+          return new Response(
+            JSON.stringify({
+              version: 'test',
+              alertRewrite: {
+                styleRulesBase: [],
+                styleRulesWithExamples: [],
+                systemPromptWithExamplesLines: [],
+                systemPromptWithoutExamplesLines: [],
+                retryInstructions: {},
+              },
+            }),
+            { status: 200 },
+          );
+        }
         if (url.includes('issues-output-schema.json')) {
           return new Response('{"type":"object"}', { status: 200 });
         }
@@ -190,6 +206,9 @@ describe('SkillManagerService', () => {
     );
     expect(result.loadedPaths).toContain(
       'skills/alerts/alerts-rewriting/references/rewrite-instructions.json',
+    );
+    expect(result.loadedPaths).toContain(
+      'skills/alerts/alerts-rewriting/references/runtime-rewrite-rules.json',
     );
     expect(result.loadedPaths).toContain(
       'skills/alerts/alerts-rewriting/references/examples.json',

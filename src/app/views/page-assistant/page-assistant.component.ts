@@ -549,7 +549,10 @@ export class PageAssistantCompareComponent
 
   private async getPromptForKey(key: PromptKey): Promise<string> {
     const custom = this.customPromptText.trim();
-    if (key === PromptKey.AlertsIssues) {
+    if (
+      key === PromptKey.AlertsIssues ||
+      key === PromptKey.AlertsRecommendations
+    ) {
       const composed = await this.skillManager.composePrompt({
         basePrompt: '',
         queryText: this.buildSkillQueryText(key, custom),
@@ -563,8 +566,7 @@ export class PageAssistantCompareComponent
     }
 
     const base = await getPromptTemplate(key);
-    const includeEditPrompt = key !== PromptKey.AlertsRecommendations;
-    const editPrefix = includeEditPrompt ? this.customEditText : '';
+    const editPrefix = this.customEditText;
     const promptBody = editPrefix ? `${editPrefix}\n\n${base}` : base;
     return custom ? `${promptBody}\n\n${custom}` : promptBody;
   }
