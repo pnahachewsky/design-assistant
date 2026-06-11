@@ -253,7 +253,7 @@ export class AlertRewriteOrchestratorService {
         // used by the rest of the pipeline. If parsing fails we cannot safely
         // patch the alert into the page, so we retry with a structure-specific instruction.
         timingStart = performance.now();
-        const parsedResult = this.alertRewrite.parseAlertRewriteResponse(
+        let parsedResult = this.alertRewrite.parseAlertRewriteResponse(
           rewriteResponse.text,
           initialPlan,
           selectedExamples,
@@ -287,6 +287,26 @@ export class AlertRewriteOrchestratorService {
           retryInstructionsForAttempt = [retryInstructions.invalidWrapperHtml];
           this.addElapsed(timings, 'parseAndGuardMs', timingStart);
           continue;
+        }
+
+        const preservedLeadInHtml =
+          this.alertRewriteGuard.preserveOriginalStandaloneLinkLeadIns(
+            parsedResult.rewrittenAlertHtml,
+            alertHtml,
+          );
+        if (preservedLeadInHtml !== parsedResult.rewrittenAlertHtml) {
+          const leadInPreservedResult =
+            this.alertRewrite.parseAlertRewriteResponse(
+              JSON.stringify({
+                ...parsedResult,
+                rewrittenAlertHtml: preservedLeadInHtml,
+              }),
+              initialPlan,
+              selectedExamples,
+            );
+          if (leadInPreservedResult?.rewrittenAlertHtml) {
+            parsedResult = leadInPreservedResult;
+          }
         }
         lastRepairCandidate = parsedResult;
 

@@ -76,6 +76,9 @@ describe('AlertRewriteOrchestratorService', () => {
         'repairEmbeddedStandaloneLeadInParagraphs',
         'tryLocalAlertRewriteRepair',
         'ensureSemanticHeading',
+        'removeRedundantLeadInsBeforeActionLinks',
+        'preserveOriginalStandaloneLinkLeadIns',
+        'removeStandaloneLinkTerminalPunctuation',
         'applyAlertHtmlRewrites',
       ],
     );
@@ -120,6 +123,15 @@ describe('AlertRewriteOrchestratorService', () => {
     alertRewriteGuardSpy.ensureSemanticHeading.and.callFake(
       (html: string, heading: string) =>
         `<div class="alert alert-info"><h3>${heading}</h3><p>Processing of Form T2201 is delayed.</p><p>Check <a href="/times">Check CRA processing times</a>.</p></div>`,
+    );
+    alertRewriteGuardSpy.removeRedundantLeadInsBeforeActionLinks.and.callFake(
+      (html: string) => html,
+    );
+    alertRewriteGuardSpy.preserveOriginalStandaloneLinkLeadIns.and.callFake(
+      (html: string) => html,
+    );
+    alertRewriteGuardSpy.removeStandaloneLinkTerminalPunctuation.and.callFake(
+      (html: string) => html,
     );
     alertRewriteGuardSpy.applyAlertHtmlRewrites.and.callFake(
       (_html: string, rewrites: AlertHtmlRewrite[]) => {
@@ -236,6 +248,61 @@ describe('AlertRewriteOrchestratorService', () => {
     expect(callOpenRouterForMessages).toHaveBeenCalledTimes(1);
     expect(alertRewriteGuardSpy.tryLocalAlertRewriteRepair).not.toHaveBeenCalled();
     expect(result.formattedHtml).toContain(repairedHtml);
+  });
+
+  it('repairs model output that changes an original for-details lead-in to refer-to', async () => {
+    const htmlWithForDetails =
+      '<div class="alert alert-info"><p>The benefit will change.</p><p>For details: <a href="/benefit.html">Benefit details</a></p></div>';
+    const referToResult: AlertRewriteResult = {
+      rewrittenAlertHtml:
+        '<div class="alert alert-info"><h3>Benefit update</h3><p>The benefit will change.</p><p>Refer to: <a href="/benefit.html">Benefit details</a></p></div>',
+      rewrittenHeading: 'Benefit update',
+      rewrittenAlert: 'The benefit will change. Refer to: Benefit details.',
+      appliedDirectives: [],
+      exampleIdsUsed: [],
+    };
+    const forDetailsResult: AlertRewriteResult = {
+      ...referToResult,
+      rewrittenAlertHtml:
+        '<div class="alert alert-info"><h3>Benefit update</h3><p>The benefit will change.</p><p>For details: <a href="/benefit.html">Benefit details</a></p></div>',
+      rewrittenAlert: 'The benefit will change. For details: Benefit details.',
+    };
+
+    alertRewriteGuardSpy.hasSemanticHeading.and.returnValue(true);
+    alertRewriteGuardSpy.hasFullSentenceLinkWithoutAllowedLeadIn.and.returnValue(false);
+    alertRewriteGuardSpy.getFullSentenceLinkLeadInIssue.and.returnValue(null);
+    alertRewriteSpy.parseAlertRewriteResponse.and.returnValues(
+      referToResult,
+      forDetailsResult,
+    );
+    alertRewriteGuardSpy.preserveOriginalStandaloneLinkLeadIns.and.callFake(
+      (html: string) => html.replace('Refer to:', 'For details:'),
+    );
+    alertRewriteGuardSpy.ensureSemanticHeading.and.callFake((html: string) => html);
+
+    const callOpenRouterForMessages = jasmine
+      .createSpy('callOpenRouterForMessages')
+      .and.resolveTo({
+        text: '{"rewrittenAlertHtml":"ignored"}',
+        usedModel: AiModel.NemotronSuper,
+      });
+
+    const result = await service.generateRecommendations({
+      html: htmlWithForDetails,
+      issues: [],
+      model: AiModel.NemotronSuper,
+      headers: {},
+      url: 'https://example.test',
+      includeExamples: false,
+      useCompactAlertsPageContext: false,
+      forceLocalRepairForTesting: false,
+      callOpenRouterForMessages,
+      getShortModelName: (model) => model,
+    });
+
+    expect(result.formattedHtml).toContain('For details:');
+    expect(result.formattedHtml).not.toContain('Refer to:');
+    expect(alertRewriteSpy.parseAlertRewriteResponse).toHaveBeenCalledTimes(2);
   });
 
   it('attempts local repair from a partial response when wrapper html is invalid on every retry', async () => {

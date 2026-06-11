@@ -428,13 +428,33 @@ export class AlertRewriteGuardService {
         'text/html',
       );
       const originalLeadInsByHref = new Map<string, string>();
+      const originalLeadInsByNormalizedHref = new Map<string, string>();
+      const originalLeadInsByLinkText = new Map<string, string>();
       originalDoc.body.querySelectorAll('a[href]').forEach((anchor) => {
         const href = anchor.getAttribute('href') || '';
         if (!href || originalLeadInsByHref.has(href)) return;
         const leadIn = this.getOriginalStandaloneLinkLeadIn(anchor);
-        if (leadIn) originalLeadInsByHref.set(href, leadIn);
+        if (!leadIn) return;
+
+        originalLeadInsByHref.set(href, leadIn);
+        this.setUniqueLeadIn(
+          originalLeadInsByNormalizedHref,
+          this.normalizeHrefForLeadInMatch(href),
+          leadIn,
+        );
+        this.setUniqueLeadIn(
+          originalLeadInsByLinkText,
+          this.normalizeLinkTextForLeadInMatch(anchor.textContent || ''),
+          leadIn,
+        );
       });
-      if (!originalLeadInsByHref.size) return rewrittenHtml;
+      if (
+        !originalLeadInsByHref.size &&
+        !originalLeadInsByNormalizedHref.size &&
+        !originalLeadInsByLinkText.size
+      ) {
+        return rewrittenHtml;
+      }
 
       const rewrittenDoc = new DOMParser().parseFromString(
         rewrittenHtml || '',
@@ -444,9 +464,15 @@ export class AlertRewriteGuardService {
       if (!root) return rewrittenHtml;
 
       root.querySelectorAll('a[href]').forEach((anchor) => {
-        const originalLeadIn = originalLeadInsByHref.get(
-          anchor.getAttribute('href') || '',
-        );
+        const href = anchor.getAttribute('href') || '';
+        const originalLeadIn =
+          originalLeadInsByHref.get(href) ||
+          originalLeadInsByNormalizedHref.get(
+            this.normalizeHrefForLeadInMatch(href),
+          ) ||
+          originalLeadInsByLinkText.get(
+            this.normalizeLinkTextForLeadInMatch(anchor.textContent || ''),
+          );
         if (!originalLeadIn) return;
         this.restoreInlineStandaloneLeadIn(anchor, originalLeadIn);
         this.restorePreviousStandaloneLeadIn(anchor, originalLeadIn);
@@ -766,6 +792,34 @@ export class AlertRewriteGuardService {
   private cleanOriginalLeadIn(leadInText: string): string | null {
     const leadIn = leadInText.replace(/[.!?]\s*$/g, '').trim();
     return this.isValidStandaloneLinkLeadIn(leadIn) ? leadIn : null;
+  }
+
+  private setUniqueLeadIn(
+    map: Map<string, string>,
+    key: string,
+    leadIn: string,
+  ): void {
+    if (!key) return;
+    if (map.has(key) && map.get(key) !== leadIn) {
+      map.delete(key);
+      return;
+    }
+    map.set(key, leadIn);
+  }
+
+  private normalizeHrefForLeadInMatch(href: string): string {
+    const value = (href || '').trim();
+    if (!value) return '';
+    try {
+      const url = new URL(value, 'https://www.canada.ca');
+      return `${url.pathname}${url.search}${url.hash}`.toLowerCase();
+    } catch {
+      return value.toLowerCase();
+    }
+  }
+
+  private normalizeLinkTextForLeadInMatch(value: string): string {
+    return (value || '').replace(/\s+/g, ' ').trim().toLowerCase();
   }
 
   // Rebuilds a minimal alert wrapper when the model returns usable text but invalid structure.

@@ -250,6 +250,18 @@ describe('AlertRewriteGuardService', () => {
     expect(repaired).not.toContain('Refer to:');
   });
 
+  it('preserves for-details when the rewrite normalizes the same href to an absolute URL', () => {
+    const repaired = service.preserveOriginalStandaloneLinkLeadIns(
+      '<div class="alert alert-info"><h3>Benefit update</h3><p>The benefit will change.</p><p>Refer to: <a href="https://www.canada.ca/benefit.html">Benefit details</a></p></div>',
+      '<section class="alert alert-info"><p>The benefit will change.</p><p>For details: <a href="/benefit.html">Benefit details</a></p></section>',
+    );
+
+    expect(repaired).toContain(
+      '<p>For details: <a href="https://www.canada.ca/benefit.html">Benefit details</a></p>',
+    );
+    expect(repaired).not.toContain('Refer to:');
+  });
+
   it('keeps punctuation when a link is part of normal prose', () => {
     const repaired = service.removeStandaloneLinkTerminalPunctuation(
       '<div class="alert alert-info"><h3>Benefit update</h3><p>You can apply for the <a href="/benefit">Canada Groceries and Essentials Benefit</a>.</p></div>',
