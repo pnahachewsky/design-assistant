@@ -269,7 +269,7 @@ export class AlertRewriteService {
     }
     if (linkManifest.hasLinks) {
       styleRules.push(
-        'Use linkManifest as the source of truth for original links. If linkManifest.mustPreserveAtLeastOne is true, rewrittenAlertHtml must include at least one real <a> element whose href exactly matches one of linkManifest.items[].href values.',
+        'Use linkManifest as the source of truth for original links. If linkManifest.mustPreserveAtLeastOne is true, rewrittenAlertHtml must include at least one real <a> element whose href exactly matches one of linkManifest.items[].href values. If linkManifest.allowRemoval is true, you may remove extra links, but you must still keep at least one original link.',
       );
     }
     const retryInstructions = Array.from(
@@ -514,7 +514,7 @@ export class AlertRewriteService {
       count: items.length,
       hasLinks: items.length > 0,
       allowRemoval: canRemoveLinks,
-      mustPreserveAtLeastOne: items.length > 0 && !canRemoveLinks,
+      mustPreserveAtLeastOne: items.length > 0,
       items,
     };
   }

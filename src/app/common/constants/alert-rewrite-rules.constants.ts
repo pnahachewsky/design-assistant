@@ -17,8 +17,18 @@ export interface AlertRewriteRulesJson {
   };
 }
 
+interface AlertRewriteSharedGuidanceJson {
+  styleRules: string[];
+  exampleRules: string[];
+}
+
 const ALERT_REWRITE_RULES_PATH = new URL(
   'skills/alerts/alerts-rewriting/references/runtime-rewrite-rules.json',
+  document.baseURI,
+).toString();
+
+const ALERT_REWRITE_SHARED_GUIDANCE_PATH = new URL(
+  'skills/alerts/alerts-rewriting/references/shared-rewrite-guidance.json',
   document.baseURI,
 ).toString();
 
@@ -125,20 +135,73 @@ function toValidatedRules(raw: unknown): AlertRewriteRulesJson | null {
   };
 }
 
+function toValidatedSharedGuidance(
+  raw: unknown,
+): AlertRewriteSharedGuidanceJson | null {
+  if (!raw || typeof raw !== 'object') return null;
+  const root = raw as Record<string, unknown>;
+  const styleRules = root['styleRules'];
+  const exampleRules = root['exampleRules'];
+
+  if (!isStringArray(styleRules) || !isStringArray(exampleRules)) {
+    return null;
+  }
+
+  return {
+    styleRules,
+    exampleRules,
+  };
+}
+
+function mergeSharedGuidance(
+  rules: AlertRewriteRulesJson,
+  sharedGuidance: AlertRewriteSharedGuidanceJson,
+): AlertRewriteRulesJson {
+  return {
+    ...rules,
+    alertRewrite: {
+      ...rules.alertRewrite,
+      styleRulesBase: [
+        ...sharedGuidance.styleRules,
+        ...rules.alertRewrite.styleRulesBase,
+      ],
+      styleRulesWithExamples: [
+        ...sharedGuidance.exampleRules,
+        ...rules.alertRewrite.styleRulesWithExamples,
+      ],
+    },
+  };
+}
+
 export async function getAlertRewriteRules(): Promise<AlertRewriteRulesJson> {
   if (alertRewriteRulesCache) return alertRewriteRulesCache;
 
   try {
-    const response = await fetch(ALERT_REWRITE_RULES_PATH);
-    if (!response.ok) {
-      throw new Error(`Failed to load alert rewrite rules (${response.status}).`);
+    const [runtimeResponse, sharedGuidanceResponse] = await Promise.all([
+      fetch(ALERT_REWRITE_RULES_PATH),
+      fetch(ALERT_REWRITE_SHARED_GUIDANCE_PATH),
+    ]);
+    if (!runtimeResponse.ok) {
+      throw new Error(
+        `Failed to load alert rewrite rules (${runtimeResponse.status}).`,
+      );
     }
-    const payload = (await response.json()) as unknown;
+    if (!sharedGuidanceResponse.ok) {
+      throw new Error(
+        `Failed to load shared alert rewrite guidance (${sharedGuidanceResponse.status}).`,
+      );
+    }
+    const payload = (await runtimeResponse.json()) as unknown;
+    const sharedGuidancePayload = (await sharedGuidanceResponse.json()) as unknown;
     const validated = toValidatedRules(payload);
+    const sharedGuidance = toValidatedSharedGuidance(sharedGuidancePayload);
     if (!validated) {
       throw new Error('Invalid alert rewrite rules JSON schema.');
     }
-    alertRewriteRulesCache = validated;
+    if (!sharedGuidance) {
+      throw new Error('Invalid shared alert rewrite guidance JSON schema.');
+    }
+    alertRewriteRulesCache = mergeSharedGuidance(validated, sharedGuidance);
   } catch (err) {
     console.warn(
       'Unable to load alert rewrite rules JSON; using inline fallback.',

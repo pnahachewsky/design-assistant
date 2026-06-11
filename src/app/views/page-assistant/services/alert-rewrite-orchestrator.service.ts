@@ -325,9 +325,9 @@ export class AlertRewriteOrchestratorService {
           addRetryInstruction('noLinksAllowed', retryInstructions.noLinksAllowed);
         }
 
-        // Guard 4: if the source alert had a required link, do not let the
-        // rewrite drop it unless the issues/plan explicitly allow link removal.
-        if (originalHasAnchor && !rewrittenHasAnchor && !allowLinkRemoval) {
+        // Guard 4: if the source alert had links, do not let the rewrite drop
+        // every link. Link-removal issues may remove extras, not all links.
+        if (originalHasAnchor && !rewrittenHasAnchor) {
           addRetryInstruction('mustKeepLink', retryInstructions.mustKeepLink);
         }
 

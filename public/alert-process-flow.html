@@ -102,6 +102,13 @@
       box-shadow: var(--shadow);
     }
 
+    .hero-layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1.35fr) minmax(260px, 0.65fr);
+      gap: 28px;
+      align-items: end;
+    }
+
     .eyebrow {
       margin-bottom: 12px;
       color: var(--green);
@@ -118,24 +125,28 @@
       font-size: 1.08rem;
     }
 
-    .summary-bar {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      margin-top: 22px;
+    .process-summary {
+      padding: 18px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--soft);
     }
 
-    .pill {
-      display: inline-flex;
-      align-items: center;
-      min-height: 36px;
-      padding: 7px 12px;
-      border: 1px solid var(--line);
-      border-radius: 999px;
-      background: var(--soft);
-      color: var(--ink);
+    .process-summary h2 {
+      margin-bottom: 12px;
+      font-size: 1.05rem;
+      font-family: Aptos, "Segoe UI", Arial, sans-serif;
+    }
+
+    .process-summary ol {
+      margin: 0;
+      padding-left: 1.45rem;
       font-size: 0.9rem;
-      font-weight: 650;
+      color: var(--muted);
+    }
+
+    .process-summary li + li {
+      margin-top: 6px;
     }
 
     .quick-nav {
@@ -303,6 +314,14 @@
         padding: 20px;
       }
 
+      .hero-layout {
+        grid-template-columns: 1fr;
+      }
+
+      .process-summary {
+        margin-top: 18px;
+      }
+
       .diagram {
         padding: 10px;
       }
@@ -338,18 +357,25 @@
 <body>
   <main>
     <section class="hero">
-      <p class="eyebrow">AIDA alert process</p>
-      <h1>Alert review and rewrite overview</h1>
-      <p class="lede">
-        This report explains how AIDA reviews Canada.ca alerts, identifies issues, creates recommended rewrites, checks the results,
-        and applies accepted changes back to the page. It is intended as a plain-language overview of the current alert process.
-      </p>
-      <div class="summary-bar" aria-label="Process summary">
-        <span class="pill">Find alerts</span>
-        <span class="pill">Identify issues</span>
-        <span class="pill">Rewrite selected alerts</span>
-        <span class="pill">Check quality</span>
-        <span class="pill">Patch the page</span>
+      <div class="hero-layout">
+        <div>
+          <p class="eyebrow">AIDA alert process</p>
+          <h1>Alert review and rewrite overview</h1>
+          <p class="lede">
+            This report explains how AIDA reviews Canada.ca alerts, identifies issues, creates recommended rewrites, checks the results,
+            and applies accepted changes back to the page. It is intended as a plain-language overview of the current alert process.
+          </p>
+        </div>
+        <aside class="process-summary" aria-label="Process summary">
+          <h2>Process summary</h2>
+          <ol>
+            <li>Find alerts</li>
+            <li>Identify issues</li>
+            <li>Rewrite selected alerts</li>
+            <li>Check quality</li>
+            <li>Patch the page</li>
+          </ol>
+        </aside>
       </div>
     </section>
 
@@ -357,7 +383,7 @@
       <a href="#decision-visual">Decision visual</a>
       <a href="#review-flow">Review flow</a>
       <a href="#rewrite-flow">Rewrite flow</a>
-      <a href="#quality-checks">Main checks</a>
+      <a href="#quality-checks">What AIDA checks for</a>
       <a href="#detailed-guardrails">Guardrail logic</a>
       <a href="#toggles">Options</a>
       <a href="#source-files">Reference files</a>
@@ -463,7 +489,7 @@ flowchart TD
     </section>
 
     <section class="panel" id="quality-checks">
-      <h2>Main checks</h2>
+      <h2>What AIDA checks for</h2>
       <p class="intro">
         These are the main things AIDA checks before a rewritten alert can be applied to the page. The next section explains how
         AIDA responds when one of these checks needs action.
@@ -562,7 +588,9 @@ flowchart TD
           <span class="label label-blue">Current rule source</span>
           <h3>Where the guardrails come from</h3>
           <p>
-            Retry text and runtime rule fragments come from
+            Shared behavioural guidance comes from
+            <a href="./skills/alerts/alerts-rewriting/references/shared-rewrite-guidance.json">shared-rewrite-guidance.json</a>.
+            Retry text and runtime-specific rule fragments come from
             <a href="./skills/alerts/alerts-rewriting/references/runtime-rewrite-rules.json">runtime-rewrite-rules.json</a>.
             The broader rewrite contract comes from
             <a href="./skills/alerts/alerts-rewriting/references/rewrite-instructions.json">rewrite-instructions.json</a>.
@@ -616,6 +644,7 @@ flowchart TD
           <p>Used to guide rewritten alert content and output format.</p>
           <ul>
             <li><a href="./skills/alerts/alerts-rewriting/SKILL.md">skills/alerts/alerts-rewriting/SKILL.md</a></li>
+            <li><a href="./skills/alerts/alerts-rewriting/references/shared-rewrite-guidance.json">skills/alerts/alerts-rewriting/references/shared-rewrite-guidance.json</a></li>
             <li><a href="./skills/alerts/alerts-rewriting/references/rewrite-instructions.json">skills/alerts/alerts-rewriting/references/rewrite-instructions.json</a></li>
             <li><a href="./skills/alerts/alerts-rewriting/references/examples.json">skills/alerts/alerts-rewriting/references/examples.json</a></li>
             <li><a href="./skills/alerts/alerts-rewriting/assets/rewriting-output-schema.json">skills/alerts/alerts-rewriting/assets/rewriting-output-schema.json</a></li>
@@ -624,7 +653,10 @@ flowchart TD
 
         <article class="source-card">
           <h3>Runtime rewrite rules</h3>
-          <p>Used by the current alert rewrite service for per-alert prompts, retry text, and runtime compatibility.</p>
+          <p>
+            Used by the current alert rewrite service for per-alert prompts, retry text, and runtime-specific output fields.
+            The runtime service also loads the shared rewrite guidance above.
+          </p>
           <ul>
             <li><a href="./skills/alerts/alerts-rewriting/references/runtime-rewrite-rules.json">skills/alerts/alerts-rewriting/references/runtime-rewrite-rules.json</a></li>
           </ul>

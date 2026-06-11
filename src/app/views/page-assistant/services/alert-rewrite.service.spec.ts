@@ -52,6 +52,15 @@ describe('AlertRewriteService', () => {
             { status: 200 },
           );
         }
+        if (url.includes('skills/alerts/alerts-rewriting/references/shared-rewrite-guidance.json')) {
+          return new Response(
+            JSON.stringify({
+              styleRules: ['Use shared alert rewrite guidance.'],
+              exampleRules: ['Use examples as pattern guidance only.'],
+            }),
+            { status: 200 },
+          );
+        }
         if (
           url.includes(
             'skills/alerts/alerts-rewriting/references/runtime-rewrite-rules.json',
@@ -96,6 +105,7 @@ describe('AlertRewriteService', () => {
     };
 
     expect(fetchSpy).toHaveBeenCalled();
+    expect(userPayload.styleRules).toContain('Use shared alert rewrite guidance.');
     expect(userPayload.styleRules).toContain(
       '[Canada.ca style C1_avoid_please must] Do not use "please" as a courtesy filler.',
     );
@@ -111,6 +121,15 @@ describe('AlertRewriteService', () => {
         if (url.includes('skills/canada-ca-style/references/writing-rules.json')) {
           return new Response(
             JSON.stringify({ version: 'test', rules: [], examples: [] }),
+            { status: 200 },
+          );
+        }
+        if (url.includes('skills/alerts/alerts-rewriting/references/shared-rewrite-guidance.json')) {
+          return new Response(
+            JSON.stringify({
+              styleRules: ['Use shared alert rewrite guidance.'],
+              exampleRules: ['Use examples as pattern guidance only.'],
+            }),
             { status: 200 },
           );
         }
@@ -172,6 +191,15 @@ describe('AlertRewriteService', () => {
         if (url.includes('skills/canada-ca-style/references/writing-rules.json')) {
           return new Response(
             JSON.stringify({ version: 'test', rules: [], examples: [] }),
+            { status: 200 },
+          );
+        }
+        if (url.includes('skills/alerts/alerts-rewriting/references/shared-rewrite-guidance.json')) {
+          return new Response(
+            JSON.stringify({
+              styleRules: ['Use shared alert rewrite guidance.'],
+              exampleRules: ['Use examples as pattern guidance only.'],
+            }),
             { status: 200 },
           );
         }
@@ -275,6 +303,15 @@ describe('AlertRewriteService', () => {
             { status: 200 },
           );
         }
+        if (url.includes('skills/alerts/alerts-rewriting/references/shared-rewrite-guidance.json')) {
+          return new Response(
+            JSON.stringify({
+              styleRules: ['Use shared alert rewrite guidance.'],
+              exampleRules: ['Use examples as pattern guidance only.'],
+            }),
+            { status: 200 },
+          );
+        }
         if (
           url.includes(
             'skills/alerts/alerts-rewriting/references/runtime-rewrite-rules.json',
@@ -359,6 +396,29 @@ describe('AlertRewriteService', () => {
     ) as { linkManifest: { allowRemoval: boolean; mustPreserveAtLeastOne: boolean } };
     expect(misclassifiedPayload.linkManifest.allowRemoval).toBeFalse();
     expect(misclassifiedPayload.linkManifest.mustPreserveAtLeastOne).toBeTrue();
+
+    const multiLinkMessages = await service.buildAlertRewriteMessages({
+      originalAlertText:
+        'The benefit will replace the credit. For details: Benefit and payment details.',
+      originalAlertHtml:
+        '<section class="alert alert-info"><p>The benefit will replace the credit.</p><p>For details:</p><ul><li><a href="/benefit.html">Benefit details</a></li><li><a href="/payment.html">Payment details</a></li></ul></section>',
+      plan,
+      issues: [{ category: 'Too many links' }],
+      examples: [],
+    });
+    const multiLinkPayload = JSON.parse(
+      multiLinkMessages[1]?.content || '{}',
+    ) as {
+      styleRules: string[];
+      linkManifest: { allowRemoval: boolean; mustPreserveAtLeastOne: boolean };
+    };
+    expect(multiLinkPayload.linkManifest.allowRemoval).toBeTrue();
+    expect(multiLinkPayload.linkManifest.mustPreserveAtLeastOne).toBeTrue();
+    expect(
+      multiLinkPayload.styleRules.some((rule) =>
+        rule.includes('you may remove extra links, but you must still keep at least one original link'),
+      ),
+    ).toBeTrue();
   });
 
   it('does not rank examples by alert type', () => {

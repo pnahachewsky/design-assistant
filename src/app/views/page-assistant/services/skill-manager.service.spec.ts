@@ -32,6 +32,7 @@ describe('SkillManagerService', () => {
         promptKeys: ['alertsRecommendations'],
         outputModes: ['json'],
         defaultReferencePaths: [
+          'skills/alerts/alerts-rewriting/references/shared-rewrite-guidance.json',
           'skills/alerts/alerts-rewriting/references/rewrite-instructions.json',
           'skills/alerts/alerts-rewriting/references/runtime-rewrite-rules.json',
         ],
@@ -109,6 +110,12 @@ describe('SkillManagerService', () => {
         }
         if (url.includes('issue-analysis-instructions.json')) {
           return new Response('{"objective":"Analyze alerts."}', { status: 200 });
+        }
+        if (url.includes('shared-rewrite-guidance.json')) {
+          return new Response(
+            '{"styleRules":["Use shared guidance."],"exampleRules":["Use examples as patterns."]}',
+            { status: 200 },
+          );
         }
         if (url.includes('rewrite-instructions.json')) {
           return new Response('{"rewriteRules":["Use one link max."]}', { status: 200 });
@@ -203,6 +210,9 @@ describe('SkillManagerService', () => {
     );
     expect(result.loadedPaths).not.toContain(
       'skills/alerts/alerts-issues/assets/issues-output-schema.json',
+    );
+    expect(result.loadedPaths).toContain(
+      'skills/alerts/alerts-rewriting/references/shared-rewrite-guidance.json',
     );
     expect(result.loadedPaths).toContain(
       'skills/alerts/alerts-rewriting/references/rewrite-instructions.json',

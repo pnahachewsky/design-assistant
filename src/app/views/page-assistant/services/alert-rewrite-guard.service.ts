@@ -300,7 +300,7 @@ export class AlertRewriteGuardService {
     let repairedHtml = candidate.rewrittenAlertHtml;
     if (!originalHasAnchor) {
       repairedHtml = this.removeAnchorsPreservingText(repairedHtml);
-    } else if (!params.allowLinkRemoval && !/<a\b/i.test(repairedHtml)) {
+    } else if (!/<a\b/i.test(repairedHtml)) {
       repairedHtml = this.ensureAtLeastOneOriginalLink(
         repairedHtml,
         params.originalAlertHtml,
@@ -338,7 +338,7 @@ export class AlertRewriteGuardService {
     const repairedHasAnchor = /<a\b/i.test(repaired.rewrittenAlertHtml);
     if (!this.hasSemanticHeading(repaired.rewrittenAlertHtml)) return null;
     if (!originalHasAnchor && repairedHasAnchor) return null;
-    if (originalHasAnchor && !repairedHasAnchor && !params.allowLinkRemoval) {
+    if (originalHasAnchor && !repairedHasAnchor) {
       return null;
     }
     if (

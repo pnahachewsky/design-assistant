@@ -336,6 +336,30 @@ describe('AlertRewriteGuardService', () => {
     ).toBeFalse();
   });
 
+  it('restores one original link when too-many-links repair removed every link', () => {
+    mockParsedAlertRewriteResult();
+
+    const result = service.tryLocalAlertRewriteRepair({
+      result: {
+        rewrittenAlertHtml:
+          '<section class="alert alert-info"><h3>Benefit update</h3><p>The benefit will replace the credit.</p></section>',
+        rewrittenHeading: 'Benefit update',
+        rewrittenAlert: 'The benefit will replace the credit.',
+        appliedDirectives: [],
+        exampleIdsUsed: [],
+      },
+      originalAlertHtml:
+        '<section class="alert alert-info"><p>The benefit will replace the credit.</p><p>For details:</p><ul><li><a href="/benefit.html">Benefit details</a></li><li><a href="/payment.html">Payment details</a></li></ul></section>',
+      originalHeading: '',
+      originalAlertText: 'The benefit will replace the credit. Benefit details. Payment details.',
+      plan: infoPlan,
+      selectedExamples: [],
+      allowLinkRemoval: true,
+    });
+
+    expect(result?.rewrittenAlertHtml).toContain('<a href="/benefit.html">');
+  });
+
   it('preserves multi-node alert replacements so fallback notices can appear above the alert', () => {
     const result = service.applyAlertHtmlRewrites(
       '<body><main><section class="alert alert-info"><p>Original alert text.</p></section></main></body>',
