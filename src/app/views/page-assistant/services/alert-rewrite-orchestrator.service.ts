@@ -520,6 +520,11 @@ export class AlertRewriteOrchestratorService {
           rewriteResult.rewrittenAlertHtml,
         );
       rewriteResult.rewrittenAlertHtml =
+        this.alertRewriteGuard.preserveOriginalStandaloneLinkLeadIns(
+          rewriteResult.rewrittenAlertHtml,
+          alertHtml,
+        );
+      rewriteResult.rewrittenAlertHtml =
         this.alertRewriteGuard.removeStandaloneLinkTerminalPunctuation(
           rewriteResult.rewrittenAlertHtml,
         );

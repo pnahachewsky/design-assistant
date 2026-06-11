@@ -418,6 +418,46 @@ export class AlertRewriteGuardService {
     return this.stripStandaloneLinkTerminalPunctuation(alertHtml);
   }
 
+  preserveOriginalStandaloneLinkLeadIns(
+    rewrittenHtml: string,
+    originalAlertHtml: string,
+  ): string {
+    try {
+      const originalDoc = new DOMParser().parseFromString(
+        originalAlertHtml || '',
+        'text/html',
+      );
+      const originalLeadInsByHref = new Map<string, string>();
+      originalDoc.body.querySelectorAll('a[href]').forEach((anchor) => {
+        const href = anchor.getAttribute('href') || '';
+        if (!href || originalLeadInsByHref.has(href)) return;
+        const leadIn = this.getOriginalStandaloneLinkLeadIn(anchor);
+        if (leadIn) originalLeadInsByHref.set(href, leadIn);
+      });
+      if (!originalLeadInsByHref.size) return rewrittenHtml;
+
+      const rewrittenDoc = new DOMParser().parseFromString(
+        rewrittenHtml || '',
+        'text/html',
+      );
+      const root = rewrittenDoc.body.firstElementChild as HTMLElement | null;
+      if (!root) return rewrittenHtml;
+
+      root.querySelectorAll('a[href]').forEach((anchor) => {
+        const originalLeadIn = originalLeadInsByHref.get(
+          anchor.getAttribute('href') || '',
+        );
+        if (!originalLeadIn) return;
+        this.restoreInlineStandaloneLeadIn(anchor, originalLeadIn);
+        this.restorePreviousStandaloneLeadIn(anchor, originalLeadIn);
+      });
+
+      return root.outerHTML.trim();
+    } catch {
+      return rewrittenHtml;
+    }
+  }
+
   // The remaining helpers support the guard logic above and stay private so the
   // orchestration layer only depends on the high-level validation/repair API.
   private normalizeLeadInText(value: string): string {
@@ -644,16 +684,88 @@ export class AlertRewriteGuardService {
       if (!root) return rewrittenHtml;
       if (root.querySelector('a')) return root.outerHTML.trim();
 
+      const leadIn = this.getOriginalStandaloneLinkLeadIn(sourceAnchor) || 'Refer to:';
       const linkParagraph = rewrittenDoc.createElement('p');
       linkParagraph.insertAdjacentHTML(
         'beforeend',
-        `Refer to: ${sourceAnchor.outerHTML}`,
+        `${leadIn} ${sourceAnchor.outerHTML}`,
       );
       root.appendChild(linkParagraph);
       return root.outerHTML.trim();
     } catch {
       return rewrittenHtml;
     }
+  }
+
+  private getOriginalStandaloneLinkLeadIn(sourceAnchor: Element): string | null {
+    const inlineParagraph = sourceAnchor.closest('p');
+    if (inlineParagraph && inlineParagraph.querySelectorAll('a').length === 1) {
+      const ownerDocument = inlineParagraph.ownerDocument;
+      const beforeRange = ownerDocument.createRange();
+      beforeRange.setStart(inlineParagraph, 0);
+      beforeRange.setEndBefore(sourceAnchor);
+      const leadIn = this.cleanOriginalLeadIn(beforeRange.toString());
+      beforeRange.detach();
+      if (leadIn) return leadIn;
+    }
+
+    const linkBlock = sourceAnchor.closest('p, ul, ol');
+    let previous = linkBlock?.previousElementSibling || null;
+    while (previous) {
+      const text = (previous.textContent || '').trim();
+      if (text) {
+        return this.cleanOriginalLeadIn(text);
+      }
+      previous = previous.previousElementSibling;
+    }
+    return null;
+  }
+
+  private restoreInlineStandaloneLeadIn(anchor: Element, originalLeadIn: string): void {
+    const paragraph = anchor.closest('p');
+    if (!paragraph || paragraph.querySelectorAll('a').length !== 1) return;
+
+    const ownerDocument = paragraph.ownerDocument;
+    const beforeRange = ownerDocument.createRange();
+    beforeRange.setStart(paragraph, 0);
+    beforeRange.setEndBefore(anchor);
+    const currentLeadIn = this.cleanOriginalLeadIn(beforeRange.toString());
+    beforeRange.detach();
+    if (!currentLeadIn || currentLeadIn === originalLeadIn) return;
+
+    while (paragraph.firstChild && paragraph.firstChild !== anchor) {
+      paragraph.removeChild(paragraph.firstChild);
+    }
+    paragraph.insertBefore(
+      ownerDocument.createTextNode(`${originalLeadIn} `),
+      anchor,
+    );
+  }
+
+  private restorePreviousStandaloneLeadIn(
+    anchor: Element,
+    originalLeadIn: string,
+  ): void {
+    const linkBlock = anchor.closest('ul, ol');
+    if (!linkBlock) return;
+
+    let previous = linkBlock.previousElementSibling;
+    while (previous) {
+      const currentLeadIn = this.cleanOriginalLeadIn(previous.textContent || '');
+      if (currentLeadIn) {
+        if (currentLeadIn !== originalLeadIn) {
+          previous.textContent = originalLeadIn;
+        }
+        return;
+      }
+      if ((previous.textContent || '').trim()) return;
+      previous = previous.previousElementSibling;
+    }
+  }
+
+  private cleanOriginalLeadIn(leadInText: string): string | null {
+    const leadIn = leadInText.replace(/[.!?]\s*$/g, '').trim();
+    return this.isValidStandaloneLinkLeadIn(leadIn) ? leadIn : null;
   }
 
   // Rebuilds a minimal alert wrapper when the model returns usable text but invalid structure.

@@ -228,6 +228,28 @@ describe('AlertRewriteGuardService', () => {
     );
   });
 
+  it('preserves an original standalone for-details lead-in before a link list', () => {
+    const repaired = service.preserveOriginalStandaloneLinkLeadIns(
+      '<div class="alert alert-info"><h3>Benefit update</h3><p>The benefit will change.</p><p>Refer to:</p><ul><li><a href="/benefit.html">Benefit details</a></li><li><a href="/payment.html">Payment details</a></li></ul></div>',
+      '<section class="alert alert-info"><p>The benefit will change.</p><p>For details:</p><ul><li><a href="/benefit.html">Benefit details</a></li><li><a href="/payment.html">Payment details</a></li></ul></section>',
+    );
+
+    expect(repaired).toContain('<p>For details:</p>');
+    expect(repaired).not.toContain('<p>Refer to:</p>');
+  });
+
+  it('preserves an original inline for-details lead-in before a standalone link', () => {
+    const repaired = service.preserveOriginalStandaloneLinkLeadIns(
+      '<div class="alert alert-info"><h3>Benefit update</h3><p>The benefit will change.</p><p>Refer to: <a href="/benefit.html">Benefit details</a></p></div>',
+      '<section class="alert alert-info"><p>The benefit will change.</p><p>For details: <a href="/benefit.html">Benefit details</a></p></section>',
+    );
+
+    expect(repaired).toContain(
+      '<p>For details: <a href="/benefit.html">Benefit details</a></p>',
+    );
+    expect(repaired).not.toContain('Refer to:');
+  });
+
   it('keeps punctuation when a link is part of normal prose', () => {
     const repaired = service.removeStandaloneLinkTerminalPunctuation(
       '<div class="alert alert-info"><h3>Benefit update</h3><p>You can apply for the <a href="/benefit">Canada Groceries and Essentials Benefit</a>.</p></div>',
@@ -357,7 +379,9 @@ describe('AlertRewriteGuardService', () => {
       allowLinkRemoval: true,
     });
 
-    expect(result?.rewrittenAlertHtml).toContain('<a href="/benefit.html">');
+    expect(result?.rewrittenAlertHtml).toContain(
+      '<p>For details: <a href="/benefit.html">Benefit details</a></p>',
+    );
   });
 
   it('preserves multi-node alert replacements so fallback notices can appear above the alert', () => {
