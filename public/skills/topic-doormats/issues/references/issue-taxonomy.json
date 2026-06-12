@@ -2,7 +2,7 @@
   "version": "draft-2026-06-01",
   "scope": "Issue analysis for GCWeb topic page doormats.",
   "precondition": "Run this analysis only when AIDA heuristics have detected one or more topic doormat items. Missing doormat-section detection is handled before invoking this skill.",
-  "analysis_unit": "Analyze one complete topic doormat set at a time. Compare all doormats in the set before assigning issues. Use caller-provided H2 section metadata only for section-local numbering, the 9-doormat limit, and issues that explicitly require section context.",
+  "analysis_unit": "Analyze one complete topic doormat set at a time. Compare all doormats in the set before assigning issues. Also audit description style within each caller-provided H2 section. Use caller-provided H2 section metadata for section-local numbering, the 9-doormat limit, and section-level style issues.",
   "reporting_unit": "Return issue reports for each affected doormat item. If an editorial issue applies to a whole section rather than a single doormat, return it in section_issues with the affected section_index. Do not repeat section-level issues on every doormat. Report mixed-description-style-in-section as one section_issues item attached to the most affected supplied section, even though the style comparison is set-wide. Report too-many-doormats-in-section as one section_issues item for the affected H2 section, not as repeated per-doormat issues. Do not also report inconsistent-description-style for individual doormats when mixed-description-style-in-section is reported.",
   "analysis_sequence": [
     {
@@ -40,6 +40,7 @@
         "description-repeats-link-text",
         "duplicate-or-near-duplicate-description",
         "mixed-description-style-in-section",
+        "section-description-style-outlier",
         "inconsistent-link-name-style",
         "inconsistent-description-style",
         "enhancement-label-not-needed",
@@ -62,7 +63,7 @@
     "mixed_description_style": "For mixed-description-style-in-section, name the style groups and include 2 to 4 representative doormat indexes per style group. Do not list every doormat. Do not quote full descriptions. Example: Mixes keyword-list and action-verb descriptions. Keyword-list examples: 1, 3, 5. Action-verb examples: 2, 6, 10."
   },
   "mandatory_description_style_audit": {
-    "instruction": "Always audit description style across the complete topic doormat set during the judgment/editorial pass. Apply one decision path: if the set mixes two or more clear description styles enough to reduce scannability or comparability, report one section-level mixed-description-style-in-section issue in section_issues for the most affected supplied section. Do not report individual inconsistent-description-style rows for doormats already covered by that mixed-style issue. If the set is otherwise consistent and only one or two descriptions are clear outliers, report inconsistent-description-style only on those outlier doormats. Do not treat a live Canada.ca page as acceptable by default.",
+    "instruction": "Always audit description style within each H2 section and across the complete topic doormat set during the judgment/editorial pass. Apply one decision path per H2 section: if the section mixes two or more clear description styles enough to reduce scannability or comparability, report one section-level mixed-description-style-in-section issue in section_issues for that section. Do this even when the section is small, including sections with 4 or fewer doormats, when the split is visible. Do not report individual inconsistent-description-style rows for doormats already covered by that section's mixed-style issue. If the section is otherwise consistent and only one or two descriptions are clear outliers, report inconsistent-description-style only on those outlier doormats. Do not treat a live Canada.ca page as acceptable by default.",
     "style_groups_to_compare": [
       "noun/topic keyword-list descriptions",
       "action-verb task phrases",
@@ -74,6 +75,8 @@
     "must_flag_when": [
       "The section mixes noun/topic keyword-list descriptions with action-verb task phrases.",
       "The section mixes How to descriptions with noun/topic keyword-list descriptions.",
+      "The section mixes noun/topic or benefit-summary descriptions with imperative, question-answer, or How to descriptions.",
+      "A small section, including a section with 4 or fewer doormats, has a visible split between noun/topic summary descriptions and action-oriented or How to descriptions.",
       "The section mixes short keyword fragments with sentence-style explanations or benefit summaries.",
       "The section starts some descriptions with verbs and others with nouns or topic labels in a way that makes the set feel inconsistent."
     ],
@@ -116,10 +119,10 @@
       "eligibility-or-benefit-summary",
       "mixed-or-unclear"
     ],
-    "instruction": "Identify the detected link text style and detected description style for each doormat. Do not enforce one universal style across all pages. Compare style across the complete supplied doormat set. Use mixed-description-style-in-section for a broad mix of description styles in the set, attached to the most affected supplied section for reporting. Use inconsistent-description-style only for one or two clear outliers in an otherwise consistent set."
+    "instruction": "Identify the detected link text style and detected description style for each doormat. Do not enforce one universal style across all pages. Compare style within each H2 section and across the complete supplied doormat set. Use mixed-description-style-in-section when a supplied H2 section has a clear mix of description styles. Use inconsistent-description-style only for one or two clear outliers in an otherwise consistent section."
   },
   "style_inconsistency_reporting": {
-    "minimum_standard": "Do not report a style inconsistency just because descriptions are not identical. Use mixed-description-style-in-section when a broad mix of two or more clear description styles across the supplied set reduces scannability or comparability. Use inconsistent-description-style only for one or two clear outliers from an otherwise consistent set.",
+    "minimum_standard": "Do not report a style inconsistency just because descriptions are not identical. Use mixed-description-style-in-section when an H2 section has a clear mix of two or more description styles that reduces scannability or comparability. This can apply in small sections when the split is visible. Use inconsistent-description-style only for one or two clear outliers from an otherwise consistent section.",
     "dominant_style_required": true,
     "outlier_only_reporting": true,
     "mixed_section_reporting_allowed": true,
@@ -147,6 +150,7 @@
       "Use description-too-long for length issues; do not also report inconsistent-description-style for the same length evidence.",
       "Use description-lacks-clarity or description-missing-needed-information for unclear or incomplete descriptions; do not use inconsistent-description-style as a substitute.",
       "Use mixed-description-style-in-section as a section-level issue when the set-wide style mix is the actual problem; do not also report individual inconsistent-description-style rows for doormats covered by that same issue.",
+      "Use section-description-style-outlier when one internally consistent section clearly differs from the dominant page-level section style.",
       "Use description-incorrect-style only when the description does not fit any accepted style."
     ],
     "evidence_required": [
@@ -160,7 +164,8 @@
   },
   "set_level_checks": [
     "Check whether link texts use one grammatical style across the set, but report only clear outliers from a dominant style.",
-    "Check whether descriptions use one description style across the complete set. If the set-wide mix reduces scannability or comparability, report one mixed-description-style-in-section issue in section_issues. If the set is otherwise consistent, report only clear outlier descriptions.",
+    "Check whether descriptions use one description style within each H2 section and across the complete set. If one section has a visible section-level mix, report one mixed-description-style-in-section issue in section_issues for that section. If a section is otherwise consistent, report only clear outlier descriptions.",
+    "Check whether internally consistent H2 sections use compatible styles with each other. If one section clearly differs from the dominant page-level section style, report one section-description-style-outlier issue in section_issues for that section. If there are only two internally consistent sections and they use different styles, treat the first section's style as the page precedent and report the later section as the differing section unless there is clear evidence that the difference is intentional.",
     "Check whether each description is specific enough to distinguish its doormat from the others.",
     "Check for duplicate or near-duplicate descriptions across the set.",
     "Check for repeated generic task lists across the set.",
@@ -354,13 +359,26 @@
       "group": "Description clarity",
       "label": "Mixed description styles in section",
       "severity": "Medium",
-      "condition": "The doormat section mixes two or more description styles, such as noun/topic keyword lists, action-verb task phrases, How to phrases, audience or benefit summaries, sentence-style explanations, or short keyword fragments.",
+      "condition": "The doormat section mixes two or more description styles, such as noun/topic keyword lists, action-verb task phrases, imperative or question-answer descriptions, How to phrases, audience or benefit summaries, sentence-style explanations, or short keyword fragments. This includes small sections when the section has a visible split between noun/topic summaries and action-oriented or How to descriptions.",
       "recommendation": "Rewrite the descriptions so they use one consistent description style across the section.",
       "reporting": "Report this issue once in section_issues for the affected section. Do not report it under individual doormats. Do not require a dominant style, rare outliers, or a character-length problem. Evidence must be concise: include the mixed style types and 2 to 4 representative doormat indexes per style group. Do not list every doormat or quote full descriptions.",
       "evidence_required": [
         "section_description_styles",
         "representative_doormat_indexes",
         "why_the_mix_reduces_scannability"
+      ]
+    },
+    {
+      "id": "section-description-style-outlier",
+      "group": "Description clarity",
+      "label": "Section description style differs from page",
+      "severity": "Low",
+      "condition": "One H2 section is internally consistent, but its dominant description style clearly differs from the dominant description style used by other internally consistent H2 sections on the page. When there are only two internally consistent sections with different styles, the later section differs from the page precedent set by the first section.",
+      "recommendation": "Align this section with the dominant page description style unless the section has a clear reason to use a different pattern.",
+      "reporting": "Report this issue once in section_issues for each affected section. Do not report it when there is no clear dominant page-level section style, when the section is internally mixed, or when the difference is only length, detail, or topic.",
+      "evidence_required": [
+        "dominant_page_section_style",
+        "outlier_section_style"
       ]
     },
     {

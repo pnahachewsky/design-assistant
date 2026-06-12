@@ -241,6 +241,11 @@
       gap: 10px;
     }
 
+    .source-card-with-aside {
+      grid-template-columns: minmax(0, 1fr) minmax(320px, 0.95fr);
+      align-items: start;
+    }
+
     .source-card code,
     .inline-code {
       font-family: Consolas, "Liberation Mono", monospace;
@@ -250,6 +255,52 @@
       border: 1px solid var(--line);
       border-radius: 4px;
       padding: 1px 4px;
+    }
+
+    .ex-hide {
+      margin-top: 14px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--paper);
+    }
+
+    .source-card .ex-hide {
+      margin-top: 0;
+      background: var(--soft);
+    }
+
+    .ex-hide summary {
+      cursor: pointer;
+      padding: 14px 18px;
+      font-weight: 800;
+    }
+
+    .ex-hide pre {
+      margin: 0;
+      padding: 0 18px 18px;
+      color: var(--muted);
+      font-family: Aptos, "Segoe UI", Arial, sans-serif;
+      font-size: 0.95rem;
+      line-height: 1.55;
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+    }
+
+    .ex-hide-content {
+      padding: 0 18px 18px;
+      color: var(--muted);
+    }
+
+    .ex-hide-content p {
+      margin-bottom: 12px;
+    }
+
+    .ex-hide-content ul {
+      margin-top: 8px;
+    }
+
+    .ex-hide-content > ul {
+      padding-left: 1.1rem;
     }
 
     .note {
@@ -283,6 +334,10 @@
 
       .panel {
         padding: 20px;
+      }
+
+      .source-card-with-aside {
+        grid-template-columns: 1fr;
       }
     }
 
@@ -449,14 +504,117 @@
       </p>
 
       <div class="source-list">
-        <article class="source-card">
-          <h3>Topic doormat issue review</h3>
-          <p>Used to identify topic doormat problems before rewriting starts.</p>
-          <ul>
-            <li><a href="./skills/topic-doormats/issues/SKILL.md">skills/topic-doormats/issues/SKILL.md</a></li>
-            <li><a href="./skills/topic-doormats/issues/references/issue-taxonomy.json">skills/topic-doormats/issues/references/issue-taxonomy.json</a></li>
-            <li><a href="./skills/topic-doormats/issues/assets/issues-output-schema.json">skills/topic-doormats/issues/assets/issues-output-schema.json</a></li>
-          </ul>
+        <article class="source-card source-card-with-aside">
+          <div>
+            <h3>Topic doormat issue review</h3>
+            <p>Used to identify topic doormat problems before rewriting starts.</p>
+            <ul>
+              <li><a href="./skills/topic-doormats/issues/SKILL.md">skills/topic-doormats/issues/SKILL.md</a></li>
+              <li><a href="./skills/topic-doormats/issues/references/issue-taxonomy.json">skills/topic-doormats/issues/references/issue-taxonomy.json</a></li>
+              <li><a href="./skills/topic-doormats/issues/assets/issues-output-schema.json">skills/topic-doormats/issues/assets/issues-output-schema.json</a></li>
+            </ul>
+          </div>
+
+          <details class="ex-hide">
+            <summary>Anne's original categories</summary>
+            <div class="ex-hide-content">
+              <p>
+                I outlined some possible <strong>doormat pain point categories</strong>. In bold is the potential category,
+                sub-bullets contain the more detailed issue. Let me know if this helps or if you need something else.
+              </p>
+              <ul>
+                <li>
+                  <strong>Link code issue</strong>
+                  <ul>
+                    <li>Broken link</li>
+                    <li>Misdirected link (wrong page or wrong anchored location)</li>
+                    <li>More than one link</li>
+                  </ul>
+                </li>
+                <li>
+                  <strong>Link name</strong>
+                  <ul>
+                    <li>
+                      Lacks clarity (must provide clear choice)
+                      <ul>
+                        <li>Must be descriptive and unique on page</li>
+                      </ul>
+                    </li>
+                    <li>
+                      Too long (wordy)
+                      <ul>
+                        <li>EN ideally under 35 characters (with spaces)</li>
+                        <li>FR ideally 45 characters (with spaces)</li>
+                      </ul>
+                    </li>
+                    <li>
+                      Too different from destination page title
+                      <ul>
+                        <li>Does not need to be exact match of destination page title, but sh convery similar idea</li>
+                      </ul>
+                    </li>
+                  </ul>
+                </li>
+                <li>
+                  <strong>Repeat link</strong>
+                  <ul>
+                    <li>Don't repeat links in Most requested</li>
+                  </ul>
+                </li>
+                <li>
+                  <strong>Description lacks clarity</strong> (unclear)
+                  <ul>
+                    <li>Missing needed information (content gap)</li>
+                  </ul>
+                </li>
+                <li>
+                  <strong>Description is too long</strong> (too wordy)
+                  <ul>
+                    <li>EN should be under 90 characters?</li>
+                    <li>FR under 120 characters?</li>
+                  </ul>
+                </li>
+                <li>
+                  <strong>Description has incorrect style</strong> (not sure of Marvin's wording on this)
+                  <ul>
+                    <li>Action verbs that summarize what can be done on the page</li>
+                    <li>list of keywords that summarize information on the page</li>
+                    <li>list of tasks that can be accomplished on the page</li>
+                    <li>
+                      (We have examples of the style options in the UCDG
+                      <a href="https://design.cra-arc.alpha.canada.ca/en/design-systems/gcweb/doormats/index.html">Doormats – GCWeb design system</a>)
+                    </li>
+                  </ul>
+                </li>
+                <li>
+                  <strong>Description formatting</strong>
+                  <ul>
+                    <li>Don't use "and" before the last item in the list</li>
+                    <li>Don't use icons or images</li>
+                    <li>No special formatting (bold, italics, bullets)</li>
+                    <li>Capitalize the letter of the first word</li>
+                    <li>Use commas to separate listed items or phrase</li>
+                    <li>Do not put any punctuation at the end</li>
+                    <li>No links in description</li>
+                  </ul>
+                </li>
+                <li>
+                  Enhancement label
+                  <ul>
+                    <li>Only for a recent change (e.g. info label "New", Danger label "Closed")</li>
+                  </ul>
+                </li>
+                <li>
+                  <strong>Choice of doormats</strong>
+                  <ul>
+                    <li>Missing a needed doormat</li>
+                    <li>Extra doormat that is not needed (badly chosen)</li>
+                  </ul>
+                </li>
+                <li><strong>Wrong doormat order</strong> (prioritize most visited info and services)s.</li>
+              </ul>
+            </div>
+          </details>
         </article>
 
         <article class="source-card">
