@@ -28533,12 +28533,12 @@ var AlertsGuidanceComponent = class _AlertsGuidanceComponent {
       \u0275\u0275advance(3);
       \u0275\u0275conditional(ctx.issues.length ? 3 : -1);
     }
-  }, dependencies: [CommonModule, NgClass, FormsModule, NgControlStatus, NgModel, TableModule, Table, PrimeTemplate, CheckboxModule, Checkbox, ButtonModule, ButtonDirective], styles: ["\n\n.alert-table[_ngcontent-%COMP%]   .p-datatable-tbody[_ngcontent-%COMP%]    > tr[_ngcontent-%COMP%]    > td[_ngcontent-%COMP%], \n.alert-table[_ngcontent-%COMP%]   .p-datatable-thead[_ngcontent-%COMP%]    > tr[_ngcontent-%COMP%]    > th[_ngcontent-%COMP%] {\n  white-space: normal !important;\n  word-break: normal;\n  overflow-wrap: normal;\n  vertical-align: top;\n}\n.alert-table[_ngcontent-%COMP%]   .wrap-col[_ngcontent-%COMP%] {\n  min-width: 140px;\n}\n.alert-table[_ngcontent-%COMP%]   .severity-col[_ngcontent-%COMP%]   .chip[_ngcontent-%COMP%] {\n  white-space: nowrap !important;\n  display: inline-flex;\n}\n.alert-table[_ngcontent-%COMP%]   .include-col[_ngcontent-%COMP%] {\n  width: 140px;\n  text-align: center;\n}\n.alert-table[_ngcontent-%COMP%]   .include-col[_ngcontent-%COMP%]   .p-checkbox[_ngcontent-%COMP%] {\n  display: inline-flex;\n}\n.alert-table[_ngcontent-%COMP%]   .p-datatable-table[_ngcontent-%COMP%] {\n  width: 100%;\n  border: 1px solid #d1d5db;\n  border-radius: 6px;\n}\n.alert-table[_ngcontent-%COMP%]   .p-datatable-wrapper[_ngcontent-%COMP%] {\n  width: 100%;\n  overflow-x: auto;\n}\n.alert-table[_ngcontent-%COMP%]   .p-datatable-table[_ngcontent-%COMP%] {\n  table-layout: auto !important;\n}\n.alert-table-actions[_ngcontent-%COMP%] {\n  display: flex;\n  justify-content: flex-end;\n  margin-top: 0.75rem;\n}\n.alert-table[_ngcontent-%COMP%]   .toggle-col[_ngcontent-%COMP%], \n.alert-table[_ngcontent-%COMP%]   .checkbox-col[_ngcontent-%COMP%] {\n  width: 1%;\n  white-space: nowrap;\n  text-align: center;\n  padding: 0;\n}\n.alert-table.p-datatable[_ngcontent-%COMP%]   .p-datatable-thead[_ngcontent-%COMP%]    > tr[_ngcontent-%COMP%]    > th.toggle-col[_ngcontent-%COMP%], \n.alert-table.p-datatable[_ngcontent-%COMP%]   .p-datatable-tbody[_ngcontent-%COMP%]    > tr[_ngcontent-%COMP%]    > td.toggle-col[_ngcontent-%COMP%], \n.alert-table.p-datatable[_ngcontent-%COMP%]   .p-datatable-thead[_ngcontent-%COMP%]    > tr[_ngcontent-%COMP%]    > th.checkbox-col[_ngcontent-%COMP%], \n.alert-table.p-datatable[_ngcontent-%COMP%]   .p-datatable-tbody[_ngcontent-%COMP%]    > tr[_ngcontent-%COMP%]    > td.checkbox-col[_ngcontent-%COMP%] {\n  width: 1% !important;\n  white-space: nowrap !important;\n  text-align: center;\n  padding: 0 0.25rem;\n}\n/*# sourceMappingURL=alerts-guidance.component.css.map */", "\n\n[_nghost-%COMP%]     .alert-table .p-datatable-table {\n  table-layout: auto !important;\n}\n[_nghost-%COMP%]     .alert-table.p-datatable .p-datatable-thead > tr > th.toggle-col, \n[_nghost-%COMP%]     .alert-table.p-datatable .p-datatable-tbody > tr > td.toggle-col {\n  width: 70px !important;\n  min-width: 70px;\n  max-width: 70px;\n  white-space: nowrap !important;\n  text-align: center;\n  padding: 0 0.25rem;\n}\n[_nghost-%COMP%]     .alert-table.p-datatable .p-datatable-thead > tr > th.checkbox-col, \n[_nghost-%COMP%]     .alert-table.p-datatable .p-datatable-tbody > tr > td.checkbox-col {\n  width: 70px !important;\n  min-width: 70px;\n  max-width: 70px;\n  white-space: nowrap !important;\n  text-align: center;\n  padding: 0 0.25rem;\n}\n[_nghost-%COMP%]     .topic-doormat-section-row > td {\n  background: #eef2f6;\n}\n.topic-doormat-group[_ngcontent-%COMP%] {\n  margin-top: 1rem;\n  border: 1px solid #d8dee6;\n  border-radius: 6px;\n  background: #fff;\n  overflow: hidden;\n}\n.topic-doormat-group[_ngcontent-%COMP%]    + .topic-doormat-group[_ngcontent-%COMP%] {\n  margin-top: 1.25rem;\n}\n.topic-doormat-group-header[_ngcontent-%COMP%] {\n  display: flex;\n  align-items: flex-start;\n  justify-content: space-between;\n  gap: 1rem;\n  padding: 1.1rem 1.25rem;\n  border-bottom: 1px solid #d8dee6;\n  background: #eef2f6;\n}\n.topic-doormat-group[_ngcontent-%COMP%]   h3[_ngcontent-%COMP%] {\n  margin: 0;\n  font-size: 1.75rem;\n  line-height: 1.25;\n}\n.topic-doormat-count[_ngcontent-%COMP%] {\n  flex: 0 0 auto;\n  padding: 0.4rem 0.8rem;\n  border: 1px solid #d8dee6;\n  border-radius: 999px;\n  background: #fff;\n  color: #202833;\n  font-size: 1.25rem;\n  font-weight: 700;\n}\n.topic-doormat-subheading[_ngcontent-%COMP%] {\n  margin: 1rem 1rem 0.4rem;\n  padding-bottom: 0.25rem;\n  border-bottom: 1px solid #eef2f6;\n  color: #202833;\n  font-size: 0.9rem;\n  font-weight: 700;\n}\n.topic-doormat-group[_ngcontent-%COMP%]   .expansion-table[_ngcontent-%COMP%] {\n  margin: 0 1rem 1rem;\n}\n.topic-doormat-empty[_ngcontent-%COMP%] {\n  padding: 0.75rem;\n  border: 1px solid #d8dee6;\n  border-radius: 4px;\n  background: #fff;\n}\n/*# sourceMappingURL=component-guidance.component.css.map */"] });
+  }, dependencies: [CommonModule, NgClass, FormsModule, NgControlStatus, NgModel, TableModule, Table, PrimeTemplate, CheckboxModule, Checkbox, ButtonModule, ButtonDirective], styles: ["\n\n.alert-table[_ngcontent-%COMP%]   .p-datatable-tbody[_ngcontent-%COMP%]    > tr[_ngcontent-%COMP%]    > td[_ngcontent-%COMP%], \n.alert-table[_ngcontent-%COMP%]   .p-datatable-thead[_ngcontent-%COMP%]    > tr[_ngcontent-%COMP%]    > th[_ngcontent-%COMP%] {\n  white-space: normal !important;\n  word-break: normal;\n  overflow-wrap: normal;\n  vertical-align: top;\n}\n.alert-table[_ngcontent-%COMP%]   .wrap-col[_ngcontent-%COMP%] {\n  min-width: 140px;\n}\n.alert-table[_ngcontent-%COMP%]   .severity-col[_ngcontent-%COMP%]   .chip[_ngcontent-%COMP%] {\n  white-space: nowrap !important;\n  display: inline-flex;\n}\n.alert-table[_ngcontent-%COMP%]   .include-col[_ngcontent-%COMP%] {\n  width: 140px;\n  text-align: center;\n}\n.alert-table[_ngcontent-%COMP%]   .include-col[_ngcontent-%COMP%]   .p-checkbox[_ngcontent-%COMP%] {\n  display: inline-flex;\n}\n.alert-table[_ngcontent-%COMP%]   .p-datatable-table[_ngcontent-%COMP%] {\n  width: 100%;\n  border: 1px solid #d1d5db;\n  border-radius: 6px;\n}\n.alert-table[_ngcontent-%COMP%]   .p-datatable-wrapper[_ngcontent-%COMP%] {\n  width: 100%;\n  overflow-x: auto;\n}\n.alert-table[_ngcontent-%COMP%]   .p-datatable-table[_ngcontent-%COMP%] {\n  table-layout: auto !important;\n}\n.alert-table-actions[_ngcontent-%COMP%] {\n  display: flex;\n  justify-content: flex-end;\n  margin-top: 0.75rem;\n}\n.alert-table[_ngcontent-%COMP%]   .toggle-col[_ngcontent-%COMP%], \n.alert-table[_ngcontent-%COMP%]   .checkbox-col[_ngcontent-%COMP%] {\n  width: 1%;\n  white-space: nowrap;\n  text-align: center;\n  padding: 0;\n}\n.alert-table.p-datatable[_ngcontent-%COMP%]   .p-datatable-thead[_ngcontent-%COMP%]    > tr[_ngcontent-%COMP%]    > th.toggle-col[_ngcontent-%COMP%], \n.alert-table.p-datatable[_ngcontent-%COMP%]   .p-datatable-tbody[_ngcontent-%COMP%]    > tr[_ngcontent-%COMP%]    > td.toggle-col[_ngcontent-%COMP%], \n.alert-table.p-datatable[_ngcontent-%COMP%]   .p-datatable-thead[_ngcontent-%COMP%]    > tr[_ngcontent-%COMP%]    > th.checkbox-col[_ngcontent-%COMP%], \n.alert-table.p-datatable[_ngcontent-%COMP%]   .p-datatable-tbody[_ngcontent-%COMP%]    > tr[_ngcontent-%COMP%]    > td.checkbox-col[_ngcontent-%COMP%] {\n  width: 1% !important;\n  white-space: nowrap !important;\n  text-align: center;\n  padding: 0 0.25rem;\n}\n/*# sourceMappingURL=alerts-guidance.component.css.map */", "\n\n[_nghost-%COMP%]     .alert-table .p-datatable-table {\n  table-layout: auto !important;\n}\n[_nghost-%COMP%]     .alert-table.p-datatable .p-datatable-thead > tr > th.toggle-col, \n[_nghost-%COMP%]     .alert-table.p-datatable .p-datatable-tbody > tr > td.toggle-col {\n  width: 70px !important;\n  min-width: 70px;\n  max-width: 70px;\n  white-space: nowrap !important;\n  text-align: center;\n  padding: 0 0.25rem;\n}\n[_nghost-%COMP%]     .alert-table.p-datatable .p-datatable-thead > tr > th.checkbox-col, \n[_nghost-%COMP%]     .alert-table.p-datatable .p-datatable-tbody > tr > td.checkbox-col {\n  width: 70px !important;\n  min-width: 70px;\n  max-width: 70px;\n  white-space: nowrap !important;\n  text-align: center;\n  padding: 0 0.25rem;\n}\n[_nghost-%COMP%]     .topic-doormat-section-row > td {\n  background: #eef2f6;\n}\n.topic-doormat-group[_ngcontent-%COMP%] {\n  margin-top: 1rem;\n  border: 1px solid #d8dee6;\n  border-radius: 6px;\n  background: #fff;\n  overflow: hidden;\n}\n.topic-doormat-group[_ngcontent-%COMP%]    + .topic-doormat-group[_ngcontent-%COMP%] {\n  margin-top: 1.25rem;\n}\n.topic-doormat-group-header[_ngcontent-%COMP%] {\n  display: flex;\n  align-items: flex-start;\n  gap: 0.75rem;\n  padding: 1.1rem 1.25rem;\n  border-bottom: 1px solid #d8dee6;\n  background: #eef2f6;\n}\n.topic-doormat-group[_ngcontent-%COMP%]   h3[_ngcontent-%COMP%] {\n  margin: 0;\n  font-size: 1.25rem;\n  line-height: 1.25;\n}\n.topic-doormat-count[_ngcontent-%COMP%] {\n  flex: 0 0 auto;\n  padding: 0.4rem 0.8rem;\n  border: 1px solid #d8dee6;\n  border-radius: 999px;\n  background: #fff;\n  color: #202833;\n  font-size: 0.9rem;\n  font-weight: 700;\n}\n.topic-doormat-subheading[_ngcontent-%COMP%] {\n  margin: 1rem 1rem 0.4rem;\n  padding-bottom: 0.25rem;\n  border-bottom: 1px solid #eef2f6;\n  color: #202833;\n  font-size: 0.9rem;\n  font-weight: 700;\n}\n.topic-doormat-group[_ngcontent-%COMP%]   .expansion-table[_ngcontent-%COMP%] {\n  margin: 0 1rem 1rem;\n}\n.topic-doormat-empty[_ngcontent-%COMP%] {\n  padding: 0.75rem;\n  border: 1px solid #d8dee6;\n  border-radius: 4px;\n  background: #fff;\n}\n/*# sourceMappingURL=component-guidance.component.css.map */"] });
 };
 (() => {
   (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(AlertsGuidanceComponent, [{
     type: Component,
-    args: [{ selector: "ca-alerts-guidance", standalone: true, imports: [CommonModule, FormsModule, TableModule, CheckboxModule, ButtonModule], template: '<p-table [value]="issues" styleClass="p-datatable-sm alert-table">\n  <ng-template pTemplate="header">\n    <tr>\n      <th class="include-col">Include in fix</th>\n      <th class="severity-col">Severity</th>\n      <th>Pain point category</th>\n      <th class="wrap-col">Description</th>\n      <th class="wrap-col">Recommendation</th>\n    </tr>\n  </ng-template>\n  <ng-template pTemplate="body" let-issue>\n    <tr>\n      <td class="include-col">\n        <p-checkbox [binary]="true" [(ngModel)]="issue.include" (onChange)="onIncludeToggle()"></p-checkbox>\n      </td>\n      <td class="severity-col">\n        <span class="chip" [ngClass]="severityClass(issue.severity)">\n          {{ issue.severity }}\n        </span>\n      </td>\n      <td>{{ issue.category }}</td>\n      <td class="wrap-col">{{ issue.description }}</td>\n      <td class="wrap-col">{{ issue.recommendation }}</td>\n    </tr>\n  </ng-template>\n</p-table>\n\n@if (issues.length) {\n  <div class="alert-table-actions">\n    <button\n      pButton\n      type="button"\n      label="Clear alert issues"\n      icon="pi pi-trash"\n      class="p-button-secondary p-button-sm"\n      (click)="clearPersistedIssues()"\n    ></button>\n  </div>\n}\n', styles: ["/* src/app/views/page-assistant/components/problems/component-guidance/alerts-guidance/alerts-guidance.component.css */\n.alert-table .p-datatable-tbody > tr > td,\n.alert-table .p-datatable-thead > tr > th {\n  white-space: normal !important;\n  word-break: normal;\n  overflow-wrap: normal;\n  vertical-align: top;\n}\n.alert-table .wrap-col {\n  min-width: 140px;\n}\n.alert-table .severity-col .chip {\n  white-space: nowrap !important;\n  display: inline-flex;\n}\n.alert-table .include-col {\n  width: 140px;\n  text-align: center;\n}\n.alert-table .include-col .p-checkbox {\n  display: inline-flex;\n}\n.alert-table .p-datatable-table {\n  width: 100%;\n  border: 1px solid #d1d5db;\n  border-radius: 6px;\n}\n.alert-table .p-datatable-wrapper {\n  width: 100%;\n  overflow-x: auto;\n}\n.alert-table .p-datatable-table {\n  table-layout: auto !important;\n}\n.alert-table-actions {\n  display: flex;\n  justify-content: flex-end;\n  margin-top: 0.75rem;\n}\n.alert-table .toggle-col,\n.alert-table .checkbox-col {\n  width: 1%;\n  white-space: nowrap;\n  text-align: center;\n  padding: 0;\n}\n.alert-table.p-datatable .p-datatable-thead > tr > th.toggle-col,\n.alert-table.p-datatable .p-datatable-tbody > tr > td.toggle-col,\n.alert-table.p-datatable .p-datatable-thead > tr > th.checkbox-col,\n.alert-table.p-datatable .p-datatable-tbody > tr > td.checkbox-col {\n  width: 1% !important;\n  white-space: nowrap !important;\n  text-align: center;\n  padding: 0 0.25rem;\n}\n/*# sourceMappingURL=alerts-guidance.component.css.map */\n", "/* src/app/views/page-assistant/components/problems/component-guidance/component-guidance.component.css */\n:host ::ng-deep .alert-table .p-datatable-table {\n  table-layout: auto !important;\n}\n:host ::ng-deep .alert-table.p-datatable .p-datatable-thead > tr > th.toggle-col,\n:host ::ng-deep .alert-table.p-datatable .p-datatable-tbody > tr > td.toggle-col {\n  width: 70px !important;\n  min-width: 70px;\n  max-width: 70px;\n  white-space: nowrap !important;\n  text-align: center;\n  padding: 0 0.25rem;\n}\n:host ::ng-deep .alert-table.p-datatable .p-datatable-thead > tr > th.checkbox-col,\n:host ::ng-deep .alert-table.p-datatable .p-datatable-tbody > tr > td.checkbox-col {\n  width: 70px !important;\n  min-width: 70px;\n  max-width: 70px;\n  white-space: nowrap !important;\n  text-align: center;\n  padding: 0 0.25rem;\n}\n:host ::ng-deep .topic-doormat-section-row > td {\n  background: #eef2f6;\n}\n.topic-doormat-group {\n  margin-top: 1rem;\n  border: 1px solid #d8dee6;\n  border-radius: 6px;\n  background: #fff;\n  overflow: hidden;\n}\n.topic-doormat-group + .topic-doormat-group {\n  margin-top: 1.25rem;\n}\n.topic-doormat-group-header {\n  display: flex;\n  align-items: flex-start;\n  justify-content: space-between;\n  gap: 1rem;\n  padding: 1.1rem 1.25rem;\n  border-bottom: 1px solid #d8dee6;\n  background: #eef2f6;\n}\n.topic-doormat-group h3 {\n  margin: 0;\n  font-size: 1.75rem;\n  line-height: 1.25;\n}\n.topic-doormat-count {\n  flex: 0 0 auto;\n  padding: 0.4rem 0.8rem;\n  border: 1px solid #d8dee6;\n  border-radius: 999px;\n  background: #fff;\n  color: #202833;\n  font-size: 1.25rem;\n  font-weight: 700;\n}\n.topic-doormat-subheading {\n  margin: 1rem 1rem 0.4rem;\n  padding-bottom: 0.25rem;\n  border-bottom: 1px solid #eef2f6;\n  color: #202833;\n  font-size: 0.9rem;\n  font-weight: 700;\n}\n.topic-doormat-group .expansion-table {\n  margin: 0 1rem 1rem;\n}\n.topic-doormat-empty {\n  padding: 0.75rem;\n  border: 1px solid #d8dee6;\n  border-radius: 4px;\n  background: #fff;\n}\n/*# sourceMappingURL=component-guidance.component.css.map */\n"] }]
+    args: [{ selector: "ca-alerts-guidance", standalone: true, imports: [CommonModule, FormsModule, TableModule, CheckboxModule, ButtonModule], template: '<p-table [value]="issues" styleClass="p-datatable-sm alert-table">\n  <ng-template pTemplate="header">\n    <tr>\n      <th class="include-col">Include in fix</th>\n      <th class="severity-col">Severity</th>\n      <th>Pain point category</th>\n      <th class="wrap-col">Description</th>\n      <th class="wrap-col">Recommendation</th>\n    </tr>\n  </ng-template>\n  <ng-template pTemplate="body" let-issue>\n    <tr>\n      <td class="include-col">\n        <p-checkbox [binary]="true" [(ngModel)]="issue.include" (onChange)="onIncludeToggle()"></p-checkbox>\n      </td>\n      <td class="severity-col">\n        <span class="chip" [ngClass]="severityClass(issue.severity)">\n          {{ issue.severity }}\n        </span>\n      </td>\n      <td>{{ issue.category }}</td>\n      <td class="wrap-col">{{ issue.description }}</td>\n      <td class="wrap-col">{{ issue.recommendation }}</td>\n    </tr>\n  </ng-template>\n</p-table>\n\n@if (issues.length) {\n  <div class="alert-table-actions">\n    <button\n      pButton\n      type="button"\n      label="Clear alert issues"\n      icon="pi pi-trash"\n      class="p-button-secondary p-button-sm"\n      (click)="clearPersistedIssues()"\n    ></button>\n  </div>\n}\n', styles: ["/* src/app/views/page-assistant/components/problems/component-guidance/alerts-guidance/alerts-guidance.component.css */\n.alert-table .p-datatable-tbody > tr > td,\n.alert-table .p-datatable-thead > tr > th {\n  white-space: normal !important;\n  word-break: normal;\n  overflow-wrap: normal;\n  vertical-align: top;\n}\n.alert-table .wrap-col {\n  min-width: 140px;\n}\n.alert-table .severity-col .chip {\n  white-space: nowrap !important;\n  display: inline-flex;\n}\n.alert-table .include-col {\n  width: 140px;\n  text-align: center;\n}\n.alert-table .include-col .p-checkbox {\n  display: inline-flex;\n}\n.alert-table .p-datatable-table {\n  width: 100%;\n  border: 1px solid #d1d5db;\n  border-radius: 6px;\n}\n.alert-table .p-datatable-wrapper {\n  width: 100%;\n  overflow-x: auto;\n}\n.alert-table .p-datatable-table {\n  table-layout: auto !important;\n}\n.alert-table-actions {\n  display: flex;\n  justify-content: flex-end;\n  margin-top: 0.75rem;\n}\n.alert-table .toggle-col,\n.alert-table .checkbox-col {\n  width: 1%;\n  white-space: nowrap;\n  text-align: center;\n  padding: 0;\n}\n.alert-table.p-datatable .p-datatable-thead > tr > th.toggle-col,\n.alert-table.p-datatable .p-datatable-tbody > tr > td.toggle-col,\n.alert-table.p-datatable .p-datatable-thead > tr > th.checkbox-col,\n.alert-table.p-datatable .p-datatable-tbody > tr > td.checkbox-col {\n  width: 1% !important;\n  white-space: nowrap !important;\n  text-align: center;\n  padding: 0 0.25rem;\n}\n/*# sourceMappingURL=alerts-guidance.component.css.map */\n", "/* src/app/views/page-assistant/components/problems/component-guidance/component-guidance.component.css */\n:host ::ng-deep .alert-table .p-datatable-table {\n  table-layout: auto !important;\n}\n:host ::ng-deep .alert-table.p-datatable .p-datatable-thead > tr > th.toggle-col,\n:host ::ng-deep .alert-table.p-datatable .p-datatable-tbody > tr > td.toggle-col {\n  width: 70px !important;\n  min-width: 70px;\n  max-width: 70px;\n  white-space: nowrap !important;\n  text-align: center;\n  padding: 0 0.25rem;\n}\n:host ::ng-deep .alert-table.p-datatable .p-datatable-thead > tr > th.checkbox-col,\n:host ::ng-deep .alert-table.p-datatable .p-datatable-tbody > tr > td.checkbox-col {\n  width: 70px !important;\n  min-width: 70px;\n  max-width: 70px;\n  white-space: nowrap !important;\n  text-align: center;\n  padding: 0 0.25rem;\n}\n:host ::ng-deep .topic-doormat-section-row > td {\n  background: #eef2f6;\n}\n.topic-doormat-group {\n  margin-top: 1rem;\n  border: 1px solid #d8dee6;\n  border-radius: 6px;\n  background: #fff;\n  overflow: hidden;\n}\n.topic-doormat-group + .topic-doormat-group {\n  margin-top: 1.25rem;\n}\n.topic-doormat-group-header {\n  display: flex;\n  align-items: flex-start;\n  gap: 0.75rem;\n  padding: 1.1rem 1.25rem;\n  border-bottom: 1px solid #d8dee6;\n  background: #eef2f6;\n}\n.topic-doormat-group h3 {\n  margin: 0;\n  font-size: 1.25rem;\n  line-height: 1.25;\n}\n.topic-doormat-count {\n  flex: 0 0 auto;\n  padding: 0.4rem 0.8rem;\n  border: 1px solid #d8dee6;\n  border-radius: 999px;\n  background: #fff;\n  color: #202833;\n  font-size: 0.9rem;\n  font-weight: 700;\n}\n.topic-doormat-subheading {\n  margin: 1rem 1rem 0.4rem;\n  padding-bottom: 0.25rem;\n  border-bottom: 1px solid #eef2f6;\n  color: #202833;\n  font-size: 0.9rem;\n  font-weight: 700;\n}\n.topic-doormat-group .expansion-table {\n  margin: 0 1rem 1rem;\n}\n.topic-doormat-empty {\n  padding: 0.75rem;\n  border: 1px solid #d8dee6;\n  border-radius: 4px;\n  background: #fff;\n}\n/*# sourceMappingURL=component-guidance.component.css.map */\n"] }]
   }], null, { selectAll: [{
     type: Input
   }], maxSeverityChange: [{
@@ -29929,11 +29929,20 @@ var ComponentGuidanceComponent = class _ComponentGuidanceComponent {
   messageService = inject(MessageService);
   alertIssuesSub;
   topicDoormatDebugStorageKey = "pageAssistant.topicDoormatDebug";
+  topicDoormatForceParseFailureStorageKey = "pageAssistant.topicDoormatForceParseFailure";
   topicDoormatIssueTaxonomyPath = "skills/topic-doormats/issues/references/issue-taxonomy.json";
   topicDoormatIssueLengthLimits = {
     "link-name-too-long": 35,
     "description-too-long": 120
   };
+  topicDoormatDescriptionStyleOrder = [
+    "noun-topic",
+    "benefit-summary",
+    "status-or-date-change",
+    "action-oriented",
+    "how-to",
+    "question-or-sentence"
+  ];
   topicDoormatIssueTaxonomyLoad;
   topicDoormatIssueIdToLabel = /* @__PURE__ */ new Map();
   topicDoormatIssueAliasToId = /* @__PURE__ */ new Map();
@@ -30298,7 +30307,7 @@ var ComponentGuidanceComponent = class _ComponentGuidanceComponent {
           userPayloadCharacters: messages[1].content.length,
           totalMessageCharacters: messages.reduce((total, message) => total + message.content.length, 0)
         });
-        const { text, model } = yield this.callTopicDoormatIssuesWithFallback(messages, modelRotation);
+        const { text, model } = yield this.callTopicDoormatIssuesWithFallback(messages, modelRotation, doormatSummaries);
         this.topicDoormatIssuesResponseReceived = !!text;
         if (text) {
           this.messageService.add({
@@ -30307,7 +30316,7 @@ var ComponentGuidanceComponent = class _ComponentGuidanceComponent {
             life: 2e3
           });
         }
-        this.topicDoormatIssueRows = text ? this.parseTopicDoormatIssueRows(text, doormatSummaries) : [];
+        this.topicDoormatIssueRows = text ? this.parseTopicDoormatIssueRows(text, doormatSummaries) : this.buildTopicDoormatFallbackRows(doormatSummaries);
         this.topicDoormatIssueGroups = this.buildTopicDoormatIssueGroups(this.topicDoormatIssueRows);
         this.debugTopicDoormatIssues("response parsed", {
           model,
@@ -30366,11 +30375,13 @@ var ComponentGuidanceComponent = class _ComponentGuidanceComponent {
       }
     });
   }
-  callTopicDoormatIssuesWithFallback(messages, models) {
+  callTopicDoormatIssuesWithFallback(messages, models, doormatSummaries) {
     return __async(this, null, function* () {
       let lastError;
+      let lastModel = models[0] ?? "";
       for (let index = 0; index < models.length; index += 1) {
         const model = models[index];
+        lastModel = model;
         const modelStart = performance.now();
         try {
           this.debugTopicDoormatIssues("model attempt started", {
@@ -30385,13 +30396,56 @@ var ComponentGuidanceComponent = class _ComponentGuidanceComponent {
           });
           const text = resp?.choices?.[0]?.message?.content?.trim() || "";
           if (text) {
-            this.debugTopicDoormatIssues("model attempt succeeded", {
+            const forcedParseFailureMode = this.getTopicDoormatForceParseFailureMode();
+            if (forcedParseFailureMode === "local-only") {
+              this.debugTopicDoormatIssues("forced parse failure enabled", {
+                mode: forcedParseFailureMode,
+                model,
+                responseCharacters: text.length
+              });
+              return { text: "", model };
+            }
+            const textToValidate = forcedParseFailureMode === "repair" ? '{"doormats": [' : text;
+            if (forcedParseFailureMode === "repair") {
+              this.debugTopicDoormatIssues("forced parse failure enabled", {
+                mode: forcedParseFailureMode,
+                model,
+                responseCharacters: text.length
+              });
+            }
+            if (this.isParseableTopicDoormatIssueResponseText(textToValidate)) {
+              this.debugTopicDoormatIssues("model attempt succeeded", {
+                attempt: index + 1,
+                model,
+                elapsedMs: Math.round(performance.now() - modelStart),
+                responseCharacters: text.length
+              });
+              return { text, model };
+            }
+            this.debugTopicDoormatIssues("model attempt returned invalid json", {
               attempt: index + 1,
               model,
               elapsedMs: Math.round(performance.now() - modelStart),
               responseCharacters: text.length
             });
-            return { text, model };
+            const repairedText = yield this.repairTopicDoormatIssueJson(model, text, doormatSummaries);
+            if (repairedText && this.isParseableTopicDoormatIssueResponseText(repairedText)) {
+              this.debugTopicDoormatIssues("model json repair succeeded", {
+                attempt: index + 1,
+                model,
+                elapsedMs: Math.round(performance.now() - modelStart),
+                originalResponseCharacters: text.length,
+                repairedResponseCharacters: repairedText.length
+              });
+              return { text: repairedText, model };
+            }
+            this.debugTopicDoormatIssues("model json repair failed", {
+              attempt: index + 1,
+              model,
+              elapsedMs: Math.round(performance.now() - modelStart)
+            });
+            lastError = new Error(`Invalid Topic doormat JSON from ${model}`);
+            continue;
           }
           this.debugTopicDoormatIssues("model attempt returned empty content", {
             attempt: index + 1,
@@ -30408,7 +30462,44 @@ var ComponentGuidanceComponent = class _ComponentGuidanceComponent {
           });
         }
       }
-      throw lastError instanceof Error ? lastError : new Error(this.translate.instant("common.ai.errorCommunicatingOpenRouter"));
+      this.debugTopicDoormatIssues("model attempts exhausted", {
+        models,
+        lastModel,
+        error: lastError instanceof Error ? lastError.message : String(lastError)
+      });
+      return { text: "", model: lastModel };
+    });
+  }
+  repairTopicDoormatIssueJson(model, invalidText, doormatSummaries) {
+    return __async(this, null, function* () {
+      try {
+        const repairMessages = [
+          {
+            role: "system",
+            content: "Convert the supplied response to valid JSON that matches the Topic doormat issue schema. Fix format only. Do not add, remove, reinterpret, or re-analyze issues. Return JSON only."
+          },
+          {
+            role: "user",
+            content: JSON.stringify({
+              requiredShape: '{ "section_issues": [], "doormats": [{ "doormat_index": number, "link_text": string, "href": string, "issues": [] }] }',
+              validDoormatIndexes: doormatSummaries.map((summary) => summary.index),
+              responseToRepair: invalidText
+            })
+          }
+        ];
+        const resp = yield this.openRouter.call(model, repairMessages, {
+          temperature: 0,
+          title: "Content Assistant - Topic Doormat JSON Repair",
+          throwOnError: true
+        });
+        return resp?.choices?.[0]?.message?.content?.trim() || "";
+      } catch (err) {
+        this.debugTopicDoormatIssues("model json repair request failed", {
+          model,
+          error: err instanceof Error ? err.message : String(err)
+        });
+        return "";
+      }
     });
   }
   buildTopicDoormatModelRotation(requested) {
@@ -30436,6 +30527,18 @@ var ComponentGuidanceComponent = class _ComponentGuidanceComponent {
       return localStorage.getItem(this.topicDoormatDebugStorageKey) === "true";
     } catch {
       return false;
+    }
+  }
+  getTopicDoormatForceParseFailureMode() {
+    try {
+      const value = (localStorage.getItem(this.topicDoormatForceParseFailureStorageKey) || "").trim().toLowerCase();
+      if (value === "repair")
+        return "repair";
+      if (value === "local-only" || value === "true")
+        return "local-only";
+      return "";
+    } catch {
+      return "";
     }
   }
   parseTopicDoormatIssueRows(text, doormatSummaries = []) {
@@ -30503,6 +30606,9 @@ var ComponentGuidanceComponent = class _ComponentGuidanceComponent {
           }
           return null;
         }
+        if (issueId === "multiple-links") {
+          return null;
+        }
         if (!this.hasValidTopicDoormatObjectiveEvidence(issueId, summary)) {
           return null;
         }
@@ -30529,10 +30635,9 @@ var ComponentGuidanceComponent = class _ComponentGuidanceComponent {
     });
     const reportableSectionIssueRows = sectionIssueRows.filter((row) => row.issueId !== "too-many-doormats-in-section");
     const mixedDescriptionStyleSectionIndexes = new Set(reportableSectionIssueRows.filter((row) => row.issueId === "mixed-description-style-in-section").map((row) => row.sectionIndex).filter((index) => typeof index === "number" && index > 0));
-    const hasMixedDescriptionStyleIssue = mixedDescriptionStyleSectionIndexes.size > 0;
-    const suppressedModelIssueRows = rows.filter((row) => row.issueId === "inconsistent-description-style" && (hasMixedDescriptionStyleIssue || !!row.sectionIndex && mixedDescriptionStyleSectionIndexes.has(row.sectionIndex)));
+    const suppressedModelIssueRows = rows.filter((row) => row.issueId === "inconsistent-description-style" && !!row.sectionIndex && mixedDescriptionStyleSectionIndexes.has(row.sectionIndex));
     const modelIssueRows = rows.filter((row) => !suppressedModelIssueRows.includes(row));
-    const deterministicRows = this.buildDeterministicTopicDoormatIssueRows(doormatSummaries, modelIssueRows);
+    const deterministicRows = this.buildDeterministicTopicDoormatIssueRows(doormatSummaries, [...modelIssueRows, ...reportableSectionIssueRows]);
     const representedIndexes = new Set([...modelIssueRows, ...deterministicRows, ...reportableSectionIssueRows].map((row) => row.doormatIndex).filter((index) => typeof index === "number" && index > 0));
     const missingNoIssueRows = doormatSummaries.filter((summary) => !representedIndexes.has(summary.index)).map((summary) => this.buildTopicDoormatNoIssueRow(summary));
     const resolvedRows = this.removeConflictingTopicDoormatNoIssueRows([
@@ -30596,11 +30701,21 @@ var ComponentGuidanceComponent = class _ComponentGuidanceComponent {
     return rows.filter((row) => !this.isNoIssueRow(row) || !row.doormatIndex || !indexesWithIssues.has(row.doormatIndex));
   }
   buildTopicDoormatFallbackRows(doormatSummaries) {
-    return doormatSummaries.map((summary) => this.buildTopicDoormatNoIssueRow(summary));
+    const deterministicRows = this.buildDeterministicTopicDoormatIssueRows(doormatSummaries, []);
+    const representedIndexes = new Set(deterministicRows.map((row) => row.doormatIndex).filter((index) => typeof index === "number" && index > 0));
+    const noIssueRows = doormatSummaries.filter((summary) => !representedIndexes.has(summary.index)).map((summary) => this.buildTopicDoormatNoIssueRow(summary));
+    return this.removeConflictingTopicDoormatNoIssueRows([
+      ...deterministicRows,
+      ...noIssueRows
+    ].sort((a, b) => {
+      const aIndex = this.getTopicDoormatRowSortIndex(a, doormatSummaries);
+      const bIndex = this.getTopicDoormatRowSortIndex(b, doormatSummaries);
+      return aIndex - bIndex;
+    }));
   }
   buildDeterministicTopicDoormatIssueRows(doormatSummaries, existingRows) {
     const existingIssueKeys = new Set(existingRows.map((row) => `${row.sectionIndex ?? 0}|${row.issueId}`));
-    return this.buildTopicDoormatSectionCounts(doormatSummaries).flatMap((section) => {
+    const overLimitRows = this.buildTopicDoormatSectionCounts(doormatSummaries).flatMap((section) => {
       if (section.count <= 9 || existingIssueKeys.has(`${section.sectionIndex}|too-many-doormats-in-section`)) {
         return [];
       }
@@ -30620,6 +30735,231 @@ var ComponentGuidanceComponent = class _ComponentGuidanceComponent {
         }
       ];
     });
+    return [
+      ...overLimitRows,
+      ...this.buildLocalTopicDoormatMultipleLinkRows(doormatSummaries),
+      ...this.buildLocalTopicDoormatStyleIssueRows(doormatSummaries, existingIssueKeys)
+    ];
+  }
+  buildLocalTopicDoormatMultipleLinkRows(doormatSummaries) {
+    return doormatSummaries.filter((summary) => summary.itemLinkCount > 1).map((summary) => ({
+      include: true,
+      rowType: "doormat",
+      severity: "High",
+      doormat: this.buildTopicDoormatLabel(summary),
+      doormatLabel: summary.linkText || summary.href || "Doormat",
+      issueId: "multiple-links",
+      issue: this.getTopicDoormatIssueLabel("multiple-links"),
+      evidence: this.buildTopicDoormatMultipleLinksEvidence(summary),
+      recommendation: "Use one link per doormat. Move any extra destination to a separate doormat if it is needed.",
+      doormatIndex: summary.index || void 0,
+      sectionIndex: summary.sectionIndex || void 0,
+      sectionTitle: summary.sectionTitle || void 0,
+      sectionItemIndex: summary.sectionItemIndex || void 0
+    }));
+  }
+  buildTopicDoormatMultipleLinksEvidence(doormat) {
+    const additionalLinkCount = Math.max(doormat.itemLinkCount - 1, 0);
+    const additionalLabel = additionalLinkCount === 1 ? "1 additional link" : `${additionalLinkCount} additional links`;
+    return `This doormat contains ${doormat.itemLinkCount} links: the main doormat link plus ${additionalLabel}.`;
+  }
+  buildLocalTopicDoormatStyleIssueRows(doormatSummaries, existingIssueKeys) {
+    const analyses = this.analyzeTopicDoormatDescriptionStyles(doormatSummaries);
+    const rows = [];
+    analyses.forEach((analysis) => {
+      const key2 = `${analysis.sectionIndex}|mixed-description-style-in-section`;
+      if (!analysis.isMixed || existingIssueKeys.has(key2))
+        return;
+      rows.push({
+        include: true,
+        rowType: "section",
+        severity: "Medium",
+        doormat: this.buildTopicDoormatSectionLabel(analysis.sectionIndex, doormatSummaries),
+        doormatLabel: "All doormats in section",
+        issueId: "mixed-description-style-in-section",
+        issue: this.getTopicDoormatIssueLabel("mixed-description-style-in-section"),
+        evidence: this.buildTopicDoormatMixedStyleEvidence(analysis),
+        recommendation: "Rewrite the descriptions so they use one consistent description style across the section.",
+        sectionIndex: analysis.sectionIndex,
+        sectionTitle: analysis.sectionTitle
+      });
+    });
+    const internallyConsistentAnalyses = analyses.filter((analysis) => !analysis.isMixed && !!analysis.dominantStyle);
+    const pageDominantStyle = this.getDominantTopicDoormatSectionStyle(internallyConsistentAnalyses) ?? this.getTwoSectionTopicDoormatReferenceStyle(internallyConsistentAnalyses);
+    if (!pageDominantStyle)
+      return rows;
+    internallyConsistentAnalyses.forEach((analysis) => {
+      const sectionStyle = analysis.dominantStyle;
+      if (!sectionStyle || sectionStyle === pageDominantStyle)
+        return;
+      const key2 = `${analysis.sectionIndex}|section-description-style-outlier`;
+      if (existingIssueKeys.has(key2))
+        return;
+      rows.push({
+        include: true,
+        rowType: "section",
+        severity: "Low",
+        doormat: this.buildTopicDoormatSectionLabel(analysis.sectionIndex, doormatSummaries),
+        doormatLabel: "All doormats in section",
+        issueId: "section-description-style-outlier",
+        issue: this.getTopicDoormatIssueLabel("section-description-style-outlier"),
+        evidence: `This section uses ${this.getTopicDoormatStyleLabel(sectionStyle)}, while the page mostly uses ${this.getTopicDoormatStyleLabel(pageDominantStyle)}.`,
+        recommendation: "Align this section with the dominant page description style unless the section has a clear reason to use a different pattern.",
+        sectionIndex: analysis.sectionIndex,
+        sectionTitle: analysis.sectionTitle
+      });
+    });
+    return rows;
+  }
+  analyzeTopicDoormatDescriptionStyles(doormatSummaries) {
+    const sections = /* @__PURE__ */ new Map();
+    doormatSummaries.forEach((summary) => {
+      if (!summary.sectionIndex)
+        return;
+      const rows = sections.get(summary.sectionIndex) ?? [];
+      rows.push(summary);
+      sections.set(summary.sectionIndex, rows);
+    });
+    return Array.from(sections.entries()).map(([sectionIndex, summaries]) => {
+      const styleCounts = /* @__PURE__ */ new Map();
+      const examplesByStyle = /* @__PURE__ */ new Map();
+      summaries.forEach((summary) => {
+        const style2 = this.classifyTopicDoormatDescriptionStyle(summary.description);
+        styleCounts.set(style2, (styleCounts.get(style2) ?? 0) + 1);
+        const examples = examplesByStyle.get(style2) ?? [];
+        examples.push(summary.sectionItemIndex);
+        examplesByStyle.set(style2, examples);
+      });
+      const relevantStyles = this.topicDoormatDescriptionStyleOrder.filter((style2) => (styleCounts.get(style2) ?? 0) > 0);
+      const dominantStyle = this.getDominantTopicDoormatDescriptionStyle(styleCounts);
+      const rankedRelevantStyles = relevantStyles.map((style2) => ({ style: style2, count: styleCounts.get(style2) ?? 0 })).sort((a, b) => b.count - a.count);
+      const secondStyleCount = rankedRelevantStyles[1]?.count ?? 0;
+      const isMixed = summaries.length >= 3 && relevantStyles.length >= 2 && (secondStyleCount >= 2 || summaries.length <= 4);
+      return {
+        sectionIndex,
+        sectionTitle: summaries[0]?.sectionTitle || `Section ${sectionIndex}`,
+        summaries,
+        dominantStyle,
+        styleCounts,
+        examplesByStyle,
+        isMixed
+      };
+    }).sort((a, b) => a.sectionIndex - b.sectionIndex);
+  }
+  classifyTopicDoormatDescriptionStyle(description) {
+    const text = this.cleanVisibleText(description).toLowerCase();
+    if (!text)
+      return "unclear";
+    if (/^how to\b/.test(text))
+      return "how-to";
+    if (/^(answer|find|find out|get|learn|apply|claim|calculate|check|confirm|report|see|use|update|manage|register|sign in|pay|file)\b/.test(text)) {
+      return "action-oriented";
+    }
+    if (/^(will be|starts?|closed|temporary|you may still|as of|from \w+ \d{1,2}|effective|replaced|replacement)\b/.test(text) || /\b(reviewed|changed|replacement|replace|replaced|starts?|closed)\b/.test(text)) {
+      return "status-or-date-change";
+    }
+    if (/^(monthly|quarterly|annual|one-time)?\s*(payment|payments|benefit|benefits|credit|tax credit|temporary relief)\b/.test(text) || /^(benefit|benefits|tax credit|credit|monthly payment|quarterly payments)\s+(for|to|that)\b/.test(text)) {
+      return "benefit-summary";
+    }
+    if (/^(what|who|when|where|why|whether)\b/.test(text)) {
+      return "question-or-sentence";
+    }
+    return "noun-topic";
+  }
+  getDominantTopicDoormatDescriptionStyle(styleCounts) {
+    const candidates = this.topicDoormatDescriptionStyleOrder.map((style2) => ({ style: style2, count: styleCounts.get(style2) ?? 0 })).filter((entry) => entry.count > 0).sort((a, b) => b.count - a.count);
+    if (!candidates.length)
+      return null;
+    if (candidates.length > 1 && candidates[0].count === candidates[1].count) {
+      return null;
+    }
+    return candidates[0].style;
+  }
+  getDominantTopicDoormatSectionStyle(analyses) {
+    const counts = /* @__PURE__ */ new Map();
+    analyses.forEach((analysis) => {
+      if (!analysis.dominantStyle)
+        return;
+      counts.set(analysis.dominantStyle, (counts.get(analysis.dominantStyle) ?? 0) + 1);
+    });
+    const ranked = Array.from(counts.entries()).sort((a, b) => b[1] - a[1]);
+    if (ranked.length < 2)
+      return null;
+    if (ranked[0][1] === ranked[1][1])
+      return null;
+    return ranked[0][0];
+  }
+  getTwoSectionTopicDoormatReferenceStyle(analyses) {
+    if (analyses.length !== 2)
+      return null;
+    const firstStyle = analyses[0].dominantStyle;
+    const secondStyle = analyses[1].dominantStyle;
+    if (!firstStyle || !secondStyle || firstStyle === secondStyle)
+      return null;
+    return firstStyle;
+  }
+  buildTopicDoormatMixedStyleEvidence(analysis) {
+    const groups = this.buildTopicDoormatMixedStyleEvidenceGroups(analysis);
+    if (!groups.length)
+      return "Mixes description styles in this section.";
+    if (groups.length === 2) {
+      const [first, second] = groups;
+      return [
+        `Mixes ${first.label} with ${second.label}.`,
+        `${first.exampleLabel} examples: ${first.examples.join(", ")}.`,
+        `${second.exampleLabel} examples: ${second.examples.join(", ")}.`
+      ].join(" ");
+    }
+    const styleParts = groups.map((group) => `${group.exampleLabel} examples: ${group.examples.join(", ")}`);
+    return `Mixes description styles in this section. ${styleParts.join(". ")}.`;
+  }
+  buildTopicDoormatMixedStyleEvidenceGroups(analysis) {
+    const evidenceGroups = [
+      {
+        label: "summary-style descriptions",
+        exampleLabel: "Summary",
+        styles: [
+          "noun-topic",
+          "benefit-summary",
+          "question-or-sentence"
+        ]
+      },
+      {
+        label: "task/action descriptions",
+        exampleLabel: "Task/action",
+        styles: [
+          "action-oriented",
+          "how-to"
+        ]
+      },
+      {
+        label: "status or date-change descriptions",
+        exampleLabel: "Status/date-change",
+        styles: [
+          "status-or-date-change"
+        ]
+      }
+    ];
+    return evidenceGroups.map((group) => ({
+      label: group.label,
+      exampleLabel: group.exampleLabel,
+      examples: group.styles.flatMap((style2) => analysis.examplesByStyle.get(style2) ?? []).sort((a, b) => a - b).slice(0, 4)
+    })).filter((group) => group.examples.length > 0);
+  }
+  getTopicDoormatStyleLabel(style2) {
+    if (style2 === "noun-topic")
+      return "noun/topic summaries";
+    if (style2 === "benefit-summary")
+      return "benefit summaries";
+    if (style2 === "status-or-date-change") {
+      return "status or date-change descriptions";
+    }
+    if (style2 === "how-to")
+      return "How to descriptions";
+    if (style2 === "question-or-sentence") {
+      return "question or sentence descriptions";
+    }
+    return "action-oriented descriptions";
   }
   buildTopicDoormatIssueGroups(rows) {
     const groups = /* @__PURE__ */ new Map();
@@ -30863,22 +31203,75 @@ var ComponentGuidanceComponent = class _ComponentGuidanceComponent {
     }
     return null;
   }
+  isParseableTopicDoormatIssueResponseText(text) {
+    const parsed = this.looseJsonParse(this.stripCodeFences(text));
+    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+      return false;
+    }
+    const root = parsed;
+    return Array.isArray(root["doormats"]) || Array.isArray(root["section_issues"]);
+  }
   stripCodeFences(value) {
-    return value.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/i, "").trim();
+    const trimmed = value.trim();
+    const fencedJson = trimmed.match(/```(?:json)?\s*([\s\S]*?)\s*```/i);
+    return (fencedJson?.[1] ?? trimmed).replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/i, "").trim();
   }
   looseJsonParse(value) {
-    try {
-      return JSON.parse(value);
-    } catch {
-      const match = value.match(/\{[\s\S]*\}/);
-      if (!match)
-        return null;
-      try {
-        return JSON.parse(match[0]);
-      } catch {
-        return null;
+    const candidates = [
+      value,
+      this.extractJsonObjectText(value)
+    ].filter((candidate) => !!candidate);
+    for (const candidate of candidates) {
+      const normalizedCandidates = [
+        candidate,
+        this.removeJsonTrailingCommas(candidate)
+      ];
+      for (const normalized of normalizedCandidates) {
+        try {
+          return JSON.parse(normalized);
+        } catch {
+        }
       }
     }
+    return null;
+  }
+  extractJsonObjectText(value) {
+    const start = value.indexOf("{");
+    const end = value.lastIndexOf("}");
+    if (start < 0 || end <= start)
+      return null;
+    return value.slice(start, end + 1);
+  }
+  removeJsonTrailingCommas(value) {
+    let inString = false;
+    let escaped = false;
+    let output = "";
+    for (let i = 0; i < value.length; i += 1) {
+      const char = value[i];
+      if (escaped) {
+        output += char;
+        escaped = false;
+        continue;
+      }
+      if (char === "\\") {
+        output += char;
+        escaped = inString;
+        continue;
+      }
+      if (char === '"') {
+        inString = !inString;
+        output += char;
+        continue;
+      }
+      if (char === "," && !inString) {
+        const nextNonWhitespace = value.slice(i + 1).match(/\S/)?.[0];
+        if (nextNonWhitespace === "}" || nextNonWhitespace === "]") {
+          continue;
+        }
+      }
+      output += char;
+    }
+    return output;
   }
   toNumber(value) {
     const num = typeof value === "number" ? value : typeof value === "string" ? Number.parseInt(value, 10) : Number.NaN;
@@ -31211,7 +31604,7 @@ var ComponentGuidanceComponent = class _ComponentGuidanceComponent {
     Tooltip,
     TranslateModule,
     AlertsGuidanceComponent
-  ], styles: ["\n\n[_nghost-%COMP%]     .alert-table .p-datatable-table {\n  table-layout: auto !important;\n}\n[_nghost-%COMP%]     .alert-table.p-datatable .p-datatable-thead > tr > th.toggle-col, \n[_nghost-%COMP%]     .alert-table.p-datatable .p-datatable-tbody > tr > td.toggle-col {\n  width: 70px !important;\n  min-width: 70px;\n  max-width: 70px;\n  white-space: nowrap !important;\n  text-align: center;\n  padding: 0 0.25rem;\n}\n[_nghost-%COMP%]     .alert-table.p-datatable .p-datatable-thead > tr > th.checkbox-col, \n[_nghost-%COMP%]     .alert-table.p-datatable .p-datatable-tbody > tr > td.checkbox-col {\n  width: 70px !important;\n  min-width: 70px;\n  max-width: 70px;\n  white-space: nowrap !important;\n  text-align: center;\n  padding: 0 0.25rem;\n}\n[_nghost-%COMP%]     .topic-doormat-section-row > td {\n  background: #eef2f6;\n}\n.topic-doormat-group[_ngcontent-%COMP%] {\n  margin-top: 1rem;\n  border: 1px solid #d8dee6;\n  border-radius: 6px;\n  background: #fff;\n  overflow: hidden;\n}\n.topic-doormat-group[_ngcontent-%COMP%]    + .topic-doormat-group[_ngcontent-%COMP%] {\n  margin-top: 1.25rem;\n}\n.topic-doormat-group-header[_ngcontent-%COMP%] {\n  display: flex;\n  align-items: flex-start;\n  justify-content: space-between;\n  gap: 1rem;\n  padding: 1.1rem 1.25rem;\n  border-bottom: 1px solid #d8dee6;\n  background: #eef2f6;\n}\n.topic-doormat-group[_ngcontent-%COMP%]   h3[_ngcontent-%COMP%] {\n  margin: 0;\n  font-size: 1.75rem;\n  line-height: 1.25;\n}\n.topic-doormat-count[_ngcontent-%COMP%] {\n  flex: 0 0 auto;\n  padding: 0.4rem 0.8rem;\n  border: 1px solid #d8dee6;\n  border-radius: 999px;\n  background: #fff;\n  color: #202833;\n  font-size: 1.25rem;\n  font-weight: 700;\n}\n.topic-doormat-subheading[_ngcontent-%COMP%] {\n  margin: 1rem 1rem 0.4rem;\n  padding-bottom: 0.25rem;\n  border-bottom: 1px solid #eef2f6;\n  color: #202833;\n  font-size: 0.9rem;\n  font-weight: 700;\n}\n.topic-doormat-group[_ngcontent-%COMP%]   .expansion-table[_ngcontent-%COMP%] {\n  margin: 0 1rem 1rem;\n}\n.topic-doormat-empty[_ngcontent-%COMP%] {\n  padding: 0.75rem;\n  border: 1px solid #d8dee6;\n  border-radius: 4px;\n  background: #fff;\n}\n/*# sourceMappingURL=component-guidance.component.css.map */", "\n\n.muted[_ngcontent-%COMP%] {\n  color: #6b7280;\n  font-size: 12px;\n}\n.issues[_ngcontent-%COMP%] {\n  margin: 0;\n  padding-left: 1rem;\n}\n.health-cell[_ngcontent-%COMP%] {\n  gap: 0.4rem;\n  align-items: center;\n  flex-wrap: wrap;\n}\n.chip-list[_ngcontent-%COMP%] {\n  display: flex;\n  flex-wrap: wrap;\n  gap: 0.25rem;\n  padding: 0;\n  margin: 0;\n}\n.chip-list[_ngcontent-%COMP%]   .chip[_ngcontent-%COMP%], \n.chip-list[_ngcontent-%COMP%]   .p-chip[_ngcontent-%COMP%] {\n  white-space: normal;\n  word-break: break-word;\n  max-width: 100%;\n}\n.expansion-table[_ngcontent-%COMP%] {\n  width: 100%;\n  max-width: 100%;\n  overflow: hidden;\n}\n[_nghost-%COMP%]     .expansion-table .p-datatable-table {\n  width: 100%;\n  border: 1px solid #d1d5db;\n  border-radius: 6px;\n}\n[_nghost-%COMP%]     .expansion-table .p-datatable-wrapper {\n  width: 100%;\n  overflow-x: auto;\n}\n[_nghost-%COMP%]     .expansion-table .p-datatable-tbody > tr > td, \n[_nghost-%COMP%]     .expansion-table .p-datatable-thead > tr > th {\n  white-space: normal;\n  word-break: normal;\n  overflow-wrap: normal;\n}\n.tag[_ngcontent-%COMP%] {\n  font-size: 11px;\n  padding: 0.05rem 0.4rem;\n  border-radius: 6px;\n  border: 1px solid transparent;\n}\n.ai-btn[_ngcontent-%COMP%] {\n  font-weight: 600;\n}\n.sr-only[_ngcontent-%COMP%] {\n  position: absolute;\n  width: 1px;\n  height: 1px;\n  padding: 0;\n  margin: -1px;\n  overflow: hidden;\n  clip: rect(0, 0, 0, 0);\n  white-space: nowrap;\n  border: 0;\n}\n/*# sourceMappingURL=component-guidance.component.css.map */", "\n\n.caption-actions[_ngcontent-%COMP%] {\n  display: flex;\n  align-items: center;\n  justify-content: flex-end;\n  gap: 0.5rem;\n}\n/*# sourceMappingURL=component-guidance.component.css.map */"] });
+  ], styles: ["\n\n[_nghost-%COMP%]     .alert-table .p-datatable-table {\n  table-layout: auto !important;\n}\n[_nghost-%COMP%]     .alert-table.p-datatable .p-datatable-thead > tr > th.toggle-col, \n[_nghost-%COMP%]     .alert-table.p-datatable .p-datatable-tbody > tr > td.toggle-col {\n  width: 70px !important;\n  min-width: 70px;\n  max-width: 70px;\n  white-space: nowrap !important;\n  text-align: center;\n  padding: 0 0.25rem;\n}\n[_nghost-%COMP%]     .alert-table.p-datatable .p-datatable-thead > tr > th.checkbox-col, \n[_nghost-%COMP%]     .alert-table.p-datatable .p-datatable-tbody > tr > td.checkbox-col {\n  width: 70px !important;\n  min-width: 70px;\n  max-width: 70px;\n  white-space: nowrap !important;\n  text-align: center;\n  padding: 0 0.25rem;\n}\n[_nghost-%COMP%]     .topic-doormat-section-row > td {\n  background: #eef2f6;\n}\n.topic-doormat-group[_ngcontent-%COMP%] {\n  margin-top: 1rem;\n  border: 1px solid #d8dee6;\n  border-radius: 6px;\n  background: #fff;\n  overflow: hidden;\n}\n.topic-doormat-group[_ngcontent-%COMP%]    + .topic-doormat-group[_ngcontent-%COMP%] {\n  margin-top: 1.25rem;\n}\n.topic-doormat-group-header[_ngcontent-%COMP%] {\n  display: flex;\n  align-items: flex-start;\n  gap: 0.75rem;\n  padding: 1.1rem 1.25rem;\n  border-bottom: 1px solid #d8dee6;\n  background: #eef2f6;\n}\n.topic-doormat-group[_ngcontent-%COMP%]   h3[_ngcontent-%COMP%] {\n  margin: 0;\n  font-size: 1.25rem;\n  line-height: 1.25;\n}\n.topic-doormat-count[_ngcontent-%COMP%] {\n  flex: 0 0 auto;\n  padding: 0.4rem 0.8rem;\n  border: 1px solid #d8dee6;\n  border-radius: 999px;\n  background: #fff;\n  color: #202833;\n  font-size: 0.9rem;\n  font-weight: 700;\n}\n.topic-doormat-subheading[_ngcontent-%COMP%] {\n  margin: 1rem 1rem 0.4rem;\n  padding-bottom: 0.25rem;\n  border-bottom: 1px solid #eef2f6;\n  color: #202833;\n  font-size: 0.9rem;\n  font-weight: 700;\n}\n.topic-doormat-group[_ngcontent-%COMP%]   .expansion-table[_ngcontent-%COMP%] {\n  margin: 0 1rem 1rem;\n}\n.topic-doormat-empty[_ngcontent-%COMP%] {\n  padding: 0.75rem;\n  border: 1px solid #d8dee6;\n  border-radius: 4px;\n  background: #fff;\n}\n/*# sourceMappingURL=component-guidance.component.css.map */", "\n\n.muted[_ngcontent-%COMP%] {\n  color: #6b7280;\n  font-size: 12px;\n}\n.issues[_ngcontent-%COMP%] {\n  margin: 0;\n  padding-left: 1rem;\n}\n.health-cell[_ngcontent-%COMP%] {\n  gap: 0.4rem;\n  align-items: center;\n  flex-wrap: wrap;\n}\n.chip-list[_ngcontent-%COMP%] {\n  display: flex;\n  flex-wrap: wrap;\n  gap: 0.25rem;\n  padding: 0;\n  margin: 0;\n}\n.chip-list[_ngcontent-%COMP%]   .chip[_ngcontent-%COMP%], \n.chip-list[_ngcontent-%COMP%]   .p-chip[_ngcontent-%COMP%] {\n  white-space: normal;\n  word-break: break-word;\n  max-width: 100%;\n}\n.expansion-table[_ngcontent-%COMP%] {\n  width: 100%;\n  max-width: 100%;\n  overflow: hidden;\n}\n[_nghost-%COMP%]     .expansion-table .p-datatable-table {\n  width: 100%;\n  border: 1px solid #d1d5db;\n  border-radius: 6px;\n}\n[_nghost-%COMP%]     .expansion-table .p-datatable-wrapper {\n  width: 100%;\n  overflow-x: auto;\n}\n[_nghost-%COMP%]     .expansion-table .p-datatable-tbody > tr > td, \n[_nghost-%COMP%]     .expansion-table .p-datatable-thead > tr > th {\n  white-space: normal;\n  word-break: normal;\n  overflow-wrap: normal;\n}\n.tag[_ngcontent-%COMP%] {\n  font-size: 11px;\n  padding: 0.05rem 0.4rem;\n  border-radius: 6px;\n  border: 1px solid transparent;\n}\n.ai-btn[_ngcontent-%COMP%] {\n  font-weight: 600;\n}\n.sr-only[_ngcontent-%COMP%] {\n  position: absolute;\n  width: 1px;\n  height: 1px;\n  padding: 0;\n  margin: -1px;\n  overflow: hidden;\n  clip: rect(0, 0, 0, 0);\n  white-space: nowrap;\n  border: 0;\n}\n/*# sourceMappingURL=component-guidance.component.css.map */", "\n\n.caption-actions[_ngcontent-%COMP%] {\n  display: flex;\n  align-items: center;\n  justify-content: flex-end;\n  gap: 0.5rem;\n}\n/*# sourceMappingURL=component-guidance.component.css.map */"] });
 };
 (() => {
   (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(ComponentGuidanceComponent, [{
@@ -31679,11 +32072,11 @@ var ComponentGuidanceComponent = class _ComponentGuidanceComponent {
     <span class="sr-only">Get GenAI recommendations based on user data</span>
   </button>
 </div>
-`, styles: ["/* src/app/views/page-assistant/components/problems/component-guidance/component-guidance.component.css */\n:host ::ng-deep .alert-table .p-datatable-table {\n  table-layout: auto !important;\n}\n:host ::ng-deep .alert-table.p-datatable .p-datatable-thead > tr > th.toggle-col,\n:host ::ng-deep .alert-table.p-datatable .p-datatable-tbody > tr > td.toggle-col {\n  width: 70px !important;\n  min-width: 70px;\n  max-width: 70px;\n  white-space: nowrap !important;\n  text-align: center;\n  padding: 0 0.25rem;\n}\n:host ::ng-deep .alert-table.p-datatable .p-datatable-thead > tr > th.checkbox-col,\n:host ::ng-deep .alert-table.p-datatable .p-datatable-tbody > tr > td.checkbox-col {\n  width: 70px !important;\n  min-width: 70px;\n  max-width: 70px;\n  white-space: nowrap !important;\n  text-align: center;\n  padding: 0 0.25rem;\n}\n:host ::ng-deep .topic-doormat-section-row > td {\n  background: #eef2f6;\n}\n.topic-doormat-group {\n  margin-top: 1rem;\n  border: 1px solid #d8dee6;\n  border-radius: 6px;\n  background: #fff;\n  overflow: hidden;\n}\n.topic-doormat-group + .topic-doormat-group {\n  margin-top: 1.25rem;\n}\n.topic-doormat-group-header {\n  display: flex;\n  align-items: flex-start;\n  justify-content: space-between;\n  gap: 1rem;\n  padding: 1.1rem 1.25rem;\n  border-bottom: 1px solid #d8dee6;\n  background: #eef2f6;\n}\n.topic-doormat-group h3 {\n  margin: 0;\n  font-size: 1.75rem;\n  line-height: 1.25;\n}\n.topic-doormat-count {\n  flex: 0 0 auto;\n  padding: 0.4rem 0.8rem;\n  border: 1px solid #d8dee6;\n  border-radius: 999px;\n  background: #fff;\n  color: #202833;\n  font-size: 1.25rem;\n  font-weight: 700;\n}\n.topic-doormat-subheading {\n  margin: 1rem 1rem 0.4rem;\n  padding-bottom: 0.25rem;\n  border-bottom: 1px solid #eef2f6;\n  color: #202833;\n  font-size: 0.9rem;\n  font-weight: 700;\n}\n.topic-doormat-group .expansion-table {\n  margin: 0 1rem 1rem;\n}\n.topic-doormat-empty {\n  padding: 0.75rem;\n  border: 1px solid #d8dee6;\n  border-radius: 4px;\n  background: #fff;\n}\n/*# sourceMappingURL=component-guidance.component.css.map */\n", "/* angular:styles/component:css;554a744f74cf9c5ca06a8541cdf1eb7b8f0e176bbe19733f092d723b4dd51137;C:/my-working-files/GitHub/design-assistant/src/app/views/page-assistant/components/problems/component-guidance/component-guidance.component.ts */\n.muted {\n  color: #6b7280;\n  font-size: 12px;\n}\n.issues {\n  margin: 0;\n  padding-left: 1rem;\n}\n.health-cell {\n  gap: 0.4rem;\n  align-items: center;\n  flex-wrap: wrap;\n}\n.chip-list {\n  display: flex;\n  flex-wrap: wrap;\n  gap: 0.25rem;\n  padding: 0;\n  margin: 0;\n}\n.chip-list .chip,\n.chip-list .p-chip {\n  white-space: normal;\n  word-break: break-word;\n  max-width: 100%;\n}\n.expansion-table {\n  width: 100%;\n  max-width: 100%;\n  overflow: hidden;\n}\n:host ::ng-deep .expansion-table .p-datatable-table {\n  width: 100%;\n  border: 1px solid #d1d5db;\n  border-radius: 6px;\n}\n:host ::ng-deep .expansion-table .p-datatable-wrapper {\n  width: 100%;\n  overflow-x: auto;\n}\n:host ::ng-deep .expansion-table .p-datatable-tbody > tr > td,\n:host ::ng-deep .expansion-table .p-datatable-thead > tr > th {\n  white-space: normal;\n  word-break: normal;\n  overflow-wrap: normal;\n}\n.tag {\n  font-size: 11px;\n  padding: 0.05rem 0.4rem;\n  border-radius: 6px;\n  border: 1px solid transparent;\n}\n.ai-btn {\n  font-weight: 600;\n}\n.sr-only {\n  position: absolute;\n  width: 1px;\n  height: 1px;\n  padding: 0;\n  margin: -1px;\n  overflow: hidden;\n  clip: rect(0, 0, 0, 0);\n  white-space: nowrap;\n  border: 0;\n}\n/*# sourceMappingURL=component-guidance.component.css.map */\n", "/* angular:styles/component:css;c0806e59c14ba3c53784f6243c5c92cc29bf483de8f80121dc534aca8504d932;C:/my-working-files/GitHub/design-assistant/src/app/views/page-assistant/components/problems/component-guidance/component-guidance.component.ts */\n.caption-actions {\n  display: flex;\n  align-items: center;\n  justify-content: flex-end;\n  gap: 0.5rem;\n}\n/*# sourceMappingURL=component-guidance.component.css.map */\n"] }]
+`, styles: ["/* src/app/views/page-assistant/components/problems/component-guidance/component-guidance.component.css */\n:host ::ng-deep .alert-table .p-datatable-table {\n  table-layout: auto !important;\n}\n:host ::ng-deep .alert-table.p-datatable .p-datatable-thead > tr > th.toggle-col,\n:host ::ng-deep .alert-table.p-datatable .p-datatable-tbody > tr > td.toggle-col {\n  width: 70px !important;\n  min-width: 70px;\n  max-width: 70px;\n  white-space: nowrap !important;\n  text-align: center;\n  padding: 0 0.25rem;\n}\n:host ::ng-deep .alert-table.p-datatable .p-datatable-thead > tr > th.checkbox-col,\n:host ::ng-deep .alert-table.p-datatable .p-datatable-tbody > tr > td.checkbox-col {\n  width: 70px !important;\n  min-width: 70px;\n  max-width: 70px;\n  white-space: nowrap !important;\n  text-align: center;\n  padding: 0 0.25rem;\n}\n:host ::ng-deep .topic-doormat-section-row > td {\n  background: #eef2f6;\n}\n.topic-doormat-group {\n  margin-top: 1rem;\n  border: 1px solid #d8dee6;\n  border-radius: 6px;\n  background: #fff;\n  overflow: hidden;\n}\n.topic-doormat-group + .topic-doormat-group {\n  margin-top: 1.25rem;\n}\n.topic-doormat-group-header {\n  display: flex;\n  align-items: flex-start;\n  gap: 0.75rem;\n  padding: 1.1rem 1.25rem;\n  border-bottom: 1px solid #d8dee6;\n  background: #eef2f6;\n}\n.topic-doormat-group h3 {\n  margin: 0;\n  font-size: 1.25rem;\n  line-height: 1.25;\n}\n.topic-doormat-count {\n  flex: 0 0 auto;\n  padding: 0.4rem 0.8rem;\n  border: 1px solid #d8dee6;\n  border-radius: 999px;\n  background: #fff;\n  color: #202833;\n  font-size: 0.9rem;\n  font-weight: 700;\n}\n.topic-doormat-subheading {\n  margin: 1rem 1rem 0.4rem;\n  padding-bottom: 0.25rem;\n  border-bottom: 1px solid #eef2f6;\n  color: #202833;\n  font-size: 0.9rem;\n  font-weight: 700;\n}\n.topic-doormat-group .expansion-table {\n  margin: 0 1rem 1rem;\n}\n.topic-doormat-empty {\n  padding: 0.75rem;\n  border: 1px solid #d8dee6;\n  border-radius: 4px;\n  background: #fff;\n}\n/*# sourceMappingURL=component-guidance.component.css.map */\n", "/* angular:styles/component:css;554a744f74cf9c5ca06a8541cdf1eb7b8f0e176bbe19733f092d723b4dd51137;C:/my-working-files/GitHub/design-assistant/src/app/views/page-assistant/components/problems/component-guidance/component-guidance.component.ts */\n.muted {\n  color: #6b7280;\n  font-size: 12px;\n}\n.issues {\n  margin: 0;\n  padding-left: 1rem;\n}\n.health-cell {\n  gap: 0.4rem;\n  align-items: center;\n  flex-wrap: wrap;\n}\n.chip-list {\n  display: flex;\n  flex-wrap: wrap;\n  gap: 0.25rem;\n  padding: 0;\n  margin: 0;\n}\n.chip-list .chip,\n.chip-list .p-chip {\n  white-space: normal;\n  word-break: break-word;\n  max-width: 100%;\n}\n.expansion-table {\n  width: 100%;\n  max-width: 100%;\n  overflow: hidden;\n}\n:host ::ng-deep .expansion-table .p-datatable-table {\n  width: 100%;\n  border: 1px solid #d1d5db;\n  border-radius: 6px;\n}\n:host ::ng-deep .expansion-table .p-datatable-wrapper {\n  width: 100%;\n  overflow-x: auto;\n}\n:host ::ng-deep .expansion-table .p-datatable-tbody > tr > td,\n:host ::ng-deep .expansion-table .p-datatable-thead > tr > th {\n  white-space: normal;\n  word-break: normal;\n  overflow-wrap: normal;\n}\n.tag {\n  font-size: 11px;\n  padding: 0.05rem 0.4rem;\n  border-radius: 6px;\n  border: 1px solid transparent;\n}\n.ai-btn {\n  font-weight: 600;\n}\n.sr-only {\n  position: absolute;\n  width: 1px;\n  height: 1px;\n  padding: 0;\n  margin: -1px;\n  overflow: hidden;\n  clip: rect(0, 0, 0, 0);\n  white-space: nowrap;\n  border: 0;\n}\n/*# sourceMappingURL=component-guidance.component.css.map */\n", "/* angular:styles/component:css;c0806e59c14ba3c53784f6243c5c92cc29bf483de8f80121dc534aca8504d932;C:/my-working-files/GitHub/design-assistant/src/app/views/page-assistant/components/problems/component-guidance/component-guidance.component.ts */\n.caption-actions {\n  display: flex;\n  align-items: center;\n  justify-content: flex-end;\n  gap: 0.5rem;\n}\n/*# sourceMappingURL=component-guidance.component.css.map */\n"] }]
   }], null, null);
 })();
 (() => {
-  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(ComponentGuidanceComponent, { className: "ComponentGuidanceComponent", filePath: "app/views/page-assistant/components/problems/component-guidance/component-guidance.component.ts", lineNumber: 210 });
+  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(ComponentGuidanceComponent, { className: "ComponentGuidanceComponent", filePath: "app/views/page-assistant/components/problems/component-guidance/component-guidance.component.ts", lineNumber: 229 });
 })();
 
 // src/app/views/page-assistant/components/problems/seo.component.ts
@@ -45249,4 +45642,4 @@ ${custom}` : promptBody;
 export {
   PageAssistantCompareComponent
 };
-//# sourceMappingURL=chunk-MLVCJ476.js.map
+//# sourceMappingURL=chunk-7QBXKWAV.js.map

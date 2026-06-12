@@ -23,6 +23,13 @@ Use this skill for issue analysis of topic doormat sets.
 - Apply consistency checks, including style consistency, across the complete
   topic doormat set unless the taxonomy explicitly scopes a check to one
   section
+- Audit description style within each H2 section. Report a section-level mixed
+  description style issue when a section mixes noun/topic or benefit-summary
+  descriptions with action-oriented, question-answer, or "How to" descriptions,
+  even in small sections when the split is visible
+- Compare internally consistent H2 sections with each other. Report a
+  section-level style outlier when one section's dominant description style
+  clearly differs from the dominant page-level section style
 - Use caller-provided `linkTextCharacterCount` and
   `descriptionCharacterCount` values when present; do not recalculate
   character counts from HTML
