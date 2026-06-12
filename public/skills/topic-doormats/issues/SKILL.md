@@ -14,6 +14,15 @@ Use this skill for issue analysis of topic doormat sets.
 - Use the issue taxonomy resource as the authoritative ruleset
 - Use the issues output schema as the required response shape
 - Run deterministic structural checks first, then judgment/editorial checks
+- Treat caller-provided H2 section metadata as authoritative for section-local
+  doormat numbering and the 9-doormat limit
+- Apply the 9-doormat limit per H2 section only; reset the count at each H2
+  section
+- Report `too-many-doormats-in-section` as one section-level issue for the
+  affected H2 section, not as repeated per-doormat issues
+- Apply consistency checks, including style consistency, across the complete
+  topic doormat set unless the taxonomy explicitly scopes a check to one
+  section
 - Use caller-provided `linkTextCharacterCount` and
   `descriptionCharacterCount` values when present; do not recalculate
   character counts from HTML

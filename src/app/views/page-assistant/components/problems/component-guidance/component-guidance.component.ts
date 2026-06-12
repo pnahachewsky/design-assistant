@@ -57,14 +57,26 @@ interface GuidanceRow {
 
 interface TopicDoormatIssueRow {
   include: boolean;
+  rowType: 'section' | 'doormat';
   severity: string;
   doormat: string;
+  doormatLabel: string;
   issueId: string;
   issue: string;
   evidence: string;
   recommendation: string;
   doormatIndex?: number;
   sectionIndex?: number;
+  sectionTitle?: string;
+  sectionItemIndex?: number;
+}
+
+interface TopicDoormatIssueGroup {
+  sectionIndex: number;
+  sectionTitle: string;
+  doormatCount: number;
+  sectionRows: TopicDoormatIssueRow[];
+  doormatRows: TopicDoormatIssueRow[];
 }
 
 interface TopicDoormatSummary {
@@ -82,6 +94,7 @@ interface TopicDoormatSummary {
   linkTextCharacterCount: number;
   descriptionCharacterCount: number;
   sectionIndex: number;
+  sectionTitle: string;
   sectionItemIndex: number;
   sectionDoormatCount: number;
 }
@@ -235,6 +248,7 @@ export class ComponentGuidanceComponent implements OnInit, OnDestroy {
   topicDoormatIssuesError = false;
   topicDoormatIssuesErrorDetail = '';
   topicDoormatIssueRows: TopicDoormatIssueRow[] = [];
+  topicDoormatIssueGroups: TopicDoormatIssueGroup[] = [];
   private prevAlertHasIssues = false;
 
   // multi-select
@@ -586,6 +600,8 @@ export class ComponentGuidanceComponent implements OnInit, OnDestroy {
     this.topicDoormatIssuesLoading = true;
     this.topicDoormatIssuesError = false;
     this.topicDoormatIssuesErrorDetail = '';
+    this.topicDoormatIssueRows = [];
+    this.topicDoormatIssueGroups = [];
 
     try {
       await this.loadTopicDoormatIssueTaxonomy();
@@ -632,6 +648,7 @@ export class ComponentGuidanceComponent implements OnInit, OnDestroy {
           hasDescriptionSpecialFormatting:
             summary.hasDescriptionSpecialFormatting,
           sectionIndex: summary.sectionIndex,
+          sectionTitle: summary.sectionTitle,
           sectionItemIndex: summary.sectionItemIndex,
           sectionDoormatCount: summary.sectionDoormatCount,
         })),
@@ -662,10 +679,14 @@ export class ComponentGuidanceComponent implements OnInit, OnDestroy {
       this.topicDoormatIssueRows = text
         ? this.parseTopicDoormatIssueRows(text, doormatSummaries)
         : [];
+      this.topicDoormatIssueGroups = this.buildTopicDoormatIssueGroups(
+        this.topicDoormatIssueRows,
+      );
       this.debugTopicDoormatIssues('response parsed', {
         model,
         responseCharacters: text.length,
         displayedRows: this.topicDoormatIssueRows.length,
+        displayedGroups: this.topicDoormatIssueGroups.length,
         totalElapsedMs: Math.round(performance.now() - analysisStart),
       });
       if (!text) {
@@ -853,9 +874,11 @@ export class ComponentGuidanceComponent implements OnInit, OnDestroy {
       const href = this.cleanString(doormat['href']);
       const issues = Array.isArray(doormat['issues']) ? doormat['issues'] : [];
       const summary = index ? summariesByIndex.get(index) : undefined;
-      const label = [index ? `${index}.` : '', linkText || href || 'Doormat']
-        .filter(Boolean)
-        .join(' ');
+      const label = summary
+        ? this.buildTopicDoormatLabel(summary)
+        : [index ? `${index}.` : '', linkText || href || 'Doormat']
+            .filter(Boolean)
+            .join(' ');
 
       if (!issues.length) {
         return [
@@ -875,6 +898,7 @@ export class ComponentGuidanceComponent implements OnInit, OnDestroy {
               linkTextCharacterCount: linkText.length,
               descriptionCharacterCount: 0,
               sectionIndex: 0,
+              sectionTitle: '',
               sectionItemIndex: 0,
               sectionDoormatCount: 0,
             },
@@ -907,28 +931,32 @@ export class ComponentGuidanceComponent implements OnInit, OnDestroy {
           if (!this.hasValidTopicDoormatObjectiveEvidence(issueId, summary)) {
             return null;
           }
+          if (issueId === 'too-many-doormats-in-section') {
+            return null;
+          }
           const evidence = this.buildTopicDoormatEvidence(issue, summary);
           return {
             include:
               typeof issue['include'] === 'boolean'
                 ? issue['include']
                 : true,
+            rowType: 'doormat',
             severity: this.cleanString(issue['severity']) || 'Unknown',
             doormat: label,
+            doormatLabel: summary?.linkText || linkText || href || 'Doormat',
             issueId,
             issue: this.getTopicDoormatIssueLabel(issueId),
             evidence,
             recommendation: this.cleanString(issue['recommendation']),
             doormatIndex: index ?? undefined,
             sectionIndex: summary?.sectionIndex,
+            sectionTitle: summary?.sectionTitle,
+            sectionItemIndex: summary?.sectionItemIndex,
           } satisfies TopicDoormatIssueRow;
         })
         .filter((row): row is TopicDoormatIssueRow => row !== null);
     });
 
-    const suppressedSectionIssueRows = sectionIssueRows.filter(
-      (row) => row.issueId === 'too-many-doormats-in-section',
-    );
     const reportableSectionIssueRows = sectionIssueRows.filter(
       (row) => row.issueId !== 'too-many-doormats-in-section',
     );
@@ -938,11 +966,14 @@ export class ComponentGuidanceComponent implements OnInit, OnDestroy {
         .map((row) => row.sectionIndex)
         .filter((index): index is number => typeof index === 'number' && index > 0),
     );
+    const hasMixedDescriptionStyleIssue =
+      mixedDescriptionStyleSectionIndexes.size > 0;
     const suppressedModelIssueRows = rows.filter(
       (row) =>
         row.issueId === 'inconsistent-description-style' &&
-        !!row.sectionIndex &&
-        mixedDescriptionStyleSectionIndexes.has(row.sectionIndex),
+        (hasMixedDescriptionStyleIssue ||
+          (!!row.sectionIndex &&
+            mixedDescriptionStyleSectionIndexes.has(row.sectionIndex))),
     );
     const modelIssueRows = rows.filter(
       (row) => !suppressedModelIssueRows.includes(row),
@@ -989,10 +1020,6 @@ export class ComponentGuidanceComponent implements OnInit, OnDestroy {
       ),
       modelRawSectionIssueRows: sectionIssueRows.length,
       modelDisplayedSectionIssueRows: reportableSectionIssueRows.length,
-      suppressedSectionIssueRows: suppressedSectionIssueRows.length,
-      suppressedSectionIssueBreakdown: this.countTopicDoormatRowsByIssue(
-        suppressedSectionIssueRows,
-      ),
       fallbackNoIssueRows: missingNoIssueRows.length,
       deterministicRows: deterministicRows.length,
       displayedRows: resolvedRows.length,
@@ -1034,8 +1061,13 @@ export class ComponentGuidanceComponent implements OnInit, OnDestroy {
     return {
       include:
         typeof issue['include'] === 'boolean' ? issue['include'] : true,
+      rowType: 'section',
       severity: this.cleanString(issue['severity']) || 'Unknown',
-      doormat: `Section ${sectionIndex}`,
+      doormat: this.buildTopicDoormatSectionLabel(
+        sectionIndex,
+        doormatSummaries,
+      ),
+      doormatLabel: 'All doormats in section',
       issueId: this.getTopicDoormatIssueId(issue),
       issue: this.getTopicDoormatIssueLabel(
         this.getTopicDoormatIssueId(issue),
@@ -1043,6 +1075,9 @@ export class ComponentGuidanceComponent implements OnInit, OnDestroy {
       evidence: this.buildTopicDoormatEvidence(issue),
       recommendation: this.cleanString(issue['recommendation']),
       sectionIndex,
+      sectionTitle:
+        doormatSummaries.find((summary) => summary.sectionIndex === sectionIndex)
+          ?.sectionTitle || '',
     };
   }
 
@@ -1077,16 +1112,14 @@ export class ComponentGuidanceComponent implements OnInit, OnDestroy {
     existingRows: TopicDoormatIssueRow[],
   ): TopicDoormatIssueRow[] {
     const existingIssueKeys = new Set(
-      existingRows.map((row) => `${row.doormatIndex ?? 0}|${row.issueId}`),
+      existingRows.map((row) => `${row.sectionIndex ?? 0}|${row.issueId}`),
     );
 
-    return doormatSummaries.flatMap((summary) => {
+    return this.buildTopicDoormatSectionCounts(doormatSummaries).flatMap(
+      (section) => {
       if (
-        summary.sectionDoormatCount <= 9 ||
-        summary.sectionItemIndex <= 9 ||
-        existingIssueKeys.has(
-          `${summary.index}|too-many-doormats-in-section`,
-        )
+        section.count <= 9 ||
+        existingIssueKeys.has(`${section.sectionIndex}|too-many-doormats-in-section`)
       ) {
         return [];
       }
@@ -1094,33 +1127,93 @@ export class ComponentGuidanceComponent implements OnInit, OnDestroy {
       return [
         {
           include: true,
+          rowType: 'section',
           severity: 'Medium',
-          doormat: this.buildTopicDoormatLabel(summary),
+          doormat: this.buildTopicDoormatSectionLabel(
+            section.sectionIndex,
+            doormatSummaries,
+          ),
+          doormatLabel: 'All doormats in section',
           issueId: 'too-many-doormats-in-section',
           issue: this.getTopicDoormatIssueLabel('too-many-doormats-in-section'),
-          evidence: this.buildTooManyTopicDoormatsEvidence(summary),
+          evidence: `There are ${section.count} doormats in this section.`,
           recommendation:
-            'Reduce the section to 9 doormats or split lower-priority destinations into another section.',
-          doormatIndex: summary.index,
-          sectionIndex: summary.sectionIndex,
+            'Either remove doormats or break down the section into sections that have 9 or fewer doormats.',
+          sectionIndex: section.sectionIndex,
+          sectionTitle: section.sectionTitle,
         } satisfies TopicDoormatIssueRow,
       ];
     });
   }
 
+  private buildTopicDoormatIssueGroups(
+    rows: TopicDoormatIssueRow[],
+  ): TopicDoormatIssueGroup[] {
+    const groups = new Map<number, TopicDoormatIssueGroup>();
+
+    rows.forEach((row) => {
+      const sectionIndex = row.sectionIndex ?? 0;
+      const group = groups.get(sectionIndex) ?? {
+        sectionIndex,
+        sectionTitle:
+          row.sectionTitle ||
+          (sectionIndex ? `Section ${sectionIndex}` : 'Topic doormats'),
+        doormatCount: 0,
+        sectionRows: [],
+        doormatRows: [],
+      };
+      if (!group.sectionTitle && row.sectionTitle) {
+        group.sectionTitle = row.sectionTitle;
+      }
+      if (row.rowType === 'section') {
+        group.sectionRows.push(row);
+      } else if (!this.isNoIssueRow(row)) {
+        group.doormatRows.push(row);
+      }
+      if (row.rowType === 'doormat' && row.sectionItemIndex) {
+        group.doormatCount = Math.max(group.doormatCount, row.sectionItemIndex);
+      }
+      groups.set(sectionIndex, group);
+    });
+
+    return Array.from(groups.values())
+      .map((group) => ({
+        ...group,
+        sectionRows: this.sortTopicDoormatRowsForGroup(group.sectionRows),
+        doormatRows: this.sortTopicDoormatRowsForGroup(group.doormatRows),
+      }))
+      .sort((a, b) => a.sectionIndex - b.sectionIndex);
+  }
+
+  private sortTopicDoormatRowsForGroup(
+    rows: TopicDoormatIssueRow[],
+  ): TopicDoormatIssueRow[] {
+    return [...rows].sort((a, b) => {
+      const aItem = a.sectionItemIndex ?? 0;
+      const bItem = b.sectionItemIndex ?? 0;
+      if (aItem !== bItem) return aItem - bItem;
+      if (a.rowType !== b.rowType) return a.rowType === 'section' ? -1 : 1;
+      return a.issue.localeCompare(b.issue);
+    });
+  }
+
   private buildTopicDoormatSectionCounts(
     doormatSummaries: TopicDoormatSummary[],
-  ): { sectionIndex: number; count: number }[] {
-    const counts = new Map<number, number>();
+  ): { sectionIndex: number; sectionTitle: string; count: number }[] {
+    const counts = new Map<
+      number,
+      { sectionIndex: number; sectionTitle: string; count: number }
+    >();
     doormatSummaries.forEach((summary) => {
       if (!summary.sectionIndex) return;
-      counts.set(
-        summary.sectionIndex,
-        Math.max(counts.get(summary.sectionIndex) ?? 0, summary.sectionDoormatCount),
-      );
+      const existing = counts.get(summary.sectionIndex);
+      counts.set(summary.sectionIndex, {
+        sectionIndex: summary.sectionIndex,
+        sectionTitle: summary.sectionTitle,
+        count: Math.max(existing?.count ?? 0, summary.sectionDoormatCount),
+      });
     });
-    return Array.from(counts.entries())
-      .map(([sectionIndex, count]) => ({ sectionIndex, count }))
+    return Array.from(counts.values())
       .sort((a, b) => a.sectionIndex - b.sectionIndex);
   }
 
@@ -1153,14 +1246,18 @@ export class ComponentGuidanceComponent implements OnInit, OnDestroy {
   ): TopicDoormatIssueRow {
     return {
       include: false,
+      rowType: 'doormat',
       severity: 'OK',
       doormat: this.buildTopicDoormatLabel(doormat),
+      doormatLabel: doormat.linkText || doormat.href || 'Doormat',
       issueId: 'no-issues',
       issue: 'No issues',
       evidence: 'No issues reported by AI.',
       recommendation: '',
       doormatIndex: doormat.index || undefined,
       sectionIndex: doormat.sectionIndex || undefined,
+      sectionTitle: doormat.sectionTitle || undefined,
+      sectionItemIndex: doormat.sectionItemIndex || undefined,
     };
   }
 
@@ -1274,12 +1371,34 @@ export class ComponentGuidanceComponent implements OnInit, OnDestroy {
   }
 
   private buildTopicDoormatLabel(doormat: TopicDoormatSummary): string {
+    const itemIndex = doormat.sectionItemIndex || doormat.index;
+    const itemLabel = [
+      itemIndex ? `${itemIndex}.` : '',
+      doormat.linkText || doormat.href || 'Doormat',
+    ]
+      .filter(Boolean)
+      .join(' ');
+    if (doormat.sectionTitle) {
+      return `${doormat.sectionTitle}: ${itemLabel}`;
+    }
     return [
       doormat.index ? `${doormat.index}.` : '',
       doormat.linkText || doormat.href || 'Doormat',
     ]
       .filter(Boolean)
       .join(' ');
+  }
+
+  private buildTopicDoormatSectionLabel(
+    sectionIndex: number,
+    doormatSummaries: TopicDoormatSummary[],
+  ): string {
+    const sectionTitle =
+      doormatSummaries.find((summary) => summary.sectionIndex === sectionIndex)
+        ?.sectionTitle || '';
+    return sectionTitle
+      ? `Section ${sectionIndex}: ${sectionTitle}`
+      : `Section ${sectionIndex}`;
   }
 
   private isReportableTopicDoormatIssue(
@@ -1376,7 +1495,10 @@ export class ComponentGuidanceComponent implements OnInit, OnDestroy {
       return '';
     }
 
-    return `${doormat.sectionDoormatCount}/9 doormats in section ${doormat.sectionIndex}; item ${doormat.sectionItemIndex}`;
+    const sectionLabel = doormat.sectionTitle
+      ? `"${doormat.sectionTitle}"`
+      : `section ${doormat.sectionIndex}`;
+    return `${doormat.sectionDoormatCount}/9 doormats in ${sectionLabel}; item ${doormat.sectionItemIndex}`;
   }
 
   private getTopicDoormatExactCharacterCount(
@@ -1445,59 +1567,79 @@ export class ComponentGuidanceComponent implements OnInit, OnDestroy {
     try {
       const seen = new Set<string>();
       const summaries: TopicDoormatSummary[] = [];
-      const sections = Array.from(doc.querySelectorAll<HTMLElement>('.gc-srvinfo'));
+      const sectionIndexes = new Map<HTMLElement | string, number>();
+      const sectionTitles = new Map<number, string>();
+      const sectionSummaries = new Map<number, TopicDoormatSummary[]>();
+      const links = Array.from(
+        doc.querySelectorAll<HTMLAnchorElement>(
+          '.gc-srvinfo h2 a, .gc-srvinfo h3 a',
+        ),
+      );
 
-      sections.forEach((section, sectionIndex) => {
-        const links = Array.from(
-          section.querySelectorAll<HTMLAnchorElement>('h2 a, h3 a'),
-        );
-        const sectionSummaries: TopicDoormatSummary[] = [];
+      for (const link of links) {
+        const linkText = this.cleanVisibleText(link.textContent);
+        const href = link.getAttribute('href') || '';
+        const key = `${href}|${linkText}`;
+        if (!linkText && !href) continue;
+        if (seen.has(key)) continue;
+        seen.add(key);
 
-        for (const link of links) {
-          const linkText = this.cleanVisibleText(link.textContent);
-          const href = link.getAttribute('href') || '';
-          const key = `${href}|${linkText}`;
-          if (!linkText && !href) continue;
-          if (seen.has(key)) continue;
-          seen.add(key);
-          const item = this.findTopicDoormatItem(link);
-          const descriptionElement = item?.querySelector('p') ?? null;
-          const description = this.cleanVisibleText(
-            descriptionElement?.textContent,
+        const wrapper = link.closest<HTMLElement>('.gc-srvinfo');
+        const sectionHeading = this.findTopicDoormatSectionHeading(link, wrapper);
+        const sectionKey: HTMLElement | string =
+          sectionHeading ?? wrapper ?? 'topic-doormats';
+        let sectionIndex = sectionIndexes.get(sectionKey);
+        if (!sectionIndex) {
+          sectionIndex = sectionIndexes.size + 1;
+          sectionIndexes.set(sectionKey, sectionIndex);
+          sectionTitles.set(
+            sectionIndex,
+            this.cleanVisibleText(sectionHeading?.textContent) ||
+              `Topic doormats ${sectionIndex}`,
           );
-          const heading = link.closest('h2, h3');
-          sectionSummaries.push({
-            index: summaries.length + sectionSummaries.length + 1,
-            linkText,
-            href,
-            description,
-            headingLevel: heading ? this.toNumber(heading.tagName.slice(1)) : null,
-            itemLinkCount: item
-              ? item.querySelectorAll('a[href]').length
-              : 0,
-            descriptionLinkCount: descriptionElement
-              ? descriptionElement.querySelectorAll('a[href]').length
-              : 0,
-            hasDescriptionLink: !!descriptionElement?.querySelector('a[href]'),
-            hasDescriptionIconOrImage: !!descriptionElement?.querySelector(
-              'img, svg, i[class*="glyphicon"], i[class*="fa"], span[class*="glyphicon"], span[class*="fa"]',
-            ),
-            hasDescriptionSpecialFormatting:
-              !!descriptionElement?.querySelector(
-                'strong, b, em, i, ul, ol, li, mark, code',
-              ),
-            rawItemText: this.cleanVisibleText(item?.textContent).slice(0, 500),
-            linkTextCharacterCount: linkText.length,
-            descriptionCharacterCount: description.length,
-            sectionIndex: sectionIndex + 1,
-            sectionItemIndex: sectionSummaries.length + 1,
-            sectionDoormatCount: 0,
-          });
         }
 
-        sectionSummaries.forEach((summary) => {
-          summary.sectionDoormatCount = sectionSummaries.length;
-          summaries.push(summary);
+        const sectionRows = sectionSummaries.get(sectionIndex) ?? [];
+        sectionSummaries.set(sectionIndex, sectionRows);
+        const item = this.findTopicDoormatItem(link);
+        const descriptionElement = item?.querySelector('p') ?? null;
+        const description = this.cleanVisibleText(
+          descriptionElement?.textContent,
+        );
+        const heading = link.closest('h2, h3');
+        const summary: TopicDoormatSummary = {
+          index: summaries.length + 1,
+          linkText,
+          href,
+          description,
+          headingLevel: heading ? this.toNumber(heading.tagName.slice(1)) : null,
+          itemLinkCount: item ? item.querySelectorAll('a[href]').length : 0,
+          descriptionLinkCount: descriptionElement
+            ? descriptionElement.querySelectorAll('a[href]').length
+            : 0,
+          hasDescriptionLink: !!descriptionElement?.querySelector('a[href]'),
+          hasDescriptionIconOrImage: !!descriptionElement?.querySelector(
+            'img, svg, i[class*="glyphicon"], i[class*="fa"], span[class*="glyphicon"], span[class*="fa"]',
+          ),
+          hasDescriptionSpecialFormatting:
+            !!descriptionElement?.querySelector(
+              'strong, b, em, i, ul, ol, li, mark, code',
+            ),
+          rawItemText: this.cleanVisibleText(item?.textContent).slice(0, 500),
+          linkTextCharacterCount: linkText.length,
+          descriptionCharacterCount: description.length,
+          sectionIndex,
+          sectionTitle: sectionTitles.get(sectionIndex) ?? '',
+          sectionItemIndex: sectionRows.length + 1,
+          sectionDoormatCount: 0,
+        };
+        summaries.push(summary);
+        sectionRows.push(summary);
+      }
+
+      sectionSummaries.forEach((sectionRows) => {
+        sectionRows.forEach((summary) => {
+          summary.sectionDoormatCount = sectionRows.length;
         });
       });
 
@@ -1505,6 +1647,42 @@ export class ComponentGuidanceComponent implements OnInit, OnDestroy {
     } catch {
       return [];
     }
+  }
+
+  private findTopicDoormatSectionHeading(
+    link: HTMLAnchorElement,
+    wrapper: HTMLElement | null,
+  ): HTMLElement | null {
+    const linkHeading = link.closest('h2');
+    const searchRoot = wrapper ?? link.ownerDocument.body;
+    const headings = Array.from(searchRoot.querySelectorAll<HTMLElement>('h2'));
+    const precedingHeading = headings
+      .filter(
+        (heading) =>
+          heading !== linkHeading &&
+          !!(
+            heading.compareDocumentPosition(link) &
+            Node.DOCUMENT_POSITION_FOLLOWING
+          ),
+      )
+      .pop();
+    if (precedingHeading) return precedingHeading;
+
+    let current: HTMLElement | null = wrapper;
+    while (current) {
+      let previous = current.previousElementSibling as HTMLElement | null;
+      while (previous) {
+        if (previous.matches('h2')) return previous;
+        const nestedHeading = Array.from(
+          previous.querySelectorAll<HTMLElement>('h2'),
+        ).pop();
+        if (nestedHeading) return nestedHeading;
+        previous = previous.previousElementSibling as HTMLElement | null;
+      }
+      current = current.parentElement;
+    }
+
+    return null;
   }
 
   private findTopicDoormatItem(link: HTMLAnchorElement): HTMLElement | null {
@@ -1657,6 +1835,10 @@ export class ComponentGuidanceComponent implements OnInit, OnDestroy {
 
   isNoIssueRow(issue: TopicDoormatIssueRow): boolean {
     return issue.issueId === 'no-issues';
+  }
+
+  topicDoormatRowTypeLabel(issue: TopicDoormatIssueRow): string {
+    return issue.rowType === 'section' ? 'Section' : 'Doormat';
   }
 
   alertHealthLabel(severity: string | null): string {

@@ -1,0 +1,507 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AIDA topic doormat process overview (in-progress)</title>
+  <style>
+    :root {
+      --bg: #f6f7f9;
+      --paper: #ffffff;
+      --ink: #202833;
+      --muted: #5e6a78;
+      --line: #d8dee6;
+      --soft: #eef2f6;
+      --blue: #245ca6;
+      --blue-soft: #e8f0fb;
+      --green: #23735a;
+      --green-soft: #e7f3ee;
+      --amber: #8a5b00;
+      --amber-soft: #fbf1da;
+      --shadow: 0 12px 28px rgba(32, 40, 51, 0.08);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      margin: 0;
+      font-family: Aptos, "Segoe UI", Arial, sans-serif;
+      color: var(--ink);
+      background: var(--bg);
+      line-height: 1.55;
+    }
+
+    main {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 36px 22px 64px;
+    }
+
+    a {
+      color: var(--blue);
+      text-decoration-thickness: 1px;
+      text-underline-offset: 3px;
+    }
+
+    h1,
+    h2,
+    h3 {
+      margin: 0;
+      line-height: 1.18;
+      letter-spacing: 0;
+    }
+
+    h1 {
+      max-width: 20ch;
+      font-size: clamp(2.2rem, 5vw, 4rem);
+    }
+
+    h2 {
+      font-size: 1.55rem;
+      margin-bottom: 10px;
+    }
+
+    h3 {
+      font-size: 1.08rem;
+      margin-bottom: 8px;
+    }
+
+    p {
+      margin: 0;
+    }
+
+    ul,
+    ol {
+      margin: 0;
+      padding-left: 1.25rem;
+    }
+
+    li + li {
+      margin-top: 7px;
+    }
+
+    .hero,
+    .panel,
+    .card,
+    .source-card {
+      border: 1px solid var(--line);
+      background: var(--paper);
+      border-radius: 8px;
+    }
+
+    .hero {
+      padding: 34px;
+      box-shadow: var(--shadow);
+    }
+
+    .hero-layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1.35fr) minmax(260px, 0.65fr);
+      gap: 28px;
+      align-items: end;
+    }
+
+    .eyebrow {
+      margin-bottom: 12px;
+      color: var(--green);
+      font-size: 0.8rem;
+      font-weight: 800;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    .lede {
+      max-width: 74ch;
+      margin-top: 18px;
+      color: var(--muted);
+      font-size: 1.08rem;
+    }
+
+    .process-summary {
+      padding: 18px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--soft);
+    }
+
+    .process-summary h2 {
+      margin-bottom: 12px;
+      font-size: 1.05rem;
+      font-family: Aptos, "Segoe UI", Arial, sans-serif;
+    }
+
+    .process-summary ol {
+      margin: 0;
+      padding-left: 1.45rem;
+      font-size: 0.9rem;
+      color: var(--muted);
+    }
+
+    .process-summary li + li {
+      margin-top: 6px;
+    }
+
+    .quick-nav {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin: 18px 0 22px;
+    }
+
+    .quick-nav a {
+      display: inline-flex;
+      align-items: center;
+      min-height: 38px;
+      padding: 8px 12px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: var(--paper);
+      color: var(--ink);
+      font-size: 0.92rem;
+      font-weight: 650;
+      text-decoration: none;
+    }
+
+    .panel {
+      padding: 26px;
+      margin-top: 18px;
+    }
+
+    .intro {
+      max-width: 78ch;
+      color: var(--muted);
+      margin-bottom: 18px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 14px;
+    }
+
+    .two-col {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 16px;
+      align-items: start;
+    }
+
+    .card,
+    .source-card {
+      padding: 18px;
+    }
+
+    .card p,
+    .source-card p {
+      color: var(--muted);
+    }
+
+    .label {
+      display: inline-flex;
+      align-items: center;
+      min-height: 28px;
+      padding: 4px 9px;
+      border-radius: 999px;
+      font-size: 0.75rem;
+      font-weight: 800;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      margin-bottom: 12px;
+    }
+
+    .label-blue {
+      color: var(--blue);
+      background: var(--blue-soft);
+    }
+
+    .label-green {
+      color: var(--green);
+      background: var(--green-soft);
+    }
+
+    .label-amber {
+      color: var(--amber);
+      background: var(--amber-soft);
+    }
+
+    .source-list {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 14px;
+    }
+
+    .source-card {
+      display: grid;
+      gap: 10px;
+    }
+
+    .source-card code,
+    .inline-code {
+      font-family: Consolas, "Liberation Mono", monospace;
+      font-size: 0.88rem;
+      color: var(--ink);
+      background: var(--soft);
+      border: 1px solid var(--line);
+      border-radius: 4px;
+      padding: 1px 4px;
+    }
+
+    .note {
+      padding: 16px 18px;
+      border-left: 5px solid var(--green);
+      background: var(--green-soft);
+      border-radius: 0 8px 8px 0;
+    }
+
+    .small {
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+
+    @media (max-width: 760px) {
+      main {
+        padding: 22px 14px 46px;
+      }
+
+      .hero {
+        padding: 24px;
+      }
+
+      .hero-layout {
+        grid-template-columns: 1fr;
+      }
+
+      .process-summary {
+        margin-top: 18px;
+      }
+
+      .panel {
+        padding: 20px;
+      }
+    }
+
+    @media print {
+      body {
+        background: #fff;
+      }
+
+      main {
+        max-width: none;
+        padding: 0;
+      }
+
+      .hero,
+      .panel,
+      .card,
+      .source-card {
+        box-shadow: none;
+        break-inside: avoid;
+      }
+
+      .quick-nav {
+        display: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <section class="hero">
+      <div class="hero-layout">
+        <div>
+          <p class="eyebrow">AIDA topic doormat process</p>
+          <h1>Topic doormat review and rewrite overview (in-progress)</h1>
+          <p class="lede">
+            This page summarizes how AIDA detects GCWeb topic doormats, sends structured
+            doormat data to the issue prompt, and uses the issue output as the basis for
+            later rewrite work.
+          </p>
+        </div>
+        <aside class="process-summary" aria-label="Process summary">
+          <h2>Process summary</h2>
+          <ol>
+            <li>Detect topic doormat blocks with <span class="inline-code">.gc-srvinfo</span>.</li>
+            <li>Extract link text, destination, description, counts, and H2 section metadata.</li>
+            <li>Run local deterministic checks for counts and predictable structure issues.</li>
+            <li>Send the complete doormat set to the Topic doormats issue skill.</li>
+            <li>Parse returned issue rows and fill omitted clean doormats with No issues rows.</li>
+            <li>Use selected issue rows as rewrite input when rewrite support is applied.</li>
+          </ol>
+        </aside>
+      </div>
+    </section>
+
+    <nav class="quick-nav" aria-label="Page sections">
+      <a href="#review-flow">Review flow</a>
+      <a href="#section-rules">Section rules</a>
+      <a href="#quality-checks">What AIDA checks for</a>
+      <a href="#source-files">Reference files</a>
+    </nav>
+
+    <section class="panel" id="review-flow">
+      <h2>Topic doormat review flow</h2>
+      <p class="intro">
+        The issue flow is set-based. AIDA sends all detected topic doormats together so
+        the model can compare the complete set while AIDA keeps deterministic checks local.
+      </p>
+      <div class="two-col">
+        <article class="card">
+          <span class="label label-blue">Input</span>
+          <h3>What AIDA sends</h3>
+          <p>
+            AIDA sends structured doormat summaries, including page order, section-local
+            order, link text, href, description, exact character counts, and extracted
+            H2 section metadata.
+          </p>
+        </article>
+        <article class="card">
+          <span class="label label-green">Output</span>
+          <h3>What AIDA gets back</h3>
+          <p>
+            The model returns JSON issue rows grouped by doormat, plus section-level
+            issues when the taxonomy asks for them. AIDA normalizes labels, suppresses
+            unsupported rows, and fills missing clean doormats with No issues rows.
+          </p>
+        </article>
+      </div>
+    </section>
+
+    <section class="panel" id="section-rules">
+      <h2>Section rules</h2>
+      <p class="intro">
+        H2 headings define section-local numbering for the doormat limit. Other
+        consistency checks still compare the full supplied doormat set unless the
+        taxonomy explicitly scopes the check to one section.
+      </p>
+      <div class="grid">
+        <article class="card">
+          <span class="label label-green">Local structure</span>
+          <h3>H2 sections reset numbering</h3>
+          <p>
+            AIDA assigns each topic doormat to the nearest preceding H2 section and
+            numbers doormats from 1 inside that section.
+          </p>
+        </article>
+        <article class="card">
+          <span class="label label-amber">Limit rule</span>
+          <h3>Nine doormats per section</h3>
+          <p>
+            AIDA reports <span class="inline-code">too-many-doormats-in-section</span>
+            once as a section-level issue when an H2 section has more than 9 doormats.
+          </p>
+        </article>
+        <article class="card">
+          <span class="label label-blue">Set comparison</span>
+          <h3>Consistency stays set-wide</h3>
+          <p>
+            Style and consistency checks compare the complete doormat set so the model
+            can see patterns that cross H2 sections.
+          </p>
+        </article>
+      </div>
+    </section>
+
+    <section class="panel" id="quality-checks">
+      <h2>What AIDA checks for</h2>
+      <p class="intro">
+        The current flow splits deterministic checks from model judgment. AIDA owns exact
+        counts and local fallback rows; the model handles editorial and comparative judgment.
+      </p>
+      <div class="grid">
+        <article class="card">
+          <h3>Exact character counts</h3>
+          <p>AIDA provides authoritative link text and description character counts.</p>
+        </article>
+        <article class="card">
+          <h3>Doormat count limit</h3>
+          <p>AIDA applies the 9-doormat limit per H2 section.</p>
+        </article>
+        <article class="card">
+          <h3>Description and link style</h3>
+          <p>The model compares the complete set for meaningful style inconsistency.</p>
+        </article>
+        <article class="card">
+          <h3>Most requested duplicates</h3>
+          <p>AIDA sends Most requested links so the model can identify duplicate destinations.</p>
+        </article>
+        <article class="card">
+          <h3>No issues rows</h3>
+          <p>AIDA keeps every detected doormat visible, including clean items.</p>
+        </article>
+        <article class="card">
+          <h3>Fallback behaviour</h3>
+          <p>If the model response is empty or invalid, AIDA builds local No issues rows.</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="panel" id="source-files">
+      <h2>Reference files</h2>
+      <p class="intro">
+        These files contain the active instructions, schemas, shared guidance, and
+        runtime code used by the Topic doormats process.
+      </p>
+
+      <div class="source-list">
+        <article class="source-card">
+          <h3>Topic doormat issue review</h3>
+          <p>Used to identify topic doormat problems before rewriting starts.</p>
+          <ul>
+            <li><a href="./skills/topic-doormats/issues/SKILL.md">skills/topic-doormats/issues/SKILL.md</a></li>
+            <li><a href="./skills/topic-doormats/issues/references/issue-taxonomy.json">skills/topic-doormats/issues/references/issue-taxonomy.json</a></li>
+            <li><a href="./skills/topic-doormats/issues/assets/issues-output-schema.json">skills/topic-doormats/issues/assets/issues-output-schema.json</a></li>
+          </ul>
+        </article>
+
+        <article class="source-card">
+          <h3>Topic doormat rewriting</h3>
+          <p>Used to guide rewritten topic doormat content and output format.</p>
+          <ul>
+            <li><a href="./skills/topic-doormats/rewrite/SKILL.md">skills/topic-doormats/rewrite/SKILL.md</a></li>
+            <li><a href="./skills/topic-doormats/rewrite/references/rewrite-rules.json">skills/topic-doormats/rewrite/references/rewrite-rules.json</a></li>
+            <li><a href="./skills/topic-doormats/rewrite/assets/rewrite-output-schema.json">skills/topic-doormats/rewrite/assets/rewrite-output-schema.json</a></li>
+          </ul>
+        </article>
+
+        <article class="source-card">
+          <h3>Shared Topic doormat guidance</h3>
+          <p>Reusable domain guidance included in the issue and rewrite processes.</p>
+          <ul>
+            <li><a href="./skills/topic-doormats/SKILL.md">skills/topic-doormats/SKILL.md</a></li>
+          </ul>
+        </article>
+
+        <article class="source-card">
+          <h3>Runtime code paths</h3>
+          <p>Implementation files that run detection, prompt composition, issue calls, parsing, and table display.</p>
+          <ul>
+            <li><code>src/app/views/page-assistant/components/problems/component-guidance/component-guidance.component.ts</code></li>
+            <li><code>src/app/views/page-assistant/services/skill-manager.service.ts</code></li>
+            <li><code>src/app/views/page-assistant/data/css-list.config.ts</code></li>
+            <li><code>src/app/views/page-assistant/services/validator.service.ts</code></li>
+          </ul>
+        </article>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="note">
+        <p>
+          Bottom line: AIDA evaluates Topic doormats as a complete set, uses H2
+          sections only where the rules require section-local structure, and keeps the
+          prompt files linked above as the active source of issue and rewrite guidance.
+        </p>
+      </div>
+      <p class="small" style="margin-top: 12px;">
+        This page is an initial overview. The visual flow can be added once the written flow is complete.
+      </p>
+    </section>
+  </main>
+</body>
+</html>

@@ -27,6 +27,7 @@ export class OpenRouterService {
 
   private readonly openRouterApiUrl = 'https://openrouter.ai/api/v1/chat/completions';
   private readonly freeModelOrder: string[] = [
+    AiModel.GptOSS20BFree,
     AiModel.OwlAlpha,
     AiModel.Zai,
     AiModel.NemotronNano,

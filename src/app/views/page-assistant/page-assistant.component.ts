@@ -824,7 +824,7 @@ export class PageAssistantCompareComponent
   }
 
   //AI Model
-  selectedAiModel: AiModel = AiModel.OwlAlpha;
+  selectedAiModel: AiModel = AiModel.GptOSS20BFree;
 
   onAiChange(key: AiModel) {
     this.selectedAiModel = key;
@@ -885,6 +885,7 @@ export class PageAssistantCompareComponent
   private buildModelRotation(model: AiModel): string[] {
     // Fallback order after the user-selected model.
     const fallbackOrder: AiModel[] = [
+      AiModel.GptOSS20BFree,
       AiModel.OwlAlpha,
       AiModel.Zai,
       AiModel.NemotronNano,

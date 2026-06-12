@@ -2,8 +2,8 @@
   "version": "draft-2026-06-01",
   "scope": "Issue analysis for GCWeb topic page doormats.",
   "precondition": "Run this analysis only when AIDA heuristics have detected one or more topic doormat items. Missing doormat-section detection is handled before invoking this skill.",
-  "analysis_unit": "Analyze one complete topic doormat set at a time. Compare all doormats in the set before assigning issues.",
-  "reporting_unit": "Return issue reports for each affected doormat item. If an editorial issue applies to a whole section rather than a single doormat, return it in section_issues with the affected section_index. Do not repeat section-level issues on every doormat. Report mixed-description-style-in-section as a section-level issue. Report too-many-doormats-in-section only on doormats after the ninth item, not in section_issues. Do not also report inconsistent-description-style for individual doormats in a section that already has mixed-description-style-in-section.",
+  "analysis_unit": "Analyze one complete topic doormat set at a time. Compare all doormats in the set before assigning issues. Use caller-provided H2 section metadata only for section-local numbering, the 9-doormat limit, and issues that explicitly require section context.",
+  "reporting_unit": "Return issue reports for each affected doormat item. If an editorial issue applies to a whole section rather than a single doormat, return it in section_issues with the affected section_index. Do not repeat section-level issues on every doormat. Report mixed-description-style-in-section as one section_issues item attached to the most affected supplied section, even though the style comparison is set-wide. Report too-many-doormats-in-section as one section_issues item for the affected H2 section, not as repeated per-doormat issues. Do not also report inconsistent-description-style for individual doormats when mixed-description-style-in-section is reported.",
   "analysis_sequence": [
     {
       "pass": "deterministic_structural_checks",
@@ -62,7 +62,7 @@
     "mixed_description_style": "For mixed-description-style-in-section, name the style groups and include 2 to 4 representative doormat indexes per style group. Do not list every doormat. Do not quote full descriptions. Example: Mixes keyword-list and action-verb descriptions. Keyword-list examples: 1, 3, 5. Action-verb examples: 2, 6, 10."
   },
   "mandatory_description_style_audit": {
-    "instruction": "Always audit description style for each complete doormat section during the judgment/editorial pass. Apply one decision path: if the section mixes two or more clear description styles enough to reduce scannability or comparability, report one section-level mixed-description-style-in-section issue in section_issues. Do not report individual inconsistent-description-style rows for that same section. If the section is otherwise consistent and only one or two descriptions are clear outliers, report inconsistent-description-style only on those outlier doormats. Do not treat a live Canada.ca page as acceptable by default.",
+    "instruction": "Always audit description style across the complete topic doormat set during the judgment/editorial pass. Apply one decision path: if the set mixes two or more clear description styles enough to reduce scannability or comparability, report one section-level mixed-description-style-in-section issue in section_issues for the most affected supplied section. Do not report individual inconsistent-description-style rows for doormats already covered by that mixed-style issue. If the set is otherwise consistent and only one or two descriptions are clear outliers, report inconsistent-description-style only on those outlier doormats. Do not treat a live Canada.ca page as acceptable by default.",
     "style_groups_to_compare": [
       "noun/topic keyword-list descriptions",
       "action-verb task phrases",
@@ -116,10 +116,10 @@
       "eligibility-or-benefit-summary",
       "mixed-or-unclear"
     ],
-    "instruction": "Identify the detected link text style and detected description style for each doormat. Do not enforce one universal style across all pages. Use mixed-description-style-in-section for a section-wide mix of description styles. Use inconsistent-description-style only for one or two clear outliers in an otherwise consistent section."
+    "instruction": "Identify the detected link text style and detected description style for each doormat. Do not enforce one universal style across all pages. Compare style across the complete supplied doormat set. Use mixed-description-style-in-section for a broad mix of description styles in the set, attached to the most affected supplied section for reporting. Use inconsistent-description-style only for one or two clear outliers in an otherwise consistent set."
   },
   "style_inconsistency_reporting": {
-    "minimum_standard": "Do not report a style inconsistency just because descriptions are not identical. Use mixed-description-style-in-section when a section-wide mix of two or more clear description styles reduces scannability or comparability. Use inconsistent-description-style only for one or two clear outliers from an otherwise consistent section.",
+    "minimum_standard": "Do not report a style inconsistency just because descriptions are not identical. Use mixed-description-style-in-section when a broad mix of two or more clear description styles across the supplied set reduces scannability or comparability. Use inconsistent-description-style only for one or two clear outliers from an otherwise consistent set.",
     "dominant_style_required": true,
     "outlier_only_reporting": true,
     "mixed_section_reporting_allowed": true,
@@ -137,7 +137,7 @@
     ],
     "do_not_report_when": [
       "Most or all doormats would receive the same style inconsistency issue.",
-      "The same section already has mixed-description-style-in-section.",
+      "The affected doormat is already covered by mixed-description-style-in-section.",
       "The only evidence is that descriptions have different topics, lengths, or wording.",
       "The only evidence is that one description is longer, more detailed, or more complex than descriptions in the same style category.",
       "The doormat has description-too-long and the style concern depends on the description being long, verbose, detailed, or complex.",
@@ -146,7 +146,7 @@
     "use_other_issue_instead": [
       "Use description-too-long for length issues; do not also report inconsistent-description-style for the same length evidence.",
       "Use description-lacks-clarity or description-missing-needed-information for unclear or incomplete descriptions; do not use inconsistent-description-style as a substitute.",
-      "Use mixed-description-style-in-section as a section-level issue when the section-wide style mix is the actual problem; do not also report individual inconsistent-description-style rows for that same section.",
+      "Use mixed-description-style-in-section as a section-level issue when the set-wide style mix is the actual problem; do not also report individual inconsistent-description-style rows for doormats covered by that same issue.",
       "Use description-incorrect-style only when the description does not fit any accepted style."
     ],
     "evidence_required": [
@@ -160,11 +160,11 @@
   },
   "set_level_checks": [
     "Check whether link texts use one grammatical style across the set, but report only clear outliers from a dominant style.",
-    "Check whether descriptions use one description style across the section. If the section-wide mix reduces scannability or comparability, report one mixed-description-style-in-section issue in section_issues. If the section is otherwise consistent, report only clear outlier descriptions.",
+    "Check whether descriptions use one description style across the complete set. If the set-wide mix reduces scannability or comparability, report one mixed-description-style-in-section issue in section_issues. If the set is otherwise consistent, report only clear outlier descriptions.",
     "Check whether each description is specific enough to distinguish its doormat from the others.",
     "Check for duplicate or near-duplicate descriptions across the set.",
     "Check for repeated generic task lists across the set.",
-    "Check whether any topic doormat section contains more than 9 doormats. If it does, report too-many-doormats-in-section only on doormats after the ninth item.",
+    "Check whether any topic doormat section contains more than 9 doormats. If it does, report too-many-doormats-in-section once in section_issues for the affected H2 section.",
     "Check whether any doormat link is repeated in the page's Most requested section.",
     "Check whether the set is missing a needed doormat based on the supplied page context.",
     "Check whether the set includes an unnecessary or badly chosen doormat.",
@@ -483,8 +483,8 @@
       "label": "Too many doormats in section",
       "severity": "Medium",
       "condition": "A single topic doormat section contains more than 9 doormats.",
-      "recommendation": "Reduce the section to 9 doormats or split lower-priority destinations into another section.",
-      "reporting": "Report this issue only on doormats after the ninth item in the section. Do not report it on every doormat. Do not report this issue in section_issues.",
+      "recommendation": "Either remove doormats or break down the section into sections that have 9 or fewer doormats.",
+      "reporting": "Report this issue once in section_issues for the affected H2 section. Do not report it on individual doormats.",
       "evidence_required": [
         "section_doormat_count",
         "maximum_allowed",

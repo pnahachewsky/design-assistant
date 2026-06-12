@@ -21,3 +21,66 @@
   text-align: center;
   padding: 0 0.25rem;
 }
+
+:host ::ng-deep .topic-doormat-section-row > td {
+  background: #eef2f6;
+}
+
+.topic-doormat-group {
+  margin-top: 1rem;
+  border: 1px solid #d8dee6;
+  border-radius: 6px;
+  background: #fff;
+  overflow: hidden;
+}
+
+.topic-doormat-group + .topic-doormat-group {
+  margin-top: 1.25rem;
+}
+
+.topic-doormat-group-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.1rem 1.25rem;
+  border-bottom: 1px solid #d8dee6;
+  background: #eef2f6;
+}
+
+.topic-doormat-group h3 {
+  margin: 0;
+  font-size: 1.75rem;
+  line-height: 1.25;
+}
+
+.topic-doormat-count {
+  flex: 0 0 auto;
+  padding: 0.4rem 0.8rem;
+  border: 1px solid #d8dee6;
+  border-radius: 999px;
+  background: #fff;
+  color: #202833;
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+
+.topic-doormat-subheading {
+  margin: 1rem 1rem 0.4rem;
+  padding-bottom: 0.25rem;
+  border-bottom: 1px solid #eef2f6;
+  color: #202833;
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.topic-doormat-group .expansion-table {
+  margin: 0 1rem 1rem;
+}
+
+.topic-doormat-empty {
+  padding: 0.75rem;
+  border: 1px solid #d8dee6;
+  border-radius: 4px;
+  background: #fff;
+}

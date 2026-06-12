@@ -229,8 +229,6 @@
                     <i class="pi pi-spinner pi-spin" aria-hidden="true"></i>
                     Analyzing topic doormats
                   </span>
-                } @else if (topicDoormatIssuesResponseReceived) {
-                  <span>AI response received.</span>
                 } @else if (topicDoormatIssuesError) {
                   <div>
                     <span class="text-danger">AI error</span>
@@ -240,6 +238,120 @@
                   </div>
                 }
               </div>
+              @if (topicDoormatIssueGroups.length) {
+                @for (group of topicDoormatIssueGroups; track group.sectionIndex) {
+                  <section class="topic-doormat-group">
+                    <header class="topic-doormat-group-header">
+                      <div>
+                        <h3>
+                          Section {{ group.sectionIndex }}:
+                          {{ group.sectionTitle }}
+                        </h3>
+                      </div>
+                      <span class="topic-doormat-count">
+                        {{ group.doormatCount }} doormats
+                      </span>
+                    </header>
+
+                    <h4 class="topic-doormat-subheading">Section-level issues</h4>
+                    <p-table
+                      [value]="group.sectionRows"
+                      styleClass="p-datatable-sm expansion-table">
+                      <ng-template pTemplate="header">
+                        <tr>
+                          <th style="width: 3rem">Include</th>
+                          <th style="width: 8rem">Severity</th>
+                          <th>Issue</th>
+                          <th>Evidence</th>
+                          <th>Recommendation</th>
+                        </tr>
+                      </ng-template>
+                      <ng-template pTemplate="body" let-issue>
+                        <tr class="topic-doormat-section-row">
+                          <td>
+                            <p-checkbox
+                              [binary]="true"
+                              [(ngModel)]="issue.include"
+                              [disabled]="isNoIssueRow(issue)">
+                            </p-checkbox>
+                          </td>
+                          <td>
+                            <span class="chip" [ngClass]="severityChip(issue.severity)">
+                              {{ issue.severity }}
+                            </span>
+                          </td>
+                          <td>{{ issue.issue }}</td>
+                          <td>{{ issue.evidence || '-' }}</td>
+                          <td>{{ issue.recommendation || '-' }}</td>
+                        </tr>
+                      </ng-template>
+                      <ng-template pTemplate="emptymessage">
+                        <tr>
+                          <td colspan="5">
+                            <span class="muted">No section-level issues</span>
+                          </td>
+                        </tr>
+                      </ng-template>
+                    </p-table>
+
+                    <h4 class="topic-doormat-subheading">Doormat-level issues</h4>
+                    <p-table
+                      [value]="group.doormatRows"
+                      styleClass="p-datatable-sm expansion-table">
+                      <ng-template pTemplate="header">
+                        <tr>
+                          <th style="width: 3rem">Include</th>
+                          <th style="width: 4rem">#</th>
+                          <th>Doormat</th>
+                          <th style="width: 8rem">Severity</th>
+                          <th>Issue</th>
+                          <th>Evidence</th>
+                          <th>Recommendation</th>
+                        </tr>
+                      </ng-template>
+                      <ng-template pTemplate="body" let-issue>
+                        <tr>
+                          <td>
+                            <p-checkbox
+                              [binary]="true"
+                              [(ngModel)]="issue.include"
+                              [disabled]="isNoIssueRow(issue)">
+                            </p-checkbox>
+                          </td>
+                          <td>{{ issue.sectionItemIndex || '-' }}</td>
+                          <td>{{ issue.doormatLabel || '-' }}</td>
+                          <td>
+                            <span class="chip" [ngClass]="severityChip(issue.severity)">
+                              {{ issue.severity }}
+                            </span>
+                          </td>
+                          <td>{{ issue.issue }}</td>
+                          <td>{{ issue.evidence || '-' }}</td>
+                          <td>{{ issue.recommendation || '-' }}</td>
+                        </tr>
+                      </ng-template>
+                      <ng-template pTemplate="emptymessage">
+                        <tr>
+                          <td colspan="7">
+                            <span class="muted">No doormat-level issues</span>
+                          </td>
+                        </tr>
+                      </ng-template>
+                    </p-table>
+                  </section>
+                }
+              } @else {
+                <div class="topic-doormat-empty">
+                  @if (topicDoormatIssuesLoading) {
+                    <span class="muted">Waiting for AI response</span>
+                  } @else if (topicDoormatIssuesResponseReceived) {
+                    <span class="muted">No issues returned</span>
+                  } @else {
+                    <span class="muted">Expand this row to analyze topic doormats</span>
+                  }
+                </div>
+              }
+              <!-- Previous flat Topic doormat table replaced by grouped section tables.
               <p-table
                 [value]="topicDoormatIssueRows"
                 styleClass="p-datatable-sm expansion-table">
@@ -247,6 +359,9 @@
                   <tr>
                     <th style="width: 3rem">Include</th>
                     <th style="width: 8rem">Severity</th>
+                    <th style="width: 7rem">Type</th>
+                    <th>Section</th>
+                    <th style="width: 4rem">#</th>
                     <th>Doormat</th>
                     <th>Issue</th>
                     <th>Evidence</th>
@@ -254,7 +369,7 @@
                   </tr>
                 </ng-template>
                 <ng-template pTemplate="body" let-issue>
-                  <tr>
+                  <tr [class.topic-doormat-section-row]="issue.rowType === 'section'">
                     <td>
                       <p-checkbox
                         [binary]="true"
@@ -267,7 +382,10 @@
                         {{ issue.severity }}
                       </span>
                     </td>
-                    <td>{{ issue.doormat }}</td>
+                    <td>{{ topicDoormatRowTypeLabel(issue) }}</td>
+                    <td>{{ issue.sectionTitle || '-' }}</td>
+                    <td>{{ issue.sectionItemIndex || '-' }}</td>
+                    <td>{{ issue.doormatLabel || '-' }}</td>
                     <td>{{ issue.issue }}</td>
                     <td>{{ issue.evidence || '—' }}</td>
 	                    <td>{{ issue.recommendation || '-' }}</td>
@@ -275,7 +393,7 @@
                 </ng-template>
                 <ng-template pTemplate="emptymessage">
                   <tr>
-                    <td colspan="6">
+                    <td colspan="9">
                       @if (topicDoormatIssuesLoading) {
                         <span class="muted">Waiting for AI response</span>
                       } @else if (topicDoormatIssuesResponseReceived) {
@@ -287,6 +405,7 @@
                   </tr>
                 </ng-template>
               </p-table>
+              -->
             } @else {
               <p-table styleClass="p-datatable-sm expansion-table">
                 <ng-template pTemplate="header">
