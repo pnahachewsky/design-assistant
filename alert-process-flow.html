@@ -1,0 +1,730 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AIDA alert process overview</title>
+  <style>
+    :root {
+      --bg: #f6f7f9;
+      --paper: #ffffff;
+      --ink: #202833;
+      --muted: #5e6a78;
+      --line: #d8dee6;
+      --soft: #eef2f6;
+      --blue: #245ca6;
+      --blue-soft: #e8f0fb;
+      --green: #23735a;
+      --green-soft: #e7f3ee;
+      --amber: #8a5b00;
+      --amber-soft: #fbf1da;
+      --red: #9a2f2f;
+      --red-soft: #f8e8e8;
+      --shadow: 0 12px 28px rgba(32, 40, 51, 0.08);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      margin: 0;
+      font-family: Aptos, "Segoe UI", Arial, sans-serif;
+      color: var(--ink);
+      background: var(--bg);
+      line-height: 1.55;
+    }
+
+    main {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 36px 22px 64px;
+    }
+
+    a {
+      color: var(--blue);
+      text-decoration-thickness: 1px;
+      text-underline-offset: 3px;
+    }
+
+    h1,
+    h2,
+    h3 {
+      margin: 0;
+      line-height: 1.18;
+      letter-spacing: 0;
+    }
+
+    h1 {
+      max-width: 20ch;
+      font-size: clamp(2.2rem, 5vw, 4rem);
+    }
+
+    h2 {
+      font-size: 1.55rem;
+      margin-bottom: 10px;
+    }
+
+    h3 {
+      font-size: 1.08rem;
+      margin-bottom: 8px;
+    }
+
+    p {
+      margin: 0;
+    }
+
+    ul,
+    ol {
+      margin: 0;
+      padding-left: 1.25rem;
+    }
+
+    li + li {
+      margin-top: 7px;
+    }
+
+    .hero,
+    .panel,
+    .card,
+    .source-card {
+      border: 1px solid var(--line);
+      background: var(--paper);
+      border-radius: 8px;
+    }
+
+    .hero {
+      padding: 34px;
+      box-shadow: var(--shadow);
+    }
+
+    .hero-layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1.35fr) minmax(260px, 0.65fr);
+      gap: 28px;
+      align-items: end;
+    }
+
+    .eyebrow {
+      margin-bottom: 12px;
+      color: var(--green);
+      font-size: 0.8rem;
+      font-weight: 800;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    .lede {
+      max-width: 74ch;
+      margin-top: 18px;
+      color: var(--muted);
+      font-size: 1.08rem;
+    }
+
+    .process-summary {
+      padding: 18px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--soft);
+    }
+
+    .process-summary h2 {
+      margin-bottom: 12px;
+      font-size: 1.05rem;
+      font-family: Aptos, "Segoe UI", Arial, sans-serif;
+    }
+
+    .process-summary ol {
+      margin: 0;
+      padding-left: 1.45rem;
+      font-size: 0.9rem;
+      color: var(--muted);
+    }
+
+    .process-summary li + li {
+      margin-top: 6px;
+    }
+
+    .quick-nav {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin: 18px 0 22px;
+    }
+
+    .quick-nav a {
+      display: inline-flex;
+      align-items: center;
+      min-height: 38px;
+      padding: 8px 12px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: var(--paper);
+      color: var(--ink);
+      font-size: 0.92rem;
+      font-weight: 650;
+      text-decoration: none;
+    }
+
+    .panel {
+      padding: 26px;
+      margin-top: 18px;
+    }
+
+    .intro {
+      max-width: 78ch;
+      color: var(--muted);
+      margin-bottom: 18px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 14px;
+    }
+
+    .three-col-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .two-col {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 16px;
+      align-items: start;
+    }
+
+    .card,
+    .source-card {
+      padding: 18px;
+    }
+
+    .card p,
+    .source-card p {
+      color: var(--muted);
+    }
+
+    .label {
+      display: inline-flex;
+      align-items: center;
+      min-height: 28px;
+      padding: 4px 9px;
+      border-radius: 999px;
+      font-size: 0.75rem;
+      font-weight: 800;
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
+      margin-bottom: 10px;
+    }
+
+    .label-blue {
+      color: var(--blue);
+      background: var(--blue-soft);
+    }
+
+    .label-green {
+      color: var(--green);
+      background: var(--green-soft);
+    }
+
+    .label-amber {
+      color: var(--amber);
+      background: var(--amber-soft);
+    }
+
+    .label-red {
+      color: var(--red);
+      background: var(--red-soft);
+    }
+
+    .diagram {
+      margin-top: 18px;
+      padding: 16px;
+      overflow-x: auto;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fafbfc;
+    }
+
+    .mermaid {
+      min-width: 720px;
+      font-size: 0.86rem;
+    }
+
+    .mermaid svg {
+      max-width: 100%;
+      height: auto;
+    }
+
+    .source-list {
+      display: grid;
+      gap: 12px;
+      margin-top: 16px;
+    }
+
+    .source-card {
+      display: grid;
+      gap: 8px;
+    }
+
+    .source-card code,
+    .inline-code {
+      font-family: Consolas, "Courier New", monospace;
+      font-size: 0.9rem;
+      background: var(--soft);
+      border-radius: 5px;
+      padding: 2px 5px;
+    }
+
+    .note {
+      padding: 16px 18px;
+      border-radius: 8px;
+      background: var(--green-soft);
+      border: 1px solid #bedccd;
+    }
+
+    .small {
+      color: var(--muted);
+      font-size: 0.92rem;
+    }
+
+    @media (max-width: 980px) {
+      .mermaid {
+        min-width: 680px;
+      }
+
+      .three-col-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 760px) {
+      main {
+        padding: 22px 14px 44px;
+      }
+
+      .hero,
+      .panel {
+        padding: 20px;
+      }
+
+      .hero-layout {
+        grid-template-columns: 1fr;
+      }
+
+      .process-summary {
+        margin-top: 18px;
+      }
+
+      .diagram {
+        padding: 10px;
+      }
+
+      .three-col-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media print {
+      body {
+        background: #ffffff;
+      }
+
+      main {
+        max-width: none;
+        padding: 0;
+      }
+
+      .hero,
+      .panel,
+      .card,
+      .source-card {
+        box-shadow: none;
+      }
+
+      .quick-nav {
+        display: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <section class="hero">
+      <div class="hero-layout">
+        <div>
+          <p class="eyebrow">AIDA alert process</p>
+          <h1>Alert review and rewrite overview</h1>
+          <p class="lede">
+            This report explains how AIDA reviews Canada.ca alerts, identifies issues, creates recommended rewrites, checks the results,
+            and applies accepted changes back to the page. It is intended as a plain-language overview of the current alert process.
+          </p>
+        </div>
+        <aside class="process-summary" aria-label="Process summary">
+          <h2>Process summary</h2>
+          <ol>
+            <li>Find alerts</li>
+            <li>Identify issues</li>
+            <li>Rewrite selected alerts</li>
+            <li>Check quality</li>
+            <li>Patch the page</li>
+          </ol>
+        </aside>
+      </div>
+    </section>
+
+    <nav class="quick-nav" aria-label="Page sections">
+      <a href="#decision-visual">Decision visual</a>
+      <a href="#review-flow">Review flow</a>
+      <a href="#rewrite-flow">Rewrite flow</a>
+      <a href="#quality-checks">What AIDA checks for</a>
+      <a href="#detailed-guardrails">Guardrail logic</a>
+      <a href="#toggles">Options</a>
+      <a href="#source-files">Reference files</a>
+    </nav>
+
+    <section class="panel" id="decision-visual">
+      <h2>Decision visual</h2>
+      <p class="intro">
+        This visual shows the main decisions AIDA makes from page input to final alert output, including where the compact context
+        and examples options affect the flow.
+      </p>
+
+      <div class="diagram" aria-label="AIDA alert decision flow">
+        <div class="mermaid">
+flowchart TD
+    A["Page HTML"] --> B{"Compact context<br>enabled?"}
+    B -->|"Yes (default)"| C["Build compact page<br>and alert signals"]
+    B -->|"No"| D["Use sanitized<br>alert HTML"]
+    C --> E["Alert issue<br>analysis"]
+    D --> E
+    E --> H{"Alert has one or more<br>selected issues?"}
+    H -->|"No"| Y["Updated page<br>HTML"]
+    H -->|"Yes"| J["Prepare per-alert<br>rewrite"]
+    J --> K{"Examples<br>enabled?"}
+    K -->|"Yes (default)"| L["Add selected examples<br>as pattern guidance"]
+    K -->|"No"| M["Continue without<br>examples"]
+    L --> N["Model draft<br>rewrite"]
+    M --> N
+    N --> O{"Guardrails<br>pass?"}
+    O -->|"Yes"| P["Accept rewrite"]
+    O -->|"No"| Q{"Can retry<br>(max 2 / alert)?"}
+    Q -->|"Yes"| R["Retry with targeted<br>correction"]
+    R --> N
+    Q -->|"No"| S{"Can repair<br>locally?"}
+    S -->|"Yes"| T["Apply narrow<br>local repair"]
+    S -->|"No"| U["Keep safest candidate<br>or original alert"]
+    P --> V["Safe alert<br>result"]
+    T --> V
+    U --> V
+    V --> X["Replace alert<br>container"]
+    X --> Y
+
+    classDef toggle fill:#e8f0fb,stroke:#9db9df,color:#202833;
+    classDef defaultPath fill:#dcf7ea,stroke:#23735a,stroke-width:2px,color:#202833;
+    classDef check fill:#fbf1da,stroke:#d2aa4c,color:#202833;
+    classDef safe fill:#e7f3ee,stroke:#8fc2aa,color:#202833;
+    classDef risk fill:#f8e8e8,stroke:#d99b9b,color:#202833;
+    class B,K toggle;
+    class C,L defaultPath;
+    class H,O,Q,S check;
+    class P,T,V,X,Y safe;
+    class R,U risk;
+    linkStyle 1,9 stroke:#23735a,stroke-width:3px;
+        </div>
+      </div>
+    </section>
+
+    <section class="panel" id="review-flow">
+      <h2>Alert review flow</h2>
+      <p class="intro">
+        The review flow is the first pass. Its job is to understand the page and report alert issues in a structured way.
+      </p>
+      <div class="two-col">
+        <article class="card">
+          <h3>What AIDA sends</h3>
+          <p>
+            AIDA starts from the page HTML and focuses the model on alert review. With compact context enabled, it sends structured
+            page and alert signals. Without compact context, it sends sanitized alert HTML.
+          </p>
+        </article>
+        <article class="card">
+          <h3>What AIDA gets back</h3>
+          <p>
+            The model returns alert issues with categories, severity, evidence, and recommendations. The user selects which issues
+            should be included in the rewrite step.
+          </p>
+        </article>
+      </div>
+    </section>
+
+    <section class="panel" id="rewrite-flow">
+      <h2>Alert rewrite flow</h2>
+      <p class="intro">
+        The rewrite flow is a second pass. It uses selected issues and rewrites only the relevant alert containers.
+      </p>
+      <div class="two-col">
+        <article class="card">
+          <h3>Per-alert rewriting</h3>
+          <p>
+            AIDA maps selected issues back to their alerts. Alerts without selected issues are skipped. For selected alerts, AIDA
+            creates a per-alert rewrite request using the original alert, the selected issues, link guidance, style guidance, compact
+            context when available, and examples when enabled.
+          </p>
+        </article>
+        <article class="card">
+          <h3>Safe page update</h3>
+          <p>
+            AIDA checks each model draft before applying it. A clean rewrite can be accepted directly. A draft with a narrow problem
+            can be retried or repaired. If AIDA cannot produce a safe rewrite, it keeps the original alert.
+          </p>
+        </article>
+      </div>
+    </section>
+
+    <section class="panel" id="quality-checks">
+      <h2>What AIDA checks for</h2>
+      <p class="intro">
+        These are the main things AIDA checks before a rewritten alert can be applied to the page. The next section explains how
+        AIDA responds when one of these checks needs action.
+      </p>
+      <div class="grid">
+        <article class="card">
+          <span class="label label-green">Structure</span>
+          <h3>Valid alert HTML</h3>
+          <p>The rewrite must be a complete alert wrapper with usable HTML structure.</p>
+        </article>
+        <article class="card">
+          <span class="label label-green">Headings</span>
+          <h3>Clear alert heading</h3>
+          <p>The rewritten alert should include a short, descriptive semantic heading.</p>
+        </article>
+        <article class="card">
+          <span class="label label-red">Links</span>
+          <h3>Links stay controlled</h3>
+          <p>AIDA checks that links are not invented, lost, converted to placeholders, or removed without a selected issue that supports it.</p>
+        </article>
+        <article class="card">
+          <span class="label label-amber">Wording</span>
+          <h3>Text remains specific</h3>
+          <p>The rewrite should address the selected issue without inventing facts or copying example wording.</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="panel" id="detailed-guardrails">
+      <h2>Detailed guardrail logic</h2>
+      <p class="intro">
+        This section expands on the main checks. AIDA uses both preventive guidance and after-the-fact checks. The guidance steers
+        the model before it writes. The checks decide what happens after AIDA receives a draft.
+      </p>
+
+      <div class="three-col-grid">
+        <article class="card">
+          <span class="label label-blue">Preventive guidance</span>
+          <h3>Key instructions for rewriting</h3>
+          <ul>
+            <li>Keep the edit inside the existing alert container.</li>
+            <li>Preserve the original meaning, facts, dates, program names, and source links.</li>
+            <li>Use short, plain, active, neutral wording.</li>
+            <li>Add or preserve a short descriptive heading.</li>
+            <li>Use examples as pattern guidance only, not wording to copy.</li>
+          </ul>
+        </article>
+
+        <article class="card">
+          <span class="label label-red">Hard checks</span>
+          <h3>Reject unsafe drafts</h3>
+          <ul>
+            <li>Invalid or incomplete alert wrapper HTML.</li>
+            <li>New hyperlinks when the original alert did not have links.</li>
+            <li>Removed required links when link removal was not justified by the selected issue.</li>
+            <li>Example wording copied too closely into the rewrite, unless the example is also very close to the original alert.</li>
+          </ul>
+        </article>
+
+        <article class="card">
+          <span class="label label-amber">Retry triggers</span>
+          <h3>Ask again with a targeted correction</h3>
+          <ul>
+            <li>The returned HTML is not a full alert wrapper.</li>
+            <li>The rewrite does not include a semantic heading.</li>
+            <li>The rewrite adds, removes, or placeholders links incorrectly.</li>
+            <li>A standalone link sentence needs clearer lead-in handling.</li>
+            <li>The rewrite is too close to an example.</li>
+          </ul>
+        </article>
+
+        <article class="card">
+          <span class="label label-green">Local repair</span>
+          <h3>Repair narrow, predictable problems</h3>
+          <ul>
+            <li>Restore one original link when a required link was dropped.</li>
+            <li>Remove unexpected anchors when no links were allowed.</li>
+            <li>Insert a missing heading when the rest of the rewrite is usable.</li>
+            <li>Clean standalone link punctuation after the closing anchor.</li>
+            <li>Repair embedded standalone lead-in paragraphs when the pattern is otherwise clear.</li>
+            <li>Preserve valid original standalone link lead-ins when the model changes them unnecessarily.</li>
+          </ul>
+        </article>
+
+        <article class="card">
+          <span class="label label-green">Fallback</span>
+          <h3>Choose the safest final outcome</h3>
+          <ul>
+            <li><strong>Model:</strong> the model rewrite passed the checks.</li>
+            <li><strong>Local repair:</strong> AIDA accepted a repaired version of a close model answer.</li>
+            <li><strong>Soft-failure candidate:</strong> AIDA used the safest close candidate when the remaining issue was low risk.</li>
+            <li><strong>Passthrough:</strong> AIDA kept the original alert instead of forcing an unsafe rewrite.</li>
+          </ul>
+        </article>
+
+        <article class="card">
+          <span class="label label-blue">Current rule source</span>
+          <h3>Where the guardrails come from</h3>
+          <p>
+            Shared behavioural guidance comes from
+            <a href="./skills/alerts/alerts-rewriting/references/shared-rewrite-guidance.json">shared-rewrite-guidance.json</a>.
+            Retry text and runtime-specific rule fragments come from
+            <a href="./skills/alerts/alerts-rewriting/references/runtime-rewrite-rules.json">runtime-rewrite-rules.json</a>.
+            The broader rewrite contract comes from
+            <a href="./skills/alerts/alerts-rewriting/references/rewrite-instructions.json">rewrite-instructions.json</a>.
+          </p>
+        </article>
+      </div>
+    </section>
+
+    <section class="panel" id="toggles">
+      <h2>Options that affect the flow</h2>
+      <div class="two-col">
+        <article class="card">
+          <span class="label label-blue">Compact context</span>
+          <h3>Smaller page summary</h3>
+          <p>
+            Compact context sends structured page and alert details instead of relying only on a larger HTML input.
+            It helps focus issue analysis and can provide useful alert context during rewriting. In testing, this appears to be
+            especially helpful with smaller AI models because they have less irrelevant page content to sort through.
+          </p>
+        </article>
+        <article class="card">
+          <span class="label label-blue">Examples</span>
+          <h3>Optional rewrite patterns</h3>
+          <p>
+            The examples option supplies selected rewrite examples to the model. AIDA records which examples were supplied and which
+            ones the model says it used.
+          </p>
+        </article>
+      </div>
+    </section>
+
+    <section class="panel" id="source-files">
+      <h2>Reference files</h2>
+      <p class="intro">
+        These files contain the active instructions, examples, schemas, and shared writing guidance used by the alert process.
+      </p>
+
+      <div class="source-list">
+        <article class="source-card">
+          <h3>Alert issue review</h3>
+          <p>Used to identify alert problems before rewriting starts.</p>
+          <ul>
+            <li><a href="./skills/alerts/alerts-issues/SKILL.md">skills/alerts/alerts-issues/SKILL.md</a></li>
+            <li><a href="./skills/alerts/alerts-issues/references/issue-analysis-instructions.json">skills/alerts/alerts-issues/references/issue-analysis-instructions.json</a></li>
+            <li><a href="./skills/alerts/alerts-issues/assets/issues-output-schema.json">skills/alerts/alerts-issues/assets/issues-output-schema.json</a></li>
+          </ul>
+        </article>
+
+        <article class="source-card">
+          <h3>Alert rewriting</h3>
+          <p>Used to guide rewritten alert content and output format.</p>
+          <ul>
+            <li><a href="./skills/alerts/alerts-rewriting/SKILL.md">skills/alerts/alerts-rewriting/SKILL.md</a></li>
+            <li><a href="./skills/alerts/alerts-rewriting/references/shared-rewrite-guidance.json">skills/alerts/alerts-rewriting/references/shared-rewrite-guidance.json</a></li>
+            <li><a href="./skills/alerts/alerts-rewriting/references/rewrite-instructions.json">skills/alerts/alerts-rewriting/references/rewrite-instructions.json</a></li>
+            <li><a href="./skills/alerts/alerts-rewriting/references/examples.json">skills/alerts/alerts-rewriting/references/examples.json</a></li>
+            <li><a href="./skills/alerts/alerts-rewriting/assets/rewriting-output-schema.json">skills/alerts/alerts-rewriting/assets/rewriting-output-schema.json</a></li>
+          </ul>
+        </article>
+
+        <article class="source-card">
+          <h3>Runtime rewrite rules</h3>
+          <p>
+            Used by the current alert rewrite service for per-alert prompts, retry text, and runtime-specific output fields.
+            The runtime service also loads the shared rewrite guidance above.
+          </p>
+          <ul>
+            <li><a href="./skills/alerts/alerts-rewriting/references/runtime-rewrite-rules.json">skills/alerts/alerts-rewriting/references/runtime-rewrite-rules.json</a></li>
+          </ul>
+        </article>
+
+        <article class="source-card">
+          <h3>Shared writing guidance</h3>
+          <p>Reusable guidance included in the alert process.</p>
+          <ul>
+            <li><a href="./skills/link-writing/SKILL.md">skills/link-writing/SKILL.md</a></li>
+            <li><a href="./skills/link-writing/references/link-writing-rules.json">skills/link-writing/references/link-writing-rules.json</a></li>
+            <li><a href="./skills/canada-ca-style/SKILL.md">skills/canada-ca-style/SKILL.md</a></li>
+            <li><a href="./skills/canada-ca-style/references/writing-rules.json">skills/canada-ca-style/references/writing-rules.json</a></li>
+          </ul>
+        </article>
+
+        <article class="source-card">
+          <h3>Runtime code paths</h3>
+          <p>Implementation files that run the review, rewrite, validation, repair, and page-patching process.</p>
+          <ul>
+            <li><code>src/app/views/page-assistant/page-assistant.component.ts</code></li>
+            <li><code>src/app/views/page-assistant/services/skill-manager.service.ts</code></li>
+            <li><code>src/app/views/page-assistant/services/alert-context.service.ts</code></li>
+            <li><code>src/app/views/page-assistant/services/alert-rewrite-orchestrator.service.ts</code></li>
+            <li><code>src/app/views/page-assistant/services/alert-rewrite.service.ts</code></li>
+            <li><code>src/app/views/page-assistant/services/alert-rewrite-guard.service.ts</code></li>
+          </ul>
+        </article>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="note">
+        <p>
+          Bottom line: AIDA reviews alerts first, rewrites only the selected alerts, checks each rewrite, and applies safe replacements
+          back to the page. The reference files linked above show the current raw instructions and schemas behind that process.
+        </p>
+      </div>
+      <p class="small" style="margin-top: 12px;">
+        This page is intended as a consolidated overview of the alert review and rewrite process.
+      </p>
+    </section>
+  </main>
+  <script type="module">
+    import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+
+    mermaid.initialize({
+      startOnLoad: true,
+      securityLevel: 'loose',
+      theme: 'base',
+      flowchart: {
+        nodeSpacing: 64,
+        rankSpacing: 34,
+        padding: 8,
+        curve: 'basis'
+      },
+      themeVariables: {
+        fontFamily: 'Aptos, Segoe UI, Arial, sans-serif',
+        fontSize: '13px',
+        primaryColor: '#ffffff',
+        primaryTextColor: '#202833',
+        primaryBorderColor: '#d8dee6',
+        lineColor: '#5e6a78',
+        secondaryColor: '#e8f0fb',
+        tertiaryColor: '#e7f3ee'
+      }
+    });
+  </script>
+</body>
+</html>

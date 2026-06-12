@@ -22471,6 +22471,7 @@ H2 headings (${context.h2Headings.length}): ${context.h2Headings.join(" | ") || 
 
 // src/app/common/constants/alert-rewrite-rules.constants.ts
 var ALERT_REWRITE_RULES_PATH = new URL("skills/alerts/alerts-rewriting/references/runtime-rewrite-rules.json", document.baseURI).toString();
+var ALERT_REWRITE_SHARED_GUIDANCE_PATH = new URL("skills/alerts/alerts-rewriting/references/shared-rewrite-guidance.json", document.baseURI).toString();
 var ALERT_REWRITE_RULES_FALLBACK = {
   version: "fallback-inline",
   alertRewrite: {
@@ -22538,21 +22539,60 @@ function toValidatedRules(raw) {
     }
   };
 }
+function toValidatedSharedGuidance(raw) {
+  if (!raw || typeof raw !== "object")
+    return null;
+  const root = raw;
+  const styleRules = root["styleRules"];
+  const exampleRules = root["exampleRules"];
+  if (!isStringArray(styleRules) || !isStringArray(exampleRules)) {
+    return null;
+  }
+  return {
+    styleRules,
+    exampleRules
+  };
+}
+function mergeSharedGuidance(rules, sharedGuidance) {
+  return __spreadProps(__spreadValues({}, rules), {
+    alertRewrite: __spreadProps(__spreadValues({}, rules.alertRewrite), {
+      styleRulesBase: [
+        ...sharedGuidance.styleRules,
+        ...rules.alertRewrite.styleRulesBase
+      ],
+      styleRulesWithExamples: [
+        ...sharedGuidance.exampleRules,
+        ...rules.alertRewrite.styleRulesWithExamples
+      ]
+    })
+  });
+}
 function getAlertRewriteRules() {
   return __async(this, null, function* () {
     if (alertRewriteRulesCache)
       return alertRewriteRulesCache;
     try {
-      const response = yield fetch(ALERT_REWRITE_RULES_PATH);
-      if (!response.ok) {
-        throw new Error(`Failed to load alert rewrite rules (${response.status}).`);
+      const [runtimeResponse, sharedGuidanceResponse] = yield Promise.all([
+        fetch(ALERT_REWRITE_RULES_PATH),
+        fetch(ALERT_REWRITE_SHARED_GUIDANCE_PATH)
+      ]);
+      if (!runtimeResponse.ok) {
+        throw new Error(`Failed to load alert rewrite rules (${runtimeResponse.status}).`);
       }
-      const payload = yield response.json();
+      if (!sharedGuidanceResponse.ok) {
+        throw new Error(`Failed to load shared alert rewrite guidance (${sharedGuidanceResponse.status}).`);
+      }
+      const payload = yield runtimeResponse.json();
+      const sharedGuidancePayload = yield sharedGuidanceResponse.json();
       const validated = toValidatedRules(payload);
+      const sharedGuidance = toValidatedSharedGuidance(sharedGuidancePayload);
       if (!validated) {
         throw new Error("Invalid alert rewrite rules JSON schema.");
       }
-      alertRewriteRulesCache = validated;
+      if (!sharedGuidance) {
+        throw new Error("Invalid shared alert rewrite guidance JSON schema.");
+      }
+      alertRewriteRulesCache = mergeSharedGuidance(validated, sharedGuidance);
     } catch (err) {
       console.warn("Unable to load alert rewrite rules JSON; using inline fallback.", err);
       alertRewriteRulesCache = ALERT_REWRITE_RULES_FALLBACK;
@@ -22874,10 +22914,10 @@ var AlertRewriteService = class _AlertRewriteService {
         ...params.examples.length ? rules.alertRewrite.styleRulesWithExamples : []
       ];
       if (this.hasAcceptableFinalStandaloneLinkSentence(params.originalAlertHtml)) {
-        styleRules.push("The original alert already ends with an acceptable standalone final link sentence or paragraph. Preserve that wording and placement unless a selected issue clearly requires a change.");
+        styleRules.push('The original alert already ends with an acceptable standalone final link sentence or paragraph. Preserve that wording and placement unless a selected issue clearly requires a change. Do not rewrite a valid existing lead-in such as "For details:" to "Refer to:" when it already reads naturally.');
       }
       if (linkManifest.hasLinks) {
-        styleRules.push("Use linkManifest as the source of truth for original links. If linkManifest.mustPreserveAtLeastOne is true, rewrittenAlertHtml must include at least one real <a> element whose href exactly matches one of linkManifest.items[].href values.");
+        styleRules.push("Use linkManifest as the source of truth for original links. If linkManifest.mustPreserveAtLeastOne is true, rewrittenAlertHtml must include at least one real <a> element whose href exactly matches one of linkManifest.items[].href values. If linkManifest.allowRemoval is true, you may remove extra links, but you must still keep at least one original link.");
       }
       const retryInstructions = Array.from(new Set((params.retryInstructions || []).map((instruction) => (instruction || "").trim()).filter((instruction) => !!instruction)));
       if (retryInstructions.length) {
@@ -22969,6 +23009,9 @@ var AlertRewriteService = class _AlertRewriteService {
       const lastParagraph = paragraphs[paragraphs.length - 1];
       if (!lastParagraph)
         return false;
+      if (this.hasAcceptableFinalStandaloneLinkList(root, lastParagraph)) {
+        return true;
+      }
       const anchors = Array.from(lastParagraph.querySelectorAll("a"));
       if (!anchors.length)
         return false;
@@ -22986,10 +23029,30 @@ var AlertRewriteService = class _AlertRewriteService {
       const sentences = paragraphWithMarkers.match(/[^.!?]+[.!?]?/g)?.map((sentence) => sentence.trim()).filter((sentence) => !!sentence) ?? [];
       if (sentences.length !== 1)
         return false;
-      return /^find out\s+\[\[link:[^\]]+\]\][.!?]?$/.test(paragraphWithMarkers) || /^learn about(?: the)?\s+\[\[link:[^\]]+\]\][.!?]?$/.test(paragraphWithMarkers) || /^refer to:\s*\[\[link:[^\]]+\]\][.!?]?$/.test(paragraphWithMarkers) || /^learn more:\s*\[\[link:[^\]]+\]\][.!?]?$/.test(paragraphWithMarkers);
+      return /^find out\s+\[\[link:[^\]]+\]\][.!?]?$/.test(paragraphWithMarkers) || /^learn about(?: the)?\s+\[\[link:[^\]]+\]\][.!?]?$/.test(paragraphWithMarkers) || /^for details:\s*\[\[link:[^\]]+\]\][.!?]?$/.test(paragraphWithMarkers) || /^refer to:\s*\[\[link:[^\]]+\]\][.!?]?$/.test(paragraphWithMarkers) || /^learn more:\s*\[\[link:[^\]]+\]\][.!?]?$/.test(paragraphWithMarkers);
     } catch {
       return false;
     }
+  }
+  hasAcceptableFinalStandaloneLinkList(root, leadInParagraph) {
+    const leadInText = (leadInParagraph.textContent || "").replace(/\s+/g, " ").trim().toLowerCase();
+    if (leadInText !== "for details:" && leadInText !== "refer to:" && leadInText !== "learn more:") {
+      return false;
+    }
+    let next = leadInParagraph.nextElementSibling;
+    while (next && !next.textContent?.trim()) {
+      next = next.nextElementSibling;
+    }
+    if (!next || !["ul", "ol"].includes(next.tagName.toLowerCase())) {
+      return false;
+    }
+    if (!next.querySelector("a"))
+      return false;
+    let trailing = next.nextElementSibling;
+    while (trailing && !trailing.textContent?.trim()) {
+      trailing = trailing.nextElementSibling;
+    }
+    return !trailing && next.parentElement === root;
   }
   buildAlertLinkManifest(alertHtml, allowRemoval) {
     const items = [];
@@ -23014,7 +23077,7 @@ var AlertRewriteService = class _AlertRewriteService {
       count: items.length,
       hasLinks: items.length > 0,
       allowRemoval: canRemoveLinks,
-      mustPreserveAtLeastOne: items.length > 0 && !canRemoveLinks,
+      mustPreserveAtLeastOne: items.length > 0,
       items
     };
   }
@@ -23863,7 +23926,7 @@ var AlertRewriteGuardService = class _AlertRewriteGuardService {
     let repairedHtml = candidate.rewrittenAlertHtml;
     if (!originalHasAnchor) {
       repairedHtml = this.removeAnchorsPreservingText(repairedHtml);
-    } else if (!params.allowLinkRemoval && !/<a\b/i.test(repairedHtml)) {
+    } else if (!/<a\b/i.test(repairedHtml)) {
       repairedHtml = this.ensureAtLeastOneOriginalLink(repairedHtml, params.originalAlertHtml);
     }
     if (!this.hasSemanticHeading(repairedHtml)) {
@@ -23888,7 +23951,7 @@ var AlertRewriteGuardService = class _AlertRewriteGuardService {
       return null;
     if (!originalHasAnchor && repairedHasAnchor)
       return null;
-    if (originalHasAnchor && !repairedHasAnchor && !params.allowLinkRemoval) {
+    if (originalHasAnchor && !repairedHasAnchor) {
       return null;
     }
     if (repairedHasAnchor && this.hasFullSentenceLinkWithoutAllowedLeadIn(repaired.rewrittenAlertHtml)) {
@@ -23944,6 +24007,43 @@ var AlertRewriteGuardService = class _AlertRewriteGuardService {
   removeStandaloneLinkTerminalPunctuation(alertHtml) {
     return this.stripStandaloneLinkTerminalPunctuation(alertHtml);
   }
+  preserveOriginalStandaloneLinkLeadIns(rewrittenHtml, originalAlertHtml) {
+    try {
+      const originalDoc = new DOMParser().parseFromString(originalAlertHtml || "", "text/html");
+      const originalLeadInsByHref = /* @__PURE__ */ new Map();
+      const originalLeadInsByNormalizedHref = /* @__PURE__ */ new Map();
+      const originalLeadInsByLinkText = /* @__PURE__ */ new Map();
+      originalDoc.body.querySelectorAll("a[href]").forEach((anchor) => {
+        const href = anchor.getAttribute("href") || "";
+        if (!href || originalLeadInsByHref.has(href))
+          return;
+        const leadIn = this.getOriginalStandaloneLinkLeadIn(anchor);
+        if (!leadIn)
+          return;
+        originalLeadInsByHref.set(href, leadIn);
+        this.setUniqueLeadIn(originalLeadInsByNormalizedHref, this.normalizeHrefForLeadInMatch(href), leadIn);
+        this.setUniqueLeadIn(originalLeadInsByLinkText, this.normalizeLinkTextForLeadInMatch(anchor.textContent || ""), leadIn);
+      });
+      if (!originalLeadInsByHref.size && !originalLeadInsByNormalizedHref.size && !originalLeadInsByLinkText.size) {
+        return rewrittenHtml;
+      }
+      const rewrittenDoc = new DOMParser().parseFromString(rewrittenHtml || "", "text/html");
+      const root = rewrittenDoc.body.firstElementChild;
+      if (!root)
+        return rewrittenHtml;
+      root.querySelectorAll("a[href]").forEach((anchor) => {
+        const href = anchor.getAttribute("href") || "";
+        const originalLeadIn = originalLeadInsByHref.get(href) || originalLeadInsByNormalizedHref.get(this.normalizeHrefForLeadInMatch(href)) || originalLeadInsByLinkText.get(this.normalizeLinkTextForLeadInMatch(anchor.textContent || ""));
+        if (!originalLeadIn)
+          return;
+        this.restoreInlineStandaloneLeadIn(anchor, originalLeadIn);
+        this.restorePreviousStandaloneLeadIn(anchor, originalLeadIn);
+      });
+      return root.outerHTML.trim();
+    } catch {
+      return rewrittenHtml;
+    }
+  }
   // The remaining helpers support the guard logic above and stay private so the
   // orchestration layer only depends on the high-level validation/repair API.
   normalizeLeadInText(value) {
@@ -23981,7 +24081,7 @@ var AlertRewriteGuardService = class _AlertRewriteGuardService {
     const normalized = this.normalizeLeadInText(leadInText.replace(/[.!?]\s*$/g, ""));
     if (!normalized)
       return false;
-    if (normalized === "refer to:" || normalized === "learn more:" || /^learn about(?: the)?$/.test(normalized)) {
+    if (normalized === "refer to:" || normalized === "for details:" || normalized === "learn more:" || /^learn about(?: the)?$/.test(normalized)) {
       return true;
     }
     return normalized.startsWith("find out");
@@ -23992,7 +24092,7 @@ var AlertRewriteGuardService = class _AlertRewriteGuardService {
     const normalized = this.normalizeLeadInText(leadInText.replace(/[.!?]\s*$/g, ""));
     if (!normalized)
       return false;
-    return /\blearn more\b/.test(normalized);
+    return /\b(?:for details|learn more)\b/.test(normalized);
   }
   hasStandaloneActionVerbLinkText(sentence, markerPrefix, markerSuffix) {
     const escapedPrefix = markerPrefix.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -24026,7 +24126,7 @@ var AlertRewriteGuardService = class _AlertRewriteGuardService {
         beforeRange.setEndBefore(anchor);
         const beforeText = this.normalizeLeadInText(beforeRange.toString());
         beforeRange.detach();
-        if (beforeText !== "refer to:" && beforeText !== "learn more:")
+        if (beforeText !== "refer to:" && beforeText !== "for details:" && beforeText !== "learn more:")
           return;
         const afterRange = doc.createRange();
         afterRange.setStartAfter(anchor);
@@ -24119,13 +24219,99 @@ var AlertRewriteGuardService = class _AlertRewriteGuardService {
         return rewrittenHtml;
       if (root.querySelector("a"))
         return root.outerHTML.trim();
+      const leadIn = this.getOriginalStandaloneLinkLeadIn(sourceAnchor) || "Refer to:";
       const linkParagraph = rewrittenDoc.createElement("p");
-      linkParagraph.insertAdjacentHTML("beforeend", `Refer to: ${sourceAnchor.outerHTML}`);
+      linkParagraph.insertAdjacentHTML("beforeend", `${leadIn} ${sourceAnchor.outerHTML}`);
       root.appendChild(linkParagraph);
       return root.outerHTML.trim();
     } catch {
       return rewrittenHtml;
     }
+  }
+  getOriginalStandaloneLinkLeadIn(sourceAnchor) {
+    const inlineParagraph = sourceAnchor.closest("p");
+    if (inlineParagraph && inlineParagraph.querySelectorAll("a").length === 1) {
+      const ownerDocument = inlineParagraph.ownerDocument;
+      const beforeRange = ownerDocument.createRange();
+      beforeRange.setStart(inlineParagraph, 0);
+      beforeRange.setEndBefore(sourceAnchor);
+      const leadIn = this.cleanOriginalLeadIn(beforeRange.toString());
+      beforeRange.detach();
+      if (leadIn)
+        return leadIn;
+    }
+    const linkBlock = sourceAnchor.closest("p, ul, ol");
+    let previous = linkBlock?.previousElementSibling || null;
+    while (previous) {
+      const text = (previous.textContent || "").trim();
+      if (text) {
+        return this.cleanOriginalLeadIn(text);
+      }
+      previous = previous.previousElementSibling;
+    }
+    return null;
+  }
+  restoreInlineStandaloneLeadIn(anchor, originalLeadIn) {
+    const paragraph = anchor.closest("p");
+    if (!paragraph || paragraph.querySelectorAll("a").length !== 1)
+      return;
+    const ownerDocument = paragraph.ownerDocument;
+    const beforeRange = ownerDocument.createRange();
+    beforeRange.setStart(paragraph, 0);
+    beforeRange.setEndBefore(anchor);
+    const currentLeadIn = this.cleanOriginalLeadIn(beforeRange.toString());
+    beforeRange.detach();
+    if (!currentLeadIn || currentLeadIn === originalLeadIn)
+      return;
+    while (paragraph.firstChild && paragraph.firstChild !== anchor) {
+      paragraph.removeChild(paragraph.firstChild);
+    }
+    paragraph.insertBefore(ownerDocument.createTextNode(`${originalLeadIn} `), anchor);
+  }
+  restorePreviousStandaloneLeadIn(anchor, originalLeadIn) {
+    const linkBlock = anchor.closest("ul, ol");
+    if (!linkBlock)
+      return;
+    let previous = linkBlock.previousElementSibling;
+    while (previous) {
+      const currentLeadIn = this.cleanOriginalLeadIn(previous.textContent || "");
+      if (currentLeadIn) {
+        if (currentLeadIn !== originalLeadIn) {
+          previous.textContent = originalLeadIn;
+        }
+        return;
+      }
+      if ((previous.textContent || "").trim())
+        return;
+      previous = previous.previousElementSibling;
+    }
+  }
+  cleanOriginalLeadIn(leadInText) {
+    const leadIn = leadInText.replace(/[.!?]\s*$/g, "").trim();
+    return this.isValidStandaloneLinkLeadIn(leadIn) ? leadIn : null;
+  }
+  setUniqueLeadIn(map, key2, leadIn) {
+    if (!key2)
+      return;
+    if (map.has(key2) && map.get(key2) !== leadIn) {
+      map.delete(key2);
+      return;
+    }
+    map.set(key2, leadIn);
+  }
+  normalizeHrefForLeadInMatch(href) {
+    const value = (href || "").trim();
+    if (!value)
+      return "";
+    try {
+      const url = new URL(value, "https://www.canada.ca");
+      return `${url.pathname}${url.search}${url.hash}`.toLowerCase();
+    } catch {
+      return value.toLowerCase();
+    }
+  }
+  normalizeLinkTextForLeadInMatch(value) {
+    return (value || "").replace(/\s+/g, " ").trim().toLowerCase();
   }
   // Rebuilds a minimal alert wrapper when the model returns usable text but invalid structure.
   buildAlertWrapperFromOriginal(params) {
@@ -24301,7 +24487,7 @@ var AlertRewriteOrchestratorService = class _AlertRewriteOrchestratorService {
             responseCharacters: rewriteResponse.text.length
           });
           timingStart = performance.now();
-          const parsedResult = this.alertRewrite.parseAlertRewriteResponse(rewriteResponse.text, initialPlan, selectedExamples);
+          let parsedResult = this.alertRewrite.parseAlertRewriteResponse(rewriteResponse.text, initialPlan, selectedExamples);
           this.debugLog("Alert rewrite parsed model output", {
             alertIndex,
             attempt: attempt + 1,
@@ -24325,6 +24511,15 @@ var AlertRewriteOrchestratorService = class _AlertRewriteOrchestratorService {
             this.addElapsed(timings, "parseAndGuardMs", timingStart);
             continue;
           }
+          const preservedLeadInHtml = this.alertRewriteGuard.preserveOriginalStandaloneLinkLeadIns(parsedResult.rewrittenAlertHtml, alertHtml);
+          if (preservedLeadInHtml !== parsedResult.rewrittenAlertHtml) {
+            const leadInPreservedResult = this.alertRewrite.parseAlertRewriteResponse(JSON.stringify(__spreadProps(__spreadValues({}, parsedResult), {
+              rewrittenAlertHtml: preservedLeadInHtml
+            })), initialPlan, selectedExamples);
+            if (leadInPreservedResult?.rewrittenAlertHtml) {
+              parsedResult = leadInPreservedResult;
+            }
+          }
           lastRepairCandidate = parsedResult;
           const retryReasons = [];
           const retryInstructionsForResult = [];
@@ -24343,7 +24538,7 @@ var AlertRewriteOrchestratorService = class _AlertRewriteOrchestratorService {
           if (!originalHasAnchor && rewrittenHasAnchor) {
             addRetryInstruction("noLinksAllowed", retryInstructions.noLinksAllowed);
           }
-          if (originalHasAnchor && !rewrittenHasAnchor && !allowLinkRemoval) {
+          if (originalHasAnchor && !rewrittenHasAnchor) {
             addRetryInstruction("mustKeepLink", retryInstructions.mustKeepLink);
           }
           const linkLeadInIssue = rewrittenHasAnchor ? this.alertRewriteGuard.getFullSentenceLinkLeadInIssue(parsedResult.rewrittenAlertHtml) : null;
@@ -24472,6 +24667,7 @@ var AlertRewriteOrchestratorService = class _AlertRewriteOrchestratorService {
         }
         rewriteResult.rewrittenAlertHtml = this.alertRewriteGuard.ensureSemanticHeading(rewriteResult.rewrittenAlertHtml, rewriteResult.rewrittenHeading);
         rewriteResult.rewrittenAlertHtml = this.alertRewriteGuard.removeRedundantLeadInsBeforeActionLinks(rewriteResult.rewrittenAlertHtml);
+        rewriteResult.rewrittenAlertHtml = this.alertRewriteGuard.preserveOriginalStandaloneLinkLeadIns(rewriteResult.rewrittenAlertHtml, alertHtml);
         rewriteResult.rewrittenAlertHtml = this.alertRewriteGuard.removeStandaloneLinkTerminalPunctuation(rewriteResult.rewrittenAlertHtml);
         rewrites.push({
           alert_index: alertIndex,
@@ -29964,6 +30160,7 @@ var ComponentGuidanceComponent = class _ComponentGuidanceComponent {
             hasDescriptionIconOrImage: summary.hasDescriptionIconOrImage,
             hasDescriptionSpecialFormatting: summary.hasDescriptionSpecialFormatting,
             sectionIndex: summary.sectionIndex,
+            sectionTitle: summary.sectionTitle,
             sectionItemIndex: summary.sectionItemIndex,
             sectionDoormatCount: summary.sectionDoormatCount
           })),
@@ -30138,7 +30335,7 @@ var ComponentGuidanceComponent = class _ComponentGuidanceComponent {
       const href = this.cleanString(doormat["href"]);
       const issues = Array.isArray(doormat["issues"]) ? doormat["issues"] : [];
       const summary = index ? summariesByIndex.get(index) : void 0;
-      const label = [index ? `${index}.` : "", linkText || href || "Doormat"].filter(Boolean).join(" ");
+      const label = summary ? this.buildTopicDoormatLabel(summary) : [index ? `${index}.` : "", linkText || href || "Doormat"].filter(Boolean).join(" ");
       if (!issues.length) {
         return [
           this.buildTopicDoormatNoIssueRow(summary ?? {
@@ -30156,6 +30353,7 @@ var ComponentGuidanceComponent = class _ComponentGuidanceComponent {
             linkTextCharacterCount: linkText.length,
             descriptionCharacterCount: 0,
             sectionIndex: 0,
+            sectionTitle: "",
             sectionItemIndex: 0,
             sectionDoormatCount: 0
           })
@@ -30197,7 +30395,8 @@ var ComponentGuidanceComponent = class _ComponentGuidanceComponent {
     const suppressedSectionIssueRows = sectionIssueRows.filter((row) => row.issueId === "too-many-doormats-in-section");
     const reportableSectionIssueRows = sectionIssueRows.filter((row) => row.issueId !== "too-many-doormats-in-section");
     const mixedDescriptionStyleSectionIndexes = new Set(reportableSectionIssueRows.filter((row) => row.issueId === "mixed-description-style-in-section").map((row) => row.sectionIndex).filter((index) => typeof index === "number" && index > 0));
-    const suppressedModelIssueRows = rows.filter((row) => row.issueId === "inconsistent-description-style" && !!row.sectionIndex && mixedDescriptionStyleSectionIndexes.has(row.sectionIndex));
+    const hasMixedDescriptionStyleIssue = mixedDescriptionStyleSectionIndexes.size > 0;
+    const suppressedModelIssueRows = rows.filter((row) => row.issueId === "inconsistent-description-style" && (hasMixedDescriptionStyleIssue || !!row.sectionIndex && mixedDescriptionStyleSectionIndexes.has(row.sectionIndex)));
     const modelIssueRows = rows.filter((row) => !suppressedModelIssueRows.includes(row));
     const deterministicRows = this.buildDeterministicTopicDoormatIssueRows(doormatSummaries, modelIssueRows);
     const representedIndexes = new Set([...modelIssueRows, ...deterministicRows, ...reportableSectionIssueRows].map((row) => row.doormatIndex).filter((index) => typeof index === "number" && index > 0));
@@ -30249,7 +30448,7 @@ var ComponentGuidanceComponent = class _ComponentGuidanceComponent {
     return {
       include: typeof issue["include"] === "boolean" ? issue["include"] : true,
       severity: this.cleanString(issue["severity"]) || "Unknown",
-      doormat: `Section ${sectionIndex}`,
+      doormat: this.buildTopicDoormatSectionLabel(sectionIndex, doormatSummaries),
       issueId: this.getTopicDoormatIssueId(issue),
       issue: this.getTopicDoormatIssueLabel(this.getTopicDoormatIssueId(issue)),
       evidence: this.buildTopicDoormatEvidence(issue),
@@ -30290,9 +30489,14 @@ var ComponentGuidanceComponent = class _ComponentGuidanceComponent {
     doormatSummaries.forEach((summary) => {
       if (!summary.sectionIndex)
         return;
-      counts.set(summary.sectionIndex, Math.max(counts.get(summary.sectionIndex) ?? 0, summary.sectionDoormatCount));
+      const existing = counts.get(summary.sectionIndex);
+      counts.set(summary.sectionIndex, {
+        sectionIndex: summary.sectionIndex,
+        sectionTitle: summary.sectionTitle,
+        count: Math.max(existing?.count ?? 0, summary.sectionDoormatCount)
+      });
     });
-    return Array.from(counts.entries()).map(([sectionIndex, count]) => ({ sectionIndex, count })).sort((a, b) => a.sectionIndex - b.sectionIndex);
+    return Array.from(counts.values()).sort((a, b) => a.sectionIndex - b.sectionIndex);
   }
   getTopicDoormatRowSortIndex(row, doormatSummaries) {
     if (row.doormatIndex)
@@ -30395,10 +30599,22 @@ var ComponentGuidanceComponent = class _ComponentGuidanceComponent {
     return /[.:;?!,]$/.test(doormat.description.trim());
   }
   buildTopicDoormatLabel(doormat) {
+    const itemIndex = doormat.sectionItemIndex || doormat.index;
+    const itemLabel = [
+      itemIndex ? `${itemIndex}.` : "",
+      doormat.linkText || doormat.href || "Doormat"
+    ].filter(Boolean).join(" ");
+    if (doormat.sectionTitle) {
+      return `${doormat.sectionTitle}: ${itemLabel}`;
+    }
     return [
       doormat.index ? `${doormat.index}.` : "",
       doormat.linkText || doormat.href || "Doormat"
     ].filter(Boolean).join(" ");
+  }
+  buildTopicDoormatSectionLabel(sectionIndex, doormatSummaries) {
+    const sectionTitle = doormatSummaries.find((summary) => summary.sectionIndex === sectionIndex)?.sectionTitle || "";
+    return sectionTitle ? `Section ${sectionIndex}: ${sectionTitle}` : `Section ${sectionIndex}`;
   }
   isReportableTopicDoormatIssue(issue, doormat) {
     const issueCategory = this.getTopicDoormatIssueId(issue);
@@ -30452,7 +30668,8 @@ var ComponentGuidanceComponent = class _ComponentGuidanceComponent {
     if (!doormat?.sectionDoormatCount || !doormat.sectionIndex || !doormat.sectionItemIndex) {
       return "";
     }
-    return `${doormat.sectionDoormatCount}/9 doormats in section ${doormat.sectionIndex}; item ${doormat.sectionItemIndex}`;
+    const sectionLabel = doormat.sectionTitle ? `"${doormat.sectionTitle}"` : `section ${doormat.sectionIndex}`;
+    return `${doormat.sectionDoormatCount}/9 doormats in ${sectionLabel}; item ${doormat.sectionItemIndex}`;
   }
   getTopicDoormatExactCharacterCount(issueCategory, doormat) {
     if (!doormat)
@@ -30505,51 +30722,87 @@ var ComponentGuidanceComponent = class _ComponentGuidanceComponent {
     try {
       const seen = /* @__PURE__ */ new Set();
       const summaries = [];
-      const sections = Array.from(doc.querySelectorAll(".gc-srvinfo"));
-      sections.forEach((section, sectionIndex) => {
-        const links = Array.from(section.querySelectorAll("h2 a, h3 a"));
-        const sectionSummaries = [];
-        for (const link of links) {
-          const linkText = this.cleanVisibleText(link.textContent);
-          const href = link.getAttribute("href") || "";
-          const key2 = `${href}|${linkText}`;
-          if (!linkText && !href)
-            continue;
-          if (seen.has(key2))
-            continue;
-          seen.add(key2);
-          const item = this.findTopicDoormatItem(link);
-          const descriptionElement = item?.querySelector("p") ?? null;
-          const description = this.cleanVisibleText(descriptionElement?.textContent);
-          const heading = link.closest("h2, h3");
-          sectionSummaries.push({
-            index: summaries.length + sectionSummaries.length + 1,
-            linkText,
-            href,
-            description,
-            headingLevel: heading ? this.toNumber(heading.tagName.slice(1)) : null,
-            itemLinkCount: item ? item.querySelectorAll("a[href]").length : 0,
-            descriptionLinkCount: descriptionElement ? descriptionElement.querySelectorAll("a[href]").length : 0,
-            hasDescriptionLink: !!descriptionElement?.querySelector("a[href]"),
-            hasDescriptionIconOrImage: !!descriptionElement?.querySelector('img, svg, i[class*="glyphicon"], i[class*="fa"], span[class*="glyphicon"], span[class*="fa"]'),
-            hasDescriptionSpecialFormatting: !!descriptionElement?.querySelector("strong, b, em, i, ul, ol, li, mark, code"),
-            rawItemText: this.cleanVisibleText(item?.textContent).slice(0, 500),
-            linkTextCharacterCount: linkText.length,
-            descriptionCharacterCount: description.length,
-            sectionIndex: sectionIndex + 1,
-            sectionItemIndex: sectionSummaries.length + 1,
-            sectionDoormatCount: 0
-          });
+      const sectionIndexes = /* @__PURE__ */ new Map();
+      const sectionTitles = /* @__PURE__ */ new Map();
+      const sectionSummaries = /* @__PURE__ */ new Map();
+      const links = Array.from(doc.querySelectorAll(".gc-srvinfo h2 a, .gc-srvinfo h3 a"));
+      for (const link of links) {
+        const linkText = this.cleanVisibleText(link.textContent);
+        const href = link.getAttribute("href") || "";
+        const key2 = `${href}|${linkText}`;
+        if (!linkText && !href)
+          continue;
+        if (seen.has(key2))
+          continue;
+        seen.add(key2);
+        const wrapper = link.closest(".gc-srvinfo");
+        const sectionHeading = this.findTopicDoormatSectionHeading(link, wrapper);
+        const sectionKey = sectionHeading ?? wrapper ?? "topic-doormats";
+        let sectionIndex = sectionIndexes.get(sectionKey);
+        if (!sectionIndex) {
+          sectionIndex = sectionIndexes.size + 1;
+          sectionIndexes.set(sectionKey, sectionIndex);
+          sectionTitles.set(sectionIndex, this.cleanVisibleText(sectionHeading?.textContent) || `Topic doormats ${sectionIndex}`);
         }
-        sectionSummaries.forEach((summary) => {
-          summary.sectionDoormatCount = sectionSummaries.length;
-          summaries.push(summary);
+        const sectionRows = sectionSummaries.get(sectionIndex) ?? [];
+        sectionSummaries.set(sectionIndex, sectionRows);
+        const item = this.findTopicDoormatItem(link);
+        const descriptionElement = item?.querySelector("p") ?? null;
+        const description = this.cleanVisibleText(descriptionElement?.textContent);
+        const heading = link.closest("h2, h3");
+        const summary = {
+          index: summaries.length + 1,
+          linkText,
+          href,
+          description,
+          headingLevel: heading ? this.toNumber(heading.tagName.slice(1)) : null,
+          itemLinkCount: item ? item.querySelectorAll("a[href]").length : 0,
+          descriptionLinkCount: descriptionElement ? descriptionElement.querySelectorAll("a[href]").length : 0,
+          hasDescriptionLink: !!descriptionElement?.querySelector("a[href]"),
+          hasDescriptionIconOrImage: !!descriptionElement?.querySelector('img, svg, i[class*="glyphicon"], i[class*="fa"], span[class*="glyphicon"], span[class*="fa"]'),
+          hasDescriptionSpecialFormatting: !!descriptionElement?.querySelector("strong, b, em, i, ul, ol, li, mark, code"),
+          rawItemText: this.cleanVisibleText(item?.textContent).slice(0, 500),
+          linkTextCharacterCount: linkText.length,
+          descriptionCharacterCount: description.length,
+          sectionIndex,
+          sectionTitle: sectionTitles.get(sectionIndex) ?? "",
+          sectionItemIndex: sectionRows.length + 1,
+          sectionDoormatCount: 0
+        };
+        summaries.push(summary);
+        sectionRows.push(summary);
+      }
+      sectionSummaries.forEach((sectionRows) => {
+        sectionRows.forEach((summary) => {
+          summary.sectionDoormatCount = sectionRows.length;
         });
       });
       return summaries;
     } catch {
       return [];
     }
+  }
+  findTopicDoormatSectionHeading(link, wrapper) {
+    const linkHeading = link.closest("h2");
+    const searchRoot = wrapper ?? link.ownerDocument.body;
+    const headings = Array.from(searchRoot.querySelectorAll("h2"));
+    const precedingHeading = headings.filter((heading) => heading !== linkHeading && !!(heading.compareDocumentPosition(link) & Node.DOCUMENT_POSITION_FOLLOWING)).pop();
+    if (precedingHeading)
+      return precedingHeading;
+    let current = wrapper;
+    while (current) {
+      let previous = current.previousElementSibling;
+      while (previous) {
+        if (previous.matches("h2"))
+          return previous;
+        const nestedHeading = Array.from(previous.querySelectorAll("h2")).pop();
+        if (nestedHeading)
+          return nestedHeading;
+        previous = previous.previousElementSibling;
+      }
+      current = current.parentElement;
+    }
+    return null;
   }
   findTopicDoormatItem(link) {
     let current = link;
@@ -31127,7 +31380,7 @@ var ComponentGuidanceComponent = class _ComponentGuidanceComponent {
   }], null, null);
 })();
 (() => {
-  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(ComponentGuidanceComponent, { className: "ComponentGuidanceComponent", filePath: "app/views/page-assistant/components/problems/component-guidance/component-guidance.component.ts", lineNumber: 197 });
+  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(ComponentGuidanceComponent, { className: "ComponentGuidanceComponent", filePath: "app/views/page-assistant/components/problems/component-guidance/component-guidance.component.ts", lineNumber: 198 });
 })();
 
 // src/app/views/page-assistant/components/problems/seo.component.ts
@@ -44692,4 +44945,4 @@ ${custom}` : promptBody;
 export {
   PageAssistantCompareComponent
 };
-//# sourceMappingURL=chunk-O22A5XSK.js.map
+//# sourceMappingURL=chunk-UKNSON7F.js.map
