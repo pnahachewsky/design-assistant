@@ -148,6 +148,8 @@
 	"page.ai-options.model.short.NemotronSuper": "Nemotron 120B",
   "page.ai-options.model.GptOSSFree": "OpenAI: gpt-oss-120b (gratuit)",
   "page.ai-options.model.short.GptOSSFree": "GPT-oss gratuit",
+  "page.ai-options.model.GptOSS20BFree": "OpenAI: gpt-oss-20b (gratuit)",
+  "page.ai-options.model.short.GptOSS20BFree": "gpt-oss-20b gratuit",
   "page.ai-options.model.DeepSeek": "DeepSeek: DeepSeek V3.2 ($$$)",
   "page.ai-options.model.short.DeepSeek": "DeepSeek V3.2",
   "page.ai-options.model.GPT5Mini": "OpenAI: GPT-5 Mini ($$)",

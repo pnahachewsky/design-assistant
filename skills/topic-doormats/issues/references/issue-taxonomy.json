@@ -3,7 +3,7 @@
   "scope": "Issue analysis for GCWeb topic page doormats.",
   "precondition": "Run this analysis only when AIDA heuristics have detected one or more topic doormat items. Missing doormat-section detection is handled before invoking this skill.",
   "analysis_unit": "Analyze one complete topic doormat set at a time. Compare all doormats in the set before assigning issues. Use caller-provided H2 section metadata only for section-local numbering, the 9-doormat limit, and issues that explicitly require section context.",
-  "reporting_unit": "Return issue reports for each affected doormat item. If an editorial issue applies to a whole section rather than a single doormat, return it in section_issues with the affected section_index. Do not repeat section-level issues on every doormat. Report mixed-description-style-in-section as one section_issues item attached to the most affected supplied section, even though the style comparison is set-wide. Report too-many-doormats-in-section only on doormats after the ninth item in each H2 section, not in section_issues. Do not also report inconsistent-description-style for individual doormats when mixed-description-style-in-section is reported.",
+  "reporting_unit": "Return issue reports for each affected doormat item. If an editorial issue applies to a whole section rather than a single doormat, return it in section_issues with the affected section_index. Do not repeat section-level issues on every doormat. Report mixed-description-style-in-section as one section_issues item attached to the most affected supplied section, even though the style comparison is set-wide. Report too-many-doormats-in-section as one section_issues item for the affected H2 section, not as repeated per-doormat issues. Do not also report inconsistent-description-style for individual doormats when mixed-description-style-in-section is reported.",
   "analysis_sequence": [
     {
       "pass": "deterministic_structural_checks",
@@ -164,7 +164,7 @@
     "Check whether each description is specific enough to distinguish its doormat from the others.",
     "Check for duplicate or near-duplicate descriptions across the set.",
     "Check for repeated generic task lists across the set.",
-    "Check whether any topic doormat section contains more than 9 doormats. If it does, report too-many-doormats-in-section only on doormats after the ninth item.",
+    "Check whether any topic doormat section contains more than 9 doormats. If it does, report too-many-doormats-in-section once in section_issues for the affected H2 section.",
     "Check whether any doormat link is repeated in the page's Most requested section.",
     "Check whether the set is missing a needed doormat based on the supplied page context.",
     "Check whether the set includes an unnecessary or badly chosen doormat.",
@@ -483,8 +483,8 @@
       "label": "Too many doormats in section",
       "severity": "Medium",
       "condition": "A single topic doormat section contains more than 9 doormats.",
-      "recommendation": "Reduce the section to 9 doormats or split lower-priority destinations into another section.",
-      "reporting": "Report this issue only on doormats after the ninth item in the section. Do not report it on every doormat. Do not report this issue in section_issues.",
+      "recommendation": "Either remove doormats or break down the section into sections that have 9 or fewer doormats.",
+      "reporting": "Report this issue once in section_issues for the affected H2 section. Do not report it on individual doormats.",
       "evidence_required": [
         "section_doormat_count",
         "maximum_allowed",

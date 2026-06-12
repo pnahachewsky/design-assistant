@@ -38508,11 +38508,12 @@ var AiModel;
   AiModel2["Zai"] = "z-ai/glm-4.5-air:free";
   AiModel2["NemotronNano"] = "nvidia/nemotron-3-nano-30b-a3b:free";
   AiModel2["GptOSSFree"] = "openai/gpt-oss-120b:free";
+  AiModel2["GptOSS20BFree"] = "openai/gpt-oss-20b:free";
   AiModel2["NemotronSuper"] = "nvidia/nemotron-3-super-120b-a12b:free";
-  AiModel2["GPT5Mini"] = "openai/gpt-5-mini";
   AiModel2["GptOSS20B"] = "openai/gpt-oss-20b";
-  AiModel2["DeepSeek"] = "deepseek/deepseek-v3.2";
   AiModel2["Gemini"] = "google/gemini-2.5-flash-lite";
+  AiModel2["GPT5Mini"] = "openai/gpt-5-mini";
+  AiModel2["DeepSeek"] = "deepseek/deepseek-v3.2";
 })(AiModel || (AiModel = {}));
 
 // src/app/services/local-storage.service.ts
@@ -38561,7 +38562,7 @@ var UploadStateService = class _UploadStateService {
     this.storage.saveData(this.uploadTypeKey, type);
   }
   // Primary AI model selected for the current session.
-  selectedAiModel = signal(AiModel.OwlAlpha);
+  selectedAiModel = signal(AiModel.GptOSS20BFree);
   getSelectedAiModel = computed(() => this.selectedAiModel());
   setSelectedAiModel(model2) {
     this.selectedAiModel.set(model2);
@@ -38664,7 +38665,7 @@ var UploadStateService = class _UploadStateService {
   // Clear both in-memory state and the persisted assistant session.
   resetUploadFlow() {
     this.selectedUploadType.set("url");
-    this.selectedAiModel.set(AiModel.OwlAlpha);
+    this.selectedAiModel.set(AiModel.GptOSS20BFree);
     this.editPromptText.set("");
     this.includeAlertRewriteExamples.set(true);
     this.useCompactAlertsPageContext.set(true);
@@ -100367,4 +100368,4 @@ export {
    * License: MIT
    *)
 */
-//# sourceMappingURL=chunk-VBSMZM64.js.map
+//# sourceMappingURL=chunk-X6OY6UYI.js.map

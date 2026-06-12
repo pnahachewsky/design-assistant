@@ -18,6 +18,8 @@ Use this skill for issue analysis of topic doormat sets.
   doormat numbering and the 9-doormat limit
 - Apply the 9-doormat limit per H2 section only; reset the count at each H2
   section
+- Report `too-many-doormats-in-section` as one section-level issue for the
+  affected H2 section, not as repeated per-doormat issues
 - Apply consistency checks, including style consistency, across the complete
   topic doormat set unless the taxonomy explicitly scopes a check to one
   section
