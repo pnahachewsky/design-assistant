@@ -64,6 +64,7 @@ interface TopicDoormatIssueRow {
   issueId: string;
   issue: string;
   evidence: string;
+  evidenceMetric?: string;
   recommendation: string;
   doormatIndex?: number;
   sectionIndex?: number;
@@ -77,6 +78,12 @@ interface TopicDoormatIssueGroup {
   doormatCount: number;
   sectionRows: TopicDoormatIssueRow[];
   doormatRows: TopicDoormatIssueRow[];
+}
+
+interface TopicDoormatIssueSummary {
+  label: string;
+  severity: string;
+  rowType: 'section' | 'doormat';
 }
 
 interface TopicDoormatSummary {
@@ -201,6 +208,12 @@ interface TopicDoormatSectionStyleAnalysis {
         border: 1px solid transparent;
       }
 
+      .topic-doormat-evidence-metric {
+        display: inline-flex;
+        margin-right: 0.2rem;
+        vertical-align: baseline;
+      }
+
       .ai-btn {
         font-weight: 600;
       }
@@ -246,7 +259,7 @@ export class ComponentGuidanceComponent implements OnInit, OnDestroy {
     'skills/topic-doormats/issues/references/issue-taxonomy.json';
   private readonly topicDoormatIssueLengthLimits: Record<string, number> = {
     'link-name-too-long': 35,
-    'description-too-long': 120,
+    'description-too-long': 90,
   };
   private readonly topicDoormatDescriptionStyleOrder: Exclude<
     TopicDoormatDescriptionStyle,
@@ -281,6 +294,7 @@ export class ComponentGuidanceComponent implements OnInit, OnDestroy {
   topicDoormatIssuesErrorDetail = '';
   topicDoormatIssueRows: TopicDoormatIssueRow[] = [];
   topicDoormatIssueGroups: TopicDoormatIssueGroup[] = [];
+  topicDoormatIssueCategories: TopicDoormatIssueSummary[] = [];
   private prevAlertHasIssues = false;
 
   // multi-select
@@ -634,6 +648,8 @@ export class ComponentGuidanceComponent implements OnInit, OnDestroy {
     this.topicDoormatIssuesErrorDetail = '';
     this.topicDoormatIssueRows = [];
     this.topicDoormatIssueGroups = [];
+    this.topicDoormatIssueCategories = [];
+    this.updateTopicDoormatRowHealth('unknown');
 
     try {
       await this.loadTopicDoormatIssueTaxonomy();
@@ -715,6 +731,7 @@ export class ComponentGuidanceComponent implements OnInit, OnDestroy {
       this.topicDoormatIssueGroups = this.buildTopicDoormatIssueGroups(
         this.topicDoormatIssueRows,
       );
+      this.updateTopicDoormatSummaryState();
       this.debugTopicDoormatIssues('response parsed', {
         model,
         responseCharacters: text.length,
@@ -755,6 +772,8 @@ export class ComponentGuidanceComponent implements OnInit, OnDestroy {
       }
     } catch (err) {
       this.topicDoormatIssuesError = true;
+      this.topicDoormatIssueCategories = [];
+      this.updateTopicDoormatRowHealth('unknown');
       const detail =
         err instanceof Error
           ? err.message
@@ -1064,7 +1083,8 @@ export class ComponentGuidanceComponent implements OnInit, OnDestroy {
           const issueId = this.getTopicDoormatIssueId(issue);
           if (!this.isReportableTopicDoormatIssue(issue, summary)) return null;
           if (
-            issueId === 'mixed-description-style-in-section'
+            issueId === 'mixed-description-style-in-section' ||
+            issueId === 'mixed-link-name-styles-in-section'
           ) {
             const sectionRow = this.buildTopicDoormatSectionIssueRow(
               issue,
@@ -1080,6 +1100,12 @@ export class ComponentGuidanceComponent implements OnInit, OnDestroy {
             return null;
           }
           if (issueId === 'multiple-links') {
+            return null;
+          }
+          if (issueId === 'link-name-too-long') {
+            return null;
+          }
+          if (issueId === 'description-too-long') {
             return null;
           }
           if (!this.hasValidTopicDoormatObjectiveEvidence(issueId, summary)) {
@@ -1120,11 +1146,43 @@ export class ComponentGuidanceComponent implements OnInit, OnDestroy {
         .map((row) => row.sectionIndex)
         .filter((index): index is number => typeof index === 'number' && index > 0),
     );
+    const mixedLinkNameStyleSectionIndexes = new Set(
+      reportableSectionIssueRows
+        .filter((row) => row.issueId === 'mixed-link-name-styles-in-section')
+        .map((row) => row.sectionIndex)
+        .filter((index): index is number => typeof index === 'number' && index > 0),
+    );
+    const inconsistentLinkNameStyleCountsBySection = rows.reduce<
+      Map<number, number>
+    >((counts, row) => {
+      if (
+        row.issueId !== 'inconsistent-link-name-style' ||
+        !row.sectionIndex
+      ) {
+        return counts;
+      }
+      counts.set(row.sectionIndex, (counts.get(row.sectionIndex) ?? 0) + 1);
+      return counts;
+    }, new Map<number, number>());
     const suppressedModelIssueRows = rows.filter(
-      (row) =>
-        row.issueId === 'inconsistent-description-style' &&
-        !!row.sectionIndex &&
-        mixedDescriptionStyleSectionIndexes.has(row.sectionIndex),
+      (row) => {
+        if (!row.sectionIndex) return false;
+        if (
+          row.issueId === 'inconsistent-description-style' &&
+          mixedDescriptionStyleSectionIndexes.has(row.sectionIndex)
+        ) {
+          return true;
+        }
+        if (row.issueId !== 'inconsistent-link-name-style') return false;
+        if (mixedLinkNameStyleSectionIndexes.has(row.sectionIndex)) return true;
+        const sectionCount =
+          doormatSummaries.find(
+            (summary) => summary.sectionIndex === row.sectionIndex,
+          )?.sectionDoormatCount ?? 0;
+        const flaggedCount =
+          inconsistentLinkNameStyleCountsBySection.get(row.sectionIndex) ?? 0;
+        return sectionCount > 0 && flaggedCount >= Math.max(2, sectionCount - 1);
+      },
     );
     const modelIssueRows = rows.filter(
       (row) => !suppressedModelIssueRows.includes(row),
@@ -1316,12 +1374,86 @@ export class ComponentGuidanceComponent implements OnInit, OnDestroy {
 
     return [
       ...overLimitRows,
+      ...this.buildLocalTopicDoormatLinkNameLengthRows(doormatSummaries),
+      ...this.buildLocalTopicDoormatDescriptionLengthRows(doormatSummaries),
       ...this.buildLocalTopicDoormatMultipleLinkRows(doormatSummaries),
       ...this.buildLocalTopicDoormatStyleIssueRows(
         doormatSummaries,
         existingIssueKeys,
       ),
     ];
+  }
+
+  private buildLocalTopicDoormatLinkNameLengthRows(
+    doormatSummaries: TopicDoormatSummary[],
+  ): TopicDoormatIssueRow[] {
+    const limit = this.topicDoormatIssueLengthLimits['link-name-too-long'];
+    return doormatSummaries
+      .filter((summary) => summary.linkTextCharacterCount > limit)
+      .map((summary) => {
+        const count = summary.linkTextCharacterCount;
+        const metric = `${count}/${limit} characters`;
+        return {
+          include: true,
+          rowType: 'doormat',
+          severity: this.getTopicDoormatLinkNameLengthSeverity(count),
+          doormat: this.buildTopicDoormatLabel(summary),
+          doormatLabel: summary.linkText || summary.href || 'Doormat',
+          issueId: 'link-name-too-long',
+          issue: this.getTopicDoormatIssueLabel('link-name-too-long'),
+          evidence:
+            'The French version must be <= 75 characters. Aim for the English version to be <= 45 characters.',
+          evidenceMetric: metric,
+          recommendation:
+            'Shorten the link text. Keep link text under 35 characters.',
+          doormatIndex: summary.index || undefined,
+          sectionIndex: summary.sectionIndex || undefined,
+          sectionTitle: summary.sectionTitle || undefined,
+          sectionItemIndex: summary.sectionItemIndex || undefined,
+        } satisfies TopicDoormatIssueRow;
+      });
+  }
+
+  private getTopicDoormatLinkNameLengthSeverity(count: number): string {
+    if (count <= 45) return 'Low';
+    if (count <= 60) return 'Medium';
+    return 'High';
+  }
+
+  private buildLocalTopicDoormatDescriptionLengthRows(
+    doormatSummaries: TopicDoormatSummary[],
+  ): TopicDoormatIssueRow[] {
+    const limit = this.topicDoormatIssueLengthLimits['description-too-long'];
+    return doormatSummaries
+      .filter((summary) => summary.descriptionCharacterCount > limit)
+      .map((summary) => {
+        const count = summary.descriptionCharacterCount;
+        const metric = `${count}/${limit} characters`;
+        return {
+          include: true,
+          rowType: 'doormat',
+          severity: this.getTopicDoormatDescriptionLengthSeverity(count),
+          doormat: this.buildTopicDoormatLabel(summary),
+          doormatLabel: summary.linkText || summary.href || 'Doormat',
+          issueId: 'description-too-long',
+          issue: this.getTopicDoormatIssueLabel('description-too-long'),
+          evidence:
+            'The French version must be <= 120 characters. Aim for the English version to be <= 90 characters.',
+          evidenceMetric: metric,
+          recommendation:
+            'Shorten the description. Keep the English version under 90 characters where possible.',
+          doormatIndex: summary.index || undefined,
+          sectionIndex: summary.sectionIndex || undefined,
+          sectionTitle: summary.sectionTitle || undefined,
+          sectionItemIndex: summary.sectionItemIndex || undefined,
+        } satisfies TopicDoormatIssueRow;
+      });
+  }
+
+  private getTopicDoormatDescriptionLengthSeverity(count: number): string {
+    if (count <= 105) return 'Low';
+    if (count <= 120) return 'Medium';
+    return 'High';
   }
 
   private buildLocalTopicDoormatMultipleLinkRows(
@@ -1646,6 +1778,12 @@ export class ComponentGuidanceComponent implements OnInit, OnDestroy {
   private buildTopicDoormatIssueGroups(
     rows: TopicDoormatIssueRow[],
   ): TopicDoormatIssueGroup[] {
+    this.topicDoormatIssueCategories =
+      this.buildTopicDoormatIssueCategories(rows);
+    this.updateTopicDoormatRowHealth(
+      this.getTopicDoormatHealthFromCategories(this.topicDoormatIssueCategories),
+    );
+
     const groups = new Map<number, TopicDoormatIssueGroup>();
 
     rows.forEach((row) => {
@@ -1680,6 +1818,89 @@ export class ComponentGuidanceComponent implements OnInit, OnDestroy {
         doormatRows: this.sortTopicDoormatRowsForGroup(group.doormatRows),
       }))
       .sort((a, b) => a.sectionIndex - b.sectionIndex);
+  }
+
+  private updateTopicDoormatSummaryState(): void {
+    this.topicDoormatIssueCategories =
+      this.buildTopicDoormatIssueCategories(this.topicDoormatIssueRows);
+    this.updateTopicDoormatRowHealth(
+      this.getTopicDoormatHealthFromCategories(this.topicDoormatIssueCategories),
+    );
+  }
+
+  private buildTopicDoormatIssueCategories(
+    rows: TopicDoormatIssueRow[],
+  ): TopicDoormatIssueSummary[] {
+    const byIssue = new Map<string, TopicDoormatIssueSummary>();
+
+    rows.forEach((row) => {
+      if (this.isNoIssueRow(row)) return;
+      const issueId = row.issueId || row.issue;
+      if (!issueId) return;
+      const existing = byIssue.get(issueId);
+      if (!existing) {
+        byIssue.set(issueId, {
+          label: row.issue,
+          severity: row.severity,
+          rowType: row.rowType,
+        });
+        return;
+      }
+
+      if (this.getSeverityRank(row.severity) > this.getSeverityRank(existing.severity)) {
+        existing.severity = row.severity;
+      }
+      if (row.rowType === 'section') {
+        existing.rowType = 'section';
+      }
+    });
+
+    return Array.from(byIssue.values()).sort((a, b) => {
+      if (a.rowType !== b.rowType) return a.rowType === 'section' ? -1 : 1;
+      const severityDiff =
+        this.getSeverityRank(b.severity) - this.getSeverityRank(a.severity);
+      if (severityDiff !== 0) return severityDiff;
+      return a.label.localeCompare(b.label, undefined, { sensitivity: 'base' });
+    });
+  }
+
+  private getTopicDoormatHealthFromCategories(
+    categories: TopicDoormatIssueSummary[],
+  ): UiHealth {
+    if (!categories.length) return 'ok';
+    const maxSeverity = categories.reduce(
+      (max, category) =>
+        this.getSeverityRank(category.severity) > this.getSeverityRank(max)
+          ? category.severity
+          : max,
+      '',
+    );
+    return this.topicDoormatSeverityToHealth(maxSeverity);
+  }
+
+  private topicDoormatSeverityToHealth(severity: string | undefined | null): UiHealth {
+    const s = (severity || '').toLowerCase();
+    if (s === 'high') return 'severe';
+    if (s === 'medium' || s === 'low') return 'minor';
+    if (s === 'ok') return 'ok';
+    return 'unknown';
+  }
+
+  private updateTopicDoormatRowHealth(health: UiHealth): void {
+    const topicRow = this.rows.find((row) => row.__id === this.topicDoormatsId);
+    if (topicRow) {
+      topicRow.health = health;
+    }
+  }
+
+  private getSeverityRank(severity: string | undefined | null): number {
+    return ALERT_SEVERITY_RANK[(severity || '').toLowerCase()] ?? -1;
+  }
+
+  getTopicDoormatIssueCategoriesForDisplay(): TopicDoormatIssueSummary[] {
+    return this.topicDoormatIssueCategories.length
+      ? this.topicDoormatIssueCategories
+      : this.buildTopicDoormatIssueCategories(this.topicDoormatIssueRows);
   }
 
   private sortTopicDoormatRowsForGroup(

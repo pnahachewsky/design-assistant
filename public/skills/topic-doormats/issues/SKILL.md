@@ -27,12 +27,19 @@ Use this skill for issue analysis of topic doormat sets.
   description style issue when a section mixes noun/topic or benefit-summary
   descriptions with action-oriented, question-answer, or "How to" descriptions,
   even in small sections when the split is visible
+- Audit link name style within each H2 section. Report a section-level mixed
+  link name style issue when a section visibly mixes noun/topic link names with
+  action-verb link names. Do not report every doormat in a section as an
+  individual link-name style outlier
 - Compare internally consistent H2 sections with each other. Report a
   section-level style outlier when one section's dominant description style
   clearly differs from the dominant page-level section style
 - Use caller-provided `linkTextCharacterCount` and
   `descriptionCharacterCount` values when present; do not recalculate
   character counts from HTML
+- Do not report `link-name-too-long` or `description-too-long`; AIDA
+  calculates and reports those issues deterministically from
+  `linkTextCharacterCount` and `descriptionCharacterCount`
 - Return JSON only
 - Report issues per affected doormat
 - Report section-level problems in `section_issues` rather than repeating

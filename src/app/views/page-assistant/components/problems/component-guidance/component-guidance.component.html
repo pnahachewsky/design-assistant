@@ -185,6 +185,27 @@
           } @else {
             <span class="muted">Expand this row to explore alert pain points</span>
           }
+        } @else if (row.__id === topicDoormatsId) {
+          @if (topicDoormatIssuesLoading) {
+            <div class="alert-loading">
+              <i class="pi pi-spinner pi-spin" aria-hidden="true"></i>
+              <span class="sr-only">Loading topic doormat issues</span>
+            </div>
+          } @else if (topicDoormatIssuesError) {
+            <span class="text-danger">AI error</span>
+          } @else if (getTopicDoormatIssueCategoriesForDisplay().length) {
+            <div class="chip-list">
+              <p-chip
+                *ngFor="let chip of getTopicDoormatIssueCategoriesForDisplay()"
+                [label]="chip.label"
+                [styleClass]="'chip ' + severityChip(chip.severity)">
+              </p-chip>
+            </div>
+          } @else if (topicDoormatIssuesResponseReceived) {
+            <span class="muted">No pain points found</span>
+          } @else {
+            <span class="muted">Expand this row to explore doormat pain points</span>
+          }
         } @else if (isDoormatRow(row)) {
           <span class="muted">Expand this row to explore doormat pain points</span>
         } @else {
@@ -281,7 +302,20 @@
                             </span>
                           </td>
                           <td>{{ issue.issue }}</td>
-                          <td>{{ issue.evidence || '-' }}</td>
+                          <td>
+                            @if (issue.evidenceMetric) {
+                              <span
+                                class="chip topic-doormat-evidence-metric"
+                                [ngClass]="severityChip(issue.severity)">
+                                {{ issue.evidenceMetric }}
+                              </span>
+                              @if (issue.evidence) {
+                                <span>. {{ issue.evidence }}</span>
+                              }
+                            } @else {
+                              {{ issue.evidence || '-' }}
+                            }
+                          </td>
                           <td>{{ issue.recommendation || '-' }}</td>
                         </tr>
                       </ng-template>
@@ -326,7 +360,20 @@
                             </span>
                           </td>
                           <td>{{ issue.issue }}</td>
-                          <td>{{ issue.evidence || '-' }}</td>
+                          <td>
+                            @if (issue.evidenceMetric) {
+                              <span
+                                class="chip topic-doormat-evidence-metric"
+                                [ngClass]="severityChip(issue.severity)">
+                                {{ issue.evidenceMetric }}
+                              </span>
+                              @if (issue.evidence) {
+                                <span>. {{ issue.evidence }}</span>
+                              }
+                            } @else {
+                              {{ issue.evidence || '-' }}
+                            }
+                          </td>
                           <td>{{ issue.recommendation || '-' }}</td>
                         </tr>
                       </ng-template>
