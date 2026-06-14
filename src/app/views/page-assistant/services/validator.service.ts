@@ -7,6 +7,12 @@ const SUBWAY_DOORMATS_GUIDANCE = {
   url: 'page.tools.guidance.craVariant.doormats.url',
 };
 
+const TOPIC_DOORMATS_GUIDANCE = {
+  id: 'topicDoormats',
+  name: 'page.tools.guidance.craVariant.topicDoormats.title',
+  url: 'page.tools.guidance.craVariant.doormats.url',
+};
+
 @Injectable({
   providedIn: 'root'
 })
@@ -106,6 +112,46 @@ export class ValidatorService {
     ) {
       this.addGuidance(found, SUBWAY_DOORMATS_GUIDANCE);
     }
+    if (this.hasLegacyTopicDoormatStructure(root)) {
+      this.addGuidance(found, TOPIC_DOORMATS_GUIDANCE);
+    }
+  }
+
+  private hasLegacyTopicDoormatStructure(root: Element): boolean {
+    if (
+      root.querySelector('.gc-srvinfo') ||
+      root.querySelector('.gc-drmt') ||
+      root.querySelector('.mwsdoormat-links-container')
+    ) {
+      return true;
+    }
+
+    const topicsHeading = Array.from(root.querySelectorAll('h2, h3')).find(
+      (heading) => (heading.textContent || '').replace(/\s+/g, ' ').trim().toLowerCase() === 'topics',
+    );
+    if (!topicsHeading) return false;
+
+    let linkedHeadingCount = 0;
+    let current = topicsHeading.nextElementSibling;
+    while (current && linkedHeadingCount < 2) {
+      const text = (current.textContent || '').replace(/\s+/g, ' ').trim().toLowerCase();
+      if (
+        current.matches('h2') &&
+        text &&
+        text !== 'topics'
+      ) {
+        break;
+      }
+      if (
+        current.matches('h2, h3') &&
+        current.querySelectorAll('a[href]').length === 1
+      ) {
+        linkedHeadingCount += 1;
+      }
+      current = current.nextElementSibling;
+    }
+
+    return linkedHeadingCount >= 2;
   }
 
   private walkForGuidance(node: Element, found: Map<string, { id?: string; name: string; url: string }>) {

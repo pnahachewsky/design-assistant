@@ -269,6 +269,27 @@
       background: var(--soft);
     }
 
+    .reference-box {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--soft);
+      padding: 14px 18px;
+    }
+
+    .reference-box h4 {
+      margin: 0 0 6px;
+      font-size: 1rem;
+    }
+
+    .reference-box p {
+      margin: 0;
+    }
+
+    .source-aside {
+      display: grid;
+      gap: 14px;
+    }
+
     .ex-hide summary {
       cursor: pointer;
       padding: 14px 18px;
@@ -515,14 +536,21 @@
             </ul>
           </div>
 
-          <details class="ex-hide">
-            <summary>Anne's original categories</summary>
-            <div class="ex-hide-content">
-              <p>
-                I outlined some possible <strong>doormat pain point categories</strong>. In bold is the potential category,
-                sub-bullets contain the more detailed issue. Let me know if this helps or if you need something else.
-              </p>
-              <ul>
+          <div class="source-aside">
+            <div class="reference-box">
+              <h4>
+                <a href="https://github.com/cra-proto/IPD-template/blob/main/.claude/skills/gcweb-doormats/SKILL.md">Marvin's original skill</a>
+              </h4>
+            </div>
+
+            <details class="ex-hide">
+              <summary>Anne's original categories</summary>
+              <div class="ex-hide-content">
+                <p>
+                  I outlined some possible <strong>doormat pain point categories</strong>. In bold is the potential category,
+                  sub-bullets contain the more detailed issue. Let me know if this helps or if you need something else.
+                </p>
+                <ul>
                 <li>
                   <strong>Link code issue</strong>
                   <ul>
@@ -612,9 +640,10 @@
                   </ul>
                 </li>
                 <li><strong>Wrong doormat order</strong> (prioritize most visited info and services)s.</li>
-              </ul>
-            </div>
-          </details>
+                </ul>
+              </div>
+            </details>
+          </div>
         </article>
 
         <article class="source-card">

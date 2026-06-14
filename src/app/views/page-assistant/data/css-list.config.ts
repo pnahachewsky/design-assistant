@@ -197,7 +197,7 @@ export const guidanceMap: {
             id: 'topicDoormats',
             name: 'page.tools.guidance.craVariant.topicDoormats.title',
             url: 'page.tools.guidance.craVariant.doormats.url',
-            patterns: ['gc-srvinfo'],
+            patterns: ['gc-srvinfo', 'gc-drmt', 'mwsdoormat-links-container'],
         },
         {
             id: 'subwayDoormats',

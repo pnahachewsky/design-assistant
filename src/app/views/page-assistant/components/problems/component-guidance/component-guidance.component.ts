@@ -395,8 +395,8 @@ export class ComponentGuidanceComponent implements OnInit, OnDestroy {
   }
 
   private removeTopicDoormatRowWhenNoTopicDoormats(html: string): void {
-    const doc = new DOMParser().parseFromString(html, 'text/html');
-    if (doc.querySelector('.gc-srvinfo')) return;
+    const doc = this.parseHtmlDocument(html);
+    if (doc && this.hasTopicDoormatCandidates(doc)) return;
 
     this.rows = this.rows.filter(
       (row) => row.__id !== this.topicDoormatsId,
@@ -640,6 +640,8 @@ export class ComponentGuidanceComponent implements OnInit, OnDestroy {
     if (!doc) return;
     const doormatSummaries = this.extractTopicDoormatSummaries(doc);
     if (!doormatSummaries.length) return;
+    const hasLegacyTopicDoormatTemplate =
+      this.hasLegacyTopicDoormatTemplate(doc);
     const analysisStart = performance.now();
     const mostRequestedLinks = this.extractMostRequestedLinks(doc);
 
@@ -656,7 +658,7 @@ export class ComponentGuidanceComponent implements OnInit, OnDestroy {
       const composed = await this.skillManager.composePrompt({
         basePrompt: '',
         queryText:
-          'analyze topic doormats gc-srvinfo issue report for each doormat',
+          'analyze topic doormats issue report for each doormat',
         promptKey: PromptKey.Doormats,
         outputMode: 'json',
         includeReferences: true,
@@ -726,8 +728,15 @@ export class ComponentGuidanceComponent implements OnInit, OnDestroy {
         });
       }
       this.topicDoormatIssueRows = text
-        ? this.parseTopicDoormatIssueRows(text, doormatSummaries)
-        : this.buildTopicDoormatFallbackRows(doormatSummaries);
+        ? this.parseTopicDoormatIssueRows(
+            text,
+            doormatSummaries,
+            hasLegacyTopicDoormatTemplate,
+          )
+        : this.buildTopicDoormatFallbackRows(
+            doormatSummaries,
+            hasLegacyTopicDoormatTemplate,
+          );
       this.topicDoormatIssueGroups = this.buildTopicDoormatIssueGroups(
         this.topicDoormatIssueRows,
       );
@@ -1009,10 +1018,14 @@ export class ComponentGuidanceComponent implements OnInit, OnDestroy {
   private parseTopicDoormatIssueRows(
     text: string,
     doormatSummaries: TopicDoormatSummary[] = [],
+    hasLegacyTopicDoormatTemplate = false,
   ): TopicDoormatIssueRow[] {
     const parsed = this.looseJsonParse(this.stripCodeFences(text));
     if (!parsed || typeof parsed !== 'object') {
-      const fallbackRows = this.buildTopicDoormatFallbackRows(doormatSummaries);
+      const fallbackRows = this.buildTopicDoormatFallbackRows(
+        doormatSummaries,
+        hasLegacyTopicDoormatTemplate,
+      );
       this.debugTopicDoormatIssues('response parse fallback', {
         reason: 'invalid-json-or-non-object',
         doormatSummaryCount: doormatSummaries.length,
@@ -1191,6 +1204,7 @@ export class ComponentGuidanceComponent implements OnInit, OnDestroy {
     const deterministicRows = this.buildDeterministicTopicDoormatIssueRows(
       doormatSummaries,
       [...modelIssueRows, ...reportableSectionIssueRows],
+      hasLegacyTopicDoormatTemplate,
     );
 
     const representedIndexes = new Set(
@@ -1310,10 +1324,12 @@ export class ComponentGuidanceComponent implements OnInit, OnDestroy {
 
   private buildTopicDoormatFallbackRows(
     doormatSummaries: TopicDoormatSummary[],
+    hasLegacyTopicDoormatTemplate = false,
   ): TopicDoormatIssueRow[] {
     const deterministicRows = this.buildDeterministicTopicDoormatIssueRows(
       doormatSummaries,
       [],
+      hasLegacyTopicDoormatTemplate,
     );
     const representedIndexes = new Set(
       deterministicRows
@@ -1337,10 +1353,35 @@ export class ComponentGuidanceComponent implements OnInit, OnDestroy {
   private buildDeterministicTopicDoormatIssueRows(
     doormatSummaries: TopicDoormatSummary[],
     existingRows: TopicDoormatIssueRow[],
+    hasLegacyTopicDoormatTemplate = false,
   ): TopicDoormatIssueRow[] {
     const existingIssueKeys = new Set(
       existingRows.map((row) => `${row.sectionIndex ?? 0}|${row.issueId}`),
     );
+
+    const outdatedTemplateRows =
+      hasLegacyTopicDoormatTemplate &&
+      !existingIssueKeys.has('1|outdated-topic-page-template')
+        ? [
+            {
+              include: true,
+              rowType: 'section',
+              severity: 'High',
+              doormat: this.buildTopicDoormatSectionLabel(1, doormatSummaries),
+              doormatLabel: 'All doormats in section',
+              issueId: 'outdated-topic-page-template',
+              issue: 'Topic page template is outdated',
+              evidence:
+                'This section uses legacy topic doormat markup: .gc-drmt or .mwsdoormat-links-container.',
+              recommendation:
+                'Update the page to use the current GCWeb topic page doormat template.',
+              sectionIndex: 1,
+              sectionTitle:
+                doormatSummaries.find((summary) => summary.sectionIndex === 1)
+                  ?.sectionTitle || '',
+            } satisfies TopicDoormatIssueRow,
+          ]
+        : [];
 
     const overLimitRows = this.buildTopicDoormatSectionCounts(doormatSummaries).flatMap(
       (section) => {
@@ -1373,6 +1414,7 @@ export class ComponentGuidanceComponent implements OnInit, OnDestroy {
     });
 
     return [
+      ...outdatedTemplateRows,
       ...overLimitRows,
       ...this.buildLocalTopicDoormatLinkNameLengthRows(doormatSummaries),
       ...this.buildLocalTopicDoormatDescriptionLengthRows(doormatSummaries),
@@ -2352,21 +2394,19 @@ export class ComponentGuidanceComponent implements OnInit, OnDestroy {
       const sectionIndexes = new Map<HTMLElement | string, number>();
       const sectionTitles = new Map<number, string>();
       const sectionSummaries = new Map<number, TopicDoormatSummary[]>();
-      const links = Array.from(
-        doc.querySelectorAll<HTMLAnchorElement>(
-          '.gc-srvinfo h2 a, .gc-srvinfo h3 a',
-        ),
-      );
 
-      for (const link of links) {
+      const addSummary = (
+        link: HTMLAnchorElement,
+        wrapper: HTMLElement | null,
+        item: HTMLElement | null,
+      ): void => {
         const linkText = this.cleanVisibleText(link.textContent);
         const href = link.getAttribute('href') || '';
         const key = `${href}|${linkText}`;
-        if (!linkText && !href) continue;
-        if (seen.has(key)) continue;
+        if (!linkText && !href) return;
+        if (seen.has(key)) return;
         seen.add(key);
 
-        const wrapper = link.closest<HTMLElement>('.gc-srvinfo');
         const sectionHeading = this.findTopicDoormatSectionHeading(link, wrapper);
         const sectionKey: HTMLElement | string =
           sectionHeading ?? wrapper ?? 'topic-doormats';
@@ -2383,7 +2423,6 @@ export class ComponentGuidanceComponent implements OnInit, OnDestroy {
 
         const sectionRows = sectionSummaries.get(sectionIndex) ?? [];
         sectionSummaries.set(sectionIndex, sectionRows);
-        const item = this.findTopicDoormatItem(link);
         const descriptionElement = item?.querySelector('p') ?? null;
         const description = this.cleanVisibleText(
           descriptionElement?.textContent,
@@ -2417,7 +2456,21 @@ export class ComponentGuidanceComponent implements OnInit, OnDestroy {
         };
         summaries.push(summary);
         sectionRows.push(summary);
-      }
+      };
+
+      const modernLinks = Array.from(
+        doc.querySelectorAll<HTMLAnchorElement>(
+          '.gc-srvinfo h2 a, .gc-srvinfo h3 a',
+        ),
+      );
+      modernLinks.forEach((link) => {
+        const wrapper = link.closest<HTMLElement>('.gc-srvinfo');
+        addSummary(link, wrapper, this.findTopicDoormatItem(link, wrapper));
+      });
+
+      this.getLegacyTopicDoormatLinks(doc).forEach(({ link, wrapper, item }) => {
+        addSummary(link, wrapper, item);
+      });
 
       sectionSummaries.forEach((sectionRows) => {
         sectionRows.forEach((summary) => {
@@ -2431,10 +2484,117 @@ export class ComponentGuidanceComponent implements OnInit, OnDestroy {
     }
   }
 
+  private hasTopicDoormatCandidates(doc: Document): boolean {
+    return (
+      !!doc.querySelector('.gc-srvinfo') ||
+      !!doc.querySelector('.gc-drmt') ||
+      !!doc.querySelector('.mwsdoormat-links-container') ||
+      this.getLegacyTopicDoormatLinks(doc).length >= 2
+    );
+  }
+
+  private hasLegacyTopicDoormatTemplate(doc: Document): boolean {
+    return (
+      !!doc.querySelector('.gc-drmt') ||
+      !!doc.querySelector('.mwsdoormat-links-container')
+    );
+  }
+
+  private getLegacyTopicDoormatLinks(doc: Document): {
+    link: HTMLAnchorElement;
+    wrapper: HTMLElement | null;
+    item: HTMLElement | null;
+  }[] {
+    const candidates: {
+      link: HTMLAnchorElement;
+      wrapper: HTMLElement | null;
+      item: HTMLElement | null;
+    }[] = [];
+
+    const legacyContainers = Array.from(
+      doc.querySelectorAll<HTMLElement>(
+        '.mwsdoormat-links-container.section, .mwsdoormat-links-container',
+      ),
+    );
+    legacyContainers.forEach((wrapper) => {
+      const links = Array.from(
+        wrapper.querySelectorAll<HTMLAnchorElement>('h2 a[href], h3 a[href]'),
+      );
+      links.forEach((link) => {
+        candidates.push({
+          link,
+          wrapper,
+          item: this.findTopicDoormatItem(link, wrapper),
+        });
+      });
+    });
+
+    Array.from(doc.querySelectorAll<HTMLElement>('.gc-drmt')).forEach((item) => {
+      const wrapper =
+        item.closest<HTMLElement>(
+          '.mwsdoormat-links-container.section, .mwsdoormat-links-container',
+        ) ?? item.parentElement;
+      const link =
+        item.querySelector<HTMLAnchorElement>('h2 a[href], h3 a[href]') ??
+        item.querySelector<HTMLAnchorElement>('a[href]');
+      if (!link) return;
+      candidates.push({ link, wrapper, item });
+    });
+
+    const topicHeading = this.getTopicHeadingElement(doc);
+    if (topicHeading) {
+      let current = topicHeading.nextElementSibling as HTMLElement | null;
+      while (current) {
+        const headingText = this.cleanVisibleText(current.textContent).toLowerCase();
+        if (
+          current.matches('h2') &&
+          headingText &&
+          headingText !== 'topics'
+        ) {
+          break;
+        }
+        if (current.matches('h2, h3')) {
+          const links = current.querySelectorAll<HTMLAnchorElement>('a[href]');
+          if (links.length === 1) {
+            candidates.push({
+              link: links[0],
+              wrapper: topicHeading,
+              item: this.findLegacyTopicHeadingItem(current),
+            });
+          }
+        }
+        current = current.nextElementSibling as HTMLElement | null;
+      }
+    }
+
+    return candidates;
+  }
+
+  private getTopicHeadingElement(doc: Document): HTMLElement | null {
+    return (
+      Array.from(doc.querySelectorAll<HTMLElement>('main h2, main h3, h2, h3')).find(
+        (heading) => this.cleanVisibleText(heading.textContent).toLowerCase() === 'topics',
+      ) ?? null
+    );
+  }
+
+  private findLegacyTopicHeadingItem(heading: HTMLElement): HTMLElement {
+    const doc = heading.ownerDocument;
+    const item = doc.createElement('div');
+    item.appendChild(heading.cloneNode(true));
+    let current = heading.nextElementSibling as HTMLElement | null;
+    while (current && !current.matches('h2, h3')) {
+      item.appendChild(current.cloneNode(true));
+      current = current.nextElementSibling as HTMLElement | null;
+    }
+    return item;
+  }
+
   private findTopicDoormatSectionHeading(
     link: HTMLAnchorElement,
     wrapper: HTMLElement | null,
   ): HTMLElement | null {
+    if (wrapper?.matches('h2, h3')) return wrapper;
     const linkHeading = link.closest('h2');
     const searchRoot = wrapper ?? link.ownerDocument.body;
     const headings = Array.from(searchRoot.querySelectorAll<HTMLElement>('h2'));
@@ -2467,13 +2627,16 @@ export class ComponentGuidanceComponent implements OnInit, OnDestroy {
     return null;
   }
 
-  private findTopicDoormatItem(link: HTMLAnchorElement): HTMLElement | null {
+  private findTopicDoormatItem(
+    link: HTMLAnchorElement,
+    wrapper: HTMLElement | null,
+  ): HTMLElement | null {
     let current: HTMLElement | null = link;
-    while (current && !current.classList.contains('gc-srvinfo')) {
+    while (current && current !== wrapper) {
       if (current !== link && current.querySelector('p')) return current;
       current = current.parentElement;
     }
-    return null;
+    return wrapper?.querySelector('p') ? wrapper : null;
   }
 
   private extractMostRequestedLinks(doc: Document): {
