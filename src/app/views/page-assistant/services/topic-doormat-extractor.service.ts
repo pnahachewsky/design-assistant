@@ -78,9 +78,12 @@ export class TopicDoormatExtractorService {
     if (metaLanguage === 'fra' || metaLanguage.startsWith('fr')) return 'fr';
     if (metaLanguage === 'eng' || metaLanguage.startsWith('en')) return 'en';
 
-    const uploadLanguage = (uploadData?.metadata ?? [])
-      .find((item) => item.name === 'dcterms.language')
-      ?.content?.trim()
+    const uploadLanguage = String(
+      (uploadData?.metadata ?? []).find(
+        (item) => item.name === 'dcterms.language',
+      )?.content ?? '',
+    )
+      .trim()
       .toLowerCase();
     if (uploadLanguage === 'fra' || uploadLanguage?.startsWith('fr')) return 'fr';
     if (uploadLanguage === 'eng' || uploadLanguage?.startsWith('en')) return 'en';
