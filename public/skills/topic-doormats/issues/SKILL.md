@@ -37,9 +37,13 @@ Use this skill for issue analysis of topic doormat sets.
 - Use caller-provided `linkTextCharacterCount` and
   `descriptionCharacterCount` values when present; do not recalculate
   character counts from HTML
-- Do not report `link-name-too-long` or `description-too-long`; AIDA
-  calculates and reports those issues deterministically from
-  `linkTextCharacterCount` and `descriptionCharacterCount`
+- Use caller-provided `destinationPageTitle` and `destinationPageHeading` values
+  as destination context when present, especially for
+  `link-name-too-different-from-destination-title`. Do not invent destination
+  titles or headings when these values are absent.
+- Do not report `link-name-too-long`, `description-too-long`,
+  `link-name-trailing-punctuation`, or `description-trailing-punctuation`; AIDA
+  calculates and reports those issues deterministically from the extracted doormat text and character counts
 - Return JSON only
 - Report issues per affected doormat
 - Report section-level problems in `section_issues` rather than repeating
