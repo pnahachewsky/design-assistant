@@ -1,0 +1,136 @@
+import { Injectable } from '@angular/core';
+import {
+  TopicDoormatIssueGroup,
+  TopicDoormatIssueRow,
+  TopicDoormatIssueSummary,
+} from './topic-doormat.types';
+
+export type TopicDoormatHealth = 'severe' | 'moderate' | 'minor' | 'ok' | 'unknown';
+
+const SEVERITY_RANK: Record<string, number> = {
+  high: 3,
+  medium: 2,
+  low: 1,
+  ok: 0,
+};
+
+@Injectable({ providedIn: 'root' })
+export class TopicDoormatPresenterService {
+  buildIssueGroups(rows: TopicDoormatIssueRow[]): TopicDoormatIssueGroup[] {
+    const groups = new Map<number, TopicDoormatIssueGroup>();
+
+    rows.forEach((row) => {
+      const sectionIndex = row.sectionIndex ?? 0;
+      const group = groups.get(sectionIndex) ?? {
+        sectionIndex,
+        sectionTitle:
+          row.sectionTitle ||
+          (sectionIndex ? `Section ${sectionIndex}` : 'Topic doormats'),
+        doormatCount: 0,
+        sectionRows: [],
+        doormatRows: [],
+      };
+      if (!group.sectionTitle && row.sectionTitle) {
+        group.sectionTitle = row.sectionTitle;
+      }
+      if (row.rowType === 'section') {
+        group.sectionRows.push(row);
+      } else if (!this.isNoIssueRow(row)) {
+        group.doormatRows.push(row);
+      }
+      if (row.rowType === 'doormat' && row.sectionItemIndex) {
+        group.doormatCount = Math.max(group.doormatCount, row.sectionItemIndex);
+      }
+      groups.set(sectionIndex, group);
+    });
+
+    return Array.from(groups.values())
+      .map((group) => ({
+        ...group,
+        sectionRows: this.sortRowsForGroup(group.sectionRows),
+        doormatRows: this.sortRowsForGroup(group.doormatRows),
+      }))
+      .sort((a, b) => a.sectionIndex - b.sectionIndex);
+  }
+
+  buildIssueCategories(
+    rows: TopicDoormatIssueRow[],
+  ): TopicDoormatIssueSummary[] {
+    const byIssue = new Map<string, TopicDoormatIssueSummary>();
+
+    rows.forEach((row) => {
+      if (this.isNoIssueRow(row)) return;
+      const issueId = row.issueId || row.issue;
+      if (!issueId) return;
+      const existing = byIssue.get(issueId);
+      if (!existing) {
+        byIssue.set(issueId, {
+          label: row.issue,
+          severity: row.severity,
+          rowType: row.rowType,
+        });
+        return;
+      }
+
+      if (this.getSeverityRank(row.severity) > this.getSeverityRank(existing.severity)) {
+        existing.severity = row.severity;
+      }
+      if (row.rowType === 'section') {
+        existing.rowType = 'section';
+      }
+    });
+
+    return Array.from(byIssue.values()).sort((a, b) => {
+      if (a.rowType !== b.rowType) return a.rowType === 'section' ? -1 : 1;
+      const severityDiff =
+        this.getSeverityRank(b.severity) - this.getSeverityRank(a.severity);
+      if (severityDiff !== 0) return severityDiff;
+      return a.label.localeCompare(b.label, undefined, { sensitivity: 'base' });
+    });
+  }
+
+  getHealthFromCategories(
+    categories: TopicDoormatIssueSummary[],
+  ): TopicDoormatHealth {
+    if (!categories.length) return 'ok';
+    const maxSeverity = categories.reduce(
+      (max, category) =>
+        this.getSeverityRank(category.severity) > this.getSeverityRank(max)
+          ? category.severity
+          : max,
+      '',
+    );
+    return this.severityToHealth(maxSeverity);
+  }
+
+  getSeverityRank(severity: string | undefined | null): number {
+    return SEVERITY_RANK[(severity || '').toLowerCase()] ?? -1;
+  }
+
+  private sortRowsForGroup(
+    rows: TopicDoormatIssueRow[],
+  ): TopicDoormatIssueRow[] {
+    return [...rows].sort((a, b) => {
+      const aItem = a.sectionItemIndex ?? 0;
+      const bItem = b.sectionItemIndex ?? 0;
+      if (aItem !== bItem) return aItem - bItem;
+      if (a.rowType !== b.rowType) return a.rowType === 'section' ? -1 : 1;
+      return a.issue.localeCompare(b.issue);
+    });
+  }
+
+  private severityToHealth(
+    severity: string | undefined | null,
+  ): TopicDoormatHealth {
+    const s = (severity || '').toLowerCase();
+    if (s === 'high') return 'severe';
+    if (s === 'medium') return 'moderate';
+    if (s === 'low') return 'minor';
+    if (s === 'ok') return 'ok';
+    return 'unknown';
+  }
+
+  private isNoIssueRow(issue: TopicDoormatIssueRow): boolean {
+    return issue.issueId === 'no-issues';
+  }
+}
