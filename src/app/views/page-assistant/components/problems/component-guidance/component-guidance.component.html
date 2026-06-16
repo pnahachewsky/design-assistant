@@ -142,21 +142,25 @@
             [icon]="
               row.health === 'severe'
                 ? 'pi pi-exclamation-triangle'
-                : row.health === 'minor'
-                  ? 'pi pi-times-circle'
-                  : row.health === 'ok'
-                    ? 'pi pi-check-circle'
-                    : 'pi pi-question-circle'
+                : row.health === 'moderate'
+                  ? 'pi pi-exclamation-circle'
+                  : row.health === 'minor'
+                    ? 'pi pi-times-circle'
+                    : row.health === 'ok'
+                      ? 'pi pi-check-circle'
+                      : 'pi pi-question-circle'
             "
             [styleClass]="
               'chip ' +
               (row.health === 'severe'
                 ? 'chip-severe'
-                : row.health === 'minor'
-                  ? 'chip-minor'
-                  : row.health === 'ok'
-                    ? 'chip-ok'
-                    : 'chip-unk')
+                : row.health === 'moderate'
+                  ? 'chip-med'
+                  : row.health === 'minor'
+                    ? 'chip-minor'
+                    : row.health === 'ok'
+                      ? 'chip-ok'
+                      : 'chip-unk')
             ">
           </p-chip>
         }

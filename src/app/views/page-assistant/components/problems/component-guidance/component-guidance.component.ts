@@ -33,12 +33,13 @@ import { HttpClient } from '@angular/common/http';
 import { Subscription, firstValueFrom } from 'rxjs';
 import { environment } from '../../../../../../environments/environment';
 import { ChangeDetectorRef } from '@angular/core';
-import { AiModel, PromptKey } from '../../../data/data.model';
+import { AiModel, PromptKey, UploadData } from '../../../data/data.model';
 import { ChatMessage, OpenRouterService } from '../../../services/openrouter.service';
 import { SkillManagerService } from '../../../services/skill-manager.service';
 
 // UI shows these:
-type UiHealth = 'severe' | 'minor' | 'ok' | 'unknown';
+type UiHealth = 'severe' | 'moderate' | 'minor' | 'ok' | 'unknown';
+type TopicDoormatPageLanguage = 'en' | 'fr';
 
 interface GuidanceRow {
   order: number;
@@ -257,9 +258,18 @@ export class ComponentGuidanceComponent implements OnInit, OnDestroy {
     'pageAssistant.topicDoormatForceParseFailure';
   private readonly topicDoormatIssueTaxonomyPath =
     'skills/topic-doormats/issues/references/issue-taxonomy.json';
-  private readonly topicDoormatIssueLengthLimits: Record<string, number> = {
-    'link-name-too-long': 35,
-    'description-too-long': 90,
+  private readonly topicDoormatIssueLengthLimits: Record<
+    TopicDoormatPageLanguage,
+    Record<string, number>
+  > = {
+    en: {
+      'link-name-too-long': 35,
+      'description-too-long': 90,
+    },
+    fr: {
+      'link-name-too-long': 45,
+      'description-too-long': 120,
+    },
   };
   private readonly topicDoormatDescriptionStyleOrder: Exclude<
     TopicDoormatDescriptionStyle,
@@ -314,9 +324,10 @@ export class ComponentGuidanceComponent implements OnInit, OnDestroy {
     { field: 'rationale', header: 'Explanation' },
   ];
 
-  // rank for custom sort (severe > minor > ok > unknown)
+  // rank for custom sort (severe > moderate > minor > ok > unknown)
   private readonly HEALTH_RANK: Record<UiHealth, number> = {
-    severe: 3,
+    severe: 4,
+    moderate: 3,
     minor: 2,
     ok: 1,
     unknown: 0,
@@ -533,6 +544,8 @@ export class ComponentGuidanceComponent implements OnInit, OnDestroy {
     switch (h) {
       case 'severe':
         return 'Severe';
+      case 'moderate':
+        return 'Moderate';
       case 'minor':
         return 'Minor';
       case 'ok':
@@ -550,7 +563,8 @@ export class ComponentGuidanceComponent implements OnInit, OnDestroy {
   }
 
   private applyCachedAlertIssues(): void {
-    const html = this.uploadState.getUploadData()?.originalHtml || '';
+    const uploadData = this.uploadState.getUploadData();
+    const html = uploadData?.originalHtml || '';
     if (!html) return;
     const cached = this.alertAi.getCachedIssues(html);
     if (!cached?.length) return;
@@ -635,11 +649,13 @@ export class ComponentGuidanceComponent implements OnInit, OnDestroy {
       return;
     }
 
-    const html = this.uploadState.getUploadData()?.originalHtml || '';
+    const uploadData = this.uploadState.getUploadData();
+    const html = uploadData?.originalHtml || '';
     const doc = this.parseHtmlDocument(html);
     if (!doc) return;
     const doormatSummaries = this.extractTopicDoormatSummaries(doc);
     if (!doormatSummaries.length) return;
+    const pageLanguage = this.detectTopicDoormatPageLanguage(doc, uploadData);
     const hasLegacyTopicDoormatTemplate =
       this.hasLegacyTopicDoormatTemplate(doc);
     const analysisStart = performance.now();
@@ -681,6 +697,7 @@ export class ComponentGuidanceComponent implements OnInit, OnDestroy {
       this.debugTopicDoormatIssues('request prepared', {
         selectedModel,
         modelRotation,
+        pageLanguage,
         doormatSummaryCount: doormatSummaries.length,
         sectionCounts: this.buildTopicDoormatSectionCounts(doormatSummaries),
         overLimitSummaryIndexes:
@@ -732,10 +749,12 @@ export class ComponentGuidanceComponent implements OnInit, OnDestroy {
             text,
             doormatSummaries,
             hasLegacyTopicDoormatTemplate,
+            pageLanguage,
           )
         : this.buildTopicDoormatFallbackRows(
             doormatSummaries,
             hasLegacyTopicDoormatTemplate,
+            pageLanguage,
           );
       this.topicDoormatIssueGroups = this.buildTopicDoormatIssueGroups(
         this.topicDoormatIssueRows,
@@ -1019,12 +1038,14 @@ export class ComponentGuidanceComponent implements OnInit, OnDestroy {
     text: string,
     doormatSummaries: TopicDoormatSummary[] = [],
     hasLegacyTopicDoormatTemplate = false,
+    pageLanguage: TopicDoormatPageLanguage = 'en',
   ): TopicDoormatIssueRow[] {
     const parsed = this.looseJsonParse(this.stripCodeFences(text));
     if (!parsed || typeof parsed !== 'object') {
       const fallbackRows = this.buildTopicDoormatFallbackRows(
         doormatSummaries,
         hasLegacyTopicDoormatTemplate,
+        pageLanguage,
       );
       this.debugTopicDoormatIssues('response parse fallback', {
         reason: 'invalid-json-or-non-object',
@@ -1094,7 +1115,13 @@ export class ComponentGuidanceComponent implements OnInit, OnDestroy {
           if (!rawIssue || typeof rawIssue !== 'object') return null;
           const issue = rawIssue as Record<string, unknown>;
           const issueId = this.getTopicDoormatIssueId(issue);
-          if (!this.isReportableTopicDoormatIssue(issue, summary)) return null;
+          if (!this.isReportableTopicDoormatIssue(
+            issue,
+            summary,
+            pageLanguage,
+          )) {
+            return null;
+          }
           if (
             issueId === 'mixed-description-style-in-section' ||
             issueId === 'mixed-link-name-styles-in-section'
@@ -1205,6 +1232,7 @@ export class ComponentGuidanceComponent implements OnInit, OnDestroy {
       doormatSummaries,
       [...modelIssueRows, ...reportableSectionIssueRows],
       hasLegacyTopicDoormatTemplate,
+      pageLanguage,
     );
 
     const representedIndexes = new Set(
@@ -1325,11 +1353,13 @@ export class ComponentGuidanceComponent implements OnInit, OnDestroy {
   private buildTopicDoormatFallbackRows(
     doormatSummaries: TopicDoormatSummary[],
     hasLegacyTopicDoormatTemplate = false,
+    pageLanguage: TopicDoormatPageLanguage = 'en',
   ): TopicDoormatIssueRow[] {
     const deterministicRows = this.buildDeterministicTopicDoormatIssueRows(
       doormatSummaries,
       [],
       hasLegacyTopicDoormatTemplate,
+      pageLanguage,
     );
     const representedIndexes = new Set(
       deterministicRows
@@ -1354,6 +1384,7 @@ export class ComponentGuidanceComponent implements OnInit, OnDestroy {
     doormatSummaries: TopicDoormatSummary[],
     existingRows: TopicDoormatIssueRow[],
     hasLegacyTopicDoormatTemplate = false,
+    pageLanguage: TopicDoormatPageLanguage = 'en',
   ): TopicDoormatIssueRow[] {
     const existingIssueKeys = new Set(
       existingRows.map((row) => `${row.sectionIndex ?? 0}|${row.issueId}`),
@@ -1416,8 +1447,14 @@ export class ComponentGuidanceComponent implements OnInit, OnDestroy {
     return [
       ...outdatedTemplateRows,
       ...overLimitRows,
-      ...this.buildLocalTopicDoormatLinkNameLengthRows(doormatSummaries),
-      ...this.buildLocalTopicDoormatDescriptionLengthRows(doormatSummaries),
+      ...this.buildLocalTopicDoormatLinkNameLengthRows(
+        doormatSummaries,
+        pageLanguage,
+      ),
+      ...this.buildLocalTopicDoormatDescriptionLengthRows(
+        doormatSummaries,
+        pageLanguage,
+      ),
       ...this.buildLocalTopicDoormatMultipleLinkRows(doormatSummaries),
       ...this.buildLocalTopicDoormatStyleIssueRows(
         doormatSummaries,
@@ -1428,8 +1465,12 @@ export class ComponentGuidanceComponent implements OnInit, OnDestroy {
 
   private buildLocalTopicDoormatLinkNameLengthRows(
     doormatSummaries: TopicDoormatSummary[],
+    pageLanguage: TopicDoormatPageLanguage,
   ): TopicDoormatIssueRow[] {
-    const limit = this.topicDoormatIssueLengthLimits['link-name-too-long'];
+    const limit = this.getTopicDoormatLengthLimit(
+      'link-name-too-long',
+      pageLanguage,
+    );
     return doormatSummaries
       .filter((summary) => summary.linkTextCharacterCount > limit)
       .map((summary) => {
@@ -1438,16 +1479,20 @@ export class ComponentGuidanceComponent implements OnInit, OnDestroy {
         return {
           include: true,
           rowType: 'doormat',
-          severity: this.getTopicDoormatLinkNameLengthSeverity(count),
+          severity: this.getTopicDoormatLinkNameLengthSeverity(
+            count,
+            pageLanguage,
+          ),
           doormat: this.buildTopicDoormatLabel(summary),
           doormatLabel: summary.linkText || summary.href || 'Doormat',
           issueId: 'link-name-too-long',
           issue: this.getTopicDoormatIssueLabel('link-name-too-long'),
-          evidence:
-            'The French version must be <= 75 characters. Aim for the English version to be <= 45 characters.',
+          evidence: this.getTopicDoormatLinkNameLengthEvidence(pageLanguage),
           evidenceMetric: metric,
-          recommendation:
-            'Shorten the link text. Keep link text under 35 characters.',
+          recommendation: this.getTopicDoormatLinkNameLengthRecommendation(
+            pageLanguage,
+            limit,
+          ),
           doormatIndex: summary.index || undefined,
           sectionIndex: summary.sectionIndex || undefined,
           sectionTitle: summary.sectionTitle || undefined,
@@ -1456,7 +1501,16 @@ export class ComponentGuidanceComponent implements OnInit, OnDestroy {
       });
   }
 
-  private getTopicDoormatLinkNameLengthSeverity(count: number): string {
+  private getTopicDoormatLinkNameLengthSeverity(
+    count: number,
+    pageLanguage: TopicDoormatPageLanguage = 'en',
+  ): string {
+    if (pageLanguage === 'fr') {
+      if (count <= 60) return 'Low';
+      if (count <= 75) return 'Medium';
+      return 'High';
+    }
+
     if (count <= 45) return 'Low';
     if (count <= 60) return 'Medium';
     return 'High';
@@ -1464,8 +1518,12 @@ export class ComponentGuidanceComponent implements OnInit, OnDestroy {
 
   private buildLocalTopicDoormatDescriptionLengthRows(
     doormatSummaries: TopicDoormatSummary[],
+    pageLanguage: TopicDoormatPageLanguage,
   ): TopicDoormatIssueRow[] {
-    const limit = this.topicDoormatIssueLengthLimits['description-too-long'];
+    const limit = this.getTopicDoormatLengthLimit(
+      'description-too-long',
+      pageLanguage,
+    );
     return doormatSummaries
       .filter((summary) => summary.descriptionCharacterCount > limit)
       .map((summary) => {
@@ -1474,16 +1532,20 @@ export class ComponentGuidanceComponent implements OnInit, OnDestroy {
         return {
           include: true,
           rowType: 'doormat',
-          severity: this.getTopicDoormatDescriptionLengthSeverity(count),
+          severity: this.getTopicDoormatDescriptionLengthSeverity(
+            count,
+            pageLanguage,
+          ),
           doormat: this.buildTopicDoormatLabel(summary),
           doormatLabel: summary.linkText || summary.href || 'Doormat',
           issueId: 'description-too-long',
           issue: this.getTopicDoormatIssueLabel('description-too-long'),
-          evidence:
-            'The French version must be <= 120 characters. Aim for the English version to be <= 90 characters.',
+          evidence: this.getTopicDoormatDescriptionLengthEvidence(pageLanguage),
           evidenceMetric: metric,
-          recommendation:
-            'Shorten the description. Keep the English version under 90 characters where possible.',
+          recommendation: this.getTopicDoormatDescriptionLengthRecommendation(
+            pageLanguage,
+            limit,
+          ),
           doormatIndex: summary.index || undefined,
           sectionIndex: summary.sectionIndex || undefined,
           sectionTitle: summary.sectionTitle || undefined,
@@ -1492,10 +1554,62 @@ export class ComponentGuidanceComponent implements OnInit, OnDestroy {
       });
   }
 
-  private getTopicDoormatDescriptionLengthSeverity(count: number): string {
+  private getTopicDoormatDescriptionLengthSeverity(
+    count: number,
+    pageLanguage: TopicDoormatPageLanguage = 'en',
+  ): string {
+    if (pageLanguage === 'fr') {
+      if (count <= 135) return 'Low';
+      if (count <= 150) return 'Medium';
+      return 'High';
+    }
+
     if (count <= 105) return 'Low';
     if (count <= 120) return 'Medium';
     return 'High';
+  }
+
+  private getTopicDoormatLengthLimit(
+    issueId: 'link-name-too-long' | 'description-too-long',
+    pageLanguage: TopicDoormatPageLanguage,
+  ): number {
+    return this.topicDoormatIssueLengthLimits[pageLanguage][issueId];
+  }
+
+  private getTopicDoormatLinkNameLengthEvidence(
+    pageLanguage: TopicDoormatPageLanguage,
+  ): string {
+    return this.translate.instant(
+      `page.tools.guidance.topicDoormats.length.link.evidence.${pageLanguage}`,
+    );
+  }
+
+  private getTopicDoormatDescriptionLengthEvidence(
+    pageLanguage: TopicDoormatPageLanguage,
+  ): string {
+    return this.translate.instant(
+      `page.tools.guidance.topicDoormats.length.description.evidence.${pageLanguage}`,
+    );
+  }
+
+  private getTopicDoormatLinkNameLengthRecommendation(
+    pageLanguage: TopicDoormatPageLanguage,
+    limit: number,
+  ): string {
+    return this.translate.instant(
+      `page.tools.guidance.topicDoormats.length.link.recommendation.${pageLanguage}`,
+      { limit },
+    );
+  }
+
+  private getTopicDoormatDescriptionLengthRecommendation(
+    pageLanguage: TopicDoormatPageLanguage,
+    limit: number,
+  ): string {
+    return this.translate.instant(
+      `page.tools.guidance.topicDoormats.length.description.recommendation.${pageLanguage}`,
+      { limit },
+    );
   }
 
   private buildLocalTopicDoormatMultipleLinkRows(
@@ -1923,7 +2037,8 @@ export class ComponentGuidanceComponent implements OnInit, OnDestroy {
   private topicDoormatSeverityToHealth(severity: string | undefined | null): UiHealth {
     const s = (severity || '').toLowerCase();
     if (s === 'high') return 'severe';
-    if (s === 'medium' || s === 'low') return 'minor';
+    if (s === 'medium') return 'moderate';
+    if (s === 'low') return 'minor';
     if (s === 'ok') return 'ok';
     return 'unknown';
   }
@@ -2164,6 +2279,7 @@ export class ComponentGuidanceComponent implements OnInit, OnDestroy {
   private isReportableTopicDoormatIssue(
     issue: Record<string, unknown>,
     doormat?: TopicDoormatSummary,
+    pageLanguage: TopicDoormatPageLanguage = 'en',
   ): boolean {
     const issueCategory = this.getTopicDoormatIssueId(issue);
     if (
@@ -2185,7 +2301,10 @@ export class ComponentGuidanceComponent implements OnInit, OnDestroy {
         : null;
     const limit =
       this.toNumber(details?.['character_limit']) ??
-      this.topicDoormatIssueLengthLimits[issueCategory];
+      this.getTopicDoormatLengthLimit(
+        issueCategory as 'link-name-too-long' | 'description-too-long',
+        pageLanguage,
+      );
     if (limit == null) return true;
 
     return exactCount > limit;
@@ -2385,6 +2504,70 @@ export class ComponentGuidanceComponent implements OnInit, OnDestroy {
     } catch {
       return null;
     }
+  }
+
+  private detectTopicDoormatPageLanguage(
+    doc: Document,
+    uploadData?: Partial<UploadData> | null,
+  ): TopicDoormatPageLanguage {
+    const htmlLang =
+      doc.documentElement.getAttribute('lang') ||
+      doc.querySelector('html')?.getAttribute('lang') ||
+      '';
+    const normalizedHtmlLang = htmlLang.trim().toLowerCase();
+    if (normalizedHtmlLang.startsWith('fr')) return 'fr';
+    if (normalizedHtmlLang.startsWith('en')) return 'en';
+
+    const metaLanguage = (
+      doc.querySelector<HTMLMetaElement>('meta[name="dcterms.language"]')
+        ?.content || ''
+    )
+      .trim()
+      .toLowerCase();
+    if (metaLanguage === 'fra' || metaLanguage.startsWith('fr')) return 'fr';
+    if (metaLanguage === 'eng' || metaLanguage.startsWith('en')) return 'en';
+
+    const uploadLanguage = (uploadData?.metadata ?? [])
+      .find((item) => item.name === 'dcterms.language')
+      ?.content?.trim()
+      .toLowerCase();
+    if (uploadLanguage === 'fra' || uploadLanguage?.startsWith('fr')) return 'fr';
+    if (uploadLanguage === 'eng' || uploadLanguage?.startsWith('en')) return 'en';
+
+    const urlLanguage = this.detectTopicDoormatLanguageFromUrl(
+      uploadData?.originalUrl,
+      uploadData?.modifiedUrl,
+    );
+    if (urlLanguage) return urlLanguage;
+
+    if (this.hasFrenchTopicDoormatText(doc)) return 'fr';
+    return 'en';
+  }
+
+  private detectTopicDoormatLanguageFromUrl(
+    ...urls: (string | undefined)[]
+  ): TopicDoormatPageLanguage | null {
+    for (const url of urls) {
+      const lower = (url || '').toLowerCase();
+      if (/(^|[/_-])fr([/_-]|$)/.test(lower)) return 'fr';
+      if (/(^|[/_-])en([/_-]|$)/.test(lower)) return 'en';
+    }
+    return null;
+  }
+
+  private hasFrenchTopicDoormatText(doc: Document): boolean {
+    const text = this.cleanVisibleText(doc.body?.textContent).toLowerCase();
+    if (!text) return false;
+    return [
+      'services et information',
+      'tps/tvh',
+      'impôt',
+      'impôts',
+      'renseignements',
+      'déclaration',
+      'remboursement',
+      'compte de tps/tvh',
+    ].some((pattern) => text.includes(pattern));
   }
 
   private extractTopicDoormatSummaries(doc: Document): TopicDoormatSummary[] {
