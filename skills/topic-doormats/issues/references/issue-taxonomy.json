@@ -7,17 +7,16 @@
   "analysis_sequence": [
     {
       "pass": "deterministic_structural_checks",
-      "instruction": "Run these checks first. Do not return the response until every deterministic structural check has been evaluated for every doormat and every complete doormat section. Do not report link-name-too-long or description-too-long; AIDA calculates and reports those issues deterministically from linkTextCharacterCount and descriptionCharacterCount.",
+      "instruction": "Run these checks first. Do not return the response until every model-owned deterministic structural check has been evaluated for every doormat and every complete doormat section. Do not report link-name-too-long, description-too-long, link-name-trailing-punctuation, or description-trailing-punctuation; AIDA calculates and reports those issues deterministically from the extracted doormat text and character counts.",
       "issue_ids": [
         "too-many-doormats-in-section",
+        "split-heading-link",
         "multiple-links",
         "missing-description",
         "duplicate-link-in-most-requested",
         "description-contains-link",
         "description-uses-icons-or-images",
         "description-special-formatting",
-        "link-name-trailing-punctuation",
-        "description-trailing-punctuation",
         "description-capitalization",
         "description-list-separators",
         "description-uses-and-before-final-item"
@@ -224,11 +223,19 @@
       "recommendation": "Update the href so the doormat points to the intended destination page or anchor."
     },
     {
+      "id": "split-heading-link",
+      "group": "Link code issue",
+      "label": "Heading link is split into multiple links",
+      "severity": "High",
+      "condition": "A single doormat heading contains multiple links, often because one intended heading link was pasted as separate adjacent link fragments.",
+      "recommendation": "Use one link around the complete doormat heading text."
+    },
+    {
       "id": "multiple-links",
       "group": "Link code issue",
-      "label": "More than one link",
+      "label": "Doormat contains extra links",
       "severity": "High",
-      "condition": "A single doormat item contains more than one link.",
+      "condition": "A single doormat item contains more than one link, excluding the more specific cases where the heading link is split or the description contains a link.",
       "recommendation": "Use one link per doormat. Move any extra destination to a separate doormat if it is needed."
     },
     {
@@ -484,7 +491,7 @@
     },
     {
       "id": "description-contains-link",
-      "group": "Description formatting",
+      "group": "Link code issue",
       "label": "Description contains a link",
       "severity": "Medium",
       "condition": "The paragraph description contains one or more links.",

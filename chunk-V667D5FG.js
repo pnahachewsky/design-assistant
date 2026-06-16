@@ -30093,6 +30093,7 @@ var ComponentGuidanceComponent = class _ComponentGuidanceComponent {
   openRouter = inject(OpenRouterService);
   skillManager = inject(SkillManagerService);
   messageService = inject(MessageService);
+  fetchService = inject(FetchService);
   alertIssuesSub;
   topicDoormatDebugStorageKey = "pageAssistant.topicDoormatDebug";
   topicDoormatForceParseFailureStorageKey = "pageAssistant.topicDoormatForceParseFailure";
@@ -30107,6 +30108,7 @@ var ComponentGuidanceComponent = class _ComponentGuidanceComponent {
       "description-too-long": 120
     }
   };
+  topicDoormatTrailingPunctuationPattern = /[.:;?!,]$/;
   topicDoormatDescriptionStyleOrder = [
     "noun-topic",
     "benefit-summary",
@@ -30422,13 +30424,9 @@ var ComponentGuidanceComponent = class _ComponentGuidanceComponent {
       const doc = this.parseHtmlDocument(html);
       if (!doc)
         return;
-      const doormatSummaries = this.extractTopicDoormatSummaries(doc);
-      if (!doormatSummaries.length)
+      const extractedDoormatSummaries = this.extractTopicDoormatSummaries(doc);
+      if (!extractedDoormatSummaries.length)
         return;
-      const pageLanguage = this.detectTopicDoormatPageLanguage(doc, uploadData);
-      const hasLegacyTopicDoormatTemplate = this.hasLegacyTopicDoormatTemplate(doc);
-      const analysisStart = performance.now();
-      const mostRequestedLinks = this.extractMostRequestedLinks(doc);
       this.topicDoormatIssuesLoading = true;
       this.topicDoormatIssuesError = false;
       this.topicDoormatIssuesErrorDetail = "";
@@ -30436,7 +30434,12 @@ var ComponentGuidanceComponent = class _ComponentGuidanceComponent {
       this.topicDoormatIssueGroups = [];
       this.topicDoormatIssueCategories = [];
       this.updateTopicDoormatRowHealth("unknown");
+      const analysisStart = performance.now();
       try {
+        const doormatSummaries = yield this.enrichTopicDoormatDestinationContext(extractedDoormatSummaries, uploadData);
+        const pageLanguage = this.detectTopicDoormatPageLanguage(doc, uploadData);
+        const hasLegacyTopicDoormatTemplate = this.hasLegacyTopicDoormatTemplate(doc);
+        const mostRequestedLinks = this.extractMostRequestedLinks(doc);
         yield this.loadTopicDoormatIssueTaxonomy();
         const composed = yield this.skillManager.composePrompt({
           basePrompt: "",
@@ -30469,11 +30472,17 @@ var ComponentGuidanceComponent = class _ComponentGuidanceComponent {
           doormatSummaries: doormatSummaries.map((summary) => ({
             index: summary.index,
             linkText: summary.linkText,
+            href: summary.href,
+            destinationUrl: summary.destinationUrl,
+            destinationPageTitle: summary.destinationPageTitle,
+            destinationPageHeading: summary.destinationPageHeading,
             linkTextCharacterCount: summary.linkTextCharacterCount,
             descriptionCharacterCount: summary.descriptionCharacterCount,
             headingLevel: summary.headingLevel,
             itemLinkCount: summary.itemLinkCount,
+            headingLinkCount: summary.headingLinkCount,
             descriptionLinkCount: summary.descriptionLinkCount,
+            hasSplitHeadingLink: summary.hasSplitHeadingLink,
             hasDescriptionLink: summary.hasDescriptionLink,
             hasDescriptionIconOrImage: summary.hasDescriptionIconOrImage,
             hasDescriptionSpecialFormatting: summary.hasDescriptionSpecialFormatting,
@@ -30762,7 +30771,9 @@ var ComponentGuidanceComponent = class _ComponentGuidanceComponent {
             description: "",
             headingLevel: null,
             itemLinkCount: 0,
+            headingLinkCount: 0,
             descriptionLinkCount: 0,
+            hasSplitHeadingLink: false,
             hasDescriptionLink: false,
             hasDescriptionIconOrImage: false,
             hasDescriptionSpecialFormatting: false,
@@ -30794,6 +30805,12 @@ var ComponentGuidanceComponent = class _ComponentGuidanceComponent {
           return null;
         }
         if (issueId === "multiple-links") {
+          return null;
+        }
+        if (issueId === "split-heading-link") {
+          return null;
+        }
+        if (issueId === "description-contains-link") {
           return null;
         }
         if (issueId === "link-name-too-long") {
@@ -30829,6 +30846,7 @@ var ComponentGuidanceComponent = class _ComponentGuidanceComponent {
     const reportableSectionIssueRows = sectionIssueRows.filter((row) => row.issueId !== "too-many-doormats-in-section");
     const mixedDescriptionStyleSectionIndexes = new Set(reportableSectionIssueRows.filter((row) => row.issueId === "mixed-description-style-in-section").map((row) => row.sectionIndex).filter((index) => typeof index === "number" && index > 0));
     const mixedLinkNameStyleSectionIndexes = new Set(reportableSectionIssueRows.filter((row) => row.issueId === "mixed-link-name-styles-in-section").map((row) => row.sectionIndex).filter((index) => typeof index === "number" && index > 0));
+    const localDescriptionTrailingPunctuationSectionIndexes = this.getLocalDescriptionTrailingPunctuationSectionIndexes(doormatSummaries);
     const inconsistentLinkNameStyleCountsBySection = rows.reduce((counts, row) => {
       if (row.issueId !== "inconsistent-link-name-style" || !row.sectionIndex) {
         return counts;
@@ -30840,6 +30858,9 @@ var ComponentGuidanceComponent = class _ComponentGuidanceComponent {
       if (!row.sectionIndex)
         return false;
       if (row.issueId === "inconsistent-description-style" && mixedDescriptionStyleSectionIndexes.has(row.sectionIndex)) {
+        return true;
+      }
+      if (row.issueId === "description-trailing-punctuation" && localDescriptionTrailingPunctuationSectionIndexes.has(row.sectionIndex)) {
         return true;
       }
       if (row.issueId !== "inconsistent-link-name-style")
@@ -30969,7 +30990,8 @@ var ComponentGuidanceComponent = class _ComponentGuidanceComponent {
       ...overLimitRows,
       ...this.buildLocalTopicDoormatLinkNameLengthRows(doormatSummaries, pageLanguage),
       ...this.buildLocalTopicDoormatDescriptionLengthRows(doormatSummaries, pageLanguage),
-      ...this.buildLocalTopicDoormatMultipleLinkRows(doormatSummaries),
+      ...this.buildLocalTopicDoormatTrailingPunctuationRows(doormatSummaries, existingRows),
+      ...this.buildLocalTopicDoormatLinkCodeRows(doormatSummaries),
       ...this.buildLocalTopicDoormatStyleIssueRows(doormatSummaries, existingIssueKeys)
     ];
   }
@@ -31047,6 +31069,97 @@ var ComponentGuidanceComponent = class _ComponentGuidanceComponent {
       return "Medium";
     return "High";
   }
+  buildLocalTopicDoormatTrailingPunctuationRows(doormatSummaries, existingRows) {
+    const existingDoormatIssueKeys = new Set(existingRows.filter((row) => row.doormatIndex).map((row) => `${row.doormatIndex}|${row.issueId}`));
+    const sectionLevelDescriptionPunctuationIndexes = this.getLocalDescriptionTrailingPunctuationSectionIndexes(doormatSummaries);
+    const descriptionPunctuationBySection = this.groupTopicDoormatsWithDescriptionTrailingPunctuation(doormatSummaries);
+    const sectionRows = Array.from(sectionLevelDescriptionPunctuationIndexes).flatMap((sectionIndex) => {
+      if (existingRows.some((row) => row.rowType === "section" && row.sectionIndex === sectionIndex && row.issueId === "description-trailing-punctuation")) {
+        return [];
+      }
+      const affected = descriptionPunctuationBySection.get(sectionIndex) ?? [];
+      if (affected.length < 2)
+        return [];
+      const firstSummary = affected[0];
+      return [
+        {
+          include: true,
+          rowType: "section",
+          severity: "Low",
+          doormat: this.buildTopicDoormatSectionLabel(sectionIndex, doormatSummaries),
+          doormatLabel: "Multiple doormats in section",
+          issueId: "description-trailing-punctuation",
+          issue: this.getTopicDoormatIssueLabel("description-trailing-punctuation"),
+          evidence: this.buildTopicDoormatSectionTrailingPunctuationEvidence(affected),
+          recommendation: "Remove final punctuation from the descriptions.",
+          sectionIndex,
+          sectionTitle: firstSummary.sectionTitle
+        }
+      ];
+    });
+    const doormatRows = doormatSummaries.flatMap((summary) => {
+      const rows = [];
+      const baseRow = {
+        include: true,
+        rowType: "doormat",
+        severity: "Low",
+        doormat: this.buildTopicDoormatLabel(summary),
+        doormatLabel: summary.linkText || summary.href || "Doormat",
+        doormatIndex: summary.index || void 0,
+        sectionIndex: summary.sectionIndex || void 0,
+        sectionTitle: summary.sectionTitle || void 0,
+        sectionItemIndex: summary.sectionItemIndex || void 0
+      };
+      if (this.hasTopicDoormatTrailingPunctuation(summary.linkText) && !existingDoormatIssueKeys.has(`${summary.index}|link-name-trailing-punctuation`)) {
+        rows.push(__spreadProps(__spreadValues({}, baseRow), {
+          issueId: "link-name-trailing-punctuation",
+          issue: this.getTopicDoormatIssueLabel("link-name-trailing-punctuation"),
+          evidence: this.buildTopicDoormatTrailingPunctuationEvidence("Link name", summary.linkText),
+          recommendation: "Remove trailing punctuation from the link text."
+        }));
+      }
+      if (this.hasTopicDoormatTrailingPunctuation(summary.description) && !sectionLevelDescriptionPunctuationIndexes.has(summary.sectionIndex) && !existingDoormatIssueKeys.has(`${summary.index}|description-trailing-punctuation`)) {
+        rows.push(__spreadProps(__spreadValues({}, baseRow), {
+          issueId: "description-trailing-punctuation",
+          issue: this.getTopicDoormatIssueLabel("description-trailing-punctuation"),
+          evidence: this.buildTopicDoormatTrailingPunctuationEvidence("Description", summary.description),
+          recommendation: "Remove final punctuation from the description."
+        }));
+      }
+      return rows;
+    });
+    return [...sectionRows, ...doormatRows];
+  }
+  hasTopicDoormatTrailingPunctuation(value) {
+    return this.topicDoormatTrailingPunctuationPattern.test(value.trim());
+  }
+  buildTopicDoormatTrailingPunctuationEvidence(label, value) {
+    const trimmed = value.trim();
+    const punctuation = trimmed.slice(-1);
+    return `${label} ends with '${punctuation}'.`;
+  }
+  getLocalDescriptionTrailingPunctuationSectionIndexes(doormatSummaries) {
+    return new Set(Array.from(this.groupTopicDoormatsWithDescriptionTrailingPunctuation(doormatSummaries).entries()).filter(([, summaries]) => summaries.length > 1).map(([sectionIndex]) => sectionIndex));
+  }
+  groupTopicDoormatsWithDescriptionTrailingPunctuation(doormatSummaries) {
+    return doormatSummaries.reduce((groups, summary) => {
+      if (!this.hasTopicDoormatTrailingPunctuation(summary.description)) {
+        return groups;
+      }
+      const sectionIndex = summary.sectionIndex || 0;
+      const sectionSummaries = groups.get(sectionIndex) ?? [];
+      sectionSummaries.push(summary);
+      groups.set(sectionIndex, sectionSummaries);
+      return groups;
+    }, /* @__PURE__ */ new Map());
+  }
+  buildTopicDoormatSectionTrailingPunctuationEvidence(doormatSummaries) {
+    const indexes = doormatSummaries.map((summary) => summary.sectionItemIndex || summary.index).filter((index) => index > 0).join(", ");
+    const count = doormatSummaries.length;
+    const descriptionLabel = count === 1 ? "description" : "descriptions";
+    const doormatLabel = count === 1 ? "doormat" : "doormats";
+    return `${count} ${descriptionLabel} in this section end with punctuation: ${doormatLabel} ${indexes}.`;
+  }
   getTopicDoormatLengthLimit(issueId, pageLanguage) {
     return this.topicDoormatIssueLengthLimits[pageLanguage][issueId];
   }
@@ -31062,22 +31175,55 @@ var ComponentGuidanceComponent = class _ComponentGuidanceComponent {
   getTopicDoormatDescriptionLengthRecommendation(pageLanguage, limit) {
     return this.translate.instant(`page.tools.guidance.topicDoormats.length.description.recommendation.${pageLanguage}`, { limit });
   }
-  buildLocalTopicDoormatMultipleLinkRows(doormatSummaries) {
-    return doormatSummaries.filter((summary) => summary.itemLinkCount > 1).map((summary) => ({
-      include: true,
-      rowType: "doormat",
-      severity: "High",
-      doormat: this.buildTopicDoormatLabel(summary),
-      doormatLabel: summary.linkText || summary.href || "Doormat",
-      issueId: "multiple-links",
-      issue: this.getTopicDoormatIssueLabel("multiple-links"),
-      evidence: this.buildTopicDoormatMultipleLinksEvidence(summary),
-      recommendation: "Use one link per doormat. Move any extra destination to a separate doormat if it is needed.",
-      doormatIndex: summary.index || void 0,
-      sectionIndex: summary.sectionIndex || void 0,
-      sectionTitle: summary.sectionTitle || void 0,
-      sectionItemIndex: summary.sectionItemIndex || void 0
-    }));
+  buildLocalTopicDoormatLinkCodeRows(doormatSummaries) {
+    return doormatSummaries.flatMap((summary) => {
+      const rows = [];
+      const baseRow = {
+        include: true,
+        rowType: "doormat",
+        severity: "High",
+        doormat: this.buildTopicDoormatLabel(summary),
+        doormatLabel: summary.linkText || summary.href || "Doormat",
+        doormatIndex: summary.index || void 0,
+        sectionIndex: summary.sectionIndex || void 0,
+        sectionTitle: summary.sectionTitle || void 0,
+        sectionItemIndex: summary.sectionItemIndex || void 0
+      };
+      if (summary.hasSplitHeadingLink) {
+        rows.push(__spreadProps(__spreadValues({}, baseRow), {
+          issueId: "split-heading-link",
+          issue: this.getTopicDoormatIssueLabel("split-heading-link"),
+          evidence: this.buildTopicDoormatSplitHeadingLinkEvidence(summary),
+          recommendation: "Use one link around the complete doormat heading text."
+        }));
+      }
+      if (summary.hasDescriptionLink) {
+        rows.push(__spreadProps(__spreadValues({}, baseRow), {
+          severity: "Medium",
+          issueId: "description-contains-link",
+          issue: this.getTopicDoormatIssueLabel("description-contains-link"),
+          evidence: this.buildTopicDoormatDescriptionLinkEvidence(summary),
+          recommendation: "Remove links from the description. The doormat heading should contain the only link."
+        }));
+      }
+      if (summary.itemLinkCount > 1 && !summary.hasSplitHeadingLink && !summary.hasDescriptionLink) {
+        rows.push(__spreadProps(__spreadValues({}, baseRow), {
+          issueId: "multiple-links",
+          issue: this.getTopicDoormatIssueLabel("multiple-links"),
+          evidence: this.buildTopicDoormatMultipleLinksEvidence(summary),
+          recommendation: "Use one link per doormat. Move any extra destination to a separate doormat if it is needed."
+        }));
+      }
+      return rows;
+    });
+  }
+  buildTopicDoormatSplitHeadingLinkEvidence(doormat) {
+    const linkLabel = doormat.headingLinkCount === 1 ? "1 link" : `${doormat.headingLinkCount} links`;
+    return `The doormat heading is split into ${linkLabel}: '${doormat.linkText}'.`;
+  }
+  buildTopicDoormatDescriptionLinkEvidence(doormat) {
+    const linkLabel = doormat.descriptionLinkCount === 1 ? "1 link" : `${doormat.descriptionLinkCount} links`;
+    return `The doormat description contains ${linkLabel}.`;
   }
   buildTopicDoormatMultipleLinksEvidence(doormat) {
     const additionalLinkCount = Math.max(doormat.itemLinkCount - 1, 0);
@@ -31503,11 +31649,17 @@ var ComponentGuidanceComponent = class _ComponentGuidanceComponent {
     return value.replace(/\b\w/g, (match) => match.toUpperCase());
   }
   hasValidTopicDoormatObjectiveEvidence(issueId, doormat) {
-    if (issueId !== "description-trailing-punctuation")
-      return true;
-    if (!doormat?.description)
-      return false;
-    return /[.:;?!,]$/.test(doormat.description.trim());
+    if (issueId === "link-name-trailing-punctuation") {
+      if (!doormat?.linkText)
+        return false;
+      return this.hasTopicDoormatTrailingPunctuation(doormat.linkText);
+    }
+    if (issueId === "description-trailing-punctuation") {
+      if (!doormat?.description)
+        return false;
+      return this.hasTopicDoormatTrailingPunctuation(doormat.description);
+    }
+    return true;
   }
   buildTopicDoormatLabel(doormat) {
     const itemIndex = doormat.sectionItemIndex || doormat.index;
@@ -31682,6 +31834,54 @@ var ComponentGuidanceComponent = class _ComponentGuidanceComponent {
       return null;
     }
   }
+  enrichTopicDoormatDestinationContext(doormatSummaries, uploadData) {
+    return __async(this, null, function* () {
+      if (!doormatSummaries.length)
+        return doormatSummaries;
+      const contextByUrl = /* @__PURE__ */ new Map();
+      return Promise.all(doormatSummaries.map((summary) => __async(this, null, function* () {
+        const destinationUrl = this.resolveTopicDoormatDestinationUrl(summary.href, uploadData);
+        if (!destinationUrl)
+          return summary;
+        let contextPromise = contextByUrl.get(destinationUrl);
+        if (!contextPromise) {
+          contextPromise = this.fetchTopicDoormatDestinationContext(destinationUrl);
+          contextByUrl.set(destinationUrl, contextPromise);
+        }
+        const context = yield contextPromise;
+        return __spreadValues(__spreadValues({}, summary), context);
+      })));
+    });
+  }
+  resolveTopicDoormatDestinationUrl(href, uploadData) {
+    const trimmedHref = this.cleanString(href);
+    if (!trimmedHref || trimmedHref.startsWith("#"))
+      return "";
+    const pageUrl = this.cleanString(uploadData?.originalUrl) || this.cleanString(uploadData?.modifiedUrl);
+    try {
+      const resolved = pageUrl ? new URL(trimmedHref, pageUrl) : new URL(trimmedHref);
+      if (resolved.protocol !== "https:")
+        return "";
+      resolved.hash = "";
+      return resolved.toString();
+    } catch {
+      return "";
+    }
+  }
+  fetchTopicDoormatDestinationContext(destinationUrl) {
+    return __async(this, null, function* () {
+      try {
+        const destinationDoc = yield this.fetchService.fetchContent(destinationUrl, "both", 1, "none");
+        return {
+          destinationUrl,
+          destinationPageTitle: this.cleanVisibleText(destinationDoc.querySelector("title")?.textContent),
+          destinationPageHeading: this.cleanVisibleText(destinationDoc.querySelector("main h1, h1")?.textContent)
+        };
+      } catch {
+        return { destinationUrl };
+      }
+    });
+  }
   detectTopicDoormatPageLanguage(doc, uploadData) {
     const htmlLang = doc.documentElement.getAttribute("lang") || doc.querySelector("html")?.getAttribute("lang") || "";
     const normalizedHtmlLang = htmlLang.trim().toLowerCase();
@@ -31738,10 +31938,13 @@ var ComponentGuidanceComponent = class _ComponentGuidanceComponent {
       const sectionIndexes = /* @__PURE__ */ new Map();
       const sectionTitles = /* @__PURE__ */ new Map();
       const sectionSummaries = /* @__PURE__ */ new Map();
-      const addSummary = (link, wrapper, item) => {
-        const linkText = this.cleanVisibleText(link.textContent);
+      const addSummary = (link, wrapper, item, linkTextOverride = "") => {
+        const heading = link.closest("h2, h3");
+        const headingLinkCount = heading ? heading.querySelectorAll("a[href]").length : 1;
+        const headingText = this.cleanVisibleText(heading?.textContent);
+        const linkText = this.cleanVisibleText(linkTextOverride) || (headingLinkCount > 1 ? headingText : "") || this.cleanVisibleText(link.textContent);
         const href = link.getAttribute("href") || "";
-        const key2 = `${href}|${linkText}`;
+        const key2 = item ? this.getTopicDoormatItemKey(item) : `${href}|${linkText}`;
         if (!linkText && !href)
           return;
         if (seen.has(key2))
@@ -31759,7 +31962,6 @@ var ComponentGuidanceComponent = class _ComponentGuidanceComponent {
         sectionSummaries.set(sectionIndex, sectionRows);
         const descriptionElement = item?.querySelector("p") ?? null;
         const description = this.cleanVisibleText(descriptionElement?.textContent);
-        const heading = link.closest("h2, h3");
         const summary = {
           index: summaries.length + 1,
           linkText,
@@ -31767,7 +31969,9 @@ var ComponentGuidanceComponent = class _ComponentGuidanceComponent {
           description,
           headingLevel: heading ? this.toNumber(heading.tagName.slice(1)) : null,
           itemLinkCount: item ? item.querySelectorAll("a[href]").length : 0,
+          headingLinkCount,
           descriptionLinkCount: descriptionElement ? descriptionElement.querySelectorAll("a[href]").length : 0,
+          hasSplitHeadingLink: headingLinkCount > 1,
           hasDescriptionLink: !!descriptionElement?.querySelector("a[href]"),
           hasDescriptionIconOrImage: !!descriptionElement?.querySelector('img, svg, i[class*="glyphicon"], i[class*="fa"], span[class*="glyphicon"], span[class*="fa"]'),
           hasDescriptionSpecialFormatting: !!descriptionElement?.querySelector("strong, b, em, i, ul, ol, li, mark, code"),
@@ -31782,10 +31986,13 @@ var ComponentGuidanceComponent = class _ComponentGuidanceComponent {
         summaries.push(summary);
         sectionRows.push(summary);
       };
-      const modernLinks = Array.from(doc.querySelectorAll(".gc-srvinfo h2 a, .gc-srvinfo h3 a"));
-      modernLinks.forEach((link) => {
-        const wrapper = link.closest(".gc-srvinfo");
-        addSummary(link, wrapper, this.findTopicDoormatItem(link, wrapper));
+      const modernLinks = Array.from(doc.querySelectorAll(".gc-srvinfo h2, .gc-srvinfo h3"));
+      modernLinks.forEach((heading) => {
+        const link = heading.querySelector("a[href]");
+        if (!link)
+          return;
+        const wrapper = heading.closest(".gc-srvinfo");
+        addSummary(link, wrapper, this.findTopicDoormatItem(link, wrapper), heading.textContent ?? "");
       });
       this.getLegacyTopicDoormatLinks(doc).forEach(({ link, wrapper, item }) => {
         addSummary(link, wrapper, item);
@@ -31895,6 +32102,14 @@ var ComponentGuidanceComponent = class _ComponentGuidanceComponent {
       current = current.parentElement;
     }
     return wrapper?.querySelector("p") ? wrapper : null;
+  }
+  getTopicDoormatItemKey(item) {
+    const doc = item.ownerDocument;
+    const items = Array.from(doc.querySelectorAll(".gc-srvinfo h2, .gc-srvinfo h3, .gc-drmt, .mwsdoormat-links-container h2, .mwsdoormat-links-container h3"));
+    const index = items.findIndex((candidate) => candidate === item || item.contains(candidate));
+    if (index >= 0)
+      return `item:${index}`;
+    return `item:${this.cleanVisibleText(item.textContent)}|${item.querySelectorAll("a[href]").length}`;
   }
   extractMostRequestedLinks(doc) {
     try {
@@ -32636,7 +32851,7 @@ var ComponentGuidanceComponent = class _ComponentGuidanceComponent {
   }], null, null);
 })();
 (() => {
-  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(ComponentGuidanceComponent, { className: "ComponentGuidanceComponent", filePath: "app/views/page-assistant/components/problems/component-guidance/component-guidance.component.ts", lineNumber: 243 });
+  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(ComponentGuidanceComponent, { className: "ComponentGuidanceComponent", filePath: "app/views/page-assistant/components/problems/component-guidance/component-guidance.component.ts", lineNumber: 249 });
 })();
 
 // src/app/views/page-assistant/components/problems/seo.component.ts
@@ -46202,4 +46417,4 @@ ${custom}` : promptBody;
 export {
   PageAssistantCompareComponent
 };
-//# sourceMappingURL=chunk-VYUVYRF5.js.map
+//# sourceMappingURL=chunk-V667D5FG.js.map
