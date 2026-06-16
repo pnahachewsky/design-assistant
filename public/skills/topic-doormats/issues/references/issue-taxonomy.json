@@ -7,13 +7,12 @@
   "analysis_sequence": [
     {
       "pass": "deterministic_structural_checks",
-      "instruction": "Run these checks first. Do not return the response until every model-owned deterministic structural check has been evaluated for every doormat and every complete doormat section. Do not report link-name-too-long, description-too-long, link-name-trailing-punctuation, or description-trailing-punctuation; AIDA calculates and reports those issues deterministically from the extracted doormat text and character counts.",
+      "instruction": "Run these checks first. Do not return the response until every model-owned deterministic structural check has been evaluated for every doormat and every complete doormat section. Do not report link-name-too-long, description-too-long, link-name-trailing-punctuation, description-trailing-punctuation, or duplicate-link-in-most-requested; AIDA calculates and reports those issues deterministically from the extracted doormat text, Most requested links, and character counts.",
       "issue_ids": [
         "too-many-doormats-in-section",
         "split-heading-link",
         "multiple-links",
         "missing-description",
-        "duplicate-link-in-most-requested",
         "description-contains-link",
         "description-uses-icons-or-images",
         "description-special-formatting",
@@ -177,7 +176,6 @@
     "Check for duplicate or near-duplicate descriptions across the set.",
     "Check for repeated generic task lists across the set.",
     "Check whether any topic doormat section contains more than 9 doormats. If it does, report too-many-doormats-in-section once in section_issues for the affected H2 section.",
-    "Check whether any doormat link is repeated in the page's Most requested section.",
     "Check whether the set is missing a needed doormat based on the supplied page context.",
     "Check whether the set includes an unnecessary or badly chosen doormat.",
     "Check whether the doormat order prioritizes the most visited information and services only when supplied page context includes visit data, explicit priority evidence, or another concrete signal for order."

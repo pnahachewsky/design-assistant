@@ -113,6 +113,18 @@ interface TopicDoormatSummary {
   sectionDoormatCount: number;
 }
 
+interface MostRequestedLinkSummary {
+  text: string;
+  href: string;
+}
+
+interface TopicDoormatComparableUrl {
+  kind: 'absolute' | 'root-relative';
+  absoluteKey?: string;
+  pathKey: string;
+  allowedHost: boolean;
+}
+
 interface TopicDoormatIssueCategory {
   id?: unknown;
   label?: unknown;
@@ -768,11 +780,15 @@ export class ComponentGuidanceComponent implements OnInit, OnDestroy {
             doormatSummaries,
             hasLegacyTopicDoormatTemplate,
             pageLanguage,
+            mostRequestedLinks,
+            uploadData,
           )
         : this.buildTopicDoormatFallbackRows(
             doormatSummaries,
             hasLegacyTopicDoormatTemplate,
             pageLanguage,
+            mostRequestedLinks,
+            uploadData,
           );
       this.topicDoormatIssueGroups = this.buildTopicDoormatIssueGroups(
         this.topicDoormatIssueRows,
@@ -1057,6 +1073,8 @@ export class ComponentGuidanceComponent implements OnInit, OnDestroy {
     doormatSummaries: TopicDoormatSummary[] = [],
     hasLegacyTopicDoormatTemplate = false,
     pageLanguage: TopicDoormatPageLanguage = 'en',
+    mostRequestedLinks: MostRequestedLinkSummary[] = [],
+    uploadData?: Partial<UploadData> | null,
   ): TopicDoormatIssueRow[] {
     const parsed = this.looseJsonParse(this.stripCodeFences(text));
     if (!parsed || typeof parsed !== 'object') {
@@ -1064,6 +1082,8 @@ export class ComponentGuidanceComponent implements OnInit, OnDestroy {
         doormatSummaries,
         hasLegacyTopicDoormatTemplate,
         pageLanguage,
+        mostRequestedLinks,
+        uploadData,
       );
       this.debugTopicDoormatIssues('response parse fallback', {
         reason: 'invalid-json-or-non-object',
@@ -1174,6 +1194,9 @@ export class ComponentGuidanceComponent implements OnInit, OnDestroy {
           if (issueId === 'description-too-long') {
             return null;
           }
+          if (issueId === 'duplicate-link-in-most-requested') {
+            return null;
+          }
           if (!this.hasValidTopicDoormatObjectiveEvidence(issueId, summary)) {
             return null;
           }
@@ -1267,6 +1290,8 @@ export class ComponentGuidanceComponent implements OnInit, OnDestroy {
       [...modelIssueRows, ...reportableSectionIssueRows],
       hasLegacyTopicDoormatTemplate,
       pageLanguage,
+      mostRequestedLinks,
+      uploadData,
     );
 
     const representedIndexes = new Set(
@@ -1388,12 +1413,16 @@ export class ComponentGuidanceComponent implements OnInit, OnDestroy {
     doormatSummaries: TopicDoormatSummary[],
     hasLegacyTopicDoormatTemplate = false,
     pageLanguage: TopicDoormatPageLanguage = 'en',
+    mostRequestedLinks: MostRequestedLinkSummary[] = [],
+    uploadData?: Partial<UploadData> | null,
   ): TopicDoormatIssueRow[] {
     const deterministicRows = this.buildDeterministicTopicDoormatIssueRows(
       doormatSummaries,
       [],
       hasLegacyTopicDoormatTemplate,
       pageLanguage,
+      mostRequestedLinks,
+      uploadData,
     );
     const representedIndexes = new Set(
       deterministicRows
@@ -1419,6 +1448,8 @@ export class ComponentGuidanceComponent implements OnInit, OnDestroy {
     existingRows: TopicDoormatIssueRow[],
     hasLegacyTopicDoormatTemplate = false,
     pageLanguage: TopicDoormatPageLanguage = 'en',
+    mostRequestedLinks: MostRequestedLinkSummary[] = [],
+    uploadData?: Partial<UploadData> | null,
   ): TopicDoormatIssueRow[] {
     const existingIssueKeys = new Set(
       existingRows.map((row) => `${row.sectionIndex ?? 0}|${row.issueId}`),
@@ -1492,6 +1523,12 @@ export class ComponentGuidanceComponent implements OnInit, OnDestroy {
       ...this.buildLocalTopicDoormatTrailingPunctuationRows(
         doormatSummaries,
         existingRows,
+      ),
+      ...this.buildLocalTopicDoormatMostRequestedDuplicateRows(
+        doormatSummaries,
+        mostRequestedLinks,
+        existingRows,
+        uploadData,
       ),
       ...this.buildLocalTopicDoormatLinkCodeRows(doormatSummaries),
       ...this.buildLocalTopicDoormatStyleIssueRows(
@@ -1778,6 +1815,187 @@ export class ComponentGuidanceComponent implements OnInit, OnDestroy {
     const descriptionLabel = count === 1 ? 'description' : 'descriptions';
     const doormatLabel = count === 1 ? 'doormat' : 'doormats';
     return `${count} ${descriptionLabel} in this section end with punctuation: ${doormatLabel} ${indexes}.`;
+  }
+
+  private buildLocalTopicDoormatMostRequestedDuplicateRows(
+    doormatSummaries: TopicDoormatSummary[],
+    mostRequestedLinks: MostRequestedLinkSummary[],
+    existingRows: TopicDoormatIssueRow[],
+    uploadData?: Partial<UploadData> | null,
+  ): TopicDoormatIssueRow[] {
+    if (!mostRequestedLinks.length) return [];
+    const existingDoormatIssueKeys = new Set(
+      existingRows
+        .filter((row) => row.doormatIndex)
+        .map((row) => `${row.doormatIndex}|${row.issueId}`),
+    );
+
+    return doormatSummaries.flatMap((summary) => {
+      if (
+        existingDoormatIssueKeys.has(
+          `${summary.index}|duplicate-link-in-most-requested`,
+        )
+      ) {
+        return [];
+      }
+      const duplicate = this.findTopicDoormatMostRequestedDuplicate(
+        summary.href,
+        mostRequestedLinks,
+        uploadData,
+      );
+      if (!duplicate) return [];
+
+      return [
+        {
+          include: true,
+          rowType: 'doormat',
+          severity: 'Medium',
+          doormat: this.buildTopicDoormatLabel(summary),
+          doormatLabel: summary.linkText || summary.href || 'Doormat',
+          issueId: 'duplicate-link-in-most-requested',
+          issue: this.getTopicDoormatIssueLabel(
+            'duplicate-link-in-most-requested',
+          ),
+          evidence: this.buildTopicDoormatMostRequestedDuplicateEvidence(
+            summary,
+            duplicate,
+          ),
+          recommendation:
+            'Flag for manual review. In most cases, remove the duplicate from Most requested unless there is a strong page-specific reason to keep it.',
+          doormatIndex: summary.index || undefined,
+          sectionIndex: summary.sectionIndex || undefined,
+          sectionTitle: summary.sectionTitle || undefined,
+          sectionItemIndex: summary.sectionItemIndex || undefined,
+        } satisfies TopicDoormatIssueRow,
+      ];
+    });
+  }
+
+  private findTopicDoormatMostRequestedDuplicate(
+    href: string,
+    mostRequestedLinks: MostRequestedLinkSummary[],
+    uploadData?: Partial<UploadData> | null,
+  ): MostRequestedLinkSummary | null {
+    const doormatUrl = this.parseTopicDoormatComparableUrl(href, uploadData);
+    if (!doormatUrl) return null;
+    return (
+      mostRequestedLinks.find((link) => {
+        const mostRequestedUrl = this.parseTopicDoormatComparableUrl(
+          link.href,
+          uploadData,
+        );
+        return (
+          !!mostRequestedUrl &&
+          this.areTopicDoormatComparableUrlsEqual(
+            doormatUrl,
+            mostRequestedUrl,
+          )
+        );
+      }) ?? null
+    );
+  }
+
+  private parseTopicDoormatComparableUrl(
+    href: string,
+    uploadData?: Partial<UploadData> | null,
+  ): TopicDoormatComparableUrl | null {
+    const trimmedHref = this.cleanString(href);
+    if (!trimmedHref || trimmedHref.startsWith('#')) return null;
+    const baseUrl =
+      this.cleanString(uploadData?.originalUrl) ||
+      this.cleanString(uploadData?.modifiedUrl);
+
+    if (baseUrl) {
+      try {
+        return this.buildTopicDoormatComparableAbsoluteUrl(
+          new URL(trimmedHref, baseUrl),
+        );
+      } catch {
+        return null;
+      }
+    }
+
+    try {
+      return this.buildTopicDoormatComparableAbsoluteUrl(new URL(trimmedHref));
+    } catch {
+      if (!trimmedHref.startsWith('/')) return null;
+      const parts = trimmedHref.split('#')[0].split('?');
+      const path = this.normalizeTopicDoormatComparablePath(parts[0]);
+      const query = parts[1] ? `?${parts[1]}` : '';
+      if (!path) return null;
+      return {
+        kind: 'root-relative',
+        pathKey: `${path}${query}`,
+        allowedHost: false,
+      };
+    }
+  }
+
+  private buildTopicDoormatComparableAbsoluteUrl(
+    url: URL,
+  ): TopicDoormatComparableUrl | null {
+    if (url.protocol !== 'https:' && url.protocol !== 'http:') return null;
+    url.hash = '';
+    const protocol = url.protocol.toLowerCase();
+    const host = url.hostname.toLowerCase();
+    const port = this.getTopicDoormatComparablePort(url);
+    const path = this.normalizeTopicDoormatComparablePath(url.pathname);
+    const pathKey = `${path}${url.search}`;
+    return {
+      kind: 'absolute',
+      absoluteKey: `${protocol}//${host}${port}${pathKey}`,
+      pathKey,
+      allowedHost: this.isAllowedTopicDoormatComparisonHost(host),
+    };
+  }
+
+  private getTopicDoormatComparablePort(url: URL): string {
+    if (!url.port) return '';
+    if (url.protocol === 'https:' && url.port === '443') return '';
+    if (url.protocol === 'http:' && url.port === '80') return '';
+    return `:${url.port}`;
+  }
+
+  private normalizeTopicDoormatComparablePath(path: string): string {
+    const normalized = path || '/';
+    if (normalized.length > 1 && normalized.endsWith('/')) {
+      return normalized.replace(/\/+$/, '');
+    }
+    return normalized;
+  }
+
+  private isAllowedTopicDoormatComparisonHost(host: string): boolean {
+    return [
+      'www.canada.ca',
+      'test.canada.ca',
+      'proto-cra.github.io',
+      'cra-design.github.io',
+      'cra-test-arc.canada.ca',
+      'cra-proto.github.io',
+    ].includes(host);
+  }
+
+  private areTopicDoormatComparableUrlsEqual(
+    first: TopicDoormatComparableUrl,
+    second: TopicDoormatComparableUrl,
+  ): boolean {
+    if (first.kind === 'absolute' && second.kind === 'absolute') {
+      return first.absoluteKey === second.absoluteKey;
+    }
+    if (first.kind === 'root-relative' && second.kind === 'root-relative') {
+      return first.pathKey === second.pathKey;
+    }
+    const absolute = first.kind === 'absolute' ? first : second;
+    const relative = first.kind === 'root-relative' ? first : second;
+    return absolute.allowedHost && absolute.pathKey === relative.pathKey;
+  }
+
+  private buildTopicDoormatMostRequestedDuplicateEvidence(
+    doormat: TopicDoormatSummary,
+    mostRequestedLink: MostRequestedLinkSummary,
+  ): string {
+    const mostRequestedText = mostRequestedLink.text || mostRequestedLink.href;
+    return `Doormat link '${doormat.href}' also appears in Most requested as '${mostRequestedText}' (${mostRequestedLink.href}).`;
   }
 
   private getTopicDoormatLengthLimit(
@@ -3218,10 +3436,7 @@ export class ComponentGuidanceComponent implements OnInit, OnDestroy {
     }`;
   }
 
-  private extractMostRequestedLinks(doc: Document): {
-    text: string;
-    href: string;
-  }[] {
+  private extractMostRequestedLinks(doc: Document): MostRequestedLinkSummary[] {
     try {
       const selectors = [
         '.gc-most-requested a',
