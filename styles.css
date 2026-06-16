@@ -20597,10 +20597,11 @@ html.dark-mode .secondary-outline {
   color: #92400e;
 }
 .chip-med,
-.p-chip.chip-med {
-  background: #fde7c3;
-  border-color: #f9d29b;
-  color: #9a4a00;
+.p-chip.chip-med,
+.p-chip.chip.chip-med {
+  background: #fde7c3 !important;
+  border-color: #f9d29b !important;
+  color: #9a4a00 !important;
 }
 .chip-ok,
 .p-chip.chip-ok {
