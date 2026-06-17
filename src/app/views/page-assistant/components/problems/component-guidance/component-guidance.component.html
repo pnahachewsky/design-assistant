@@ -315,9 +315,15 @@
                               </span>
                               @if (issue.evidence) {
                                 <span>. {{ issue.evidence }}</span>
+                                @if (issue.evidenceLinkText && issue.evidenceLinkHref) {
+                                  <a [href]="issue.evidenceLinkHref" target="_blank" rel="noopener noreferrer">{{ issue.evidenceLinkText }}</a>
+                                }
                               }
                             } @else {
                               {{ issue.evidence || '-' }}
+                              @if (issue.evidenceLinkText && issue.evidenceLinkHref) {
+                                <a [href]="issue.evidenceLinkHref" target="_blank" rel="noopener noreferrer">{{ issue.evidenceLinkText }}</a>
+                              }
                             }
                           </td>
                           <td>{{ issue.recommendation || '-' }}</td>
@@ -373,9 +379,15 @@
                               </span>
                               @if (issue.evidence) {
                                 <span>. {{ issue.evidence }}</span>
+                                @if (issue.evidenceLinkText && issue.evidenceLinkHref) {
+                                  <a [href]="issue.evidenceLinkHref" target="_blank" rel="noopener noreferrer">{{ issue.evidenceLinkText }}</a>
+                                }
                               }
                             } @else {
                               {{ issue.evidence || '-' }}
+                              @if (issue.evidenceLinkText && issue.evidenceLinkHref) {
+                                <a [href]="issue.evidenceLinkHref" target="_blank" rel="noopener noreferrer">{{ issue.evidenceLinkText }}</a>
+                              }
                             }
                           </td>
                           <td>{{ issue.recommendation || '-' }}</td>

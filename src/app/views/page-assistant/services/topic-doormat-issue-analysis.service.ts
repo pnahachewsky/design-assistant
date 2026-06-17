@@ -694,7 +694,7 @@ export class TopicDoormatIssueAnalysisService {
           doormatLabel: summary.linkText || summary.href || 'Doormat',
           issueId: 'link-name-too-long',
           issue: this.getTopicDoormatIssueLabel('link-name-too-long'),
-          evidence: this.getTopicDoormatLinkNameLengthEvidence(pageLanguage),
+          evidence: this.getTopicDoormatLinkNameLengthEvidence(),
           evidenceMetric: metric,
           recommendation: this.getTopicDoormatLinkNameLengthRecommendation(
             pageLanguage,
@@ -747,7 +747,7 @@ export class TopicDoormatIssueAnalysisService {
           doormatLabel: summary.linkText || summary.href || 'Doormat',
           issueId: 'description-too-long',
           issue: this.getTopicDoormatIssueLabel('description-too-long'),
-          evidence: this.getTopicDoormatDescriptionLengthEvidence(pageLanguage),
+          evidence: this.getTopicDoormatDescriptionLengthEvidence(),
           evidenceMetric: metric,
           recommendation: this.getTopicDoormatDescriptionLengthRecommendation(
             pageLanguage,
@@ -988,10 +988,9 @@ export class TopicDoormatIssueAnalysisService {
           issue: this.getTopicDoormatIssueLabel(
             'duplicate-link-in-most-requested',
           ),
-          evidence: this.buildTopicDoormatMostRequestedDuplicateEvidence(
-            summary,
-            duplicate,
-          ),
+          evidence: this.buildTopicDoormatMostRequestedDuplicateEvidence(),
+          evidenceLinkText: duplicate.text || duplicate.href,
+          evidenceLinkHref: duplicate.href,
           recommendation:
             'Flag for manual review. In most cases, remove the duplicate from Most requested unless there is a strong page-specific reason to keep it.',
           doormatIndex: summary.index || undefined,
@@ -1122,12 +1121,8 @@ export class TopicDoormatIssueAnalysisService {
     return absolute.allowedHost && absolute.pathKey === relative.pathKey;
   }
 
-  private buildTopicDoormatMostRequestedDuplicateEvidence(
-    doormat: TopicDoormatSummary,
-    mostRequestedLink: MostRequestedLinkSummary,
-  ): string {
-    const mostRequestedText = mostRequestedLink.text || mostRequestedLink.href;
-    return `Doormat link '${doormat.href}' also appears in Most requested as '${mostRequestedText}' (${mostRequestedLink.href}).`;
+  private buildTopicDoormatMostRequestedDuplicateEvidence(): string {
+    return 'This doormat links to the same destination as this Most requested link:';
   }
 
   private getTopicDoormatLengthLimit(
@@ -1137,19 +1132,15 @@ export class TopicDoormatIssueAnalysisService {
     return this.topicDoormatIssueLengthLimits[pageLanguage][issueId];
   }
 
-  private getTopicDoormatLinkNameLengthEvidence(
-    pageLanguage: TopicDoormatPageLanguage,
-  ): string {
+  private getTopicDoormatLinkNameLengthEvidence(): string {
     return this.translate.instant(
-      `page.tools.guidance.topicDoormats.length.link.evidence.${pageLanguage}`,
+      'page.tools.guidance.topicDoormats.length.link.evidence',
     );
   }
 
-  private getTopicDoormatDescriptionLengthEvidence(
-    pageLanguage: TopicDoormatPageLanguage,
-  ): string {
+  private getTopicDoormatDescriptionLengthEvidence(): string {
     return this.translate.instant(
-      `page.tools.guidance.topicDoormats.length.description.evidence.${pageLanguage}`,
+      'page.tools.guidance.topicDoormats.length.description.evidence',
     );
   }
 

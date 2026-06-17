@@ -12,6 +12,8 @@ export interface TopicDoormatIssueRow {
   issue: string;
   evidence: string;
   evidenceMetric?: string;
+  evidenceLinkText?: string;
+  evidenceLinkHref?: string;
   recommendation: string;
   doormatIndex?: number;
   sectionIndex?: number;
