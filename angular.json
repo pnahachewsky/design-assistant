@@ -172,7 +172,8 @@
             ],
             "scripts": [
               "node_modules/underscore/underscore-min.js"
-            ]
+            ],
+            "karmaConfig": "karma.conf.js"
           }
         },
         "lint": {

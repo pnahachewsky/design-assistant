@@ -3,8 +3,9 @@ import { Injectable, inject } from '@angular/core';
 import { TranslateService } from '@ngx-translate/core';
 import { firstValueFrom } from 'rxjs';
 import { PromptKey, UploadData } from '../data/data.model';
-import { ChatMessage, OpenRouterService } from './openrouter.service';
+import { ChatMessage } from './openrouter.service';
 import { SkillManagerService } from './skill-manager.service';
+import { TopicDoormatModelClientService } from './topic-doormat-model-client.service';
 import {
   MostRequestedLinkSummary,
   TopicDoormatComparableUrl,
@@ -38,12 +39,10 @@ export interface TopicDoormatIssueAnalysisResult {
 export class TopicDoormatIssueAnalysisService {
   private readonly http = inject(HttpClient);
   private readonly translate = inject(TranslateService);
-  private readonly openRouter = inject(OpenRouterService);
   private readonly skillManager = inject(SkillManagerService);
+  private readonly modelClient = inject(TopicDoormatModelClientService);
   private readonly topicDoormatDebugStorageKey =
     'pageAssistant.topicDoormatDebug';
-  private readonly topicDoormatForceParseFailureStorageKey =
-    'pageAssistant.topicDoormatForceParseFailure';
   private readonly topicDoormatIssueTaxonomyPath =
     'skills/topic-doormats/issues/references/issue-taxonomy.json';
   private readonly topicDoormatIssueLengthLimits: Record<
@@ -101,7 +100,7 @@ export class TopicDoormatIssueAnalysisService {
         }),
       },
     ];
-    const modelRotation = this.buildTopicDoormatModelRotation(
+    const modelRotation = this.modelClient.buildModelRotation(
       input.selectedModel,
     );
     this.debugTopicDoormatIssues('request prepared', {
@@ -147,11 +146,15 @@ export class TopicDoormatIssueAnalysisService {
       ),
     });
 
-    const { text, model } = await this.callTopicDoormatIssuesWithFallback(
+    const issueJson = await this.modelClient.requestIssueJson({
       messages,
-      modelRotation,
-      input.doormatSummaries,
-    );
+      requestedModel: input.selectedModel,
+      doormatSummaries: input.doormatSummaries,
+      isParseableResponseText: (value) =>
+        this.isParseableTopicDoormatIssueResponseText(value),
+      debug: (event, details) => this.debugTopicDoormatIssues(event, details),
+    });
+    const { text, model } = issueJson;
     const rows = text
       ? this.parseTopicDoormatIssueRows(
           text,
@@ -173,7 +176,7 @@ export class TopicDoormatIssueAnalysisService {
       rows,
       text,
       model,
-      modelRotation,
+      modelRotation: issueJson.modelRotation,
       elapsedMs: Math.round(performance.now() - analysisStart),
     };
   }
@@ -181,168 +184,6 @@ export class TopicDoormatIssueAnalysisService {
   debug(event: string, details: Record<string, unknown>): void {
     this.debugTopicDoormatIssues(event, details);
   }
-  private async callTopicDoormatIssuesWithFallback(
-    messages: ChatMessage[],
-    models: string[],
-    doormatSummaries: TopicDoormatSummary[],
-  ): Promise<{ text: string; model: string }> {
-    let lastError: unknown;
-    let lastModel = models[0] ?? '';
-
-    for (let index = 0; index < models.length; index += 1) {
-      const model = models[index];
-      lastModel = model;
-      const modelStart = performance.now();
-      try {
-        this.debugTopicDoormatIssues('model attempt started', {
-          attempt: index + 1,
-          totalAttempts: models.length,
-          model,
-        });
-        const resp = await this.openRouter.call(model, messages, {
-          temperature: 0,
-          title: 'Content Assistant - Topic Doormat Issues',
-          throwOnError: true,
-        });
-        const text = resp?.choices?.[0]?.message?.content?.trim() || '';
-        if (text) {
-          const forcedParseFailureMode =
-            this.getTopicDoormatForceParseFailureMode();
-          if (forcedParseFailureMode === 'local-only') {
-            this.debugTopicDoormatIssues('forced parse failure enabled', {
-              mode: forcedParseFailureMode,
-              model,
-              responseCharacters: text.length,
-            });
-            return { text: '', model };
-          }
-          const textToValidate =
-            forcedParseFailureMode === 'repair'
-              ? '{"doormats": ['
-              : text;
-          if (forcedParseFailureMode === 'repair') {
-            this.debugTopicDoormatIssues('forced parse failure enabled', {
-              mode: forcedParseFailureMode,
-              model,
-              responseCharacters: text.length,
-            });
-          }
-          if (this.isParseableTopicDoormatIssueResponseText(textToValidate)) {
-            this.debugTopicDoormatIssues('model attempt succeeded', {
-              attempt: index + 1,
-              model,
-              elapsedMs: Math.round(performance.now() - modelStart),
-              responseCharacters: text.length,
-            });
-            return { text, model };
-          }
-
-          this.debugTopicDoormatIssues('model attempt returned invalid json', {
-            attempt: index + 1,
-            model,
-            elapsedMs: Math.round(performance.now() - modelStart),
-            responseCharacters: text.length,
-          });
-
-          const repairedText = await this.repairTopicDoormatIssueJson(
-            model,
-            text,
-            doormatSummaries,
-          );
-          if (
-            repairedText &&
-            this.isParseableTopicDoormatIssueResponseText(repairedText)
-          ) {
-            this.debugTopicDoormatIssues('model json repair succeeded', {
-              attempt: index + 1,
-              model,
-              elapsedMs: Math.round(performance.now() - modelStart),
-              originalResponseCharacters: text.length,
-              repairedResponseCharacters: repairedText.length,
-            });
-            return { text: repairedText, model };
-          }
-
-          this.debugTopicDoormatIssues('model json repair failed', {
-            attempt: index + 1,
-            model,
-            elapsedMs: Math.round(performance.now() - modelStart),
-          });
-          lastError = new Error(`Invalid Topic doormat JSON from ${model}`);
-          continue;
-        }
-        this.debugTopicDoormatIssues('model attempt returned empty content', {
-          attempt: index + 1,
-          model,
-          elapsedMs: Math.round(performance.now() - modelStart),
-        });
-      } catch (err) {
-        lastError = err;
-        this.debugTopicDoormatIssues('model attempt failed', {
-          attempt: index + 1,
-          model,
-          elapsedMs: Math.round(performance.now() - modelStart),
-          error: err instanceof Error ? err.message : String(err),
-        });
-      }
-    }
-
-    this.debugTopicDoormatIssues('model attempts exhausted', {
-      models,
-      lastModel,
-      error: lastError instanceof Error ? lastError.message : String(lastError),
-    });
-    return { text: '', model: lastModel };
-  }
-
-  private async repairTopicDoormatIssueJson(
-    model: string,
-    invalidText: string,
-    doormatSummaries: TopicDoormatSummary[],
-  ): Promise<string> {
-    try {
-      const repairMessages: ChatMessage[] = [
-        {
-          role: 'system',
-          content:
-            'Convert the supplied response to valid JSON that matches the Topic doormat issue schema. Fix format only. Do not add, remove, reinterpret, or re-analyze issues. Return JSON only.',
-        },
-        {
-          role: 'user',
-          content: JSON.stringify({
-            requiredShape:
-              '{ "section_issues": [], "doormats": [{ "doormat_index": number, "link_text": string, "href": string, "issues": [] }] }',
-            validDoormatIndexes: doormatSummaries.map((summary) => summary.index),
-            responseToRepair: invalidText,
-          }),
-        },
-      ];
-      const resp = await this.openRouter.call(model, repairMessages, {
-        temperature: 0,
-        title: 'Content Assistant - Topic Doormat JSON Repair',
-        throwOnError: true,
-      });
-      return resp?.choices?.[0]?.message?.content?.trim() || '';
-    } catch (err) {
-      this.debugTopicDoormatIssues('model json repair request failed', {
-        model,
-        error: err instanceof Error ? err.message : String(err),
-      });
-      return '';
-    }
-  }
-
-  private buildTopicDoormatModelRotation(requested?: string): string[] {
-    const freeModels = this.openRouter.freeModels;
-    if (requested && this.openRouter.models.includes(requested)) {
-      return [
-        requested,
-        ...freeModels.filter((candidate) => candidate !== requested),
-      ];
-    }
-    return freeModels;
-  }
-
   private debugTopicDoormatIssues(
     event: string,
     details: Record<string, unknown>,
@@ -356,24 +197,6 @@ export class TopicDoormatIssueAnalysisService {
       return localStorage.getItem(this.topicDoormatDebugStorageKey) === 'true';
     } catch {
       return false;
-    }
-  }
-
-  private getTopicDoormatForceParseFailureMode():
-    | ''
-    | 'repair'
-    | 'local-only' {
-    try {
-      const value = (
-        localStorage.getItem(this.topicDoormatForceParseFailureStorageKey) || ''
-      )
-        .trim()
-        .toLowerCase();
-      if (value === 'repair') return 'repair';
-      if (value === 'local-only' || value === 'true') return 'local-only';
-      return '';
-    } catch {
-      return '';
     }
   }
 

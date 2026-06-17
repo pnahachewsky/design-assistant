@@ -1,10 +1,30 @@
+import { ActivatedRoute, Router } from '@angular/router';
+import { of } from 'rxjs';
 import { TestBed } from '@angular/core/testing';
 import { AppComponent } from './app.component';
+import { LocalStorageService } from './services/local-storage.service';
 
 describe('AppComponent', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [AppComponent],
+      providers: [
+        {
+          provide: ActivatedRoute,
+          useValue: { queryParams: of({}) },
+        },
+        {
+          provide: Router,
+          useValue: { navigate: jasmine.createSpy('navigate') },
+        },
+        {
+          provide: LocalStorageService,
+          useValue: {
+            getData: jasmine.createSpy('getData').and.returnValue(null),
+            saveData: jasmine.createSpy('saveData'),
+          },
+        },
+      ],
     }).compileComponents();
   });
 
@@ -12,18 +32,5 @@ describe('AppComponent', () => {
     const fixture = TestBed.createComponent(AppComponent);
     const app = fixture.componentInstance;
     expect(app).toBeTruthy();
-  });
-
-  it(`should have the 'design-assistant' title`, () => {
-    const fixture = TestBed.createComponent(AppComponent);
-    const app = fixture.componentInstance;
-    expect(app.title).toEqual('design-assistant');
-  });
-
-  it('should render title', () => {
-    const fixture = TestBed.createComponent(AppComponent);
-    fixture.detectChanges();
-    const compiled = fixture.nativeElement as HTMLElement;
-    expect(compiled.querySelector('h1')?.textContent).toContain('Hello, design-assistant');
   });
 });

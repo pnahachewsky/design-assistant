@@ -257,6 +257,12 @@
       padding: 1px 4px;
     }
 
+    .code-path {
+      display: block;
+      margin-top: 4px;
+      margin-left: 1rem;
+    }
+
     .ex-hide {
       margin-top: 14px;
       border: 1px solid var(--line);
@@ -639,7 +645,7 @@
                     <li>Extra doormat that is not needed (badly chosen)</li>
                   </ul>
                 </li>
-                <li><strong>Wrong doormat order</strong> (prioritize most visited info and services)s.</li>
+                <li><strong>Wrong doormat order</strong> (prioritize most visited info and services).</li>
                 </ul>
               </div>
             </details>
@@ -666,12 +672,44 @@
 
         <article class="source-card">
           <h3>Runtime code paths</h3>
-          <p>Implementation files that run detection, prompt composition, issue calls, parsing, and table display.</p>
+          <p>Implementation files that run detection, prompt composition, issue calls, parsing, deterministic rows, and table display.</p>
           <ul>
-            <li><code>src/app/views/page-assistant/components/problems/component-guidance/component-guidance.component.ts</code></li>
-            <li><code>src/app/views/page-assistant/services/skill-manager.service.ts</code></li>
-            <li><code>src/app/views/page-assistant/data/css-list.config.ts</code></li>
-            <li><code>src/app/views/page-assistant/services/validator.service.ts</code></li>
+            <li>
+              Coordinates the guidance table, expands the Topic doormat row, and displays issue groups and status.
+              <code class="code-path">src/app/views/page-assistant/components/problems/component-guidance/component-guidance.component.ts</code>
+            </li>
+            <li>
+              Parses page HTML into doormat summaries, section metadata, language signals, and Most requested link context.
+              <code class="code-path">src/app/views/page-assistant/services/topic-doormat-extractor.service.ts</code>
+            </li>
+            <li>
+              Composes the issue request, parses model JSON, applies deterministic issue rows, and resolves final rows.
+              <code class="code-path">src/app/views/page-assistant/services/topic-doormat-issue-analysis.service.ts</code>
+            </li>
+            <li>
+              Calls the selected model, rotates through fallbacks, and repairs invalid JSON responses.
+              <code class="code-path">src/app/views/page-assistant/services/topic-doormat-model-client.service.ts</code>
+            </li>
+            <li>
+              Groups issue rows, builds category summaries, and maps issues to the displayed health state.
+              <code class="code-path">src/app/views/page-assistant/services/topic-doormat-presenter.service.ts</code>
+            </li>
+            <li>
+              Defines shared Topic doormat interfaces used by the component and services.
+              <code class="code-path">src/app/views/page-assistant/services/topic-doormat.types.ts</code>
+            </li>
+            <li>
+              Loads the active AIDA skill files, references, and schemas used to build the model prompt.
+              <code class="code-path">src/app/views/page-assistant/services/skill-manager.service.ts</code>
+            </li>
+            <li>
+              Maps detected GCWeb/Cra design patterns to guidance rows, including Topic doormats.
+              <code class="code-path">src/app/views/page-assistant/data/css-list.config.ts</code>
+            </li>
+            <li>
+              Scans the uploaded page and collects the matching guidance URLs used by the table.
+              <code class="code-path">src/app/views/page-assistant/services/validator.service.ts</code>
+            </li>
           </ul>
         </article>
       </div>
