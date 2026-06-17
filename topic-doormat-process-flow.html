@@ -257,6 +257,12 @@
       padding: 1px 4px;
     }
 
+    .code-path {
+      display: block;
+      margin-top: 4px;
+      margin-left: 1rem;
+    }
+
     .ex-hide {
       margin-top: 14px;
       border: 1px solid var(--line);
@@ -417,6 +423,7 @@
       <a href="#review-flow">Review flow</a>
       <a href="#section-rules">Section rules</a>
       <a href="#quality-checks">What AIDA checks for</a>
+      <a href="#testing">Testing</a>
       <a href="#source-files">Reference files</a>
     </nav>
 
@@ -504,7 +511,7 @@
         </article>
         <article class="card">
           <h3>Most requested duplicates</h3>
-          <p>AIDA sends Most requested links so the model can identify duplicate destinations.</p>
+          <p>AIDA compares doormat links with Most requested links locally to identify duplicate destinations.</p>
         </article>
         <article class="card">
           <h3>No issues rows</h3>
@@ -515,6 +522,24 @@
           <p>If the model response is empty or invalid, AIDA builds local No issues rows.</p>
         </article>
       </div>
+    </section>
+
+    <section class="panel" id="testing">
+      <h2>Testing</h2>
+      <p class="intro">
+        These testing references support Topic doormat issue review and rewrite checks.
+      </p>
+      <article class="source-card">
+        <h3>Testing resources</h3>
+        <ul>
+          <li>
+            <a href="https://122gc-my.sharepoint.com/:wb:/r/personal/parissa_nahachewsky_cra-arc_gc_ca/Documents/Whiteboards/AIDA%20Topic%20doormat%20tests.whiteboard?d=w515211d148334ac4a7d8f17ce61a03db&amp;csf=1&amp;web=1&amp;e=OMZons">Testing whiteboard</a>
+          </li>
+          <li>
+            <a href="https://cra-test-arc.canada.ca/aida-doormat-testing-2026/index.html">Testing repository</a>
+          </li>
+        </ul>
+      </article>
     </section>
 
     <section class="panel" id="source-files">
@@ -633,13 +658,13 @@
                   </ul>
                 </li>
                 <li>
-                  <strong>Choice of doormats</strong>
+                  <strong><mark>Choice of doormats</mark></strong>
                   <ul>
-                    <li>Missing a needed doormat</li>
-                    <li>Extra doormat that is not needed (badly chosen)</li>
+                    <li><mark>Missing a needed doormat</mark></li>
+                    <li><mark>Extra doormat that is not needed (badly chosen)</mark></li>
                   </ul>
                 </li>
-                <li><strong>Wrong doormat order</strong> (prioritize most visited info and services)s.</li>
+                <li><mark><strong>Wrong doormat order</strong> (prioritize most visited info and services).</mark></li>
                 </ul>
               </div>
             </details>
@@ -666,12 +691,36 @@
 
         <article class="source-card">
           <h3>Runtime code paths</h3>
-          <p>Implementation files that run detection, prompt composition, issue calls, parsing, and table display.</p>
+          <p>Implementation files that run detection, prompt composition, issue calls, parsing, deterministic rows, and table display.</p>
           <ul>
-            <li><code>src/app/views/page-assistant/components/problems/component-guidance/component-guidance.component.ts</code></li>
-            <li><code>src/app/views/page-assistant/services/skill-manager.service.ts</code></li>
-            <li><code>src/app/views/page-assistant/data/css-list.config.ts</code></li>
-            <li><code>src/app/views/page-assistant/services/validator.service.ts</code></li>
+            <li>
+              Coordinates the guidance table, expands the Topic doormat row, and displays issue groups and status.
+              <code class="code-path">src/app/views/page-assistant/components/problems/component-guidance/component-guidance.component.ts</code>
+            </li>
+            <li>
+              Parses page HTML into doormat summaries, section metadata, language signals, and Most requested link context.
+              <code class="code-path">src/app/views/page-assistant/services/topic-doormat-extractor.service.ts</code>
+            </li>
+            <li>
+              Composes the issue request, parses model JSON, applies deterministic issue rows, and resolves final rows.
+              <code class="code-path">src/app/views/page-assistant/services/topic-doormat-issue-analysis.service.ts</code>
+            </li>
+            <li>
+              Calls the selected model, rotates through fallbacks, and repairs invalid JSON responses.
+              <code class="code-path">src/app/views/page-assistant/services/topic-doormat-model-client.service.ts</code>
+            </li>
+            <li>
+              Groups issue rows, builds category summaries, and maps issues to the displayed health state.
+              <code class="code-path">src/app/views/page-assistant/services/topic-doormat-presenter.service.ts</code>
+            </li>
+            <li>
+              Defines shared Topic doormat interfaces used by the component and services.
+              <code class="code-path">src/app/views/page-assistant/services/topic-doormat.types.ts</code>
+            </li>
+            <li>
+              Loads the active AIDA skill files, references, and schemas used to build the model prompt.
+              <code class="code-path">src/app/views/page-assistant/services/skill-manager.service.ts</code>
+            </li>
           </ul>
         </article>
       </div>

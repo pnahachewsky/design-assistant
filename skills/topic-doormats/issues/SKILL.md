@@ -42,8 +42,10 @@ Use this skill for issue analysis of topic doormat sets.
   `link-name-too-different-from-destination-title`. Do not invent destination
   titles or headings when these values are absent.
 - Do not report `link-name-too-long`, `description-too-long`,
-  `link-name-trailing-punctuation`, or `description-trailing-punctuation`; AIDA
-  calculates and reports those issues deterministically from the extracted doormat text and character counts
+  `link-name-trailing-punctuation`, `description-trailing-punctuation`, or
+  `duplicate-link-in-most-requested`; AIDA calculates and reports those issues
+  deterministically from the extracted doormat text, Most requested links, and
+  character counts
 - Return JSON only
 - Report issues per affected doormat
 - Report section-level problems in `section_issues` rather than repeating
