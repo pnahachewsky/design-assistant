@@ -129,11 +129,11 @@ export class TopicDoormatIaCheckService {
         doormatLabel: 'Doormat set',
         issueId: 'missing-needed-doormat',
         issue: 'Missing a needed doormat',
-        evidence: `Child page not found in doormats: ${child.label}.`,
+        evidence: 'Child page not found in doormats:',
         evidenceLinkText: child.label,
         evidenceLinkHref: child.url,
         recommendation:
-          'Flag for manual review and consider adding a doormat for the missing destination.',
+          'Review and consider adding a doormat for the missing child page.',
       }));
   }
 
