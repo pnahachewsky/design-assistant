@@ -30277,7 +30277,7 @@ var TopicDoormatIssueAnalysisService = class _TopicDoormatIssueAnalysisService {
   topicDoormatIssueLengthLimits = {
     en: {
       "link-name-too-long": 35,
-      "description-too-long": 90
+      "description-too-long": 95
     },
     fr: {
       "link-name-too-long": 45,
@@ -47222,4 +47222,4 @@ ${custom}` : promptBody;
 export {
   PageAssistantCompareComponent
 };
-//# sourceMappingURL=chunk-NPVIIGOE.js.map
+//# sourceMappingURL=chunk-P2DY2RDU.js.map

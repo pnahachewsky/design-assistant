@@ -85,7 +85,7 @@
   "language_thresholds": {
     "en": {
       "link_text_max_characters": 35,
-      "description_max_characters": 90
+      "description_max_characters": 95
     },
     "fr": {
       "link_text_max_characters": 45,
@@ -336,12 +336,12 @@
       "group": "Description clarity",
       "label": "Description too long",
       "severity": "Low",
-      "condition": "The English description exceeds 90 characters, including spaces. The official limit for link descriptions is 120 characters in both official languages, and the English version should aim to stay under 90 characters to allow for French expansion.",
-      "recommendation": "Shorten the description. Aim for the English version to be under 90 characters so the French version can stay under 120 characters.",
+      "condition": "The English description exceeds 95 characters, including spaces. The official limit for link descriptions is 120 characters in both official languages, and the English version should aim to stay under 95 characters to allow for French expansion.",
+      "recommendation": "Shorten the description. Aim for the English version to be under 95 characters so the French version can stay under 120 characters.",
       "local_deterministic": true,
       "reporting": "AIDA reports this issue locally from descriptionCharacterCount. The model should not return this issue.",
       "severity_override": {
-        "Low": "Use Low when the description is 91 to 105 characters.",
+        "Low": "Use Low when the description is 96 to 105 characters.",
         "Medium": "Use Medium when the description is 106 to 120 characters.",
         "High": "Use High when the description is 121 characters or longer."
       }
