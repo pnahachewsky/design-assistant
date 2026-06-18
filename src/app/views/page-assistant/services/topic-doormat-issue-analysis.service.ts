@@ -5,6 +5,10 @@ import { firstValueFrom } from 'rxjs';
 import { PromptKey, UploadData } from '../data/data.model';
 import { ChatMessage } from './openrouter.service';
 import { SkillManagerService } from './skill-manager.service';
+import {
+  TopicDoormatIaCheckResult,
+  TopicDoormatIaCheckService,
+} from './topic-doormat-ia-check.service';
 import { TopicDoormatModelClientService } from './topic-doormat-model-client.service';
 import {
   MostRequestedLinkSummary,
@@ -41,6 +45,7 @@ export class TopicDoormatIssueAnalysisService {
   private readonly translate = inject(TranslateService);
   private readonly skillManager = inject(SkillManagerService);
   private readonly modelClient = inject(TopicDoormatModelClientService);
+  private readonly iaCheck = inject(TopicDoormatIaCheckService);
   private readonly topicDoormatDebugStorageKey =
     'pageAssistant.topicDoormatDebug';
   private readonly topicDoormatIssueTaxonomyPath =
@@ -146,15 +151,29 @@ export class TopicDoormatIssueAnalysisService {
       ),
     });
 
-    const issueJson = await this.modelClient.requestIssueJson({
-      messages,
-      requestedModel: input.selectedModel,
-      doormatSummaries: input.doormatSummaries,
-      isParseableResponseText: (value) =>
-        this.isParseableTopicDoormatIssueResponseText(value),
-      debug: (event, details) => this.debugTopicDoormatIssues(event, details),
-    });
+    const [issueJson, localIaResult] = await Promise.all([
+      this.modelClient.requestIssueJson({
+        messages,
+        requestedModel: input.selectedModel,
+        doormatSummaries: input.doormatSummaries,
+        isParseableResponseText: (value) =>
+          this.isParseableTopicDoormatIssueResponseText(value),
+        debug: (event, details) => this.debugTopicDoormatIssues(event, details),
+      }),
+      this.iaCheck.analyze(input.doormatSummaries, input.uploadData).catch(
+        (err: unknown) => {
+          this.debugTopicDoormatIssues('local IA checks failed', {
+            error: err instanceof Error ? err.message : String(err),
+          });
+          return {
+            rows: [],
+            metaByDoormatIndex: new Map<number, string>(),
+          } satisfies TopicDoormatIaCheckResult;
+        },
+      ),
+    ]);
     const { text, model } = issueJson;
+    const localIaRows = localIaResult.rows;
     const rows = text
       ? this.parseTopicDoormatIssueRows(
           text,
@@ -163,6 +182,7 @@ export class TopicDoormatIssueAnalysisService {
           input.pageLanguage,
           input.mostRequestedLinks,
           input.uploadData,
+          localIaRows,
         )
       : this.buildTopicDoormatFallbackRows(
           input.doormatSummaries,
@@ -170,10 +190,15 @@ export class TopicDoormatIssueAnalysisService {
           input.pageLanguage,
           input.mostRequestedLinks,
           input.uploadData,
+          localIaRows,
         );
+    const rowsWithIaMeta = this.applyTopicDoormatSectionItemMeta(
+      rows,
+      localIaResult.metaByDoormatIndex,
+    );
 
     return {
-      rows,
+      rows: rowsWithIaMeta,
       text,
       model,
       modelRotation: issueJson.modelRotation,
@@ -207,6 +232,7 @@ export class TopicDoormatIssueAnalysisService {
     pageLanguage: TopicDoormatPageLanguage = 'en',
     mostRequestedLinks: MostRequestedLinkSummary[] = [],
     uploadData?: Partial<UploadData> | null,
+    localIaRows: TopicDoormatIssueRow[] = [],
   ): TopicDoormatIssueRow[] {
     const parsed = this.looseJsonParse(this.stripCodeFences(text));
     if (!parsed || typeof parsed !== 'object') {
@@ -216,6 +242,7 @@ export class TopicDoormatIssueAnalysisService {
         pageLanguage,
         mostRequestedLinks,
         uploadData,
+        localIaRows,
       );
       this.debugTopicDoormatIssues('response parse fallback', {
         reason: 'invalid-json-or-non-object',
@@ -359,7 +386,9 @@ export class TopicDoormatIssueAnalysisService {
     });
 
     const reportableSectionIssueRows = sectionIssueRows.filter(
-      (row) => row.issueId !== 'too-many-doormats-in-section',
+      (row) =>
+        row.issueId !== 'too-many-doormats-in-section' &&
+        !this.isLocalIaOwnedTopicDoormatIssue(row.issueId),
     );
     const mixedDescriptionStyleSectionIndexes = new Set(
       reportableSectionIssueRows
@@ -389,6 +418,7 @@ export class TopicDoormatIssueAnalysisService {
     }, new Map<number, number>());
     const suppressedModelIssueRows = rows.filter(
       (row) => {
+        if (this.isLocalIaOwnedTopicDoormatIssue(row.issueId)) return true;
         if (!row.sectionIndex) return false;
         if (
           row.issueId === 'inconsistent-description-style' &&
@@ -419,7 +449,7 @@ export class TopicDoormatIssueAnalysisService {
 
     const deterministicRows = this.buildDeterministicTopicDoormatIssueRows(
       doormatSummaries,
-      [...modelIssueRows, ...reportableSectionIssueRows],
+      [...modelIssueRows, ...reportableSectionIssueRows, ...localIaRows],
       hasLegacyTopicDoormatTemplate,
       pageLanguage,
       mostRequestedLinks,
@@ -427,7 +457,12 @@ export class TopicDoormatIssueAnalysisService {
     );
 
     const representedIndexes = new Set(
-      [...modelIssueRows, ...deterministicRows, ...reportableSectionIssueRows]
+      [
+        ...modelIssueRows,
+        ...deterministicRows,
+        ...reportableSectionIssueRows,
+        ...localIaRows,
+      ]
         .map((row) => row.doormatIndex)
         .filter((index): index is number => typeof index === 'number' && index > 0),
     );
@@ -439,6 +474,7 @@ export class TopicDoormatIssueAnalysisService {
       ...modelIssueRows,
       ...deterministicRows,
       ...reportableSectionIssueRows,
+      ...localIaRows,
       ...missingNoIssueRows,
     ].sort((a, b) => {
       const aIndex = this.getTopicDoormatRowSortIndex(a, doormatSummaries);
@@ -464,6 +500,8 @@ export class TopicDoormatIssueAnalysisService {
       modelDisplayedSectionIssueRows: reportableSectionIssueRows.length,
       fallbackNoIssueRows: missingNoIssueRows.length,
       deterministicRows: deterministicRows.length,
+      localIaRows: localIaRows.length,
+      localIaBreakdown: this.countTopicDoormatRowsByIssue(localIaRows),
       displayedRows: resolvedRows.length,
     });
     return resolvedRows;
@@ -541,23 +579,36 @@ export class TopicDoormatIssueAnalysisService {
     );
   }
 
+  private applyTopicDoormatSectionItemMeta(
+    rows: TopicDoormatIssueRow[],
+    metaByDoormatIndex: Map<number, string>,
+  ): TopicDoormatIssueRow[] {
+    if (!metaByDoormatIndex.size) return rows;
+    return rows.map((row) => {
+      if (row.rowType !== 'doormat' || !row.doormatIndex) return row;
+      const sectionItemMeta = metaByDoormatIndex.get(row.doormatIndex);
+      return sectionItemMeta ? { ...row, sectionItemMeta } : row;
+    });
+  }
+
   private buildTopicDoormatFallbackRows(
     doormatSummaries: TopicDoormatSummary[],
     hasLegacyTopicDoormatTemplate = false,
     pageLanguage: TopicDoormatPageLanguage = 'en',
     mostRequestedLinks: MostRequestedLinkSummary[] = [],
     uploadData?: Partial<UploadData> | null,
+    localIaRows: TopicDoormatIssueRow[] = [],
   ): TopicDoormatIssueRow[] {
     const deterministicRows = this.buildDeterministicTopicDoormatIssueRows(
       doormatSummaries,
-      [],
+      localIaRows,
       hasLegacyTopicDoormatTemplate,
       pageLanguage,
       mostRequestedLinks,
       uploadData,
     );
     const representedIndexes = new Set(
-      deterministicRows
+      [...deterministicRows, ...localIaRows]
         .map((row) => row.doormatIndex)
         .filter((index): index is number => typeof index === 'number' && index > 0),
     );
@@ -567,6 +618,7 @@ export class TopicDoormatIssueAnalysisService {
 
     return this.removeConflictingTopicDoormatNoIssueRows([
       ...deterministicRows,
+      ...localIaRows,
       ...noIssueRows,
     ].sort((a, b) => {
       const aIndex = this.getTopicDoormatRowSortIndex(a, doormatSummaries);
@@ -1718,6 +1770,14 @@ export class TopicDoormatIssueAnalysisService {
     return true;
   }
 
+  private isLocalIaOwnedTopicDoormatIssue(issueId: string): boolean {
+    return (
+      issueId === 'missing-needed-doormat' ||
+      issueId === 'unnecessary-doormat' ||
+      issueId === 'wrong-doormat-order'
+    );
+  }
+
   private buildTopicDoormatLabel(doormat: TopicDoormatSummary): string {
     const itemIndex = doormat.sectionItemIndex || doormat.index;
     const itemLabel = [
@@ -1755,6 +1815,12 @@ export class TopicDoormatIssueAnalysisService {
     pageLanguage: TopicDoormatPageLanguage = 'en',
   ): boolean {
     const issueCategory = this.getTopicDoormatIssueId(issue);
+    if (issueCategory === 'link-name-too-different-from-destination-title') {
+      return this.hasMeaningfulTopicDoormatDestinationTitleMismatch(
+        issue,
+        doormat,
+      );
+    }
     if (
       issueCategory !== 'link-name-too-long' &&
       issueCategory !== 'description-too-long'
@@ -1781,6 +1847,48 @@ export class TopicDoormatIssueAnalysisService {
     if (limit == null) return true;
 
     return exactCount > limit;
+  }
+
+  private hasMeaningfulTopicDoormatDestinationTitleMismatch(
+    issue: Record<string, unknown>,
+    doormat?: TopicDoormatSummary,
+  ): boolean {
+    if (!doormat?.linkText) return true;
+    const details =
+      issue['evidence_details'] && typeof issue['evidence_details'] === 'object'
+        ? (issue['evidence_details'] as Record<string, unknown>)
+        : null;
+    const linkKey = this.normalizeTopicDoormatDestinationComparisonText(
+      doormat.linkText,
+    );
+    if (!linkKey) return true;
+
+    const destinationKeys = [
+      doormat.destinationPageTitle,
+      doormat.destinationPageHeading,
+      this.cleanString(details?.['destination_page_title']),
+      this.cleanString(details?.['destination_page_heading']),
+    ]
+      .map((value) =>
+        this.normalizeTopicDoormatDestinationComparisonText(value),
+      )
+      .filter(Boolean);
+
+    if (!destinationKeys.length) return true;
+    return !destinationKeys.includes(linkKey);
+  }
+
+  private normalizeTopicDoormatDestinationComparisonText(
+    value: string | undefined,
+  ): string {
+    return this.cleanVisibleText(value)
+      .replace(/\s*(?:[-|]\s*)?canada\.ca\s*$/i, '')
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[\u2018\u2019\u201b\u2032]/g, "'")
+      .replace(/[^a-z0-9]+/gi, ' ')
+      .trim()
+      .toLowerCase();
   }
 
   private buildTopicDoormatEvidence(

@@ -12,6 +12,7 @@ export interface TopicDoormatIssueRow {
   issue: string;
   evidence: string;
   evidenceMetric?: string;
+  evidenceOrderItems?: string[];
   evidenceLinkText?: string;
   evidenceLinkHref?: string;
   recommendation: string;
@@ -19,6 +20,7 @@ export interface TopicDoormatIssueRow {
   sectionIndex?: number;
   sectionTitle?: string;
   sectionItemIndex?: number;
+  sectionItemMeta?: string;
 }
 
 export interface TopicDoormatIssueGroup {

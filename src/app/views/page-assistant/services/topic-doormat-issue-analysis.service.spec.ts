@@ -5,6 +5,7 @@ import { of } from 'rxjs';
 
 import { OpenRouterService } from './openrouter.service';
 import { SkillManagerService } from './skill-manager.service';
+import { TopicDoormatIaCheckService } from './topic-doormat-ia-check.service';
 import { TopicDoormatIssueAnalysisService } from './topic-doormat-issue-analysis.service';
 import { TopicDoormatSummary } from './topic-doormat.types';
 
@@ -13,6 +14,10 @@ class HttpClientStub {
     of({
       issue_categories: [
         { id: 'description-too-long', label: 'Description too long' },
+        {
+          id: 'link-name-too-different-from-destination-title',
+          label: 'Link name too different from destination',
+        },
         { id: 'link-name-too-long', label: 'Link name too long' },
         { id: 'too-many-doormats-in-section', label: 'Too many doormats' },
       ],
@@ -24,7 +29,7 @@ class TranslateServiceStub {
   instant(key: string, params?: Record<string, unknown>): string {
     if (key.includes('length.link.evidence')) return 'Link name is too long.';
     if (key.includes('length.description.evidence')) {
-      return 'Description is too long.';
+      return 'Description too long.';
     }
     if (key.includes('length.link.recommendation')) {
       return `Shorten the link name to ${params?.['limit']} characters.`;
@@ -47,6 +52,13 @@ class SkillManagerServiceStub {
     prompt: 'Analyze Topic doormats.',
     loadedPaths: ['skills/topic-doormats/issues/SKILL.md'],
     estimatedPromptTokens: 42,
+  });
+}
+
+class TopicDoormatIaCheckServiceStub {
+  analyze = jasmine.createSpy('analyze').and.resolveTo({
+    rows: [],
+    metaByDoormatIndex: new Map<number, string>(),
   });
 }
 
@@ -87,6 +99,10 @@ describe('TopicDoormatIssueAnalysisService', () => {
         { provide: TranslateService, useClass: TranslateServiceStub },
         { provide: OpenRouterService, useClass: OpenRouterServiceStub },
         { provide: SkillManagerService, useClass: SkillManagerServiceStub },
+        {
+          provide: TopicDoormatIaCheckService,
+          useClass: TopicDoormatIaCheckServiceStub,
+        },
       ],
     });
 
@@ -161,5 +177,60 @@ describe('TopicDoormatIssueAnalysisService', () => {
       'link-name-too-long',
     );
     expect(result.rows.some((row) => row.issueId === 'no-issues')).toBeFalse();
+  });
+
+  it('suppresses destination title mismatch when only Canada.ca boilerplate differs', async () => {
+    openRouter.call.and.resolveTo({
+      choices: [
+        {
+          message: {
+            content: JSON.stringify({
+              doormats: [
+                {
+                  doormat_index: 1,
+                  link_text: 'Credits impot et prestations pour les particuliers',
+                  href: '/fr/services/impots/prestations.html',
+                  issues: [
+                    {
+                      include: true,
+                      severity: 'Low',
+                      issue_category:
+                        'link-name-too-different-from-destination-title',
+                      evidence:
+                        'Destination title closely matches link text.',
+                      evidence_details: {
+                        destination_page_title:
+                          "Credits d'impot et prestations pour les particuliers - Canada.ca",
+                      },
+                      recommendation: 'Align the link text.',
+                    },
+                  ],
+                },
+              ],
+            }),
+          },
+        },
+      ],
+    });
+
+    const result = await service.analyze({
+      doormatSummaries: [
+        summary({
+          linkText: "Credits d'impot et prestations pour les particuliers",
+          href: '/fr/services/impots/prestations.html',
+          destinationPageTitle:
+            "Credits d'impot et prestations pour les particuliers - Canada.ca",
+          linkTextCharacterCount: 52,
+        }),
+      ],
+      pageLanguage: 'fr',
+      hasLegacyTopicDoormatTemplate: false,
+      mostRequestedLinks: [],
+      selectedModel: 'selected-model',
+    });
+
+    expect(result.rows.map((row) => row.issueId)).not.toContain(
+      'link-name-too-different-from-destination-title',
+    );
   });
 });

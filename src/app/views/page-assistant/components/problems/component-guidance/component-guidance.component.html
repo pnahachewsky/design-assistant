@@ -320,9 +320,23 @@
                                 }
                               }
                             } @else {
-                              {{ issue.evidence || '-' }}
-                              @if (issue.evidenceLinkText && issue.evidenceLinkHref) {
-                                <a [href]="issue.evidenceLinkHref" target="_blank" rel="noopener noreferrer">{{ issue.evidenceLinkText }}</a>
+                              @if (issue.evidenceOrderItems?.length) {
+                                <div class="topic-doormat-order-evidence">
+                                  <span>{{ issue.evidence }}</span>
+                                  <span class="topic-doormat-order-list">
+                                    @for (item of issue.evidenceOrderItems; track $index) {
+                                      @if ($index > 0) {
+                                        <span class="topic-doormat-order-separator">-></span>
+                                      }
+                                      <span class="topic-doormat-order-pill">{{ item }}</span>
+                                    }
+                                  </span>
+                                </div>
+                              } @else {
+                                {{ issue.evidence || '-' }}
+                                @if (issue.evidenceLinkText && issue.evidenceLinkHref) {
+                                  <a [href]="issue.evidenceLinkHref" target="_blank" rel="noopener noreferrer">{{ issue.evidenceLinkText }}</a>
+                                }
                               }
                             }
                           </td>
@@ -362,7 +376,12 @@
                               [disabled]="isNoIssueRow(issue)">
                             </p-checkbox>
                           </td>
-                          <td>{{ issue.sectionItemIndex || '-' }}</td>
+                          <td>
+                            {{ issue.sectionItemIndex || '-' }}
+                            @if (issue.sectionItemMeta) {
+                              <span class="muted">({{ issue.sectionItemMeta }})</span>
+                            }
+                          </td>
                           <td>{{ issue.doormatLabel || '-' }}</td>
                           <td>
                             <span class="chip" [ngClass]="severityChip(issue.severity)">
