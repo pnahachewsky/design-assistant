@@ -29826,10 +29826,10 @@ var TopicDoormatIaCheckService = class _TopicDoormatIaCheckService {
       doormatLabel: "Doormat set",
       issueId: "missing-needed-doormat",
       issue: "Missing a needed doormat",
-      evidence: `Child page not found in doormats: ${child.label}.`,
+      evidence: "Child page not found in doormats:",
       evidenceLinkText: child.label,
       evidenceLinkHref: child.url,
-      recommendation: "Flag for manual review and consider adding a doormat for the missing destination."
+      recommendation: "Review and consider adding a doormat for the missing child page."
     }));
   }
   buildExtraRows(doormatSummaries, childByKey, visits, topicUrl) {
@@ -32089,7 +32089,7 @@ function ComponentGuidanceComponent_ng_template_5_Conditional_3_Template(rf, ctx
     \u0275\u0275property("selectAll", ctx_r2.alertSelectAll);
   }
 }
-function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_1_Template(rf, ctx) {
+function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_2_Template(rf, ctx) {
   if (rf & 1) {
     \u0275\u0275elementStart(0, "span", 25);
     \u0275\u0275element(1, "i", 31);
@@ -32097,7 +32097,7 @@ function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Co
     \u0275\u0275elementEnd();
   }
 }
-function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_2_Conditional_3_Template(rf, ctx) {
+function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_3_Conditional_3_Template(rf, ctx) {
   if (rf & 1) {
     \u0275\u0275elementStart(0, "div", 25);
     \u0275\u0275text(1);
@@ -32109,12 +32109,12 @@ function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Co
     \u0275\u0275textInterpolate(ctx_r2.topicDoormatIssuesErrorDetail);
   }
 }
-function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_2_Template(rf, ctx) {
+function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_3_Template(rf, ctx) {
   if (rf & 1) {
     \u0275\u0275elementStart(0, "div")(1, "span", 29);
     \u0275\u0275text(2, "AI error");
     \u0275\u0275elementEnd();
-    \u0275\u0275template(3, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_2_Conditional_3_Template, 2, 1, "div", 25);
+    \u0275\u0275template(3, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_3_Conditional_3_Template, 2, 1, "div", 25);
     \u0275\u0275elementEnd();
   }
   if (rf & 2) {
@@ -32123,12 +32123,12 @@ function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Co
     \u0275\u0275conditional(ctx_r2.topicDoormatIssuesErrorDetail ? 3 : -1);
   }
 }
-function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_3_For_1_ng_template_10_Template(rf, ctx) {
+function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_10_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275elementStart(0, "tr")(1, "th", 49);
+    \u0275\u0275elementStart(0, "tr")(1, "th", 50);
     \u0275\u0275text(2, "Include");
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(3, "th", 50);
+    \u0275\u0275elementStart(3, "th", 51);
     \u0275\u0275text(4, "Severity");
     \u0275\u0275elementEnd();
     \u0275\u0275elementStart(5, "th");
@@ -32142,185 +32142,185 @@ function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Co
     \u0275\u0275elementEnd()();
   }
 }
-function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_3_For_1_ng_template_11_Conditional_9_Conditional_2_Conditional_2_Template(rf, ctx) {
+function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_11_Conditional_9_Conditional_2_Conditional_2_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275elementStart(0, "a", 55);
+    \u0275\u0275elementStart(0, "a", 56);
     \u0275\u0275text(1);
     \u0275\u0275elementEnd();
   }
   if (rf & 2) {
-    const issue_r11 = \u0275\u0275nextContext(3).$implicit;
-    \u0275\u0275property("href", issue_r11.evidenceLinkHref, \u0275\u0275sanitizeUrl);
+    const issue_r12 = \u0275\u0275nextContext(3).$implicit;
+    \u0275\u0275property("href", issue_r12.evidenceLinkHref, \u0275\u0275sanitizeUrl);
     \u0275\u0275advance();
-    \u0275\u0275textInterpolate(issue_r11.evidenceLinkText);
+    \u0275\u0275textInterpolate(issue_r12.evidenceLinkText);
   }
 }
-function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_3_For_1_ng_template_11_Conditional_9_Conditional_2_Template(rf, ctx) {
+function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_11_Conditional_9_Conditional_2_Template(rf, ctx) {
   if (rf & 1) {
     \u0275\u0275elementStart(0, "span");
     \u0275\u0275text(1);
     \u0275\u0275elementEnd();
-    \u0275\u0275template(2, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_3_For_1_ng_template_11_Conditional_9_Conditional_2_Conditional_2_Template, 2, 2, "a", 55);
+    \u0275\u0275template(2, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_11_Conditional_9_Conditional_2_Conditional_2_Template, 2, 2, "a", 56);
   }
   if (rf & 2) {
-    const issue_r11 = \u0275\u0275nextContext(2).$implicit;
+    const issue_r12 = \u0275\u0275nextContext(2).$implicit;
     \u0275\u0275advance();
-    \u0275\u0275textInterpolate1(". ", issue_r11.evidence, "");
+    \u0275\u0275textInterpolate1(". ", issue_r12.evidence, "");
     \u0275\u0275advance();
-    \u0275\u0275conditional(issue_r11.evidenceLinkText && issue_r11.evidenceLinkHref ? 2 : -1);
+    \u0275\u0275conditional(issue_r12.evidenceLinkText && issue_r12.evidenceLinkHref ? 2 : -1);
   }
 }
-function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_3_For_1_ng_template_11_Conditional_9_Template(rf, ctx) {
+function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_11_Conditional_9_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275elementStart(0, "span", 54);
+    \u0275\u0275elementStart(0, "span", 55);
     \u0275\u0275text(1);
     \u0275\u0275elementEnd();
-    \u0275\u0275template(2, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_3_For_1_ng_template_11_Conditional_9_Conditional_2_Template, 3, 2);
+    \u0275\u0275template(2, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_11_Conditional_9_Conditional_2_Template, 3, 2);
   }
   if (rf & 2) {
-    const issue_r11 = \u0275\u0275nextContext().$implicit;
+    const issue_r12 = \u0275\u0275nextContext().$implicit;
     const ctx_r2 = \u0275\u0275nextContext(6);
-    \u0275\u0275property("ngClass", ctx_r2.severityChip(issue_r11.severity));
+    \u0275\u0275property("ngClass", ctx_r2.severityChip(issue_r12.severity));
     \u0275\u0275advance();
-    \u0275\u0275textInterpolate1(" ", issue_r11.evidenceMetric, " ");
+    \u0275\u0275textInterpolate1(" ", issue_r12.evidenceMetric, " ");
     \u0275\u0275advance();
-    \u0275\u0275conditional(issue_r11.evidence ? 2 : -1);
+    \u0275\u0275conditional(issue_r12.evidence ? 2 : -1);
   }
 }
-function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_3_For_1_ng_template_11_Conditional_10_Conditional_0_For_5_Conditional_0_Template(rf, ctx) {
+function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_11_Conditional_10_Conditional_0_For_5_Conditional_0_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275elementStart(0, "span", 58);
+    \u0275\u0275elementStart(0, "span", 59);
     \u0275\u0275text(1, "->");
     \u0275\u0275elementEnd();
   }
 }
-function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_3_For_1_ng_template_11_Conditional_10_Conditional_0_For_5_Template(rf, ctx) {
+function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_11_Conditional_10_Conditional_0_For_5_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275template(0, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_3_For_1_ng_template_11_Conditional_10_Conditional_0_For_5_Conditional_0_Template, 2, 0, "span", 58);
-    \u0275\u0275elementStart(1, "span", 59);
+    \u0275\u0275template(0, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_11_Conditional_10_Conditional_0_For_5_Conditional_0_Template, 2, 0, "span", 59);
+    \u0275\u0275elementStart(1, "span", 60);
     \u0275\u0275text(2);
     \u0275\u0275elementEnd();
   }
   if (rf & 2) {
-    const item_r12 = ctx.$implicit;
-    const $index_r13 = ctx.$index;
-    \u0275\u0275conditional($index_r13 > 0 ? 0 : -1);
+    const item_r13 = ctx.$implicit;
+    const $index_r14 = ctx.$index;
+    \u0275\u0275conditional($index_r14 > 0 ? 0 : -1);
     \u0275\u0275advance(2);
-    \u0275\u0275textInterpolate(item_r12);
+    \u0275\u0275textInterpolate(item_r13);
   }
 }
-function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_3_For_1_ng_template_11_Conditional_10_Conditional_0_Template(rf, ctx) {
+function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_11_Conditional_10_Conditional_0_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275elementStart(0, "div", 56)(1, "span");
+    \u0275\u0275elementStart(0, "div", 57)(1, "span");
     \u0275\u0275text(2);
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(3, "span", 57);
-    \u0275\u0275repeaterCreate(4, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_3_For_1_ng_template_11_Conditional_10_Conditional_0_For_5_Template, 3, 2, null, null, \u0275\u0275repeaterTrackByIndex);
+    \u0275\u0275elementStart(3, "span", 58);
+    \u0275\u0275repeaterCreate(4, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_11_Conditional_10_Conditional_0_For_5_Template, 3, 2, null, null, \u0275\u0275repeaterTrackByIndex);
     \u0275\u0275elementEnd()();
   }
   if (rf & 2) {
-    const issue_r11 = \u0275\u0275nextContext(2).$implicit;
+    const issue_r12 = \u0275\u0275nextContext(2).$implicit;
     \u0275\u0275advance(2);
-    \u0275\u0275textInterpolate(issue_r11.evidence);
+    \u0275\u0275textInterpolate(issue_r12.evidence);
     \u0275\u0275advance(2);
-    \u0275\u0275repeater(issue_r11.evidenceOrderItems);
+    \u0275\u0275repeater(issue_r12.evidenceOrderItems);
   }
 }
-function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_3_For_1_ng_template_11_Conditional_10_Conditional_1_Conditional_1_Template(rf, ctx) {
+function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_11_Conditional_10_Conditional_1_Conditional_1_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275elementStart(0, "a", 55);
+    \u0275\u0275elementStart(0, "a", 56);
     \u0275\u0275text(1);
     \u0275\u0275elementEnd();
   }
   if (rf & 2) {
-    const issue_r11 = \u0275\u0275nextContext(3).$implicit;
-    \u0275\u0275property("href", issue_r11.evidenceLinkHref, \u0275\u0275sanitizeUrl);
+    const issue_r12 = \u0275\u0275nextContext(3).$implicit;
+    \u0275\u0275property("href", issue_r12.evidenceLinkHref, \u0275\u0275sanitizeUrl);
     \u0275\u0275advance();
-    \u0275\u0275textInterpolate(issue_r11.evidenceLinkText);
+    \u0275\u0275textInterpolate(issue_r12.evidenceLinkText);
   }
 }
-function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_3_For_1_ng_template_11_Conditional_10_Conditional_1_Template(rf, ctx) {
+function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_11_Conditional_10_Conditional_1_Template(rf, ctx) {
   if (rf & 1) {
     \u0275\u0275text(0);
-    \u0275\u0275template(1, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_3_For_1_ng_template_11_Conditional_10_Conditional_1_Conditional_1_Template, 2, 2, "a", 55);
+    \u0275\u0275template(1, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_11_Conditional_10_Conditional_1_Conditional_1_Template, 2, 2, "a", 56);
   }
   if (rf & 2) {
-    const issue_r11 = \u0275\u0275nextContext(2).$implicit;
-    \u0275\u0275textInterpolate1(" ", issue_r11.evidence || "-", " ");
+    const issue_r12 = \u0275\u0275nextContext(2).$implicit;
+    \u0275\u0275textInterpolate1(" ", issue_r12.evidence || "-", " ");
     \u0275\u0275advance();
-    \u0275\u0275conditional(issue_r11.evidenceLinkText && issue_r11.evidenceLinkHref ? 1 : -1);
+    \u0275\u0275conditional(issue_r12.evidenceLinkText && issue_r12.evidenceLinkHref ? 1 : -1);
   }
 }
-function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_3_For_1_ng_template_11_Conditional_10_Template(rf, ctx) {
+function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_11_Conditional_10_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275template(0, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_3_For_1_ng_template_11_Conditional_10_Conditional_0_Template, 6, 1, "div", 56)(1, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_3_For_1_ng_template_11_Conditional_10_Conditional_1_Template, 2, 2);
+    \u0275\u0275template(0, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_11_Conditional_10_Conditional_0_Template, 6, 1, "div", 57)(1, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_11_Conditional_10_Conditional_1_Template, 2, 2);
   }
   if (rf & 2) {
-    const issue_r11 = \u0275\u0275nextContext().$implicit;
-    \u0275\u0275conditional((issue_r11.evidenceOrderItems == null ? null : issue_r11.evidenceOrderItems.length) ? 0 : 1);
+    const issue_r12 = \u0275\u0275nextContext().$implicit;
+    \u0275\u0275conditional((issue_r12.evidenceOrderItems == null ? null : issue_r12.evidenceOrderItems.length) ? 0 : 1);
   }
 }
-function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_3_For_1_ng_template_11_Template(rf, ctx) {
+function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_11_Template(rf, ctx) {
   if (rf & 1) {
-    const _r10 = \u0275\u0275getCurrentView();
-    \u0275\u0275elementStart(0, "tr", 51)(1, "td")(2, "p-checkbox", 52);
-    \u0275\u0275twoWayListener("ngModelChange", function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_3_For_1_ng_template_11_Template_p_checkbox_ngModelChange_2_listener($event) {
-      const issue_r11 = \u0275\u0275restoreView(_r10).$implicit;
-      \u0275\u0275twoWayBindingSet(issue_r11.include, $event) || (issue_r11.include = $event);
+    const _r11 = \u0275\u0275getCurrentView();
+    \u0275\u0275elementStart(0, "tr", 52)(1, "td")(2, "p-checkbox", 53);
+    \u0275\u0275twoWayListener("ngModelChange", function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_11_Template_p_checkbox_ngModelChange_2_listener($event) {
+      const issue_r12 = \u0275\u0275restoreView(_r11).$implicit;
+      \u0275\u0275twoWayBindingSet(issue_r12.include, $event) || (issue_r12.include = $event);
       return \u0275\u0275resetView($event);
     });
     \u0275\u0275elementEnd()();
-    \u0275\u0275elementStart(3, "td")(4, "span", 53);
+    \u0275\u0275elementStart(3, "td")(4, "span", 54);
     \u0275\u0275text(5);
     \u0275\u0275elementEnd()();
     \u0275\u0275elementStart(6, "td");
     \u0275\u0275text(7);
     \u0275\u0275elementEnd();
     \u0275\u0275elementStart(8, "td");
-    \u0275\u0275template(9, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_3_For_1_ng_template_11_Conditional_9_Template, 3, 3)(10, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_3_For_1_ng_template_11_Conditional_10_Template, 2, 1);
+    \u0275\u0275template(9, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_11_Conditional_9_Template, 3, 3)(10, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_11_Conditional_10_Template, 2, 1);
     \u0275\u0275elementEnd();
     \u0275\u0275elementStart(11, "td");
     \u0275\u0275text(12);
     \u0275\u0275elementEnd()();
   }
   if (rf & 2) {
-    const issue_r11 = ctx.$implicit;
+    const issue_r12 = ctx.$implicit;
     const ctx_r2 = \u0275\u0275nextContext(6);
     \u0275\u0275advance(2);
     \u0275\u0275property("binary", true);
-    \u0275\u0275twoWayProperty("ngModel", issue_r11.include);
-    \u0275\u0275property("disabled", ctx_r2.isNoIssueRow(issue_r11));
+    \u0275\u0275twoWayProperty("ngModel", issue_r12.include);
+    \u0275\u0275property("disabled", ctx_r2.isNoIssueRow(issue_r12));
     \u0275\u0275advance(2);
-    \u0275\u0275property("ngClass", ctx_r2.severityChip(issue_r11.severity));
+    \u0275\u0275property("ngClass", ctx_r2.severityChip(issue_r12.severity));
     \u0275\u0275advance();
-    \u0275\u0275textInterpolate1(" ", issue_r11.severity, " ");
+    \u0275\u0275textInterpolate1(" ", issue_r12.severity, " ");
     \u0275\u0275advance(2);
-    \u0275\u0275textInterpolate(issue_r11.issue);
+    \u0275\u0275textInterpolate(issue_r12.issue);
     \u0275\u0275advance(2);
-    \u0275\u0275conditional(issue_r11.evidenceMetric ? 9 : 10);
+    \u0275\u0275conditional(issue_r12.evidenceMetric ? 9 : 10);
     \u0275\u0275advance(3);
-    \u0275\u0275textInterpolate(issue_r11.recommendation || "-");
+    \u0275\u0275textInterpolate(issue_r12.recommendation || "-");
   }
 }
-function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_3_For_1_ng_template_12_Template(rf, ctx) {
+function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_12_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275elementStart(0, "tr")(1, "td", 60)(2, "span", 25);
+    \u0275\u0275elementStart(0, "tr")(1, "td", 61)(2, "span", 25);
     \u0275\u0275text(3, "No section-level issues");
     \u0275\u0275elementEnd()()();
   }
 }
-function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_3_For_1_ng_template_16_Template(rf, ctx) {
+function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_16_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275elementStart(0, "tr")(1, "th", 49);
+    \u0275\u0275elementStart(0, "tr")(1, "th", 50);
     \u0275\u0275text(2, "Include");
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(3, "th", 61);
+    \u0275\u0275elementStart(3, "th", 62);
     \u0275\u0275text(4, "#");
     \u0275\u0275elementEnd();
     \u0275\u0275elementStart(5, "th");
     \u0275\u0275text(6, "Doormat");
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(7, "th", 50);
+    \u0275\u0275elementStart(7, "th", 51);
     \u0275\u0275text(8, "Severity");
     \u0275\u0275elementEnd();
     \u0275\u0275elementStart(9, "th");
@@ -32334,217 +32334,217 @@ function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Co
     \u0275\u0275elementEnd()();
   }
 }
-function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_3_For_1_ng_template_17_Conditional_5_Template(rf, ctx) {
+function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_17_Conditional_5_Template(rf, ctx) {
   if (rf & 1) {
     \u0275\u0275elementStart(0, "span", 25);
     \u0275\u0275text(1);
     \u0275\u0275elementEnd();
   }
   if (rf & 2) {
-    const issue_r15 = \u0275\u0275nextContext().$implicit;
+    const issue_r16 = \u0275\u0275nextContext().$implicit;
     \u0275\u0275advance();
-    \u0275\u0275textInterpolate1("(", issue_r15.sectionItemMeta, ")");
+    \u0275\u0275textInterpolate1("(", issue_r16.sectionItemMeta, ")");
   }
 }
-function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_3_For_1_ng_template_17_Conditional_14_Conditional_2_Conditional_2_Template(rf, ctx) {
+function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_17_Conditional_14_Conditional_2_Conditional_2_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275elementStart(0, "a", 55);
+    \u0275\u0275elementStart(0, "a", 56);
     \u0275\u0275text(1);
     \u0275\u0275elementEnd();
   }
   if (rf & 2) {
-    const issue_r15 = \u0275\u0275nextContext(3).$implicit;
-    \u0275\u0275property("href", issue_r15.evidenceLinkHref, \u0275\u0275sanitizeUrl);
+    const issue_r16 = \u0275\u0275nextContext(3).$implicit;
+    \u0275\u0275property("href", issue_r16.evidenceLinkHref, \u0275\u0275sanitizeUrl);
     \u0275\u0275advance();
-    \u0275\u0275textInterpolate(issue_r15.evidenceLinkText);
+    \u0275\u0275textInterpolate(issue_r16.evidenceLinkText);
   }
 }
-function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_3_For_1_ng_template_17_Conditional_14_Conditional_2_Template(rf, ctx) {
+function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_17_Conditional_14_Conditional_2_Template(rf, ctx) {
   if (rf & 1) {
     \u0275\u0275elementStart(0, "span");
     \u0275\u0275text(1);
     \u0275\u0275elementEnd();
-    \u0275\u0275template(2, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_3_For_1_ng_template_17_Conditional_14_Conditional_2_Conditional_2_Template, 2, 2, "a", 55);
+    \u0275\u0275template(2, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_17_Conditional_14_Conditional_2_Conditional_2_Template, 2, 2, "a", 56);
   }
   if (rf & 2) {
-    const issue_r15 = \u0275\u0275nextContext(2).$implicit;
+    const issue_r16 = \u0275\u0275nextContext(2).$implicit;
     \u0275\u0275advance();
-    \u0275\u0275textInterpolate1(". ", issue_r15.evidence, "");
+    \u0275\u0275textInterpolate1(". ", issue_r16.evidence, "");
     \u0275\u0275advance();
-    \u0275\u0275conditional(issue_r15.evidenceLinkText && issue_r15.evidenceLinkHref ? 2 : -1);
+    \u0275\u0275conditional(issue_r16.evidenceLinkText && issue_r16.evidenceLinkHref ? 2 : -1);
   }
 }
-function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_3_For_1_ng_template_17_Conditional_14_Template(rf, ctx) {
+function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_17_Conditional_14_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275elementStart(0, "span", 54);
+    \u0275\u0275elementStart(0, "span", 55);
     \u0275\u0275text(1);
     \u0275\u0275elementEnd();
-    \u0275\u0275template(2, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_3_For_1_ng_template_17_Conditional_14_Conditional_2_Template, 3, 2);
+    \u0275\u0275template(2, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_17_Conditional_14_Conditional_2_Template, 3, 2);
   }
   if (rf & 2) {
-    const issue_r15 = \u0275\u0275nextContext().$implicit;
+    const issue_r16 = \u0275\u0275nextContext().$implicit;
     const ctx_r2 = \u0275\u0275nextContext(6);
-    \u0275\u0275property("ngClass", ctx_r2.severityChip(issue_r15.severity));
+    \u0275\u0275property("ngClass", ctx_r2.severityChip(issue_r16.severity));
     \u0275\u0275advance();
-    \u0275\u0275textInterpolate1(" ", issue_r15.evidenceMetric, " ");
+    \u0275\u0275textInterpolate1(" ", issue_r16.evidenceMetric, " ");
     \u0275\u0275advance();
-    \u0275\u0275conditional(issue_r15.evidence ? 2 : -1);
+    \u0275\u0275conditional(issue_r16.evidence ? 2 : -1);
   }
 }
-function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_3_For_1_ng_template_17_Conditional_15_Conditional_1_Template(rf, ctx) {
+function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_17_Conditional_15_Conditional_1_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275elementStart(0, "a", 55);
+    \u0275\u0275elementStart(0, "a", 56);
     \u0275\u0275text(1);
     \u0275\u0275elementEnd();
   }
   if (rf & 2) {
-    const issue_r15 = \u0275\u0275nextContext(2).$implicit;
-    \u0275\u0275property("href", issue_r15.evidenceLinkHref, \u0275\u0275sanitizeUrl);
+    const issue_r16 = \u0275\u0275nextContext(2).$implicit;
+    \u0275\u0275property("href", issue_r16.evidenceLinkHref, \u0275\u0275sanitizeUrl);
     \u0275\u0275advance();
-    \u0275\u0275textInterpolate(issue_r15.evidenceLinkText);
+    \u0275\u0275textInterpolate(issue_r16.evidenceLinkText);
   }
 }
-function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_3_For_1_ng_template_17_Conditional_15_Template(rf, ctx) {
+function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_17_Conditional_15_Template(rf, ctx) {
   if (rf & 1) {
     \u0275\u0275text(0);
-    \u0275\u0275template(1, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_3_For_1_ng_template_17_Conditional_15_Conditional_1_Template, 2, 2, "a", 55);
+    \u0275\u0275template(1, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_17_Conditional_15_Conditional_1_Template, 2, 2, "a", 56);
   }
   if (rf & 2) {
-    const issue_r15 = \u0275\u0275nextContext().$implicit;
-    \u0275\u0275textInterpolate1(" ", issue_r15.evidence || "-", " ");
+    const issue_r16 = \u0275\u0275nextContext().$implicit;
+    \u0275\u0275textInterpolate1(" ", issue_r16.evidence || "-", " ");
     \u0275\u0275advance();
-    \u0275\u0275conditional(issue_r15.evidenceLinkText && issue_r15.evidenceLinkHref ? 1 : -1);
+    \u0275\u0275conditional(issue_r16.evidenceLinkText && issue_r16.evidenceLinkHref ? 1 : -1);
   }
 }
-function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_3_For_1_ng_template_17_Template(rf, ctx) {
+function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_17_Template(rf, ctx) {
   if (rf & 1) {
-    const _r14 = \u0275\u0275getCurrentView();
-    \u0275\u0275elementStart(0, "tr")(1, "td")(2, "p-checkbox", 52);
-    \u0275\u0275twoWayListener("ngModelChange", function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_3_For_1_ng_template_17_Template_p_checkbox_ngModelChange_2_listener($event) {
-      const issue_r15 = \u0275\u0275restoreView(_r14).$implicit;
-      \u0275\u0275twoWayBindingSet(issue_r15.include, $event) || (issue_r15.include = $event);
+    const _r15 = \u0275\u0275getCurrentView();
+    \u0275\u0275elementStart(0, "tr")(1, "td")(2, "p-checkbox", 53);
+    \u0275\u0275twoWayListener("ngModelChange", function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_17_Template_p_checkbox_ngModelChange_2_listener($event) {
+      const issue_r16 = \u0275\u0275restoreView(_r15).$implicit;
+      \u0275\u0275twoWayBindingSet(issue_r16.include, $event) || (issue_r16.include = $event);
       return \u0275\u0275resetView($event);
     });
     \u0275\u0275elementEnd()();
     \u0275\u0275elementStart(3, "td");
     \u0275\u0275text(4);
-    \u0275\u0275template(5, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_3_For_1_ng_template_17_Conditional_5_Template, 2, 1, "span", 25);
+    \u0275\u0275template(5, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_17_Conditional_5_Template, 2, 1, "span", 25);
     \u0275\u0275elementEnd();
     \u0275\u0275elementStart(6, "td");
     \u0275\u0275text(7);
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(8, "td")(9, "span", 53);
+    \u0275\u0275elementStart(8, "td")(9, "span", 54);
     \u0275\u0275text(10);
     \u0275\u0275elementEnd()();
     \u0275\u0275elementStart(11, "td");
     \u0275\u0275text(12);
     \u0275\u0275elementEnd();
     \u0275\u0275elementStart(13, "td");
-    \u0275\u0275template(14, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_3_For_1_ng_template_17_Conditional_14_Template, 3, 3)(15, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_3_For_1_ng_template_17_Conditional_15_Template, 2, 2);
+    \u0275\u0275template(14, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_17_Conditional_14_Template, 3, 3)(15, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_17_Conditional_15_Template, 2, 2);
     \u0275\u0275elementEnd();
     \u0275\u0275elementStart(16, "td");
     \u0275\u0275text(17);
     \u0275\u0275elementEnd()();
   }
   if (rf & 2) {
-    const issue_r15 = ctx.$implicit;
+    const issue_r16 = ctx.$implicit;
     const ctx_r2 = \u0275\u0275nextContext(6);
     \u0275\u0275advance(2);
     \u0275\u0275property("binary", true);
-    \u0275\u0275twoWayProperty("ngModel", issue_r15.include);
-    \u0275\u0275property("disabled", ctx_r2.isNoIssueRow(issue_r15));
+    \u0275\u0275twoWayProperty("ngModel", issue_r16.include);
+    \u0275\u0275property("disabled", ctx_r2.isNoIssueRow(issue_r16));
     \u0275\u0275advance(2);
-    \u0275\u0275textInterpolate1(" ", issue_r15.sectionItemIndex || "-", " ");
+    \u0275\u0275textInterpolate1(" ", issue_r16.sectionItemIndex || "-", " ");
     \u0275\u0275advance();
-    \u0275\u0275conditional(issue_r15.sectionItemMeta ? 5 : -1);
+    \u0275\u0275conditional(issue_r16.sectionItemMeta ? 5 : -1);
     \u0275\u0275advance(2);
-    \u0275\u0275textInterpolate(issue_r15.doormatLabel || "-");
+    \u0275\u0275textInterpolate(issue_r16.doormatLabel || "-");
     \u0275\u0275advance(2);
-    \u0275\u0275property("ngClass", ctx_r2.severityChip(issue_r15.severity));
+    \u0275\u0275property("ngClass", ctx_r2.severityChip(issue_r16.severity));
     \u0275\u0275advance();
-    \u0275\u0275textInterpolate1(" ", issue_r15.severity, " ");
+    \u0275\u0275textInterpolate1(" ", issue_r16.severity, " ");
     \u0275\u0275advance(2);
-    \u0275\u0275textInterpolate(issue_r15.issue);
+    \u0275\u0275textInterpolate(issue_r16.issue);
     \u0275\u0275advance(2);
-    \u0275\u0275conditional(issue_r15.evidenceMetric ? 14 : 15);
+    \u0275\u0275conditional(issue_r16.evidenceMetric ? 14 : 15);
     \u0275\u0275advance(3);
-    \u0275\u0275textInterpolate(issue_r15.recommendation || "-");
+    \u0275\u0275textInterpolate(issue_r16.recommendation || "-");
   }
 }
-function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_3_For_1_ng_template_18_Template(rf, ctx) {
+function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_18_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275elementStart(0, "tr")(1, "td", 62)(2, "span", 25);
+    \u0275\u0275elementStart(0, "tr")(1, "td", 63)(2, "span", 25);
     \u0275\u0275text(3, "No doormat-level issues");
     \u0275\u0275elementEnd()()();
   }
 }
-function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_3_For_1_Template(rf, ctx) {
+function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275elementStart(0, "section", 43)(1, "header", 44)(2, "div")(3, "h3");
+    \u0275\u0275elementStart(0, "section", 44)(1, "header", 45)(2, "div")(3, "h3");
     \u0275\u0275text(4);
     \u0275\u0275elementEnd()();
-    \u0275\u0275elementStart(5, "span", 45);
+    \u0275\u0275elementStart(5, "span", 46);
     \u0275\u0275text(6);
     \u0275\u0275elementEnd()();
-    \u0275\u0275elementStart(7, "h4", 46);
+    \u0275\u0275elementStart(7, "h4", 47);
     \u0275\u0275text(8, "Section-level issues");
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(9, "p-table", 47);
-    \u0275\u0275template(10, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_3_For_1_ng_template_10_Template, 11, 0, "ng-template", 3)(11, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_3_For_1_ng_template_11_Template, 13, 8, "ng-template", 4)(12, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_3_For_1_ng_template_12_Template, 4, 0, "ng-template", 48);
+    \u0275\u0275elementStart(9, "p-table", 48);
+    \u0275\u0275template(10, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_10_Template, 11, 0, "ng-template", 3)(11, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_11_Template, 13, 8, "ng-template", 4)(12, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_12_Template, 4, 0, "ng-template", 49);
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(13, "h4", 46);
+    \u0275\u0275elementStart(13, "h4", 47);
     \u0275\u0275text(14, "Doormat-level issues");
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(15, "p-table", 47);
-    \u0275\u0275template(16, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_3_For_1_ng_template_16_Template, 15, 0, "ng-template", 3)(17, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_3_For_1_ng_template_17_Template, 18, 11, "ng-template", 4)(18, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_3_For_1_ng_template_18_Template, 4, 0, "ng-template", 48);
+    \u0275\u0275elementStart(15, "p-table", 48);
+    \u0275\u0275template(16, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_16_Template, 15, 0, "ng-template", 3)(17, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_17_Template, 18, 11, "ng-template", 4)(18, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_18_Template, 4, 0, "ng-template", 49);
     \u0275\u0275elementEnd()();
   }
   if (rf & 2) {
-    const group_r16 = ctx.$implicit;
+    const group_r17 = ctx.$implicit;
     \u0275\u0275advance(4);
-    \u0275\u0275textInterpolate2(" Section ", group_r16.sectionIndex, ": ", group_r16.sectionTitle, " ");
+    \u0275\u0275textInterpolate2(" Section ", group_r17.sectionIndex, ": ", group_r17.sectionTitle, " ");
     \u0275\u0275advance(2);
-    \u0275\u0275textInterpolate1(" ", group_r16.doormatCount, " doormats ");
+    \u0275\u0275textInterpolate1(" ", group_r17.doormatCount, " doormats ");
     \u0275\u0275advance(3);
-    \u0275\u0275property("value", group_r16.sectionRows);
+    \u0275\u0275property("value", group_r17.sectionRows);
     \u0275\u0275advance(6);
-    \u0275\u0275property("value", group_r16.doormatRows);
+    \u0275\u0275property("value", group_r17.doormatRows);
   }
 }
-function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_3_Template(rf, ctx) {
+function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275repeaterCreate(0, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_3_For_1_Template, 19, 5, "section", 43, _forTrack0);
+    \u0275\u0275repeaterCreate(0, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_Template, 19, 5, "section", 44, _forTrack0);
   }
   if (rf & 2) {
     const ctx_r2 = \u0275\u0275nextContext(4);
     \u0275\u0275repeater(ctx_r2.topicDoormatIssueGroups);
   }
 }
-function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_Conditional_1_Template(rf, ctx) {
+function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_5_Conditional_1_Template(rf, ctx) {
   if (rf & 1) {
     \u0275\u0275elementStart(0, "span", 25);
     \u0275\u0275text(1, "Waiting for AI response");
     \u0275\u0275elementEnd();
   }
 }
-function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_Conditional_2_Template(rf, ctx) {
+function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_5_Conditional_2_Template(rf, ctx) {
   if (rf & 1) {
     \u0275\u0275elementStart(0, "span", 25);
     \u0275\u0275text(1, "No issues returned");
     \u0275\u0275elementEnd();
   }
 }
-function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_Conditional_3_Template(rf, ctx) {
+function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_5_Conditional_3_Template(rf, ctx) {
   if (rf & 1) {
     \u0275\u0275elementStart(0, "span", 25);
     \u0275\u0275text(1, "Expand this row to analyze topic doormats");
     \u0275\u0275elementEnd();
   }
 }
-function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_Template(rf, ctx) {
+function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_5_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275elementStart(0, "div", 42);
-    \u0275\u0275template(1, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_Conditional_1_Template, 2, 0, "span", 25)(2, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_Conditional_2_Template, 2, 0, "span", 25)(3, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_Conditional_3_Template, 2, 0, "span", 25);
+    \u0275\u0275elementStart(0, "div", 43);
+    \u0275\u0275template(1, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_5_Conditional_1_Template, 2, 0, "span", 25)(2, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_5_Conditional_2_Template, 2, 0, "span", 25)(3, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_5_Conditional_3_Template, 2, 0, "span", 25);
     \u0275\u0275elementEnd();
   }
   if (rf & 2) {
@@ -32555,17 +32555,26 @@ function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Co
 }
 function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275elementStart(0, "div", 41);
-    \u0275\u0275template(1, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_1_Template, 3, 0, "span", 25)(2, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_2_Template, 4, 1, "div");
+    const _r10 = \u0275\u0275getCurrentView();
+    \u0275\u0275elementStart(0, "div", 41)(1, "button", 42);
+    \u0275\u0275listener("click", function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Template_button_click_1_listener() {
+      \u0275\u0275restoreView(_r10);
+      const ctx_r2 = \u0275\u0275nextContext(3);
+      return \u0275\u0275resetView(ctx_r2.rerunTopicDoormatIssues());
+    });
     \u0275\u0275elementEnd();
-    \u0275\u0275template(3, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_3_Template, 2, 0)(4, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_Template, 4, 1, "div", 42);
+    \u0275\u0275template(2, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_2_Template, 3, 0, "span", 25)(3, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_3_Template, 4, 1, "div");
+    \u0275\u0275elementEnd();
+    \u0275\u0275template(4, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_Template, 2, 0)(5, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_5_Template, 4, 1, "div", 43);
   }
   if (rf & 2) {
     const ctx_r2 = \u0275\u0275nextContext(3);
     \u0275\u0275advance();
-    \u0275\u0275conditional(ctx_r2.topicDoormatIssuesLoading ? 1 : ctx_r2.topicDoormatIssuesError ? 2 : -1);
+    \u0275\u0275property("disabled", ctx_r2.topicDoormatIssuesLoading);
+    \u0275\u0275advance();
+    \u0275\u0275conditional(ctx_r2.topicDoormatIssuesLoading ? 2 : ctx_r2.topicDoormatIssuesError ? 3 : -1);
     \u0275\u0275advance(2);
-    \u0275\u0275conditional(ctx_r2.topicDoormatIssueGroups.length ? 3 : 4);
+    \u0275\u0275conditional(ctx_r2.topicDoormatIssueGroups.length ? 4 : 5);
   }
 }
 function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_1_ng_template_1_Template(rf, ctx) {
@@ -32609,12 +32618,12 @@ function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_1_Te
 }
 function ComponentGuidanceComponent_ng_template_5_Conditional_4_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275template(0, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Template, 5, 2)(1, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_1_Template, 3, 0, "p-table", 40);
+    \u0275\u0275template(0, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Template, 6, 3)(1, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_1_Template, 3, 0, "p-table", 40);
   }
   if (rf & 2) {
-    const row_r17 = \u0275\u0275nextContext().$implicit;
+    const row_r18 = \u0275\u0275nextContext().$implicit;
     const ctx_r2 = \u0275\u0275nextContext();
-    \u0275\u0275conditional(row_r17.__id === ctx_r2.topicDoormatsId ? 0 : 1);
+    \u0275\u0275conditional(row_r18.__id === ctx_r2.topicDoormatsId ? 0 : 1);
   }
 }
 function ComponentGuidanceComponent_ng_template_5_Template(rf, ctx) {
@@ -32624,9 +32633,9 @@ function ComponentGuidanceComponent_ng_template_5_Template(rf, ctx) {
     \u0275\u0275elementEnd()()();
   }
   if (rf & 2) {
-    const row_r17 = ctx.$implicit;
+    const row_r18 = ctx.$implicit;
     \u0275\u0275advance(3);
-    \u0275\u0275conditional(row_r17.__nameKey === "page.tools.guidance.craVariant.alerts.title" ? 3 : 4);
+    \u0275\u0275conditional(row_r18.__nameKey === "page.tools.guidance.craVariant.alerts.title" ? 3 : 4);
   }
 }
 var ComponentGuidanceComponent = class _ComponentGuidanceComponent {
@@ -32661,6 +32670,7 @@ var ComponentGuidanceComponent = class _ComponentGuidanceComponent {
   topicDoormatIssueGroups = [];
   topicDoormatIssueCategories = [];
   prevAlertHasIssues = false;
+  topicDoormatAnalyzedHtml = "";
   // multi-select
   selectedRows = [];
   isLoading = false;
@@ -32930,6 +32940,11 @@ var ComponentGuidanceComponent = class _ComponentGuidanceComponent {
     delete copy[key2];
     this.expandedRows = copy;
   }
+  rerunTopicDoormatIssues() {
+    this.topicDoormatIssuesResponseReceived = false;
+    this.topicDoormatAnalyzedHtml = "";
+    void this.analyzeTopicDoormatIssues();
+  }
   expandAll() {
     this.expandedRows = Object.fromEntries(this.tableRows.map((r) => [r.url, true]));
   }
@@ -32938,11 +32953,14 @@ var ComponentGuidanceComponent = class _ComponentGuidanceComponent {
   }
   analyzeTopicDoormatIssues() {
     return __async(this, null, function* () {
-      if (this.topicDoormatIssuesLoading || this.topicDoormatIssuesResponseReceived) {
+      if (this.topicDoormatIssuesLoading) {
         return;
       }
       const uploadData = this.uploadState.getUploadData();
-      const html = uploadData?.originalHtml || "";
+      const html = this.getTopicDoormatWorkingHtml(uploadData);
+      if (this.topicDoormatIssuesResponseReceived && this.topicDoormatAnalyzedHtml === html) {
+        return;
+      }
       const doc = this.topicDoormatExtractor.parseHtmlDocument(html);
       if (!doc)
         return;
@@ -32979,6 +32997,7 @@ var ComponentGuidanceComponent = class _ComponentGuidanceComponent {
           });
         }
         this.topicDoormatIssueRows = result.rows;
+        this.topicDoormatAnalyzedHtml = html;
         this.topicDoormatIssueGroups = this.buildTopicDoormatIssueGroups(this.topicDoormatIssueRows);
         this.updateTopicDoormatSummaryState();
         this.topicDoormatIssueAnalysis.debug("response parsed", {
@@ -33039,6 +33058,9 @@ var ComponentGuidanceComponent = class _ComponentGuidanceComponent {
         this.cdr.markForCheck();
       }
     });
+  }
+  getTopicDoormatWorkingHtml(uploadData) {
+    return uploadData?.modifiedHtml || uploadData?.originalHtml || "";
   }
   getShortModelName(model) {
     const normalizedModel = (model || "").replace(/-\d{4}-\d{2}-\d{2}$/, "").replace(/:free$/, ":free");
@@ -33199,7 +33221,7 @@ var ComponentGuidanceComponent = class _ComponentGuidanceComponent {
   static \u0275fac = function ComponentGuidanceComponent_Factory(__ngFactoryType__) {
     return new (__ngFactoryType__ || _ComponentGuidanceComponent)();
   };
-  static \u0275cmp = /* @__PURE__ */ \u0275\u0275defineComponent({ type: _ComponentGuidanceComponent, selectors: [["ca-component-guidance"]], decls: 10, vars: 10, consts: [["dt", ""], ["dataKey", "url", "styleClass", "p-datatable-sm", "selectionMode", "multiple", "expandableRows", "", 3, "selectionChange", "sortFunction", "onRowExpand", "onRowCollapse", "value", "selection", "customSort", "resizableColumns", "expandedRowKeys"], ["pTemplate", "caption"], ["pTemplate", "header"], ["pTemplate", "body"], ["pTemplate", "expandedrow"], [1, "mt-3"], ["pButton", "", "type", "button", "aria-label", "Get GenAI recommendations based on user data", "pTooltip", "Select one or more components", 1, "ai-btn", 3, "click", "label", "icon", "disabled", "showDelay", "hideDelay"], [1, "sr-only"], [1, "caption-actions"], ["pButton", "", "type", "button", "label", "Expand All", "icon", "pi pi-plus", 1, "p-button-text", 3, "click"], ["pButton", "", "type", "button", "label", "Collapse All", "icon", "pi pi-minus", 1, "p-button-text", 3, "click"], [2, "width", "3rem", "text-align", "center"], ["pSortableColumn", "order"], ["field", "order"], ["pSortableColumn", "health", 1, "health-col"], ["field", "health"], [3, "pSelectableRow"], [2, "text-align", "center"], ["pButton", "", "type", "button", "aria-label", "Toggle row", 1, "p-button-text", "p-button-rounded", "p-button-plain", 3, "pRowToggler"], ["aria-hidden", "true", 1, "pi", 3, "ngClass"], [3, "value"], ["target", "_blank", "rel", "noopener", 3, "href"], [1, "health-cell", "health-col"], [3, "label", "icon", "styleClass"], [1, "muted"], ["icon", "pi pi-question-circle", "styleClass", "chip chip-unk", 3, "label"], ["label", "OK", "icon", "pi pi-check-circle", "styleClass", "chip chip-ok"], [1, "alert-loading"], [1, "text-danger"], [1, "chip-list"], ["aria-hidden", "true", 1, "pi", "pi-spinner", "pi-spin"], [3, "label", "styleClass", 4, "ngFor", "ngForOf"], [3, "label", "styleClass"], ["styleClass", "chip chip-hghlght", 3, "label", 4, "ngFor", "ngForOf"], ["styleClass", "chip chip-hghlght", 3, "label"], ["colspan", "6"], [1, "p-3"], [1, "expansion-table", 3, "selectAll"], [1, "expansion-table", 3, "maxSeverityChange", "categoriesChange", "loadingChange", "errorChange", "issuesCleared", "selectAll"], ["styleClass", "p-datatable-sm expansion-table"], [1, "mb-3"], [1, "topic-doormat-empty"], [1, "topic-doormat-group"], [1, "topic-doormat-group-header"], [1, "topic-doormat-count"], [1, "topic-doormat-subheading"], ["styleClass", "p-datatable-sm expansion-table", 3, "value"], ["pTemplate", "emptymessage"], [2, "width", "3rem"], [2, "width", "8rem"], [1, "topic-doormat-section-row"], [3, "ngModelChange", "binary", "ngModel", "disabled"], [1, "chip", 3, "ngClass"], [1, "chip", "topic-doormat-evidence-metric", 3, "ngClass"], ["target", "_blank", "rel", "noopener noreferrer", 3, "href"], [1, "topic-doormat-order-evidence"], [1, "topic-doormat-order-list"], [1, "topic-doormat-order-separator"], [1, "topic-doormat-order-pill"], ["colspan", "5"], [2, "width", "4rem"], ["colspan", "7"]], template: function ComponentGuidanceComponent_Template(rf, ctx) {
+  static \u0275cmp = /* @__PURE__ */ \u0275\u0275defineComponent({ type: _ComponentGuidanceComponent, selectors: [["ca-component-guidance"]], decls: 10, vars: 10, consts: [["dt", ""], ["dataKey", "url", "styleClass", "p-datatable-sm", "selectionMode", "multiple", "expandableRows", "", 3, "selectionChange", "sortFunction", "onRowExpand", "onRowCollapse", "value", "selection", "customSort", "resizableColumns", "expandedRowKeys"], ["pTemplate", "caption"], ["pTemplate", "header"], ["pTemplate", "body"], ["pTemplate", "expandedrow"], [1, "mt-3"], ["pButton", "", "type", "button", "aria-label", "Get GenAI recommendations based on user data", "pTooltip", "Select one or more components", 1, "ai-btn", 3, "click", "label", "icon", "disabled", "showDelay", "hideDelay"], [1, "sr-only"], [1, "caption-actions"], ["pButton", "", "type", "button", "label", "Expand All", "icon", "pi pi-plus", 1, "p-button-text", 3, "click"], ["pButton", "", "type", "button", "label", "Collapse All", "icon", "pi pi-minus", 1, "p-button-text", 3, "click"], [2, "width", "3rem", "text-align", "center"], ["pSortableColumn", "order"], ["field", "order"], ["pSortableColumn", "health", 1, "health-col"], ["field", "health"], [3, "pSelectableRow"], [2, "text-align", "center"], ["pButton", "", "type", "button", "aria-label", "Toggle row", 1, "p-button-text", "p-button-rounded", "p-button-plain", 3, "pRowToggler"], ["aria-hidden", "true", 1, "pi", 3, "ngClass"], [3, "value"], ["target", "_blank", "rel", "noopener", 3, "href"], [1, "health-cell", "health-col"], [3, "label", "icon", "styleClass"], [1, "muted"], ["icon", "pi pi-question-circle", "styleClass", "chip chip-unk", 3, "label"], ["label", "OK", "icon", "pi pi-check-circle", "styleClass", "chip chip-ok"], [1, "alert-loading"], [1, "text-danger"], [1, "chip-list"], ["aria-hidden", "true", 1, "pi", "pi-spinner", "pi-spin"], [3, "label", "styleClass", 4, "ngFor", "ngForOf"], [3, "label", "styleClass"], ["styleClass", "chip chip-hghlght", 3, "label", 4, "ngFor", "ngForOf"], ["styleClass", "chip chip-hghlght", 3, "label"], ["colspan", "6"], [1, "p-3"], [1, "expansion-table", 3, "selectAll"], [1, "expansion-table", 3, "maxSeverityChange", "categoriesChange", "loadingChange", "errorChange", "issuesCleared", "selectAll"], ["styleClass", "p-datatable-sm expansion-table"], [1, "mb-3"], ["pButton", "", "type", "button", "label", "Analyze current page", "icon", "pi pi-refresh", 1, "p-button-text", "p-button-sm", 3, "click", "disabled"], [1, "topic-doormat-empty"], [1, "topic-doormat-group"], [1, "topic-doormat-group-header"], [1, "topic-doormat-count"], [1, "topic-doormat-subheading"], ["styleClass", "p-datatable-sm expansion-table", 3, "value"], ["pTemplate", "emptymessage"], [2, "width", "3rem"], [2, "width", "8rem"], [1, "topic-doormat-section-row"], [3, "ngModelChange", "binary", "ngModel", "disabled"], [1, "chip", 3, "ngClass"], [1, "chip", "topic-doormat-evidence-metric", 3, "ngClass"], ["target", "_blank", "rel", "noopener noreferrer", 3, "href"], [1, "topic-doormat-order-evidence"], [1, "topic-doormat-order-list"], [1, "topic-doormat-order-separator"], [1, "topic-doormat-order-pill"], ["colspan", "5"], [2, "width", "4rem"], ["colspan", "7"]], template: function ComponentGuidanceComponent_Template(rf, ctx) {
     if (rf & 1) {
       const _r1 = \u0275\u0275getCurrentView();
       \u0275\u0275elementStart(0, "p-table", 1, 0);
@@ -33531,6 +33553,15 @@ var ComponentGuidanceComponent = class _ComponentGuidanceComponent {
           } @else {
             @if (row.__id === topicDoormatsId) {
               <div class="mb-3">
+                <button
+                  pButton
+                  type="button"
+                  label="Analyze current page"
+                  icon="pi pi-refresh"
+                  class="p-button-text p-button-sm"
+                  [disabled]="topicDoormatIssuesLoading"
+                  (click)="rerunTopicDoormatIssues()">
+                </button>
                 @if (topicDoormatIssuesLoading) {
                   <span class="muted">
                     <i class="pi pi-spinner pi-spin" aria-hidden="true"></i>
@@ -47222,4 +47253,4 @@ ${custom}` : promptBody;
 export {
   PageAssistantCompareComponent
 };
-//# sourceMappingURL=chunk-P2DY2RDU.js.map
+//# sourceMappingURL=chunk-OAU42FZM.js.map

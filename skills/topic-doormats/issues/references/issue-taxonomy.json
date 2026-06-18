@@ -514,7 +514,7 @@
       "label": "Missing a needed doormat",
       "severity": "High",
       "condition": "The page context suggests an important user task, service, or high-demand destination is missing from the doormat set.",
-      "recommendation": "Flag for manual review and consider adding a doormat for the missing destination."
+      "recommendation": "Review and consider adding a doormat for the missing child page."
     },
     {
       "id": "unnecessary-doormat",
