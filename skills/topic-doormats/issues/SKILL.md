@@ -41,11 +41,19 @@ Use this skill for issue analysis of topic doormat sets.
   as destination context when present, especially for
   `link-name-too-different-from-destination-title`. Do not invent destination
   titles or headings when these values are absent.
+- For `link-name-too-different-from-destination-title`, compare meaning and
+  information scent, not exact wording. Ignore boilerplate suffixes such as
+  `- Canada.ca`. It is acceptable for the link name wording to be shortened or
+  adjusted to match the doormat style on the page. Report this issue only when
+  the link name is misleading, points to a different topic/task/audience, or
+  no longer gives users the same destination scent as the destination title or
+  heading.
 - Do not report `link-name-too-long`, `description-too-long`,
   `link-name-trailing-punctuation`, `description-trailing-punctuation`, or
-  `duplicate-link-in-most-requested`; AIDA calculates and reports those issues
-  deterministically from the extracted doormat text, Most requested links, and
-  character counts
+  `duplicate-link-in-most-requested`, `missing-needed-doormat`,
+  `unnecessary-doormat`, or `wrong-doormat-order`; AIDA calculates and reports
+  those issues deterministically from the extracted doormat text, Most requested
+  links, IA child-page relationships, page-view data, and character counts
 - Return JSON only
 - Report issues per affected doormat
 - Report section-level problems in `section_issues` rather than repeating

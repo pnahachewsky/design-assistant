@@ -137,7 +137,7 @@ import {
   unblockBodyScroll,
   uuid,
   zindexutils
-} from "./chunk-X6OY6UYI.js";
+} from "./chunk-M46MQX4A.js";
 import {
   ChangeDetectionStrategy,
   ChangeDetectorRef,
@@ -211,6 +211,7 @@ import {
   ɵɵreference,
   ɵɵrepeater,
   ɵɵrepeaterCreate,
+  ɵɵrepeaterTrackByIndex,
   ɵɵresetView,
   ɵɵrestoreView,
   ɵɵsanitizeHtml,
@@ -227,7 +228,7 @@ import {
   ɵɵtwoWayListener,
   ɵɵtwoWayProperty,
   ɵɵviewQuery
-} from "./chunk-7QCF5G4D.js";
+} from "./chunk-OORXL2HI.js";
 import {
   __async,
   __commonJS,
@@ -28533,12 +28534,12 @@ var AlertsGuidanceComponent = class _AlertsGuidanceComponent {
       \u0275\u0275advance(3);
       \u0275\u0275conditional(ctx.issues.length ? 3 : -1);
     }
-  }, dependencies: [CommonModule, NgClass, FormsModule, NgControlStatus, NgModel, TableModule, Table, PrimeTemplate, CheckboxModule, Checkbox, ButtonModule, ButtonDirective], styles: ["\n\n.alert-table[_ngcontent-%COMP%]   .p-datatable-tbody[_ngcontent-%COMP%]    > tr[_ngcontent-%COMP%]    > td[_ngcontent-%COMP%], \n.alert-table[_ngcontent-%COMP%]   .p-datatable-thead[_ngcontent-%COMP%]    > tr[_ngcontent-%COMP%]    > th[_ngcontent-%COMP%] {\n  white-space: normal !important;\n  word-break: normal;\n  overflow-wrap: normal;\n  vertical-align: top;\n}\n.alert-table[_ngcontent-%COMP%]   .wrap-col[_ngcontent-%COMP%] {\n  min-width: 140px;\n}\n.alert-table[_ngcontent-%COMP%]   .severity-col[_ngcontent-%COMP%]   .chip[_ngcontent-%COMP%] {\n  white-space: nowrap !important;\n  display: inline-flex;\n}\n.alert-table[_ngcontent-%COMP%]   .include-col[_ngcontent-%COMP%] {\n  width: 140px;\n  text-align: center;\n}\n.alert-table[_ngcontent-%COMP%]   .include-col[_ngcontent-%COMP%]   .p-checkbox[_ngcontent-%COMP%] {\n  display: inline-flex;\n}\n.alert-table[_ngcontent-%COMP%]   .p-datatable-table[_ngcontent-%COMP%] {\n  width: 100%;\n  border: 1px solid #d1d5db;\n  border-radius: 6px;\n}\n.alert-table[_ngcontent-%COMP%]   .p-datatable-wrapper[_ngcontent-%COMP%] {\n  width: 100%;\n  overflow-x: auto;\n}\n.alert-table[_ngcontent-%COMP%]   .p-datatable-table[_ngcontent-%COMP%] {\n  table-layout: auto !important;\n}\n.alert-table-actions[_ngcontent-%COMP%] {\n  display: flex;\n  justify-content: flex-end;\n  margin-top: 0.75rem;\n}\n.alert-table[_ngcontent-%COMP%]   .toggle-col[_ngcontent-%COMP%], \n.alert-table[_ngcontent-%COMP%]   .checkbox-col[_ngcontent-%COMP%] {\n  width: 1%;\n  white-space: nowrap;\n  text-align: center;\n  padding: 0;\n}\n.alert-table.p-datatable[_ngcontent-%COMP%]   .p-datatable-thead[_ngcontent-%COMP%]    > tr[_ngcontent-%COMP%]    > th.toggle-col[_ngcontent-%COMP%], \n.alert-table.p-datatable[_ngcontent-%COMP%]   .p-datatable-tbody[_ngcontent-%COMP%]    > tr[_ngcontent-%COMP%]    > td.toggle-col[_ngcontent-%COMP%], \n.alert-table.p-datatable[_ngcontent-%COMP%]   .p-datatable-thead[_ngcontent-%COMP%]    > tr[_ngcontent-%COMP%]    > th.checkbox-col[_ngcontent-%COMP%], \n.alert-table.p-datatable[_ngcontent-%COMP%]   .p-datatable-tbody[_ngcontent-%COMP%]    > tr[_ngcontent-%COMP%]    > td.checkbox-col[_ngcontent-%COMP%] {\n  width: 1% !important;\n  white-space: nowrap !important;\n  text-align: center;\n  padding: 0 0.25rem;\n}\n/*# sourceMappingURL=alerts-guidance.component.css.map */", "\n\n[_nghost-%COMP%]     .alert-table .p-datatable-table {\n  table-layout: auto !important;\n}\n[_nghost-%COMP%]     .alert-table.p-datatable .p-datatable-thead > tr > th.toggle-col, \n[_nghost-%COMP%]     .alert-table.p-datatable .p-datatable-tbody > tr > td.toggle-col {\n  width: 70px !important;\n  min-width: 70px;\n  max-width: 70px;\n  white-space: nowrap !important;\n  text-align: center;\n  padding: 0 0.25rem;\n}\n[_nghost-%COMP%]     .alert-table.p-datatable .p-datatable-thead > tr > th.checkbox-col, \n[_nghost-%COMP%]     .alert-table.p-datatable .p-datatable-tbody > tr > td.checkbox-col {\n  width: 70px !important;\n  min-width: 70px;\n  max-width: 70px;\n  white-space: nowrap !important;\n  text-align: center;\n  padding: 0 0.25rem;\n}\n[_nghost-%COMP%]     .topic-doormat-section-row > td {\n  background: #eef2f6;\n}\n.topic-doormat-group[_ngcontent-%COMP%] {\n  margin-top: 1rem;\n  border: 1px solid #d8dee6;\n  border-radius: 6px;\n  background: #fff;\n  overflow: hidden;\n}\n.topic-doormat-group[_ngcontent-%COMP%]    + .topic-doormat-group[_ngcontent-%COMP%] {\n  margin-top: 1.25rem;\n}\n.topic-doormat-group-header[_ngcontent-%COMP%] {\n  display: flex;\n  align-items: flex-start;\n  gap: 0.75rem;\n  padding: 1.1rem 1.25rem;\n  border-bottom: 1px solid #d8dee6;\n  background: #eef2f6;\n}\n.topic-doormat-group[_ngcontent-%COMP%]   h3[_ngcontent-%COMP%] {\n  margin: 0;\n  font-size: 1.25rem;\n  line-height: 1.25;\n}\n.topic-doormat-count[_ngcontent-%COMP%] {\n  flex: 0 0 auto;\n  padding: 0.4rem 0.8rem;\n  border: 1px solid #d8dee6;\n  border-radius: 999px;\n  background: #fff;\n  color: #202833;\n  font-size: 0.9rem;\n  font-weight: 700;\n}\n.topic-doormat-subheading[_ngcontent-%COMP%] {\n  margin: 1rem 1rem 0.4rem;\n  padding-bottom: 0.25rem;\n  border-bottom: 1px solid #eef2f6;\n  color: #202833;\n  font-size: 0.9rem;\n  font-weight: 700;\n}\n.topic-doormat-group[_ngcontent-%COMP%]   .expansion-table[_ngcontent-%COMP%] {\n  margin: 0 1rem 1rem;\n}\n.topic-doormat-empty[_ngcontent-%COMP%] {\n  padding: 0.75rem;\n  border: 1px solid #d8dee6;\n  border-radius: 4px;\n  background: #fff;\n}\n/*# sourceMappingURL=component-guidance.component.css.map */"] });
+  }, dependencies: [CommonModule, NgClass, FormsModule, NgControlStatus, NgModel, TableModule, Table, PrimeTemplate, CheckboxModule, Checkbox, ButtonModule, ButtonDirective], styles: ["\n\n.alert-table[_ngcontent-%COMP%]   .p-datatable-tbody[_ngcontent-%COMP%]    > tr[_ngcontent-%COMP%]    > td[_ngcontent-%COMP%], \n.alert-table[_ngcontent-%COMP%]   .p-datatable-thead[_ngcontent-%COMP%]    > tr[_ngcontent-%COMP%]    > th[_ngcontent-%COMP%] {\n  white-space: normal !important;\n  word-break: normal;\n  overflow-wrap: normal;\n  vertical-align: top;\n}\n.alert-table[_ngcontent-%COMP%]   .wrap-col[_ngcontent-%COMP%] {\n  min-width: 140px;\n}\n.alert-table[_ngcontent-%COMP%]   .severity-col[_ngcontent-%COMP%]   .chip[_ngcontent-%COMP%] {\n  white-space: nowrap !important;\n  display: inline-flex;\n}\n.alert-table[_ngcontent-%COMP%]   .include-col[_ngcontent-%COMP%] {\n  width: 140px;\n  text-align: center;\n}\n.alert-table[_ngcontent-%COMP%]   .include-col[_ngcontent-%COMP%]   .p-checkbox[_ngcontent-%COMP%] {\n  display: inline-flex;\n}\n.alert-table[_ngcontent-%COMP%]   .p-datatable-table[_ngcontent-%COMP%] {\n  width: 100%;\n  border: 1px solid #d1d5db;\n  border-radius: 6px;\n}\n.alert-table[_ngcontent-%COMP%]   .p-datatable-wrapper[_ngcontent-%COMP%] {\n  width: 100%;\n  overflow-x: auto;\n}\n.alert-table[_ngcontent-%COMP%]   .p-datatable-table[_ngcontent-%COMP%] {\n  table-layout: auto !important;\n}\n.alert-table-actions[_ngcontent-%COMP%] {\n  display: flex;\n  justify-content: flex-end;\n  margin-top: 0.75rem;\n}\n.alert-table[_ngcontent-%COMP%]   .toggle-col[_ngcontent-%COMP%], \n.alert-table[_ngcontent-%COMP%]   .checkbox-col[_ngcontent-%COMP%] {\n  width: 1%;\n  white-space: nowrap;\n  text-align: center;\n  padding: 0;\n}\n.alert-table.p-datatable[_ngcontent-%COMP%]   .p-datatable-thead[_ngcontent-%COMP%]    > tr[_ngcontent-%COMP%]    > th.toggle-col[_ngcontent-%COMP%], \n.alert-table.p-datatable[_ngcontent-%COMP%]   .p-datatable-tbody[_ngcontent-%COMP%]    > tr[_ngcontent-%COMP%]    > td.toggle-col[_ngcontent-%COMP%], \n.alert-table.p-datatable[_ngcontent-%COMP%]   .p-datatable-thead[_ngcontent-%COMP%]    > tr[_ngcontent-%COMP%]    > th.checkbox-col[_ngcontent-%COMP%], \n.alert-table.p-datatable[_ngcontent-%COMP%]   .p-datatable-tbody[_ngcontent-%COMP%]    > tr[_ngcontent-%COMP%]    > td.checkbox-col[_ngcontent-%COMP%] {\n  width: 1% !important;\n  white-space: nowrap !important;\n  text-align: center;\n  padding: 0 0.25rem;\n}\n/*# sourceMappingURL=alerts-guidance.component.css.map */", "\n\n[_nghost-%COMP%]     .alert-table .p-datatable-table {\n  table-layout: auto !important;\n}\n[_nghost-%COMP%]     .alert-table.p-datatable .p-datatable-thead > tr > th.toggle-col, \n[_nghost-%COMP%]     .alert-table.p-datatable .p-datatable-tbody > tr > td.toggle-col {\n  width: 70px !important;\n  min-width: 70px;\n  max-width: 70px;\n  white-space: nowrap !important;\n  text-align: center;\n  padding: 0 0.25rem;\n}\n[_nghost-%COMP%]     .alert-table.p-datatable .p-datatable-thead > tr > th.checkbox-col, \n[_nghost-%COMP%]     .alert-table.p-datatable .p-datatable-tbody > tr > td.checkbox-col {\n  width: 70px !important;\n  min-width: 70px;\n  max-width: 70px;\n  white-space: nowrap !important;\n  text-align: center;\n  padding: 0 0.25rem;\n}\n[_nghost-%COMP%]     .topic-doormat-section-row > td {\n  background: #eef2f6;\n}\n.topic-doormat-group[_ngcontent-%COMP%] {\n  margin-top: 1rem;\n  border: 1px solid #d8dee6;\n  border-radius: 6px;\n  background: #fff;\n  overflow: hidden;\n}\n.topic-doormat-group[_ngcontent-%COMP%]    + .topic-doormat-group[_ngcontent-%COMP%] {\n  margin-top: 1.25rem;\n}\n.topic-doormat-group-header[_ngcontent-%COMP%] {\n  display: flex;\n  align-items: flex-start;\n  gap: 0.75rem;\n  padding: 1.1rem 1.25rem;\n  border-bottom: 1px solid #d8dee6;\n  background: #eef2f6;\n}\n.topic-doormat-group[_ngcontent-%COMP%]   h3[_ngcontent-%COMP%] {\n  margin: 0;\n  font-size: 1.25rem;\n  line-height: 1.25;\n}\n.topic-doormat-count[_ngcontent-%COMP%] {\n  flex: 0 0 auto;\n  padding: 0.4rem 0.8rem;\n  border: 1px solid #d8dee6;\n  border-radius: 999px;\n  background: #fff;\n  color: #202833;\n  font-size: 0.9rem;\n  font-weight: 700;\n}\n.topic-doormat-subheading[_ngcontent-%COMP%] {\n  margin: 1rem 1rem 0.4rem;\n  padding-bottom: 0.25rem;\n  border-bottom: 1px solid #eef2f6;\n  color: #202833;\n  font-size: 0.9rem;\n  font-weight: 700;\n}\n.topic-doormat-group[_ngcontent-%COMP%]   .expansion-table[_ngcontent-%COMP%] {\n  margin: 0 1rem 1rem;\n}\n.topic-doormat-empty[_ngcontent-%COMP%] {\n  padding: 0.75rem;\n  border: 1px solid #d8dee6;\n  border-radius: 4px;\n  background: #fff;\n}\n.topic-doormat-order-evidence[_ngcontent-%COMP%] {\n  display: grid;\n  gap: 0.35rem;\n}\n.topic-doormat-order-list[_ngcontent-%COMP%] {\n  display: inline-flex;\n  flex-wrap: wrap;\n  align-items: center;\n  gap: 0.3rem;\n}\n.topic-doormat-order-pill[_ngcontent-%COMP%] {\n  display: inline-flex;\n  align-items: center;\n  min-height: 1.65rem;\n  padding: 0.2rem 0.5rem;\n  border: 1px solid #c9d3df;\n  border-radius: 4px;\n  background: #fff;\n  color: #202833;\n  font-size: 0.88rem;\n  line-height: 1.2;\n}\n.topic-doormat-order-separator[_ngcontent-%COMP%] {\n  color: #5d6778;\n  font-weight: 700;\n}\n/*# sourceMappingURL=component-guidance.component.css.map */"] });
 };
 (() => {
   (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(AlertsGuidanceComponent, [{
     type: Component,
-    args: [{ selector: "ca-alerts-guidance", standalone: true, imports: [CommonModule, FormsModule, TableModule, CheckboxModule, ButtonModule], template: '<p-table [value]="issues" styleClass="p-datatable-sm alert-table">\n  <ng-template pTemplate="header">\n    <tr>\n      <th class="include-col">Include in fix</th>\n      <th class="severity-col">Severity</th>\n      <th>Pain point category</th>\n      <th class="wrap-col">Description</th>\n      <th class="wrap-col">Recommendation</th>\n    </tr>\n  </ng-template>\n  <ng-template pTemplate="body" let-issue>\n    <tr>\n      <td class="include-col">\n        <p-checkbox [binary]="true" [(ngModel)]="issue.include" (onChange)="onIncludeToggle()"></p-checkbox>\n      </td>\n      <td class="severity-col">\n        <span class="chip" [ngClass]="severityClass(issue.severity)">\n          {{ issue.severity }}\n        </span>\n      </td>\n      <td>{{ issue.category }}</td>\n      <td class="wrap-col">{{ issue.description }}</td>\n      <td class="wrap-col">{{ issue.recommendation }}</td>\n    </tr>\n  </ng-template>\n</p-table>\n\n@if (issues.length) {\n  <div class="alert-table-actions">\n    <button\n      pButton\n      type="button"\n      label="Clear alert issues"\n      icon="pi pi-trash"\n      class="p-button-secondary p-button-sm"\n      (click)="clearPersistedIssues()"\n    ></button>\n  </div>\n}\n', styles: ["/* src/app/views/page-assistant/components/problems/component-guidance/alerts-guidance/alerts-guidance.component.css */\n.alert-table .p-datatable-tbody > tr > td,\n.alert-table .p-datatable-thead > tr > th {\n  white-space: normal !important;\n  word-break: normal;\n  overflow-wrap: normal;\n  vertical-align: top;\n}\n.alert-table .wrap-col {\n  min-width: 140px;\n}\n.alert-table .severity-col .chip {\n  white-space: nowrap !important;\n  display: inline-flex;\n}\n.alert-table .include-col {\n  width: 140px;\n  text-align: center;\n}\n.alert-table .include-col .p-checkbox {\n  display: inline-flex;\n}\n.alert-table .p-datatable-table {\n  width: 100%;\n  border: 1px solid #d1d5db;\n  border-radius: 6px;\n}\n.alert-table .p-datatable-wrapper {\n  width: 100%;\n  overflow-x: auto;\n}\n.alert-table .p-datatable-table {\n  table-layout: auto !important;\n}\n.alert-table-actions {\n  display: flex;\n  justify-content: flex-end;\n  margin-top: 0.75rem;\n}\n.alert-table .toggle-col,\n.alert-table .checkbox-col {\n  width: 1%;\n  white-space: nowrap;\n  text-align: center;\n  padding: 0;\n}\n.alert-table.p-datatable .p-datatable-thead > tr > th.toggle-col,\n.alert-table.p-datatable .p-datatable-tbody > tr > td.toggle-col,\n.alert-table.p-datatable .p-datatable-thead > tr > th.checkbox-col,\n.alert-table.p-datatable .p-datatable-tbody > tr > td.checkbox-col {\n  width: 1% !important;\n  white-space: nowrap !important;\n  text-align: center;\n  padding: 0 0.25rem;\n}\n/*# sourceMappingURL=alerts-guidance.component.css.map */\n", "/* src/app/views/page-assistant/components/problems/component-guidance/component-guidance.component.css */\n:host ::ng-deep .alert-table .p-datatable-table {\n  table-layout: auto !important;\n}\n:host ::ng-deep .alert-table.p-datatable .p-datatable-thead > tr > th.toggle-col,\n:host ::ng-deep .alert-table.p-datatable .p-datatable-tbody > tr > td.toggle-col {\n  width: 70px !important;\n  min-width: 70px;\n  max-width: 70px;\n  white-space: nowrap !important;\n  text-align: center;\n  padding: 0 0.25rem;\n}\n:host ::ng-deep .alert-table.p-datatable .p-datatable-thead > tr > th.checkbox-col,\n:host ::ng-deep .alert-table.p-datatable .p-datatable-tbody > tr > td.checkbox-col {\n  width: 70px !important;\n  min-width: 70px;\n  max-width: 70px;\n  white-space: nowrap !important;\n  text-align: center;\n  padding: 0 0.25rem;\n}\n:host ::ng-deep .topic-doormat-section-row > td {\n  background: #eef2f6;\n}\n.topic-doormat-group {\n  margin-top: 1rem;\n  border: 1px solid #d8dee6;\n  border-radius: 6px;\n  background: #fff;\n  overflow: hidden;\n}\n.topic-doormat-group + .topic-doormat-group {\n  margin-top: 1.25rem;\n}\n.topic-doormat-group-header {\n  display: flex;\n  align-items: flex-start;\n  gap: 0.75rem;\n  padding: 1.1rem 1.25rem;\n  border-bottom: 1px solid #d8dee6;\n  background: #eef2f6;\n}\n.topic-doormat-group h3 {\n  margin: 0;\n  font-size: 1.25rem;\n  line-height: 1.25;\n}\n.topic-doormat-count {\n  flex: 0 0 auto;\n  padding: 0.4rem 0.8rem;\n  border: 1px solid #d8dee6;\n  border-radius: 999px;\n  background: #fff;\n  color: #202833;\n  font-size: 0.9rem;\n  font-weight: 700;\n}\n.topic-doormat-subheading {\n  margin: 1rem 1rem 0.4rem;\n  padding-bottom: 0.25rem;\n  border-bottom: 1px solid #eef2f6;\n  color: #202833;\n  font-size: 0.9rem;\n  font-weight: 700;\n}\n.topic-doormat-group .expansion-table {\n  margin: 0 1rem 1rem;\n}\n.topic-doormat-empty {\n  padding: 0.75rem;\n  border: 1px solid #d8dee6;\n  border-radius: 4px;\n  background: #fff;\n}\n/*# sourceMappingURL=component-guidance.component.css.map */\n"] }]
+    args: [{ selector: "ca-alerts-guidance", standalone: true, imports: [CommonModule, FormsModule, TableModule, CheckboxModule, ButtonModule], template: '<p-table [value]="issues" styleClass="p-datatable-sm alert-table">\n  <ng-template pTemplate="header">\n    <tr>\n      <th class="include-col">Include in fix</th>\n      <th class="severity-col">Severity</th>\n      <th>Pain point category</th>\n      <th class="wrap-col">Description</th>\n      <th class="wrap-col">Recommendation</th>\n    </tr>\n  </ng-template>\n  <ng-template pTemplate="body" let-issue>\n    <tr>\n      <td class="include-col">\n        <p-checkbox [binary]="true" [(ngModel)]="issue.include" (onChange)="onIncludeToggle()"></p-checkbox>\n      </td>\n      <td class="severity-col">\n        <span class="chip" [ngClass]="severityClass(issue.severity)">\n          {{ issue.severity }}\n        </span>\n      </td>\n      <td>{{ issue.category }}</td>\n      <td class="wrap-col">{{ issue.description }}</td>\n      <td class="wrap-col">{{ issue.recommendation }}</td>\n    </tr>\n  </ng-template>\n</p-table>\n\n@if (issues.length) {\n  <div class="alert-table-actions">\n    <button\n      pButton\n      type="button"\n      label="Clear alert issues"\n      icon="pi pi-trash"\n      class="p-button-secondary p-button-sm"\n      (click)="clearPersistedIssues()"\n    ></button>\n  </div>\n}\n', styles: ["/* src/app/views/page-assistant/components/problems/component-guidance/alerts-guidance/alerts-guidance.component.css */\n.alert-table .p-datatable-tbody > tr > td,\n.alert-table .p-datatable-thead > tr > th {\n  white-space: normal !important;\n  word-break: normal;\n  overflow-wrap: normal;\n  vertical-align: top;\n}\n.alert-table .wrap-col {\n  min-width: 140px;\n}\n.alert-table .severity-col .chip {\n  white-space: nowrap !important;\n  display: inline-flex;\n}\n.alert-table .include-col {\n  width: 140px;\n  text-align: center;\n}\n.alert-table .include-col .p-checkbox {\n  display: inline-flex;\n}\n.alert-table .p-datatable-table {\n  width: 100%;\n  border: 1px solid #d1d5db;\n  border-radius: 6px;\n}\n.alert-table .p-datatable-wrapper {\n  width: 100%;\n  overflow-x: auto;\n}\n.alert-table .p-datatable-table {\n  table-layout: auto !important;\n}\n.alert-table-actions {\n  display: flex;\n  justify-content: flex-end;\n  margin-top: 0.75rem;\n}\n.alert-table .toggle-col,\n.alert-table .checkbox-col {\n  width: 1%;\n  white-space: nowrap;\n  text-align: center;\n  padding: 0;\n}\n.alert-table.p-datatable .p-datatable-thead > tr > th.toggle-col,\n.alert-table.p-datatable .p-datatable-tbody > tr > td.toggle-col,\n.alert-table.p-datatable .p-datatable-thead > tr > th.checkbox-col,\n.alert-table.p-datatable .p-datatable-tbody > tr > td.checkbox-col {\n  width: 1% !important;\n  white-space: nowrap !important;\n  text-align: center;\n  padding: 0 0.25rem;\n}\n/*# sourceMappingURL=alerts-guidance.component.css.map */\n", "/* src/app/views/page-assistant/components/problems/component-guidance/component-guidance.component.css */\n:host ::ng-deep .alert-table .p-datatable-table {\n  table-layout: auto !important;\n}\n:host ::ng-deep .alert-table.p-datatable .p-datatable-thead > tr > th.toggle-col,\n:host ::ng-deep .alert-table.p-datatable .p-datatable-tbody > tr > td.toggle-col {\n  width: 70px !important;\n  min-width: 70px;\n  max-width: 70px;\n  white-space: nowrap !important;\n  text-align: center;\n  padding: 0 0.25rem;\n}\n:host ::ng-deep .alert-table.p-datatable .p-datatable-thead > tr > th.checkbox-col,\n:host ::ng-deep .alert-table.p-datatable .p-datatable-tbody > tr > td.checkbox-col {\n  width: 70px !important;\n  min-width: 70px;\n  max-width: 70px;\n  white-space: nowrap !important;\n  text-align: center;\n  padding: 0 0.25rem;\n}\n:host ::ng-deep .topic-doormat-section-row > td {\n  background: #eef2f6;\n}\n.topic-doormat-group {\n  margin-top: 1rem;\n  border: 1px solid #d8dee6;\n  border-radius: 6px;\n  background: #fff;\n  overflow: hidden;\n}\n.topic-doormat-group + .topic-doormat-group {\n  margin-top: 1.25rem;\n}\n.topic-doormat-group-header {\n  display: flex;\n  align-items: flex-start;\n  gap: 0.75rem;\n  padding: 1.1rem 1.25rem;\n  border-bottom: 1px solid #d8dee6;\n  background: #eef2f6;\n}\n.topic-doormat-group h3 {\n  margin: 0;\n  font-size: 1.25rem;\n  line-height: 1.25;\n}\n.topic-doormat-count {\n  flex: 0 0 auto;\n  padding: 0.4rem 0.8rem;\n  border: 1px solid #d8dee6;\n  border-radius: 999px;\n  background: #fff;\n  color: #202833;\n  font-size: 0.9rem;\n  font-weight: 700;\n}\n.topic-doormat-subheading {\n  margin: 1rem 1rem 0.4rem;\n  padding-bottom: 0.25rem;\n  border-bottom: 1px solid #eef2f6;\n  color: #202833;\n  font-size: 0.9rem;\n  font-weight: 700;\n}\n.topic-doormat-group .expansion-table {\n  margin: 0 1rem 1rem;\n}\n.topic-doormat-empty {\n  padding: 0.75rem;\n  border: 1px solid #d8dee6;\n  border-radius: 4px;\n  background: #fff;\n}\n.topic-doormat-order-evidence {\n  display: grid;\n  gap: 0.35rem;\n}\n.topic-doormat-order-list {\n  display: inline-flex;\n  flex-wrap: wrap;\n  align-items: center;\n  gap: 0.3rem;\n}\n.topic-doormat-order-pill {\n  display: inline-flex;\n  align-items: center;\n  min-height: 1.65rem;\n  padding: 0.2rem 0.5rem;\n  border: 1px solid #c9d3df;\n  border-radius: 4px;\n  background: #fff;\n  color: #202833;\n  font-size: 0.88rem;\n  line-height: 1.2;\n}\n.topic-doormat-order-separator {\n  color: #5d6778;\n  font-weight: 700;\n}\n/*# sourceMappingURL=component-guidance.component.css.map */\n"] }]
   }], null, { selectAll: [{
     type: Input
   }], maxSeverityChange: [{
@@ -29598,6 +29599,500 @@ var TopicDoormatExtractorService = class _TopicDoormatExtractorService {
   }], null, null);
 })();
 
+// src/app/views/page-assistant/services/ia-structure.service.ts
+var IaStructureService = class _IaStructureService {
+  lastResult = null;
+  skipFormsAndPubs = /* @__PURE__ */ new Set([
+    "https://www.canada.ca/en/revenue-agency/services/forms-publications/forms.html",
+    "https://www.canada.ca/fr/agence-revenu/services/formulaires-publications/formulaires.html",
+    "https://www.canada.ca/en/revenue-agency/services/forms-publications/publications.html",
+    "https://www.canada.ca/fr/agence-revenu/services/formulaires-publications/publications.html"
+  ]);
+  buildIaTree(urls, depth, options) {
+    return __async(this, null, function* () {
+      const brokenLinks = [];
+      const state = {
+        total: urls.length,
+        processed: 0,
+        started: false
+      };
+      if (!state.started) {
+        state.started = true;
+        options?.onStart?.(state.total);
+      }
+      const tree = yield this.buildIaTreeInternal(urls, depth, void 0, 0, state, brokenLinks, options);
+      options?.onDone?.();
+      const result = { tree, brokenLinks };
+      if (urls.length === 1) {
+        this.lastResult = { url: urls[0], result };
+      }
+      return result;
+    });
+  }
+  getCachedResultFor(url) {
+    if (!this.lastResult)
+      return null;
+    return this.lastResult.url === url ? this.lastResult.result : null;
+  }
+  flattenTree(nodes, level = 1) {
+    const rows = [];
+    for (const node of nodes) {
+      const url = node.data?.url;
+      if (url) {
+        rows.push({ url, level });
+      }
+      if (node.children?.length) {
+        rows.push(...this.flattenTree(node.children, level + 1));
+      }
+    }
+    return rows;
+  }
+  buildIaTreeInternal(urls, depth, parentUrl, level = 0, state, brokenLinks, options) {
+    return __async(this, null, function* () {
+      if (depth <= 0)
+        return [];
+      const nodes = [];
+      for (const url of urls) {
+        const meta = yield this.getPageMetaAndLinks(url);
+        if (state) {
+          state.processed += 1;
+          options?.onProgress?.(state.processed, state.total);
+        }
+        if (!meta || meta.status !== 200) {
+          if (brokenLinks) {
+            brokenLinks.push({
+              parentUrl,
+              url,
+              status: meta?.status || 0
+            });
+          }
+          continue;
+        }
+        if (!meta.breadcrumb || !meta.links)
+          continue;
+        if (parentUrl && meta.breadcrumb.at(-1) !== parentUrl) {
+          continue;
+        }
+        const node = {
+          label: meta.h1,
+          data: {
+            h1: meta.h1,
+            url,
+            originalParent: parentUrl,
+            editing: null,
+            customStyle: false,
+            customStyleKey: null,
+            borderStyle: "border-2 border-primary border-round shadow-2"
+          },
+          expanded: true,
+          children: []
+        };
+        if (meta.links?.length && depth > 1) {
+          const total = meta.links.length;
+          let limit = total;
+          if (this.skipFormsAndPubs.has(url)) {
+            limit = 5;
+          }
+          if (state) {
+            state.total += total;
+            options?.onProgress?.(state.processed, state.total);
+          }
+          const links = meta.links.slice(0, limit);
+          node.children = yield this.buildIaTreeInternal(links, depth - 1, url, level + 1, state, brokenLinks, options);
+          if (total > limit) {
+            node.children?.push({
+              label: `+ ${total - limit} more...`,
+              data: {
+                h1: `+ ${total - limit} more...`,
+                url: null,
+                originalParent: parentUrl,
+                editing: null,
+                customStyle: true,
+                customStyleKey: "template",
+                borderStyle: "border-2 border-primary border-round shadow-2 border-dashed"
+              },
+              expanded: true,
+              children: []
+            });
+          }
+        }
+        nodes.push(node);
+      }
+      return nodes;
+    });
+  }
+  getPageMetaAndLinks(url) {
+    return __async(this, null, function* () {
+      try {
+        const res = yield fetch(url);
+        const status = res.status;
+        if (!res.ok)
+          return { status };
+        const html = yield res.text();
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(html, "text/html");
+        const h1Elements = Array.from(doc.querySelectorAll("h1"));
+        const h1 = h1Elements.map((e) => e.textContent?.trim()).filter(Boolean).join("<br>");
+        const breadcrumb = Array.from(doc.querySelectorAll(".breadcrumb li a")).map((a) => new URL(a.getAttribute("href") || "", url).href);
+        const anchors = Array.from(doc.querySelectorAll("main a[href]"));
+        const baseUrl = new URL(url).origin;
+        const links = Array.from(new Set(anchors.map((a) => {
+          const u = new URL(a.getAttribute("href") || "", url);
+          u.hash = "";
+          return u.href;
+        }).filter((u) => u.startsWith(baseUrl) && u !== url)));
+        return { h1, breadcrumb, links, status };
+      } catch (err) {
+        console.error(`Failed to fetch ${url}`, err);
+        return { status: 0 };
+      }
+    });
+  }
+  static \u0275fac = function IaStructureService_Factory(__ngFactoryType__) {
+    return new (__ngFactoryType__ || _IaStructureService)();
+  };
+  static \u0275prov = /* @__PURE__ */ \u0275\u0275defineInjectable({ token: _IaStructureService, factory: _IaStructureService.\u0275fac, providedIn: "root" });
+};
+(() => {
+  (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(IaStructureService, [{
+    type: Injectable,
+    args: [{
+      providedIn: "root"
+    }]
+  }], null, null);
+})();
+
+// src/app/views/page-assistant/services/topic-doormat-ia-check.service.ts
+var TopicDoormatIaCheckService = class _TopicDoormatIaCheckService {
+  iaStructure = inject(IaStructureService);
+  http = inject(HttpClient);
+  locationStrategy = inject(LocationStrategy);
+  visitsSourcePath = "visits-urls.json";
+  visitsLoad;
+  analyze(doormatSummaries, uploadData) {
+    return __async(this, null, function* () {
+      const topicUrl = this.getTopicPageUrl(uploadData);
+      if (!topicUrl || !doormatSummaries.length) {
+        return { rows: [], metaByDoormatIndex: /* @__PURE__ */ new Map() };
+      }
+      const [iaResult, visits] = yield Promise.all([
+        this.getChildPageCandidates(topicUrl),
+        this.loadVisits()
+      ]);
+      const childByKey = new Map(iaResult.map((child) => [child.key, child]));
+      const doormatByKey = /* @__PURE__ */ new Map();
+      doormatSummaries.forEach((summary) => {
+        const key2 = this.getComparableUrlKey(summary.destinationUrl || summary.href, topicUrl);
+        if (key2) {
+          doormatByKey.set(key2, summary);
+        }
+      });
+      return {
+        rows: [
+          ...iaResult.length ? this.buildMissingRows(iaResult, doormatByKey) : [],
+          ...iaResult.length ? this.buildExtraRows(doormatSummaries, childByKey, visits, topicUrl) : [],
+          ...this.buildWrongOrderRows(doormatSummaries, visits, topicUrl)
+        ],
+        metaByDoormatIndex: this.buildDoormatMetaMap(doormatSummaries, childByKey, visits, topicUrl)
+      };
+    });
+  }
+  getChildPageCandidates(topicUrl) {
+    return __async(this, null, function* () {
+      const cached = this.iaStructure.getCachedResultFor(topicUrl);
+      const result = cached ?? (yield this.iaStructure.buildIaTree([topicUrl], 2));
+      const root = result.tree[0];
+      const children = root?.children ?? [];
+      return children.map((node) => this.toChildPageCandidate(node, topicUrl)).filter((candidate) => !!candidate && !!candidate.key);
+    });
+  }
+  toChildPageCandidate(node, topicUrl) {
+    const rawUrl = this.cleanString(node.data?.url);
+    const key2 = this.getComparableUrlKey(rawUrl, topicUrl);
+    if (!key2)
+      return null;
+    return {
+      label: this.cleanString(node.data?.h1) || this.cleanString(node.label) || rawUrl,
+      url: rawUrl,
+      key: key2
+    };
+  }
+  buildMissingRows(childPages, doormatByKey) {
+    return childPages.filter((child) => !doormatByKey.has(child.key)).map((child) => ({
+      include: true,
+      rowType: "section",
+      severity: "High",
+      doormat: "Topic page doormat set",
+      doormatLabel: "Doormat set",
+      issueId: "missing-needed-doormat",
+      issue: "Missing a needed doormat",
+      evidence: `Child page not found in doormats: ${child.label}.`,
+      evidenceLinkText: child.label,
+      evidenceLinkHref: child.url,
+      recommendation: "Flag for manual review and consider adding a doormat for the missing destination."
+    }));
+  }
+  buildExtraRows(doormatSummaries, childByKey, visits, topicUrl) {
+    return doormatSummaries.flatMap((summary) => {
+      const key2 = this.getComparableUrlKey(summary.destinationUrl || summary.href, topicUrl);
+      if (!key2 || childByKey.has(key2))
+        return [];
+      return [
+        {
+          include: true,
+          rowType: "doormat",
+          severity: "Medium",
+          doormat: this.buildDoormatLabel(summary),
+          doormatLabel: summary.linkText || summary.href || "Doormat",
+          issueId: "unnecessary-doormat",
+          issue: "Extra doormat",
+          evidence: "This doormat destination was not found as a direct child page in the IA crawl.",
+          recommendation: "Flag for manual review and consider removing or replacing the doormat.",
+          doormatIndex: summary.index || void 0,
+          sectionIndex: summary.sectionIndex || void 0,
+          sectionTitle: summary.sectionTitle || void 0,
+          sectionItemIndex: summary.sectionItemIndex || void 0,
+          sectionItemMeta: this.buildDoormatMeta(summary, childByKey, visits, topicUrl)
+        }
+      ];
+    });
+  }
+  buildDoormatMetaMap(doormatSummaries, childByKey, visits, topicUrl) {
+    const metaByIndex = /* @__PURE__ */ new Map();
+    doormatSummaries.forEach((summary) => {
+      if (!summary.index)
+        return;
+      const meta = this.buildDoormatMeta(summary, childByKey, visits, topicUrl);
+      if (meta) {
+        metaByIndex.set(summary.index, meta);
+      }
+    });
+    return metaByIndex;
+  }
+  buildDoormatMeta(summary, childByKey, visits, topicUrl) {
+    const key2 = this.getComparableUrlKey(summary.destinationUrl || summary.href, topicUrl);
+    const isChild = !!key2 && childByKey.has(key2);
+    const visitCount = this.getVisitsForUrl(summary.destinationUrl || summary.href, visits, topicUrl);
+    const parts = [
+      isChild ? "child" : "",
+      visitCount !== null ? this.formatVisits(visitCount) : "no views"
+    ].filter(Boolean);
+    return parts.join(", ");
+  }
+  buildWrongOrderRows(doormatSummaries, visits, topicUrl) {
+    const bySection = /* @__PURE__ */ new Map();
+    doormatSummaries.forEach((summary) => {
+      if (!summary.sectionIndex)
+        return;
+      const rows = bySection.get(summary.sectionIndex) ?? [];
+      rows.push(summary);
+      bySection.set(summary.sectionIndex, rows);
+    });
+    return Array.from(bySection.entries()).flatMap(([sectionIndex, rows]) => {
+      const rowsWithVisits = rows.map((summary) => ({
+        summary,
+        visits: this.getVisitsForUrl(summary.destinationUrl || summary.href, visits, topicUrl)
+      })).filter((entry) => entry.visits !== null);
+      if (rowsWithVisits.length < 2)
+        return [];
+      const outOfOrder = rowsWithVisits.some((entry, index, entries) => {
+        if (index === 0)
+          return false;
+        return entry.visits > entries[index - 1].visits;
+      });
+      if (!outOfOrder)
+        return [];
+      const expectedOrderItems = [...rowsWithVisits].sort((a, b) => b.visits - a.visits).map((entry) => entry.summary.linkText || entry.summary.href).filter(Boolean);
+      const sectionTitle = rows[0]?.sectionTitle || "";
+      return [
+        {
+          include: true,
+          rowType: "section",
+          severity: "Medium",
+          doormat: sectionTitle ? `Section ${sectionIndex}: ${sectionTitle}` : `Section ${sectionIndex}`,
+          doormatLabel: "All doormats in section",
+          issueId: "wrong-doormat-order",
+          issue: "Wrong doormat order",
+          evidence: "Expected order:",
+          evidenceOrderItems: expectedOrderItems,
+          recommendation: "Reorder doormats so the highest-demand or highest-priority information and services come first.",
+          sectionIndex,
+          sectionTitle
+        }
+      ];
+    });
+  }
+  loadVisits() {
+    return __async(this, null, function* () {
+      if (!this.visitsLoad) {
+        this.visitsLoad = this.fetchVisits().catch(() => ({
+          byUrl: /* @__PURE__ */ new Map(),
+          byPath: /* @__PURE__ */ new Map()
+        }));
+      }
+      return this.visitsLoad;
+    });
+  }
+  fetchVisits() {
+    return __async(this, null, function* () {
+      const baseHref = this.locationStrategy.getBaseHref() || "/";
+      const resourceUrl = new URL(this.visitsSourcePath, `${window.location.origin}${baseHref}`).toString();
+      const data = yield firstValueFrom(this.http.get(resourceUrl));
+      const byUrl = /* @__PURE__ */ new Map();
+      const byPath = /* @__PURE__ */ new Map();
+      if (!Array.isArray(data))
+        return { byUrl, byPath };
+      data.forEach((entry) => {
+        if (!entry || typeof entry !== "object")
+          return;
+        const typed = entry;
+        const url = this.cleanString(typed.url);
+        const visits = this.parseVisits(typed.visits);
+        if (!url || visits === null)
+          return;
+        const normalized = this.normalizeUrl(url);
+        byUrl.set(normalized, visits);
+        byUrl.set(this.normalizeUrl(this.decodeUrl(url)), visits);
+        const pathKey = this.getPathSuffixKey(url);
+        if (pathKey) {
+          byPath.set(pathKey, visits);
+        }
+      });
+      return { byUrl, byPath };
+    });
+  }
+  getVisitsForUrl(rawUrl, visits, baseUrl) {
+    const absoluteUrl = this.resolveUrl(rawUrl, baseUrl);
+    if (!absoluteUrl)
+      return null;
+    const normalized = this.normalizeUrl(absoluteUrl);
+    const direct = visits.byUrl.get(normalized) ?? visits.byUrl.get(this.normalizeUrl(this.decodeUrl(absoluteUrl)));
+    if (direct !== void 0)
+      return direct;
+    const pathKey = this.getPathSuffixKey(absoluteUrl);
+    if (!pathKey)
+      return null;
+    return visits.byPath.get(pathKey) ?? visits.byPath.get(this.normalizePath(pathKey)) ?? null;
+  }
+  getTopicPageUrl(uploadData) {
+    const pageUrl = this.cleanString(uploadData?.originalUrl) || this.cleanString(uploadData?.modifiedUrl);
+    return this.resolveUrl(pageUrl, pageUrl);
+  }
+  getComparableUrlKey(rawUrl, baseUrl) {
+    const resolved = this.resolveUrl(rawUrl, baseUrl);
+    if (!resolved)
+      return "";
+    return this.normalizeUrl(resolved);
+  }
+  resolveUrl(rawUrl, baseUrl) {
+    const trimmed = this.cleanString(rawUrl);
+    if (!trimmed || trimmed.startsWith("#"))
+      return "";
+    try {
+      const resolved = baseUrl ? new URL(trimmed, baseUrl) : new URL(trimmed);
+      resolved.hash = "";
+      return resolved.toString();
+    } catch {
+      return "";
+    }
+  }
+  normalizeUrl(url) {
+    try {
+      const parsed = new URL(this.ensureUrlScheme(url));
+      const normalized = `${parsed.origin.toLowerCase()}${parsed.pathname}`;
+      return normalized.replace(/\/+$/, "");
+    } catch {
+      const stripped = url.split("#")[0].split("?")[0];
+      return stripped.replace(/\/+$/, "");
+    }
+  }
+  ensureUrlScheme(url) {
+    const trimmed = url.trim();
+    if (/^https?:\/\//i.test(trimmed))
+      return trimmed;
+    if (/^www\./i.test(trimmed))
+      return `https://${trimmed}`;
+    if (/^canada\.ca\//i.test(trimmed))
+      return `https://${trimmed}`;
+    return trimmed;
+  }
+  getPathSuffixKey(url) {
+    const path = this.extractPathname(url);
+    if (!path)
+      return null;
+    const normalizedPath = this.normalizePath(path);
+    const langMarker = this.findLangMarker(normalizedPath);
+    if (!langMarker)
+      return normalizedPath;
+    return normalizedPath.slice(normalizedPath.indexOf(langMarker));
+  }
+  extractPathname(url) {
+    try {
+      const parsed = new URL(this.ensureUrlScheme(url));
+      return parsed.pathname || null;
+    } catch {
+      const stripped = url.split("#")[0].split("?")[0];
+      const slashIndex = stripped.indexOf("/");
+      return slashIndex >= 0 ? stripped.slice(slashIndex) : null;
+    }
+  }
+  findLangMarker(path) {
+    if (path.includes("/en/"))
+      return "/en/";
+    if (path.includes("/fr/"))
+      return "/fr/";
+    return null;
+  }
+  normalizePath(path) {
+    return path.toLowerCase().replace(/\/+$/, "");
+  }
+  parseVisits(raw) {
+    if (typeof raw === "number") {
+      return Number.isFinite(raw) ? Math.round(raw) : null;
+    }
+    if (typeof raw !== "string")
+      return null;
+    const cleaned = raw.replace(/[^\d.]/g, "");
+    if (!cleaned)
+      return null;
+    const value = Number.parseFloat(cleaned);
+    return Number.isFinite(value) ? Math.round(value) : null;
+  }
+  decodeUrl(url) {
+    try {
+      return decodeURI(url);
+    } catch {
+      return url;
+    }
+  }
+  buildDoormatLabel(summary) {
+    const itemLabel = [
+      summary.sectionItemIndex ? `${summary.sectionItemIndex}.` : "",
+      summary.linkText || summary.href || "Doormat"
+    ].filter(Boolean).join(" ");
+    return summary.sectionTitle ? `${summary.sectionTitle}: ${itemLabel}` : [
+      summary.index ? `${summary.index}.` : "",
+      summary.linkText || summary.href || "Doormat"
+    ].filter(Boolean).join(" ");
+  }
+  formatVisits(value) {
+    return new Intl.NumberFormat("en-CA").format(value);
+  }
+  cleanString(value) {
+    return typeof value === "string" ? value.trim() : "";
+  }
+  static \u0275fac = function TopicDoormatIaCheckService_Factory(__ngFactoryType__) {
+    return new (__ngFactoryType__ || _TopicDoormatIaCheckService)();
+  };
+  static \u0275prov = /* @__PURE__ */ \u0275\u0275defineInjectable({ token: _TopicDoormatIaCheckService, factory: _TopicDoormatIaCheckService.\u0275fac, providedIn: "root" });
+};
+(() => {
+  (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(TopicDoormatIaCheckService, [{
+    type: Injectable,
+    args: [{ providedIn: "root" }]
+  }], null, null);
+})();
+
 // src/app/views/page-assistant/services/topic-doormat-model-client.service.ts
 var TopicDoormatModelClientService = class _TopicDoormatModelClientService {
   openRouter = inject(OpenRouterService);
@@ -29776,6 +30271,7 @@ var TopicDoormatIssueAnalysisService = class _TopicDoormatIssueAnalysisService {
   translate = inject(TranslateService);
   skillManager = inject(SkillManagerService);
   modelClient = inject(TopicDoormatModelClientService);
+  iaCheck = inject(TopicDoormatIaCheckService);
   topicDoormatDebugStorageKey = "pageAssistant.topicDoormatDebug";
   topicDoormatIssueTaxonomyPath = "skills/topic-doormats/issues/references/issue-taxonomy.json";
   topicDoormatIssueLengthLimits = {
@@ -29861,17 +30357,30 @@ var TopicDoormatIssueAnalysisService = class _TopicDoormatIssueAnalysisService {
         userPayloadCharacters: messages[1].content.length,
         totalMessageCharacters: messages.reduce((total, message) => total + message.content.length, 0)
       });
-      const issueJson = yield this.modelClient.requestIssueJson({
-        messages,
-        requestedModel: input.selectedModel,
-        doormatSummaries: input.doormatSummaries,
-        isParseableResponseText: (value) => this.isParseableTopicDoormatIssueResponseText(value),
-        debug: (event, details) => this.debugTopicDoormatIssues(event, details)
-      });
+      const [issueJson, localIaResult] = yield Promise.all([
+        this.modelClient.requestIssueJson({
+          messages,
+          requestedModel: input.selectedModel,
+          doormatSummaries: input.doormatSummaries,
+          isParseableResponseText: (value) => this.isParseableTopicDoormatIssueResponseText(value),
+          debug: (event, details) => this.debugTopicDoormatIssues(event, details)
+        }),
+        this.iaCheck.analyze(input.doormatSummaries, input.uploadData).catch((err) => {
+          this.debugTopicDoormatIssues("local IA checks failed", {
+            error: err instanceof Error ? err.message : String(err)
+          });
+          return {
+            rows: [],
+            metaByDoormatIndex: /* @__PURE__ */ new Map()
+          };
+        })
+      ]);
       const { text, model } = issueJson;
-      const rows = text ? this.parseTopicDoormatIssueRows(text, input.doormatSummaries, input.hasLegacyTopicDoormatTemplate, input.pageLanguage, input.mostRequestedLinks, input.uploadData) : this.buildTopicDoormatFallbackRows(input.doormatSummaries, input.hasLegacyTopicDoormatTemplate, input.pageLanguage, input.mostRequestedLinks, input.uploadData);
+      const localIaRows = localIaResult.rows;
+      const rows = text ? this.parseTopicDoormatIssueRows(text, input.doormatSummaries, input.hasLegacyTopicDoormatTemplate, input.pageLanguage, input.mostRequestedLinks, input.uploadData, localIaRows) : this.buildTopicDoormatFallbackRows(input.doormatSummaries, input.hasLegacyTopicDoormatTemplate, input.pageLanguage, input.mostRequestedLinks, input.uploadData, localIaRows);
+      const rowsWithIaMeta = this.applyTopicDoormatSectionItemMeta(rows, localIaResult.metaByDoormatIndex);
       return {
-        rows,
+        rows: rowsWithIaMeta,
         text,
         model,
         modelRotation: issueJson.modelRotation,
@@ -29894,10 +30403,10 @@ var TopicDoormatIssueAnalysisService = class _TopicDoormatIssueAnalysisService {
       return false;
     }
   }
-  parseTopicDoormatIssueRows(text, doormatSummaries = [], hasLegacyTopicDoormatTemplate = false, pageLanguage = "en", mostRequestedLinks = [], uploadData) {
+  parseTopicDoormatIssueRows(text, doormatSummaries = [], hasLegacyTopicDoormatTemplate = false, pageLanguage = "en", mostRequestedLinks = [], uploadData, localIaRows = []) {
     const parsed = this.looseJsonParse(this.stripCodeFences(text));
     if (!parsed || typeof parsed !== "object") {
-      const fallbackRows = this.buildTopicDoormatFallbackRows(doormatSummaries, hasLegacyTopicDoormatTemplate, pageLanguage, mostRequestedLinks, uploadData);
+      const fallbackRows = this.buildTopicDoormatFallbackRows(doormatSummaries, hasLegacyTopicDoormatTemplate, pageLanguage, mostRequestedLinks, uploadData, localIaRows);
       this.debugTopicDoormatIssues("response parse fallback", {
         reason: "invalid-json-or-non-object",
         doormatSummaryCount: doormatSummaries.length,
@@ -30004,7 +30513,7 @@ var TopicDoormatIssueAnalysisService = class _TopicDoormatIssueAnalysisService {
         };
       }).filter((row) => row !== null);
     });
-    const reportableSectionIssueRows = sectionIssueRows.filter((row) => row.issueId !== "too-many-doormats-in-section");
+    const reportableSectionIssueRows = sectionIssueRows.filter((row) => row.issueId !== "too-many-doormats-in-section" && !this.isLocalIaOwnedTopicDoormatIssue(row.issueId));
     const mixedDescriptionStyleSectionIndexes = new Set(reportableSectionIssueRows.filter((row) => row.issueId === "mixed-description-style-in-section").map((row) => row.sectionIndex).filter((index) => typeof index === "number" && index > 0));
     const mixedLinkNameStyleSectionIndexes = new Set(reportableSectionIssueRows.filter((row) => row.issueId === "mixed-link-name-styles-in-section").map((row) => row.sectionIndex).filter((index) => typeof index === "number" && index > 0));
     const localDescriptionTrailingPunctuationSectionIndexes = this.getLocalDescriptionTrailingPunctuationSectionIndexes(doormatSummaries);
@@ -30016,6 +30525,8 @@ var TopicDoormatIssueAnalysisService = class _TopicDoormatIssueAnalysisService {
       return counts;
     }, /* @__PURE__ */ new Map());
     const suppressedModelIssueRows = rows.filter((row) => {
+      if (this.isLocalIaOwnedTopicDoormatIssue(row.issueId))
+        return true;
       if (!row.sectionIndex)
         return false;
       if (row.issueId === "inconsistent-description-style" && mixedDescriptionStyleSectionIndexes.has(row.sectionIndex)) {
@@ -30033,13 +30544,19 @@ var TopicDoormatIssueAnalysisService = class _TopicDoormatIssueAnalysisService {
       return sectionCount > 0 && flaggedCount >= Math.max(2, sectionCount - 1);
     });
     const modelIssueRows = rows.filter((row) => !suppressedModelIssueRows.includes(row));
-    const deterministicRows = this.buildDeterministicTopicDoormatIssueRows(doormatSummaries, [...modelIssueRows, ...reportableSectionIssueRows], hasLegacyTopicDoormatTemplate, pageLanguage, mostRequestedLinks, uploadData);
-    const representedIndexes = new Set([...modelIssueRows, ...deterministicRows, ...reportableSectionIssueRows].map((row) => row.doormatIndex).filter((index) => typeof index === "number" && index > 0));
+    const deterministicRows = this.buildDeterministicTopicDoormatIssueRows(doormatSummaries, [...modelIssueRows, ...reportableSectionIssueRows, ...localIaRows], hasLegacyTopicDoormatTemplate, pageLanguage, mostRequestedLinks, uploadData);
+    const representedIndexes = new Set([
+      ...modelIssueRows,
+      ...deterministicRows,
+      ...reportableSectionIssueRows,
+      ...localIaRows
+    ].map((row) => row.doormatIndex).filter((index) => typeof index === "number" && index > 0));
     const missingNoIssueRows = doormatSummaries.filter((summary) => !representedIndexes.has(summary.index)).map((summary) => this.buildTopicDoormatNoIssueRow(summary));
     const resolvedRows = this.removeConflictingTopicDoormatNoIssueRows([
       ...modelIssueRows,
       ...deterministicRows,
       ...reportableSectionIssueRows,
+      ...localIaRows,
       ...missingNoIssueRows
     ].sort((a, b) => {
       const aIndex = this.getTopicDoormatRowSortIndex(a, doormatSummaries);
@@ -30061,6 +30578,8 @@ var TopicDoormatIssueAnalysisService = class _TopicDoormatIssueAnalysisService {
       modelDisplayedSectionIssueRows: reportableSectionIssueRows.length,
       fallbackNoIssueRows: missingNoIssueRows.length,
       deterministicRows: deterministicRows.length,
+      localIaRows: localIaRows.length,
+      localIaBreakdown: this.countTopicDoormatRowsByIssue(localIaRows),
       displayedRows: resolvedRows.length
     });
     return resolvedRows;
@@ -30096,12 +30615,23 @@ var TopicDoormatIssueAnalysisService = class _TopicDoormatIssueAnalysisService {
     const indexesWithIssues = new Set(rows.filter((row) => !this.isNoIssueRow(row)).map((row) => row.doormatIndex).filter((index) => typeof index === "number" && index > 0));
     return rows.filter((row) => !this.isNoIssueRow(row) || !row.doormatIndex || !indexesWithIssues.has(row.doormatIndex));
   }
-  buildTopicDoormatFallbackRows(doormatSummaries, hasLegacyTopicDoormatTemplate = false, pageLanguage = "en", mostRequestedLinks = [], uploadData) {
-    const deterministicRows = this.buildDeterministicTopicDoormatIssueRows(doormatSummaries, [], hasLegacyTopicDoormatTemplate, pageLanguage, mostRequestedLinks, uploadData);
-    const representedIndexes = new Set(deterministicRows.map((row) => row.doormatIndex).filter((index) => typeof index === "number" && index > 0));
+  applyTopicDoormatSectionItemMeta(rows, metaByDoormatIndex) {
+    if (!metaByDoormatIndex.size)
+      return rows;
+    return rows.map((row) => {
+      if (row.rowType !== "doormat" || !row.doormatIndex)
+        return row;
+      const sectionItemMeta = metaByDoormatIndex.get(row.doormatIndex);
+      return sectionItemMeta ? __spreadProps(__spreadValues({}, row), { sectionItemMeta }) : row;
+    });
+  }
+  buildTopicDoormatFallbackRows(doormatSummaries, hasLegacyTopicDoormatTemplate = false, pageLanguage = "en", mostRequestedLinks = [], uploadData, localIaRows = []) {
+    const deterministicRows = this.buildDeterministicTopicDoormatIssueRows(doormatSummaries, localIaRows, hasLegacyTopicDoormatTemplate, pageLanguage, mostRequestedLinks, uploadData);
+    const representedIndexes = new Set([...deterministicRows, ...localIaRows].map((row) => row.doormatIndex).filter((index) => typeof index === "number" && index > 0));
     const noIssueRows = doormatSummaries.filter((summary) => !representedIndexes.has(summary.index)).map((summary) => this.buildTopicDoormatNoIssueRow(summary));
     return this.removeConflictingTopicDoormatNoIssueRows([
       ...deterministicRows,
+      ...localIaRows,
       ...noIssueRows
     ].sort((a, b) => {
       const aIndex = this.getTopicDoormatRowSortIndex(a, doormatSummaries);
@@ -30840,6 +31370,9 @@ var TopicDoormatIssueAnalysisService = class _TopicDoormatIssueAnalysisService {
     }
     return true;
   }
+  isLocalIaOwnedTopicDoormatIssue(issueId) {
+    return issueId === "missing-needed-doormat" || issueId === "unnecessary-doormat" || issueId === "wrong-doormat-order";
+  }
   buildTopicDoormatLabel(doormat) {
     const itemIndex = doormat.sectionItemIndex || doormat.index;
     const itemLabel = [
@@ -30860,6 +31393,9 @@ var TopicDoormatIssueAnalysisService = class _TopicDoormatIssueAnalysisService {
   }
   isReportableTopicDoormatIssue(issue, doormat, pageLanguage = "en") {
     const issueCategory = this.getTopicDoormatIssueId(issue);
+    if (issueCategory === "link-name-too-different-from-destination-title") {
+      return this.hasMeaningfulTopicDoormatDestinationTitleMismatch(issue, doormat);
+    }
     if (issueCategory !== "link-name-too-long" && issueCategory !== "description-too-long") {
       return true;
     }
@@ -30871,6 +31407,26 @@ var TopicDoormatIssueAnalysisService = class _TopicDoormatIssueAnalysisService {
     if (limit == null)
       return true;
     return exactCount > limit;
+  }
+  hasMeaningfulTopicDoormatDestinationTitleMismatch(issue, doormat) {
+    if (!doormat?.linkText)
+      return true;
+    const details = issue["evidence_details"] && typeof issue["evidence_details"] === "object" ? issue["evidence_details"] : null;
+    const linkKey = this.normalizeTopicDoormatDestinationComparisonText(doormat.linkText);
+    if (!linkKey)
+      return true;
+    const destinationKeys = [
+      doormat.destinationPageTitle,
+      doormat.destinationPageHeading,
+      this.cleanString(details?.["destination_page_title"]),
+      this.cleanString(details?.["destination_page_heading"])
+    ].map((value) => this.normalizeTopicDoormatDestinationComparisonText(value)).filter(Boolean);
+    if (!destinationKeys.length)
+      return true;
+    return !destinationKeys.includes(linkKey);
+  }
+  normalizeTopicDoormatDestinationComparisonText(value) {
+    return this.cleanVisibleText(value).replace(/\s*(?:[-|]\s*)?canada\.ca\s*$/i, "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[\u2018\u2019\u201b\u2032]/g, "'").replace(/[^a-z0-9]+/gi, " ").trim().toLowerCase();
   }
   buildTopicDoormatEvidence(issue, doormat) {
     const evidence = this.cleanString(issue["evidence"]);
@@ -31631,29 +32187,77 @@ function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Co
     \u0275\u0275conditional(issue_r11.evidence ? 2 : -1);
   }
 }
-function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_3_For_1_ng_template_11_Conditional_10_Conditional_1_Template(rf, ctx) {
+function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_3_For_1_ng_template_11_Conditional_10_Conditional_0_For_5_Conditional_0_Template(rf, ctx) {
+  if (rf & 1) {
+    \u0275\u0275elementStart(0, "span", 58);
+    \u0275\u0275text(1, "->");
+    \u0275\u0275elementEnd();
+  }
+}
+function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_3_For_1_ng_template_11_Conditional_10_Conditional_0_For_5_Template(rf, ctx) {
+  if (rf & 1) {
+    \u0275\u0275template(0, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_3_For_1_ng_template_11_Conditional_10_Conditional_0_For_5_Conditional_0_Template, 2, 0, "span", 58);
+    \u0275\u0275elementStart(1, "span", 59);
+    \u0275\u0275text(2);
+    \u0275\u0275elementEnd();
+  }
+  if (rf & 2) {
+    const item_r12 = ctx.$implicit;
+    const $index_r13 = ctx.$index;
+    \u0275\u0275conditional($index_r13 > 0 ? 0 : -1);
+    \u0275\u0275advance(2);
+    \u0275\u0275textInterpolate(item_r12);
+  }
+}
+function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_3_For_1_ng_template_11_Conditional_10_Conditional_0_Template(rf, ctx) {
+  if (rf & 1) {
+    \u0275\u0275elementStart(0, "div", 56)(1, "span");
+    \u0275\u0275text(2);
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(3, "span", 57);
+    \u0275\u0275repeaterCreate(4, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_3_For_1_ng_template_11_Conditional_10_Conditional_0_For_5_Template, 3, 2, null, null, \u0275\u0275repeaterTrackByIndex);
+    \u0275\u0275elementEnd()();
+  }
+  if (rf & 2) {
+    const issue_r11 = \u0275\u0275nextContext(2).$implicit;
+    \u0275\u0275advance(2);
+    \u0275\u0275textInterpolate(issue_r11.evidence);
+    \u0275\u0275advance(2);
+    \u0275\u0275repeater(issue_r11.evidenceOrderItems);
+  }
+}
+function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_3_For_1_ng_template_11_Conditional_10_Conditional_1_Conditional_1_Template(rf, ctx) {
   if (rf & 1) {
     \u0275\u0275elementStart(0, "a", 55);
     \u0275\u0275text(1);
     \u0275\u0275elementEnd();
   }
   if (rf & 2) {
-    const issue_r11 = \u0275\u0275nextContext(2).$implicit;
+    const issue_r11 = \u0275\u0275nextContext(3).$implicit;
     \u0275\u0275property("href", issue_r11.evidenceLinkHref, \u0275\u0275sanitizeUrl);
     \u0275\u0275advance();
     \u0275\u0275textInterpolate(issue_r11.evidenceLinkText);
   }
 }
-function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_3_For_1_ng_template_11_Conditional_10_Template(rf, ctx) {
+function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_3_For_1_ng_template_11_Conditional_10_Conditional_1_Template(rf, ctx) {
   if (rf & 1) {
     \u0275\u0275text(0);
-    \u0275\u0275template(1, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_3_For_1_ng_template_11_Conditional_10_Conditional_1_Template, 2, 2, "a", 55);
+    \u0275\u0275template(1, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_3_For_1_ng_template_11_Conditional_10_Conditional_1_Conditional_1_Template, 2, 2, "a", 55);
   }
   if (rf & 2) {
-    const issue_r11 = \u0275\u0275nextContext().$implicit;
+    const issue_r11 = \u0275\u0275nextContext(2).$implicit;
     \u0275\u0275textInterpolate1(" ", issue_r11.evidence || "-", " ");
     \u0275\u0275advance();
     \u0275\u0275conditional(issue_r11.evidenceLinkText && issue_r11.evidenceLinkHref ? 1 : -1);
+  }
+}
+function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_3_For_1_ng_template_11_Conditional_10_Template(rf, ctx) {
+  if (rf & 1) {
+    \u0275\u0275template(0, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_3_For_1_ng_template_11_Conditional_10_Conditional_0_Template, 6, 1, "div", 56)(1, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_3_For_1_ng_template_11_Conditional_10_Conditional_1_Template, 2, 2);
+  }
+  if (rf & 2) {
+    const issue_r11 = \u0275\u0275nextContext().$implicit;
+    \u0275\u0275conditional((issue_r11.evidenceOrderItems == null ? null : issue_r11.evidenceOrderItems.length) ? 0 : 1);
   }
 }
 function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_3_For_1_ng_template_11_Template(rf, ctx) {
@@ -31673,7 +32277,7 @@ function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Co
     \u0275\u0275text(7);
     \u0275\u0275elementEnd();
     \u0275\u0275elementStart(8, "td");
-    \u0275\u0275template(9, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_3_For_1_ng_template_11_Conditional_9_Template, 3, 3)(10, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_3_For_1_ng_template_11_Conditional_10_Template, 2, 2);
+    \u0275\u0275template(9, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_3_For_1_ng_template_11_Conditional_9_Template, 3, 3)(10, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_3_For_1_ng_template_11_Conditional_10_Template, 2, 1);
     \u0275\u0275elementEnd();
     \u0275\u0275elementStart(11, "td");
     \u0275\u0275text(12);
@@ -31700,7 +32304,7 @@ function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Co
 }
 function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_3_For_1_ng_template_12_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275elementStart(0, "tr")(1, "td", 56)(2, "span", 25);
+    \u0275\u0275elementStart(0, "tr")(1, "td", 60)(2, "span", 25);
     \u0275\u0275text(3, "No section-level issues");
     \u0275\u0275elementEnd()()();
   }
@@ -31710,7 +32314,7 @@ function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Co
     \u0275\u0275elementStart(0, "tr")(1, "th", 49);
     \u0275\u0275text(2, "Include");
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(3, "th", 57);
+    \u0275\u0275elementStart(3, "th", 61);
     \u0275\u0275text(4, "#");
     \u0275\u0275elementEnd();
     \u0275\u0275elementStart(5, "th");
@@ -31730,131 +32334,146 @@ function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Co
     \u0275\u0275elementEnd()();
   }
 }
-function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_3_For_1_ng_template_17_Conditional_13_Conditional_2_Conditional_2_Template(rf, ctx) {
+function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_3_For_1_ng_template_17_Conditional_5_Template(rf, ctx) {
+  if (rf & 1) {
+    \u0275\u0275elementStart(0, "span", 25);
+    \u0275\u0275text(1);
+    \u0275\u0275elementEnd();
+  }
+  if (rf & 2) {
+    const issue_r15 = \u0275\u0275nextContext().$implicit;
+    \u0275\u0275advance();
+    \u0275\u0275textInterpolate1("(", issue_r15.sectionItemMeta, ")");
+  }
+}
+function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_3_For_1_ng_template_17_Conditional_14_Conditional_2_Conditional_2_Template(rf, ctx) {
   if (rf & 1) {
     \u0275\u0275elementStart(0, "a", 55);
     \u0275\u0275text(1);
     \u0275\u0275elementEnd();
   }
   if (rf & 2) {
-    const issue_r13 = \u0275\u0275nextContext(3).$implicit;
-    \u0275\u0275property("href", issue_r13.evidenceLinkHref, \u0275\u0275sanitizeUrl);
+    const issue_r15 = \u0275\u0275nextContext(3).$implicit;
+    \u0275\u0275property("href", issue_r15.evidenceLinkHref, \u0275\u0275sanitizeUrl);
     \u0275\u0275advance();
-    \u0275\u0275textInterpolate(issue_r13.evidenceLinkText);
+    \u0275\u0275textInterpolate(issue_r15.evidenceLinkText);
   }
 }
-function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_3_For_1_ng_template_17_Conditional_13_Conditional_2_Template(rf, ctx) {
+function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_3_For_1_ng_template_17_Conditional_14_Conditional_2_Template(rf, ctx) {
   if (rf & 1) {
     \u0275\u0275elementStart(0, "span");
     \u0275\u0275text(1);
     \u0275\u0275elementEnd();
-    \u0275\u0275template(2, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_3_For_1_ng_template_17_Conditional_13_Conditional_2_Conditional_2_Template, 2, 2, "a", 55);
+    \u0275\u0275template(2, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_3_For_1_ng_template_17_Conditional_14_Conditional_2_Conditional_2_Template, 2, 2, "a", 55);
   }
   if (rf & 2) {
-    const issue_r13 = \u0275\u0275nextContext(2).$implicit;
+    const issue_r15 = \u0275\u0275nextContext(2).$implicit;
     \u0275\u0275advance();
-    \u0275\u0275textInterpolate1(". ", issue_r13.evidence, "");
+    \u0275\u0275textInterpolate1(". ", issue_r15.evidence, "");
     \u0275\u0275advance();
-    \u0275\u0275conditional(issue_r13.evidenceLinkText && issue_r13.evidenceLinkHref ? 2 : -1);
+    \u0275\u0275conditional(issue_r15.evidenceLinkText && issue_r15.evidenceLinkHref ? 2 : -1);
   }
 }
-function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_3_For_1_ng_template_17_Conditional_13_Template(rf, ctx) {
+function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_3_For_1_ng_template_17_Conditional_14_Template(rf, ctx) {
   if (rf & 1) {
     \u0275\u0275elementStart(0, "span", 54);
     \u0275\u0275text(1);
     \u0275\u0275elementEnd();
-    \u0275\u0275template(2, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_3_For_1_ng_template_17_Conditional_13_Conditional_2_Template, 3, 2);
+    \u0275\u0275template(2, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_3_For_1_ng_template_17_Conditional_14_Conditional_2_Template, 3, 2);
   }
   if (rf & 2) {
-    const issue_r13 = \u0275\u0275nextContext().$implicit;
+    const issue_r15 = \u0275\u0275nextContext().$implicit;
     const ctx_r2 = \u0275\u0275nextContext(6);
-    \u0275\u0275property("ngClass", ctx_r2.severityChip(issue_r13.severity));
+    \u0275\u0275property("ngClass", ctx_r2.severityChip(issue_r15.severity));
     \u0275\u0275advance();
-    \u0275\u0275textInterpolate1(" ", issue_r13.evidenceMetric, " ");
+    \u0275\u0275textInterpolate1(" ", issue_r15.evidenceMetric, " ");
     \u0275\u0275advance();
-    \u0275\u0275conditional(issue_r13.evidence ? 2 : -1);
+    \u0275\u0275conditional(issue_r15.evidence ? 2 : -1);
   }
 }
-function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_3_For_1_ng_template_17_Conditional_14_Conditional_1_Template(rf, ctx) {
+function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_3_For_1_ng_template_17_Conditional_15_Conditional_1_Template(rf, ctx) {
   if (rf & 1) {
     \u0275\u0275elementStart(0, "a", 55);
     \u0275\u0275text(1);
     \u0275\u0275elementEnd();
   }
   if (rf & 2) {
-    const issue_r13 = \u0275\u0275nextContext(2).$implicit;
-    \u0275\u0275property("href", issue_r13.evidenceLinkHref, \u0275\u0275sanitizeUrl);
+    const issue_r15 = \u0275\u0275nextContext(2).$implicit;
+    \u0275\u0275property("href", issue_r15.evidenceLinkHref, \u0275\u0275sanitizeUrl);
     \u0275\u0275advance();
-    \u0275\u0275textInterpolate(issue_r13.evidenceLinkText);
+    \u0275\u0275textInterpolate(issue_r15.evidenceLinkText);
   }
 }
-function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_3_For_1_ng_template_17_Conditional_14_Template(rf, ctx) {
+function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_3_For_1_ng_template_17_Conditional_15_Template(rf, ctx) {
   if (rf & 1) {
     \u0275\u0275text(0);
-    \u0275\u0275template(1, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_3_For_1_ng_template_17_Conditional_14_Conditional_1_Template, 2, 2, "a", 55);
+    \u0275\u0275template(1, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_3_For_1_ng_template_17_Conditional_15_Conditional_1_Template, 2, 2, "a", 55);
   }
   if (rf & 2) {
-    const issue_r13 = \u0275\u0275nextContext().$implicit;
-    \u0275\u0275textInterpolate1(" ", issue_r13.evidence || "-", " ");
+    const issue_r15 = \u0275\u0275nextContext().$implicit;
+    \u0275\u0275textInterpolate1(" ", issue_r15.evidence || "-", " ");
     \u0275\u0275advance();
-    \u0275\u0275conditional(issue_r13.evidenceLinkText && issue_r13.evidenceLinkHref ? 1 : -1);
+    \u0275\u0275conditional(issue_r15.evidenceLinkText && issue_r15.evidenceLinkHref ? 1 : -1);
   }
 }
 function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_3_For_1_ng_template_17_Template(rf, ctx) {
   if (rf & 1) {
-    const _r12 = \u0275\u0275getCurrentView();
+    const _r14 = \u0275\u0275getCurrentView();
     \u0275\u0275elementStart(0, "tr")(1, "td")(2, "p-checkbox", 52);
     \u0275\u0275twoWayListener("ngModelChange", function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_3_For_1_ng_template_17_Template_p_checkbox_ngModelChange_2_listener($event) {
-      const issue_r13 = \u0275\u0275restoreView(_r12).$implicit;
-      \u0275\u0275twoWayBindingSet(issue_r13.include, $event) || (issue_r13.include = $event);
+      const issue_r15 = \u0275\u0275restoreView(_r14).$implicit;
+      \u0275\u0275twoWayBindingSet(issue_r15.include, $event) || (issue_r15.include = $event);
       return \u0275\u0275resetView($event);
     });
     \u0275\u0275elementEnd()();
     \u0275\u0275elementStart(3, "td");
     \u0275\u0275text(4);
+    \u0275\u0275template(5, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_3_For_1_ng_template_17_Conditional_5_Template, 2, 1, "span", 25);
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(5, "td");
-    \u0275\u0275text(6);
+    \u0275\u0275elementStart(6, "td");
+    \u0275\u0275text(7);
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(7, "td")(8, "span", 53);
-    \u0275\u0275text(9);
+    \u0275\u0275elementStart(8, "td")(9, "span", 53);
+    \u0275\u0275text(10);
     \u0275\u0275elementEnd()();
-    \u0275\u0275elementStart(10, "td");
-    \u0275\u0275text(11);
+    \u0275\u0275elementStart(11, "td");
+    \u0275\u0275text(12);
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(12, "td");
-    \u0275\u0275template(13, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_3_For_1_ng_template_17_Conditional_13_Template, 3, 3)(14, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_3_For_1_ng_template_17_Conditional_14_Template, 2, 2);
+    \u0275\u0275elementStart(13, "td");
+    \u0275\u0275template(14, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_3_For_1_ng_template_17_Conditional_14_Template, 3, 3)(15, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_3_For_1_ng_template_17_Conditional_15_Template, 2, 2);
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(15, "td");
-    \u0275\u0275text(16);
+    \u0275\u0275elementStart(16, "td");
+    \u0275\u0275text(17);
     \u0275\u0275elementEnd()();
   }
   if (rf & 2) {
-    const issue_r13 = ctx.$implicit;
+    const issue_r15 = ctx.$implicit;
     const ctx_r2 = \u0275\u0275nextContext(6);
     \u0275\u0275advance(2);
     \u0275\u0275property("binary", true);
-    \u0275\u0275twoWayProperty("ngModel", issue_r13.include);
-    \u0275\u0275property("disabled", ctx_r2.isNoIssueRow(issue_r13));
+    \u0275\u0275twoWayProperty("ngModel", issue_r15.include);
+    \u0275\u0275property("disabled", ctx_r2.isNoIssueRow(issue_r15));
     \u0275\u0275advance(2);
-    \u0275\u0275textInterpolate(issue_r13.sectionItemIndex || "-");
-    \u0275\u0275advance(2);
-    \u0275\u0275textInterpolate(issue_r13.doormatLabel || "-");
-    \u0275\u0275advance(2);
-    \u0275\u0275property("ngClass", ctx_r2.severityChip(issue_r13.severity));
+    \u0275\u0275textInterpolate1(" ", issue_r15.sectionItemIndex || "-", " ");
     \u0275\u0275advance();
-    \u0275\u0275textInterpolate1(" ", issue_r13.severity, " ");
+    \u0275\u0275conditional(issue_r15.sectionItemMeta ? 5 : -1);
     \u0275\u0275advance(2);
-    \u0275\u0275textInterpolate(issue_r13.issue);
+    \u0275\u0275textInterpolate(issue_r15.doormatLabel || "-");
     \u0275\u0275advance(2);
-    \u0275\u0275conditional(issue_r13.evidenceMetric ? 13 : 14);
+    \u0275\u0275property("ngClass", ctx_r2.severityChip(issue_r15.severity));
+    \u0275\u0275advance();
+    \u0275\u0275textInterpolate1(" ", issue_r15.severity, " ");
+    \u0275\u0275advance(2);
+    \u0275\u0275textInterpolate(issue_r15.issue);
+    \u0275\u0275advance(2);
+    \u0275\u0275conditional(issue_r15.evidenceMetric ? 14 : 15);
     \u0275\u0275advance(3);
-    \u0275\u0275textInterpolate(issue_r13.recommendation || "-");
+    \u0275\u0275textInterpolate(issue_r15.recommendation || "-");
   }
 }
 function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_3_For_1_ng_template_18_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275elementStart(0, "tr")(1, "td", 58)(2, "span", 25);
+    \u0275\u0275elementStart(0, "tr")(1, "td", 62)(2, "span", 25);
     \u0275\u0275text(3, "No doormat-level issues");
     \u0275\u0275elementEnd()()();
   }
@@ -31877,19 +32496,19 @@ function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Co
     \u0275\u0275text(14, "Doormat-level issues");
     \u0275\u0275elementEnd();
     \u0275\u0275elementStart(15, "p-table", 47);
-    \u0275\u0275template(16, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_3_For_1_ng_template_16_Template, 15, 0, "ng-template", 3)(17, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_3_For_1_ng_template_17_Template, 17, 10, "ng-template", 4)(18, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_3_For_1_ng_template_18_Template, 4, 0, "ng-template", 48);
+    \u0275\u0275template(16, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_3_For_1_ng_template_16_Template, 15, 0, "ng-template", 3)(17, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_3_For_1_ng_template_17_Template, 18, 11, "ng-template", 4)(18, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_3_For_1_ng_template_18_Template, 4, 0, "ng-template", 48);
     \u0275\u0275elementEnd()();
   }
   if (rf & 2) {
-    const group_r14 = ctx.$implicit;
+    const group_r16 = ctx.$implicit;
     \u0275\u0275advance(4);
-    \u0275\u0275textInterpolate2(" Section ", group_r14.sectionIndex, ": ", group_r14.sectionTitle, " ");
+    \u0275\u0275textInterpolate2(" Section ", group_r16.sectionIndex, ": ", group_r16.sectionTitle, " ");
     \u0275\u0275advance(2);
-    \u0275\u0275textInterpolate1(" ", group_r14.doormatCount, " doormats ");
+    \u0275\u0275textInterpolate1(" ", group_r16.doormatCount, " doormats ");
     \u0275\u0275advance(3);
-    \u0275\u0275property("value", group_r14.sectionRows);
+    \u0275\u0275property("value", group_r16.sectionRows);
     \u0275\u0275advance(6);
-    \u0275\u0275property("value", group_r14.doormatRows);
+    \u0275\u0275property("value", group_r16.doormatRows);
   }
 }
 function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_3_Template(rf, ctx) {
@@ -31993,9 +32612,9 @@ function ComponentGuidanceComponent_ng_template_5_Conditional_4_Template(rf, ctx
     \u0275\u0275template(0, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Template, 5, 2)(1, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_1_Template, 3, 0, "p-table", 40);
   }
   if (rf & 2) {
-    const row_r15 = \u0275\u0275nextContext().$implicit;
+    const row_r17 = \u0275\u0275nextContext().$implicit;
     const ctx_r2 = \u0275\u0275nextContext();
-    \u0275\u0275conditional(row_r15.__id === ctx_r2.topicDoormatsId ? 0 : 1);
+    \u0275\u0275conditional(row_r17.__id === ctx_r2.topicDoormatsId ? 0 : 1);
   }
 }
 function ComponentGuidanceComponent_ng_template_5_Template(rf, ctx) {
@@ -32005,9 +32624,9 @@ function ComponentGuidanceComponent_ng_template_5_Template(rf, ctx) {
     \u0275\u0275elementEnd()()();
   }
   if (rf & 2) {
-    const row_r15 = ctx.$implicit;
+    const row_r17 = ctx.$implicit;
     \u0275\u0275advance(3);
-    \u0275\u0275conditional(row_r15.__nameKey === "page.tools.guidance.craVariant.alerts.title" ? 3 : 4);
+    \u0275\u0275conditional(row_r17.__nameKey === "page.tools.guidance.craVariant.alerts.title" ? 3 : 4);
   }
 }
 var ComponentGuidanceComponent = class _ComponentGuidanceComponent {
@@ -32580,7 +33199,7 @@ var ComponentGuidanceComponent = class _ComponentGuidanceComponent {
   static \u0275fac = function ComponentGuidanceComponent_Factory(__ngFactoryType__) {
     return new (__ngFactoryType__ || _ComponentGuidanceComponent)();
   };
-  static \u0275cmp = /* @__PURE__ */ \u0275\u0275defineComponent({ type: _ComponentGuidanceComponent, selectors: [["ca-component-guidance"]], decls: 10, vars: 10, consts: [["dt", ""], ["dataKey", "url", "styleClass", "p-datatable-sm", "selectionMode", "multiple", "expandableRows", "", 3, "selectionChange", "sortFunction", "onRowExpand", "onRowCollapse", "value", "selection", "customSort", "resizableColumns", "expandedRowKeys"], ["pTemplate", "caption"], ["pTemplate", "header"], ["pTemplate", "body"], ["pTemplate", "expandedrow"], [1, "mt-3"], ["pButton", "", "type", "button", "aria-label", "Get GenAI recommendations based on user data", "pTooltip", "Select one or more components", 1, "ai-btn", 3, "click", "label", "icon", "disabled", "showDelay", "hideDelay"], [1, "sr-only"], [1, "caption-actions"], ["pButton", "", "type", "button", "label", "Expand All", "icon", "pi pi-plus", 1, "p-button-text", 3, "click"], ["pButton", "", "type", "button", "label", "Collapse All", "icon", "pi pi-minus", 1, "p-button-text", 3, "click"], [2, "width", "3rem", "text-align", "center"], ["pSortableColumn", "order"], ["field", "order"], ["pSortableColumn", "health", 1, "health-col"], ["field", "health"], [3, "pSelectableRow"], [2, "text-align", "center"], ["pButton", "", "type", "button", "aria-label", "Toggle row", 1, "p-button-text", "p-button-rounded", "p-button-plain", 3, "pRowToggler"], ["aria-hidden", "true", 1, "pi", 3, "ngClass"], [3, "value"], ["target", "_blank", "rel", "noopener", 3, "href"], [1, "health-cell", "health-col"], [3, "label", "icon", "styleClass"], [1, "muted"], ["icon", "pi pi-question-circle", "styleClass", "chip chip-unk", 3, "label"], ["label", "OK", "icon", "pi pi-check-circle", "styleClass", "chip chip-ok"], [1, "alert-loading"], [1, "text-danger"], [1, "chip-list"], ["aria-hidden", "true", 1, "pi", "pi-spinner", "pi-spin"], [3, "label", "styleClass", 4, "ngFor", "ngForOf"], [3, "label", "styleClass"], ["styleClass", "chip chip-hghlght", 3, "label", 4, "ngFor", "ngForOf"], ["styleClass", "chip chip-hghlght", 3, "label"], ["colspan", "6"], [1, "p-3"], [1, "expansion-table", 3, "selectAll"], [1, "expansion-table", 3, "maxSeverityChange", "categoriesChange", "loadingChange", "errorChange", "issuesCleared", "selectAll"], ["styleClass", "p-datatable-sm expansion-table"], [1, "mb-3"], [1, "topic-doormat-empty"], [1, "topic-doormat-group"], [1, "topic-doormat-group-header"], [1, "topic-doormat-count"], [1, "topic-doormat-subheading"], ["styleClass", "p-datatable-sm expansion-table", 3, "value"], ["pTemplate", "emptymessage"], [2, "width", "3rem"], [2, "width", "8rem"], [1, "topic-doormat-section-row"], [3, "ngModelChange", "binary", "ngModel", "disabled"], [1, "chip", 3, "ngClass"], [1, "chip", "topic-doormat-evidence-metric", 3, "ngClass"], ["target", "_blank", "rel", "noopener noreferrer", 3, "href"], ["colspan", "5"], [2, "width", "4rem"], ["colspan", "7"]], template: function ComponentGuidanceComponent_Template(rf, ctx) {
+  static \u0275cmp = /* @__PURE__ */ \u0275\u0275defineComponent({ type: _ComponentGuidanceComponent, selectors: [["ca-component-guidance"]], decls: 10, vars: 10, consts: [["dt", ""], ["dataKey", "url", "styleClass", "p-datatable-sm", "selectionMode", "multiple", "expandableRows", "", 3, "selectionChange", "sortFunction", "onRowExpand", "onRowCollapse", "value", "selection", "customSort", "resizableColumns", "expandedRowKeys"], ["pTemplate", "caption"], ["pTemplate", "header"], ["pTemplate", "body"], ["pTemplate", "expandedrow"], [1, "mt-3"], ["pButton", "", "type", "button", "aria-label", "Get GenAI recommendations based on user data", "pTooltip", "Select one or more components", 1, "ai-btn", 3, "click", "label", "icon", "disabled", "showDelay", "hideDelay"], [1, "sr-only"], [1, "caption-actions"], ["pButton", "", "type", "button", "label", "Expand All", "icon", "pi pi-plus", 1, "p-button-text", 3, "click"], ["pButton", "", "type", "button", "label", "Collapse All", "icon", "pi pi-minus", 1, "p-button-text", 3, "click"], [2, "width", "3rem", "text-align", "center"], ["pSortableColumn", "order"], ["field", "order"], ["pSortableColumn", "health", 1, "health-col"], ["field", "health"], [3, "pSelectableRow"], [2, "text-align", "center"], ["pButton", "", "type", "button", "aria-label", "Toggle row", 1, "p-button-text", "p-button-rounded", "p-button-plain", 3, "pRowToggler"], ["aria-hidden", "true", 1, "pi", 3, "ngClass"], [3, "value"], ["target", "_blank", "rel", "noopener", 3, "href"], [1, "health-cell", "health-col"], [3, "label", "icon", "styleClass"], [1, "muted"], ["icon", "pi pi-question-circle", "styleClass", "chip chip-unk", 3, "label"], ["label", "OK", "icon", "pi pi-check-circle", "styleClass", "chip chip-ok"], [1, "alert-loading"], [1, "text-danger"], [1, "chip-list"], ["aria-hidden", "true", 1, "pi", "pi-spinner", "pi-spin"], [3, "label", "styleClass", 4, "ngFor", "ngForOf"], [3, "label", "styleClass"], ["styleClass", "chip chip-hghlght", 3, "label", 4, "ngFor", "ngForOf"], ["styleClass", "chip chip-hghlght", 3, "label"], ["colspan", "6"], [1, "p-3"], [1, "expansion-table", 3, "selectAll"], [1, "expansion-table", 3, "maxSeverityChange", "categoriesChange", "loadingChange", "errorChange", "issuesCleared", "selectAll"], ["styleClass", "p-datatable-sm expansion-table"], [1, "mb-3"], [1, "topic-doormat-empty"], [1, "topic-doormat-group"], [1, "topic-doormat-group-header"], [1, "topic-doormat-count"], [1, "topic-doormat-subheading"], ["styleClass", "p-datatable-sm expansion-table", 3, "value"], ["pTemplate", "emptymessage"], [2, "width", "3rem"], [2, "width", "8rem"], [1, "topic-doormat-section-row"], [3, "ngModelChange", "binary", "ngModel", "disabled"], [1, "chip", 3, "ngClass"], [1, "chip", "topic-doormat-evidence-metric", 3, "ngClass"], ["target", "_blank", "rel", "noopener noreferrer", 3, "href"], [1, "topic-doormat-order-evidence"], [1, "topic-doormat-order-list"], [1, "topic-doormat-order-separator"], [1, "topic-doormat-order-pill"], ["colspan", "5"], [2, "width", "4rem"], ["colspan", "7"]], template: function ComponentGuidanceComponent_Template(rf, ctx) {
     if (rf & 1) {
       const _r1 = \u0275\u0275getCurrentView();
       \u0275\u0275elementStart(0, "p-table", 1, 0);
@@ -32646,7 +33265,7 @@ var ComponentGuidanceComponent = class _ComponentGuidanceComponent {
     Tooltip,
     TranslateModule,
     AlertsGuidanceComponent
-  ], styles: ["\n\n[_nghost-%COMP%]     .alert-table .p-datatable-table {\n  table-layout: auto !important;\n}\n[_nghost-%COMP%]     .alert-table.p-datatable .p-datatable-thead > tr > th.toggle-col, \n[_nghost-%COMP%]     .alert-table.p-datatable .p-datatable-tbody > tr > td.toggle-col {\n  width: 70px !important;\n  min-width: 70px;\n  max-width: 70px;\n  white-space: nowrap !important;\n  text-align: center;\n  padding: 0 0.25rem;\n}\n[_nghost-%COMP%]     .alert-table.p-datatable .p-datatable-thead > tr > th.checkbox-col, \n[_nghost-%COMP%]     .alert-table.p-datatable .p-datatable-tbody > tr > td.checkbox-col {\n  width: 70px !important;\n  min-width: 70px;\n  max-width: 70px;\n  white-space: nowrap !important;\n  text-align: center;\n  padding: 0 0.25rem;\n}\n[_nghost-%COMP%]     .topic-doormat-section-row > td {\n  background: #eef2f6;\n}\n.topic-doormat-group[_ngcontent-%COMP%] {\n  margin-top: 1rem;\n  border: 1px solid #d8dee6;\n  border-radius: 6px;\n  background: #fff;\n  overflow: hidden;\n}\n.topic-doormat-group[_ngcontent-%COMP%]    + .topic-doormat-group[_ngcontent-%COMP%] {\n  margin-top: 1.25rem;\n}\n.topic-doormat-group-header[_ngcontent-%COMP%] {\n  display: flex;\n  align-items: flex-start;\n  gap: 0.75rem;\n  padding: 1.1rem 1.25rem;\n  border-bottom: 1px solid #d8dee6;\n  background: #eef2f6;\n}\n.topic-doormat-group[_ngcontent-%COMP%]   h3[_ngcontent-%COMP%] {\n  margin: 0;\n  font-size: 1.25rem;\n  line-height: 1.25;\n}\n.topic-doormat-count[_ngcontent-%COMP%] {\n  flex: 0 0 auto;\n  padding: 0.4rem 0.8rem;\n  border: 1px solid #d8dee6;\n  border-radius: 999px;\n  background: #fff;\n  color: #202833;\n  font-size: 0.9rem;\n  font-weight: 700;\n}\n.topic-doormat-subheading[_ngcontent-%COMP%] {\n  margin: 1rem 1rem 0.4rem;\n  padding-bottom: 0.25rem;\n  border-bottom: 1px solid #eef2f6;\n  color: #202833;\n  font-size: 0.9rem;\n  font-weight: 700;\n}\n.topic-doormat-group[_ngcontent-%COMP%]   .expansion-table[_ngcontent-%COMP%] {\n  margin: 0 1rem 1rem;\n}\n.topic-doormat-empty[_ngcontent-%COMP%] {\n  padding: 0.75rem;\n  border: 1px solid #d8dee6;\n  border-radius: 4px;\n  background: #fff;\n}\n/*# sourceMappingURL=component-guidance.component.css.map */", "\n\n.muted[_ngcontent-%COMP%] {\n  color: #6b7280;\n  font-size: 12px;\n}\n.issues[_ngcontent-%COMP%] {\n  margin: 0;\n  padding-left: 1rem;\n}\n.health-cell[_ngcontent-%COMP%] {\n  gap: 0.4rem;\n  align-items: center;\n  flex-wrap: wrap;\n}\n.chip-list[_ngcontent-%COMP%] {\n  display: flex;\n  flex-wrap: wrap;\n  gap: 0.25rem;\n  padding: 0;\n  margin: 0;\n}\n.chip-list[_ngcontent-%COMP%]   .chip[_ngcontent-%COMP%], \n.chip-list[_ngcontent-%COMP%]   .p-chip[_ngcontent-%COMP%] {\n  white-space: normal;\n  word-break: break-word;\n  max-width: 100%;\n}\n.expansion-table[_ngcontent-%COMP%] {\n  width: 100%;\n  max-width: 100%;\n  overflow: hidden;\n}\n[_nghost-%COMP%]     .expansion-table .p-datatable-table {\n  width: 100%;\n  border: 1px solid #d1d5db;\n  border-radius: 6px;\n}\n[_nghost-%COMP%]     .expansion-table .p-datatable-wrapper {\n  width: 100%;\n  overflow-x: auto;\n}\n[_nghost-%COMP%]     .expansion-table .p-datatable-tbody > tr > td, \n[_nghost-%COMP%]     .expansion-table .p-datatable-thead > tr > th {\n  white-space: normal;\n  word-break: normal;\n  overflow-wrap: normal;\n}\n.tag[_ngcontent-%COMP%] {\n  font-size: 11px;\n  padding: 0.05rem 0.4rem;\n  border-radius: 6px;\n  border: 1px solid transparent;\n}\n.topic-doormat-evidence-metric[_ngcontent-%COMP%] {\n  display: inline-flex;\n  margin-right: 0.2rem;\n  vertical-align: baseline;\n}\n.ai-btn[_ngcontent-%COMP%] {\n  font-weight: 600;\n}\n.sr-only[_ngcontent-%COMP%] {\n  position: absolute;\n  width: 1px;\n  height: 1px;\n  padding: 0;\n  margin: -1px;\n  overflow: hidden;\n  clip: rect(0, 0, 0, 0);\n  white-space: nowrap;\n  border: 0;\n}\n/*# sourceMappingURL=component-guidance.component.css.map */", "\n\n.caption-actions[_ngcontent-%COMP%] {\n  display: flex;\n  align-items: center;\n  justify-content: flex-end;\n  gap: 0.5rem;\n}\n/*# sourceMappingURL=component-guidance.component.css.map */"] });
+  ], styles: ["\n\n[_nghost-%COMP%]     .alert-table .p-datatable-table {\n  table-layout: auto !important;\n}\n[_nghost-%COMP%]     .alert-table.p-datatable .p-datatable-thead > tr > th.toggle-col, \n[_nghost-%COMP%]     .alert-table.p-datatable .p-datatable-tbody > tr > td.toggle-col {\n  width: 70px !important;\n  min-width: 70px;\n  max-width: 70px;\n  white-space: nowrap !important;\n  text-align: center;\n  padding: 0 0.25rem;\n}\n[_nghost-%COMP%]     .alert-table.p-datatable .p-datatable-thead > tr > th.checkbox-col, \n[_nghost-%COMP%]     .alert-table.p-datatable .p-datatable-tbody > tr > td.checkbox-col {\n  width: 70px !important;\n  min-width: 70px;\n  max-width: 70px;\n  white-space: nowrap !important;\n  text-align: center;\n  padding: 0 0.25rem;\n}\n[_nghost-%COMP%]     .topic-doormat-section-row > td {\n  background: #eef2f6;\n}\n.topic-doormat-group[_ngcontent-%COMP%] {\n  margin-top: 1rem;\n  border: 1px solid #d8dee6;\n  border-radius: 6px;\n  background: #fff;\n  overflow: hidden;\n}\n.topic-doormat-group[_ngcontent-%COMP%]    + .topic-doormat-group[_ngcontent-%COMP%] {\n  margin-top: 1.25rem;\n}\n.topic-doormat-group-header[_ngcontent-%COMP%] {\n  display: flex;\n  align-items: flex-start;\n  gap: 0.75rem;\n  padding: 1.1rem 1.25rem;\n  border-bottom: 1px solid #d8dee6;\n  background: #eef2f6;\n}\n.topic-doormat-group[_ngcontent-%COMP%]   h3[_ngcontent-%COMP%] {\n  margin: 0;\n  font-size: 1.25rem;\n  line-height: 1.25;\n}\n.topic-doormat-count[_ngcontent-%COMP%] {\n  flex: 0 0 auto;\n  padding: 0.4rem 0.8rem;\n  border: 1px solid #d8dee6;\n  border-radius: 999px;\n  background: #fff;\n  color: #202833;\n  font-size: 0.9rem;\n  font-weight: 700;\n}\n.topic-doormat-subheading[_ngcontent-%COMP%] {\n  margin: 1rem 1rem 0.4rem;\n  padding-bottom: 0.25rem;\n  border-bottom: 1px solid #eef2f6;\n  color: #202833;\n  font-size: 0.9rem;\n  font-weight: 700;\n}\n.topic-doormat-group[_ngcontent-%COMP%]   .expansion-table[_ngcontent-%COMP%] {\n  margin: 0 1rem 1rem;\n}\n.topic-doormat-empty[_ngcontent-%COMP%] {\n  padding: 0.75rem;\n  border: 1px solid #d8dee6;\n  border-radius: 4px;\n  background: #fff;\n}\n.topic-doormat-order-evidence[_ngcontent-%COMP%] {\n  display: grid;\n  gap: 0.35rem;\n}\n.topic-doormat-order-list[_ngcontent-%COMP%] {\n  display: inline-flex;\n  flex-wrap: wrap;\n  align-items: center;\n  gap: 0.3rem;\n}\n.topic-doormat-order-pill[_ngcontent-%COMP%] {\n  display: inline-flex;\n  align-items: center;\n  min-height: 1.65rem;\n  padding: 0.2rem 0.5rem;\n  border: 1px solid #c9d3df;\n  border-radius: 4px;\n  background: #fff;\n  color: #202833;\n  font-size: 0.88rem;\n  line-height: 1.2;\n}\n.topic-doormat-order-separator[_ngcontent-%COMP%] {\n  color: #5d6778;\n  font-weight: 700;\n}\n/*# sourceMappingURL=component-guidance.component.css.map */", "\n\n.muted[_ngcontent-%COMP%] {\n  color: #6b7280;\n  font-size: 12px;\n}\n.issues[_ngcontent-%COMP%] {\n  margin: 0;\n  padding-left: 1rem;\n}\n.health-cell[_ngcontent-%COMP%] {\n  gap: 0.4rem;\n  align-items: center;\n  flex-wrap: wrap;\n}\n.chip-list[_ngcontent-%COMP%] {\n  display: flex;\n  flex-wrap: wrap;\n  gap: 0.25rem;\n  padding: 0;\n  margin: 0;\n}\n.chip-list[_ngcontent-%COMP%]   .chip[_ngcontent-%COMP%], \n.chip-list[_ngcontent-%COMP%]   .p-chip[_ngcontent-%COMP%] {\n  white-space: normal;\n  word-break: break-word;\n  max-width: 100%;\n}\n.expansion-table[_ngcontent-%COMP%] {\n  width: 100%;\n  max-width: 100%;\n  overflow: hidden;\n}\n[_nghost-%COMP%]     .expansion-table .p-datatable-table {\n  width: 100%;\n  border: 1px solid #d1d5db;\n  border-radius: 6px;\n}\n[_nghost-%COMP%]     .expansion-table .p-datatable-wrapper {\n  width: 100%;\n  overflow-x: auto;\n}\n[_nghost-%COMP%]     .expansion-table .p-datatable-tbody > tr > td, \n[_nghost-%COMP%]     .expansion-table .p-datatable-thead > tr > th {\n  white-space: normal;\n  word-break: normal;\n  overflow-wrap: normal;\n}\n.tag[_ngcontent-%COMP%] {\n  font-size: 11px;\n  padding: 0.05rem 0.4rem;\n  border-radius: 6px;\n  border: 1px solid transparent;\n}\n.topic-doormat-evidence-metric[_ngcontent-%COMP%] {\n  display: inline-flex;\n  margin-right: 0.2rem;\n  vertical-align: baseline;\n}\n.ai-btn[_ngcontent-%COMP%] {\n  font-weight: 600;\n}\n.sr-only[_ngcontent-%COMP%] {\n  position: absolute;\n  width: 1px;\n  height: 1px;\n  padding: 0;\n  margin: -1px;\n  overflow: hidden;\n  clip: rect(0, 0, 0, 0);\n  white-space: nowrap;\n  border: 0;\n}\n/*# sourceMappingURL=component-guidance.component.css.map */", "\n\n.caption-actions[_ngcontent-%COMP%] {\n  display: flex;\n  align-items: center;\n  justify-content: flex-end;\n  gap: 0.5rem;\n}\n/*# sourceMappingURL=component-guidance.component.css.map */"] });
 };
 (() => {
   (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(ComponentGuidanceComponent, [{
@@ -32983,9 +33602,23 @@ var ComponentGuidanceComponent = class _ComponentGuidanceComponent {
                                 }
                               }
                             } @else {
-                              {{ issue.evidence || '-' }}
-                              @if (issue.evidenceLinkText && issue.evidenceLinkHref) {
-                                <a [href]="issue.evidenceLinkHref" target="_blank" rel="noopener noreferrer">{{ issue.evidenceLinkText }}</a>
+                              @if (issue.evidenceOrderItems?.length) {
+                                <div class="topic-doormat-order-evidence">
+                                  <span>{{ issue.evidence }}</span>
+                                  <span class="topic-doormat-order-list">
+                                    @for (item of issue.evidenceOrderItems; track $index) {
+                                      @if ($index > 0) {
+                                        <span class="topic-doormat-order-separator">-></span>
+                                      }
+                                      <span class="topic-doormat-order-pill">{{ item }}</span>
+                                    }
+                                  </span>
+                                </div>
+                              } @else {
+                                {{ issue.evidence || '-' }}
+                                @if (issue.evidenceLinkText && issue.evidenceLinkHref) {
+                                  <a [href]="issue.evidenceLinkHref" target="_blank" rel="noopener noreferrer">{{ issue.evidenceLinkText }}</a>
+                                }
                               }
                             }
                           </td>
@@ -33025,7 +33658,12 @@ var ComponentGuidanceComponent = class _ComponentGuidanceComponent {
                               [disabled]="isNoIssueRow(issue)">
                             </p-checkbox>
                           </td>
-                          <td>{{ issue.sectionItemIndex || '-' }}</td>
+                          <td>
+                            {{ issue.sectionItemIndex || '-' }}
+                            @if (issue.sectionItemMeta) {
+                              <span class="muted">({{ issue.sectionItemMeta }})</span>
+                            }
+                          </td>
                           <td>{{ issue.doormatLabel || '-' }}</td>
                           <td>
                             <span class="chip" [ngClass]="severityChip(issue.severity)">
@@ -33177,7 +33815,7 @@ var ComponentGuidanceComponent = class _ComponentGuidanceComponent {
     <span class="sr-only">Get GenAI recommendations based on user data</span>
   </button>
 </div>
-`, styles: ["/* src/app/views/page-assistant/components/problems/component-guidance/component-guidance.component.css */\n:host ::ng-deep .alert-table .p-datatable-table {\n  table-layout: auto !important;\n}\n:host ::ng-deep .alert-table.p-datatable .p-datatable-thead > tr > th.toggle-col,\n:host ::ng-deep .alert-table.p-datatable .p-datatable-tbody > tr > td.toggle-col {\n  width: 70px !important;\n  min-width: 70px;\n  max-width: 70px;\n  white-space: nowrap !important;\n  text-align: center;\n  padding: 0 0.25rem;\n}\n:host ::ng-deep .alert-table.p-datatable .p-datatable-thead > tr > th.checkbox-col,\n:host ::ng-deep .alert-table.p-datatable .p-datatable-tbody > tr > td.checkbox-col {\n  width: 70px !important;\n  min-width: 70px;\n  max-width: 70px;\n  white-space: nowrap !important;\n  text-align: center;\n  padding: 0 0.25rem;\n}\n:host ::ng-deep .topic-doormat-section-row > td {\n  background: #eef2f6;\n}\n.topic-doormat-group {\n  margin-top: 1rem;\n  border: 1px solid #d8dee6;\n  border-radius: 6px;\n  background: #fff;\n  overflow: hidden;\n}\n.topic-doormat-group + .topic-doormat-group {\n  margin-top: 1.25rem;\n}\n.topic-doormat-group-header {\n  display: flex;\n  align-items: flex-start;\n  gap: 0.75rem;\n  padding: 1.1rem 1.25rem;\n  border-bottom: 1px solid #d8dee6;\n  background: #eef2f6;\n}\n.topic-doormat-group h3 {\n  margin: 0;\n  font-size: 1.25rem;\n  line-height: 1.25;\n}\n.topic-doormat-count {\n  flex: 0 0 auto;\n  padding: 0.4rem 0.8rem;\n  border: 1px solid #d8dee6;\n  border-radius: 999px;\n  background: #fff;\n  color: #202833;\n  font-size: 0.9rem;\n  font-weight: 700;\n}\n.topic-doormat-subheading {\n  margin: 1rem 1rem 0.4rem;\n  padding-bottom: 0.25rem;\n  border-bottom: 1px solid #eef2f6;\n  color: #202833;\n  font-size: 0.9rem;\n  font-weight: 700;\n}\n.topic-doormat-group .expansion-table {\n  margin: 0 1rem 1rem;\n}\n.topic-doormat-empty {\n  padding: 0.75rem;\n  border: 1px solid #d8dee6;\n  border-radius: 4px;\n  background: #fff;\n}\n/*# sourceMappingURL=component-guidance.component.css.map */\n", "/* angular:styles/component:css;430e57ca770217165e875d99e86a3dead87c45d69199439a33445ade7db50790;C:/my-working-files/GitHub/design-assistant/src/app/views/page-assistant/components/problems/component-guidance/component-guidance.component.ts */\n.muted {\n  color: #6b7280;\n  font-size: 12px;\n}\n.issues {\n  margin: 0;\n  padding-left: 1rem;\n}\n.health-cell {\n  gap: 0.4rem;\n  align-items: center;\n  flex-wrap: wrap;\n}\n.chip-list {\n  display: flex;\n  flex-wrap: wrap;\n  gap: 0.25rem;\n  padding: 0;\n  margin: 0;\n}\n.chip-list .chip,\n.chip-list .p-chip {\n  white-space: normal;\n  word-break: break-word;\n  max-width: 100%;\n}\n.expansion-table {\n  width: 100%;\n  max-width: 100%;\n  overflow: hidden;\n}\n:host ::ng-deep .expansion-table .p-datatable-table {\n  width: 100%;\n  border: 1px solid #d1d5db;\n  border-radius: 6px;\n}\n:host ::ng-deep .expansion-table .p-datatable-wrapper {\n  width: 100%;\n  overflow-x: auto;\n}\n:host ::ng-deep .expansion-table .p-datatable-tbody > tr > td,\n:host ::ng-deep .expansion-table .p-datatable-thead > tr > th {\n  white-space: normal;\n  word-break: normal;\n  overflow-wrap: normal;\n}\n.tag {\n  font-size: 11px;\n  padding: 0.05rem 0.4rem;\n  border-radius: 6px;\n  border: 1px solid transparent;\n}\n.topic-doormat-evidence-metric {\n  display: inline-flex;\n  margin-right: 0.2rem;\n  vertical-align: baseline;\n}\n.ai-btn {\n  font-weight: 600;\n}\n.sr-only {\n  position: absolute;\n  width: 1px;\n  height: 1px;\n  padding: 0;\n  margin: -1px;\n  overflow: hidden;\n  clip: rect(0, 0, 0, 0);\n  white-space: nowrap;\n  border: 0;\n}\n/*# sourceMappingURL=component-guidance.component.css.map */\n", "/* angular:styles/component:css;c0806e59c14ba3c53784f6243c5c92cc29bf483de8f80121dc534aca8504d932;C:/my-working-files/GitHub/design-assistant/src/app/views/page-assistant/components/problems/component-guidance/component-guidance.component.ts */\n.caption-actions {\n  display: flex;\n  align-items: center;\n  justify-content: flex-end;\n  gap: 0.5rem;\n}\n/*# sourceMappingURL=component-guidance.component.css.map */\n"] }]
+`, styles: ["/* src/app/views/page-assistant/components/problems/component-guidance/component-guidance.component.css */\n:host ::ng-deep .alert-table .p-datatable-table {\n  table-layout: auto !important;\n}\n:host ::ng-deep .alert-table.p-datatable .p-datatable-thead > tr > th.toggle-col,\n:host ::ng-deep .alert-table.p-datatable .p-datatable-tbody > tr > td.toggle-col {\n  width: 70px !important;\n  min-width: 70px;\n  max-width: 70px;\n  white-space: nowrap !important;\n  text-align: center;\n  padding: 0 0.25rem;\n}\n:host ::ng-deep .alert-table.p-datatable .p-datatable-thead > tr > th.checkbox-col,\n:host ::ng-deep .alert-table.p-datatable .p-datatable-tbody > tr > td.checkbox-col {\n  width: 70px !important;\n  min-width: 70px;\n  max-width: 70px;\n  white-space: nowrap !important;\n  text-align: center;\n  padding: 0 0.25rem;\n}\n:host ::ng-deep .topic-doormat-section-row > td {\n  background: #eef2f6;\n}\n.topic-doormat-group {\n  margin-top: 1rem;\n  border: 1px solid #d8dee6;\n  border-radius: 6px;\n  background: #fff;\n  overflow: hidden;\n}\n.topic-doormat-group + .topic-doormat-group {\n  margin-top: 1.25rem;\n}\n.topic-doormat-group-header {\n  display: flex;\n  align-items: flex-start;\n  gap: 0.75rem;\n  padding: 1.1rem 1.25rem;\n  border-bottom: 1px solid #d8dee6;\n  background: #eef2f6;\n}\n.topic-doormat-group h3 {\n  margin: 0;\n  font-size: 1.25rem;\n  line-height: 1.25;\n}\n.topic-doormat-count {\n  flex: 0 0 auto;\n  padding: 0.4rem 0.8rem;\n  border: 1px solid #d8dee6;\n  border-radius: 999px;\n  background: #fff;\n  color: #202833;\n  font-size: 0.9rem;\n  font-weight: 700;\n}\n.topic-doormat-subheading {\n  margin: 1rem 1rem 0.4rem;\n  padding-bottom: 0.25rem;\n  border-bottom: 1px solid #eef2f6;\n  color: #202833;\n  font-size: 0.9rem;\n  font-weight: 700;\n}\n.topic-doormat-group .expansion-table {\n  margin: 0 1rem 1rem;\n}\n.topic-doormat-empty {\n  padding: 0.75rem;\n  border: 1px solid #d8dee6;\n  border-radius: 4px;\n  background: #fff;\n}\n.topic-doormat-order-evidence {\n  display: grid;\n  gap: 0.35rem;\n}\n.topic-doormat-order-list {\n  display: inline-flex;\n  flex-wrap: wrap;\n  align-items: center;\n  gap: 0.3rem;\n}\n.topic-doormat-order-pill {\n  display: inline-flex;\n  align-items: center;\n  min-height: 1.65rem;\n  padding: 0.2rem 0.5rem;\n  border: 1px solid #c9d3df;\n  border-radius: 4px;\n  background: #fff;\n  color: #202833;\n  font-size: 0.88rem;\n  line-height: 1.2;\n}\n.topic-doormat-order-separator {\n  color: #5d6778;\n  font-weight: 700;\n}\n/*# sourceMappingURL=component-guidance.component.css.map */\n", "/* angular:styles/component:css;430e57ca770217165e875d99e86a3dead87c45d69199439a33445ade7db50790;C:/my-working-files/GitHub/design-assistant/src/app/views/page-assistant/components/problems/component-guidance/component-guidance.component.ts */\n.muted {\n  color: #6b7280;\n  font-size: 12px;\n}\n.issues {\n  margin: 0;\n  padding-left: 1rem;\n}\n.health-cell {\n  gap: 0.4rem;\n  align-items: center;\n  flex-wrap: wrap;\n}\n.chip-list {\n  display: flex;\n  flex-wrap: wrap;\n  gap: 0.25rem;\n  padding: 0;\n  margin: 0;\n}\n.chip-list .chip,\n.chip-list .p-chip {\n  white-space: normal;\n  word-break: break-word;\n  max-width: 100%;\n}\n.expansion-table {\n  width: 100%;\n  max-width: 100%;\n  overflow: hidden;\n}\n:host ::ng-deep .expansion-table .p-datatable-table {\n  width: 100%;\n  border: 1px solid #d1d5db;\n  border-radius: 6px;\n}\n:host ::ng-deep .expansion-table .p-datatable-wrapper {\n  width: 100%;\n  overflow-x: auto;\n}\n:host ::ng-deep .expansion-table .p-datatable-tbody > tr > td,\n:host ::ng-deep .expansion-table .p-datatable-thead > tr > th {\n  white-space: normal;\n  word-break: normal;\n  overflow-wrap: normal;\n}\n.tag {\n  font-size: 11px;\n  padding: 0.05rem 0.4rem;\n  border-radius: 6px;\n  border: 1px solid transparent;\n}\n.topic-doormat-evidence-metric {\n  display: inline-flex;\n  margin-right: 0.2rem;\n  vertical-align: baseline;\n}\n.ai-btn {\n  font-weight: 600;\n}\n.sr-only {\n  position: absolute;\n  width: 1px;\n  height: 1px;\n  padding: 0;\n  margin: -1px;\n  overflow: hidden;\n  clip: rect(0, 0, 0, 0);\n  white-space: nowrap;\n  border: 0;\n}\n/*# sourceMappingURL=component-guidance.component.css.map */\n", "/* angular:styles/component:css;c0806e59c14ba3c53784f6243c5c92cc29bf483de8f80121dc534aca8504d932;C:/my-working-files/GitHub/design-assistant/src/app/views/page-assistant/components/problems/component-guidance/component-guidance.component.ts */\n.caption-actions {\n  display: flex;\n  align-items: center;\n  justify-content: flex-end;\n  gap: 0.5rem;\n}\n/*# sourceMappingURL=component-guidance.component.css.map */\n"] }]
   }], null, null);
 })();
 (() => {
@@ -36322,169 +36960,6 @@ var BreadcrumbModule = class _BreadcrumbModule {
     args: [{
       imports: [Breadcrumb, SharedModule],
       exports: [Breadcrumb, SharedModule]
-    }]
-  }], null, null);
-})();
-
-// src/app/views/page-assistant/services/ia-structure.service.ts
-var IaStructureService = class _IaStructureService {
-  lastResult = null;
-  skipFormsAndPubs = /* @__PURE__ */ new Set([
-    "https://www.canada.ca/en/revenue-agency/services/forms-publications/forms.html",
-    "https://www.canada.ca/fr/agence-revenu/services/formulaires-publications/formulaires.html",
-    "https://www.canada.ca/en/revenue-agency/services/forms-publications/publications.html",
-    "https://www.canada.ca/fr/agence-revenu/services/formulaires-publications/publications.html"
-  ]);
-  buildIaTree(urls, depth, options) {
-    return __async(this, null, function* () {
-      const brokenLinks = [];
-      const state = {
-        total: urls.length,
-        processed: 0,
-        started: false
-      };
-      if (!state.started) {
-        state.started = true;
-        options?.onStart?.(state.total);
-      }
-      const tree = yield this.buildIaTreeInternal(urls, depth, void 0, 0, state, brokenLinks, options);
-      options?.onDone?.();
-      const result = { tree, brokenLinks };
-      if (urls.length === 1) {
-        this.lastResult = { url: urls[0], result };
-      }
-      return result;
-    });
-  }
-  getCachedResultFor(url) {
-    if (!this.lastResult)
-      return null;
-    return this.lastResult.url === url ? this.lastResult.result : null;
-  }
-  flattenTree(nodes, level = 1) {
-    const rows = [];
-    for (const node of nodes) {
-      const url = node.data?.url;
-      if (url) {
-        rows.push({ url, level });
-      }
-      if (node.children?.length) {
-        rows.push(...this.flattenTree(node.children, level + 1));
-      }
-    }
-    return rows;
-  }
-  buildIaTreeInternal(urls, depth, parentUrl, level = 0, state, brokenLinks, options) {
-    return __async(this, null, function* () {
-      if (depth <= 0)
-        return [];
-      const nodes = [];
-      for (const url of urls) {
-        const meta = yield this.getPageMetaAndLinks(url);
-        if (state) {
-          state.processed += 1;
-          options?.onProgress?.(state.processed, state.total);
-        }
-        if (!meta || meta.status !== 200) {
-          if (brokenLinks) {
-            brokenLinks.push({
-              parentUrl,
-              url,
-              status: meta?.status || 0
-            });
-          }
-          continue;
-        }
-        if (!meta.breadcrumb || !meta.links)
-          continue;
-        if (parentUrl && meta.breadcrumb.at(-1) !== parentUrl) {
-          continue;
-        }
-        const node = {
-          label: meta.h1,
-          data: {
-            h1: meta.h1,
-            url,
-            originalParent: parentUrl,
-            editing: null,
-            customStyle: false,
-            customStyleKey: null,
-            borderStyle: "border-2 border-primary border-round shadow-2"
-          },
-          expanded: true,
-          children: []
-        };
-        if (meta.links?.length && depth > 1) {
-          const total = meta.links.length;
-          let limit = total;
-          if (this.skipFormsAndPubs.has(url)) {
-            limit = 5;
-          }
-          if (state) {
-            state.total += total;
-            options?.onProgress?.(state.processed, state.total);
-          }
-          const links = meta.links.slice(0, limit);
-          node.children = yield this.buildIaTreeInternal(links, depth - 1, url, level + 1, state, brokenLinks, options);
-          if (total > limit) {
-            node.children?.push({
-              label: `+ ${total - limit} more...`,
-              data: {
-                h1: `+ ${total - limit} more...`,
-                url: null,
-                originalParent: parentUrl,
-                editing: null,
-                customStyle: true,
-                customStyleKey: "template",
-                borderStyle: "border-2 border-primary border-round shadow-2 border-dashed"
-              },
-              expanded: true,
-              children: []
-            });
-          }
-        }
-        nodes.push(node);
-      }
-      return nodes;
-    });
-  }
-  getPageMetaAndLinks(url) {
-    return __async(this, null, function* () {
-      try {
-        const res = yield fetch(url);
-        const status = res.status;
-        if (!res.ok)
-          return { status };
-        const html = yield res.text();
-        const parser = new DOMParser();
-        const doc = parser.parseFromString(html, "text/html");
-        const h1Elements = Array.from(doc.querySelectorAll("h1"));
-        const h1 = h1Elements.map((e) => e.textContent?.trim()).filter(Boolean).join("<br>");
-        const breadcrumb = Array.from(doc.querySelectorAll(".breadcrumb li a")).map((a) => new URL(a.getAttribute("href") || "", url).href);
-        const anchors = Array.from(doc.querySelectorAll("main a[href]"));
-        const baseUrl = new URL(url).origin;
-        const links = Array.from(new Set(anchors.map((a) => {
-          const u = new URL(a.getAttribute("href") || "", url);
-          u.hash = "";
-          return u.href;
-        }).filter((u) => u.startsWith(baseUrl) && u !== url)));
-        return { h1, breadcrumb, links, status };
-      } catch (err) {
-        console.error(`Failed to fetch ${url}`, err);
-        return { status: 0 };
-      }
-    });
-  }
-  static \u0275fac = function IaStructureService_Factory(__ngFactoryType__) {
-    return new (__ngFactoryType__ || _IaStructureService)();
-  };
-  static \u0275prov = /* @__PURE__ */ \u0275\u0275defineInjectable({ token: _IaStructureService, factory: _IaStructureService.\u0275fac, providedIn: "root" });
-};
-(() => {
-  (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(IaStructureService, [{
-    type: Injectable,
-    args: [{
-      providedIn: "root"
     }]
   }], null, null);
 })();
@@ -46747,4 +47222,4 @@ ${custom}` : promptBody;
 export {
   PageAssistantCompareComponent
 };
-//# sourceMappingURL=chunk-AK2PIIDS.js.map
+//# sourceMappingURL=chunk-NPVIIGOE.js.map

@@ -7,7 +7,7 @@
   "analysis_sequence": [
     {
       "pass": "deterministic_structural_checks",
-      "instruction": "Run these checks first. Do not return the response until every model-owned deterministic structural check has been evaluated for every doormat and every complete doormat section. Do not report link-name-too-long, description-too-long, link-name-trailing-punctuation, description-trailing-punctuation, or duplicate-link-in-most-requested; AIDA calculates and reports those issues deterministically from the extracted doormat text, Most requested links, and character counts.",
+      "instruction": "Run these checks first. Do not return the response until every model-owned deterministic structural check has been evaluated for every doormat and every complete doormat section. Do not report link-name-too-long, description-too-long, link-name-trailing-punctuation, description-trailing-punctuation, duplicate-link-in-most-requested, missing-needed-doormat, unnecessary-doormat, or wrong-doormat-order; AIDA calculates and reports those issues deterministically from the extracted doormat text, Most requested links, IA child-page relationships, page-view data, and character counts.",
       "issue_ids": [
         "too-many-doormats-in-section",
         "split-heading-link",
@@ -41,10 +41,7 @@
         "inconsistent-link-name-style",
         "inconsistent-description-style",
         "enhancement-label-not-needed",
-        "enhancement-label-wrong-type",
-        "missing-needed-doormat",
-        "unnecessary-doormat",
-        "wrong-doormat-order"
+        "enhancement-label-wrong-type"
       ]
     }
   ],
@@ -176,9 +173,9 @@
     "Check for duplicate or near-duplicate descriptions across the set.",
     "Check for repeated generic task lists across the set.",
     "Check whether any topic doormat section contains more than 9 doormats. If it does, report too-many-doormats-in-section once in section_issues for the affected H2 section.",
-    "Check whether the set is missing a needed doormat based on the supplied page context.",
-    "Check whether the set includes an unnecessary or badly chosen doormat.",
-    "Check whether the doormat order prioritizes the most visited information and services only when supplied page context includes visit data, explicit priority evidence, or another concrete signal for order."
+    "AIDA checks whether the set is missing a needed doormat based on IA child-page relationships.",
+    "AIDA checks whether the set includes an unnecessary or badly chosen doormat based on IA child-page relationships.",
+    "AIDA checks whether doormats within each section are ordered by descending page views."
   ],
   "order_issue_reporting": {
     "minimum_standard": "Do not guess doormat priority from topic names alone.",
@@ -223,7 +220,7 @@
     {
       "id": "split-heading-link",
       "group": "Link code issue",
-      "label": "Heading link is split into multiple links",
+      "label": "Heading link is split",
       "severity": "High",
       "condition": "A single doormat heading contains multiple links, often because one intended heading link was pasted as separate adjacent link fragments.",
       "recommendation": "Use one link around the complete doormat heading text."
@@ -247,7 +244,7 @@
     {
       "id": "link-name-not-unique",
       "group": "Link name",
-      "label": "Link name is not descriptive or unique",
+      "label": "Link name not descriptive or unique",
       "severity": "High",
       "condition": "The link text is vague, duplicated, or too similar to another link on the page.",
       "recommendation": "Use unique link text that distinguishes this doormat from the other page links."
@@ -255,7 +252,7 @@
     {
       "id": "link-name-too-long",
       "group": "Link name",
-      "label": "Link name is too long",
+      "label": "Link name too long",
       "severity": "Low",
       "condition": "The link text exceeds 35 characters, including spaces.",
       "recommendation": "Shorten the link text. Keep link text under 35 characters.",
@@ -270,15 +267,15 @@
     {
       "id": "link-name-too-different-from-destination-title",
       "group": "Link name",
-      "label": "Link name is too different from destination title",
+      "label": "Link name too different from destination",
       "severity": "Medium",
-      "condition": "The link text does not need to exactly match the destination page title, but it conveys a substantially different idea.",
-      "recommendation": "Align the link text with the destination page title or purpose while keeping it concise."
+      "condition": "The link text does not need to exactly match the destination page title or heading. It should be reported only when the link name gives users a different or misleading information scent, such as a different topic, task, audience, service, or destination purpose. Ignore boilerplate title suffixes such as '- Canada.ca' and allow wording changes that make the link fit the doormat style on the page.",
+      "recommendation": "Align the link text with the destination page meaning and information scent while keeping it concise and consistent with the page's doormat style."
     },
     {
       "id": "duplicate-link-in-most-requested",
       "group": "Link name",
-      "label": "Doormat link repeated in Most requested",
+      "label": "Doormat link in Most requested",
       "severity": "Medium",
       "condition": "A doormat links to the same destination as an item in the page's Most requested section.",
       "recommendation": "Flag for manual review. In most cases, remove the duplicate from Most requested unless there is a strong page-specific reason to keep it.",
@@ -292,7 +289,7 @@
     {
       "id": "link-name-trailing-punctuation",
       "group": "Link name",
-      "label": "Link name has trailing punctuation",
+      "label": "Link has trailing punctuation",
       "severity": "Low",
       "condition": "The link text ends with a period, colon, question mark, exclamation mark, semicolon, or comma.",
       "recommendation": "Remove trailing punctuation from the link text."
@@ -321,7 +318,7 @@
     {
       "id": "description-missing-needed-information",
       "group": "Description clarity",
-      "label": "Description is missing needed information",
+      "label": "Description has content gap",
       "severity": "High",
       "condition": "The description has a content gap that prevents users from understanding the destination or choosing between doormats.",
       "recommendation": "Add the missing decision-making detail while keeping the description concise."
@@ -337,7 +334,7 @@
     {
       "id": "description-too-long",
       "group": "Description clarity",
-      "label": "Description is too long",
+      "label": "Description too long",
       "severity": "Low",
       "condition": "The English description exceeds 90 characters, including spaces. The official limit for link descriptions is 120 characters in both official languages, and the English version should aim to stay under 90 characters to allow for French expansion.",
       "recommendation": "Shorten the description. Aim for the English version to be under 90 characters so the French version can stay under 120 characters.",
@@ -368,7 +365,7 @@
     {
       "id": "duplicate-or-near-duplicate-description",
       "group": "Description clarity",
-      "label": "Duplicate or near-duplicate description",
+      "label": "Duplicate description",
       "severity": "High",
       "condition": "Two or more doormats have identical or nearly identical descriptions.",
       "recommendation": "Rewrite each description so users can tell the doormats apart."
@@ -390,7 +387,7 @@
     {
       "id": "section-description-style-outlier",
       "group": "Description clarity",
-      "label": "Section description style differs from page",
+      "label": "Section (description) styles differ",
       "severity": "Low",
       "condition": "One H2 section is internally consistent, but its dominant description style clearly differs from the dominant description style used by other internally consistent H2 sections on the page. When there are only two internally consistent sections with different styles, the later section differs from the page precedent set by the first section.",
       "recommendation": "Align this section with the dominant page description style unless the section has a clear reason to use a different pattern.",
@@ -403,7 +400,7 @@
     {
       "id": "mixed-link-name-styles-in-section",
       "group": "Link name",
-      "label": "Mixed link name styles in section",
+      "label": "Mixed link styles in section",
       "severity": "Medium",
       "condition": "The doormat section mixes link name styles, such as noun/topic link names and action-verb link names, in a way that reduces scannability or comparability.",
       "recommendation": "Rewrite the link names so they use one consistent link name style across the section.",
@@ -522,7 +519,7 @@
     {
       "id": "unnecessary-doormat",
       "group": "Choice of doormats",
-      "label": "Extra doormat is not needed",
+      "label": "Extra doormat",
       "severity": "Medium",
       "condition": "The doormat appears unnecessary, low-value, redundant, or badly chosen for the page context.",
       "recommendation": "Flag for manual review and consider removing or replacing the doormat."
@@ -530,7 +527,7 @@
     {
       "id": "too-many-doormats-in-section",
       "group": "Choice of doormats",
-      "label": "Too many doormats in section",
+      "label": "Too many doormats",
       "severity": "Medium",
       "condition": "A single topic doormat section contains more than 9 doormats.",
       "recommendation": "Either remove doormats or break down the section into sections that have 9 or fewer doormats.",
