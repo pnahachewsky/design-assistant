@@ -179,6 +179,44 @@ describe('TopicDoormatIssueAnalysisService', () => {
     expect(result.rows.some((row) => row.issueId === 'no-issues')).toBeFalse();
   });
 
+  it('flags English descriptions only when they exceed 95 characters', async () => {
+    openRouter.call.and.resolveTo({
+      choices: [{ message: { content: '' } }],
+    });
+
+    const result = await service.analyze({
+      doormatSummaries: [
+        summary({
+          index: 1,
+          sectionItemIndex: 1,
+          linkText: 'Allowed description',
+          descriptionCharacterCount: 95,
+        }),
+        summary({
+          index: 2,
+          sectionItemIndex: 2,
+          linkText: 'Too long description',
+          descriptionCharacterCount: 96,
+        }),
+      ],
+      pageLanguage: 'en',
+      hasLegacyTopicDoormatTemplate: false,
+      mostRequestedLinks: [],
+      selectedModel: 'selected-model',
+    });
+
+    const descriptionRows = result.rows.filter(
+      (row) => row.issueId === 'description-too-long',
+    );
+    expect(descriptionRows.length).toBe(1);
+    expect(descriptionRows[0]).toEqual(
+      jasmine.objectContaining({
+        doormatIndex: 2,
+        evidenceMetric: '96/95 characters',
+      }),
+    );
+  });
+
   it('suppresses destination title mismatch when only Canada.ca boilerplate differs', async () => {
     openRouter.call.and.resolveTo({
       choices: [

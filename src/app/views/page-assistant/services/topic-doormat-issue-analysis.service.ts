@@ -56,7 +56,7 @@ export class TopicDoormatIssueAnalysisService {
   > = {
     en: {
       'link-name-too-long': 35,
-      'description-too-long': 90,
+      'description-too-long': 95,
     },
     fr: {
       'link-name-too-long': 45,
