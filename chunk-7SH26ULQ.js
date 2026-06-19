@@ -38562,7 +38562,7 @@ var UploadStateService = class _UploadStateService {
     this.storage.saveData(this.uploadTypeKey, type);
   }
   // Primary AI model selected for the current session.
-  selectedAiModel = signal(AiModel.GptOSS20BFree);
+  selectedAiModel = signal(AiModel.OwlAlpha);
   getSelectedAiModel = computed(() => this.selectedAiModel());
   setSelectedAiModel(model2) {
     this.selectedAiModel.set(model2);
@@ -38597,7 +38597,15 @@ var UploadStateService = class _UploadStateService {
   // undo stack
   maxHistory = 20;
   // max undo depth
+  workingContentRevision = signal(0);
+  recommendationReviewPending = signal(false);
   getUploadData = computed(() => this.uploadData());
+  getWorkingHtml = computed(() => {
+    const data = this.uploadData();
+    return data?.modifiedHtml || data?.originalHtml || "";
+  });
+  getWorkingContentRevision = computed(() => this.workingContentRevision());
+  getRecommendationReviewPending = computed(() => this.recommendationReviewPending());
   constructor() {
     if (this.isPageReload()) {
       this.storage.removeData(this.uploadTypeKey);
@@ -38613,6 +38621,8 @@ var UploadStateService = class _UploadStateService {
   }
   setUploadData(data) {
     this.uploadData.set(data);
+    this.recommendationReviewPending.set(false);
+    this.bumpWorkingContentRevision();
     this.persistUploadData();
   }
   mergeModifiedData(modified) {
@@ -38621,6 +38631,7 @@ var UploadStateService = class _UploadStateService {
       modifiedHtml: modified.modifiedHtml,
       modifiedUrl: modified.modifiedUrl
     }));
+    this.bumpWorkingContentRevision();
     this.persistUploadData();
   }
   mergeOriginalData(original) {
@@ -38629,7 +38640,11 @@ var UploadStateService = class _UploadStateService {
       originalHtml: original.originalHtml,
       originalUrl: original.originalUrl
     }));
+    this.bumpWorkingContentRevision();
     this.persistUploadData();
+  }
+  setRecommendationReviewPending(pending) {
+    this.recommendationReviewPending.set(!!pending);
   }
   mergeFoundFlags(version, flags) {
     const current = this.uploadData() || {};
@@ -38648,8 +38663,12 @@ var UploadStateService = class _UploadStateService {
   undoLastChange() {
     if (this.prevUploadData.length === 0)
       return;
-    const lastState = this.prevUploadData.pop() ?? null;
-    this.uploadData.set(lastState);
+    const lastState = this.prevUploadData.pop();
+    if (!lastState)
+      return;
+    this.uploadData.set(lastState.data);
+    this.recommendationReviewPending.set(lastState.recommendationReviewPending);
+    this.bumpWorkingContentRevision();
   }
   isUndoDisabled() {
     return this.prevUploadData.length === 0;
@@ -38657,7 +38676,10 @@ var UploadStateService = class _UploadStateService {
   // Capture state before an accept/reject action mutates the working HTML.
   savePreviousUploadData() {
     const current = this.uploadData();
-    this.prevUploadData.push(current ? structuredClone(current) : null);
+    this.prevUploadData.push({
+      data: current ? structuredClone(current) : null,
+      recommendationReviewPending: this.recommendationReviewPending()
+    });
     if (this.prevUploadData.length > this.maxHistory) {
       this.prevUploadData.shift();
     }
@@ -38665,11 +38687,13 @@ var UploadStateService = class _UploadStateService {
   // Clear both in-memory state and the persisted assistant session.
   resetUploadFlow() {
     this.selectedUploadType.set("url");
-    this.selectedAiModel.set(AiModel.GptOSS20BFree);
+    this.selectedAiModel.set(AiModel.OwlAlpha);
     this.editPromptText.set("");
     this.includeAlertRewriteExamples.set(true);
     this.useCompactAlertsPageContext.set(true);
     this.uploadData.set(null);
+    this.recommendationReviewPending.set(false);
+    this.bumpWorkingContentRevision();
     this.prevUploadData = [];
     this.storage.removeData(this.uploadTypeKey);
     this.storage.removeData(this.aiModelKey);
@@ -38724,6 +38748,9 @@ var UploadStateService = class _UploadStateService {
     } catch (err) {
       console.warn("Failed to restore upload state:", err);
     }
+  }
+  bumpWorkingContentRevision() {
+    this.workingContentRevision.update((revision) => revision + 1);
   }
   isPageReload() {
     try {
@@ -100368,4 +100395,4 @@ export {
    * License: MIT
    *)
 */
-//# sourceMappingURL=chunk-M46MQX4A.js.map
+//# sourceMappingURL=chunk-7SH26ULQ.js.map
