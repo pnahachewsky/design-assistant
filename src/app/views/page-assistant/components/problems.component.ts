@@ -77,6 +77,11 @@ export class PageProblemsComponent {
     return this.activePanels.includes(panelIndex);
   }
 
+  openPanel(panelIndex: number): void {
+    if (this.isPanelOpen(panelIndex)) return;
+    this.activePanels = [...this.activePanels, panelIndex];
+  }
+
   @Output() summary = new EventEmitter<ProblemsFlags>();
 
   // track the 5 features shown under Problems

@@ -1,5 +1,13 @@
 // src/app/views/page-assistant/components/tools/component-guidance.component.ts
-import { Component, OnDestroy, OnInit, inject } from '@angular/core';
+import {
+  Component,
+  EventEmitter,
+  OnDestroy,
+  OnInit,
+  Output,
+  effect,
+  inject,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TableModule } from 'primeng/table';
@@ -179,6 +187,10 @@ export class ComponentGuidanceComponent implements OnInit, OnDestroy {
   private topicDoormatIssueAnalysis = inject(TopicDoormatIssueAnalysisService);
   private topicDoormatPresenter = inject(TopicDoormatPresenterService);
   private alertIssuesSub?: Subscription;
+  private lastAlertGuidanceRevision = -1;
+  private lastExpandedAlertAnalysisHtml = '';
+
+  @Output() analysisAvailable = new EventEmitter<void>();
 
   production: boolean = environment.production;
 
@@ -228,12 +240,32 @@ export class ComponentGuidanceComponent implements OnInit, OnDestroy {
     unknown: 0,
   };
 
+  constructor() {
+    effect(() => {
+      const revision = this.uploadState.getWorkingContentRevision();
+      const html = this.uploadState.getWorkingHtml();
+      if (revision === this.lastAlertGuidanceRevision) return;
+      this.lastAlertGuidanceRevision = revision;
+      this.syncAlertGuidanceRowForWorkingHtml(html);
+    });
+  }
+
   ngOnInit() {
     const data = this.uploadState.getUploadData();
     if (data?.originalHtml) {
-      this.guidanceList = this.validator.collectGuidanceUrls(data.originalHtml);
+      const workingHtml = this.uploadState.getWorkingHtml();
+      const originalGuidance = this.validator.collectGuidanceUrls(
+        data.originalHtml,
+      );
+      const workingAlertGuidance = this.validator
+        .collectGuidanceUrls(workingHtml)
+        .filter((item) => item.name === this.alertsNameKey);
+      this.guidanceList = [
+        ...originalGuidance.filter((item) => item.name !== this.alertsNameKey),
+        ...workingAlertGuidance,
+      ];
       this.rows = this.buildRows(this.guidanceList);
-      this.removeAlertRowWhenNoReportableAlerts(data.originalHtml);
+      this.removeAlertRowWhenNoReportableAlerts(workingHtml);
       this.removeTopicDoormatRowWhenNoTopicDoormats(data.originalHtml);
       this.syncAlertRowSelection();
     }
@@ -298,6 +330,43 @@ export class ComponentGuidanceComponent implements OnInit, OnDestroy {
       (row) => row.__nameKey !== this.alertsNameKey,
     );
     this.reindexRows();
+  }
+
+  private syncAlertGuidanceRowForWorkingHtml(html: string): void {
+    if (!html) return;
+    const reportableAlerts = getReportableAlertsFromHtml(html, {
+      interactiveResultLeadIns: this.getInteractiveResultLeadIns(),
+    });
+    const alertRow = this.rows.find(
+      (row) => row.__nameKey === this.alertsNameKey,
+    );
+
+    if (!reportableAlerts.length) {
+      if (!alertRow) return;
+      this.rows = this.rows.filter((row) => row !== alertRow);
+      this.selectedRows = this.selectedRows.filter((row) => row !== alertRow);
+      const expandedRows = { ...this.expandedRows };
+      delete expandedRows[alertRow.url];
+      this.expandedRows = expandedRows;
+      this.reindexRows();
+      this.cdr.markForCheck();
+      return;
+    }
+
+    if (alertRow) return;
+    const alertGuidance = this.validator
+      .collectGuidanceUrls(html)
+      .find((item) => item.name === this.alertsNameKey);
+    if (!alertGuidance) return;
+    const newRow = this.buildRows([alertGuidance])[0];
+    this.rows = [...this.rows, newRow].sort((a, b) => {
+      const rankDiff =
+        this.getGuidanceSortRank(a.__nameKey, a.__id) -
+        this.getGuidanceSortRank(b.__nameKey, b.__id);
+      return rankDiff || a.component.localeCompare(b.component);
+    });
+    this.reindexRows();
+    this.cdr.markForCheck();
   }
 
   private removeTopicDoormatRowWhenNoTopicDoormats(html: string): void {
@@ -458,18 +527,21 @@ export class ComponentGuidanceComponent implements OnInit, OnDestroy {
   }
 
   private applyCachedAlertIssues(): void {
-    const uploadData = this.uploadState.getUploadData();
-    const html = uploadData?.originalHtml || '';
+    const html = this.uploadState.getWorkingHtml();
     if (!html) return;
     const cached = this.alertAi.getCachedIssues(html);
-    if (!cached?.length) return;
+    const analysis =
+      cached !== null
+        ? { html, issues: cached }
+        : this.alertAi.getLatestCachedAnalysis();
+    if (!analysis) return;
 
-      const normalizedIssues = this.alertAi.normalizeAlertIssues(cached).map(
-        (issue) => ({
-          ...issue,
-          category: this.normalizeCategoryLabel(issue.category),
-        }),
-      );
+    const normalizedIssues = this.alertAi
+      .normalizeAlertIssues(analysis.issues)
+      .map((issue) => ({
+        ...issue,
+        category: this.normalizeCategoryLabel(issue.category),
+      }));
     this.alertCategories = this.sortCategories(
       computeAlertCategories(normalizedIssues),
     );
@@ -481,6 +553,19 @@ export class ComponentGuidanceComponent implements OnInit, OnDestroy {
     this.alertDataLoaded = true;
     this.syncAlertRowSelection();
     this.prevAlertHasIssues = this.alertHasIssues;
+    const alertRow = this.rows.find(
+      (row) => row.__nameKey === this.alertsNameKey,
+    );
+    if (alertRow) {
+      this.expandedRows = { ...this.expandedRows, [alertRow.url]: true };
+    }
+    if (
+      alertRow &&
+      analysis.html !== this.lastExpandedAlertAnalysisHtml
+    ) {
+      this.lastExpandedAlertAnalysisHtml = analysis.html;
+      this.analysisAvailable.emit();
+    }
     this.cdr.markForCheck();
   }
 
@@ -782,26 +867,6 @@ export class ComponentGuidanceComponent implements OnInit, OnDestroy {
       }
       this.cdr.markForCheck();
     });
-  }
-
-  onAlertIssuesCleared(): void {
-    const alertRow = this.rows.find((r) => r.__nameKey === this.alertsNameKey);
-    this.alertCategories = [];
-    this.alertMaxSeverity = null;
-    this.alertHasIssues = false;
-    this.alertLoading = false;
-    this.alertError = false;
-    this.alertDataLoaded = false;
-    this.alertLoadAttempted = false;
-    this.prevAlertHasIssues = false;
-    if (alertRow) {
-      this.selectedRows = this.selectedRows.filter((r) => r.url !== alertRow.url);
-      this.alertSelectAll = false;
-      const expandedRows = { ...this.expandedRows };
-      delete expandedRows[alertRow.url];
-      this.expandedRows = expandedRows;
-    }
-    this.cdr.markForCheck();
   }
 
   private syncAlertRowSelection(): void {

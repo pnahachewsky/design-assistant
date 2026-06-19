@@ -411,4 +411,22 @@ describe('AlertRewriteGuardService', () => {
     expect(result).toContain('data-alert-rewrite-status="failed"');
     expect(result).toContain('<section class="alert alert-info"><p>Original alert text.</p></section>');
   });
+
+  it('preserves the original alert wrapper tag when applying a rewrite', () => {
+    const result = service.applyAlertHtmlRewrites(
+      '<body><main><div class="alert alert-info"><h2>Old heading</h2><p>Old text.</p></div></main></body>',
+      [
+        {
+          alert_index: 1,
+          rewritten_alert_html:
+            '<section class="alert alert-info"><h2>New heading</h2><p>New text.</p></section>',
+        },
+      ],
+    );
+
+    expect(result).toContain(
+      '<div class="alert alert-info"><h2>New heading</h2><p>New text.</p></div>',
+    );
+    expect(result).not.toContain('<section class="alert');
+  });
 });

@@ -95,7 +95,7 @@ export class AiOptionsComponent implements OnInit {
   }
 
   // Model and alert-specific options persisted through UploadStateService.
-  selectedAi: AiModel = AiModel.GptOSS20BFree;
+  selectedAi: AiModel = AiModel.OwlAlpha;
   selectedAis: AiModel[] = [];
 
   includeAlertRewriteExamples = true;

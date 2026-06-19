@@ -388,6 +388,14 @@ export class ShadowDomService {
     const selection = window.getSelection();
     if (!shadowRoot || !selection) { this.lastSelection = { count: 0, startId: null, endId: null }; return }; //reset lastSelection
 
+    if (
+      selection.anchorNode?.getRootNode() !== shadowRoot ||
+      selection.focusNode?.getRootNode() !== shadowRoot
+    ) {
+      this.lastSelection = { count: 0, startId: null, endId: null };
+      return;
+    }
+
     const selectedText = normalize(selection.toString());
     if (!selectedText) return; //no change to lastSelection
 

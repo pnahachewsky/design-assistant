@@ -396,12 +396,29 @@ export class AlertRewriteGuardService {
         if (node.nodeType !== Node.TEXT_NODE) return true;
         return !!(node.textContent || '').trim();
       });
-      const hasAlertElement = replacementNodes.some(
-        (node) =>
+      const replacementAlerts = replacementNodes.filter(
+        (node): node is HTMLElement =>
           node.nodeType === Node.ELEMENT_NODE &&
           (node as HTMLElement).classList.contains('alert'),
       );
-      if (!replacementNodes.length || !hasAlertElement) continue;
+      if (!replacementNodes.length || !replacementAlerts.length) continue;
+
+      const rewrittenAlert = replacementAlerts[replacementAlerts.length - 1];
+      if (!rewrittenAlert) continue;
+      if (rewrittenAlert.tagName !== target.tagName) {
+        const normalizedAlert = updatedDoc.createElement(
+          target.tagName.toLowerCase(),
+        );
+        Array.from(rewrittenAlert.attributes).forEach((attribute) => {
+          normalizedAlert.setAttribute(attribute.name, attribute.value);
+        });
+        normalizedAlert.append(...Array.from(rewrittenAlert.childNodes));
+        const rewrittenAlertIndex = replacementNodes.indexOf(rewrittenAlert);
+        rewrittenAlert.replaceWith(normalizedAlert);
+        if (rewrittenAlertIndex >= 0) {
+          replacementNodes[rewrittenAlertIndex] = normalizedAlert;
+        }
+      }
 
       const importedNodes = replacementNodes.map((node) => doc.importNode(node, true));
       target.replaceWith(...importedNodes);

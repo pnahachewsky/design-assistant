@@ -167,6 +167,9 @@ export class PageAssistantCompareComponent
         } else {
           this.isDisabled = false;
           this.aiDisabled = '';
+          if (this.uploadState.getRecommendationReviewPending()) {
+            this.uploadState.setRecommendationReviewPending(false);
+          }
         }
       }
       this.toggleEdit = false;
@@ -383,7 +386,7 @@ export class PageAssistantCompareComponent
 
   ngOnInit(): void {
     this.observeDarkMode();
-    this.uploadState.setSelectedAiModel(this.selectedAiModel);
+    this.selectedAiModel = this.uploadState.getSelectedAiModel();
     this.customEditText = this.uploadState.getEditPromptText();
 
     //Translations
@@ -805,10 +808,14 @@ export class PageAssistantCompareComponent
         getShortModelName: this.getShortModelName.bind(this),
       });
 
+    if (recommendationResult.formattedHtml !== params.html) {
+      this.alertAi.markAnalysisStale(recommendationResult.formattedHtml);
+    }
     this.uploadState.mergeModifiedData({
       modifiedUrl: 'AI generated',
       modifiedHtml: recommendationResult.formattedHtml,
     });
+    this.uploadState.setRecommendationReviewPending(true);
     if (recommendationResult.fallbackNotices.length) {
       const failedAlertIndexes = recommendationResult.fallbackNotices
         .map((notice) => notice.alertIndex)
@@ -824,7 +831,7 @@ export class PageAssistantCompareComponent
   }
 
   //AI Model
-  selectedAiModel: AiModel = AiModel.GptOSS20BFree;
+  selectedAiModel: AiModel = AiModel.OwlAlpha;
 
   onAiChange(key: AiModel) {
     this.selectedAiModel = key;
@@ -917,6 +924,7 @@ export class PageAssistantCompareComponent
     let alertIssuesPromptSent = false;
     let alertRewriteRan = false;
     let aiRequestStarted = false;
+    let pendingAlertAnalysisHtml = '';
     this.isLoading = true;
     this.aiDisabled = 'Wait for response from AI';
     this.statusSeverity = 'info';
@@ -927,13 +935,15 @@ export class PageAssistantCompareComponent
       if (!apiKey) throw new Error('Missing API key');
 
       const uploadData = this.uploadState.getUploadData();
-      const html = uploadData?.originalHtml;
-      if (!html) throw new Error('No HTML to send');
-
       const isAlertsRecommendations =
         this.selectedPromptKey === PromptKey.AlertsRecommendations;
       const isAlertsIssues = this.selectedPromptKey === PromptKey.AlertsIssues;
       const isAlertFlow = isAlertsRecommendations || isAlertsIssues;
+      const html = isAlertFlow
+        ? this.uploadState.getWorkingHtml()
+        : uploadData?.originalHtml;
+      if (!html) throw new Error('No HTML to send');
+
       const promptKeyForRequest = isAlertsRecommendations
         ? PromptKey.AlertsIssues
         : this.selectedPromptKey;
@@ -986,7 +996,7 @@ export class PageAssistantCompareComponent
 
       if (isAlertFlow) {
         const cachedIssues = this.alertAi.getCachedIssues(html);
-        if (cachedIssues) {
+        if (cachedIssues !== null) {
           usedCachedAlertIssues = true;
           timingFlow = 'alert-rewrite-with-cached-issues';
           const selectedIssues: AlertRewriteIssueInput[] = cachedIssues
@@ -1024,6 +1034,8 @@ export class PageAssistantCompareComponent
           });
           return;
         }
+        this.alertAi.prepareForReanalysis(html);
+        pendingAlertAnalysisHtml = html;
       }
 
       const candidates = this.buildModelRotation(model);
@@ -1240,6 +1252,7 @@ export class PageAssistantCompareComponent
             .filter((issue) => issue.include)
             .map((issue) => ({ ...issue }));
         }
+        pendingAlertAnalysisHtml = '';
         if (selectedIssues.length) {
           this.messageService.add({
             severity: 'info',
@@ -1295,6 +1308,9 @@ export class PageAssistantCompareComponent
         life: 5000,
       });
     } catch (err) {
+      if (pendingAlertAnalysisHtml) {
+        this.alertAi.failAnalysis(pendingAlertAnalysisHtml);
+      }
       console.error(`sendToAI function failed:`, err);
       this.statusSeverity = 'error';
       this.statusMessage = this.translate.instant(
@@ -1432,7 +1448,21 @@ export class PageAssistantCompareComponent
   private focusOnIndex(index: number) {
     const shadowRoot = this.shadowDOM();
     if (!shadowRoot) return;
-    const el = this.elements[index];
+
+    const currentElements = this.elements.filter(
+      (element) => element.getRootNode() === shadowRoot,
+    );
+    this.elements = currentElements.length
+      ? currentElements
+      : this.shadowDomService.getDataIdElements(shadowRoot);
+    if (!this.elements.length) {
+      this.currentIndex = 0;
+      return;
+    }
+
+    this.currentIndex = Math.min(Math.max(index, 0), this.elements.length - 1);
+    const el = this.elements[this.currentIndex];
+    if (!el) return;
     this.shadowDomService.highlightElement(el);
     this.shadowDomService.openParentDetails(el);
     this.shadowDomService.closeAllDetailsExcept(shadowRoot, el);
@@ -1535,6 +1565,7 @@ export class PageAssistantCompareComponent
       originalHtml: data.modifiedHtml,
       originalUrl: data.modifiedUrl,
     });
+    this.uploadState.setRecommendationReviewPending(false);
     this.currentIndex = 0;
   }
 
@@ -1548,6 +1579,7 @@ export class PageAssistantCompareComponent
       modifiedHtml: data.originalHtml,
       modifiedUrl: data.originalUrl,
     });
+    this.uploadState.setRecommendationReviewPending(false);
     this.currentIndex = 0;
   }
 

@@ -26,6 +26,27 @@ describe('getReportableAlerts', () => {
     expect(alerts[0]?.textContent).toContain('Visible page-level alert');
   });
 
+  it('counts a nested alert structure as one outer alert', () => {
+    const body = parseBody(`
+      <div class="alert alert-info">
+        <section class="alert alert-info">
+          <h2>Nested replacement</h2>
+          <p>Visible alert text</p>
+        </section>
+      </div>
+      <div class="alert alert-warning">
+        <p>Second alert</p>
+      </div>
+    `);
+
+    const alerts = getReportableAlerts(body);
+
+    expect(alerts.length).toBe(2);
+    expect(alerts[0]?.tagName.toLowerCase()).toBe('div');
+    expect(alerts[0]?.querySelector('.alert')).not.toBeNull();
+    expect(alerts[1]?.textContent).toContain('Second alert');
+  });
+
   it('excludes hidden interactive answer alerts', () => {
     const body = parseBody(`
       <div>

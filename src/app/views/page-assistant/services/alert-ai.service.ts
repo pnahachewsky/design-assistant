@@ -13,6 +13,17 @@ import {
   getReportableAlerts,
 } from './alert-reportable.utils';
 
+export interface AlertIssuesCacheEntry {
+  html: string;
+  issues: AlertIssue[];
+}
+
+export interface AlertAnalysisState {
+  html: string;
+  loading: boolean;
+  error: boolean;
+}
+
 @Injectable({ providedIn: 'root' })
 export class AlertAiService {
   private readonly openRouter = inject(OpenRouterService);
@@ -25,8 +36,12 @@ export class AlertAiService {
     issues: AlertIssue[];
   }>();
   readonly issuesUpdated$ = this.issuesUpdatedSubject.asObservable();
-  // Cache the last analyzed alert HTML so repeat opens of the same page do not re-call the model.
-  private cachedAlertIssues: { html: string; issues: AlertIssue[] } | null = null;
+  private readonly analysisStateSubject = new Subject<AlertAnalysisState>();
+  readonly analysisState$ = this.analysisStateSubject.asObservable();
+  // Keep successful session results by HTML version so undo/navigation can restore them.
+  private cachedAlertIssues = new Map<string, AlertIssuesCacheEntry>();
+  private latestCachedAlertKey: string | null = null;
+  private staleAlertHtmlKeys = new Set<string>();
   // Fallback metadata fills gaps when the model omits severity/include fields.
   private readonly fallbackSeverities: Record<string, { severity: string; include?: boolean }> =
     Object.fromEntries(
@@ -61,7 +76,7 @@ export class AlertAiService {
     model?: AiModel,
   ): Promise<AlertIssue[]> {
     const cached = this.getCachedIssues(alertHtml);
-    if (cached?.length) {
+    if (cached !== null) {
       return cached;
     }
     const startTime = performance.now();
@@ -164,14 +179,19 @@ export class AlertAiService {
         }
       }
 
-      if (!resolvedIssues.length && !errorNotified && !sawResponse) {
-        this.notifyError(
-          lastError ??
-            new Error(
-              this.translate.instant('common.ai.errorCommunicatingOpenRouter'),
-            ),
-        );
-      } else if (!resolvedIssues.length && !errorNotified && sawResponse) {
+      if (!sawResponse) {
+        const error =
+          lastError instanceof Error
+            ? lastError
+            : new Error(
+                this.translate.instant('common.ai.errorCommunicatingOpenRouter'),
+              );
+        if (!errorNotified) {
+          this.notifyError(error);
+        }
+        throw error;
+      }
+      if (!resolvedIssues.length && !errorNotified) {
         this.messageService.add({
           severity: 'warn',
           summary: this.translate.instant('common.ai.alertIssuesNotIdentified'),
@@ -195,41 +215,73 @@ export class AlertAiService {
   }
 
   getCachedIssues(alertHtml: string): AlertIssue[] | null {
-    const normalized = this.trimText(alertHtml);
-    if (!this.cachedAlertIssues) return null;
-    if (this.cachedAlertIssues.html !== normalized) return null;
-    return this.cachedAlertIssues.issues;
+    const key = this.getCacheKey(alertHtml);
+    if (this.staleAlertHtmlKeys.has(key)) return null;
+    const entry = this.cachedAlertIssues.get(key);
+    return entry ? entry.issues.map((issue) => ({ ...issue })) : null;
+  }
+
+  getLatestCachedAnalysis(): AlertIssuesCacheEntry | null {
+    if (!this.latestCachedAlertKey) return null;
+    const entry = this.cachedAlertIssues.get(this.latestCachedAlertKey);
+    if (!entry) return null;
+    return {
+      html: entry.html,
+      issues: entry.issues.map((issue) => ({ ...issue })),
+    };
   }
 
   cacheIssues(alertHtml: string, issues: AlertIssue[]): void {
     // Cache and emit copied objects so downstream views cannot mutate the shared source array by reference.
-    const normalized = this.trimText(alertHtml);
+    const normalized = this.getCacheKey(alertHtml);
     const copied = issues.map((issue) => ({ ...issue }));
-    this.cachedAlertIssues = {
-      html: normalized,
+    this.cachedAlertIssues.set(normalized, {
+      html: alertHtml,
       issues: copied,
-    };
+    });
+    this.staleAlertHtmlKeys.delete(normalized);
+    this.latestCachedAlertKey = normalized;
     this.issuesUpdatedSubject.next({
-      html: normalized,
+      html: alertHtml,
       issues: copied.map((issue) => ({ ...issue })),
+    });
+    this.finishAnalysis(alertHtml);
+  }
+
+  prepareForReanalysis(alertHtml: string): void {
+    const normalized = this.getCacheKey(alertHtml);
+    this.cachedAlertIssues.delete(normalized);
+    this.staleAlertHtmlKeys.add(normalized);
+    this.latestCachedAlertKey = null;
+    this.analysisStateSubject.next({
+      html: alertHtml,
+      loading: true,
+      error: false,
+    });
+    this.issuesUpdatedSubject.next({ html: alertHtml, issues: [] });
+  }
+
+  finishAnalysis(alertHtml: string): void {
+    this.analysisStateSubject.next({
+      html: alertHtml,
+      loading: false,
+      error: false,
     });
   }
 
-  clearCachedIssues(alertHtml?: string): void {
-    const normalized = this.trimText(alertHtml);
-    if (
-      normalized &&
-      this.cachedAlertIssues &&
-      this.cachedAlertIssues.html !== normalized
-    ) {
-      return;
-    }
-
-    this.cachedAlertIssues = null;
-    this.issuesUpdatedSubject.next({
-      html: normalized,
-      issues: [],
+  failAnalysis(alertHtml: string): void {
+    this.analysisStateSubject.next({
+      html: alertHtml,
+      loading: false,
+      error: true,
     });
+  }
+
+  markAnalysisStale(alertHtml: string): void {
+    const normalized = this.getCacheKey(alertHtml);
+    if (normalized) {
+      this.staleAlertHtmlKeys.add(normalized);
+    }
   }
 
   private notifyError(err: unknown): void {
@@ -385,6 +437,10 @@ export class AlertAiService {
   private trimText(s: string | undefined, max = 12000): string {
     const t = (s || '').trim();
     return t.length > max ? t.slice(0, max) : t;
+  }
+
+  private getCacheKey(s: string | undefined): string {
+    return (s || '').trim();
   }
 
   private cleanString(v: unknown): string {

@@ -13,7 +13,9 @@ export function getReportableAlerts(
   options?: AlertReportableOptions,
 ): HTMLElement[] {
   return Array.from(root.querySelectorAll<HTMLElement>('.alert')).filter(
-    (alert) => !isConditionalInteractiveAlert(alert, options),
+    (alert) =>
+      !alert.parentElement?.closest('.alert') &&
+      !isConditionalInteractiveAlert(alert, options),
   );
 }
 

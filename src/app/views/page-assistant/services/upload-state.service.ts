@@ -26,7 +26,7 @@ export class UploadStateService {
   }
 
   // Primary AI model selected for the current session.
-  private selectedAiModel = signal<AiModel>(AiModel.GptOSS20BFree);
+  private selectedAiModel = signal<AiModel>(AiModel.OwlAlpha);
   getSelectedAiModel = computed(() => this.selectedAiModel());
   setSelectedAiModel(model: AiModel) {
     this.selectedAiModel.set(model);
@@ -64,9 +64,22 @@ export class UploadStateService {
   // Working page data plus shallow history for undo.
   private uploadData = signal<Partial<UploadData> | null>(null);
   private originalUploadData: Partial<UploadData> | null = null; // reserved for future compare-with-original behavior
-  private prevUploadData: (Partial<UploadData> | null)[] = []; // undo stack
+  private prevUploadData: Array<{
+    data: Partial<UploadData> | null;
+    recommendationReviewPending: boolean;
+  }> = []; // undo stack
   private maxHistory = 20; // max undo depth
+  private workingContentRevision = signal(0);
+  private recommendationReviewPending = signal(false);
   getUploadData = computed(() => this.uploadData());
+  getWorkingHtml = computed(() => {
+    const data = this.uploadData();
+    return data?.modifiedHtml || data?.originalHtml || '';
+  });
+  getWorkingContentRevision = computed(() => this.workingContentRevision());
+  getRecommendationReviewPending = computed(() =>
+    this.recommendationReviewPending(),
+  );
 
   constructor() {
     // A hard reload should start a fresh assistant session rather than restoring stale page state.
@@ -85,6 +98,8 @@ export class UploadStateService {
 
   setUploadData(data: Partial<UploadData>) {
     this.uploadData.set(data);
+    this.recommendationReviewPending.set(false);
+    this.bumpWorkingContentRevision();
     this.persistUploadData();
   }
 
@@ -95,6 +110,7 @@ export class UploadStateService {
       modifiedHtml: modified.modifiedHtml,
       modifiedUrl: modified.modifiedUrl,
     });
+    this.bumpWorkingContentRevision();
     this.persistUploadData();
   }
 
@@ -105,7 +121,12 @@ export class UploadStateService {
       originalHtml: original.originalHtml,
       originalUrl: original.originalUrl,
     });
+    this.bumpWorkingContentRevision();
     this.persistUploadData();
+  }
+
+  setRecommendationReviewPending(pending: boolean): void {
+    this.recommendationReviewPending.set(!!pending);
   }
 
   mergeFoundFlags(version: 'original' | 'modified', flags: { hidden: boolean; modal: boolean; dynamic: boolean }) {
@@ -130,8 +151,13 @@ export class UploadStateService {
   // Restore the most recent pre-edit snapshot.
   undoLastChange(): void {
     if (this.prevUploadData.length === 0) return;
-    const lastState = this.prevUploadData.pop() ?? null;
-    this.uploadData.set(lastState);
+    const lastState = this.prevUploadData.pop();
+    if (!lastState) return;
+    this.uploadData.set(lastState.data);
+    this.recommendationReviewPending.set(
+      lastState.recommendationReviewPending,
+    );
+    this.bumpWorkingContentRevision();
   }
 
   isUndoDisabled(): boolean { return this.prevUploadData.length === 0; }
@@ -139,7 +165,10 @@ export class UploadStateService {
   // Capture state before an accept/reject action mutates the working HTML.
   savePreviousUploadData(): void {
     const current = this.uploadData();
-    this.prevUploadData.push(current ? structuredClone(current) : null);
+    this.prevUploadData.push({
+      data: current ? structuredClone(current) : null,
+      recommendationReviewPending: this.recommendationReviewPending(),
+    });
     // Trim the oldest snapshot when the undo buffer exceeds its cap.
     if (this.prevUploadData.length > this.maxHistory) {
       this.prevUploadData.shift();
@@ -149,11 +178,13 @@ export class UploadStateService {
   // Clear both in-memory state and the persisted assistant session.
   resetUploadFlow(): void {
     this.selectedUploadType.set('url'); // default to URL
-    this.selectedAiModel.set(AiModel.GptOSS20BFree);
+    this.selectedAiModel.set(AiModel.OwlAlpha);
     this.editPromptText.set('');
     this.includeAlertRewriteExamples.set(true);
     this.useCompactAlertsPageContext.set(true);
     this.uploadData.set(null);
+    this.recommendationReviewPending.set(false);
+    this.bumpWorkingContentRevision();
     this.prevUploadData = [];
     this.storage.removeData(this.uploadTypeKey);
     this.storage.removeData(this.aiModelKey);
@@ -229,6 +260,10 @@ export class UploadStateService {
     } catch (err) {
       console.warn('Failed to restore upload state:', err);
     }
+  }
+
+  private bumpWorkingContentRevision(): void {
+    this.workingContentRevision.update((revision) => revision + 1);
   }
 
   private isPageReload(): boolean {
