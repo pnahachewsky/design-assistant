@@ -69,7 +69,6 @@ export class TopicDoormatIaCheckService {
         ...(iaResult.length
           ? this.buildExtraRows(doormatSummaries, childByKey, visits, topicUrl)
           : []),
-        ...this.buildWrongOrderRows(doormatSummaries, visits, topicUrl),
       ],
       metaByDoormatIndex: this.buildDoormatMetaMap(
         doormatSummaries,
@@ -216,70 +215,6 @@ export class TopicDoormatIaCheckService {
       visitCount !== null ? this.formatVisits(visitCount) : 'no views',
     ].filter(Boolean);
     return parts.join(', ');
-  }
-
-  private buildWrongOrderRows(
-    doormatSummaries: TopicDoormatSummary[],
-    visits: { byUrl: Map<string, number>; byPath: Map<string, number> },
-    topicUrl: string,
-  ): TopicDoormatIssueRow[] {
-    const bySection = new Map<number, TopicDoormatSummary[]>();
-    doormatSummaries.forEach((summary) => {
-      if (!summary.sectionIndex) return;
-      const rows = bySection.get(summary.sectionIndex) ?? [];
-      rows.push(summary);
-      bySection.set(summary.sectionIndex, rows);
-    });
-
-    return Array.from(bySection.entries()).flatMap(([sectionIndex, rows]) => {
-      const rowsWithVisits = rows
-        .map((summary) => ({
-          summary,
-          visits: this.getVisitsForUrl(
-            summary.destinationUrl || summary.href,
-            visits,
-            topicUrl,
-          ),
-        }))
-        .filter(
-          (entry): entry is { summary: TopicDoormatSummary; visits: number } =>
-            entry.visits !== null,
-        );
-
-      if (rowsWithVisits.length < 2) return [];
-
-      const outOfOrder = rowsWithVisits.some((entry, index, entries) => {
-        if (index === 0) return false;
-        return entry.visits > entries[index - 1].visits;
-      });
-      if (!outOfOrder) return [];
-
-      const expectedOrderItems = [...rowsWithVisits]
-        .sort((a, b) => b.visits - a.visits)
-        .map((entry) => entry.summary.linkText || entry.summary.href)
-        .filter(Boolean);
-      const sectionTitle = rows[0]?.sectionTitle || '';
-
-      return [
-        {
-          include: true,
-          rowType: 'section',
-          severity: 'Medium',
-          doormat: sectionTitle
-            ? `Section ${sectionIndex}: ${sectionTitle}`
-            : `Section ${sectionIndex}`,
-          doormatLabel: 'All doormats in section',
-          issueId: 'wrong-doormat-order',
-          issue: 'Wrong doormat order',
-          evidence: 'Expected order:',
-          evidenceOrderItems: expectedOrderItems,
-          recommendation:
-            'Reorder doormats so the highest-demand or highest-priority information and services come first.',
-          sectionIndex,
-          sectionTitle,
-        } satisfies TopicDoormatIssueRow,
-      ];
-    });
   }
 
   private async loadVisits(): Promise<{

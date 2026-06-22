@@ -7,7 +7,7 @@
   "analysis_sequence": [
     {
       "pass": "deterministic_structural_checks",
-      "instruction": "Run these checks first. Do not return the response until every model-owned deterministic structural check has been evaluated for every doormat and every complete doormat section. Do not report link-name-too-long, description-too-long, link-name-trailing-punctuation, description-trailing-punctuation, duplicate-link-in-most-requested, missing-needed-doormat, unnecessary-doormat, or wrong-doormat-order; AIDA calculates and reports those issues deterministically from the extracted doormat text, Most requested links, IA child-page relationships, page-view data, and character counts.",
+      "instruction": "Run these checks first. Do not return the response until every model-owned deterministic structural check has been evaluated for every doormat and every complete doormat section. Do not report link-name-too-long, description-too-long, link-name-trailing-punctuation, description-trailing-punctuation, duplicate-link-in-most-requested, missing-needed-doormat, or unnecessary-doormat; AIDA calculates and reports those issues deterministically from the extracted doormat text, Most requested links, IA child-page relationships, page-view data, and character counts.",
       "issue_ids": [
         "too-many-doormats-in-section",
         "split-heading-link",
@@ -536,19 +536,6 @@
         "section_doormat_count",
         "maximum_allowed",
         "doormat_index"
-      ]
-    },
-    {
-      "id": "wrong-doormat-order",
-      "group": "Choice of doormats",
-      "label": "Wrong doormat order",
-      "severity": "Medium",
-      "condition": "The doormat order conflicts with supplied evidence about the most visited information, priority services, explicit page hierarchy, or another concrete ordering signal.",
-      "recommendation": "Reorder doormats so the highest-demand or highest-priority information and services come first.",
-      "evidence_required": [
-        "visit_data",
-        "explicit_priority_signal",
-        "page_context_signal"
       ]
     }
   ],

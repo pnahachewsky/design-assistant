@@ -1773,8 +1773,7 @@ export class TopicDoormatIssueAnalysisService {
   private isLocalIaOwnedTopicDoormatIssue(issueId: string): boolean {
     return (
       issueId === 'missing-needed-doormat' ||
-      issueId === 'unnecessary-doormat' ||
-      issueId === 'wrong-doormat-order'
+      issueId === 'unnecessary-doormat'
     );
   }
 

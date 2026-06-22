@@ -12,7 +12,6 @@ export interface TopicDoormatIssueRow {
   issue: string;
   evidence: string;
   evidenceMetric?: string;
-  evidenceOrderItems?: string[];
   evidenceLinkText?: string;
   evidenceLinkHref?: string;
   recommendation: string;
