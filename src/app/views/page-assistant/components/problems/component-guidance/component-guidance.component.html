@@ -427,61 +427,6 @@
                   }
                 </div>
               }
-              <!-- Previous flat Topic doormat table replaced by grouped section tables.
-              <p-table
-                [value]="topicDoormatIssueRows"
-                styleClass="p-datatable-sm expansion-table">
-                <ng-template pTemplate="header">
-                  <tr>
-                    <th style="width: 3rem">Include</th>
-                    <th style="width: 8rem">Severity</th>
-                    <th style="width: 7rem">Type</th>
-                    <th>Section</th>
-                    <th style="width: 4rem">#</th>
-                    <th>Doormat</th>
-                    <th>Issue</th>
-                    <th>Evidence</th>
-                    <th>Recommendation</th>
-                  </tr>
-                </ng-template>
-                <ng-template pTemplate="body" let-issue>
-                  <tr [class.topic-doormat-section-row]="issue.rowType === 'section'">
-                    <td>
-                      <p-checkbox
-                        [binary]="true"
-	                        [(ngModel)]="issue.include"
-	                        [disabled]="isNoIssueRow(issue)">
-                      </p-checkbox>
-                    </td>
-                    <td>
-                      <span class="chip" [ngClass]="severityChip(issue.severity)">
-                        {{ issue.severity }}
-                      </span>
-                    </td>
-                    <td>{{ topicDoormatRowTypeLabel(issue) }}</td>
-                    <td>{{ issue.sectionTitle || '-' }}</td>
-                    <td>{{ issue.sectionItemIndex || '-' }}</td>
-                    <td>{{ issue.doormatLabel || '-' }}</td>
-                    <td>{{ issue.issue }}</td>
-                    <td>{{ issue.evidence || '—' }}</td>
-	                    <td>{{ issue.recommendation || '-' }}</td>
-                  </tr>
-                </ng-template>
-                <ng-template pTemplate="emptymessage">
-                  <tr>
-                    <td colspan="9">
-                      @if (topicDoormatIssuesLoading) {
-                        <span class="muted">Waiting for AI response</span>
-                      } @else if (topicDoormatIssuesResponseReceived) {
-                        <span class="muted">No issues returned</span>
-                      } @else {
-                        <span class="muted">Expand this row to analyze topic doormats</span>
-                      }
-                    </td>
-                  </tr>
-                </ng-template>
-              </p-table>
-              -->
             } @else {
               <p-table styleClass="p-datatable-sm expansion-table">
                 <ng-template pTemplate="header">

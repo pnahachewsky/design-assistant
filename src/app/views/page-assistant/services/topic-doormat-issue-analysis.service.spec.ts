@@ -123,6 +123,7 @@ describe('TopicDoormatIssueAnalysisService', () => {
                   doormat_index: 1,
                   link_text: 'Benefit one',
                   href: '/en/benefits/one.html',
+                  description: 'Benefit programs and services',
                   issues: [],
                 },
               ],
@@ -152,6 +153,47 @@ describe('TopicDoormatIssueAnalysisService', () => {
         doormatIndex: 1,
       }),
     );
+  });
+
+  it('rejects unknown model issue categories and uses local fallback rows', async () => {
+    openRouter.call.and.resolveTo({
+      choices: [
+        {
+          message: {
+            content: JSON.stringify({
+              doormats: [
+                {
+                  doormat_index: 1,
+                  link_text: 'Benefit one',
+                  href: '/en/benefits/one.html',
+                  description: 'Benefit programs and services',
+                  issues: [
+                    {
+                      issue_category: 'invented-issue',
+                      description: 'Invented issue.',
+                      recommendation: 'Invented recommendation.',
+                      severity: 'Low',
+                    },
+                  ],
+                },
+              ],
+            }),
+          },
+        },
+      ],
+    });
+
+    const result = await service.analyze({
+      doormatSummaries: [summary()],
+      pageLanguage: 'en',
+      hasLegacyTopicDoormatTemplate: false,
+      mostRequestedLinks: [],
+      selectedModel: 'selected-model',
+    });
+
+    expect(result.usedLocalFallback).toBeTrue();
+    expect(result.rows.some((row) => row.issueId === 'invented-issue')).toBeFalse();
+    expect(result.rows.some((row) => row.issueId === 'no-issues')).toBeTrue();
   });
 
   it('falls back to deterministic rows when the model returns empty content', async () => {
@@ -280,12 +322,15 @@ describe('TopicDoormatIssueAnalysisService', () => {
                   doormat_index: 1,
                   link_text: 'Credits impot et prestations pour les particuliers',
                   href: '/fr/services/impots/prestations.html',
+                  description: 'Credits et prestations disponibles',
                   issues: [
                     {
                       include: true,
                       severity: 'Low',
                       issue_category:
                         'link-name-too-different-from-destination-title',
+                      description:
+                        'The link name differs from the destination title.',
                       evidence:
                         'Destination title closely matches link text.',
                       evidence_details: {

@@ -41,7 +41,7 @@ import { HttpClient } from '@angular/common/http';
 import { Subscription, firstValueFrom } from 'rxjs';
 import { environment } from '../../../../../../environments/environment';
 import { ChangeDetectorRef } from '@angular/core';
-import { AiModel, UploadData } from '../../../data/data.model';
+import { AiModel } from '../../../data/data.model';
 import { TopicDoormatExtractorService } from '../../../services/topic-doormat-extractor.service';
 import { TopicDoormatIssueAnalysisService } from '../../../services/topic-doormat-issue-analysis.service';
 import { TopicDoormatPresenterService } from '../../../services/topic-doormat-presenter.service';
@@ -187,7 +187,7 @@ export class ComponentGuidanceComponent implements OnInit, OnDestroy {
   private topicDoormatIssueAnalysis = inject(TopicDoormatIssueAnalysisService);
   private topicDoormatPresenter = inject(TopicDoormatPresenterService);
   private alertIssuesSub?: Subscription;
-  private lastAlertGuidanceRevision = -1;
+  private lastGuidanceRevision = -1;
   private lastExpandedAlertAnalysisHtml = '';
 
   @Output() analysisAvailable = new EventEmitter<void>();
@@ -221,6 +221,10 @@ export class ComponentGuidanceComponent implements OnInit, OnDestroy {
   expandedRows: Record<string, boolean> = {};
   readonly alertsNameKey = 'page.tools.guidance.craVariant.alerts.title';
   readonly topicDoormatsId = 'topicDoormats';
+  readonly topicDoormatsNameKey =
+    'page.tools.guidance.craVariant.topicDoormats.title';
+  readonly topicDoormatsUrlKey =
+    'page.tools.guidance.craVariant.doormats.url';
   readonly subwayDoormatsId = 'subwayDoormats';
 
   cols = [
@@ -244,9 +248,10 @@ export class ComponentGuidanceComponent implements OnInit, OnDestroy {
     effect(() => {
       const revision = this.uploadState.getWorkingContentRevision();
       const html = this.uploadState.getWorkingHtml();
-      if (revision === this.lastAlertGuidanceRevision) return;
-      this.lastAlertGuidanceRevision = revision;
+      if (revision === this.lastGuidanceRevision) return;
+      this.lastGuidanceRevision = revision;
       this.syncAlertGuidanceRowForWorkingHtml(html);
+      this.syncTopicDoormatGuidanceRowForWorkingHtml(html);
     });
   }
 
@@ -257,16 +262,24 @@ export class ComponentGuidanceComponent implements OnInit, OnDestroy {
       const originalGuidance = this.validator.collectGuidanceUrls(
         data.originalHtml,
       );
-      const workingAlertGuidance = this.validator
+      const workingDynamicGuidance = this.validator
         .collectGuidanceUrls(workingHtml)
-        .filter((item) => item.name === this.alertsNameKey);
+        .filter(
+          (item) =>
+            item.name === this.alertsNameKey ||
+            item.id === this.topicDoormatsId,
+        );
       this.guidanceList = [
-        ...originalGuidance.filter((item) => item.name !== this.alertsNameKey),
-        ...workingAlertGuidance,
+        ...originalGuidance.filter(
+          (item) =>
+            item.name !== this.alertsNameKey &&
+            item.id !== this.topicDoormatsId,
+        ),
+        ...workingDynamicGuidance,
       ];
       this.rows = this.buildRows(this.guidanceList);
       this.removeAlertRowWhenNoReportableAlerts(workingHtml);
-      this.removeTopicDoormatRowWhenNoTopicDoormats(data.originalHtml);
+      this.syncTopicDoormatGuidanceRowForWorkingHtml(workingHtml);
       this.syncAlertRowSelection();
     }
     this.applyCachedAlertIssues();
@@ -369,9 +382,40 @@ export class ComponentGuidanceComponent implements OnInit, OnDestroy {
     this.cdr.markForCheck();
   }
 
-  private removeTopicDoormatRowWhenNoTopicDoormats(html: string): void {
+  private syncTopicDoormatGuidanceRowForWorkingHtml(html: string): void {
     const doc = this.topicDoormatExtractor.parseHtmlDocument(html);
-    if (doc && this.topicDoormatExtractor.hasCandidates(doc)) return;
+    const hasCandidates = !!doc && this.topicDoormatExtractor.hasCandidates(doc);
+    const topicRow = this.rows.find(
+      (row) => row.__id === this.topicDoormatsId,
+    );
+
+    if (hasCandidates) {
+      if (!topicRow) {
+        const newRow = this.buildRows([
+          {
+            id: this.topicDoormatsId,
+            name: this.topicDoormatsNameKey,
+            url: this.topicDoormatsUrlKey,
+          },
+        ])[0];
+        this.rows = [...this.rows, newRow].sort((a, b) => {
+          const rankDiff =
+            this.getGuidanceSortRank(a.__nameKey, a.__id) -
+            this.getGuidanceSortRank(b.__nameKey, b.__id);
+          return rankDiff || a.component.localeCompare(b.component);
+        });
+        this.reindexRows();
+      }
+
+      if (
+        this.topicDoormatAnalyzedHtml &&
+        this.topicDoormatAnalyzedHtml !== html
+      ) {
+        this.resetTopicDoormatAnalysisState();
+      }
+      this.cdr.markForCheck();
+      return;
+    }
 
     this.rows = this.rows.filter(
       (row) => row.__id !== this.topicDoormatsId,
@@ -379,7 +423,25 @@ export class ComponentGuidanceComponent implements OnInit, OnDestroy {
     this.selectedRows = this.selectedRows.filter(
       (row) => row.__id !== this.topicDoormatsId,
     );
+    if (topicRow) {
+      const expandedRows = { ...this.expandedRows };
+      delete expandedRows[topicRow.url];
+      this.expandedRows = expandedRows;
+    }
+    this.resetTopicDoormatAnalysisState();
     this.reindexRows();
+    this.cdr.markForCheck();
+  }
+
+  private resetTopicDoormatAnalysisState(): void {
+    this.topicDoormatIssuesResponseReceived = false;
+    this.topicDoormatIssuesError = false;
+    this.topicDoormatIssuesErrorDetail = '';
+    this.topicDoormatIssueRows = [];
+    this.topicDoormatIssueGroups = [];
+    this.topicDoormatIssueCategories = [];
+    this.topicDoormatAnalyzedHtml = '';
+    this.updateTopicDoormatRowHealth('unknown');
   }
 
   private getGuidanceSortRank(nameKey?: string, id?: string): number {
@@ -633,7 +695,7 @@ export class ComponentGuidanceComponent implements OnInit, OnDestroy {
     }
 
     const uploadData = this.uploadState.getUploadData();
-    const html = this.getTopicDoormatWorkingHtml(uploadData);
+    const html = this.uploadState.getWorkingHtml();
     if (
       this.topicDoormatIssuesResponseReceived &&
       this.topicDoormatAnalyzedHtml === html
@@ -659,6 +721,7 @@ export class ComponentGuidanceComponent implements OnInit, OnDestroy {
         extractedDoormatSummaries,
         uploadData,
       );
+      if (this.uploadState.getWorkingHtml() !== html) return;
       const pageLanguage = this.topicDoormatExtractor.detectPageLanguage(
         doc,
         uploadData,
@@ -675,8 +738,9 @@ export class ComponentGuidanceComponent implements OnInit, OnDestroy {
         uploadData,
         selectedModel: this.uploadState.getSelectedAiModel(),
       });
+      if (this.uploadState.getWorkingHtml() !== html) return;
 
-      this.topicDoormatIssuesResponseReceived = !!result.text;
+      this.topicDoormatIssuesResponseReceived = true;
       if (result.text) {
         this.messageService.add({
           severity: 'info',
@@ -697,10 +761,13 @@ export class ComponentGuidanceComponent implements OnInit, OnDestroy {
         displayedGroups: this.topicDoormatIssueGroups.length,
         totalElapsedMs: result.elapsedMs,
       });
-      if (!result.text) {
-        this.topicDoormatIssuesError = true;
-        this.topicDoormatIssuesErrorDetail =
-          'The model response was empty or did not include message content.';
+      if (result.usedLocalFallback) {
+        this.messageService.add({
+          severity: 'warn',
+          summary: 'Topic doormat AI response unavailable',
+          detail: 'Showing deterministic local checks only.',
+          sticky: true,
+        });
       } else {
         this.messageService.add({
           severity: 'info',
@@ -751,12 +818,6 @@ export class ComponentGuidanceComponent implements OnInit, OnDestroy {
       this.topicDoormatIssuesLoading = false;
       this.cdr.markForCheck();
     }
-  }
-
-  private getTopicDoormatWorkingHtml(
-    uploadData?: Partial<UploadData> | null,
-  ): string {
-    return uploadData?.modifiedHtml || uploadData?.originalHtml || '';
   }
 
   private getShortModelName(model: string): string {
@@ -913,10 +974,6 @@ export class ComponentGuidanceComponent implements OnInit, OnDestroy {
 
   isNoIssueRow(issue: TopicDoormatIssueRow): boolean {
     return issue.issueId === 'no-issues';
-  }
-
-  topicDoormatRowTypeLabel(issue: TopicDoormatIssueRow): string {
-    return issue.rowType === 'section' ? 'Section' : 'Doormat';
   }
 
   alertHealthLabel(severity: string | null): string {

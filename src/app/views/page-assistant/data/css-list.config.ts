@@ -370,13 +370,6 @@ export const guidanceContentMap: {
             patterns: [/^On this page$/i, /^Table of contents$/i],
         },
         {
-            id: 'topicDoormats',
-            name: 'page.tools.guidance.craVariant.topicDoormats.title',
-            url: 'page.tools.guidance.craVariant.doormats.url',
-            tag: 'section',
-            patterns: [/^BANANA$/],
-        },
-        {
             name: 'page.tools.guidance.craVariant.links.title',
             url: 'page.tools.guidance.craVariant.links.url',
             tag: 'a',
