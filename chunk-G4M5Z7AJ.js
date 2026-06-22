@@ -29073,13 +29073,6 @@ var guidanceContentMap = [
     patterns: [/^On this page$/i, /^Table of contents$/i]
   },
   {
-    id: "topicDoormats",
-    name: "page.tools.guidance.craVariant.topicDoormats.title",
-    url: "page.tools.guidance.craVariant.doormats.url",
-    tag: "section",
-    patterns: [/^BANANA$/]
-  },
-  {
     name: "page.tools.guidance.craVariant.links.title",
     url: "page.tools.guidance.craVariant.links.url",
     tag: "a",
@@ -30376,6 +30369,113 @@ var TopicDoormatModelClientService = class _TopicDoormatModelClientService {
   }], null, null);
 })();
 
+// src/app/views/page-assistant/services/topic-doormat-url-comparison.service.ts
+var TopicDoormatUrlComparisonService = class _TopicDoormatUrlComparisonService {
+  findMostRequestedDuplicate(href, mostRequestedLinks, uploadData) {
+    const doormatUrl = this.parseComparableUrl(href, uploadData);
+    if (!doormatUrl)
+      return null;
+    return mostRequestedLinks.find((link) => {
+      const mostRequestedUrl = this.parseComparableUrl(link.href, uploadData);
+      return !!mostRequestedUrl && this.areComparableUrlsEqual(doormatUrl, mostRequestedUrl);
+    }) ?? null;
+  }
+  parseComparableUrl(href, uploadData) {
+    const trimmedHref = this.cleanString(href);
+    if (!trimmedHref)
+      return null;
+    const baseUrl = this.cleanString(uploadData?.originalUrl) || this.cleanString(uploadData?.modifiedUrl);
+    if (baseUrl) {
+      try {
+        return this.buildComparableAbsoluteUrl(new URL(trimmedHref, baseUrl));
+      } catch {
+        return null;
+      }
+    }
+    try {
+      return this.buildComparableAbsoluteUrl(new URL(trimmedHref));
+    } catch {
+      if (!trimmedHref.startsWith("/"))
+        return null;
+      const fragmentIndex = trimmedHref.indexOf("#");
+      const fragment = fragmentIndex >= 0 ? trimmedHref.slice(fragmentIndex) : "";
+      const hrefWithoutFragment = fragmentIndex >= 0 ? trimmedHref.slice(0, fragmentIndex) : trimmedHref;
+      const queryIndex = hrefWithoutFragment.indexOf("?");
+      const path = this.normalizeComparablePath(queryIndex >= 0 ? hrefWithoutFragment.slice(0, queryIndex) : hrefWithoutFragment);
+      const query = queryIndex >= 0 ? hrefWithoutFragment.slice(queryIndex) : "";
+      if (!path)
+        return null;
+      return {
+        kind: "root-relative",
+        pathKey: `${path}${query}${fragment}`,
+        allowedHost: false
+      };
+    }
+  }
+  buildComparableAbsoluteUrl(url) {
+    if (url.protocol !== "https:" && url.protocol !== "http:")
+      return null;
+    const protocol = url.protocol.toLowerCase();
+    const host = url.hostname.toLowerCase();
+    const port = this.getComparablePort(url);
+    const path = this.normalizeComparablePath(url.pathname);
+    const pathKey = `${path}${url.search}${url.hash}`;
+    return {
+      kind: "absolute",
+      absoluteKey: `${protocol}//${host}${port}${pathKey}`,
+      pathKey,
+      allowedHost: this.isAllowedComparisonHost(host)
+    };
+  }
+  getComparablePort(url) {
+    if (!url.port)
+      return "";
+    if (url.protocol === "https:" && url.port === "443")
+      return "";
+    if (url.protocol === "http:" && url.port === "80")
+      return "";
+    return `:${url.port}`;
+  }
+  normalizeComparablePath(path) {
+    const normalized = path || "/";
+    return normalized.length > 1 && normalized.endsWith("/") ? normalized.replace(/\/+$/, "") : normalized;
+  }
+  isAllowedComparisonHost(host) {
+    return [
+      "www.canada.ca",
+      "test.canada.ca",
+      "proto-cra.github.io",
+      "cra-design.github.io",
+      "cra-test-arc.canada.ca",
+      "cra-proto.github.io"
+    ].includes(host);
+  }
+  areComparableUrlsEqual(first, second) {
+    if (first.kind === "absolute" && second.kind === "absolute") {
+      return first.absoluteKey === second.absoluteKey;
+    }
+    if (first.kind === "root-relative" && second.kind === "root-relative") {
+      return first.pathKey === second.pathKey;
+    }
+    const absolute = first.kind === "absolute" ? first : second;
+    const relative = first.kind === "root-relative" ? first : second;
+    return absolute.allowedHost && absolute.pathKey === relative.pathKey;
+  }
+  cleanString(value) {
+    return typeof value === "string" ? value.trim() : "";
+  }
+  static \u0275fac = function TopicDoormatUrlComparisonService_Factory(__ngFactoryType__) {
+    return new (__ngFactoryType__ || _TopicDoormatUrlComparisonService)();
+  };
+  static \u0275prov = /* @__PURE__ */ \u0275\u0275defineInjectable({ token: _TopicDoormatUrlComparisonService, factory: _TopicDoormatUrlComparisonService.\u0275fac, providedIn: "root" });
+};
+(() => {
+  (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(TopicDoormatUrlComparisonService, [{
+    type: Injectable,
+    args: [{ providedIn: "root" }]
+  }], null, null);
+})();
+
 // src/app/views/page-assistant/services/topic-doormat-issue-analysis.service.ts
 var TopicDoormatIssueAnalysisService = class _TopicDoormatIssueAnalysisService {
   http = inject(HttpClient);
@@ -30383,6 +30483,7 @@ var TopicDoormatIssueAnalysisService = class _TopicDoormatIssueAnalysisService {
   skillManager = inject(SkillManagerService);
   modelClient = inject(TopicDoormatModelClientService);
   iaCheck = inject(TopicDoormatIaCheckService);
+  urlComparison = inject(TopicDoormatUrlComparisonService);
   topicDoormatDebugStorageKey = "pageAssistant.topicDoormatDebug";
   topicDoormatIssueTaxonomyPath = "skills/topic-doormats/issues/references/issue-taxonomy.json";
   topicDoormatIssueLengthLimits = {
@@ -30396,6 +30497,19 @@ var TopicDoormatIssueAnalysisService = class _TopicDoormatIssueAnalysisService {
     }
   };
   topicDoormatTrailingPunctuationPattern = /[.:;?!,]$/;
+  locallyOwnedTopicDoormatIssueIds = /* @__PURE__ */ new Set([
+    "description-contains-link",
+    "description-too-long",
+    "description-trailing-punctuation",
+    "duplicate-link-in-most-requested",
+    "link-name-too-long",
+    "link-name-trailing-punctuation",
+    "missing-needed-doormat",
+    "multiple-links",
+    "split-heading-link",
+    "too-many-doormats-in-section",
+    "unnecessary-doormat"
+  ]);
   topicDoormatDescriptionStyleOrder = [
     "noun-topic",
     "benefit-summary",
@@ -30420,13 +30534,33 @@ var TopicDoormatIssueAnalysisService = class _TopicDoormatIssueAnalysisService {
         includeAssets: true,
         requireSkill: true
       });
+      const localOwnershipInstruction = [
+        "Runtime issue ownership: AIDA calculates the following issues locally.",
+        "Do not return them in section_issues or doormat issues:",
+        Array.from(this.locallyOwnedTopicDoormatIssueIds).join(", ")
+      ].join("\n");
       const messages = [
-        { role: "system", content: composed.prompt },
+        {
+          role: "system",
+          content: `${composed.prompt}
+
+${localOwnershipInstruction}`
+        },
         {
           role: "user",
           content: JSON.stringify({
-            doormats: input.doormatSummaries,
-            mostRequestedLinks: input.mostRequestedLinks
+            doormats: input.doormatSummaries.map((summary) => ({
+              index: summary.index,
+              linkText: summary.linkText,
+              href: summary.href,
+              description: summary.description,
+              destinationUrl: summary.destinationUrl,
+              destinationPageTitle: summary.destinationPageTitle,
+              destinationPageHeading: summary.destinationPageHeading,
+              sectionIndex: summary.sectionIndex,
+              sectionTitle: summary.sectionTitle,
+              sectionItemIndex: summary.sectionItemIndex
+            }))
           })
         }
       ];
@@ -30493,6 +30627,7 @@ var TopicDoormatIssueAnalysisService = class _TopicDoormatIssueAnalysisService {
       return {
         rows: rowsWithIaMeta,
         text,
+        usedLocalFallback: !text,
         model,
         modelRotation: issueJson.modelRotation,
         elapsedMs: Math.round(performance.now() - analysisStart)
@@ -30570,11 +30705,17 @@ var TopicDoormatIssueAnalysisService = class _TopicDoormatIssueAnalysisService {
           return null;
         const issue = rawIssue;
         const issueId = this.getTopicDoormatIssueId(issue);
+        const severity = this.normalizeTopicDoormatModelSeverity(issue["severity"]);
+        if (!this.topicDoormatIssueIdToLabel.has(issueId) || !severity) {
+          return null;
+        }
         if (!this.isReportableTopicDoormatIssue(issue, summary, pageLanguage)) {
           return null;
         }
         if (issueId === "mixed-description-style-in-section" || issueId === "mixed-link-name-styles-in-section") {
           const sectionRow = this.buildTopicDoormatSectionIssueRow(issue, summary?.sectionIndex);
+          if (!sectionRow)
+            return null;
           const sectionKey = `${sectionRow.sectionIndex ?? 0}|${sectionRow.issueId}`;
           if (!sectionIssueKeys.has(sectionKey)) {
             sectionIssueRows.push(sectionRow);
@@ -30582,35 +30723,16 @@ var TopicDoormatIssueAnalysisService = class _TopicDoormatIssueAnalysisService {
           }
           return null;
         }
-        if (issueId === "multiple-links") {
+        if (this.locallyOwnedTopicDoormatIssueIds.has(issueId))
           return null;
-        }
-        if (issueId === "split-heading-link") {
-          return null;
-        }
-        if (issueId === "description-contains-link") {
-          return null;
-        }
-        if (issueId === "link-name-too-long") {
-          return null;
-        }
-        if (issueId === "description-too-long") {
-          return null;
-        }
-        if (issueId === "duplicate-link-in-most-requested") {
-          return null;
-        }
         if (!this.hasValidTopicDoormatObjectiveEvidence(issueId, summary)) {
-          return null;
-        }
-        if (issueId === "too-many-doormats-in-section") {
           return null;
         }
         const evidence = this.buildTopicDoormatEvidence(issue, summary);
         return {
           include: typeof issue["include"] === "boolean" ? issue["include"] : true,
           rowType: "doormat",
-          severity: this.cleanString(issue["severity"]) || "Unknown",
+          severity,
           doormat: label,
           doormatLabel: summary?.linkText || linkText || href || "Doormat",
           issueId,
@@ -30624,7 +30746,7 @@ var TopicDoormatIssueAnalysisService = class _TopicDoormatIssueAnalysisService {
         };
       }).filter((row) => row !== null);
     });
-    const reportableSectionIssueRows = sectionIssueRows.filter((row) => row.issueId !== "too-many-doormats-in-section" && !this.isLocalIaOwnedTopicDoormatIssue(row.issueId));
+    const reportableSectionIssueRows = sectionIssueRows.filter((row) => !this.locallyOwnedTopicDoormatIssueIds.has(row.issueId));
     const mixedDescriptionStyleSectionIndexes = new Set(reportableSectionIssueRows.filter((row) => row.issueId === "mixed-description-style-in-section").map((row) => row.sectionIndex).filter((index) => typeof index === "number" && index > 0));
     const mixedLinkNameStyleSectionIndexes = new Set(reportableSectionIssueRows.filter((row) => row.issueId === "mixed-link-name-styles-in-section").map((row) => row.sectionIndex).filter((index) => typeof index === "number" && index > 0));
     const localDescriptionTrailingPunctuationSectionIndexes = this.getLocalDescriptionTrailingPunctuationSectionIndexes(doormatSummaries);
@@ -30706,16 +30828,21 @@ var TopicDoormatIssueAnalysisService = class _TopicDoormatIssueAnalysisService {
     }).filter((row) => row !== null);
   }
   buildTopicDoormatSectionIssueRow(issue, fallbackSectionIndex, doormatSummaries = []) {
+    const issueId = this.getTopicDoormatIssueId(issue);
+    const severity = this.normalizeTopicDoormatModelSeverity(issue["severity"]);
+    if (!this.topicDoormatIssueIdToLabel.has(issueId) || !severity) {
+      return null;
+    }
     const details = issue["evidence_details"] && typeof issue["evidence_details"] === "object" ? issue["evidence_details"] : null;
     const sectionIndex = this.toNumber(issue["section_index"]) ?? this.toNumber(details?.["section_index"]) ?? fallbackSectionIndex ?? this.buildTopicDoormatSectionCounts(doormatSummaries)[0]?.sectionIndex ?? 1;
     return {
       include: typeof issue["include"] === "boolean" ? issue["include"] : true,
       rowType: "section",
-      severity: this.cleanString(issue["severity"]) || "Unknown",
+      severity,
       doormat: this.buildTopicDoormatSectionLabel(sectionIndex, doormatSummaries),
       doormatLabel: "All doormats in section",
-      issueId: this.getTopicDoormatIssueId(issue),
-      issue: this.getTopicDoormatIssueLabel(this.getTopicDoormatIssueId(issue)),
+      issueId,
+      issue: this.getTopicDoormatIssueLabel(issueId),
       evidence: this.buildTopicDoormatEvidence(issue),
       recommendation: this.cleanString(issue["recommendation"]),
       sectionIndex,
@@ -30996,97 +31123,7 @@ var TopicDoormatIssueAnalysisService = class _TopicDoormatIssueAnalysisService {
     });
   }
   findTopicDoormatMostRequestedDuplicate(href, mostRequestedLinks, uploadData) {
-    const doormatUrl = this.parseTopicDoormatComparableUrl(href, uploadData);
-    if (!doormatUrl)
-      return null;
-    return mostRequestedLinks.find((link) => {
-      const mostRequestedUrl = this.parseTopicDoormatComparableUrl(link.href, uploadData);
-      return !!mostRequestedUrl && this.areTopicDoormatComparableUrlsEqual(doormatUrl, mostRequestedUrl);
-    }) ?? null;
-  }
-  parseTopicDoormatComparableUrl(href, uploadData) {
-    const trimmedHref = this.cleanString(href);
-    if (!trimmedHref)
-      return null;
-    const baseUrl = this.cleanString(uploadData?.originalUrl) || this.cleanString(uploadData?.modifiedUrl);
-    if (baseUrl) {
-      try {
-        return this.buildTopicDoormatComparableAbsoluteUrl(new URL(trimmedHref, baseUrl));
-      } catch {
-        return null;
-      }
-    }
-    try {
-      return this.buildTopicDoormatComparableAbsoluteUrl(new URL(trimmedHref));
-    } catch {
-      if (!trimmedHref.startsWith("/"))
-        return null;
-      const fragmentIndex = trimmedHref.indexOf("#");
-      const fragment = fragmentIndex >= 0 ? trimmedHref.slice(fragmentIndex) : "";
-      const hrefWithoutFragment = fragmentIndex >= 0 ? trimmedHref.slice(0, fragmentIndex) : trimmedHref;
-      const queryIndex = hrefWithoutFragment.indexOf("?");
-      const path = this.normalizeTopicDoormatComparablePath(queryIndex >= 0 ? hrefWithoutFragment.slice(0, queryIndex) : hrefWithoutFragment);
-      const query = queryIndex >= 0 ? hrefWithoutFragment.slice(queryIndex) : "";
-      if (!path)
-        return null;
-      return {
-        kind: "root-relative",
-        pathKey: `${path}${query}${fragment}`,
-        allowedHost: false
-      };
-    }
-  }
-  buildTopicDoormatComparableAbsoluteUrl(url) {
-    if (url.protocol !== "https:" && url.protocol !== "http:")
-      return null;
-    const protocol = url.protocol.toLowerCase();
-    const host = url.hostname.toLowerCase();
-    const port = this.getTopicDoormatComparablePort(url);
-    const path = this.normalizeTopicDoormatComparablePath(url.pathname);
-    const pathKey = `${path}${url.search}${url.hash}`;
-    return {
-      kind: "absolute",
-      absoluteKey: `${protocol}//${host}${port}${pathKey}`,
-      pathKey,
-      allowedHost: this.isAllowedTopicDoormatComparisonHost(host)
-    };
-  }
-  getTopicDoormatComparablePort(url) {
-    if (!url.port)
-      return "";
-    if (url.protocol === "https:" && url.port === "443")
-      return "";
-    if (url.protocol === "http:" && url.port === "80")
-      return "";
-    return `:${url.port}`;
-  }
-  normalizeTopicDoormatComparablePath(path) {
-    const normalized = path || "/";
-    if (normalized.length > 1 && normalized.endsWith("/")) {
-      return normalized.replace(/\/+$/, "");
-    }
-    return normalized;
-  }
-  isAllowedTopicDoormatComparisonHost(host) {
-    return [
-      "www.canada.ca",
-      "test.canada.ca",
-      "proto-cra.github.io",
-      "cra-design.github.io",
-      "cra-test-arc.canada.ca",
-      "cra-proto.github.io"
-    ].includes(host);
-  }
-  areTopicDoormatComparableUrlsEqual(first, second) {
-    if (first.kind === "absolute" && second.kind === "absolute") {
-      return first.absoluteKey === second.absoluteKey;
-    }
-    if (first.kind === "root-relative" && second.kind === "root-relative") {
-      return first.pathKey === second.pathKey;
-    }
-    const absolute = first.kind === "absolute" ? first : second;
-    const relative = first.kind === "root-relative" ? first : second;
-    return absolute.allowedHost && absolute.pathKey === relative.pathKey;
+    return this.urlComparison.findMostRequestedDuplicate(href, mostRequestedLinks, uploadData);
   }
   buildTopicDoormatMostRequestedDuplicateEvidence() {
     return "This doormat links to the same destination as this Most requested link:";
@@ -31599,7 +31636,41 @@ var TopicDoormatIssueAnalysisService = class _TopicDoormatIssueAnalysisService {
       return false;
     }
     const root = parsed;
-    return Array.isArray(root["doormats"]) || Array.isArray(root["section_issues"]);
+    const doormats = root["doormats"];
+    const sectionIssues = root["section_issues"];
+    if (!Array.isArray(doormats))
+      return false;
+    if (sectionIssues !== void 0 && !Array.isArray(sectionIssues)) {
+      return false;
+    }
+    return doormats.every((value) => this.isValidTopicDoormatModelResult(value)) && (sectionIssues ?? []).every((value) => this.isValidTopicDoormatModelIssue(value, true));
+  }
+  isValidTopicDoormatModelResult(value) {
+    if (!value || typeof value !== "object" || Array.isArray(value)) {
+      return false;
+    }
+    const doormat = value;
+    const index = this.toNumber(doormat["doormat_index"]);
+    return index !== null && index > 0 && typeof doormat["link_text"] === "string" && typeof doormat["href"] === "string" && typeof doormat["description"] === "string" && Array.isArray(doormat["issues"]) && doormat["issues"].every((issue) => this.isValidTopicDoormatModelIssue(issue, false));
+  }
+  isValidTopicDoormatModelIssue(value, requireSectionIndex) {
+    if (!value || typeof value !== "object" || Array.isArray(value)) {
+      return false;
+    }
+    const issue = value;
+    const issueId = this.getTopicDoormatIssueId(issue);
+    const sectionIndex = this.toNumber(issue["section_index"]);
+    return this.topicDoormatIssueIdToLabel.has(issueId) && !!this.normalizeTopicDoormatModelSeverity(issue["severity"]) && typeof issue["description"] === "string" && typeof issue["recommendation"] === "string" && (!requireSectionIndex || sectionIndex !== null && sectionIndex > 0);
+  }
+  normalizeTopicDoormatModelSeverity(value) {
+    const severity = this.cleanString(value).toLowerCase();
+    if (severity === "high")
+      return "High";
+    if (severity === "medium")
+      return "Medium";
+    if (severity === "low")
+      return "Low";
+    return null;
   }
   stripCodeFences(value) {
     const trimmed = value.trim();
@@ -32712,7 +32783,7 @@ var ComponentGuidanceComponent = class _ComponentGuidanceComponent {
   topicDoormatIssueAnalysis = inject(TopicDoormatIssueAnalysisService);
   topicDoormatPresenter = inject(TopicDoormatPresenterService);
   alertIssuesSub;
-  lastAlertGuidanceRevision = -1;
+  lastGuidanceRevision = -1;
   lastExpandedAlertAnalysisHtml = "";
   analysisAvailable = new EventEmitter();
   production = environment.production;
@@ -32742,6 +32813,8 @@ var ComponentGuidanceComponent = class _ComponentGuidanceComponent {
   expandedRows = {};
   alertsNameKey = "page.tools.guidance.craVariant.alerts.title";
   topicDoormatsId = "topicDoormats";
+  topicDoormatsNameKey = "page.tools.guidance.craVariant.topicDoormats.title";
+  topicDoormatsUrlKey = "page.tools.guidance.craVariant.doormats.url";
   subwayDoormatsId = "subwayDoormats";
   cols = [
     { field: "order", header: "Index" },
@@ -32762,10 +32835,11 @@ var ComponentGuidanceComponent = class _ComponentGuidanceComponent {
     effect(() => {
       const revision = this.uploadState.getWorkingContentRevision();
       const html = this.uploadState.getWorkingHtml();
-      if (revision === this.lastAlertGuidanceRevision)
+      if (revision === this.lastGuidanceRevision)
         return;
-      this.lastAlertGuidanceRevision = revision;
+      this.lastGuidanceRevision = revision;
       this.syncAlertGuidanceRowForWorkingHtml(html);
+      this.syncTopicDoormatGuidanceRowForWorkingHtml(html);
     });
   }
   ngOnInit() {
@@ -32773,14 +32847,14 @@ var ComponentGuidanceComponent = class _ComponentGuidanceComponent {
     if (data?.originalHtml) {
       const workingHtml = this.uploadState.getWorkingHtml();
       const originalGuidance = this.validator.collectGuidanceUrls(data.originalHtml);
-      const workingAlertGuidance = this.validator.collectGuidanceUrls(workingHtml).filter((item) => item.name === this.alertsNameKey);
+      const workingDynamicGuidance = this.validator.collectGuidanceUrls(workingHtml).filter((item) => item.name === this.alertsNameKey || item.id === this.topicDoormatsId);
       this.guidanceList = [
-        ...originalGuidance.filter((item) => item.name !== this.alertsNameKey),
-        ...workingAlertGuidance
+        ...originalGuidance.filter((item) => item.name !== this.alertsNameKey && item.id !== this.topicDoormatsId),
+        ...workingDynamicGuidance
       ];
       this.rows = this.buildRows(this.guidanceList);
       this.removeAlertRowWhenNoReportableAlerts(workingHtml);
-      this.removeTopicDoormatRowWhenNoTopicDoormats(data.originalHtml);
+      this.syncTopicDoormatGuidanceRowForWorkingHtml(workingHtml);
       this.syncAlertRowSelection();
     }
     this.applyCachedAlertIssues();
@@ -32867,13 +32941,51 @@ var ComponentGuidanceComponent = class _ComponentGuidanceComponent {
     this.reindexRows();
     this.cdr.markForCheck();
   }
-  removeTopicDoormatRowWhenNoTopicDoormats(html) {
+  syncTopicDoormatGuidanceRowForWorkingHtml(html) {
     const doc = this.topicDoormatExtractor.parseHtmlDocument(html);
-    if (doc && this.topicDoormatExtractor.hasCandidates(doc))
+    const hasCandidates = !!doc && this.topicDoormatExtractor.hasCandidates(doc);
+    const topicRow = this.rows.find((row) => row.__id === this.topicDoormatsId);
+    if (hasCandidates) {
+      if (!topicRow) {
+        const newRow = this.buildRows([
+          {
+            id: this.topicDoormatsId,
+            name: this.topicDoormatsNameKey,
+            url: this.topicDoormatsUrlKey
+          }
+        ])[0];
+        this.rows = [...this.rows, newRow].sort((a, b) => {
+          const rankDiff = this.getGuidanceSortRank(a.__nameKey, a.__id) - this.getGuidanceSortRank(b.__nameKey, b.__id);
+          return rankDiff || a.component.localeCompare(b.component);
+        });
+        this.reindexRows();
+      }
+      if (this.topicDoormatAnalyzedHtml && this.topicDoormatAnalyzedHtml !== html) {
+        this.resetTopicDoormatAnalysisState();
+      }
+      this.cdr.markForCheck();
       return;
+    }
     this.rows = this.rows.filter((row) => row.__id !== this.topicDoormatsId);
     this.selectedRows = this.selectedRows.filter((row) => row.__id !== this.topicDoormatsId);
+    if (topicRow) {
+      const expandedRows = __spreadValues({}, this.expandedRows);
+      delete expandedRows[topicRow.url];
+      this.expandedRows = expandedRows;
+    }
+    this.resetTopicDoormatAnalysisState();
     this.reindexRows();
+    this.cdr.markForCheck();
+  }
+  resetTopicDoormatAnalysisState() {
+    this.topicDoormatIssuesResponseReceived = false;
+    this.topicDoormatIssuesError = false;
+    this.topicDoormatIssuesErrorDetail = "";
+    this.topicDoormatIssueRows = [];
+    this.topicDoormatIssueGroups = [];
+    this.topicDoormatIssueCategories = [];
+    this.topicDoormatAnalyzedHtml = "";
+    this.updateTopicDoormatRowHealth("unknown");
   }
   getGuidanceSortRank(nameKey, id) {
     if (nameKey === this.alertsNameKey)
@@ -33077,7 +33189,7 @@ var ComponentGuidanceComponent = class _ComponentGuidanceComponent {
         return;
       }
       const uploadData = this.uploadState.getUploadData();
-      const html = this.getTopicDoormatWorkingHtml(uploadData);
+      const html = this.uploadState.getWorkingHtml();
       if (this.topicDoormatIssuesResponseReceived && this.topicDoormatAnalyzedHtml === html) {
         return;
       }
@@ -33097,6 +33209,8 @@ var ComponentGuidanceComponent = class _ComponentGuidanceComponent {
       const analysisStart = performance.now();
       try {
         const doormatSummaries = yield this.topicDoormatExtractor.enrichDestinationContext(extractedDoormatSummaries, uploadData);
+        if (this.uploadState.getWorkingHtml() !== html)
+          return;
         const pageLanguage = this.topicDoormatExtractor.detectPageLanguage(doc, uploadData);
         const hasLegacyTopicDoormatTemplate = this.topicDoormatExtractor.hasLegacyTemplate(doc);
         const mostRequestedLinks = this.topicDoormatExtractor.extractMostRequestedLinks(doc);
@@ -33108,7 +33222,9 @@ var ComponentGuidanceComponent = class _ComponentGuidanceComponent {
           uploadData,
           selectedModel: this.uploadState.getSelectedAiModel()
         });
-        this.topicDoormatIssuesResponseReceived = !!result.text;
+        if (this.uploadState.getWorkingHtml() !== html)
+          return;
+        this.topicDoormatIssuesResponseReceived = true;
         if (result.text) {
           this.messageService.add({
             severity: "info",
@@ -33127,9 +33243,13 @@ var ComponentGuidanceComponent = class _ComponentGuidanceComponent {
           displayedGroups: this.topicDoormatIssueGroups.length,
           totalElapsedMs: result.elapsedMs
         });
-        if (!result.text) {
-          this.topicDoormatIssuesError = true;
-          this.topicDoormatIssuesErrorDetail = "The model response was empty or did not include message content.";
+        if (result.usedLocalFallback) {
+          this.messageService.add({
+            severity: "warn",
+            summary: "Topic doormat AI response unavailable",
+            detail: "Showing deterministic local checks only.",
+            sticky: true
+          });
         } else {
           this.messageService.add({
             severity: "info",
@@ -33178,9 +33298,6 @@ var ComponentGuidanceComponent = class _ComponentGuidanceComponent {
         this.cdr.markForCheck();
       }
     });
-  }
-  getTopicDoormatWorkingHtml(uploadData) {
-    return uploadData?.modifiedHtml || uploadData?.originalHtml || "";
   }
   getShortModelName(model) {
     const normalizedModel = (model || "").replace(/-\d{4}-\d{2}-\d{2}$/, "").replace(/:free$/, ":free");
@@ -33293,9 +33410,6 @@ var ComponentGuidanceComponent = class _ComponentGuidanceComponent {
   }
   isNoIssueRow(issue) {
     return issue.issueId === "no-issues";
-  }
-  topicDoormatRowTypeLabel(issue) {
-    return issue.rowType === "section" ? "Section" : "Doormat";
   }
   alertHealthLabel(severity) {
     const s = (severity || "").toLowerCase();
@@ -33832,61 +33946,6 @@ var ComponentGuidanceComponent = class _ComponentGuidanceComponent {
                   }
                 </div>
               }
-              <!-- Previous flat Topic doormat table replaced by grouped section tables.
-              <p-table
-                [value]="topicDoormatIssueRows"
-                styleClass="p-datatable-sm expansion-table">
-                <ng-template pTemplate="header">
-                  <tr>
-                    <th style="width: 3rem">Include</th>
-                    <th style="width: 8rem">Severity</th>
-                    <th style="width: 7rem">Type</th>
-                    <th>Section</th>
-                    <th style="width: 4rem">#</th>
-                    <th>Doormat</th>
-                    <th>Issue</th>
-                    <th>Evidence</th>
-                    <th>Recommendation</th>
-                  </tr>
-                </ng-template>
-                <ng-template pTemplate="body" let-issue>
-                  <tr [class.topic-doormat-section-row]="issue.rowType === 'section'">
-                    <td>
-                      <p-checkbox
-                        [binary]="true"
-	                        [(ngModel)]="issue.include"
-	                        [disabled]="isNoIssueRow(issue)">
-                      </p-checkbox>
-                    </td>
-                    <td>
-                      <span class="chip" [ngClass]="severityChip(issue.severity)">
-                        {{ issue.severity }}
-                      </span>
-                    </td>
-                    <td>{{ topicDoormatRowTypeLabel(issue) }}</td>
-                    <td>{{ issue.sectionTitle || '-' }}</td>
-                    <td>{{ issue.sectionItemIndex || '-' }}</td>
-                    <td>{{ issue.doormatLabel || '-' }}</td>
-                    <td>{{ issue.issue }}</td>
-                    <td>{{ issue.evidence || '\u2014' }}</td>
-	                    <td>{{ issue.recommendation || '-' }}</td>
-                  </tr>
-                </ng-template>
-                <ng-template pTemplate="emptymessage">
-                  <tr>
-                    <td colspan="9">
-                      @if (topicDoormatIssuesLoading) {
-                        <span class="muted">Waiting for AI response</span>
-                      } @else if (topicDoormatIssuesResponseReceived) {
-                        <span class="muted">No issues returned</span>
-                      } @else {
-                        <span class="muted">Expand this row to analyze topic doormats</span>
-                      }
-                    </td>
-                  </tr>
-                </ng-template>
-              </p-table>
-              -->
             } @else {
               <p-table styleClass="p-datatable-sm expansion-table">
                 <ng-template pTemplate="header">
@@ -47375,4 +47434,4 @@ ${custom}` : promptBody;
 export {
   PageAssistantCompareComponent
 };
-//# sourceMappingURL=chunk-LZWBHMQ2.js.map
+//# sourceMappingURL=chunk-G4M5Z7AJ.js.map
