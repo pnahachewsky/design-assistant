@@ -157,7 +157,7 @@ export class TopicDoormatIaCheckService {
           doormat: this.buildDoormatLabel(summary),
           doormatLabel: summary.linkText || summary.href || 'Doormat',
           issueId: 'unnecessary-doormat',
-          issue: 'Extra doormat',
+          issue: 'Non-child-page doormat',
           evidence:
             'This doormat destination was not found as a direct child page in the IA crawl.',
           recommendation:

@@ -174,22 +174,8 @@
     "Check for repeated generic task lists across the set.",
     "Check whether any topic doormat section contains more than 9 doormats. If it does, report too-many-doormats-in-section once in section_issues for the affected H2 section.",
     "AIDA checks whether the set is missing a needed doormat based on IA child-page relationships.",
-    "AIDA checks whether the set includes an unnecessary or badly chosen doormat based on IA child-page relationships.",
-    "AIDA checks whether doormats within each section are ordered by descending page views."
+    "AIDA checks whether the set includes an unnecessary or badly chosen doormat based on IA child-page relationships."
   ],
-  "order_issue_reporting": {
-    "minimum_standard": "Do not guess doormat priority from topic names alone.",
-    "evidence_required": [
-      "visit_data",
-      "explicit_priority_signal",
-      "page_context_signal"
-    ],
-    "do_not_report_when": [
-      "No traffic, priority, or demand evidence is supplied.",
-      "The only evidence is the model's general assumption that one topic is probably more important than another.",
-      "The current order could reasonably reflect an editorial or business priority not visible in the supplied context."
-    ]
-  },
   "selectors": {
     "preferred_doormat_container": ".gc-srvinfo",
     "legacy_or_basic_wrapper": ".wb-eqht.row",
@@ -252,7 +238,7 @@
     {
       "id": "link-name-too-long",
       "group": "Link name",
-      "label": "Link name too long",
+      "label": "Link too long",
       "severity": "Low",
       "condition": "The link text exceeds 35 characters, including spaces.",
       "recommendation": "Shorten the link text. Keep link text under 35 characters.",
@@ -277,7 +263,7 @@
       "group": "Link name",
       "label": "Doormat link in Most requested",
       "severity": "Medium",
-      "condition": "A doormat links to the same destination as an item in the page's Most requested section.",
+      "condition": "A doormat links to the same destination as an item in the page's Most requested section. URL fragments are part of the destination: fragment-free links match only fragment-free links, and links with fragments match only when the fragments are identical.",
       "recommendation": "Flag for manual review. In most cases, remove the duplicate from Most requested unless there is a strong page-specific reason to keep it.",
       "evidence_required": [
         "doormat_href",
@@ -519,7 +505,7 @@
     {
       "id": "unnecessary-doormat",
       "group": "Choice of doormats",
-      "label": "Extra doormat",
+      "label": "Non-child-page doormat",
       "severity": "Medium",
       "condition": "The doormat appears unnecessary, low-value, redundant, or badly chosen for the page context.",
       "recommendation": "Flag for manual review and consider removing or replacing the doormat."
@@ -528,7 +514,7 @@
       "id": "too-many-doormats-in-section",
       "group": "Choice of doormats",
       "label": "Too many doormats",
-      "severity": "Medium",
+      "severity": "Low",
       "condition": "A single topic doormat section contains more than 9 doormats.",
       "recommendation": "Either remove doormats or break down the section into sections that have 9 or fewer doormats.",
       "reporting": "Report this issue once in section_issues for the affected H2 section. Do not report it on individual doormats.",

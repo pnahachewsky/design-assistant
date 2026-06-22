@@ -18,7 +18,7 @@ class HttpClientStub {
           id: 'link-name-too-different-from-destination-title',
           label: 'Link name too different from destination',
         },
-        { id: 'link-name-too-long', label: 'Link name too long' },
+        { id: 'link-name-too-long', label: 'Link too long' },
         { id: 'too-many-doormats-in-section', label: 'Too many doormats' },
       ],
     }),
@@ -215,6 +215,58 @@ describe('TopicDoormatIssueAnalysisService', () => {
         evidenceMetric: '96/95 characters',
       }),
     );
+  });
+
+  it('treats URL fragments as part of Most requested destinations', async () => {
+    openRouter.call.and.resolveTo({
+      choices: [{ message: { content: '' } }],
+    });
+
+    const analyzeDuplicate = async (
+      doormatHref: string,
+      mostRequestedHref: string,
+    ) => {
+      const result = await service.analyze({
+        doormatSummaries: [summary({ href: doormatHref })],
+        pageLanguage: 'en',
+        hasLegacyTopicDoormatTemplate: false,
+        mostRequestedLinks: [
+          { text: 'Most requested benefit', href: mostRequestedHref },
+        ],
+        uploadData: {
+          originalUrl: 'https://www.canada.ca/en/benefits/index.html',
+        },
+        selectedModel: 'selected-model',
+      });
+      return result.rows.some(
+        (row) => row.issueId === 'duplicate-link-in-most-requested',
+      );
+    };
+
+    expect(
+      await analyzeDuplicate(
+        '/en/benefits/one.html#eligibility',
+        '/en/benefits/one.html',
+      ),
+    ).toBeFalse();
+    expect(
+      await analyzeDuplicate(
+        '/en/benefits/one.html',
+        '/en/benefits/one.html#eligibility',
+      ),
+    ).toBeFalse();
+    expect(
+      await analyzeDuplicate(
+        '/en/benefits/one.html#eligibility',
+        '/en/benefits/one.html#apply',
+      ),
+    ).toBeFalse();
+    expect(
+      await analyzeDuplicate(
+        '/en/benefits/one.html#eligibility',
+        '/en/benefits/one.html#eligibility',
+      ),
+    ).toBeTrue();
   });
 
   it('suppresses destination title mismatch when only Canada.ca boilerplate differs', async () => {

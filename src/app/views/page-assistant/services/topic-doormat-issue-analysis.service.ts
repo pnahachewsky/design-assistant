@@ -676,7 +676,7 @@ export class TopicDoormatIssueAnalysisService {
         {
           include: true,
           rowType: 'section',
-          severity: 'Medium',
+          severity: 'Low',
           doormat: this.buildTopicDoormatSectionLabel(
             section.sectionIndex,
             doormatSummaries,
@@ -1083,7 +1083,7 @@ export class TopicDoormatIssueAnalysisService {
     uploadData?: Partial<UploadData> | null,
   ): TopicDoormatComparableUrl | null {
     const trimmedHref = this.cleanString(href);
-    if (!trimmedHref || trimmedHref.startsWith('#')) return null;
+    if (!trimmedHref) return null;
     const baseUrl =
       this.cleanString(uploadData?.originalUrl) ||
       this.cleanString(uploadData?.modifiedUrl);
@@ -1102,13 +1102,23 @@ export class TopicDoormatIssueAnalysisService {
       return this.buildTopicDoormatComparableAbsoluteUrl(new URL(trimmedHref));
     } catch {
       if (!trimmedHref.startsWith('/')) return null;
-      const parts = trimmedHref.split('#')[0].split('?');
-      const path = this.normalizeTopicDoormatComparablePath(parts[0]);
-      const query = parts[1] ? `?${parts[1]}` : '';
+      const fragmentIndex = trimmedHref.indexOf('#');
+      const fragment =
+        fragmentIndex >= 0 ? trimmedHref.slice(fragmentIndex) : '';
+      const hrefWithoutFragment =
+        fragmentIndex >= 0 ? trimmedHref.slice(0, fragmentIndex) : trimmedHref;
+      const queryIndex = hrefWithoutFragment.indexOf('?');
+      const path = this.normalizeTopicDoormatComparablePath(
+        queryIndex >= 0
+          ? hrefWithoutFragment.slice(0, queryIndex)
+          : hrefWithoutFragment,
+      );
+      const query =
+        queryIndex >= 0 ? hrefWithoutFragment.slice(queryIndex) : '';
       if (!path) return null;
       return {
         kind: 'root-relative',
-        pathKey: `${path}${query}`,
+        pathKey: `${path}${query}${fragment}`,
         allowedHost: false,
       };
     }
@@ -1118,12 +1128,11 @@ export class TopicDoormatIssueAnalysisService {
     url: URL,
   ): TopicDoormatComparableUrl | null {
     if (url.protocol !== 'https:' && url.protocol !== 'http:') return null;
-    url.hash = '';
     const protocol = url.protocol.toLowerCase();
     const host = url.hostname.toLowerCase();
     const port = this.getTopicDoormatComparablePort(url);
     const path = this.normalizeTopicDoormatComparablePath(url.pathname);
-    const pathKey = `${path}${url.search}`;
+    const pathKey = `${path}${url.search}${url.hash}`;
     return {
       kind: 'absolute',
       absoluteKey: `${protocol}//${host}${port}${pathKey}`,
