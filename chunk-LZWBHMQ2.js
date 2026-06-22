@@ -29999,7 +29999,7 @@ var TopicDoormatIaCheckService = class _TopicDoormatIaCheckService {
           doormat: this.buildDoormatLabel(summary),
           doormatLabel: summary.linkText || summary.href || "Doormat",
           issueId: "unnecessary-doormat",
-          issue: "Extra doormat",
+          issue: "Non-child-page doormat",
           evidence: "This doormat destination was not found as a direct child page in the IA crawl.",
           recommendation: "Flag for manual review and consider removing or replacing the doormat.",
           doormatIndex: summary.index || void 0,
@@ -30978,7 +30978,7 @@ var TopicDoormatIssueAnalysisService = class _TopicDoormatIssueAnalysisService {
         {
           include: true,
           rowType: "doormat",
-          severity: "Low",
+          severity: "Medium",
           doormat: this.buildTopicDoormatLabel(summary),
           doormatLabel: summary.linkText || summary.href || "Doormat",
           issueId: "duplicate-link-in-most-requested",
@@ -31006,7 +31006,7 @@ var TopicDoormatIssueAnalysisService = class _TopicDoormatIssueAnalysisService {
   }
   parseTopicDoormatComparableUrl(href, uploadData) {
     const trimmedHref = this.cleanString(href);
-    if (!trimmedHref || trimmedHref.startsWith("#"))
+    if (!trimmedHref)
       return null;
     const baseUrl = this.cleanString(uploadData?.originalUrl) || this.cleanString(uploadData?.modifiedUrl);
     if (baseUrl) {
@@ -31021,14 +31021,17 @@ var TopicDoormatIssueAnalysisService = class _TopicDoormatIssueAnalysisService {
     } catch {
       if (!trimmedHref.startsWith("/"))
         return null;
-      const parts = trimmedHref.split("#")[0].split("?");
-      const path = this.normalizeTopicDoormatComparablePath(parts[0]);
-      const query = parts[1] ? `?${parts[1]}` : "";
+      const fragmentIndex = trimmedHref.indexOf("#");
+      const fragment = fragmentIndex >= 0 ? trimmedHref.slice(fragmentIndex) : "";
+      const hrefWithoutFragment = fragmentIndex >= 0 ? trimmedHref.slice(0, fragmentIndex) : trimmedHref;
+      const queryIndex = hrefWithoutFragment.indexOf("?");
+      const path = this.normalizeTopicDoormatComparablePath(queryIndex >= 0 ? hrefWithoutFragment.slice(0, queryIndex) : hrefWithoutFragment);
+      const query = queryIndex >= 0 ? hrefWithoutFragment.slice(queryIndex) : "";
       if (!path)
         return null;
       return {
         kind: "root-relative",
-        pathKey: `${path}${query}`,
+        pathKey: `${path}${query}${fragment}`,
         allowedHost: false
       };
     }
@@ -31036,12 +31039,11 @@ var TopicDoormatIssueAnalysisService = class _TopicDoormatIssueAnalysisService {
   buildTopicDoormatComparableAbsoluteUrl(url) {
     if (url.protocol !== "https:" && url.protocol !== "http:")
       return null;
-    url.hash = "";
     const protocol = url.protocol.toLowerCase();
     const host = url.hostname.toLowerCase();
     const port = this.getTopicDoormatComparablePort(url);
     const path = this.normalizeTopicDoormatComparablePath(url.pathname);
-    const pathKey = `${path}${url.search}`;
+    const pathKey = `${path}${url.search}${url.hash}`;
     return {
       kind: "absolute",
       absoluteKey: `${protocol}//${host}${port}${pathKey}`,
@@ -47373,4 +47375,4 @@ ${custom}` : promptBody;
 export {
   PageAssistantCompareComponent
 };
-//# sourceMappingURL=chunk-HRNIFARU.js.map
+//# sourceMappingURL=chunk-LZWBHMQ2.js.map
