@@ -7,7 +7,7 @@
   "analysis_sequence": [
     {
       "pass": "deterministic_structural_checks",
-      "instruction": "Run these checks first. Do not return the response until every model-owned deterministic structural check has been evaluated for every doormat and every complete doormat section. Do not report link-name-too-long, description-too-long, link-name-trailing-punctuation, description-trailing-punctuation, duplicate-link-in-most-requested, missing-needed-doormat, unnecessary-doormat, or wrong-doormat-order; AIDA calculates and reports those issues deterministically from the extracted doormat text, Most requested links, IA child-page relationships, page-view data, and character counts.",
+      "instruction": "Run these checks first. Do not return the response until every model-owned deterministic structural check has been evaluated for every doormat and every complete doormat section. Do not report link-name-too-long, description-too-long, link-name-trailing-punctuation, description-trailing-punctuation, duplicate-link-in-most-requested, missing-needed-doormat, or unnecessary-doormat; AIDA calculates and reports those issues deterministically from the extracted doormat text, Most requested links, IA child-page relationships, page-view data, and character counts.",
       "issue_ids": [
         "too-many-doormats-in-section",
         "split-heading-link",
@@ -174,22 +174,8 @@
     "Check for repeated generic task lists across the set.",
     "Check whether any topic doormat section contains more than 9 doormats. If it does, report too-many-doormats-in-section once in section_issues for the affected H2 section.",
     "AIDA checks whether the set is missing a needed doormat based on IA child-page relationships.",
-    "AIDA checks whether the set includes an unnecessary or badly chosen doormat based on IA child-page relationships.",
-    "AIDA checks whether doormats within each section are ordered by descending page views."
+    "AIDA checks whether the set includes an unnecessary or badly chosen doormat based on IA child-page relationships."
   ],
-  "order_issue_reporting": {
-    "minimum_standard": "Do not guess doormat priority from topic names alone.",
-    "evidence_required": [
-      "visit_data",
-      "explicit_priority_signal",
-      "page_context_signal"
-    ],
-    "do_not_report_when": [
-      "No traffic, priority, or demand evidence is supplied.",
-      "The only evidence is the model's general assumption that one topic is probably more important than another.",
-      "The current order could reasonably reflect an editorial or business priority not visible in the supplied context."
-    ]
-  },
   "selectors": {
     "preferred_doormat_container": ".gc-srvinfo",
     "legacy_or_basic_wrapper": ".wb-eqht.row",
@@ -268,7 +254,7 @@
       "id": "link-name-too-different-from-destination-title",
       "group": "Link name",
       "label": "Link name too different from destination",
-      "severity": "Medium",
+      "severity": "Low",
       "condition": "The link text does not need to exactly match the destination page title or heading. It should be reported only when the link name gives users a different or misleading information scent, such as a different topic, task, audience, service, or destination purpose. Ignore boilerplate title suffixes such as '- Canada.ca' and allow wording changes that make the link fit the doormat style on the page.",
       "recommendation": "Align the link text with the destination page meaning and information scent while keeping it concise and consistent with the page's doormat style."
     },
@@ -536,19 +522,6 @@
         "section_doormat_count",
         "maximum_allowed",
         "doormat_index"
-      ]
-    },
-    {
-      "id": "wrong-doormat-order",
-      "group": "Choice of doormats",
-      "label": "Wrong doormat order",
-      "severity": "Medium",
-      "condition": "The doormat order conflicts with supplied evidence about the most visited information, priority services, explicit page hierarchy, or another concrete ordering signal.",
-      "recommendation": "Reorder doormats so the highest-demand or highest-priority information and services come first.",
-      "evidence_required": [
-        "visit_data",
-        "explicit_priority_signal",
-        "page_context_signal"
       ]
     }
   ],

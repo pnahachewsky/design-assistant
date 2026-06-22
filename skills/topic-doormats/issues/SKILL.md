@@ -49,11 +49,11 @@ Use this skill for issue analysis of topic doormat sets.
   no longer gives users the same destination scent as the destination title or
   heading.
 - Do not report `link-name-too-long`, `description-too-long`,
-  `link-name-trailing-punctuation`, `description-trailing-punctuation`, or
-  `duplicate-link-in-most-requested`, `missing-needed-doormat`,
-  `unnecessary-doormat`, or `wrong-doormat-order`; AIDA calculates and reports
-  those issues deterministically from the extracted doormat text, Most requested
-  links, IA child-page relationships, page-view data, and character counts
+  `link-name-trailing-punctuation`, `description-trailing-punctuation`,
+  `duplicate-link-in-most-requested`, `missing-needed-doormat`, or
+  `unnecessary-doormat`; AIDA calculates and reports those issues
+  deterministically from the extracted doormat text, Most requested links,
+  IA child-page relationships, page-view data, and character counts
 - Return JSON only
 - Report issues per affected doormat
 - Report section-level problems in `section_issues` rather than repeating
