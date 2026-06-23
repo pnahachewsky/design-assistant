@@ -18,13 +18,30 @@ const SEVERITY_RANK: Record<string, number> = {
 export class TopicDoormatPresenterService {
   buildIssueGroups(rows: TopicDoormatIssueRow[]): TopicDoormatIssueGroup[] {
     const groups = new Map<number, TopicDoormatIssueGroup>();
-
+    const realSectionIndexes = new Set<number>();
+    const realSectionTitles = new Map<number, string>();
     rows.forEach((row) => {
       const sectionIndex = row.sectionIndex ?? 0;
+      if (sectionIndex <= 0) return;
+      realSectionIndexes.add(sectionIndex);
+      if (row.sectionTitle) realSectionTitles.set(sectionIndex, row.sectionTitle);
+    });
+    const soleSectionIndex =
+      realSectionIndexes.size === 1
+        ? Array.from(realSectionIndexes)[0]
+        : undefined;
+
+    rows.forEach((row) => {
+      const sourceSectionIndex = row.sectionIndex ?? 0;
+      const sectionIndex =
+        sourceSectionIndex === 0 && soleSectionIndex !== undefined
+          ? soleSectionIndex
+          : sourceSectionIndex;
       const group = groups.get(sectionIndex) ?? {
         sectionIndex,
         sectionTitle:
           row.sectionTitle ||
+          realSectionTitles.get(sectionIndex) ||
           (sectionIndex ? `Section ${sectionIndex}` : 'Topic doormats'),
         doormatCount: 0,
         sectionRows: [],

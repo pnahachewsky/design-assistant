@@ -69,6 +69,58 @@ describe('TopicDoormatPresenterService', () => {
     expect(groups[0].doormatCount).toBe(3);
   });
 
+  it('merges global rows into the only real doormat section', () => {
+    const groups = service.buildIssueGroups([
+      row({
+        rowType: 'section',
+        issueId: 'missing-needed-doormat',
+        issue: 'Missing a needed doormat',
+        sectionIndex: undefined,
+        sectionTitle: undefined,
+        sectionItemIndex: undefined,
+        doormatIndex: undefined,
+      }),
+      row({
+        issueId: 'description-too-long',
+        issue: 'Description too long',
+      }),
+    ]);
+
+    expect(groups.length).toBe(1);
+    expect(groups[0].sectionIndex).toBe(1);
+    expect(groups[0].sectionTitle).toBe('Benefits');
+    expect(groups[0].sectionRows.map((item) => item.issueId)).toEqual([
+      'missing-needed-doormat',
+    ]);
+  });
+
+  it('keeps a global section when there is more than one real doormat section', () => {
+    const groups = service.buildIssueGroups([
+      row({
+        rowType: 'section',
+        issueId: 'missing-needed-doormat',
+        issue: 'Missing a needed doormat',
+        sectionIndex: undefined,
+        sectionTitle: undefined,
+        sectionItemIndex: undefined,
+        doormatIndex: undefined,
+      }),
+      row({}),
+      row({
+        sectionIndex: 2,
+        sectionTitle: 'Credits',
+        sectionItemIndex: 1,
+        doormatIndex: 2,
+      }),
+    ]);
+
+    expect(groups.map((group) => group.sectionIndex)).toEqual([0, 1, 2]);
+    expect(groups[0].sectionTitle).toBe('Topic doormats');
+    expect(groups[0].sectionRows.map((item) => item.issueId)).toEqual([
+      'missing-needed-doormat',
+    ]);
+  });
+
   it('summarizes categories by issue and keeps the highest severity', () => {
     const categories = service.buildIssueCategories([
       row({
