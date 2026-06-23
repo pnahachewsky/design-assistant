@@ -72,7 +72,12 @@
           "link_text",
           "href",
           "description",
+          "detected_link_text_style",
           "detected_description_style",
+          "destination_link_relationship",
+          "destination_link_relationship_basis",
+          "destination_link_relationship_reason",
+          "destination_content_assessment",
           "issues"
         ],
         "properties": {
@@ -117,6 +122,66 @@
               "eligibility-or-benefit-summary",
               "mixed-or-unclear"
             ]
+          },
+          "destination_link_relationship": {
+            "type": "string",
+            "enum": [
+              "equivalent",
+              "narrower-but-accurate",
+              "broader-but-accurate",
+              "materially-different",
+              "unavailable"
+            ]
+          },
+          "destination_link_relationship_basis": {
+            "type": "string",
+            "enum": [
+              "literal-match",
+              "phrase-containment",
+              "grammatical-variant",
+              "synonym-or-paraphrase",
+              "acronym-or-program-term",
+              "compatible-scope",
+              "conflicting-core-concept",
+              "unavailable"
+            ]
+          },
+          "destination_link_relationship_reason": {
+            "type": "string"
+          },
+          "destination_content_assessment": {
+            "type": "object",
+            "required": [
+              "important_element_ids",
+              "covered_element_ids",
+              "missing_important_element_ids"
+            ],
+            "properties": {
+              "important_element_ids": {
+                "type": "array",
+                "uniqueItems": true,
+                "items": {
+                  "type": "string",
+                  "pattern": "^(intro|h2)-[1-9][0-9]*$"
+                }
+              },
+              "covered_element_ids": {
+                "type": "array",
+                "uniqueItems": true,
+                "items": {
+                  "type": "string",
+                  "pattern": "^(intro|h2)-[1-9][0-9]*$"
+                }
+              },
+              "missing_important_element_ids": {
+                "type": "array",
+                "uniqueItems": true,
+                "items": {
+                  "type": "string",
+                  "pattern": "^(intro|h2)-[1-9][0-9]*$"
+                }
+              }
+            }
           },
           "issues": {
             "type": "array",
@@ -212,6 +277,12 @@
             },
             "actual_character_count": {
               "type": "integer"
+            },
+            "unclear_phrase": {
+              "type": "string"
+            },
+            "ambiguity_explanation": {
+              "type": "string"
             }
           }
         }

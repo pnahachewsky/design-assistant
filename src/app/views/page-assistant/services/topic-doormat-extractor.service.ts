@@ -30,7 +30,12 @@ export class TopicDoormatExtractorService {
       string,
       Promise<Pick<
         TopicDoormatSummary,
-        'destinationUrl' | 'destinationPageTitle' | 'destinationPageHeading'
+        | 'destinationUrl'
+        | 'destinationPageTitle'
+        | 'destinationPageHeading'
+        | 'destinationIntroParagraphs'
+        | 'destinationSectionHeadings'
+        | 'destinationContextStatus'
       >>
     >();
 
@@ -276,7 +281,12 @@ export class TopicDoormatExtractorService {
   ): Promise<
     Pick<
       TopicDoormatSummary,
-      'destinationUrl' | 'destinationPageTitle' | 'destinationPageHeading'
+      | 'destinationUrl'
+      | 'destinationPageTitle'
+      | 'destinationPageHeading'
+      | 'destinationIntroParagraphs'
+      | 'destinationSectionHeadings'
+      | 'destinationContextStatus'
     >
   > {
     try {
@@ -286,18 +296,94 @@ export class TopicDoormatExtractorService {
         1,
         'none',
       );
+      const main = destinationDoc.querySelector<HTMLElement>('main');
+      const heading =
+        main?.querySelector<HTMLElement>('h1') ??
+        destinationDoc.querySelector<HTMLElement>('h1');
+      const sectionHeadingElements = main
+        ? Array.from(main.querySelectorAll<HTMLElement>('h2'))
+        : [];
+      const firstSectionHeading = heading
+        ? sectionHeadingElements.find((sectionHeading) =>
+            !!(
+              heading.compareDocumentPosition(sectionHeading) &
+              Node.DOCUMENT_POSITION_FOLLOWING
+            ),
+          ) ?? null
+        : null;
+      const destinationIntroParagraphs = main && heading
+        ? Array.from(main.querySelectorAll<HTMLElement>('p'))
+            .filter((paragraph) =>
+              this.isDestinationIntroParagraph(
+                paragraph,
+                heading,
+                firstSectionHeading,
+              ),
+            )
+            .map((paragraph) => this.cleanVisibleText(paragraph.textContent))
+            .filter(Boolean)
+        : [];
+      const destinationSectionHeadings = main
+        ? sectionHeadingElements
+            .map((sectionHeading) =>
+              this.cleanVisibleText(sectionHeading.textContent),
+            )
+            .filter(Boolean)
+        : [];
       return {
         destinationUrl,
         destinationPageTitle: this.cleanVisibleText(
           destinationDoc.querySelector('title')?.textContent,
         ),
-        destinationPageHeading: this.cleanVisibleText(
-          destinationDoc.querySelector('main h1, h1')?.textContent,
-        ),
+        destinationPageHeading: this.cleanVisibleText(heading?.textContent),
+        destinationIntroParagraphs,
+        destinationSectionHeadings,
+        destinationContextStatus:
+          destinationIntroParagraphs.length || destinationSectionHeadings.length
+            ? 'available'
+            : 'insufficient',
       };
     } catch {
-      return { destinationUrl };
+      return {
+        destinationUrl,
+        destinationIntroParagraphs: [],
+        destinationSectionHeadings: [],
+        destinationContextStatus: 'failed',
+      };
     }
+  }
+
+  private isDestinationIntroParagraph(
+    paragraph: HTMLElement,
+    heading: HTMLElement,
+    firstSectionHeading: HTMLElement | null,
+  ): boolean {
+    if (
+      paragraph.closest(
+        'nav, header, footer, aside, details, [hidden], [aria-hidden="true"], .breadcrumb, .gc-most-requested, .pagedetails',
+      )
+    ) {
+      return false;
+    }
+    if (this.isSupportingReferenceParagraph(paragraph)) return false;
+    const followsHeading = !!(
+      heading.compareDocumentPosition(paragraph) &
+      Node.DOCUMENT_POSITION_FOLLOWING
+    );
+    if (!followsHeading) return false;
+    if (!firstSectionHeading) return true;
+    return !!(
+      paragraph.compareDocumentPosition(firstSectionHeading) &
+      Node.DOCUMENT_POSITION_FOLLOWING
+    );
+  }
+
+  private isSupportingReferenceParagraph(paragraph: HTMLElement): boolean {
+    if (!paragraph.querySelector('a[href]')) return false;
+    const text = this.cleanVisibleText(paragraph.textContent).toLowerCase();
+    return /^(?:for (?:more|additional) information|to learn more|pour (?:en savoir plus|plus de renseignements|obtenir plus de renseignements)|pour en apprendre davantage)\b/.test(
+      text,
+    );
   }
 
   private detectLanguageFromUrl(

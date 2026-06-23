@@ -35,6 +35,20 @@ class HttpClientStub {
           id: 'inconsistent-description-style',
           label: 'Inconsistent description style',
         },
+        {
+          id: 'description-missing-needed-information',
+          label: 'Description has content gap',
+        },
+        { id: 'description-lacks-clarity', label: 'Description lacks clarity' },
+        { id: 'misdirected-link', label: 'Misdirected link' },
+        {
+          id: 'mixed-link-name-styles-in-section',
+          label: 'Mixed link styles in section',
+        },
+        {
+          id: 'inconsistent-link-name-style',
+          label: 'Inconsistent link name style',
+        },
         { id: 'too-many-doormats-in-section', label: 'Too many doormats' },
       ],
     }),
@@ -107,6 +121,19 @@ describe('TopicDoormatIssueAnalysisService', () => {
     ...partial,
   });
 
+  const emptyDestinationContentAssessment = () => ({
+    important_element_ids: [],
+    covered_element_ids: [],
+    missing_important_element_ids: [],
+  });
+
+  const defaultLinkClassifications = () => ({
+    detected_link_text_style: 'noun-topic',
+    destination_link_relationship: 'unavailable',
+    destination_link_relationship_basis: 'unavailable',
+    destination_link_relationship_reason: '',
+  });
+
   beforeEach(() => {
     TestBed.configureTestingModule({
       providers: [
@@ -141,6 +168,9 @@ describe('TopicDoormatIssueAnalysisService', () => {
                   href: '/en/benefits/one.html',
                   description: 'Benefit programs and services',
                   detected_description_style: 'noun-topic-summary',
+                  ...defaultLinkClassifications(),
+                  destination_content_assessment:
+                    emptyDestinationContentAssessment(),
                   issues: [],
                 },
               ],
@@ -170,6 +200,19 @@ describe('TopicDoormatIssueAnalysisService', () => {
         doormatIndex: 1,
       }),
     );
+    const skillManager = TestBed.inject(
+      SkillManagerService,
+    ) as unknown as SkillManagerServiceStub;
+    expect(skillManager.composePrompt).toHaveBeenCalledWith(
+      jasmine.objectContaining({
+        includeReferences: false,
+        includeAssets: true,
+      }),
+    );
+    const systemPrompt = openRouter.call.calls.mostRecent().args[1][0].content;
+    expect(systemPrompt).toContain('Compact model-owned issue contract');
+    expect(systemPrompt).toContain('"description-lacks-clarity"');
+    expect(systemPrompt).not.toContain('"description-too-long"');
   });
 
   it('suppresses a model mixed-style issue when all model classifications match', async () => {
@@ -201,8 +244,30 @@ describe('TopicDoormatIssueAnalysisService', () => {
                 href: `/trust/topic-${index + 1}.html`,
                 description,
                 detected_description_style: 'action-verb-task-summary',
+                ...defaultLinkClassifications(),
+                destination_content_assessment:
+                  emptyDestinationContentAssessment(),
                 issues:
-                  index === 4
+                  index === 0
+                    ? [
+                        {
+                          issue_category:
+                            'description-missing-needed-information',
+                          description: 'The description has a content gap.',
+                          recommendation: 'Add more information.',
+                          severity: 'High',
+                        },
+                      ]
+                    : index === 1
+                      ? [
+                          {
+                            issue_category: 'description-lacks-clarity',
+                            description: 'The description is generic.',
+                            recommendation: 'Add more detail.',
+                            severity: 'Medium',
+                          },
+                        ]
+                    : index === 4
                     ? [
                         {
                           issue_category: 'inconsistent-description-style',
@@ -247,6 +312,73 @@ describe('TopicDoormatIssueAnalysisService', () => {
         (row) => row.issueId === 'inconsistent-description-style',
       ),
     ).toBeFalse();
+    expect(
+      result.rows.some(
+        (row) => row.issueId === 'description-missing-needed-information',
+      ),
+    ).toBeFalse();
+    expect(
+      result.rows.some((row) => row.issueId === 'description-lacks-clarity'),
+    ).toBeFalse();
+  });
+
+  it('keeps a clarity issue only when it identifies exact ambiguous wording', async () => {
+    openRouter.call.and.resolveTo({
+      choices: [
+        {
+          message: {
+            content: JSON.stringify({
+              doormats: [
+                {
+                  doormat_index: 1,
+                  link_text: 'Trust account',
+                  href: '/trust/account.html',
+                  description: 'Use it to manage their account',
+                  detected_description_style: 'action-verb-task-summary',
+                  ...defaultLinkClassifications(),
+                  destination_content_assessment:
+                    emptyDestinationContentAssessment(),
+                  issues: [
+                    {
+                      issue_category: 'description-lacks-clarity',
+                      description: 'The pronouns have unclear referents.',
+                      evidence: 'It is unclear who or what the pronouns refer to.',
+                      evidence_details: {
+                        unclear_phrase: 'it to manage their account',
+                        ambiguity_explanation:
+                          "'it' and 'their' can refer to different people or accounts.",
+                      },
+                      recommendation: 'Name the user and account explicitly.',
+                      severity: 'Medium',
+                    },
+                  ],
+                },
+              ],
+            }),
+          },
+        },
+      ],
+    });
+
+    const result = await service.analyze({
+      doormatSummaries: [
+        summary({
+          linkText: 'Trust account',
+          href: '/trust/account.html',
+          description: 'Use it to manage their account',
+        }),
+      ],
+      pageLanguage: 'en',
+      hasLegacyTopicDoormatTemplate: false,
+      mostRequestedLinks: [],
+      selectedModel: 'selected-model',
+    });
+
+    expect(
+      result.rows.find((row) => row.issueId === 'description-lacks-clarity'),
+    ).toEqual(
+      jasmine.objectContaining({ severity: 'Medium', doormatIndex: 1 }),
+    );
   });
 
   it('builds a mixed-style section issue from per-doormat model classifications', async () => {
@@ -279,6 +411,9 @@ describe('TopicDoormatIssueAnalysisService', () => {
                 href: `/trust/topic-${index + 1}.html`,
                 description: item.description,
                 detected_description_style: item.style,
+                ...defaultLinkClassifications(),
+                destination_content_assessment:
+                  emptyDestinationContentAssessment(),
                 issues: [],
               })),
             }),
@@ -322,6 +457,373 @@ describe('TopicDoormatIssueAnalysisService', () => {
     );
   });
 
+  it('derives link-style and destination rows from classifications for the trust-page regression case', async () => {
+    const linkCases = [
+      {
+        linkText: 'Filing a trust return',
+        style: 'action-verb',
+        relationship: 'unavailable',
+      },
+      {
+        linkText: 'Tax year-end and fiscal period',
+        style: 'noun-topic',
+        relationship: 'unavailable',
+      },
+      {
+        linkText: 'Submitting and filing documents online related to trusts',
+        style: 'action-verb',
+        relationship: 'broader-but-accurate',
+        destinationPageTitle:
+          'Submitting and filing electronic documents to the T3 Estate and Trust Return programs - Canada.ca',
+        destinationPageHeading: 'Submit and file documents online related to T3',
+      },
+      {
+        linkText: 'When to pay a balance you owe on your trust return',
+        style: 'action-verb',
+        relationship: 'unavailable',
+      },
+      {
+        linkText: 'Residency and how to contact us',
+        style: 'noun-topic',
+        relationship: 'equivalent',
+        destinationPageTitle: 'Residency and contact us information - Canada.ca',
+        destinationPageHeading: 'Trust residency and how to contact us',
+      },
+      {
+        linkText: 'Clearance certificate',
+        style: 'noun-topic',
+        relationship: 'equivalent',
+        destinationPageTitle: 'Apply for a clearance certificate - Canada.ca',
+        destinationPageHeading: 'Apply for a clearance certificate',
+      },
+    ];
+    openRouter.call.and.resolveTo({
+      choices: [
+        {
+          message: {
+            content: JSON.stringify({
+              doormats: linkCases.map((item, index) => ({
+                doormat_index: index + 1,
+                link_text: item.linkText,
+                href: `/trust/topic-${index + 1}.html`,
+                description: `Description ${index + 1}`,
+                detected_link_text_style: item.style,
+                detected_description_style: 'noun-topic-summary',
+                destination_link_relationship: item.relationship,
+                destination_link_relationship_basis:
+                  item.relationship === 'broader-but-accurate'
+                    ? 'acronym-or-program-term'
+                    : item.relationship === 'equivalent'
+                      ? 'phrase-containment'
+                      : 'unavailable',
+                destination_link_relationship_reason:
+                  item.relationship === 'broader-but-accurate'
+                    ? 'Trusts accurately describes the T3 trust-return program context.'
+                    : '',
+                destination_content_assessment:
+                  emptyDestinationContentAssessment(),
+                issues:
+                  index === 1
+                    ? [
+                        {
+                          issue_category: 'inconsistent-link-name-style',
+                          description: 'This is the only noun/topic link.',
+                          recommendation: 'Use an action verb.',
+                          severity: 'Low',
+                        },
+                      ]
+                    : [2, 4, 5].includes(index)
+                      ? [
+                          {
+                            issue_category:
+                              'link-name-too-different-from-destination-title',
+                            description: 'The wording differs.',
+                            recommendation: 'Align the wording.',
+                            severity: 'Medium',
+                          },
+                        ]
+                      : [],
+              })),
+            }),
+          },
+        },
+      ],
+    });
+
+    const result = await service.analyze({
+      doormatSummaries: linkCases.map((item, index) =>
+        summary({
+          index: index + 1,
+          linkText: item.linkText,
+          href: `/trust/topic-${index + 1}.html`,
+          description: `Description ${index + 1}`,
+          sectionItemIndex: index + 1,
+          sectionDoormatCount: linkCases.length,
+          destinationPageTitle: item.destinationPageTitle,
+          destinationPageHeading: item.destinationPageHeading,
+        }),
+      ),
+      pageLanguage: 'en',
+      hasLegacyTopicDoormatTemplate: false,
+      mostRequestedLinks: [],
+      selectedModel: 'selected-model',
+    });
+
+    expect(
+      result.rows.filter(
+        (row) => row.issueId === 'mixed-link-name-styles-in-section',
+      ).length,
+    ).toBe(1);
+    expect(
+      result.rows.some((row) => row.issueId === 'inconsistent-link-name-style'),
+    ).toBeFalse();
+    expect(
+      result.rows.some(
+        (row) =>
+          row.issueId === 'link-name-too-different-from-destination-title',
+      ),
+    ).toBeFalse();
+  });
+
+  it('reports a materially different classified destination', async () => {
+    openRouter.call.and.resolveTo({
+      choices: [
+        {
+          message: {
+            content: JSON.stringify({
+              doormats: [
+                {
+                  doormat_index: 1,
+                  link_text: 'Trust filing deadlines',
+                  href: '/benefits/payment-dates.html',
+                  description: 'Find trust return filing deadlines',
+                  detected_link_text_style: 'noun-topic',
+                  detected_description_style: 'action-verb-task-summary',
+                  destination_link_relationship: 'materially-different',
+                  destination_link_relationship_basis:
+                    'conflicting-core-concept',
+                  destination_link_relationship_reason:
+                    'The destination concerns benefit payment dates, not trust filing deadlines.',
+                  destination_content_assessment:
+                    emptyDestinationContentAssessment(),
+                  issues: [],
+                },
+              ],
+            }),
+          },
+        },
+      ],
+    });
+
+    const result = await service.analyze({
+      doormatSummaries: [
+        summary({
+          linkText: 'Trust filing deadlines',
+          href: '/benefits/payment-dates.html',
+          description: 'Find trust return filing deadlines',
+          destinationPageTitle: 'Benefit payment dates - Canada.ca',
+          destinationPageHeading: 'Benefit payment dates',
+        }),
+      ],
+      pageLanguage: 'en',
+      hasLegacyTopicDoormatTemplate: false,
+      mostRequestedLinks: [],
+      selectedModel: 'selected-model',
+    });
+
+    expect(
+      result.rows.find(
+        (row) =>
+          row.issueId === 'link-name-too-different-from-destination-title',
+      ),
+    ).toEqual(
+      jasmine.objectContaining({ severity: 'Medium', doormatIndex: 1 }),
+    );
+  });
+
+  it('suppresses a destination mismatch when normalized link text is contained in the destination heading', async () => {
+    openRouter.call.and.resolveTo({
+      choices: [
+        {
+          message: {
+            content: JSON.stringify({
+              doormats: [
+                {
+                  doormat_index: 1,
+                  link_text: 'Clearance certificate',
+                  href: '/trust/clearance-certificate.html',
+                  description: 'Find out when you need a clearance certificate',
+                  detected_link_text_style: 'noun-topic',
+                  detected_description_style: 'action-verb-task-summary',
+                  destination_link_relationship: 'materially-different',
+                  destination_link_relationship_basis:
+                    'conflicting-core-concept',
+                  destination_link_relationship_reason:
+                    'The destination is framed as an application task.',
+                  destination_content_assessment:
+                    emptyDestinationContentAssessment(),
+                  issues: [],
+                },
+              ],
+            }),
+          },
+        },
+      ],
+    });
+
+    const result = await service.analyze({
+      doormatSummaries: [
+        summary({
+          linkText: 'Clearance certificate',
+          href: '/trust/clearance-certificate.html',
+          description: 'Find out when you need a clearance certificate',
+          destinationPageTitle: 'Apply for a clearance certificate - Canada.ca',
+          destinationPageHeading: 'Apply for a clearance certificate',
+        }),
+      ],
+      pageLanguage: 'en',
+      hasLegacyTopicDoormatTemplate: false,
+      mostRequestedLinks: [],
+      selectedModel: 'selected-model',
+    });
+
+    expect(
+      result.rows.some(
+        (row) =>
+          row.issueId === 'link-name-too-different-from-destination-title',
+      ),
+    ).toBeFalse();
+  });
+
+  it('builds a content-gap row from grounded destination element IDs', async () => {
+    openRouter.call.and.resolveTo({
+      choices: [
+        {
+          message: {
+            content: JSON.stringify({
+              doormats: [
+                {
+                  doormat_index: 1,
+                  link_text: 'Trust returns',
+                  href: '/trust/returns.html',
+                  description: 'Find out how to file a trust return',
+                  detected_description_style: 'action-verb-task-summary',
+                  ...defaultLinkClassifications(),
+                  destination_content_assessment: {
+                    important_element_ids: ['intro-1', 'h2-1'],
+                    covered_element_ids: ['h2-1'],
+                    missing_important_element_ids: ['intro-1'],
+                  },
+                  issues: [
+                    {
+                      issue_category: 'description-lacks-clarity',
+                      description: 'The description is unclear.',
+                      evidence_details: {
+                        unclear_phrase: 'trust return',
+                        ambiguity_explanation:
+                          'The phrase could refer to different return types.',
+                      },
+                      recommendation: 'Clarify the return type.',
+                      severity: 'Medium',
+                    },
+                  ],
+                },
+              ],
+            }),
+          },
+        },
+      ],
+    });
+
+    const result = await service.analyze({
+      doormatSummaries: [
+        summary({
+          linkText: 'Trust returns',
+          href: '/trust/returns.html',
+          description: 'Find out how to file a trust return',
+          destinationContextStatus: 'available',
+          destinationIntroParagraphs: [
+            'Use this page if you administer a resident or non-resident trust.',
+          ],
+          destinationSectionHeadings: ['How to file'],
+        }),
+      ],
+      pageLanguage: 'en',
+      hasLegacyTopicDoormatTemplate: false,
+      mostRequestedLinks: [],
+      selectedModel: 'selected-model',
+    });
+
+    const contentGapRow = result.rows.find(
+      (row) => row.issueId === 'description-missing-needed-information',
+    );
+    expect(contentGapRow).toEqual(
+      jasmine.objectContaining({
+        rowType: 'doormat',
+        severity: 'Medium',
+        doormatIndex: 1,
+      }),
+    );
+    expect(contentGapRow?.evidence).toContain(
+      'Intro: "Use this page if you administer a resident or non-resident trust."',
+    );
+    expect(
+      result.rows.some((row) => row.issueId === 'description-lacks-clarity'),
+    ).toBeFalse();
+  });
+
+  it('does not build a content-gap row from destination element IDs that were not supplied', async () => {
+    openRouter.call.and.resolveTo({
+      choices: [
+        {
+          message: {
+            content: JSON.stringify({
+              doormats: [
+                {
+                  doormat_index: 1,
+                  link_text: 'Trust returns',
+                  href: '/trust/returns.html',
+                  description: 'Find out how to file a trust return',
+                  detected_description_style: 'action-verb-task-summary',
+                  ...defaultLinkClassifications(),
+                  destination_content_assessment: {
+                    important_element_ids: ['h2-99'],
+                    covered_element_ids: [],
+                    missing_important_element_ids: ['h2-99'],
+                  },
+                  issues: [],
+                },
+              ],
+            }),
+          },
+        },
+      ],
+    });
+
+    const result = await service.analyze({
+      doormatSummaries: [
+        summary({
+          linkText: 'Trust returns',
+          href: '/trust/returns.html',
+          description: 'Find out how to file a trust return',
+          destinationContextStatus: 'available',
+          destinationIntroParagraphs: [],
+          destinationSectionHeadings: ['How to file'],
+        }),
+      ],
+      pageLanguage: 'en',
+      hasLegacyTopicDoormatTemplate: false,
+      mostRequestedLinks: [],
+      selectedModel: 'selected-model',
+    });
+
+    expect(
+      result.rows.some(
+        (row) => row.issueId === 'description-missing-needed-information',
+      ),
+    ).toBeFalse();
+  });
+
   it('rejects unknown model issue categories and uses local fallback rows', async () => {
     openRouter.call.and.resolveTo({
       choices: [
@@ -335,6 +837,9 @@ describe('TopicDoormatIssueAnalysisService', () => {
                   href: '/en/benefits/one.html',
                   description: 'Benefit programs and services',
                   detected_description_style: 'noun-topic-summary',
+                  ...defaultLinkClassifications(),
+                  destination_content_assessment:
+                    emptyDestinationContentAssessment(),
                   issues: [
                     {
                       issue_category: 'invented-issue',
@@ -573,7 +1078,7 @@ describe('TopicDoormatIssueAnalysisService', () => {
     ).toBeTrue();
   });
 
-  it('suppresses destination title mismatch when only Canada.ca boilerplate differs', async () => {
+  it('suppresses title mismatch and misdirection when the link matches the destination title', async () => {
     openRouter.call.and.resolveTo({
       choices: [
         {
@@ -586,6 +1091,9 @@ describe('TopicDoormatIssueAnalysisService', () => {
                   href: '/fr/services/impots/prestations.html',
                   description: 'Credits et prestations disponibles',
                   detected_description_style: 'noun-topic-summary',
+                  ...defaultLinkClassifications(),
+                  destination_content_assessment:
+                    emptyDestinationContentAssessment(),
                   issues: [
                     {
                       include: true,
@@ -601,6 +1109,16 @@ describe('TopicDoormatIssueAnalysisService', () => {
                           "Credits d'impot et prestations pour les particuliers - Canada.ca",
                       },
                       recommendation: 'Align the link text.',
+                    },
+                    {
+                      include: true,
+                      severity: 'High',
+                      issue_category: 'misdirected-link',
+                      description:
+                        'The URL path suggests a different section.',
+                      evidence:
+                        'The destination title matches, but the URL path differs.',
+                      recommendation: 'Use a destination in this section.',
                     },
                   ],
                 },
@@ -629,6 +1147,9 @@ describe('TopicDoormatIssueAnalysisService', () => {
 
     expect(result.rows.map((row) => row.issueId)).not.toContain(
       'link-name-too-different-from-destination-title',
+    );
+    expect(result.rows.map((row) => row.issueId)).not.toContain(
+      'misdirected-link',
     );
   });
 });

@@ -440,14 +440,15 @@
           <p>
             AIDA sends structured doormat summaries, including page order, section-local
             order, link text, href, description, exact character counts, and extracted
-            H2 section metadata.
+            H2 section metadata. For each reachable destination, AIDA also supplies the
+            page title, H1, introductory paragraphs before the first H2, and all H2 headings.
           </p>
         </article>
         <article class="card">
           <span class="label label-green">Output</span>
           <h3>What AIDA gets back</h3>
           <p>
-            The model returns one description-style classification for every doormat,
+            The model returns description-style, link-style, destination-relationship, and relationship-basis classifications for every doormat,
             JSON issue rows grouped by doormat, and supported section-level issues.
             AIDA aggregates the classifications, normalizes labels, suppresses
             unsupported rows, and fills missing clean doormats with No issues rows.
@@ -508,7 +509,15 @@
         </article>
         <article class="card">
           <h3>Description and link style</h3>
-          <p>The model classifies each description by rhetorical construction. AIDA groups those labels to identify mixed description styles and section outliers; link-style judgment remains model-owned.</p>
+          <p>The model classifies each description and link by grammatical construction. AIDA groups those labels to identify section mixes and genuine outliers.</p>
+        </article>
+        <article class="card">
+          <h3>Destination relationship</h3>
+          <p>The model classifies whether each link name is equivalent, accurately broader or narrower, materially different, or unavailable, and identifies the basis for that decision. AIDA reports only grounded core-concept conflicts and suppresses mismatches when normalized link text is contained in the destination title or H1.</p>
+        </article>
+        <article class="card">
+          <h3>Description content gaps</h3>
+          <p>The model identifies important supplied destination elements by ID. AIDA reports a content gap only when a missing important ID matches an extracted introductory paragraph or H2 heading.</p>
         </article>
         <article class="card">
           <h3>Repeated description openings</h3>
@@ -665,8 +674,8 @@
                 <li>
                   <strong>Choice of doormats</strong>
                   <ul>
-                    <li>Missing a needed doormat</li>
-                    <li>Extra (non-child-page) doormat that is not needed (badly chosen)</li>
+                    <li>Direct child page missing from the doormats (Medium review flag)</li>
+                    <li>Doormat destination outside the direct child pages (Low review flag)</li>
                   </ul>
                 </li>
                 </ul>

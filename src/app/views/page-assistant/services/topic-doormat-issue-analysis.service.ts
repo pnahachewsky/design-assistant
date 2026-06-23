@@ -14,9 +14,12 @@ import { TopicDoormatUrlComparisonService } from './topic-doormat-url-comparison
 import {
   MostRequestedLinkSummary,
   TopicDoormatDescriptionStyle,
+  TopicDoormatDestinationLinkRelationshipBasis,
+  TopicDoormatDestinationLinkRelationship,
   TopicDoormatIssueCategory,
   TopicDoormatIssueRow,
   TopicDoormatIssueTaxonomy,
+  TopicDoormatLinkTextStyle,
   TopicDoormatPageLanguage,
   TopicDoormatSectionStyleAnalysis,
   TopicDoormatSummary,
@@ -38,6 +41,24 @@ export interface TopicDoormatIssueAnalysisResult {
   model: string;
   modelRotation: string[];
   elapsedMs: number;
+}
+
+interface TopicDoormatDestinationContextElement {
+  id: string;
+  type: 'intro' | 'h2';
+  text: string;
+}
+
+interface TopicDoormatDestinationContentAssessment {
+  importantElementIds: string[];
+  coveredElementIds: string[];
+  missingImportantElementIds: string[];
+}
+
+interface TopicDoormatDestinationLinkAssessment {
+  relationship: TopicDoormatDestinationLinkRelationship;
+  basis: TopicDoormatDestinationLinkRelationshipBasis;
+  reason: string;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -68,19 +89,23 @@ export class TopicDoormatIssueAnalysisService {
   private readonly topicDoormatTrailingPunctuationPattern = /[.:;?!,]$/;
   private readonly locallyOwnedTopicDoormatIssueIds = new Set([
     'description-contains-link',
+    'description-missing-needed-information',
     'description-too-long',
     'description-trailing-punctuation',
     'duplicate-link-in-most-requested',
     'link-name-too-long',
+    'link-name-too-different-from-destination-title',
     'link-name-trailing-punctuation',
     'missing-needed-doormat',
     'mixed-description-style-in-section',
+    'mixed-link-name-styles-in-section',
     'multiple-links',
     'repeated-description-opening',
     'section-description-style-outlier',
     'split-heading-link',
     'too-many-doormats-in-section',
     'unnecessary-doormat',
+    'inconsistent-link-name-style',
   ]);
   private readonly topicDoormatDescriptionStyleOrder: Exclude<
     TopicDoormatDescriptionStyle,
@@ -92,7 +117,17 @@ export class TopicDoormatIssueAnalysisService {
     'task-list',
     'eligibility-or-benefit-summary',
   ];
+  private readonly topicDoormatLinkTextStyleOrder: Exclude<
+    TopicDoormatLinkTextStyle,
+    'mixed-or-unclear'
+  >[] = [
+    'action-verb',
+    'noun-topic',
+    'product-or-service',
+    'audience-group',
+  ];
   private topicDoormatIssueTaxonomyLoad?: Promise<void>;
+  private topicDoormatModelIssueContract = '';
   private topicDoormatIssueIdToLabel = new Map<string, string>();
   private topicDoormatIssueAliasToId = new Map<string, string>();
 
@@ -107,7 +142,7 @@ export class TopicDoormatIssueAnalysisService {
         'analyze topic doormats issue report for each doormat',
       promptKey: PromptKey.Doormats,
       outputMode: 'json',
-      includeReferences: true,
+      includeReferences: false,
       includeAssets: true,
       requireSkill: true,
     });
@@ -117,12 +152,20 @@ export class TopicDoormatIssueAnalysisService {
       'Do not return them in section_issues or doormat issues:',
       Array.from(this.locallyOwnedTopicDoormatIssueIds).join(', '),
       'You must still return exactly one allowed detected_description_style for every doormat.',
+      'You must still return exactly one allowed detected_link_text_style, destination_link_relationship, and destination_link_relationship_basis for every doormat.',
       'Classify the rhetorical construction, not the subject matter. An action-framed description remains action-verb-task-summary when it discusses eligibility, benefits, residency, dates, or status.',
     ].join('\n');
+    const systemPrompt = [
+      composed.prompt,
+      this.topicDoormatModelIssueContract,
+      localOwnershipInstruction,
+    ]
+      .filter(Boolean)
+      .join('\n\n');
     const messages: ChatMessage[] = [
       {
         role: 'system',
-        content: `${composed.prompt}\n\n${localOwnershipInstruction}`,
+        content: systemPrompt,
       },
       {
         role: 'user',
@@ -135,6 +178,13 @@ export class TopicDoormatIssueAnalysisService {
             destinationUrl: summary.destinationUrl,
             destinationPageTitle: summary.destinationPageTitle,
             destinationPageHeading: summary.destinationPageHeading,
+            destinationContext: {
+              status: summary.destinationContextStatus ?? 'insufficient',
+              pageTitle: summary.destinationPageTitle ?? '',
+              h1: summary.destinationPageHeading ?? '',
+              elements:
+                this.buildTopicDoormatDestinationContextElements(summary),
+            },
             sectionIndex: summary.sectionIndex,
             sectionTitle: summary.sectionTitle,
             sectionItemIndex: summary.sectionItemIndex,
@@ -160,6 +210,9 @@ export class TopicDoormatIssueAnalysisService {
         destinationUrl: summary.destinationUrl,
         destinationPageTitle: summary.destinationPageTitle,
         destinationPageHeading: summary.destinationPageHeading,
+        destinationContextStatus: summary.destinationContextStatus,
+        destinationIntroParagraphs: summary.destinationIntroParagraphs,
+        destinationSectionHeadings: summary.destinationSectionHeadings,
         linkTextCharacterCount: summary.linkTextCharacterCount,
         descriptionCharacterCount: summary.descriptionCharacterCount,
         headingLevel: summary.headingLevel,
@@ -179,8 +232,10 @@ export class TopicDoormatIssueAnalysisService {
       mostRequestedLinkCount: input.mostRequestedLinks.length,
       loadedSkillResources: composed.loadedPaths,
       loadedIssueTaxonomyLabels: this.topicDoormatIssueIdToLabel.size,
-      estimatedSystemPromptTokens: composed.estimatedPromptTokens,
-      systemPromptCharacters: composed.prompt.length,
+      estimatedSystemPromptTokens: Math.ceil(systemPrompt.length / 4),
+      systemPromptCharacters: systemPrompt.length,
+      compactModelIssueContractCharacters:
+        this.topicDoormatModelIssueContract.length,
       userPayloadCharacters: messages[1].content.length,
       totalMessageCharacters: messages.reduce(
         (total, message) => total + message.content.length,
@@ -293,6 +348,12 @@ export class TopicDoormatIssueAnalysisService {
     const doormats = Array.isArray(root['doormats']) ? root['doormats'] : [];
     const descriptionStylesByDoormatIndex =
       this.parseTopicDoormatDescriptionStyles(doormats);
+    const linkStylesByDoormatIndex =
+      this.parseTopicDoormatLinkTextStyles(doormats);
+    const destinationLinkAssessmentsByDoormatIndex =
+      this.parseTopicDoormatDestinationLinkAssessments(doormats);
+    const destinationContentAssessmentsByDoormatIndex =
+      this.parseTopicDoormatDestinationContentAssessments(doormats);
     const sectionIssueRows = this.parseTopicDoormatSectionIssueRows(
       root['section_issues'],
       doormatSummaries,
@@ -305,6 +366,17 @@ export class TopicDoormatIssueAnalysisService {
 
     const summariesByIndex = new Map(
       doormatSummaries.map((summary) => [summary.index, summary]),
+    );
+    const contentGapDoormatIndexes = new Set(
+      doormatSummaries
+        .filter(
+          (summary) =>
+            this.getValidatedTopicDoormatMissingElements(
+              summary,
+              destinationContentAssessmentsByDoormatIndex.get(summary.index),
+            ).length > 0,
+        )
+        .map((summary) => summary.index),
     );
 
     const rows: TopicDoormatIssueRow[] = doormats.flatMap((rawDoormat) => {
@@ -368,6 +440,13 @@ export class TopicDoormatIssueAnalysisService {
             summary,
             pageLanguage,
           )) {
+            return null;
+          }
+          if (
+            issueId === 'description-lacks-clarity' &&
+            index &&
+            contentGapDoormatIndexes.has(index)
+          ) {
             return null;
           }
           if (
@@ -507,6 +586,9 @@ export class TopicDoormatIssueAnalysisService {
       mostRequestedLinks,
       uploadData,
       descriptionStylesByDoormatIndex,
+      destinationContentAssessmentsByDoormatIndex,
+      linkStylesByDoormatIndex,
+      destinationLinkAssessmentsByDoormatIndex,
     );
 
     const representedIndexes = new Set(
@@ -559,6 +641,32 @@ export class TopicDoormatIssueAnalysisService {
           descriptionStylesByDoormatIndex.get(summary.index) ??
           'missing-or-invalid',
       })),
+      linkStylesByDoormatIndex: doormatSummaries.map((summary) => ({
+        doormatIndex: summary.index,
+        sectionIndex: summary.sectionIndex,
+        sectionItemIndex: summary.sectionItemIndex,
+        style:
+          linkStylesByDoormatIndex.get(summary.index) ?? 'missing-or-invalid',
+      })),
+      destinationLinkAssessmentsByDoormatIndex: doormatSummaries.map(
+        (summary) => ({
+          doormatIndex: summary.index,
+          assessment:
+            destinationLinkAssessmentsByDoormatIndex.get(summary.index) ??
+            null,
+        }),
+      ),
+      destinationContentAssessmentsByDoormatIndex: doormatSummaries.map(
+        (summary) => ({
+          doormatIndex: summary.index,
+          contextStatus: summary.destinationContextStatus ?? 'insufficient',
+          contextElements:
+            this.buildTopicDoormatDestinationContextElements(summary),
+          assessment:
+            destinationContentAssessmentsByDoormatIndex.get(summary.index) ??
+            null,
+        }),
+      ),
       fallbackNoIssueRows: missingNoIssueRows.length,
       deterministicRows: deterministicRows.length,
       localIaRows: localIaRows.length,
@@ -597,6 +705,76 @@ export class TopicDoormatIssueAnalysisService {
       if (index && style) stylesByDoormatIndex.set(index, style);
     });
     return stylesByDoormatIndex;
+  }
+
+  private parseTopicDoormatLinkTextStyles(
+    rawDoormats: unknown[],
+  ): Map<number, TopicDoormatLinkTextStyle> {
+    const stylesByDoormatIndex = new Map<number, TopicDoormatLinkTextStyle>();
+    rawDoormats.forEach((rawDoormat) => {
+      if (!rawDoormat || typeof rawDoormat !== 'object') return;
+      const doormat = rawDoormat as Record<string, unknown>;
+      const index = this.toNumber(doormat['doormat_index']);
+      const style = this.normalizeTopicDoormatLinkTextStyle(
+        doormat['detected_link_text_style'],
+      );
+      if (index && style) stylesByDoormatIndex.set(index, style);
+    });
+    return stylesByDoormatIndex;
+  }
+
+  private parseTopicDoormatDestinationLinkAssessments(
+    rawDoormats: unknown[],
+  ): Map<number, TopicDoormatDestinationLinkAssessment> {
+    const assessments = new Map<number, TopicDoormatDestinationLinkAssessment>();
+    rawDoormats.forEach((rawDoormat) => {
+      if (!rawDoormat || typeof rawDoormat !== 'object') return;
+      const doormat = rawDoormat as Record<string, unknown>;
+      const index = this.toNumber(doormat['doormat_index']);
+      const relationship = this.normalizeTopicDoormatDestinationLinkRelationship(
+        doormat['destination_link_relationship'],
+      );
+      const basis = this.normalizeTopicDoormatDestinationLinkRelationshipBasis(
+        doormat['destination_link_relationship_basis'],
+      );
+      if (!index || !relationship || !basis) return;
+      assessments.set(index, {
+        relationship,
+        basis,
+        reason: this.cleanString(
+          doormat['destination_link_relationship_reason'],
+        ),
+      });
+    });
+    return assessments;
+  }
+
+  private parseTopicDoormatDestinationContentAssessments(
+    rawDoormats: unknown[],
+  ): Map<number, TopicDoormatDestinationContentAssessment> {
+    const assessments = new Map<
+      number,
+      TopicDoormatDestinationContentAssessment
+    >();
+    rawDoormats.forEach((rawDoormat) => {
+      if (!rawDoormat || typeof rawDoormat !== 'object') return;
+      const doormat = rawDoormat as Record<string, unknown>;
+      const index = this.toNumber(doormat['doormat_index']);
+      const rawAssessment = doormat['destination_content_assessment'];
+      if (!index || !this.isValidTopicDoormatDestinationContentAssessment(
+        rawAssessment,
+      )) {
+        return;
+      }
+      assessments.set(index, {
+        importantElementIds: [...rawAssessment['important_element_ids']],
+        coveredElementIds: [...rawAssessment['covered_element_ids']],
+        missingImportantElementIds: [
+          ...rawAssessment['missing_important_element_ids'],
+        ],
+      });
+    });
+    return assessments;
   }
 
   private buildTopicDoormatSectionIssueRow(
@@ -718,6 +896,18 @@ export class TopicDoormatIssueAnalysisService {
       number,
       TopicDoormatDescriptionStyle
     > = new Map(),
+    destinationContentAssessmentsByDoormatIndex: Map<
+      number,
+      TopicDoormatDestinationContentAssessment
+    > = new Map(),
+    linkStylesByDoormatIndex: Map<
+      number,
+      TopicDoormatLinkTextStyle
+    > = new Map(),
+    destinationLinkAssessmentsByDoormatIndex: Map<
+      number,
+      TopicDoormatDestinationLinkAssessment
+    > = new Map(),
   ): TopicDoormatIssueRow[] {
     const existingIssueKeys = new Set(
       existingRows.map((row) => `${row.sectionIndex ?? 0}|${row.issueId}`),
@@ -801,6 +991,18 @@ export class TopicDoormatIssueAnalysisService {
       ...this.buildLocalTopicDoormatLinkCodeRows(doormatSummaries),
       ...this.buildLocalTopicDoormatRepeatedDescriptionOpeningRows(
         doormatSummaries,
+      ),
+      ...this.buildLocalTopicDoormatContentGapRows(
+        doormatSummaries,
+        destinationContentAssessmentsByDoormatIndex,
+      ),
+      ...this.buildLocalTopicDoormatLinkStyleIssueRows(
+        doormatSummaries,
+        linkStylesByDoormatIndex,
+      ),
+      ...this.buildLocalTopicDoormatDestinationMismatchRows(
+        doormatSummaries,
+        destinationLinkAssessmentsByDoormatIndex,
       ),
       ...this.buildLocalTopicDoormatStyleIssueRows(
         doormatSummaries,
@@ -1086,7 +1288,7 @@ export class TopicDoormatIssueAnalysisService {
     const count = doormatSummaries.length;
     const descriptionLabel = count === 1 ? 'description' : 'descriptions';
     const doormatLabel = count === 1 ? 'doormat' : 'doormats';
-    return `${count} ${descriptionLabel} in this section end with punctuation: ${doormatLabel} ${indexes}.`;
+    return `${count} ${descriptionLabel} end with punctuation: ${doormatLabel} ${indexes}.`;
   }
 
   private buildLocalTopicDoormatMostRequestedDuplicateRows(
@@ -1368,6 +1570,268 @@ export class TopicDoormatIssueAnalysisService {
       .replace(/[’]/g, "'")
       .toLocaleLowerCase();
     return { key, label };
+  }
+
+  private buildTopicDoormatDestinationContextElements(
+    summary: TopicDoormatSummary,
+  ): TopicDoormatDestinationContextElement[] {
+    const introElements = (summary.destinationIntroParagraphs ?? [])
+      .map((text) => this.cleanVisibleText(text))
+      .filter(Boolean)
+      .map((text, index) => ({
+        id: `intro-${index + 1}`,
+        type: 'intro' as const,
+        text,
+      }));
+    const sectionElements = (summary.destinationSectionHeadings ?? [])
+      .map((text) => this.cleanVisibleText(text))
+      .filter(Boolean)
+      .map((text, index) => ({
+        id: `h2-${index + 1}`,
+        type: 'h2' as const,
+        text,
+      }));
+    return [...introElements, ...sectionElements];
+  }
+
+  private buildLocalTopicDoormatLinkStyleIssueRows(
+    doormatSummaries: TopicDoormatSummary[],
+    stylesByDoormatIndex: Map<number, TopicDoormatLinkTextStyle>,
+  ): TopicDoormatIssueRow[] {
+    const sections = new Map<number, TopicDoormatSummary[]>();
+    doormatSummaries.forEach((summary) => {
+      if (!summary.sectionIndex) return;
+      const summaries = sections.get(summary.sectionIndex) ?? [];
+      summaries.push(summary);
+      sections.set(summary.sectionIndex, summaries);
+    });
+
+    return Array.from(sections.entries()).flatMap<TopicDoormatIssueRow>(
+      ([sectionIndex, summaries]): TopicDoormatIssueRow[] => {
+        if (summaries.length < 3) return [];
+        const classified = summaries.map((summary) => ({
+          summary,
+          style:
+            stylesByDoormatIndex.get(summary.index) ?? 'mixed-or-unclear',
+        }));
+        if (classified.some((entry) => entry.style === 'mixed-or-unclear')) {
+          return [];
+        }
+        const counts = new Map<TopicDoormatLinkTextStyle, number>();
+        classified.forEach(({ style }) => {
+          counts.set(style, (counts.get(style) ?? 0) + 1);
+        });
+        const ranked = this.topicDoormatLinkTextStyleOrder
+          .map((style) => ({ style, count: counts.get(style) ?? 0 }))
+          .filter((entry) => entry.count > 0)
+          .sort((a, b) => b.count - a.count);
+        if (ranked.length < 2) return [];
+
+        const secondStyleCount = ranked[1]?.count ?? 0;
+        const isSectionMix =
+          secondStyleCount >= 2 || summaries.length <= 4;
+        if (isSectionMix) {
+          const groups = ranked.map(({ style }) => {
+            const indexes = classified
+              .filter((entry) => entry.style === style)
+              .map((entry) => entry.summary.sectionItemIndex)
+              .slice(0, 4);
+            return `${this.getTopicDoormatLinkStyleLabel(style)}: ${indexes.join(', ')}`;
+          });
+          const firstSummary = summaries[0];
+          return [
+            {
+              include: true,
+              rowType: 'section',
+              severity: 'Medium',
+              doormat: this.buildTopicDoormatSectionLabel(
+                sectionIndex,
+                doormatSummaries,
+              ),
+              doormatLabel: 'All doormats in section',
+              issueId: 'mixed-link-name-styles-in-section',
+              issue: this.getTopicDoormatIssueLabel(
+                'mixed-link-name-styles-in-section',
+              ),
+              evidence: `Link name styles in this section: ${groups.join('; ')}.`,
+              recommendation:
+                'Rewrite the link names so they use one consistent link name style across the section.',
+              sectionIndex,
+              sectionTitle: firstSummary.sectionTitle,
+            } satisfies TopicDoormatIssueRow,
+          ];
+        }
+
+        if (ranked[0].count === ranked[1].count) return [];
+        const dominantStyle = ranked[0].style;
+        const outliers = classified.filter(
+          (entry) => entry.style !== dominantStyle,
+        );
+        if (!outliers.length || outliers.length > 2) return [];
+        return outliers.map(({ summary, style }) => ({
+          include: true,
+          rowType: 'doormat',
+          severity: 'Low',
+          doormat: this.buildTopicDoormatLabel(summary),
+          doormatLabel: summary.linkText || summary.href || 'Doormat',
+          issueId: 'inconsistent-link-name-style',
+          issue: this.getTopicDoormatIssueLabel('inconsistent-link-name-style'),
+          evidence: `The section mostly uses ${this.getTopicDoormatLinkStyleLabel(
+            dominantStyle,
+          )} link names; this doormat uses ${this.getTopicDoormatLinkStyleLabel(
+            style,
+          )}.`,
+          recommendation:
+            'Use the dominant link name style unless this doormat has a clear reason to differ.',
+          doormatIndex: summary.index,
+          sectionIndex: summary.sectionIndex,
+          sectionTitle: summary.sectionTitle,
+          sectionItemIndex: summary.sectionItemIndex,
+        } satisfies TopicDoormatIssueRow));
+      },
+    );
+  }
+
+  private getTopicDoormatLinkStyleLabel(
+    style: TopicDoormatLinkTextStyle,
+  ): string {
+    if (style === 'action-verb') return 'action-verb';
+    if (style === 'noun-topic') return 'noun/topic';
+    if (style === 'product-or-service') return 'product/service';
+    if (style === 'audience-group') return 'audience/group';
+    return 'mixed/unclear';
+  }
+
+  private buildLocalTopicDoormatDestinationMismatchRows(
+    doormatSummaries: TopicDoormatSummary[],
+    assessmentsByDoormatIndex: Map<
+      number,
+      TopicDoormatDestinationLinkAssessment
+    >,
+  ): TopicDoormatIssueRow[] {
+    return doormatSummaries.flatMap((summary) => {
+      const assessment = assessmentsByDoormatIndex.get(summary.index);
+      const destinationTitle = summary.destinationPageTitle ?? '';
+      const destinationHeading = summary.destinationPageHeading ?? '';
+      if (
+        assessment?.relationship !== 'materially-different' ||
+        assessment.basis !== 'conflicting-core-concept' ||
+        !assessment.reason ||
+        (!destinationTitle && !destinationHeading) ||
+        this.hasEquivalentTopicDoormatDestinationSurface(summary)
+      ) {
+        return [];
+      }
+      const destinationEvidence = destinationHeading
+        ? `Destination H1: "${destinationHeading}".`
+        : `Destination title: "${destinationTitle}".`;
+      return [
+        {
+          include: true,
+          rowType: 'doormat',
+          severity: 'Medium',
+          doormat: this.buildTopicDoormatLabel(summary),
+          doormatLabel: summary.linkText || summary.href || 'Doormat',
+          issueId: 'link-name-too-different-from-destination-title',
+          issue: this.getTopicDoormatIssueLabel(
+            'link-name-too-different-from-destination-title',
+          ),
+          evidence: `Link name: "${summary.linkText}". ${destinationEvidence} ${assessment.reason}`,
+          recommendation:
+            'Rewrite the link name so it accurately describes the destination topic, task, audience, and scope.',
+          doormatIndex: summary.index,
+          sectionIndex: summary.sectionIndex,
+          sectionTitle: summary.sectionTitle,
+          sectionItemIndex: summary.sectionItemIndex,
+        } satisfies TopicDoormatIssueRow,
+      ];
+    });
+  }
+
+  private buildLocalTopicDoormatContentGapRows(
+    doormatSummaries: TopicDoormatSummary[],
+    assessmentsByDoormatIndex: Map<
+      number,
+      TopicDoormatDestinationContentAssessment
+    >,
+  ): TopicDoormatIssueRow[] {
+    return doormatSummaries.flatMap((summary) => {
+      const assessment = assessmentsByDoormatIndex.get(summary.index);
+      const missingElements = this.getValidatedTopicDoormatMissingElements(
+        summary,
+        assessment,
+      );
+      if (!missingElements.length) return [];
+
+      const evidenceParts = missingElements.slice(0, 3).map((element) => {
+        const text =
+          element.text.length > 140
+            ? `${element.text.slice(0, 137).trimEnd()}...`
+            : element.text;
+        return `${element.type === 'h2' ? 'H2' : 'Intro'}: "${text}"`;
+      });
+      if (missingElements.length > evidenceParts.length) {
+        evidenceParts.push(
+          `and ${missingElements.length - evidenceParts.length} more`,
+        );
+      }
+
+      return [
+        {
+          include: true,
+          rowType: 'doormat',
+          severity: 'Medium',
+          doormat: this.buildTopicDoormatLabel(summary),
+          doormatLabel: summary.linkText || summary.href || 'Doormat',
+          issueId: 'description-missing-needed-information',
+          issue: this.getTopicDoormatIssueLabel(
+            'description-missing-needed-information',
+          ),
+          evidence: `Important destination elements not covered by the link text or description: ${evidenceParts.join('; ')}.`,
+          recommendation:
+            'Add the missing decision-making information to the description without repeating the link text.',
+          doormatIndex: summary.index,
+          sectionIndex: summary.sectionIndex,
+          sectionTitle: summary.sectionTitle,
+          sectionItemIndex: summary.sectionItemIndex,
+        } satisfies TopicDoormatIssueRow,
+      ];
+    });
+  }
+
+  private getValidatedTopicDoormatMissingElements(
+    summary: TopicDoormatSummary,
+    assessment?: TopicDoormatDestinationContentAssessment,
+  ): TopicDoormatDestinationContextElement[] {
+    if (summary.destinationContextStatus !== 'available' || !assessment) {
+      return [];
+    }
+    const elementsById = new Map(
+      this.buildTopicDoormatDestinationContextElements(summary).map((element) => [
+        element.id,
+        element,
+      ]),
+    );
+    const importantIds = new Set(
+      assessment.importantElementIds.filter((id) => elementsById.has(id)),
+    );
+    const coveredIds = new Set(
+      assessment.coveredElementIds.filter((id) => elementsById.has(id)),
+    );
+    const seen = new Set<string>();
+    return assessment.missingImportantElementIds.flatMap((id) => {
+      if (
+        seen.has(id) ||
+        !importantIds.has(id) ||
+        coveredIds.has(id)
+      ) {
+        return [];
+      }
+      const element = elementsById.get(id);
+      if (!element) return [];
+      seen.add(id);
+      return [element];
+    });
   }
 
   private buildLocalTopicDoormatStyleIssueRows(
@@ -1698,6 +2162,7 @@ export class TopicDoormatIssueAnalysisService {
           const categories = Array.isArray(taxonomy.issue_categories)
             ? taxonomy.issue_categories
             : [];
+          const modelIssueCategories: Record<string, unknown>[] = [];
           categories.forEach((rawCategory) => {
             if (!rawCategory || typeof rawCategory !== 'object') return;
             const category = rawCategory as TopicDoormatIssueCategory;
@@ -1713,7 +2178,18 @@ export class TopicDoormatIssueAnalysisService {
             if (label) {
               this.registerTopicDoormatIssueAlias(label, id);
             }
+            if (!this.locallyOwnedTopicDoormatIssueIds.has(id)) {
+              const source = rawCategory as Record<string, unknown>;
+              modelIssueCategories.push(
+                this.compactTopicDoormatIssueCategory(source),
+              );
+            }
           });
+          this.topicDoormatModelIssueContract =
+            this.buildCompactTopicDoormatModelIssueContract(
+              taxonomy,
+              modelIssueCategories,
+            );
           this.registerTopicDoormatIssueAlias('No issues', 'no-issues');
         })
         .catch((err: unknown) => {
@@ -1725,6 +2201,50 @@ export class TopicDoormatIssueAnalysisService {
     }
 
     await this.topicDoormatIssueTaxonomyLoad;
+  }
+
+  private compactTopicDoormatIssueCategory(
+    category: Record<string, unknown>,
+  ): Record<string, unknown> {
+    const compact: Record<string, unknown> = {};
+    [
+      'id',
+      'label',
+      'group',
+      'severity',
+      'condition',
+      'recommendation',
+      'reporting',
+      'evidence_required',
+      'severity_override',
+    ].forEach((key) => {
+      if (category[key] !== undefined) compact[key] = category[key];
+    });
+    return compact;
+  }
+
+  private buildCompactTopicDoormatModelIssueContract(
+    taxonomy: TopicDoormatIssueTaxonomy,
+    modelIssueCategories: Record<string, unknown>[],
+  ): string {
+    const source = taxonomy as TopicDoormatIssueTaxonomy &
+      Record<string, unknown>;
+    const contract = {
+      instruction:
+        'This compact runtime contract is authoritative. Report only allowed_issue_categories. Complete the required per-doormat classification fields before reporting issues.',
+      evidence_style: source['evidence_style'],
+      runtime_editorial_evidence_overrides:
+        source['runtime_editorial_evidence_overrides'],
+      destination_content_assessment:
+        source['destination_content_assessment'],
+      destination_link_relationship:
+        source['destination_link_relationship'],
+      style_inconsistency_reporting:
+        source['style_inconsistency_reporting'],
+      link_name_style_reporting: source['link_name_style_reporting'],
+      allowed_issue_categories: modelIssueCategories,
+    };
+    return `### Compact model-owned issue contract\n${JSON.stringify(contract)}`;
   }
 
   private registerTopicDoormatIssueAlias(alias: string, issueId: string): void {
@@ -1838,6 +2358,15 @@ export class TopicDoormatIssueAnalysisService {
         doormat,
       );
     }
+    if (issueCategory === 'misdirected-link') {
+      return this.hasMeaningfulTopicDoormatDestinationTitleMismatch(
+        issue,
+        doormat,
+      );
+    }
+    if (issueCategory === 'description-lacks-clarity') {
+      return this.hasValidTopicDoormatClarityEvidence(issue, doormat);
+    }
     if (
       issueCategory !== 'link-name-too-long' &&
       issueCategory !== 'description-too-long'
@@ -1864,6 +2393,27 @@ export class TopicDoormatIssueAnalysisService {
     if (limit == null) return true;
 
     return exactCount > limit;
+  }
+
+  private hasValidTopicDoormatClarityEvidence(
+    issue: Record<string, unknown>,
+    doormat?: TopicDoormatSummary,
+  ): boolean {
+    if (!doormat?.description) return false;
+    const details =
+      issue['evidence_details'] && typeof issue['evidence_details'] === 'object'
+        ? (issue['evidence_details'] as Record<string, unknown>)
+        : null;
+    const unclearPhrase = this.cleanVisibleText(
+      this.cleanString(details?.['unclear_phrase']),
+    );
+    const ambiguityExplanation = this.cleanVisibleText(
+      this.cleanString(details?.['ambiguity_explanation']),
+    );
+    if (!unclearPhrase || !ambiguityExplanation) return false;
+    return this.cleanVisibleText(doormat.description)
+      .toLocaleLowerCase()
+      .includes(unclearPhrase.toLocaleLowerCase());
   }
 
   private hasMeaningfulTopicDoormatDestinationTitleMismatch(
@@ -1906,6 +2456,30 @@ export class TopicDoormatIssueAnalysisService {
       .replace(/[^a-z0-9]+/gi, ' ')
       .trim()
       .toLowerCase();
+  }
+
+  private hasEquivalentTopicDoormatDestinationSurface(
+    summary: TopicDoormatSummary,
+  ): boolean {
+    const linkText = this.normalizeTopicDoormatDestinationComparisonText(
+      summary.linkText,
+    );
+    if (!linkText) return false;
+
+    const paddedLinkText = ` ${linkText} `;
+    return [summary.destinationPageTitle, summary.destinationPageHeading]
+      .map((value) =>
+        this.normalizeTopicDoormatDestinationComparisonText(value),
+      )
+      .filter(Boolean)
+      .some((destinationText) => {
+        const paddedDestinationText = ` ${destinationText} `;
+        return (
+          destinationText === linkText ||
+          paddedDestinationText.includes(paddedLinkText) ||
+          paddedLinkText.includes(paddedDestinationText)
+        );
+      });
   }
 
   private buildTopicDoormatEvidence(
@@ -2024,13 +2598,48 @@ export class TopicDoormatIssueAnalysisService {
       typeof doormat['link_text'] === 'string' &&
       typeof doormat['href'] === 'string' &&
       typeof doormat['description'] === 'string' &&
+      this.normalizeTopicDoormatLinkTextStyle(
+        doormat['detected_link_text_style'],
+      ) !== null &&
       this.normalizeTopicDoormatDescriptionStyle(
         doormat['detected_description_style'],
       ) !== null &&
+      this.normalizeTopicDoormatDestinationLinkRelationship(
+        doormat['destination_link_relationship'],
+      ) !== null &&
+      this.normalizeTopicDoormatDestinationLinkRelationshipBasis(
+        doormat['destination_link_relationship_basis'],
+      ) !== null &&
+      typeof doormat['destination_link_relationship_reason'] === 'string' &&
+      this.isValidTopicDoormatDestinationContentAssessment(
+        doormat['destination_content_assessment'],
+      ) &&
       Array.isArray(doormat['issues']) &&
       doormat['issues'].every((issue: unknown) =>
         this.isValidTopicDoormatModelIssue(issue, false),
       )
+    );
+  }
+
+  private isValidTopicDoormatDestinationContentAssessment(
+    value: unknown,
+  ): value is {
+    important_element_ids: string[];
+    covered_element_ids: string[];
+    missing_important_element_ids: string[];
+  } {
+    if (!value || typeof value !== 'object' || Array.isArray(value)) {
+      return false;
+    }
+    const assessment = value as Record<string, unknown>;
+    return [
+      assessment['important_element_ids'],
+      assessment['covered_element_ids'],
+      assessment['missing_important_element_ids'],
+    ].every(
+      (ids) =>
+        Array.isArray(ids) &&
+        ids.every((id) => typeof id === 'string'),
     );
   }
 
@@ -2045,6 +2654,54 @@ export class TopicDoormatIssueAnalysisService {
       )
     ) {
       return value as TopicDoormatDescriptionStyle;
+    }
+    return null;
+  }
+
+  private normalizeTopicDoormatLinkTextStyle(
+    value: unknown,
+  ): TopicDoormatLinkTextStyle | null {
+    if (value === 'mixed-or-unclear') return value;
+    if (
+      typeof value === 'string' &&
+      this.topicDoormatLinkTextStyleOrder.includes(
+        value as Exclude<TopicDoormatLinkTextStyle, 'mixed-or-unclear'>,
+      )
+    ) {
+      return value as TopicDoormatLinkTextStyle;
+    }
+    return null;
+  }
+
+  private normalizeTopicDoormatDestinationLinkRelationship(
+    value: unknown,
+  ): TopicDoormatDestinationLinkRelationship | null {
+    if (
+      value === 'equivalent' ||
+      value === 'narrower-but-accurate' ||
+      value === 'broader-but-accurate' ||
+      value === 'materially-different' ||
+      value === 'unavailable'
+    ) {
+      return value;
+    }
+    return null;
+  }
+
+  private normalizeTopicDoormatDestinationLinkRelationshipBasis(
+    value: unknown,
+  ): TopicDoormatDestinationLinkRelationshipBasis | null {
+    if (
+      value === 'literal-match' ||
+      value === 'phrase-containment' ||
+      value === 'grammatical-variant' ||
+      value === 'synonym-or-paraphrase' ||
+      value === 'acronym-or-program-term' ||
+      value === 'compatible-scope' ||
+      value === 'conflicting-core-concept' ||
+      value === 'unavailable'
+    ) {
+      return value;
     }
     return null;
   }

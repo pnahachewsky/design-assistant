@@ -123,7 +123,7 @@ export class TopicDoormatIaCheckService {
       .map((child) => ({
         include: true,
         rowType: 'section',
-        severity: 'High',
+        severity: 'Medium',
         doormat: 'Topic page doormat set',
         doormatLabel: 'Doormat set',
         issueId: 'missing-needed-doormat',
@@ -153,7 +153,7 @@ export class TopicDoormatIaCheckService {
         {
           include: true,
           rowType: 'doormat',
-          severity: 'Medium',
+          severity: 'Low',
           doormat: this.buildDoormatLabel(summary),
           doormatLabel: summary.linkText || summary.href || 'Doormat',
           issueId: 'unnecessary-doormat',

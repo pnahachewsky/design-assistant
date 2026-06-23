@@ -4,6 +4,10 @@
   "precondition": "Run this analysis only when AIDA heuristics have detected one or more topic doormat items. Missing doormat-section detection is handled before invoking this skill.",
   "analysis_unit": "Analyze one complete topic doormat set at a time. Compare all doormats in the set before assigning issues. Also audit description style within each caller-provided H2 section. Use caller-provided H2 section metadata for section-local numbering, the 9-doormat limit, and section-level style issues.",
   "reporting_unit": "Return issue reports for each affected doormat item. If an editorial issue applies to a whole section rather than a single doormat, return it in section_issues with the affected section_index. Do not repeat section-level issues on every doormat. Do not return mixed-description-style-in-section or section-description-style-outlier; AIDA derives them from the required per-doormat detected_description_style classifications. Report too-many-doormats-in-section as one section_issues item for the affected H2 section, not as repeated per-doormat issues.",
+  "runtime_editorial_evidence_overrides": {
+    "description-lacks-clarity": "Report only genuinely ambiguous wording. evidence_details.unclear_phrase must quote an exact phrase from the description and evidence_details.ambiguity_explanation must explain competing interpretations. Generic wording, missing detail, repetition, and incomplete destination coverage are not clarity issues.",
+    "misdirected-link": "Do not infer misdirection from URL path structure, site hierarchy, or section placement. Do not report when the normalized link name matches the destination title or H1. Section suitability is handled by AIDA's IA checks."
+  },
   "analysis_sequence": [
     {
       "pass": "deterministic_structural_checks",
@@ -31,7 +35,6 @@
         "link-name-not-unique",
         "link-name-too-different-from-destination-title",
         "description-lacks-clarity",
-        "description-missing-needed-information",
         "description-incorrect-style",
         "description-repeats-link-text",
         "duplicate-or-near-duplicate-description",
@@ -127,11 +130,47 @@
       "Use eligibility-or-benefit-summary only for a direct eligibility or benefit summary without action framing.",
       "Return one detected_description_style for every doormat before evaluating issues."
     ],
-    "instruction": "Identify the detected link text style and return exactly one allowed detected_description_style for every doormat. Do not return mixed-description-style-in-section or section-description-style-outlier; AIDA derives those issues by aggregating the per-doormat classifications. Use inconsistent-description-style only for one or two clear outliers in an otherwise consistent section."
+    "instruction": "Return exactly one allowed detected_link_text_style and detected_description_style for every doormat. AIDA aggregates the classifications into section mixes and individual outliers. Do not return mixed-description-style-in-section, section-description-style-outlier, mixed-link-name-styles-in-section, or inconsistent-link-name-style directly."
+  },
+  "destination_link_relationship": {
+    "required": true,
+    "allowed_values": [
+      "equivalent",
+      "narrower-but-accurate",
+      "broader-but-accurate",
+      "materially-different",
+      "unavailable"
+    ],
+    "allowed_bases": [
+      "literal-match",
+      "phrase-containment",
+      "grammatical-variant",
+      "synonym-or-paraphrase",
+      "acronym-or-program-term",
+      "compatible-scope",
+      "conflicting-core-concept",
+      "unavailable"
+    ],
+    "instruction": "Compare link meaning and information scent with the supplied destination title and H1. Added action wording, shortened wording, grammatical inflection, synonyms, paraphrases, acronyms, and program terminology remain accurate when they preserve meaning. Return the relationship basis separately. Use materially-different with conflicting-core-concept only for a different topic, task, audience, service, or scope and explain the conflict in destination_link_relationship_reason. AIDA creates link-name-too-different-from-destination-title only from that grounded pair."
+  },
+  "destination_content_assessment": {
+    "required": true,
+    "instruction": "For every doormat, assess the supplied destinationContext before reporting issues. Select important_element_ids only from supplied intro and H2 element IDs. Mark an element important only when users need it to decide whether this destination is relevant; do not select every H2 automatically. Compare both link text and description when determining coverage. missing_important_element_ids must be a subset of important_element_ids and must contain only supplied IDs that are not represented by covered_element_ids. When destinationContext.status is not available, return empty arrays.",
+    "model_must_not_report": "Do not return description-missing-needed-information as an issue. AIDA validates the assessment IDs against the extracted destination context and creates the issue locally.",
+    "important_element_examples": [
+      "A primary audience or eligibility condition needed to know whether the destination applies.",
+      "A major task, service, option, deadline, document, or outcome needed to distinguish the destination.",
+      "A destination section that materially changes what users should expect after following the link."
+    ],
+    "not_important_by_default": [
+      "Every H2 merely because it exists.",
+      "Secondary navigation, contact information, related links, or supporting details.",
+      "Information users can reasonably discover after they have correctly chosen the destination."
+    ]
   },
   "link_name_style_reporting": {
-    "minimum_standard": "Use mixed-link-name-styles-in-section when an H2 section visibly mixes link name styles, such as noun/topic link names and action-verb link names. Use inconsistent-link-name-style only for one or two clear outliers in an otherwise consistent section.",
-    "reporting": "When mixed-link-name-styles-in-section applies, return exactly one section_issues item for the affected section. Do not report inconsistent-link-name-style for individual doormats already covered by that section issue. Do not report every item in a section as an outlier.",
+    "minimum_standard": "Return detected_link_text_style for every doormat. AIDA uses mixed-link-name-styles-in-section when an H2 section has multiple represented styles and inconsistent-link-name-style only for one or two outliers from a dominant style.",
+    "reporting": "Do not return mixed-link-name-styles-in-section or inconsistent-link-name-style directly. AIDA derives them from the classifications and does not report individual outliers when the section is mixed.",
     "do_not_report_when": [
       "Most or all doormats in the section would receive the same link-name style issue.",
       "The section is internally consistent even if another section uses a different style.",
@@ -165,7 +204,7 @@
     ],
     "use_other_issue_instead": [
       "Use description-too-long for length issues; do not also report inconsistent-description-style for the same length evidence.",
-      "Use description-lacks-clarity or description-missing-needed-information for unclear or incomplete descriptions; do not use inconsistent-description-style as a substitute.",
+      "Use description-lacks-clarity for unclear descriptions. For incomplete descriptions, return a grounded destination_content_assessment so AIDA can determine whether a content-gap issue applies; do not use inconsistent-description-style as a substitute.",
       "Return accurate detected_description_style values when the set-wide style mix is the actual problem; AIDA creates mixed-description-style-in-section.",
       "Return accurate detected_description_style values when one internally consistent section differs from the page pattern; AIDA creates section-description-style-outlier.",
       "Use description-incorrect-style only when the description does not fit any accepted style."
@@ -270,7 +309,8 @@
       "label": "Link name too different from destination",
       "severity": "Medium",
       "condition": "The link text does not need to exactly match the destination page title or heading. It should be reported only when the link name gives users a different or misleading information scent, such as a different topic, task, audience, service, or destination purpose. Ignore boilerplate title suffixes such as '- Canada.ca' and allow wording changes that make the link fit the doormat style on the page.",
-      "recommendation": "Align the link text with the destination page meaning and information scent while keeping it concise and consistent with the page's doormat style."
+      "recommendation": "Align the link text with the destination page meaning and information scent while keeping it concise and consistent with the page's doormat style.",
+      "reporting": "Do not return this issue directly. Return destination_link_relationship, destination_link_relationship_basis, and destination_link_relationship_reason. AIDA reports this issue only for a grounded materially-different plus conflicting-core-concept classification."
     },
     {
       "id": "duplicate-link-in-most-requested",
@@ -301,6 +341,7 @@
       "severity": "Low",
       "condition": "One or more doormat link texts are clear outliers from a dominant link text style used by the rest of the set, such as a lone action verb among noun/topic links.",
       "recommendation": "Use the dominant link text style for this outlier unless the page context clearly justifies the exception.",
+      "reporting": "Do not return this issue directly. AIDA derives it from detected_link_text_style only when a section has one dominant style and no reportable section-level mix.",
       "evidence_required": [
         "dominant_style",
         "outlier_style",
@@ -319,9 +360,11 @@
       "id": "description-missing-needed-information",
       "group": "Description clarity",
       "label": "Description has content gap",
-      "severity": "High",
-      "condition": "The description has a content gap that prevents users from understanding the destination or choosing between doormats.",
-      "recommendation": "Add the missing decision-making detail while keeping the description concise."
+      "severity": "Medium",
+      "condition": "One or more important intro paragraphs or H2 headings from the supplied destination context are not represented by the doormat link text or description, and the omission prevents users from deciding whether the destination is relevant.",
+      "recommendation": "Add the missing decision-making detail while keeping the description concise.",
+      "local_from_model_assessment": true,
+      "reporting": "Do not return this issue directly. Return destination_content_assessment with grounded element IDs. AIDA reports the issue only when missing_important_element_ids is a non-empty validated subset of important_element_ids from an available destination context."
     },
     {
       "id": "missing-description",
@@ -418,7 +461,7 @@
       "severity": "Medium",
       "condition": "The doormat section mixes link name styles, such as noun/topic link names and action-verb link names, in a way that reduces scannability or comparability.",
       "recommendation": "Rewrite the link names so they use one consistent link name style across the section.",
-      "reporting": "Report this issue once in section_issues for the affected section. Do not report it under individual doormats. Do not also report inconsistent-link-name-style for individual doormats covered by this section issue.",
+      "reporting": "Do not return this issue directly. AIDA derives one section-level issue from detected_link_text_style and does not also report inconsistent-link-name-style for that section.",
       "evidence_required": [
         "section_link_name_styles",
         "representative_doormat_indexes"
@@ -526,16 +569,16 @@
       "id": "missing-needed-doormat",
       "group": "Choice of doormats",
       "label": "Missing a needed doormat",
-      "severity": "High",
-      "condition": "The page context suggests an important user task, service, or high-demand destination is missing from the doormat set.",
+      "severity": "Medium",
+      "condition": "A direct child page is not represented in the doormat set. Treat this as a review flag, not proof that a doormat is required.",
       "recommendation": "Review and consider adding a doormat for the missing child page."
     },
     {
       "id": "unnecessary-doormat",
       "group": "Choice of doormats",
       "label": "Non-child-page doormat",
-      "severity": "Medium",
-      "condition": "The doormat appears unnecessary, low-value, redundant, or badly chosen for the page context.",
+      "severity": "Low",
+      "condition": "A doormat destination is not a direct child page in the IA crawl. Treat this as a review flag, not proof that the doormat is unnecessary.",
       "recommendation": "Flag for manual review and consider removing or replacing the doormat."
     },
     {

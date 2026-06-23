@@ -8,7 +8,16 @@ class FetchServiceStub {
     .createSpy('fetchContent')
     .and.resolveTo(
       new DOMParser().parseFromString(
-        '<html><head><title>Destination</title></head><body><main><h1>Destination heading</h1></main></body></html>',
+        `<html><head><title>Destination</title></head><body><main>
+          <h1>Destination heading</h1>
+          <p>First introductory paragraph.</p>
+          <aside><p>Interface text to exclude.</p></aside>
+          <p>Second introductory paragraph.</p>
+          <p>For more information, see <a href="/reference.html">supporting reference material</a>.</p>
+          <h2>Eligibility</h2>
+          <p>Section body text to exclude.</p>
+          <h2>How to apply</h2>
+        </main></body></html>`,
         'text/html',
       ),
     );
@@ -122,5 +131,14 @@ describe('TopicDoormatExtractorService', () => {
     );
     expect(enriched[0].destinationPageTitle).toBe('Destination');
     expect(enriched[0].destinationPageHeading).toBe('Destination heading');
+    expect(enriched[0].destinationIntroParagraphs).toEqual([
+      'First introductory paragraph.',
+      'Second introductory paragraph.',
+    ]);
+    expect(enriched[0].destinationSectionHeadings).toEqual([
+      'Eligibility',
+      'How to apply',
+    ]);
+    expect(enriched[0].destinationContextStatus).toBe('available');
   });
 });

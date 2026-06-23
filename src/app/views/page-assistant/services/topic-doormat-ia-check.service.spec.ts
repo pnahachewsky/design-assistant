@@ -101,6 +101,7 @@ describe('TopicDoormatIaCheckService', () => {
       'missing-needed-doormat',
       'unnecessary-doormat',
     ]);
+    expect(result.rows.map((row) => row.severity)).toEqual(['Medium', 'Low']);
     expect(result.metaByDoormatIndex.get(1)).toBe('child, 1,200');
     expect(result.metaByDoormatIndex.get(2)).toBe('no views');
   });

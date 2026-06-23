@@ -181,7 +181,7 @@ export class TopicDoormatModelClientService {
           role: 'user',
           content: JSON.stringify({
             requiredShape:
-              '{ "section_issues": [], "doormats": [{ "doormat_index": number, "link_text": string, "href": string, "issues": [] }] }',
+              '{ "section_issues": [], "doormats": [{ "doormat_index": number, "link_text": string, "href": string, "description": string, "detected_link_text_style": string, "detected_description_style": string, "destination_link_relationship": string, "destination_link_relationship_basis": string, "destination_link_relationship_reason": string, "destination_content_assessment": { "important_element_ids": [], "covered_element_ids": [], "missing_important_element_ids": [] }, "issues": [] }] }',
             validDoormatIndexes: doormatSummaries.map((summary) => summary.index),
             responseToRepair: invalidText,
           }),

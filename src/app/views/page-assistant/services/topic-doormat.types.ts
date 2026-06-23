@@ -1,6 +1,10 @@
 import { UploadData } from '../data/data.model';
 
 export type TopicDoormatPageLanguage = 'en' | 'fr';
+export type TopicDoormatDestinationContextStatus =
+  | 'available'
+  | 'insufficient'
+  | 'failed';
 
 export interface TopicDoormatIssueRow {
   include: boolean;
@@ -43,6 +47,9 @@ export interface TopicDoormatSummary {
   destinationUrl?: string;
   destinationPageTitle?: string;
   destinationPageHeading?: string;
+  destinationIntroParagraphs?: string[];
+  destinationSectionHeadings?: string[];
+  destinationContextStatus?: TopicDoormatDestinationContextStatus;
   description: string;
   headingLevel: number | null;
   itemLinkCount: number;
@@ -89,6 +96,30 @@ export type TopicDoormatDescriptionStyle =
   | 'task-list'
   | 'eligibility-or-benefit-summary'
   | 'mixed-or-unclear';
+
+export type TopicDoormatLinkTextStyle =
+  | 'action-verb'
+  | 'noun-topic'
+  | 'product-or-service'
+  | 'audience-group'
+  | 'mixed-or-unclear';
+
+export type TopicDoormatDestinationLinkRelationship =
+  | 'equivalent'
+  | 'narrower-but-accurate'
+  | 'broader-but-accurate'
+  | 'materially-different'
+  | 'unavailable';
+
+export type TopicDoormatDestinationLinkRelationshipBasis =
+  | 'literal-match'
+  | 'phrase-containment'
+  | 'grammatical-variant'
+  | 'synonym-or-paraphrase'
+  | 'acronym-or-program-term'
+  | 'compatible-scope'
+  | 'conflicting-core-concept'
+  | 'unavailable';
 
 export interface TopicDoormatSectionStyleAnalysis {
   sectionIndex: number;
