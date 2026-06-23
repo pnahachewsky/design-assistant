@@ -401,8 +401,9 @@
           <h1>Topic doormat review and rewrite overview (in-progress)</h1>
           <p class="lede">
             This page summarizes how AIDA detects GCWeb topic doormats, sends structured
-            doormat data to the issue prompt, and uses the issue output as the basis for
-            later rewrite work.
+            doormat data to the issue prompt, asks the model for bounded classifications
+            and editorial evidence, and makes the final issue decisions in AIDA before
+            any later rewrite work.
           </p>
         </div>
         <aside class="process-summary" aria-label="Process summary">
@@ -412,7 +413,8 @@
             <li>Extract link text, destination, description, counts, and H2 section metadata.</li>
             <li>Run local deterministic checks for counts and predictable structure issues.</li>
             <li>Send the complete doormat set to the Topic doormats issue skill.</li>
-            <li>Parse returned issue rows and fill omitted clean doormats with No issues rows.</li>
+            <li>Ask the model to classify every doormat using constrained values and grounded evidence.</li>
+            <li>Let AIDA validate and aggregate the classifications, apply local decision rules, and build the displayed issues.</li>
             <li>Use selected issue rows as rewrite input when rewrite support is applied.</li>
           </ol>
         </aside>
@@ -421,8 +423,9 @@
 
     <nav class="quick-nav" aria-label="Page sections">
       <a href="#review-flow">Review flow</a>
+      <a href="#decision-boundary">Classification and decisions</a>
       <a href="#section-rules">Section rules</a>
-      <a href="#quality-checks">What AIDA checks for</a>
+      <a href="#quality-checks">How AIDA determines issues</a>
       <a href="#testing">Testing</a>
       <a href="#source-files">Reference files</a>
     </nav>
@@ -440,16 +443,68 @@
           <p>
             AIDA sends structured doormat summaries, including page order, section-local
             order, link text, href, description, exact character counts, and extracted
-            H2 section metadata.
+            H2 section metadata. For each reachable destination, AIDA also supplies the
+            page title, H1, introductory paragraphs before the first H2, and all H2 headings.
           </p>
         </article>
         <article class="card">
           <span class="label label-green">Output</span>
           <h3>What AIDA gets back</h3>
           <p>
-            The model returns JSON issue rows grouped by doormat, plus section-level
-            issues when the taxonomy asks for them. AIDA normalizes labels, suppresses
-            unsupported rows, and fills missing clean doormats with No issues rows.
+            The model returns required description-style, link-style,
+            destination-relationship, relationship-basis, and destination-content
+            classifications for every doormat. It may also return candidate rows for
+            model-owned editorial issues. These are structured inputs to AIDA, not the
+            final displayed report.
+          </p>
+        </article>
+      </div>
+    </section>
+
+    <section class="panel" id="decision-boundary">
+      <h2>Classification first, final decision in AIDA</h2>
+      <p class="intro">
+        For checks that depend on comparing the complete doormat set, the model performs
+        the language judgment and AIDA owns the issue decision. This keeps semantic
+        classification flexible without letting one model response directly determine
+        section-level findings, thresholds, severity, or suppression rules.
+      </p>
+      <div class="grid">
+        <article class="card">
+          <span class="label label-blue">1. Model classifies</span>
+          <h3>Bounded labels for every doormat</h3>
+          <p>
+            The model must return values from defined enums, such as description style,
+            link style, destination relationship and its basis, plus destination element
+            coverage. It identifies meaning and rhetorical construction; it does not
+            return the locally owned issue that may result from that classification.
+          </p>
+        </article>
+        <article class="card">
+          <span class="label label-amber">2. AIDA validates</span>
+          <h3>Ground classifications in supplied data</h3>
+          <p>
+            AIDA checks the response shape, allowed labels, doormat indexes, destination
+            element IDs, required reasons, and available page context. Invalid,
+            unsupported, or ungrounded classifications cannot create displayed issues.
+          </p>
+        </article>
+        <article class="card">
+          <span class="label label-green">3. AIDA decides</span>
+          <h3>Aggregate and apply the rule</h3>
+          <p>
+            AIDA groups valid classifications by section or page, applies thresholds and
+            deterministic safeguards, suppresses known false positives, assigns the
+            configured severity, and creates the final issue rows shown to users.
+          </p>
+        </article>
+        <article class="card">
+          <span class="label label-blue">Editorial exception</span>
+          <h3>Model-owned judgment remains bounded</h3>
+          <p>
+            Some editorial issues cannot yet be derived from a stable local rule. The
+            model may return those candidate issue rows directly, but AIDA still validates
+            them against the taxonomy and response contract before displaying them.
           </p>
         </article>
       </div>
@@ -491,10 +546,11 @@
     </section>
 
     <section class="panel" id="quality-checks">
-      <h2>What AIDA checks for</h2>
+      <h2>How AIDA determines issues</h2>
       <p class="intro">
-        The current flow splits deterministic checks from model judgment. AIDA owns exact
-        counts and local fallback rows; the model handles editorial and comparative judgment.
+        The current flow separates model classification from AIDA decisions. AIDA owns
+        exact checks and final classification-derived issue rules; the model supplies
+        semantic classifications and handles the remaining model-owned editorial judgment.
       </p>
       <div class="grid">
         <article class="card">
@@ -507,7 +563,19 @@
         </article>
         <article class="card">
           <h3>Description and link style</h3>
-          <p>The model compares the complete set for meaningful style inconsistency.</p>
+          <p>The model classifies each description and link by grammatical construction. AIDA groups those labels, determines whether a section mix or genuine outlier meets the rule, and creates the issue row.</p>
+        </article>
+        <article class="card">
+          <h3>Destination relationship</h3>
+          <p>The model classifies whether each link name is equivalent, accurately broader or narrower, materially different, or unavailable, and identifies the basis for that decision. AIDA reports only grounded core-concept conflicts and suppresses mismatches when normalized link text is contained in the destination title or H1.</p>
+        </article>
+        <article class="card">
+          <h3>Description content gaps</h3>
+          <p>The model classifies supplied destination elements as important, covered, or missing by ID. AIDA reports a content gap only when a missing important ID matches extracted page context and passes the local safeguards.</p>
+        </article>
+        <article class="card">
+          <h3>Repeated description openings</h3>
+          <p>AIDA checks each H2 section locally for descriptions that begin with the same first two words.</p>
         </article>
         <article class="card">
           <h3>Most requested duplicates</h3>
@@ -660,8 +728,8 @@
                 <li>
                   <strong>Choice of doormats</strong>
                   <ul>
-                    <li>Missing a needed doormat</li>
-                    <li>Extra (non-child-page) doormat that is not needed (badly chosen)</li>
+                    <li>Direct child page missing from the doormats (Medium review flag)</li>
+                    <li>Doormat destination outside the direct child pages (Low review flag)</li>
                   </ul>
                 </li>
                 </ul>
@@ -713,7 +781,7 @@
               <code class="code-path">src/app/views/page-assistant/services/topic-doormat-model-client.service.ts</code>
             </li>
             <li>
-              Groups issue rows, builds category summaries, and maps issues to the displayed health state.
+              Groups issue rows, builds category summaries, and maps issues to the displayed health state. Global rows appear in the only real section when there is one; Section 0 is retained when there are multiple real sections.
               <code class="code-path">src/app/views/page-assistant/services/topic-doormat-presenter.service.ts</code>
             </li>
             <li>
