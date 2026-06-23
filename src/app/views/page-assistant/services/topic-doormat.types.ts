@@ -83,19 +83,21 @@ export interface TopicDoormatIssueTaxonomy {
 }
 
 export type TopicDoormatDescriptionStyle =
-  | 'noun-topic'
-  | 'action-oriented'
-  | 'how-to'
-  | 'benefit-summary'
-  | 'question-or-sentence'
-  | 'status-or-date-change'
-  | 'unclear';
+  | 'action-verb-task-summary'
+  | 'noun-topic-summary'
+  | 'keyword-list'
+  | 'task-list'
+  | 'eligibility-or-benefit-summary'
+  | 'mixed-or-unclear';
 
 export interface TopicDoormatSectionStyleAnalysis {
   sectionIndex: number;
   sectionTitle: string;
   summaries: TopicDoormatSummary[];
-  dominantStyle: Exclude<TopicDoormatDescriptionStyle, 'unclear'> | null;
+  dominantStyle: Exclude<
+    TopicDoormatDescriptionStyle,
+    'mixed-or-unclear'
+  > | null;
   styleCounts: Map<TopicDoormatDescriptionStyle, number>;
   examplesByStyle: Map<TopicDoormatDescriptionStyle, number[]>;
   isMixed: boolean;

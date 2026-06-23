@@ -74,22 +74,23 @@ export class TopicDoormatIssueAnalysisService {
     'link-name-too-long',
     'link-name-trailing-punctuation',
     'missing-needed-doormat',
+    'mixed-description-style-in-section',
     'multiple-links',
     'repeated-description-opening',
+    'section-description-style-outlier',
     'split-heading-link',
     'too-many-doormats-in-section',
     'unnecessary-doormat',
   ]);
   private readonly topicDoormatDescriptionStyleOrder: Exclude<
     TopicDoormatDescriptionStyle,
-    'unclear'
+    'mixed-or-unclear'
   >[] = [
-    'noun-topic',
-    'benefit-summary',
-    'status-or-date-change',
-    'action-oriented',
-    'how-to',
-    'question-or-sentence',
+    'action-verb-task-summary',
+    'noun-topic-summary',
+    'keyword-list',
+    'task-list',
+    'eligibility-or-benefit-summary',
   ];
   private topicDoormatIssueTaxonomyLoad?: Promise<void>;
   private topicDoormatIssueIdToLabel = new Map<string, string>();
@@ -115,6 +116,8 @@ export class TopicDoormatIssueAnalysisService {
       'Runtime issue ownership: AIDA calculates the following issues locally.',
       'Do not return them in section_issues or doormat issues:',
       Array.from(this.locallyOwnedTopicDoormatIssueIds).join(', '),
+      'You must still return exactly one allowed detected_description_style for every doormat.',
+      'Classify the rhetorical construction, not the subject matter. An action-framed description remains action-verb-task-summary when it discusses eligibility, benefits, residency, dates, or status.',
     ].join('\n');
     const messages: ChatMessage[] = [
       {
@@ -288,6 +291,8 @@ export class TopicDoormatIssueAnalysisService {
     }
     const root = parsed as Record<string, unknown>;
     const doormats = Array.isArray(root['doormats']) ? root['doormats'] : [];
+    const descriptionStylesByDoormatIndex =
+      this.parseTopicDoormatDescriptionStyles(doormats);
     const sectionIssueRows = this.parseTopicDoormatSectionIssueRows(
       root['section_issues'],
       doormatSummaries,
@@ -414,11 +419,20 @@ export class TopicDoormatIssueAnalysisService {
       (row) =>
         !this.locallyOwnedTopicDoormatIssueIds.has(row.issueId),
     );
+    const descriptionStyleAnalyses = this.analyzeTopicDoormatDescriptionStyles(
+      doormatSummaries,
+      descriptionStylesByDoormatIndex,
+    );
+    const descriptionStyleAnalysisBySection = new Map(
+      descriptionStyleAnalyses.map((analysis) => [
+        analysis.sectionIndex,
+        analysis,
+      ]),
+    );
     const mixedDescriptionStyleSectionIndexes = new Set(
-      reportableSectionIssueRows
-        .filter((row) => row.issueId === 'mixed-description-style-in-section')
-        .map((row) => row.sectionIndex)
-        .filter((index): index is number => typeof index === 'number' && index > 0),
+      descriptionStyleAnalyses
+        .filter((analysis) => analysis.isMixed)
+        .map((analysis) => analysis.sectionIndex),
     );
     const mixedLinkNameStyleSectionIndexes = new Set(
       reportableSectionIssueRows
@@ -450,6 +464,20 @@ export class TopicDoormatIssueAnalysisService {
         ) {
           return true;
         }
+        if (row.issueId === 'inconsistent-description-style') {
+          const analysis = descriptionStyleAnalysisBySection.get(
+            row.sectionIndex,
+          );
+          const rowStyle = row.doormatIndex
+            ? descriptionStylesByDoormatIndex.get(row.doormatIndex)
+            : undefined;
+          return (
+            !analysis?.dominantStyle ||
+            !rowStyle ||
+            rowStyle === 'mixed-or-unclear' ||
+            rowStyle === analysis.dominantStyle
+          );
+        }
         if (
           row.issueId === 'description-trailing-punctuation' &&
           localDescriptionTrailingPunctuationSectionIndexes.has(row.sectionIndex)
@@ -478,6 +506,7 @@ export class TopicDoormatIssueAnalysisService {
       pageLanguage,
       mostRequestedLinks,
       uploadData,
+      descriptionStylesByDoormatIndex,
     );
 
     const representedIndexes = new Set(
@@ -522,6 +551,14 @@ export class TopicDoormatIssueAnalysisService {
       ),
       modelRawSectionIssueRows: sectionIssueRows.length,
       modelDisplayedSectionIssueRows: reportableSectionIssueRows.length,
+      descriptionStylesByDoormatIndex: doormatSummaries.map((summary) => ({
+        doormatIndex: summary.index,
+        sectionIndex: summary.sectionIndex,
+        sectionItemIndex: summary.sectionItemIndex,
+        style:
+          descriptionStylesByDoormatIndex.get(summary.index) ??
+          'missing-or-invalid',
+      })),
       fallbackNoIssueRows: missingNoIssueRows.length,
       deterministicRows: deterministicRows.length,
       localIaRows: localIaRows.length,
@@ -544,6 +581,22 @@ export class TopicDoormatIssueAnalysisService {
         return this.buildTopicDoormatSectionIssueRow(issue, undefined, doormatSummaries);
       })
       .filter((row): row is TopicDoormatIssueRow => row !== null);
+  }
+
+  private parseTopicDoormatDescriptionStyles(
+    rawDoormats: unknown[],
+  ): Map<number, TopicDoormatDescriptionStyle> {
+    const stylesByDoormatIndex = new Map<number, TopicDoormatDescriptionStyle>();
+    rawDoormats.forEach((rawDoormat) => {
+      if (!rawDoormat || typeof rawDoormat !== 'object') return;
+      const doormat = rawDoormat as Record<string, unknown>;
+      const index = this.toNumber(doormat['doormat_index']);
+      const style = this.normalizeTopicDoormatDescriptionStyle(
+        doormat['detected_description_style'],
+      );
+      if (index && style) stylesByDoormatIndex.set(index, style);
+    });
+    return stylesByDoormatIndex;
   }
 
   private buildTopicDoormatSectionIssueRow(
@@ -661,6 +714,10 @@ export class TopicDoormatIssueAnalysisService {
     pageLanguage: TopicDoormatPageLanguage = 'en',
     mostRequestedLinks: MostRequestedLinkSummary[] = [],
     uploadData?: Partial<UploadData> | null,
+    descriptionStylesByDoormatIndex: Map<
+      number,
+      TopicDoormatDescriptionStyle
+    > = new Map(),
   ): TopicDoormatIssueRow[] {
     const existingIssueKeys = new Set(
       existingRows.map((row) => `${row.sectionIndex ?? 0}|${row.issueId}`),
@@ -748,6 +805,7 @@ export class TopicDoormatIssueAnalysisService {
       ...this.buildLocalTopicDoormatStyleIssueRows(
         doormatSummaries,
         existingIssueKeys,
+        descriptionStylesByDoormatIndex,
       ),
     ];
   }
@@ -1315,8 +1373,15 @@ export class TopicDoormatIssueAnalysisService {
   private buildLocalTopicDoormatStyleIssueRows(
     doormatSummaries: TopicDoormatSummary[],
     existingIssueKeys: Set<string>,
+    descriptionStylesByDoormatIndex: Map<
+      number,
+      TopicDoormatDescriptionStyle
+    >,
   ): TopicDoormatIssueRow[] {
-    const analyses = this.analyzeTopicDoormatDescriptionStyles(doormatSummaries);
+    const analyses = this.analyzeTopicDoormatDescriptionStyles(
+      doormatSummaries,
+      descriptionStylesByDoormatIndex,
+    );
     const rows: TopicDoormatIssueRow[] = [];
 
     analyses.forEach((analysis) => {
@@ -1390,6 +1455,10 @@ export class TopicDoormatIssueAnalysisService {
 
   private analyzeTopicDoormatDescriptionStyles(
     doormatSummaries: TopicDoormatSummary[],
+    descriptionStylesByDoormatIndex: Map<
+      number,
+      TopicDoormatDescriptionStyle
+    >,
   ): TopicDoormatSectionStyleAnalysis[] {
     const sections = new Map<number, TopicDoormatSummary[]>();
     doormatSummaries.forEach((summary) => {
@@ -1405,9 +1474,9 @@ export class TopicDoormatIssueAnalysisService {
         const examplesByStyle = new Map<TopicDoormatDescriptionStyle, number[]>();
 
         summaries.forEach((summary) => {
-          const style = this.classifyTopicDoormatDescriptionStyle(
-            summary.description,
-          );
+          const style =
+            descriptionStylesByDoormatIndex.get(summary.index) ??
+            'mixed-or-unclear';
           styleCounts.set(style, (styleCounts.get(style) ?? 0) + 1);
           const examples = examplesByStyle.get(style) ?? [];
           examples.push(summary.sectionItemIndex);
@@ -1441,48 +1510,9 @@ export class TopicDoormatIssueAnalysisService {
       .sort((a, b) => a.sectionIndex - b.sectionIndex);
   }
 
-  private classifyTopicDoormatDescriptionStyle(
-    description: string,
-  ): TopicDoormatDescriptionStyle {
-    const text = this.cleanVisibleText(description).toLowerCase();
-    if (!text) return 'unclear';
-    if (/^how to\b/.test(text)) return 'how-to';
-    if (
-      /^(answer|find|find out|get|learn|apply|claim|calculate|check|confirm|report|see|use|update|manage|register|sign in|pay|file)\b/.test(
-        text,
-      )
-    ) {
-      return 'action-oriented';
-    }
-    if (
-      /^(will be|starts?|closed|temporary|you may still|as of|from \w+ \d{1,2}|effective|replaced|replacement)\b/.test(
-        text,
-      ) ||
-      /\b(reviewed|changed|replacement|replace|replaced|starts?|closed)\b/.test(
-        text,
-      )
-    ) {
-      return 'status-or-date-change';
-    }
-    if (
-      /^(monthly|quarterly|annual|one-time)?\s*(payment|payments|benefit|benefits|credit|tax credit|temporary relief)\b/.test(
-        text,
-      ) ||
-      /^(benefit|benefits|tax credit|credit|monthly payment|quarterly payments)\s+(for|to|that)\b/.test(
-        text,
-      )
-    ) {
-      return 'benefit-summary';
-    }
-    if (/^(what|who|when|where|why|whether)\b/.test(text)) {
-      return 'question-or-sentence';
-    }
-    return 'noun-topic';
-  }
-
   private getDominantTopicDoormatDescriptionStyle(
     styleCounts: Map<TopicDoormatDescriptionStyle, number>,
-  ): Exclude<TopicDoormatDescriptionStyle, 'unclear'> | null {
+  ): Exclude<TopicDoormatDescriptionStyle, 'mixed-or-unclear'> | null {
     const candidates = this.topicDoormatDescriptionStyleOrder
       .map((style) => ({ style, count: styleCounts.get(style) ?? 0 }))
       .filter((entry) => entry.count > 0)
@@ -1496,8 +1526,11 @@ export class TopicDoormatIssueAnalysisService {
 
   private getDominantTopicDoormatSectionStyle(
     analyses: TopicDoormatSectionStyleAnalysis[],
-  ): Exclude<TopicDoormatDescriptionStyle, 'unclear'> | null {
-    const counts = new Map<Exclude<TopicDoormatDescriptionStyle, 'unclear'>, number>();
+  ): Exclude<TopicDoormatDescriptionStyle, 'mixed-or-unclear'> | null {
+    const counts = new Map<
+      Exclude<TopicDoormatDescriptionStyle, 'mixed-or-unclear'>,
+      number
+    >();
     analyses.forEach((analysis) => {
       if (!analysis.dominantStyle) return;
       counts.set(
@@ -1513,7 +1546,7 @@ export class TopicDoormatIssueAnalysisService {
 
   private getTwoSectionTopicDoormatReferenceStyle(
     analyses: TopicDoormatSectionStyleAnalysis[],
-  ): Exclude<TopicDoormatDescriptionStyle, 'unclear'> | null {
+  ): Exclude<TopicDoormatDescriptionStyle, 'mixed-or-unclear'> | null {
     if (analyses.length !== 2) return null;
     const firstStyle = analyses[0].dominantStyle;
     const secondStyle = analyses[1].dominantStyle;
@@ -1545,39 +1578,11 @@ export class TopicDoormatIssueAnalysisService {
   private buildTopicDoormatMixedStyleEvidenceGroups(
     analysis: TopicDoormatSectionStyleAnalysis,
   ): { label: string; exampleLabel: string; examples: number[] }[] {
-    const evidenceGroups = [
-      {
-        label: 'summary-style descriptions',
-        exampleLabel: 'Summary',
-        styles: [
-          'noun-topic',
-          'benefit-summary',
-          'question-or-sentence',
-        ] satisfies TopicDoormatDescriptionStyle[],
-      },
-      {
-        label: 'task/action descriptions',
-        exampleLabel: 'Task/action',
-        styles: [
-          'action-oriented',
-          'how-to',
-        ] satisfies TopicDoormatDescriptionStyle[],
-      },
-      {
-        label: 'status or date-change descriptions',
-        exampleLabel: 'Status/date-change',
-        styles: [
-          'status-or-date-change',
-        ] satisfies TopicDoormatDescriptionStyle[],
-      },
-    ];
-
-    return evidenceGroups
-      .map((group) => ({
-        label: group.label,
-        exampleLabel: group.exampleLabel,
-        examples: group.styles
-          .flatMap((style) => analysis.examplesByStyle.get(style) ?? [])
+    return this.topicDoormatDescriptionStyleOrder
+      .map((style) => ({
+        label: this.getTopicDoormatStyleLabel(style),
+        exampleLabel: this.getTopicDoormatStyleEvidenceLabel(style),
+        examples: (analysis.examplesByStyle.get(style) ?? [])
           .sort((a, b) => a - b)
           .slice(0, 4),
       }))
@@ -1585,18 +1590,23 @@ export class TopicDoormatIssueAnalysisService {
   }
 
   private getTopicDoormatStyleLabel(
-    style: Exclude<TopicDoormatDescriptionStyle, 'unclear'>,
+    style: Exclude<TopicDoormatDescriptionStyle, 'mixed-or-unclear'>,
   ): string {
-    if (style === 'noun-topic') return 'noun/topic summaries';
-    if (style === 'benefit-summary') return 'benefit summaries';
-    if (style === 'status-or-date-change') {
-      return 'status or date-change descriptions';
-    }
-    if (style === 'how-to') return 'How to descriptions';
-    if (style === 'question-or-sentence') {
-      return 'question or sentence descriptions';
-    }
-    return 'action-oriented descriptions';
+    if (style === 'action-verb-task-summary') return 'action/task summaries';
+    if (style === 'noun-topic-summary') return 'noun/topic summaries';
+    if (style === 'keyword-list') return 'keyword lists';
+    if (style === 'task-list') return 'task lists';
+    return 'eligibility or benefit summaries';
+  }
+
+  private getTopicDoormatStyleEvidenceLabel(
+    style: Exclude<TopicDoormatDescriptionStyle, 'mixed-or-unclear'>,
+  ): string {
+    if (style === 'action-verb-task-summary') return 'Action/task';
+    if (style === 'noun-topic-summary') return 'Noun/topic';
+    if (style === 'keyword-list') return 'Keyword list';
+    if (style === 'task-list') return 'Task list';
+    return 'Eligibility/benefit';
   }
 
   private buildTopicDoormatSectionCounts(
@@ -2014,11 +2024,29 @@ export class TopicDoormatIssueAnalysisService {
       typeof doormat['link_text'] === 'string' &&
       typeof doormat['href'] === 'string' &&
       typeof doormat['description'] === 'string' &&
+      this.normalizeTopicDoormatDescriptionStyle(
+        doormat['detected_description_style'],
+      ) !== null &&
       Array.isArray(doormat['issues']) &&
       doormat['issues'].every((issue: unknown) =>
         this.isValidTopicDoormatModelIssue(issue, false),
       )
     );
+  }
+
+  private normalizeTopicDoormatDescriptionStyle(
+    value: unknown,
+  ): TopicDoormatDescriptionStyle | null {
+    if (value === 'mixed-or-unclear') return value;
+    if (
+      typeof value === 'string' &&
+      this.topicDoormatDescriptionStyleOrder.includes(
+        value as Exclude<TopicDoormatDescriptionStyle, 'mixed-or-unclear'>,
+      )
+    ) {
+      return value as TopicDoormatDescriptionStyle;
+    }
+    return null;
   }
 
   private isValidTopicDoormatModelIssue(

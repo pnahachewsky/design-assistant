@@ -23,6 +23,18 @@ class HttpClientStub {
           id: 'repeated-description-opening',
           label: 'Repeated description opening',
         },
+        {
+          id: 'mixed-description-style-in-section',
+          label: 'Mixed description styles in section',
+        },
+        {
+          id: 'section-description-style-outlier',
+          label: 'Section (description) styles differ',
+        },
+        {
+          id: 'inconsistent-description-style',
+          label: 'Inconsistent description style',
+        },
         { id: 'too-many-doormats-in-section', label: 'Too many doormats' },
       ],
     }),
@@ -128,6 +140,7 @@ describe('TopicDoormatIssueAnalysisService', () => {
                   link_text: 'Benefit one',
                   href: '/en/benefits/one.html',
                   description: 'Benefit programs and services',
+                  detected_description_style: 'noun-topic-summary',
                   issues: [],
                 },
               ],
@@ -159,6 +172,156 @@ describe('TopicDoormatIssueAnalysisService', () => {
     );
   });
 
+  it('suppresses a model mixed-style issue when all model classifications match', async () => {
+    const descriptions = [
+      'Find out who should file and when to file a trust return.',
+      'Find out what the tax year-end is for different types of trust.',
+      'Find out how to submit and file documents online.',
+      'Find out when to pay a balance owing.',
+      'Find out about the residency status of a trust.',
+      'Find out when you need a clearance certificate.',
+    ];
+    openRouter.call.and.resolveTo({
+      choices: [
+        {
+          message: {
+            content: JSON.stringify({
+              section_issues: [
+                {
+                  section_index: 1,
+                  issue_category: 'mixed-description-style-in-section',
+                  description: 'The section mixes description styles.',
+                  recommendation: 'Use one style.',
+                  severity: 'Medium',
+                },
+              ],
+              doormats: descriptions.map((description, index) => ({
+                doormat_index: index + 1,
+                link_text: `Trust topic ${index + 1}`,
+                href: `/trust/topic-${index + 1}.html`,
+                description,
+                detected_description_style: 'action-verb-task-summary',
+                issues:
+                  index === 4
+                    ? [
+                        {
+                          issue_category: 'inconsistent-description-style',
+                          description:
+                            'This description uses a different style.',
+                          recommendation: 'Use the dominant style.',
+                          severity: 'Low',
+                        },
+                      ]
+                    : [],
+              })),
+            }),
+          },
+        },
+      ],
+    });
+
+    const result = await service.analyze({
+      doormatSummaries: descriptions.map((description, index) =>
+        summary({
+          index: index + 1,
+          linkText: `Trust topic ${index + 1}`,
+          href: `/trust/topic-${index + 1}.html`,
+          description,
+          sectionItemIndex: index + 1,
+          sectionDoormatCount: descriptions.length,
+        }),
+      ),
+      pageLanguage: 'en',
+      hasLegacyTopicDoormatTemplate: false,
+      mostRequestedLinks: [],
+      selectedModel: 'selected-model',
+    });
+
+    expect(
+      result.rows.some(
+        (row) => row.issueId === 'mixed-description-style-in-section',
+      ),
+    ).toBeFalse();
+    expect(
+      result.rows.some(
+        (row) => row.issueId === 'inconsistent-description-style',
+      ),
+    ).toBeFalse();
+  });
+
+  it('builds a mixed-style section issue from per-doormat model classifications', async () => {
+    const classifiedDescriptions = [
+      {
+        description: 'Learn how to submit a trust return.',
+        style: 'action-verb-task-summary',
+      },
+      {
+        description: 'Apply for a trust account number.',
+        style: 'action-verb-task-summary',
+      },
+      {
+        description: 'Available to qualifying resident trusts.',
+        style: 'eligibility-or-benefit-summary',
+      },
+      {
+        description: 'Monthly support for eligible beneficiaries.',
+        style: 'eligibility-or-benefit-summary',
+      },
+    ];
+    openRouter.call.and.resolveTo({
+      choices: [
+        {
+          message: {
+            content: JSON.stringify({
+              doormats: classifiedDescriptions.map((item, index) => ({
+                doormat_index: index + 1,
+                link_text: `Trust topic ${index + 1}`,
+                href: `/trust/topic-${index + 1}.html`,
+                description: item.description,
+                detected_description_style: item.style,
+                issues: [],
+              })),
+            }),
+          },
+        },
+      ],
+    });
+
+    const result = await service.analyze({
+      doormatSummaries: classifiedDescriptions.map((item, index) =>
+        summary({
+          index: index + 1,
+          linkText: `Trust topic ${index + 1}`,
+          href: `/trust/topic-${index + 1}.html`,
+          description: item.description,
+          sectionItemIndex: index + 1,
+          sectionDoormatCount: classifiedDescriptions.length,
+        }),
+      ),
+      pageLanguage: 'en',
+      hasLegacyTopicDoormatTemplate: false,
+      mostRequestedLinks: [],
+      selectedModel: 'selected-model',
+    });
+
+    const mixedStyleRow = result.rows.find(
+      (row) => row.issueId === 'mixed-description-style-in-section',
+    );
+    expect(mixedStyleRow).toEqual(
+      jasmine.objectContaining({
+        rowType: 'section',
+        severity: 'Medium',
+        sectionIndex: 1,
+      }),
+    );
+    expect(mixedStyleRow?.evidence).toContain(
+      'Action/task examples: 1, 2.',
+    );
+    expect(mixedStyleRow?.evidence).toContain(
+      'Eligibility/benefit examples: 3, 4.',
+    );
+  });
+
   it('rejects unknown model issue categories and uses local fallback rows', async () => {
     openRouter.call.and.resolveTo({
       choices: [
@@ -171,6 +334,7 @@ describe('TopicDoormatIssueAnalysisService', () => {
                   link_text: 'Benefit one',
                   href: '/en/benefits/one.html',
                   description: 'Benefit programs and services',
+                  detected_description_style: 'noun-topic-summary',
                   issues: [
                     {
                       issue_category: 'invented-issue',
@@ -421,6 +585,7 @@ describe('TopicDoormatIssueAnalysisService', () => {
                   link_text: 'Credits impot et prestations pour les particuliers',
                   href: '/fr/services/impots/prestations.html',
                   description: 'Credits et prestations disponibles',
+                  detected_description_style: 'noun-topic-summary',
                   issues: [
                     {
                       include: true,

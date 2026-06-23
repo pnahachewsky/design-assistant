@@ -23,10 +23,14 @@ Use this skill for issue analysis of topic doormat sets.
 - Apply consistency checks, including style consistency, across the complete
   topic doormat set unless the taxonomy explicitly scopes a check to one
   section
-- Audit description style within each H2 section. Report a section-level mixed
-  description style issue when a section mixes noun/topic or benefit-summary
-  descriptions with action-oriented, question-answer, or "How to" descriptions,
-  even in small sections when the split is visible
+- Classify every doormat description using exactly one
+  `detected_description_style` value from the output schema. Classify its
+  rhetorical construction, not the subject it discusses. For example, a
+  description framed as "Find out whether you are eligible" is an
+  `action-verb-task-summary`, not an `eligibility-or-benefit-summary`.
+- Do not return `mixed-description-style-in-section` or
+  `section-description-style-outlier`. AIDA derives those section issues by
+  aggregating the per-doormat description style classifications.
 - Audit link name style within each H2 section. Report a section-level mixed
   link name style issue when a section visibly mixes noun/topic link names with
   action-verb link names. Do not report every doormat in a section as an
@@ -62,8 +66,7 @@ Use this skill for issue analysis of topic doormat sets.
 - Include evidence whenever the taxonomy asks for evidence
 - Keep evidence concise. For section-level issues, summarize the pattern and
   include only representative doormat numbers instead of quoting full
-  descriptions. For mixed description style, include 2 to 4 representative
-  doormat numbers per style group and do not list every doormat
+  descriptions
 - Do not include destination URLs or "Most requested: n/a" in evidence unless
   the issue depends on links, destination matching, duplicate links, or
   destination context

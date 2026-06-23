@@ -72,6 +72,7 @@
           "link_text",
           "href",
           "description",
+          "detected_description_style",
           "issues"
         ],
         "properties": {

@@ -412,7 +412,7 @@
             <li>Extract link text, destination, description, counts, and H2 section metadata.</li>
             <li>Run local deterministic checks for counts and predictable structure issues.</li>
             <li>Send the complete doormat set to the Topic doormats issue skill.</li>
-            <li>Parse returned issue rows and fill omitted clean doormats with No issues rows.</li>
+            <li>Aggregate returned per-doormat style classifications, parse issue rows, and fill omitted clean doormats with No issues rows.</li>
             <li>Use selected issue rows as rewrite input when rewrite support is applied.</li>
           </ol>
         </aside>
@@ -447,8 +447,9 @@
           <span class="label label-green">Output</span>
           <h3>What AIDA gets back</h3>
           <p>
-            The model returns JSON issue rows grouped by doormat, plus section-level
-            issues when the taxonomy asks for them. AIDA normalizes labels, suppresses
+            The model returns one description-style classification for every doormat,
+            JSON issue rows grouped by doormat, and supported section-level issues.
+            AIDA aggregates the classifications, normalizes labels, suppresses
             unsupported rows, and fills missing clean doormats with No issues rows.
           </p>
         </article>
@@ -507,7 +508,7 @@
         </article>
         <article class="card">
           <h3>Description and link style</h3>
-          <p>The model compares the complete set for meaningful style inconsistency.</p>
+          <p>The model classifies each description by rhetorical construction. AIDA groups those labels to identify mixed description styles and section outliers; link-style judgment remains model-owned.</p>
         </article>
         <article class="card">
           <h3>Repeated description openings</h3>
