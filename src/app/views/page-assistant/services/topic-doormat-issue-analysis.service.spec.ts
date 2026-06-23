@@ -19,6 +19,10 @@ class HttpClientStub {
           label: 'Link name too different from destination',
         },
         { id: 'link-name-too-long', label: 'Link too long' },
+        {
+          id: 'repeated-description-opening',
+          label: 'Repeated description opening',
+        },
         { id: 'too-many-doormats-in-section', label: 'Too many doormats' },
       ],
     }),
@@ -257,6 +261,100 @@ describe('TopicDoormatIssueAnalysisService', () => {
         evidenceMetric: '96/95 characters',
       }),
     );
+  });
+
+  it('reports a repeated description opening as Low at 50 percent of a section', async () => {
+    openRouter.call.and.resolveTo({
+      choices: [{ message: { content: '' } }],
+    });
+
+    const result = await service.analyze({
+      doormatSummaries: [
+        summary({ index: 1, sectionItemIndex: 1, description: 'Find, benefit payment dates' }),
+        summary({ index: 2, sectionItemIndex: 2, description: 'Apply for a benefit' }),
+        summary({ index: 3, sectionItemIndex: 3, description: 'find benefit eligibility details' }),
+        summary({ index: 4, sectionItemIndex: 4, description: 'Manage your benefit account' }),
+      ],
+      pageLanguage: 'en',
+      hasLegacyTopicDoormatTemplate: false,
+      mostRequestedLinks: [],
+      selectedModel: 'selected-model',
+    });
+
+    const repeatedRow = result.rows.find(
+      (row) => row.issueId === 'repeated-description-opening',
+    );
+    expect(repeatedRow).toEqual(
+      jasmine.objectContaining({
+        rowType: 'section',
+        severity: 'Low',
+        sectionIndex: 1,
+      }),
+    );
+    expect(repeatedRow?.evidence).toContain(
+      '2 of 4 descriptions begin with "Find benefit": doormats 1, 3.',
+    );
+  });
+
+  it('reports a repeated description opening as Medium above 50 percent of a section', async () => {
+    openRouter.call.and.resolveTo({
+      choices: [{ message: { content: '' } }],
+    });
+
+    const result = await service.analyze({
+      doormatSummaries: [
+        summary({ index: 1, sectionItemIndex: 1, description: 'Find benefit payment dates' }),
+        summary({ index: 2, sectionItemIndex: 2, description: 'Manage your benefit account' }),
+        summary({ index: 3, sectionItemIndex: 3, description: 'Find benefit eligibility details' }),
+      ],
+      pageLanguage: 'en',
+      hasLegacyTopicDoormatTemplate: false,
+      mostRequestedLinks: [],
+      selectedModel: 'selected-model',
+    });
+
+    expect(
+      result.rows.find(
+        (row) => row.issueId === 'repeated-description-opening',
+      ),
+    ).toEqual(
+      jasmine.objectContaining({ severity: 'Medium', sectionIndex: 1 }),
+    );
+  });
+
+  it('does not compare description openings across H2 sections', async () => {
+    openRouter.call.and.resolveTo({
+      choices: [{ message: { content: '' } }],
+    });
+
+    const result = await service.analyze({
+      doormatSummaries: [
+        summary({
+          index: 1,
+          sectionIndex: 1,
+          sectionTitle: 'Benefits',
+          sectionItemIndex: 1,
+          description: 'Find benefit payment dates',
+        }),
+        summary({
+          index: 2,
+          sectionIndex: 2,
+          sectionTitle: 'Credits',
+          sectionItemIndex: 1,
+          description: 'Find benefit eligibility details',
+        }),
+      ],
+      pageLanguage: 'en',
+      hasLegacyTopicDoormatTemplate: false,
+      mostRequestedLinks: [],
+      selectedModel: 'selected-model',
+    });
+
+    expect(
+      result.rows.some(
+        (row) => row.issueId === 'repeated-description-opening',
+      ),
+    ).toBeFalse();
   });
 
   it('treats URL fragments as part of Most requested destinations', async () => {

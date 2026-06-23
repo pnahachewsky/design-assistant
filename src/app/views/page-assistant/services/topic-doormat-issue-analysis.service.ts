@@ -75,6 +75,7 @@ export class TopicDoormatIssueAnalysisService {
     'link-name-trailing-punctuation',
     'missing-needed-doormat',
     'multiple-links',
+    'repeated-description-opening',
     'split-heading-link',
     'too-many-doormats-in-section',
     'unnecessary-doormat',
@@ -741,6 +742,9 @@ export class TopicDoormatIssueAnalysisService {
         uploadData,
       ),
       ...this.buildLocalTopicDoormatLinkCodeRows(doormatSummaries),
+      ...this.buildLocalTopicDoormatRepeatedDescriptionOpeningRows(
+        doormatSummaries,
+      ),
       ...this.buildLocalTopicDoormatStyleIssueRows(
         doormatSummaries,
         existingIssueKeys,
@@ -1221,6 +1225,91 @@ export class TopicDoormatIssueAnalysisService {
     const additionalLabel =
       additionalLinkCount === 1 ? '1 additional link' : `${additionalLinkCount} additional links`;
     return `This doormat contains ${doormat.itemLinkCount} links: the main doormat link plus ${additionalLabel}.`;
+  }
+
+  private buildLocalTopicDoormatRepeatedDescriptionOpeningRows(
+    doormatSummaries: TopicDoormatSummary[],
+  ): TopicDoormatIssueRow[] {
+    const summariesBySection = doormatSummaries.reduce<
+      Map<number, TopicDoormatSummary[]>
+    >((sections, summary) => {
+      const sectionIndex = summary.sectionIndex || 0;
+      const sectionSummaries = sections.get(sectionIndex) ?? [];
+      sectionSummaries.push(summary);
+      sections.set(sectionIndex, sectionSummaries);
+      return sections;
+    }, new Map<number, TopicDoormatSummary[]>());
+
+    return Array.from(summariesBySection.entries()).flatMap(
+      ([sectionIndex, sectionSummaries]) => {
+        const summariesByOpening = new Map<
+          string,
+          { label: string; summaries: TopicDoormatSummary[] }
+        >();
+        sectionSummaries.forEach((summary) => {
+          const opening = this.getTopicDoormatDescriptionOpening(
+            summary.description,
+          );
+          if (!opening) return;
+          const group = summariesByOpening.get(opening.key) ?? {
+            label: opening.label,
+            summaries: [],
+          };
+          group.summaries.push(summary);
+          summariesByOpening.set(opening.key, group);
+        });
+
+        return Array.from(summariesByOpening.values()).flatMap((group) => {
+          if (group.summaries.length < 2) return [];
+          const affectedIndexes = group.summaries
+            .map((summary) => summary.sectionItemIndex || summary.index)
+            .sort((a, b) => a - b);
+          const severity =
+            group.summaries.length / sectionSummaries.length > 0.5
+              ? 'Medium'
+              : 'Low';
+          const firstSummary = group.summaries[0];
+          return [
+            {
+              include: true,
+              rowType: 'section',
+              severity,
+              doormat: this.buildTopicDoormatSectionLabel(
+                sectionIndex,
+                doormatSummaries,
+              ),
+              doormatLabel: 'Multiple doormats in section',
+              issueId: 'repeated-description-opening',
+              issue: this.getTopicDoormatIssueLabel(
+                'repeated-description-opening',
+              ),
+              evidence: `${group.summaries.length} of ${sectionSummaries.length} descriptions begin with "${group.label}": doormats ${affectedIndexes.join(', ')}.`,
+              recommendation:
+                'Vary the description openings so users can scan and distinguish the doormats more easily.',
+              sectionIndex,
+              sectionTitle: firstSummary.sectionTitle,
+            } satisfies TopicDoormatIssueRow,
+          ];
+        });
+      },
+    );
+  }
+
+  private getTopicDoormatDescriptionOpening(
+    description: string,
+  ): { key: string; label: string } | null {
+    const words =
+      this.cleanVisibleText(description).match(
+        /[\p{L}\p{M}\p{N}]+(?:['’\-][\p{L}\p{M}\p{N}]+)*/gu,
+      ) ?? [];
+    if (words.length < 2) return null;
+    const firstTwoWords = words.slice(0, 2);
+    const label = firstTwoWords.join(' ');
+    const key = label
+      .normalize('NFKC')
+      .replace(/[’]/g, "'")
+      .toLocaleLowerCase();
+    return { key, label };
   }
 
   private buildLocalTopicDoormatStyleIssueRows(

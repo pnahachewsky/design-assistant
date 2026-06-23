@@ -357,6 +357,20 @@
       "recommendation": "Rewrite each description so users can tell the doormats apart."
     },
     {
+      "id": "repeated-description-opening",
+      "group": "Description clarity",
+      "label": "Repeated description opening",
+      "severity": "Low",
+      "condition": "Within one H2 section, two or more doormat descriptions begin with the same first two normalized words.",
+      "recommendation": "Vary the description openings so users can scan and distinguish the doormats more easily.",
+      "local_deterministic": true,
+      "reporting": "AIDA reports one section-level issue per repeated two-word opening. Use Low when the opening occurs in 50% or less of the section and Medium when it occurs in more than 50% of the section. Adjacency does not affect reporting. Do not classify this as an accessibility conformance issue.",
+      "severity_override": {
+        "Low": "Use Low when the repeated opening affects two or more descriptions but no more than 50% of the section.",
+        "Medium": "Use Medium when the repeated opening affects more than 50% of the section."
+      }
+    },
+    {
       "id": "mixed-description-style-in-section",
       "group": "Description clarity",
       "label": "Mixed description styles in section",
