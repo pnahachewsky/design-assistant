@@ -94,10 +94,7 @@ export interface TopicDoormatSectionStyleAnalysis {
   sectionIndex: number;
   sectionTitle: string;
   summaries: TopicDoormatSummary[];
-  dominantStyle: Exclude<
-    TopicDoormatDescriptionStyle,
-    'mixed-or-unclear'
-  > | null;
+  dominantStyle: Exclude<TopicDoormatDescriptionStyle, 'mixed-or-unclear'> | null;
   styleCounts: Map<TopicDoormatDescriptionStyle, number>;
   examplesByStyle: Map<TopicDoormatDescriptionStyle, number[]>;
   isMixed: boolean;
