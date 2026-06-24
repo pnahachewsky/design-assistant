@@ -14,8 +14,8 @@ import {
   AlertRewriteGuardService,
   type AlertHtmlRewrite,
 } from './alert-rewrite-guard.service';
-import { UrlDataService } from './url-data.service';
-import { AiModel } from '../data/data.model';
+import { UrlDataService } from '../url-data.service';
+import { AiModel } from '../../data/data.model';
 
 describe('AlertRewriteOrchestratorService', () => {
   let service: AlertRewriteOrchestratorService;

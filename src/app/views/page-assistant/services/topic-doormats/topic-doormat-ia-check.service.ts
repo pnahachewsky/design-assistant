@@ -3,8 +3,8 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 import { TreeNode } from 'primeng/api';
-import { UploadData } from '../data/data.model';
-import { IaStructureService } from './ia-structure.service';
+import { UploadData } from '../../data/data.model';
+import { IaStructureService } from '../ia-structure.service';
 import {
   TopicDoormatIssueRow,
   TopicDoormatSummary,

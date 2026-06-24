@@ -766,31 +766,31 @@
             </li>
             <li>
               Parses page HTML into doormat summaries, section metadata, language signals, and Most requested link context.
-              <code class="code-path">src/app/views/page-assistant/services/topic-doormat-extractor.service.ts</code>
+              <code class="code-path">src/app/views/page-assistant/services/topic-doormats/topic-doormat-extractor.service.ts</code>
             </li>
             <li>
               Compares doormat destinations with IA child pages and page-view data.
-              <code class="code-path">src/app/views/page-assistant/services/topic-doormat-ia-check.service.ts</code>
+              <code class="code-path">src/app/views/page-assistant/services/topic-doormats/topic-doormat-ia-check.service.ts</code>
             </li>
             <li>
               Composes the issue request, parses model JSON, applies deterministic issue rows, and resolves final rows.
-              <code class="code-path">src/app/views/page-assistant/services/topic-doormat-issue-analysis.service.ts</code>
+              <code class="code-path">src/app/views/page-assistant/services/topic-doormats/topic-doormat-issue-analysis.service.ts</code>
             </li>
             <li>
               Calls the selected model, rotates through fallbacks, and repairs invalid JSON responses.
-              <code class="code-path">src/app/views/page-assistant/services/topic-doormat-model-client.service.ts</code>
+              <code class="code-path">src/app/views/page-assistant/services/topic-doormats/topic-doormat-model-client.service.ts</code>
             </li>
             <li>
               Groups issue rows, builds category summaries, and maps issues to the displayed health state. Global rows appear in the only real section when there is one; Section 0 is retained when there are multiple real sections.
-              <code class="code-path">src/app/views/page-assistant/services/topic-doormat-presenter.service.ts</code>
+              <code class="code-path">src/app/views/page-assistant/services/topic-doormats/topic-doormat-presenter.service.ts</code>
             </li>
             <li>
               Normalizes URL destinations for deterministic Most requested duplicate checks.
-              <code class="code-path">src/app/views/page-assistant/services/topic-doormat-url-comparison.service.ts</code>
+              <code class="code-path">src/app/views/page-assistant/services/topic-doormats/topic-doormat-url-comparison.service.ts</code>
             </li>
             <li>
               Defines shared Topic doormat interfaces used by the component and services.
-              <code class="code-path">src/app/views/page-assistant/services/topic-doormat.types.ts</code>
+              <code class="code-path">src/app/views/page-assistant/services/topic-doormats/topic-doormat.types.ts</code>
             </li>
             <li>
               Loads the active AIDA skill files, references, and schemas used to build the model prompt.

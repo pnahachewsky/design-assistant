@@ -1,5 +1,5 @@
 import { TestBed } from '@angular/core/testing';
-import { OpenRouterService } from './openrouter.service';
+import { OpenRouterService } from '../openrouter.service';
 import { TopicDoormatModelClientService } from './topic-doormat-model-client.service';
 import { TopicDoormatSummary } from './topic-doormat.types';
 

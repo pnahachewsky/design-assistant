@@ -3,10 +3,10 @@ import { MessageService } from 'primeng/api';
 import { TranslateService } from '@ngx-translate/core';
 
 import { AlertAiService } from './alert-ai.service';
-import { OpenRouterService } from './openrouter.service';
-import { SkillManagerService } from './skill-manager.service';
-import { UploadStateService } from './upload-state.service';
-import type { AlertIssue } from '../components/problems/component-guidance/alerts-guidance/alerts-guidance.component';
+import { OpenRouterService } from '../openrouter.service';
+import { SkillManagerService } from '../skill-manager.service';
+import { UploadStateService } from '../upload-state.service';
+import type { AlertIssue } from '../../components/problems/component-guidance/alerts-guidance/alerts-guidance.component';
 
 describe('AlertAiService cache', () => {
   let service: AlertAiService;

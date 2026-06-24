@@ -17,7 +17,7 @@ import { CheckboxModule } from 'primeng/checkbox';
 import { ButtonModule } from 'primeng/button';
 import { Subscription } from 'rxjs';
 import { UploadStateService } from '../../../../services/upload-state.service';
-import { AlertAiService } from '../../../../services/alert-ai.service';
+import { AlertAiService } from '../../../../services/alerts/alert-ai.service';
 
 export interface AlertIssue {
   alertIndex?: number;

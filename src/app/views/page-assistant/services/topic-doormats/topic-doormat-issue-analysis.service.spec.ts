@@ -3,8 +3,8 @@ import { TestBed } from '@angular/core/testing';
 import { TranslateService } from '@ngx-translate/core';
 import { of } from 'rxjs';
 
-import { OpenRouterService } from './openrouter.service';
-import { SkillManagerService } from './skill-manager.service';
+import { OpenRouterService } from '../openrouter.service';
+import { SkillManagerService } from '../skill-manager.service';
 import { TopicDoormatIaCheckService } from './topic-doormat-ia-check.service';
 import { TopicDoormatIssueAnalysisService } from './topic-doormat-issue-analysis.service';
 import { TopicDoormatSummary } from './topic-doormat.types';

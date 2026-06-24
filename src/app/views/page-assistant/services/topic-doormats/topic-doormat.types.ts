@@ -1,4 +1,4 @@
-import { UploadData } from '../data/data.model';
+import { UploadData } from '../../data/data.model';
 
 export type TopicDoormatPageLanguage = 'en' | 'fr';
 export type TopicDoormatDestinationContextStatus =

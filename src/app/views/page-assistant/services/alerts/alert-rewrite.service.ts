@@ -1,8 +1,8 @@
 import { Injectable, inject } from '@angular/core';
-import { ChatMessage } from './openrouter.service';
-import { getAlertRewriteRules } from '../../../common/constants/alert-rewrite-rules.constants';
-import { getCanadaCaStyleRules } from '../../../common/constants/canada-ca-style.constants';
-import { LinkWritingRulesService } from './link-writing-rules.service';
+import { ChatMessage } from '../openrouter.service';
+import { getAlertRewriteRules } from '../../../../common/constants/alert-rewrite-rules.constants';
+import { getCanadaCaStyleRules } from '../../../../common/constants/canada-ca-style.constants';
+import { LinkWritingRulesService } from '../link-writing-rules.service';
 
 export interface AlertRewriteIssueInput {
   alertIndex?: number;

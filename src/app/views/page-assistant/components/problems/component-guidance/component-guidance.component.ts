@@ -26,11 +26,11 @@ import {
 
 import { UploadStateService } from '../../../services/upload-state.service';
 import { ValidatorService } from '../../../services/validator.service';
-import { AlertAiService } from '../../../services/alert-ai.service';
+import { AlertAiService } from '../../../services/alerts/alert-ai.service';
 import {
   coerceInteractiveResultLeadIns,
   getReportableAlertsFromHtml,
-} from '../../../services/alert-reportable.utils';
+} from '../../../services/alerts/alert-reportable.utils';
 import {
   ComponentAiService,
   ComponentAiInput,
@@ -42,14 +42,14 @@ import { Subscription, firstValueFrom } from 'rxjs';
 import { environment } from '../../../../../../environments/environment';
 import { ChangeDetectorRef } from '@angular/core';
 import { AiModel } from '../../../data/data.model';
-import { TopicDoormatExtractorService } from '../../../services/topic-doormat-extractor.service';
-import { TopicDoormatIssueAnalysisService } from '../../../services/topic-doormat-issue-analysis.service';
-import { TopicDoormatPresenterService } from '../../../services/topic-doormat-presenter.service';
+import { TopicDoormatExtractorService } from '../../../services/topic-doormats/topic-doormat-extractor.service';
+import { TopicDoormatIssueAnalysisService } from '../../../services/topic-doormats/topic-doormat-issue-analysis.service';
+import { TopicDoormatPresenterService } from '../../../services/topic-doormats/topic-doormat-presenter.service';
 import {
   TopicDoormatIssueGroup,
   TopicDoormatIssueRow,
   TopicDoormatIssueSummary,
-} from '../../../services/topic-doormat.types';
+} from '../../../services/topic-doormats/topic-doormat.types';
 
 // UI shows these:
 type UiHealth = 'severe' | 'moderate' | 'minor' | 'ok' | 'unknown';

@@ -36,19 +36,19 @@ import { UploadStateService } from './services/upload-state.service';
 import { UrlDataService } from './services/url-data.service';
 import { SourceDiffService } from './services/source-diff.service';
 import { ShadowDomService } from './services/shadowdom.service';
-import { AlertAiService } from './services/alert-ai.service';
+import { AlertAiService } from './services/alerts/alert-ai.service';
 import {
   AlertRewriteIssueInput,
-} from './services/alert-rewrite.service';
+} from './services/alerts/alert-rewrite.service';
 import { OpenRouterService } from './services/openrouter.service';
 import { SkillManagerService } from './services/skill-manager.service';
-import { AlertContextService } from './services/alert-context.service';
+import { AlertContextService } from './services/alerts/alert-context.service';
 import {
   coerceInteractiveResultLeadIns,
   getReportableAlertsFromHtml,
   removeNonReportableAlertsFromHtml,
-} from './services/alert-reportable.utils';
-import { AlertRewriteOrchestratorService } from './services/alert-rewrite-orchestrator.service';
+} from './services/alerts/alert-reportable.utils';
+import { AlertRewriteOrchestratorService } from './services/alerts/alert-rewrite-orchestrator.service';
 
 //Data
 import {

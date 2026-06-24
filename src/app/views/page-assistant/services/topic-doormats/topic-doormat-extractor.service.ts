@@ -1,5 +1,5 @@
 import { Injectable, inject } from '@angular/core';
-import { FetchService } from '../../../services/fetch.service';
+import { FetchService } from '../../../../services/fetch.service';
 import {
   MostRequestedLinkSummary,
   TopicDoormatPageLanguage,

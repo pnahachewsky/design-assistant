@@ -4,7 +4,7 @@ import { Subject } from 'rxjs';
 
 import { AlertsGuidanceComponent } from './alerts-guidance.component';
 import { UploadStateService } from '../../../../services/upload-state.service';
-import { AlertAiService } from '../../../../services/alert-ai.service';
+import { AlertAiService } from '../../../../services/alerts/alert-ai.service';
 import { DEFAULT_ALERT_ISSUES } from './alerts-guidance.component';
 
 class UploadStateServiceStub {

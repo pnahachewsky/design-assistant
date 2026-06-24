@@ -1,6 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 
-import { FetchService } from '../../../services/fetch.service';
+import { FetchService } from '../../../../services/fetch.service';
 import { TopicDoormatExtractorService } from './topic-doormat-extractor.service';
 
 class FetchServiceStub {

@@ -2,12 +2,12 @@ import { Injectable, inject } from '@angular/core';
 import { Subject } from 'rxjs';
 import { MessageService } from 'primeng/api';
 import { TranslateService } from '@ngx-translate/core';
-import { PromptKey, AiModel } from '../data/data.model';
-import { OpenRouterService, ChatMessage } from './openrouter.service';
-import { UploadStateService } from './upload-state.service';
-import { SkillManagerService } from './skill-manager.service';
-import type { AlertIssue } from '../components/problems/component-guidance/alerts-guidance/alerts-guidance.component';
-import fallbackSeverityJson from '../components/problems/component-guidance/alerts-guidance/severity-include-fallback.json';
+import { PromptKey, AiModel } from '../../data/data.model';
+import { OpenRouterService, ChatMessage } from '../openrouter.service';
+import { UploadStateService } from '../upload-state.service';
+import { SkillManagerService } from '../skill-manager.service';
+import type { AlertIssue } from '../../components/problems/component-guidance/alerts-guidance/alerts-guidance.component';
+import fallbackSeverityJson from '../../components/problems/component-guidance/alerts-guidance/severity-include-fallback.json';
 import {
   coerceInteractiveResultLeadIns,
   getReportableAlerts,

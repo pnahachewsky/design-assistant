@@ -2,7 +2,7 @@ import { LocationStrategy } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { TestBed } from '@angular/core/testing';
 import { of } from 'rxjs';
-import { IaStructureService } from './ia-structure.service';
+import { IaStructureService } from '../ia-structure.service';
 import { TopicDoormatIaCheckService } from './topic-doormat-ia-check.service';
 import { TopicDoormatSummary } from './topic-doormat.types';
 

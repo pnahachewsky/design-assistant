@@ -2,9 +2,9 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { TranslateService } from '@ngx-translate/core';
 import { firstValueFrom } from 'rxjs';
-import { PromptKey, UploadData } from '../data/data.model';
-import { ChatMessage } from './openrouter.service';
-import { SkillManagerService } from './skill-manager.service';
+import { PromptKey, UploadData } from '../../data/data.model';
+import { ChatMessage } from '../openrouter.service';
+import { SkillManagerService } from '../skill-manager.service';
 import {
   TopicDoormatIaCheckResult,
   TopicDoormatIaCheckService,

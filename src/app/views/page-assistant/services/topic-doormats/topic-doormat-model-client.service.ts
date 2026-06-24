@@ -1,5 +1,5 @@
 import { Injectable, inject } from '@angular/core';
-import { ChatMessage, OpenRouterService } from './openrouter.service';
+import { ChatMessage, OpenRouterService } from '../openrouter.service';
 import { TopicDoormatSummary } from './topic-doormat.types';
 
 export interface TopicDoormatModelClientRequest {

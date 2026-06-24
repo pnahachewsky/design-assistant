@@ -1,8 +1,8 @@
 import { Injectable, inject } from '@angular/core';
 import { TranslateService } from '@ngx-translate/core';
-import { getAlertRewriteRules } from '../../../common/constants/alert-rewrite-rules.constants';
-import { AiModel } from '../data/data.model';
-import { UrlDataService } from './url-data.service';
+import { getAlertRewriteRules } from '../../../../common/constants/alert-rewrite-rules.constants';
+import { AiModel } from '../../data/data.model';
+import { UrlDataService } from '../url-data.service';
 import {
   AlertRewriteIssueInput,
   AlertRewriteRepairCandidate,

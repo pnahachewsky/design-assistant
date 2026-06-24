@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { UploadData } from '../data/data.model';
+import { UploadData } from '../../data/data.model';
 import {
   MostRequestedLinkSummary,
   TopicDoormatComparableUrl,
