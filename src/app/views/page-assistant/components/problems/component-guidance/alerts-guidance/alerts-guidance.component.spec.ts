@@ -2,7 +2,12 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { signal } from '@angular/core';
 import { Subject } from 'rxjs';
 
-import { AlertsGuidanceComponent } from './alerts-guidance.component';
+import {
+  AlertsGuidanceComponent,
+  AlertIssue,
+  computeAlertCategories,
+  computeAlertMaxSeverity,
+} from './alerts-guidance.component';
 import { UploadStateService } from '../../../../services/upload-state.service';
 import { AlertAiService } from '../../../../services/alerts/alert-ai.service';
 import { DEFAULT_ALERT_ISSUES } from './alerts-guidance.component';
@@ -84,6 +89,21 @@ describe('AlertsGuidanceComponent', () => {
 
   it('should create', () => {
     expect(component).toBeTruthy();
+  });
+
+  it('excludes No issues rows from alert health calculations', () => {
+    const noIssue: AlertIssue = {
+      alertIndex: 1,
+      category: 'No issues',
+      severity: 'N/A',
+      description: 'Alert 1: No issues found for this alert.',
+      recommendation: 'No changes required.',
+      include: false,
+    };
+
+    expect(computeAlertCategories([noIssue])).toEqual([]);
+    expect(computeAlertMaxSeverity([noIssue])).toBeNull();
+    expect(component.isNoIssueRow(noIssue)).toBeTrue();
   });
 
   it('analyzes alerts from the current working page', async () => {

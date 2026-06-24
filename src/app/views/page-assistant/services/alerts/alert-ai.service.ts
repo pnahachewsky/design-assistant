@@ -139,7 +139,10 @@ export class AlertAiService {
             generatingNotified = true;
           }
 
-          const issues = this.parseIssues(text);
+          const issues = this.validateAlertIssuesAgainstHtml(
+            this.parseIssues(text),
+            alertHtml,
+          );
           if (issues.length) {
             resolvedIssues = issues;
             this.messageService.add({
@@ -234,7 +237,21 @@ export class AlertAiService {
   cacheIssues(alertHtml: string, issues: AlertIssue[]): void {
     // Cache and emit copied objects so downstream views cannot mutate the shared source array by reference.
     const normalized = this.getCacheKey(alertHtml);
-    const copied = issues.map((issue) => ({ ...issue }));
+    const validatedIssues = this.validateAlertIssuesAgainstHtml(
+      issues,
+      alertHtml,
+    );
+    const copied = validatedIssues.map((issue) => {
+      const category = this.cleanString(issue.category);
+      return category.toLowerCase() === 'no issues'
+        ? {
+            ...issue,
+            category,
+            severity: 'N/A',
+            include: false,
+          }
+        : { ...issue };
+    });
     this.cachedAlertIssues.set(normalized, {
       html: alertHtml,
       issues: copied,
@@ -312,15 +329,19 @@ export class AlertAiService {
       const category = this.cleanString(issue.category);
       const description = this.cleanString(issue.description);
       const recommendation = this.cleanString(issue.recommendation);
-      const severity = this.normalizeSeverity(issue.severity, category);
+      const isNoIssues = category.toLowerCase() === 'no issues';
+      const severity = isNoIssues
+        ? 'N/A'
+        : this.normalizeSeverity(issue.severity, category);
       const alertIndex =
         typeof issue.alertIndex === 'number'
           ? issue.alertIndex
           : typeof issue.alertIndex === 'string'
             ? Number.parseInt(issue.alertIndex, 10)
             : undefined;
-      const include =
-        typeof issue.include === 'boolean'
+      const include = isNoIssues
+        ? false
+        : typeof issue.include === 'boolean'
           ? issue.include
           : useIncludeFallback
             ? this.lookupFallbackInclude(category) ?? true
@@ -335,6 +356,71 @@ export class AlertAiService {
         include,
       };
     });
+  }
+
+  validateAlertIssuesAgainstHtml(
+    issues: AlertIssue[],
+    sourceHtml: string,
+  ): AlertIssue[] {
+    if (!issues.length || !sourceHtml) return issues;
+
+    let alerts: HTMLElement[];
+    try {
+      const doc = new DOMParser().parseFromString(sourceHtml, 'text/html');
+      alerts = getReportableAlerts(doc.body, {
+        interactiveResultLeadIns: this.getInteractiveResultLeadIns(),
+      });
+    } catch {
+      return issues;
+    }
+    if (!alerts.length) return issues;
+
+    const removedAlertIndexes = new Set<number>();
+    const validated = issues.filter((issue) => {
+      if (!this.claimsTargetBlankWithoutRel(issue)) return true;
+      const alertIndex = issue.alertIndex;
+      if (!alertIndex || !Number.isInteger(alertIndex)) return true;
+      const alert = alerts[alertIndex - 1];
+      if (!alert) return true;
+
+      const hasTargetBlankWithoutRel = Array.from(
+        alert.querySelectorAll<HTMLAnchorElement>('a[target]'),
+      ).some((anchor) => {
+        const target = (anchor.getAttribute('target') || '').trim().toLowerCase();
+        const rel = (anchor.getAttribute('rel') || '').trim();
+        return target === '_blank' && !rel;
+      });
+      if (hasTargetBlankWithoutRel) return true;
+
+      removedAlertIndexes.add(alertIndex);
+      return false;
+    });
+
+    for (const alertIndex of removedAlertIndexes) {
+      if (validated.some((issue) => issue.alertIndex === alertIndex)) continue;
+      validated.push({
+        alertIndex,
+        category: 'No issues',
+        severity: 'N/A',
+        description: `Alert ${alertIndex}: No issues found for this alert.`,
+        recommendation: 'No changes required.',
+        include: false,
+      });
+    }
+
+    return validated;
+  }
+
+  private claimsTargetBlankWithoutRel(issue: AlertIssue): boolean {
+    if ((issue.category || '').trim().toLowerCase() !== 'accessibility/code') {
+      return false;
+    }
+    const claim = `${issue.description || ''} ${issue.recommendation || ''}`;
+    const mentionsTargetBlank = /target\s*=\s*["']?_blank["']?/i.test(claim);
+    const claimsMissingRel =
+      /(?:no|without|missing|lacks?)\s+(?:an?\s+)?rel\b/i.test(claim) ||
+      /\badd\s+rel\b/i.test(claim);
+    return mentionsTargetBlank && claimsMissingRel;
   }
 
   private getShortModelName(model: string): string {

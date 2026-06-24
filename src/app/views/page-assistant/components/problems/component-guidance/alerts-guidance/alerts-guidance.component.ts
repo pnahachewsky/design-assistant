@@ -34,6 +34,10 @@ export const ALERT_SEVERITY_RANK: Record<string, number> = {
   low: 1,
 };
 
+export function isNoAlertIssue(issue: Pick<AlertIssue, 'category'>): boolean {
+  return (issue.category || '').trim().toLowerCase() === 'no issues';
+}
+
 export const DEFAULT_ALERT_ISSUES: AlertIssue[] = [
   {
     category: 'Too wordy',
@@ -71,6 +75,7 @@ export function computeAlertCategories(
 ): { label: string; severity: string }[] {
   const bestSeverity = new Map<string, string>();
   for (const issue of issues) {
+    if (isNoAlertIssue(issue)) continue;
     const cat = issue.category;
     if (!cat) continue;
     const current = bestSeverity.get(cat);
@@ -88,10 +93,10 @@ export function computeAlertMaxSeverity(
   issues: AlertIssue[],
   rank: Record<string, number> = ALERT_SEVERITY_RANK,
 ): string | null {
-  if (!issues.length) return null;
   let max: string | null = null;
   let maxRank = -1;
   for (const issue of issues) {
+    if (isNoAlertIssue(issue)) continue;
     const sev = (issue.severity || '').toLowerCase();
     const r = rank[sev] ?? -1;
     if (r > maxRank) {
@@ -216,7 +221,10 @@ export class AlertsGuidanceComponent implements OnInit, OnChanges, OnDestroy {
     if (!sync) return;
     this.suppressIncludeToggle = true;
     try {
-      this.issues = this.issues.map((issue) => ({ ...issue, include: flag }));
+      this.issues = this.issues.map((issue) => ({
+        ...issue,
+        include: isNoAlertIssue(issue) ? false : flag,
+      }));
       this.sortIssues();
     } finally {
       this.suppressIncludeToggle = false;
@@ -251,6 +259,10 @@ export class AlertsGuidanceComponent implements OnInit, OnChanges, OnDestroy {
     if (s === 'medium') return 'chip-med';
     if (s === 'high') return 'chip-severe';
     return 'chip-unk';
+  }
+
+  isNoIssueRow(issue: AlertIssue): boolean {
+    return isNoAlertIssue(issue);
   }
 
   private restoreOrAnalyze(): void {

@@ -1247,8 +1247,10 @@ export class PageAssistantCompareComponent
                 useIncludeFallback: false,
               })
             : [];
-          this.alertAi.cacheIssues(html, normalizedIssues);
-          selectedIssues = normalizedIssues
+          const validatedIssues =
+            this.alertAi.validateAlertIssuesAgainstHtml(normalizedIssues, html);
+          this.alertAi.cacheIssues(html, validatedIssues);
+          selectedIssues = validatedIssues
             .filter((issue) => issue.include)
             .map((issue) => ({ ...issue }));
         }

@@ -608,7 +608,7 @@ export class ComponentGuidanceComponent implements OnInit, OnDestroy {
       computeAlertCategories(normalizedIssues),
     );
     this.alertMaxSeverity = computeAlertMaxSeverity(normalizedIssues);
-    this.alertHasIssues = normalizedIssues.length > 0;
+    this.alertHasIssues = this.alertCategories.length > 0;
     this.alertLoading = false;
     this.alertError = false;
     this.alertLoadAttempted = true;

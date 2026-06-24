@@ -38,6 +38,82 @@ describe('AlertAiService cache', () => {
     expect(service.getCachedIssues('<main>Clean</main>')).toEqual([]);
   });
 
+  it('canonicalizes No issues rows as non-actionable at runtime', () => {
+    const noIssue: AlertIssue = {
+      alertIndex: 1,
+      category: 'No issues',
+      severity: 'Low',
+      description: 'Alert 1: No issues found for this alert.',
+      recommendation: 'No changes required.',
+      include: true,
+    };
+
+    service.cacheIssues('<main>Clean alert</main>', [noIssue]);
+
+    expect(service.getCachedIssues('<main>Clean alert</main>')).toEqual([
+      jasmine.objectContaining({
+        category: 'No issues',
+        severity: 'N/A',
+        include: false,
+      }),
+    ]);
+  });
+
+  it('removes an unsupported target blank without rel claim', () => {
+    const hallucinatedIssue: AlertIssue = {
+      alertIndex: 1,
+      category: 'Accessibility/code',
+      severity: 'Medium',
+      description:
+        'Alert 1: The alert contains an anchor with target="_blank" but no rel attribute.',
+      recommendation: 'Add rel="noopener noreferrer".',
+      include: true,
+    };
+    const html = `
+      <main>
+        <div class="alert alert-info">
+          <p><a href="/help.html">Get help</a></p>
+        </div>
+      </main>
+    `;
+
+    expect(
+      service.validateAlertIssuesAgainstHtml([hallucinatedIssue], html),
+    ).toEqual([
+      {
+        alertIndex: 1,
+        category: 'No issues',
+        severity: 'N/A',
+        description: 'Alert 1: No issues found for this alert.',
+        recommendation: 'No changes required.',
+        include: false,
+      },
+    ]);
+  });
+
+  it('keeps a target blank without rel claim when the markup supports it', () => {
+    const supportedIssue: AlertIssue = {
+      alertIndex: 1,
+      category: 'Accessibility/code',
+      severity: 'Medium',
+      description:
+        'Alert 1: The alert contains an anchor with target="_blank" but no rel attribute.',
+      recommendation: 'Add rel="noopener noreferrer".',
+      include: true,
+    };
+    const html = `
+      <main>
+        <div class="alert alert-info">
+          <p><a href="/help.html" target="_blank">Get help</a></p>
+        </div>
+      </main>
+    `;
+
+    expect(
+      service.validateAlertIssuesAgainstHtml([supportedIssue], html),
+    ).toEqual([supportedIssue]);
+  });
+
   it('keeps successful analyses for multiple HTML versions', () => {
     service.cacheIssues('<main>Version one</main>', [issue]);
     service.cacheIssues('<main>Version two</main>', []);

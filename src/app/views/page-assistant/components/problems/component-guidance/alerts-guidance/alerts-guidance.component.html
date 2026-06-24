@@ -11,7 +11,12 @@
   <ng-template pTemplate="body" let-issue>
     <tr>
       <td class="include-col">
-        <p-checkbox [binary]="true" [(ngModel)]="issue.include" (onChange)="onIncludeToggle()"></p-checkbox>
+        <p-checkbox
+          [binary]="true"
+          [(ngModel)]="issue.include"
+          [disabled]="isNoIssueRow(issue)"
+          (onChange)="onIncludeToggle()"
+        ></p-checkbox>
       </td>
       <td class="severity-col">
         <span class="chip" [ngClass]="severityClass(issue.severity)">
