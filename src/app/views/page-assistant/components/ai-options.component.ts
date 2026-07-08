@@ -78,7 +78,7 @@ export class AiOptionsComponent implements OnInit {
 
   promptOptions = [
     { id: PromptKey.Headings, label: 'page.ai-options.prompt.Headings', disabled: false },
-    { id: PromptKey.Doormats, label: 'page.ai-options.prompt.Doormats', disabled: false },
+    { id: PromptKey.Doormats, label: 'page.ai-options.prompt.Doormats', disabled: true },
     { id: PromptKey.PlainLanguage, label: 'page.ai-options.prompt.PlainLanguage', disabled: false },
     { id: PromptKey.AlertsRecommendations, label: 'page.ai-options.prompt.Alerts', disabled: false }
   ];
