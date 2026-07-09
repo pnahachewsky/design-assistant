@@ -193,11 +193,12 @@ export class TopicDoormatExtractorService {
         const link = heading.querySelector<HTMLAnchorElement>('a[href]');
         if (!link) return;
         const wrapper = heading.closest<HTMLElement>('.gc-srvinfo');
+        const headingLinkCount = heading.querySelectorAll('a[href]').length;
         addSummary(
           link,
           wrapper,
           this.findItem(link, wrapper),
-          heading.textContent ?? '',
+          headingLinkCount > 1 ? (heading.textContent ?? '') : '',
         );
       });
 

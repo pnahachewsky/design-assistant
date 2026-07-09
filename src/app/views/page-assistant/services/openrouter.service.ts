@@ -1,5 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpHeaders, HttpResponse } from '@angular/common/http';
+import { timeout } from 'rxjs';
 import { ApiKeyService } from '../../../services/api-key.service';
 import { AiModel } from '../data/data.model';
 
@@ -18,6 +19,7 @@ export interface OpenRouterCallOptions {
   temperature?: number;
   title?: string;
   throwOnError?: boolean;
+  timeoutMs?: number;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -28,8 +30,6 @@ export class OpenRouterService {
   private readonly openRouterApiUrl = 'https://openrouter.ai/api/v1/chat/completions';
   private readonly freeModelOrder: string[] = [
     AiModel.GptOSS20BFree,
-    AiModel.OwlAlpha,
-    AiModel.Zai,
     AiModel.NemotronNano,
     AiModel.GptOSSFree,
     AiModel.NemotronSuper,
@@ -68,13 +68,15 @@ export class OpenRouterService {
     };
 
     try {
-      const resp = (await this.http
-        .post(this.openRouterApiUrl, payload, {
+      let request$ = this.http.post(this.openRouterApiUrl, payload, {
           headers,
           responseType: 'text',
           observe: 'response',
-        })
-        .toPromise()) as HttpResponse<string> | null;
+        });
+      if (options.timeoutMs && options.timeoutMs > 0) {
+        request$ = request$.pipe(timeout(options.timeoutMs));
+      }
+      const resp = (await request$.toPromise()) as HttpResponse<string> | null;
 
       const ct = resp?.headers.get('content-type') || '';
       if (ct.includes('application/json') && typeof resp?.body === 'string') {
@@ -92,6 +94,16 @@ export class OpenRouterService {
       return undefined;
     } catch (err: unknown) {
       // Return undefined by default so higher-level flows can rotate models or surface custom messages.
+      const timeoutErr = err as { name?: string };
+      if (timeoutErr?.name === 'TimeoutError') {
+        const message = `OpenRouter request timed out (model: ${model}, timeoutMs: ${options.timeoutMs})`;
+        console.error(message);
+        if (options.throwOnError) {
+          throw new Error(message);
+        }
+        return undefined;
+      }
+
       const httpErr = err as { status?: number; error?: unknown };
       const status = httpErr?.status;
       const bodySnippet =

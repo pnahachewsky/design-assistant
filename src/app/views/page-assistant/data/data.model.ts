@@ -96,8 +96,6 @@ export enum PromptKey {
 // These values are also the canonical ids used for friendly-name resolution.
 export enum AiModel {
   // Free models
-  OwlAlpha = 'openrouter/owl-alpha', //1M context, free alpha model
-  Zai = 'z-ai/glm-4.5-air:free', //131k context, 57B
   NemotronNano = 'nvidia/nemotron-3-nano-30b-a3b:free', //256k context, 30B parameters
   GptOSSFree = 'openai/gpt-oss-120b:free', //131k context free
   GptOSS20BFree = 'openai/gpt-oss-20b:free', //131k context free

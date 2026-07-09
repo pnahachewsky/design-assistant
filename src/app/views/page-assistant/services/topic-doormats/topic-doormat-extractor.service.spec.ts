@@ -76,6 +76,31 @@ describe('TopicDoormatExtractorService', () => {
     expect(summaries[1].sectionItemIndex).toBe(2);
   });
 
+  it('excludes status labels after modern topic doormat links from link text counts', () => {
+    const doc = service.parseHtmlDocument(`
+      <main>
+        <h2>Benefits</h2>
+        <div class="gc-srvinfo">
+          <div class="col-lg-4 col-md-6">
+            <h3 class="h5">
+              <a href="/en/revenue-agency/services/child-family-benefits/gst-hst-credit.html">GST/HST credit</a>
+              <br>
+              <span class="label label-warning">Will be replaced in July 2026</span>
+            </h3>
+            <p>Quarterly payments for people with low and modest incomes</p>
+          </div>
+        </div>
+      </main>
+    `);
+
+    expect(doc).not.toBeNull();
+    const summaries = service.extractSummaries(doc as Document);
+
+    expect(summaries.length).toBe(1);
+    expect(summaries[0].linkText).toBe('GST/HST credit');
+    expect(summaries[0].linkTextCharacterCount).toBe(14);
+  });
+
   it('detects French pages from metadata and extracts Most requested links', () => {
     const doc = service.parseHtmlDocument(`
       <html>

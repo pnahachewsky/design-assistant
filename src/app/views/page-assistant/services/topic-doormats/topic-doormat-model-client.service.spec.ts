@@ -70,6 +70,40 @@ describe('TopicDoormatModelClientService', () => {
     expect(result.modelRotation).toEqual(['selected-model', 'fallback-model']);
     expect(result.model).toBe('selected-model');
     expect(openRouter.call.calls.first().args[0]).toBe('selected-model');
+    expect(openRouter.call.calls.first().args[2]).toEqual(
+      jasmine.objectContaining({ timeoutMs: 120000 }),
+    );
+  });
+
+  it('rotates to the next model when a topic doormat attempt times out', async () => {
+    openRouter.call.and.returnValues(
+      Promise.reject(new Error('OpenRouter request timed out')),
+      Promise.resolve(
+        { choices: [{ message: { content: '{"doormats":[]}' } }] } as any,
+      ),
+    );
+    const debug = jasmine.createSpy('debug');
+
+    const result = await service.requestIssueJson({
+      messages: [{ role: 'user', content: '{}' }],
+      requestedModel: 'selected-model',
+      doormatSummaries,
+      isParseableResponseText: () => true,
+      debug,
+    });
+
+    expect(result.model).toBe('fallback-model');
+    expect(openRouter.call.calls.allArgs().map((args) => args[0])).toEqual([
+      'selected-model',
+      'fallback-model',
+    ]);
+    expect(debug).toHaveBeenCalledWith(
+      'model attempt failed',
+      jasmine.objectContaining({
+        model: 'selected-model',
+        error: 'OpenRouter request timed out',
+      }),
+    );
   });
 
   it('repairs invalid model JSON with the same model', async () => {
@@ -91,6 +125,9 @@ describe('TopicDoormatModelClientService', () => {
 
     expect(result.text).toBe('{"doormats":[]}');
     expect(openRouter.call.calls.allArgs()[1][0]).toBe('selected-model');
+    expect(openRouter.call.calls.allArgs()[1][2]).toEqual(
+      jasmine.objectContaining({ timeoutMs: 120000 }),
+    );
     expect(debug).toHaveBeenCalledWith(
       'model json repair succeeded',
       jasmine.objectContaining({ model: 'selected-model' }),

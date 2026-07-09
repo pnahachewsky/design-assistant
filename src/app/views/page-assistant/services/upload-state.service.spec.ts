@@ -15,11 +15,11 @@ describe('UploadSettingsService', () => {
     expect(service).toBeTruthy();
   });
 
-  it('resets the selected model to Owl Alpha', () => {
-    service.setSelectedAiModel(AiModel.GptOSS20BFree);
+  it('resets the selected model to gpt-oss 20B free', () => {
+    service.setSelectedAiModel(AiModel.GptOSS20B);
 
     service.resetUploadFlow();
 
-    expect(service.getSelectedAiModel()).toBe(AiModel.OwlAlpha);
+    expect(service.getSelectedAiModel()).toBe(AiModel.GptOSS20BFree);
   });
 });

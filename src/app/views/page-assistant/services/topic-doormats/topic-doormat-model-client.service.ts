@@ -21,6 +21,7 @@ export class TopicDoormatModelClientService {
   private readonly openRouter = inject(OpenRouterService);
   private readonly topicDoormatForceParseFailureStorageKey =
     'pageAssistant.topicDoormatForceParseFailure';
+  private readonly topicDoormatModelAttemptTimeoutMs = 120000;
 
   async requestIssueJson(
     request: TopicDoormatModelClientRequest,
@@ -74,6 +75,7 @@ export class TopicDoormatModelClientService {
           temperature: 0,
           title: 'Content Assistant - Topic Doormat Issues',
           throwOnError: true,
+          timeoutMs: this.topicDoormatModelAttemptTimeoutMs,
         });
         const text = resp?.choices?.[0]?.message?.content?.trim() || '';
         if (text) {
@@ -191,6 +193,7 @@ export class TopicDoormatModelClientService {
         temperature: 0,
         title: 'Content Assistant - Topic Doormat JSON Repair',
         throwOnError: true,
+        timeoutMs: this.topicDoormatModelAttemptTimeoutMs,
       });
       return resp?.choices?.[0]?.message?.content?.trim() || '';
     } catch (err) {
