@@ -1,6 +1,13 @@
 import { Injectable } from '@angular/core';
 import { environment } from '../../environments/environment';
 
+export interface FetchContentResponse {
+  document: Document;
+  status: number;
+  statusText: string;
+  url: string;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -100,6 +107,56 @@ export class FetchService {
     const response = await this.fetchWithRetry(url, "GET", retries, delay, suppressErrors);
     const html = await response.text();
     return new DOMParser().parseFromString(html, "text/html");
+  }
+
+  public async fetchContentWithResponse(
+    url: string,
+    hostMode: "prod" | "proto" | "both" | "none" = "both",
+    retries = 3,
+    delay: number | "random" | "none" = "none"
+  ): Promise<FetchContentResponse> {
+    const validatedUrl = this.validateHost(url, hostMode);
+
+    for (let attempt = 1; attempt <= retries; attempt++) {
+      await this.simulateDelay(delay);
+      try {
+        const response = await fetch(validatedUrl);
+        if (response.ok) {
+          const html = await response.text();
+          return {
+            document: new DOMParser().parseFromString(html, "text/html"),
+            status: response.status,
+            statusText: response.statusText,
+            url: response.url || validatedUrl,
+          };
+        }
+
+        console.warn(`Fetch attempt #${attempt}. Status: ${response.status}. Method: GET`);
+        if (attempt < retries) {
+          const backoffDelay = Math.pow(2, attempt - 1) * 200;
+          await this.delay(backoffDelay);
+          continue;
+        }
+
+        throw Object.assign(
+          new Error(`Fetch failed ${attempt} times. Method: GET. Status: ${response.status} for ${validatedUrl}`),
+          {
+            status: response.status,
+            statusText: response.statusText,
+            url: response.url || validatedUrl,
+          },
+        );
+      } catch (error) {
+        if (attempt < retries) {
+          const backoffDelay = Math.pow(2, attempt - 1) * 200;
+          await this.delay(backoffDelay);
+          continue;
+        }
+        throw error;
+      }
+    }
+
+    throw new Error(`Unexpected error for ${validatedUrl}`);
   }
 
   public async fetchStatus(

@@ -831,7 +831,7 @@ export class PageAssistantCompareComponent
   }
 
   //AI Model
-  selectedAiModel: AiModel = AiModel.GptOSS20BFree;
+  selectedAiModel: AiModel = AiModel.Gemini;
 
   onAiChange(key: AiModel) {
     this.selectedAiModel = key;

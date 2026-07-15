@@ -15,11 +15,11 @@ describe('UploadSettingsService', () => {
     expect(service).toBeTruthy();
   });
 
-  it('resets the selected model to gpt-oss 20B free', () => {
+  it('resets the selected model to Gemini', () => {
     service.setSelectedAiModel(AiModel.GptOSS20B);
 
     service.resetUploadFlow();
 
-    expect(service.getSelectedAiModel()).toBe(AiModel.GptOSS20BFree);
+    expect(service.getSelectedAiModel()).toBe(AiModel.Gemini);
   });
 });

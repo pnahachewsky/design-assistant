@@ -17,8 +17,10 @@ explicitly asks for them.
 Always treat doormats as a complete set.
 
 Do not analyze or rewrite one doormat in isolation when the full set is
-available. Compare link text, descriptions, style, order, and destination
-choices across the set before reporting issues or making recommendations.
+available. Compare link text, descriptions, order, and destination choices in
+context before reporting issues or making recommendations. For issue analysis,
+use the task-specific taxonomy for section-scoped style checks and local
+deterministic rules.
 
 ## Resource Authority
 

@@ -13,6 +13,7 @@ class HttpClientStub {
   get = jasmine.createSpy('get').and.returnValue(
     of({
       issue_categories: [
+        { id: 'broken-link', label: 'Broken link' },
         { id: 'description-too-long', label: 'Description too long' },
         {
           id: 'link-name-too-different-from-destination-title',
@@ -26,10 +27,6 @@ class HttpClientStub {
         {
           id: 'mixed-description-style-in-section',
           label: 'Mixed description styles in section',
-        },
-        {
-          id: 'section-description-style-outlier',
-          label: 'Section (description) styles differ',
         },
         {
           id: 'inconsistent-description-style',
@@ -62,6 +59,12 @@ class TranslateServiceStub {
     }
     if (key.includes('length.description.recommendation')) {
       return `Shorten the description to ${params?.['limit']} characters.`;
+    }
+    if (key.includes('brokenLink.httpStatusEvidence')) {
+      return `The destination request returned HTTP ${params?.['status']}.`;
+    }
+    if (key.includes('brokenLink.recommendation')) {
+      return 'Replace the link with a valid destination URL.';
     }
     return key;
   }
@@ -124,7 +127,7 @@ describe('TopicDoormatIssueAnalysisService', () => {
   });
 
   const defaultLinkClassifications = () => ({
-    detected_link_text_style: 'noun-topic',
+    detected_link_text_style: 'topic',
     destination_link_relationship: 'unavailable',
     destination_link_relationship_basis: 'unavailable',
     destination_link_relationship_reason: '',
@@ -163,7 +166,7 @@ describe('TopicDoormatIssueAnalysisService', () => {
                   link_text: 'Benefit one',
                   href: '/en/benefits/one.html',
                   description: 'Benefit programs and services',
-                  detected_description_style: 'noun-topic-summary',
+                  detected_description_style: 'phrase',
                   ...defaultLinkClassifications(),
                   destination_content_assessment:
                     emptyDestinationContentAssessment(),
@@ -209,6 +212,76 @@ describe('TopicDoormatIssueAnalysisService', () => {
     expect(systemPrompt).toContain('Compact model-owned issue contract');
     expect(systemPrompt).toContain('"description-lacks-clarity"');
     expect(systemPrompt).not.toContain('"description-too-long"');
+    expect(systemPrompt).not.toContain('"broken-link"');
+    const requestPayload = JSON.parse(
+      openRouter.call.calls.mostRecent().args[1][1].content,
+    );
+    expect(requestPayload.doormats[0]).toEqual(
+      jasmine.objectContaining({
+        analysisLinkText: 'Benefit one',
+        analysisDescription: 'Find benefit one information',
+      }),
+    );
+  });
+
+  it('reports broken links from local destination HTTP status instead of model issues', async () => {
+    openRouter.call.and.resolveTo({
+      choices: [
+        {
+          message: {
+            content: JSON.stringify({
+              doormats: [
+                {
+                  doormat_index: 1,
+                  link_text: 'Benefit one',
+                  href: '/en/benefits/one.html',
+                  description: 'Benefit programs and services',
+                  detected_description_style: 'phrase',
+                  ...defaultLinkClassifications(),
+                  destination_content_assessment:
+                    emptyDestinationContentAssessment(),
+                  issues: [
+                    {
+                      issue_category: 'broken-link',
+                      severity: 'High',
+                      evidence: 'The destination appears closed.',
+                      recommendation: 'Replace the link.',
+                    },
+                  ],
+                },
+              ],
+            }),
+          },
+        },
+      ],
+    });
+
+    const result = await service.analyze({
+      doormatSummaries: [
+        summary({
+          destinationUrl: 'https://www.canada.ca/en/benefits/one.html',
+          destinationContextStatus: 'failed',
+          destinationHttpStatus: 410,
+        }),
+      ],
+      pageLanguage: 'en',
+      hasLegacyTopicDoormatTemplate: false,
+      mostRequestedLinks: [],
+      selectedModel: 'selected-model',
+    });
+
+    const brokenLinkRows = result.rows.filter(
+      (row) => row.issueId === 'broken-link',
+    );
+    expect(brokenLinkRows.length).toBe(1);
+    expect(brokenLinkRows[0]).toEqual(
+      jasmine.objectContaining({
+        severity: 'High',
+        evidence: 'The destination request returned HTTP 410.',
+        recommendation: 'Replace the link with a valid destination URL.',
+      }),
+    );
+    expect(brokenLinkRows[0].evidence).not.toContain('appears closed');
   });
 
   it('suppresses a model mixed-style issue when all model classifications match', async () => {
@@ -239,7 +312,7 @@ describe('TopicDoormatIssueAnalysisService', () => {
                 link_text: `Trust topic ${index + 1}`,
                 href: `/trust/topic-${index + 1}.html`,
                 description,
-                detected_description_style: 'action-verb-task-summary',
+                detected_description_style: 'sentence',
                 ...defaultLinkClassifications(),
                 destination_content_assessment:
                   emptyDestinationContentAssessment(),
@@ -330,7 +403,7 @@ describe('TopicDoormatIssueAnalysisService', () => {
                   link_text: 'Trust account',
                   href: '/trust/account.html',
                   description: 'Use it to manage their account',
-                  detected_description_style: 'action-verb-task-summary',
+                  detected_description_style: 'sentence',
                   ...defaultLinkClassifications(),
                   destination_content_assessment:
                     emptyDestinationContentAssessment(),
@@ -381,19 +454,19 @@ describe('TopicDoormatIssueAnalysisService', () => {
     const classifiedDescriptions = [
       {
         description: 'Learn how to submit a trust return.',
-        style: 'action-verb-task-summary',
+        style: 'sentence',
       },
       {
         description: 'Apply for a trust account number.',
-        style: 'action-verb-task-summary',
+        style: 'sentence',
       },
       {
         description: 'Available to qualifying resident trusts.',
-        style: 'eligibility-or-benefit-summary',
+        style: 'phrase',
       },
       {
         description: 'Monthly support for eligible beneficiaries.',
-        style: 'eligibility-or-benefit-summary',
+        style: 'phrase',
       },
     ];
     openRouter.call.and.resolveTo({
@@ -446,10 +519,10 @@ describe('TopicDoormatIssueAnalysisService', () => {
       }),
     );
     expect(mixedStyleRow?.evidence).toContain(
-      'Action/task examples: 1, 2.',
+      'Sentence examples: 1, 2.',
     );
     expect(mixedStyleRow?.evidence).toContain(
-      'Eligibility/benefit examples: 3, 4.',
+      'Phrase examples: 3, 4.',
     );
   });
 
@@ -457,17 +530,17 @@ describe('TopicDoormatIssueAnalysisService', () => {
     const linkCases = [
       {
         linkText: 'Filing a trust return',
-        style: 'action-verb',
+        style: 'task',
         relationship: 'unavailable',
       },
       {
         linkText: 'Tax year-end and fiscal period',
-        style: 'noun-topic',
+        style: 'topic',
         relationship: 'unavailable',
       },
       {
         linkText: 'Submitting and filing documents online related to trusts',
-        style: 'action-verb',
+        style: 'task',
         relationship: 'broader-but-accurate',
         destinationPageTitle:
           'Submitting and filing electronic documents to the T3 Estate and Trust Return programs - Canada.ca',
@@ -475,19 +548,19 @@ describe('TopicDoormatIssueAnalysisService', () => {
       },
       {
         linkText: 'When to pay a balance you owe on your trust return',
-        style: 'action-verb',
+        style: 'task',
         relationship: 'unavailable',
       },
       {
         linkText: 'Residency and how to contact us',
-        style: 'noun-topic',
+        style: 'topic',
         relationship: 'equivalent',
         destinationPageTitle: 'Residency and contact us information - Canada.ca',
         destinationPageHeading: 'Trust residency and how to contact us',
       },
       {
         linkText: 'Clearance certificate',
-        style: 'noun-topic',
+        style: 'topic',
         relationship: 'equivalent',
         destinationPageTitle: 'Apply for a clearance certificate - Canada.ca',
         destinationPageHeading: 'Apply for a clearance certificate',
@@ -504,7 +577,7 @@ describe('TopicDoormatIssueAnalysisService', () => {
                 href: `/trust/topic-${index + 1}.html`,
                 description: `Description ${index + 1}`,
                 detected_link_text_style: item.style,
-                detected_description_style: 'noun-topic-summary',
+                detected_description_style: 'phrase',
                 destination_link_relationship: item.relationship,
                 destination_link_relationship_basis:
                   item.relationship === 'broader-but-accurate'
@@ -593,8 +666,8 @@ describe('TopicDoormatIssueAnalysisService', () => {
                   link_text: 'Trust filing deadlines',
                   href: '/benefits/payment-dates.html',
                   description: 'Find trust return filing deadlines',
-                  detected_link_text_style: 'noun-topic',
-                  detected_description_style: 'action-verb-task-summary',
+                  detected_link_text_style: 'topic',
+                  detected_description_style: 'sentence',
                   destination_link_relationship: 'materially-different',
                   destination_link_relationship_basis:
                     'conflicting-core-concept',
@@ -649,8 +722,8 @@ describe('TopicDoormatIssueAnalysisService', () => {
                   link_text: 'Clearance certificate',
                   href: '/trust/clearance-certificate.html',
                   description: 'Find out when you need a clearance certificate',
-                  detected_link_text_style: 'noun-topic',
-                  detected_description_style: 'action-verb-task-summary',
+                  detected_link_text_style: 'topic',
+                  detected_description_style: 'sentence',
                   destination_link_relationship: 'materially-different',
                   destination_link_relationship_basis:
                     'conflicting-core-concept',
@@ -703,7 +776,7 @@ describe('TopicDoormatIssueAnalysisService', () => {
                   link_text: 'Trust returns',
                   href: '/trust/returns.html',
                   description: 'Find out how to file a trust return',
-                  detected_description_style: 'action-verb-task-summary',
+                  detected_description_style: 'sentence',
                   ...defaultLinkClassifications(),
                   destination_content_assessment: {
                     important_element_ids: ['intro-1', 'h2-1'],
@@ -780,7 +853,7 @@ describe('TopicDoormatIssueAnalysisService', () => {
                   link_text: 'Trust returns',
                   href: '/trust/returns.html',
                   description: 'Find out how to file a trust return',
-                  detected_description_style: 'action-verb-task-summary',
+                  detected_description_style: 'sentence',
                   ...defaultLinkClassifications(),
                   destination_content_assessment: {
                     important_element_ids: ['h2-99'],
@@ -832,7 +905,7 @@ describe('TopicDoormatIssueAnalysisService', () => {
                   link_text: 'Benefit one',
                   href: '/en/benefits/one.html',
                   description: 'Benefit programs and services',
-                  detected_description_style: 'noun-topic-summary',
+                  detected_description_style: 'phrase',
                   ...defaultLinkClassifications(),
                   destination_content_assessment:
                     emptyDestinationContentAssessment(),
@@ -1086,7 +1159,7 @@ describe('TopicDoormatIssueAnalysisService', () => {
                   link_text: 'Credits impot et prestations pour les particuliers',
                   href: '/fr/services/impots/prestations.html',
                   description: 'Credits et prestations disponibles',
-                  detected_description_style: 'noun-topic-summary',
+                  detected_description_style: 'phrase',
                   ...defaultLinkClassifications(),
                   destination_content_assessment:
                     emptyDestinationContentAssessment(),
@@ -1146,6 +1219,173 @@ describe('TopicDoormatIssueAnalysisService', () => {
     );
     expect(result.rows.map((row) => row.issueId)).not.toContain(
       'misdirected-link',
+    );
+  });
+
+  it('suppresses lifecycle-only misdirected link findings when the destination meaning matches', async () => {
+    openRouter.call.and.resolveTo({
+      choices: [
+        {
+          message: {
+            content: JSON.stringify({
+              doormats: [
+                {
+                  doormat_index: 1,
+                  link_text: 'Canada Carbon Rebate (CCR)',
+                  href: '/en/revenue-agency/services/child-family-benefits/cai-payment.html',
+                  description: 'Quarterly payments for people in eligible provinces',
+                  detected_description_style: 'phrase',
+                  ...defaultLinkClassifications(),
+                  destination_content_assessment:
+                    emptyDestinationContentAssessment(),
+                  issues: [
+                    {
+                      include: true,
+                      severity: 'High',
+                      issue_category: 'misdirected-link',
+                      evidence:
+                        'The destination indicates the Canada Carbon Rebate is closed and no longer available.',
+                      recommendation: 'Update the href.',
+                    },
+                  ],
+                },
+              ],
+            }),
+          },
+        },
+      ],
+    });
+
+    const result = await service.analyze({
+      doormatSummaries: [
+        summary({
+          linkText: 'Canada Carbon Rebate (CCR)',
+          href: '/en/revenue-agency/services/child-family-benefits/cai-payment.html',
+          description: 'Quarterly payments for people in eligible provinces',
+          destinationPageTitle:
+            'Canada Carbon Rebate for individuals - Canada.ca',
+          destinationPageHeading: 'Canada Carbon Rebate for individuals',
+          linkTextCharacterCount: 26,
+        }),
+      ],
+      pageLanguage: 'en',
+      hasLegacyTopicDoormatTemplate: false,
+      mostRequestedLinks: [],
+      selectedModel: 'selected-model',
+    });
+
+    expect(result.rows.map((row) => row.issueId)).not.toContain(
+      'misdirected-link',
+    );
+  });
+
+  it('does not report a status-only content gap when the doormat already shows the status', async () => {
+    openRouter.call.and.resolveTo({
+      choices: [
+        {
+          message: {
+            content: JSON.stringify({
+              doormats: [
+                {
+                  doormat_index: 1,
+                  link_text: 'GST/HST break',
+                  href: '/en/services/taxes/child-and-family-benefits/gst-hst-break.html',
+                  description: 'Temporary tax relief',
+                  detected_description_style: 'phrase',
+                  ...defaultLinkClassifications(),
+                  destination_content_assessment: {
+                    important_element_ids: ['intro-1'],
+                    covered_element_ids: [],
+                    missing_important_element_ids: ['intro-1'],
+                  },
+                  issues: [],
+                },
+              ],
+            }),
+          },
+        },
+      ],
+    });
+
+    const result = await service.analyze({
+      doormatSummaries: [
+        summary({
+          linkText: 'GST/HST break',
+          href: '/en/services/taxes/child-and-family-benefits/gst-hst-break.html',
+          description: 'Status: Closed Temporary tax relief',
+          rawItemText: 'GST/HST break Status: Closed Temporary tax relief',
+          destinationContextStatus: 'available',
+          destinationIntroParagraphs: ['Status: Closed'],
+          destinationPageHeading: 'GST/HST break',
+        }),
+      ],
+      pageLanguage: 'en',
+      hasLegacyTopicDoormatTemplate: false,
+      mostRequestedLinks: [],
+      selectedModel: 'selected-model',
+    });
+
+    expect(result.rows.map((row) => row.issueId)).not.toContain(
+      'description-missing-needed-information',
+    );
+    const requestPayload = JSON.parse(
+      openRouter.call.calls.mostRecent().args[1][1].content,
+    );
+    expect(requestPayload.doormats[0]).toEqual(
+      jasmine.objectContaining({
+        analysisLinkText: 'GST/HST break',
+        analysisDescription: 'Temporary tax relief',
+      }),
+    );
+  });
+
+  it('removes all extracted labels from model analysis text', async () => {
+    openRouter.call.and.resolveTo({
+      choices: [
+        {
+          message: {
+            content: JSON.stringify({
+              doormats: [
+                {
+                  doormat_index: 1,
+                  link_text: 'Benefit one',
+                  href: '/en/benefits/one.html',
+                  description: 'New Benefit programs and services',
+                  detected_description_style: 'phrase',
+                  ...defaultLinkClassifications(),
+                  destination_content_assessment:
+                    emptyDestinationContentAssessment(),
+                  issues: [],
+                },
+              ],
+            }),
+          },
+        },
+      ],
+    });
+
+    await service.analyze({
+      doormatSummaries: [
+        summary({
+          linkText: 'New Benefit one',
+          description: 'New Benefit programs and services',
+          labels: ['New'],
+        }),
+      ],
+      pageLanguage: 'en',
+      hasLegacyTopicDoormatTemplate: false,
+      mostRequestedLinks: [],
+      selectedModel: 'selected-model',
+    });
+
+    const requestPayload = JSON.parse(
+      openRouter.call.calls.mostRecent().args[1][1].content,
+    );
+    expect(requestPayload.doormats[0]).toEqual(
+      jasmine.objectContaining({
+        analysisLinkText: 'Benefit one',
+        analysisDescription: 'Benefit programs and services',
+      }),
     );
   });
 });

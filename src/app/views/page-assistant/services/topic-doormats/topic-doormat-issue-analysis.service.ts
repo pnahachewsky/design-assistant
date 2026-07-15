@@ -88,6 +88,7 @@ export class TopicDoormatIssueAnalysisService {
   };
   private readonly topicDoormatTrailingPunctuationPattern = /[.:;?!,]$/;
   private readonly locallyOwnedTopicDoormatIssueIds = new Set([
+    'broken-link',
     'description-contains-link',
     'description-missing-needed-information',
     'description-too-long',
@@ -101,7 +102,6 @@ export class TopicDoormatIssueAnalysisService {
     'mixed-link-name-styles-in-section',
     'multiple-links',
     'repeated-description-opening',
-    'section-description-style-outlier',
     'split-heading-link',
     'too-many-doormats-in-section',
     'unnecessary-doormat',
@@ -110,22 +110,11 @@ export class TopicDoormatIssueAnalysisService {
   private readonly topicDoormatDescriptionStyleOrder: Exclude<
     TopicDoormatDescriptionStyle,
     'mixed-or-unclear'
-  >[] = [
-    'action-verb-task-summary',
-    'noun-topic-summary',
-    'keyword-list',
-    'task-list',
-    'eligibility-or-benefit-summary',
-  ];
+  >[] = ['sentence', 'phrase', 'keyword-list'];
   private readonly topicDoormatLinkTextStyleOrder: Exclude<
     TopicDoormatLinkTextStyle,
     'mixed-or-unclear'
-  >[] = [
-    'action-verb',
-    'noun-topic',
-    'product-or-service',
-    'audience-group',
-  ];
+  >[] = ['task', 'topic', 'situation'];
   private topicDoormatIssueTaxonomyLoad?: Promise<void>;
   private topicDoormatModelIssueContract = '';
   private topicDoormatIssueIdToLabel = new Map<string, string>();
@@ -153,7 +142,7 @@ export class TopicDoormatIssueAnalysisService {
       Array.from(this.locallyOwnedTopicDoormatIssueIds).join(', '),
       'You must still return exactly one allowed detected_description_style for every doormat.',
       'You must still return exactly one allowed detected_link_text_style, destination_link_relationship, and destination_link_relationship_basis for every doormat.',
-      'Classify the rhetorical construction, not the subject matter. An action-framed description remains action-verb-task-summary when it discusses eligibility, benefits, residency, dates, or status.',
+      'Classify the grammatical construction, not the subject matter. A sentence-like description remains sentence even when final punctuation is intentionally omitted.',
     ].join('\n');
     const systemPrompt = [
       composed.prompt,
@@ -173,13 +162,19 @@ export class TopicDoormatIssueAnalysisService {
           doormats: input.doormatSummaries.map((summary) => ({
             index: summary.index,
             linkText: summary.linkText,
+            analysisLinkText:
+              this.removeTopicDoormatLabels(summary.linkText, summary.labels),
             href: summary.href,
             description: summary.description,
+            analysisDescription:
+              this.removeTopicDoormatLabels(summary.description, summary.labels),
             destinationUrl: summary.destinationUrl,
+            destinationHttpStatus: summary.destinationHttpStatus,
             destinationPageTitle: summary.destinationPageTitle,
             destinationPageHeading: summary.destinationPageHeading,
             destinationContext: {
               status: summary.destinationContextStatus ?? 'insufficient',
+              httpStatus: summary.destinationHttpStatus,
               pageTitle: summary.destinationPageTitle ?? '',
               h1: summary.destinationPageHeading ?? '',
               elements:
@@ -207,7 +202,10 @@ export class TopicDoormatIssueAnalysisService {
         index: summary.index,
         linkText: summary.linkText,
         href: summary.href,
+        labels: summary.labels,
         destinationUrl: summary.destinationUrl,
+        destinationHttpStatus: summary.destinationHttpStatus,
+        destinationFetchError: summary.destinationFetchError,
         destinationPageTitle: summary.destinationPageTitle,
         destinationPageHeading: summary.destinationPageHeading,
         destinationContextStatus: summary.destinationContextStatus,
@@ -660,6 +658,7 @@ export class TopicDoormatIssueAnalysisService {
         (summary) => ({
           doormatIndex: summary.index,
           contextStatus: summary.destinationContextStatus ?? 'insufficient',
+          httpStatus: summary.destinationHttpStatus,
           contextElements:
             this.buildTopicDoormatDestinationContextElements(summary),
           assessment:
@@ -1452,6 +1451,19 @@ export class TopicDoormatIssueAnalysisService {
         } satisfies TopicDoormatIssueRow);
       }
 
+      const brokenLinkEvidence = this.getTopicDoormatBrokenLinkEvidence(summary);
+      if (brokenLinkEvidence) {
+        rows.push({
+          ...baseRow,
+          issueId: 'broken-link',
+          issue: this.getTopicDoormatIssueLabel('broken-link'),
+          evidence: brokenLinkEvidence,
+          recommendation: this.getTopicDoormatDeterministicText(
+            'brokenLink.recommendation',
+          ),
+        } satisfies TopicDoormatIssueRow);
+      }
+
       if (summary.hasDescriptionLink) {
         rows.push({
           ...baseRow,
@@ -1483,6 +1495,37 @@ export class TopicDoormatIssueAnalysisService {
 
       return rows;
     });
+  }
+
+  private getTopicDoormatBrokenLinkEvidence(
+    doormat: TopicDoormatSummary,
+  ): string {
+    const href = this.cleanString(doormat.href);
+    if (!href) {
+      return this.getTopicDoormatDeterministicText(
+        'brokenLink.emptyHrefEvidence',
+      );
+    }
+
+    const status = doormat.destinationHttpStatus;
+    if (typeof status === 'number' && status >= 400) {
+      return this.getTopicDoormatDeterministicText(
+        'brokenLink.httpStatusEvidence',
+        { status },
+      );
+    }
+
+    if (doormat.destinationUrl || href.startsWith('#')) return '';
+
+    const hasUnsupportedScheme = /^[a-z][a-z0-9+.-]*:/i.test(href);
+    if (hasUnsupportedScheme || /[\s<>"]/.test(href)) {
+      return this.getTopicDoormatDeterministicText(
+        'brokenLink.invalidHrefEvidence',
+        { href },
+      );
+    }
+
+    return '';
   }
 
   private buildTopicDoormatSplitHeadingLinkEvidence(
@@ -1898,6 +1941,9 @@ export class TopicDoormatIssueAnalysisService {
       const element = elementsById.get(id);
       if (!element) return [];
       seen.add(id);
+      if (this.isTopicDoormatLifecycleStatusAlreadyCovered(summary, element)) {
+        return [];
+      }
       return [element];
     });
   }
@@ -1935,51 +1981,6 @@ export class TopicDoormatIssueAnalysisService {
         evidence: this.buildTopicDoormatMixedStyleEvidence(analysis),
         recommendation: this.getTopicDoormatDeterministicText(
           'mixedDescriptionStyle.recommendation',
-        ),
-        sectionIndex: analysis.sectionIndex,
-        sectionTitle: analysis.sectionTitle,
-      });
-    });
-
-    const internallyConsistentAnalyses = analyses.filter(
-      (analysis) => !analysis.isMixed && !!analysis.dominantStyle,
-    );
-    const pageDominantStyle =
-      this.getDominantTopicDoormatSectionStyle(
-        internallyConsistentAnalyses,
-      ) ??
-      this.getTwoSectionTopicDoormatReferenceStyle(
-      internallyConsistentAnalyses,
-      );
-    if (!pageDominantStyle) return rows;
-
-    internallyConsistentAnalyses.forEach((analysis) => {
-      const sectionStyle = analysis.dominantStyle;
-      if (!sectionStyle || sectionStyle === pageDominantStyle) return;
-      const key = `${analysis.sectionIndex}|section-description-style-outlier`;
-      if (existingIssueKeys.has(key)) return;
-      rows.push({
-        include: true,
-        rowType: 'section',
-        severity: 'Low',
-        doormat: this.buildTopicDoormatSectionLabel(
-          analysis.sectionIndex,
-          doormatSummaries,
-        ),
-        doormatLabel: 'All doormats in section',
-        issueId: 'section-description-style-outlier',
-        issue: this.getTopicDoormatIssueLabel(
-          'section-description-style-outlier',
-        ),
-        evidence: this.getTopicDoormatDeterministicText(
-          'sectionDescriptionStyleOutlier.evidence',
-          {
-            sectionStyle: this.getTopicDoormatStyleLabel(sectionStyle),
-            pageStyle: this.getTopicDoormatStyleLabel(pageDominantStyle),
-          },
-        ),
-        recommendation: this.getTopicDoormatDeterministicText(
-          'sectionDescriptionStyleOutlier.recommendation',
         ),
         sectionIndex: analysis.sectionIndex,
         sectionTitle: analysis.sectionTitle,
@@ -2058,36 +2059,6 @@ export class TopicDoormatIssueAnalysisService {
       return null;
     }
     return candidates[0].style;
-  }
-
-  private getDominantTopicDoormatSectionStyle(
-    analyses: TopicDoormatSectionStyleAnalysis[],
-  ): Exclude<TopicDoormatDescriptionStyle, 'mixed-or-unclear'> | null {
-    const counts = new Map<
-      Exclude<TopicDoormatDescriptionStyle, 'mixed-or-unclear'>,
-      number
-    >();
-    analyses.forEach((analysis) => {
-      if (!analysis.dominantStyle) return;
-      counts.set(
-        analysis.dominantStyle,
-        (counts.get(analysis.dominantStyle) ?? 0) + 1,
-      );
-    });
-    const ranked = Array.from(counts.entries()).sort((a, b) => b[1] - a[1]);
-    if (ranked.length < 2) return null;
-    if (ranked[0][1] === ranked[1][1]) return null;
-    return ranked[0][0];
-  }
-
-  private getTwoSectionTopicDoormatReferenceStyle(
-    analyses: TopicDoormatSectionStyleAnalysis[],
-  ): Exclude<TopicDoormatDescriptionStyle, 'mixed-or-unclear'> | null {
-    if (analyses.length !== 2) return null;
-    const firstStyle = analyses[0].dominantStyle;
-    const secondStyle = analyses[1].dominantStyle;
-    if (!firstStyle || !secondStyle || firstStyle === secondStyle) return null;
-    return firstStyle;
   }
 
   private buildTopicDoormatMixedStyleEvidence(
@@ -2504,8 +2475,9 @@ export class TopicDoormatIssueAnalysisService {
       issue['evidence_details'] && typeof issue['evidence_details'] === 'object'
         ? (issue['evidence_details'] as Record<string, unknown>)
         : null;
-    const linkKey = this.normalizeTopicDoormatDestinationComparisonText(
+    const linkKey = this.normalizeTopicDoormatSubstantiveDestinationText(
       doormat.linkText,
+      doormat.labels,
     );
     if (!linkKey) return true;
 
@@ -2516,12 +2488,153 @@ export class TopicDoormatIssueAnalysisService {
       this.cleanString(details?.['destination_page_heading']),
     ]
       .map((value) =>
-        this.normalizeTopicDoormatDestinationComparisonText(value),
+        this.normalizeTopicDoormatSubstantiveDestinationText(value),
       )
       .filter(Boolean);
 
     if (!destinationKeys.length) return true;
-    return !destinationKeys.includes(linkKey);
+    return !destinationKeys.some((destinationKey) =>
+      this.hasTopicDoormatSubstantiveDestinationTextMatch(
+        linkKey,
+        destinationKey,
+      ),
+    );
+  }
+
+  private hasSubstantiveTopicDoormatDestinationSurfaceMatch(
+    summary: TopicDoormatSummary,
+  ): boolean {
+    const linkText = this.normalizeTopicDoormatSubstantiveDestinationText(
+      summary.linkText,
+      summary.labels,
+    );
+    if (!linkText) return false;
+    return [summary.destinationPageTitle, summary.destinationPageHeading]
+      .map((value) =>
+        this.normalizeTopicDoormatSubstantiveDestinationText(value),
+      )
+      .filter(Boolean)
+      .some((destinationText) =>
+        this.hasTopicDoormatSubstantiveDestinationTextMatch(
+          linkText,
+          destinationText,
+        ),
+      );
+  }
+
+  private hasTopicDoormatSubstantiveDestinationTextMatch(
+    linkText: string,
+    destinationText: string,
+  ): boolean {
+    const paddedDestinationText = ` ${destinationText} `;
+    const paddedLinkText = ` ${linkText} `;
+    if (
+      destinationText === linkText ||
+      paddedDestinationText.includes(paddedLinkText) ||
+      paddedLinkText.includes(paddedDestinationText)
+    ) {
+      return true;
+    }
+    const linkTokens = this.getTopicDoormatMeaningfulDestinationTokens(linkText);
+    const destinationTokens =
+      this.getTopicDoormatMeaningfulDestinationTokens(destinationText);
+    if (linkTokens.length < 2 || destinationTokens.length < 2) {
+      return false;
+    }
+    const destinationTokenSet = new Set(destinationTokens);
+    const matchingTokens = linkTokens.filter((token) =>
+      destinationTokenSet.has(token),
+    );
+    return (
+      matchingTokens.length >= 2 &&
+      matchingTokens.length /
+        Math.min(linkTokens.length, destinationTokens.length) >=
+        0.6
+    );
+  }
+
+  private normalizeTopicDoormatSubstantiveDestinationText(
+    value: string | undefined,
+    labels: string[] = [],
+  ): string {
+    return this.normalizeTopicDoormatDestinationComparisonText(
+      this.removeTopicDoormatLabels(value, labels),
+    );
+  }
+
+  private removeTopicDoormatLabels(
+    value: string | undefined,
+    labels: string[] = [],
+  ): string {
+    let cleaned = this.cleanVisibleText(value);
+    labels.forEach((label) => {
+      const normalizedLabel = this.cleanVisibleText(label);
+      if (!normalizedLabel) return;
+      cleaned = cleaned.replace(
+        new RegExp(this.escapeRegExp(normalizedLabel), 'gi'),
+        ' ',
+      );
+    });
+    return cleaned
+      .replace(/\bstatus\s*:\s*[^.;|]+/gi, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+  }
+
+  private escapeRegExp(value: string): string {
+    return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  }
+
+  private getTopicDoormatMeaningfulDestinationTokens(value: string): string[] {
+    const stopWords = new Set([
+      'and',
+      'or',
+      'the',
+      'a',
+      'an',
+      'for',
+      'to',
+      'of',
+      'in',
+      'on',
+      'with',
+      'your',
+      'you',
+      'individuals',
+      'families',
+      'benefit',
+      'benefits',
+      'credit',
+      'credits',
+      'tax',
+    ]);
+    return value
+      .split(/\s+/)
+      .filter((token) => token.length > 2 && !stopWords.has(token));
+  }
+
+  private isTopicDoormatLifecycleStatusAlreadyCovered(
+    summary: TopicDoormatSummary,
+    element: TopicDoormatDestinationContextElement,
+  ): boolean {
+    if (!this.isTopicDoormatLifecycleStatusElement(element.text)) return false;
+    return this.hasTopicDoormatLifecycleStatusText(
+      [summary.linkText, summary.description, summary.rawItemText].join(' '),
+    );
+  }
+
+  private isTopicDoormatLifecycleStatusElement(value: string): boolean {
+    const normalized = this.normalizeTopicDoormatDestinationComparisonText(value);
+    return (
+      /^status (?:closed|archived|inactive|expired|ended)\b/.test(normalized) ||
+      /^(?:closed|archived|inactive|expired|ended)$/.test(normalized)
+    );
+  }
+
+  private hasTopicDoormatLifecycleStatusText(value: string): boolean {
+    return /\b(?:status:\s*)?(?:closed|archived|inactive|expired|ended|replaced|no longer available|not available)\b/i.test(
+      value,
+    );
   }
 
   private normalizeTopicDoormatDestinationComparisonText(
@@ -2540,25 +2653,7 @@ export class TopicDoormatIssueAnalysisService {
   private hasEquivalentTopicDoormatDestinationSurface(
     summary: TopicDoormatSummary,
   ): boolean {
-    const linkText = this.normalizeTopicDoormatDestinationComparisonText(
-      summary.linkText,
-    );
-    if (!linkText) return false;
-
-    const paddedLinkText = ` ${linkText} `;
-    return [summary.destinationPageTitle, summary.destinationPageHeading]
-      .map((value) =>
-        this.normalizeTopicDoormatDestinationComparisonText(value),
-      )
-      .filter(Boolean)
-      .some((destinationText) => {
-        const paddedDestinationText = ` ${destinationText} `;
-        return (
-          destinationText === linkText ||
-          paddedDestinationText.includes(paddedLinkText) ||
-          paddedLinkText.includes(paddedDestinationText)
-        );
-      });
+    return this.hasSubstantiveTopicDoormatDestinationSurfaceMatch(summary);
   }
 
   private buildTopicDoormatEvidence(

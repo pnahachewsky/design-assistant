@@ -36,6 +36,8 @@ export class TopicDoormatExtractorService {
         | 'destinationIntroParagraphs'
         | 'destinationSectionHeadings'
         | 'destinationContextStatus'
+        | 'destinationHttpStatus'
+        | 'destinationFetchError'
       >>
     >();
 
@@ -156,6 +158,7 @@ export class TopicDoormatExtractorService {
           index: summaries.length + 1,
           linkText,
           href,
+          labels: this.extractDoormatLabels(item),
           description,
           headingLevel: heading ? this.toNumber(heading.tagName.slice(1)) : null,
           itemLinkCount: item ? item.querySelectorAll('a[href]').length : 0,
@@ -216,6 +219,18 @@ export class TopicDoormatExtractorService {
     } catch {
       return [];
     }
+  }
+
+  private extractDoormatLabels(item: HTMLElement | null): string[] {
+    if (!item) return [];
+    const labels = Array.from(
+      item.querySelectorAll<HTMLElement>(
+        '.label, .badge, [class*="label-"], [class*="badge-"]',
+      ),
+    )
+      .map((element) => this.cleanVisibleText(element.textContent))
+      .filter(Boolean);
+    return Array.from(new Set(labels));
   }
 
   hasCandidates(doc: Document): boolean {
@@ -288,15 +303,18 @@ export class TopicDoormatExtractorService {
       | 'destinationIntroParagraphs'
       | 'destinationSectionHeadings'
       | 'destinationContextStatus'
+      | 'destinationHttpStatus'
+      | 'destinationFetchError'
     >
   > {
     try {
-      const destinationDoc = await this.fetchService.fetchContent(
+      const response = await this.fetchService.fetchContentWithResponse(
         destinationUrl,
         'both',
         1,
         'none',
       );
+      const destinationDoc = response.document;
       const main = destinationDoc.querySelector<HTMLElement>('main');
       const heading =
         main?.querySelector<HTMLElement>('h1') ??
@@ -339,19 +357,31 @@ export class TopicDoormatExtractorService {
         destinationPageHeading: this.cleanVisibleText(heading?.textContent),
         destinationIntroParagraphs,
         destinationSectionHeadings,
+        destinationHttpStatus: response.status,
         destinationContextStatus:
           destinationIntroParagraphs.length || destinationSectionHeadings.length
             ? 'available'
             : 'insufficient',
       };
-    } catch {
+    } catch (error) {
       return {
         destinationUrl,
         destinationIntroParagraphs: [],
         destinationSectionHeadings: [],
         destinationContextStatus: 'failed',
+        destinationHttpStatus: this.getFetchErrorStatus(error),
+        destinationFetchError:
+          error instanceof Error ? error.message : String(error),
       };
     }
+  }
+
+  private getFetchErrorStatus(error: unknown): number | undefined {
+    if (!error || typeof error !== 'object') return undefined;
+    const status = (error as { status?: unknown }).status;
+    return typeof status === 'number' && Number.isFinite(status)
+      ? status
+      : undefined;
   }
 
   private isDestinationIntroParagraph(

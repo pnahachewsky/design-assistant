@@ -73,6 +73,20 @@ describe('TopicDoormatModelClientService', () => {
     expect(openRouter.call.calls.first().args[2]).toEqual(
       jasmine.objectContaining({ timeoutMs: 120000 }),
     );
+    expect(debug).toHaveBeenCalledWith(
+      'model attempt started',
+      jasmine.objectContaining({
+        model: 'selected-model',
+        request: jasmine.objectContaining({
+          messageCount: 1,
+          totalCharacters: 2,
+          messageCharacterCounts: [2],
+          roleCharacterCounts: jasmine.objectContaining({ user: 2 }),
+          doormatCount: 1,
+          destinationContextAvailableCount: 0,
+        }),
+      }),
+    );
   });
 
   it('rotates to the next model when a topic doormat attempt times out', async () => {

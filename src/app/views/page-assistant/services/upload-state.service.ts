@@ -26,7 +26,7 @@ export class UploadStateService {
   }
 
   // Primary AI model selected for the current session.
-  private selectedAiModel = signal<AiModel>(AiModel.GptOSS20BFree);
+  private selectedAiModel = signal<AiModel>(AiModel.Gemini);
   getSelectedAiModel = computed(() => this.selectedAiModel());
   setSelectedAiModel(model: AiModel) {
     this.selectedAiModel.set(model);
@@ -178,7 +178,7 @@ export class UploadStateService {
   // Clear both in-memory state and the persisted assistant session.
   resetUploadFlow(): void {
     this.selectedUploadType.set('url'); // default to URL
-    this.selectedAiModel.set(AiModel.GptOSS20BFree);
+    this.selectedAiModel.set(AiModel.Gemini);
     this.editPromptText.set('');
     this.includeAlertRewriteExamples.set(true);
     this.useCompactAlertsPageContext.set(true);

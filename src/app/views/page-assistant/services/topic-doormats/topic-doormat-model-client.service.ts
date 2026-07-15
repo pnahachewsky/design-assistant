@@ -70,6 +70,7 @@ export class TopicDoormatModelClientService {
           attempt: index + 1,
           totalAttempts: models.length,
           model,
+          request: this.buildRequestMetrics(messages, doormatSummaries),
         });
         const resp = await this.openRouter.call(model, messages, {
           temperature: 0,
@@ -189,6 +190,11 @@ export class TopicDoormatModelClientService {
           }),
         },
       ];
+      debug('model json repair request prepared', {
+        model,
+        request: this.buildRequestMetrics(repairMessages, doormatSummaries),
+        invalidResponseCharacters: invalidText.length,
+      });
       const resp = await this.openRouter.call(model, repairMessages, {
         temperature: 0,
         title: 'Content Assistant - Topic Doormat JSON Repair',
@@ -221,5 +227,45 @@ export class TopicDoormatModelClientService {
     } catch {
       return '';
     }
+  }
+
+  private buildRequestMetrics(
+    messages: ChatMessage[],
+    doormatSummaries: TopicDoormatSummary[],
+  ): Record<string, unknown> {
+    const messageCharacterCounts = messages.map(
+      (message) => message.content.length,
+    );
+    const roleCharacterCounts = messages.reduce<Record<string, number>>(
+      (counts, message) => {
+        counts[message.role] = (counts[message.role] ?? 0) + message.content.length;
+        return counts;
+      },
+      {},
+    );
+    const destinationContextCharacterCount = doormatSummaries.reduce(
+      (total, summary) =>
+        total +
+        (summary.destinationPageTitle?.length ?? 0) +
+        (summary.destinationPageHeading?.length ?? 0) +
+        (summary.destinationIntroParagraphs ?? []).join('\n').length +
+        (summary.destinationSectionHeadings ?? []).join('\n').length,
+      0,
+    );
+
+    return {
+      messageCount: messages.length,
+      totalCharacters: messageCharacterCounts.reduce(
+        (total, count) => total + count,
+        0,
+      ),
+      messageCharacterCounts,
+      roleCharacterCounts,
+      doormatCount: doormatSummaries.length,
+      destinationContextAvailableCount: doormatSummaries.filter(
+        (summary) => summary.destinationContextStatus === 'available',
+      ).length,
+      destinationContextCharacterCount,
+    };
   }
 }

@@ -44,12 +44,15 @@ export interface TopicDoormatSummary {
   index: number;
   linkText: string;
   href: string;
+  labels?: string[];
   destinationUrl?: string;
   destinationPageTitle?: string;
   destinationPageHeading?: string;
   destinationIntroParagraphs?: string[];
   destinationSectionHeadings?: string[];
   destinationContextStatus?: TopicDoormatDestinationContextStatus;
+  destinationHttpStatus?: number;
+  destinationFetchError?: string;
   description: string;
   headingLevel: number | null;
   itemLinkCount: number;
@@ -90,18 +93,15 @@ export interface TopicDoormatIssueTaxonomy {
 }
 
 export type TopicDoormatDescriptionStyle =
-  | 'action-verb-task-summary'
-  | 'noun-topic-summary'
+  | 'sentence'
+  | 'phrase'
   | 'keyword-list'
-  | 'task-list'
-  | 'eligibility-or-benefit-summary'
   | 'mixed-or-unclear';
 
 export type TopicDoormatLinkTextStyle =
-  | 'action-verb'
-  | 'noun-topic'
-  | 'product-or-service'
-  | 'audience-group'
+  | 'task'
+  | 'topic'
+  | 'situation'
   | 'mixed-or-unclear';
 
 export type TopicDoormatDestinationLinkRelationship =

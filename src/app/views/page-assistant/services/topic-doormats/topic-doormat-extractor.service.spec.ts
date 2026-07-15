@@ -4,11 +4,12 @@ import { FetchService } from '../../../../services/fetch.service';
 import { TopicDoormatExtractorService } from './topic-doormat-extractor.service';
 
 class FetchServiceStub {
-  fetchContent = jasmine
-    .createSpy('fetchContent')
+  fetchContentWithResponse = jasmine
+    .createSpy('fetchContentWithResponse')
     .and.resolveTo(
-      new DOMParser().parseFromString(
-        `<html><head><title>Destination</title></head><body><main>
+      {
+        document: new DOMParser().parseFromString(
+          `<html><head><title>Destination</title></head><body><main>
           <h1>Destination heading</h1>
           <p>First introductory paragraph.</p>
           <aside><p>Interface text to exclude.</p></aside>
@@ -18,8 +19,12 @@ class FetchServiceStub {
           <p>Section body text to exclude.</p>
           <h2>How to apply</h2>
         </main></body></html>`,
-        'text/html',
-      ),
+          'text/html',
+        ),
+        status: 200,
+        statusText: 'OK',
+        url: 'https://www.canada.ca/en/benefits/one.html',
+      },
     );
 }
 
@@ -98,6 +103,7 @@ describe('TopicDoormatExtractorService', () => {
 
     expect(summaries.length).toBe(1);
     expect(summaries[0].linkText).toBe('GST/HST credit');
+    expect(summaries[0].labels).toEqual(['Will be replaced in July 2026']);
     expect(summaries[0].linkTextCharacterCount).toBe(14);
   });
 
@@ -148,7 +154,7 @@ describe('TopicDoormatExtractorService', () => {
       { originalUrl: 'https://www.canada.ca/en/services/benefits.html' },
     );
 
-    expect(fetchService.fetchContent).toHaveBeenCalledOnceWith(
+    expect(fetchService.fetchContentWithResponse).toHaveBeenCalledOnceWith(
       'https://www.canada.ca/en/benefits/one.html',
       'both',
       1,
@@ -165,5 +171,46 @@ describe('TopicDoormatExtractorService', () => {
       'How to apply',
     ]);
     expect(enriched[0].destinationContextStatus).toBe('available');
+    expect(enriched[0].destinationHttpStatus).toBe(200);
+  });
+
+  it('keeps the destination HTTP status when destination context fetch fails', async () => {
+    fetchService.fetchContentWithResponse.and.returnValue(Promise.reject(
+      Object.assign(new Error('Fetch failed. Status: 410'), {
+        status: 410,
+        statusText: 'Gone',
+      }),
+    ));
+
+    const enriched = await service.enrichDestinationContext(
+      [
+        {
+          index: 1,
+          linkText: 'Closed benefit',
+          href: '/en/benefits/closed.html',
+          description: '',
+          headingLevel: 3,
+          itemLinkCount: 1,
+          headingLinkCount: 1,
+          descriptionLinkCount: 0,
+          hasSplitHeadingLink: false,
+          hasDescriptionLink: false,
+          hasDescriptionIconOrImage: false,
+          hasDescriptionSpecialFormatting: false,
+          rawItemText: '',
+          linkTextCharacterCount: 14,
+          descriptionCharacterCount: 0,
+          sectionIndex: 1,
+          sectionTitle: 'Benefits',
+          sectionItemIndex: 1,
+          sectionDoormatCount: 1,
+        },
+      ],
+      { originalUrl: 'https://www.canada.ca/en/services/benefits.html' },
+    );
+
+    expect(enriched[0].destinationContextStatus).toBe('failed');
+    expect(enriched[0].destinationHttpStatus).toBe(410);
+    expect(enriched[0].destinationFetchError).toContain('Status: 410');
   });
 });
