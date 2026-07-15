@@ -83,3 +83,7 @@
   border-radius: 4px;
   background: #fff;
 }
+
+.topic-doormat-recommendation {
+  white-space: pre-line;
+}

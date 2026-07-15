@@ -1,6 +1,7 @@
 import { LocationStrategy } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { TestBed } from '@angular/core/testing';
+import { TranslateService } from '@ngx-translate/core';
 import { of } from 'rxjs';
 import { IaStructureService } from '../ia-structure.service';
 import { TopicDoormatIaCheckService } from './topic-doormat-ia-check.service';
@@ -30,6 +31,12 @@ class IaStructureServiceStub {
         },
       ],
     };
+  }
+}
+
+class TranslateServiceStub {
+  instant(key: string): string {
+    return key;
   }
 }
 
@@ -67,6 +74,7 @@ describe('TopicDoormatIaCheckService', () => {
       providers: [
         TopicDoormatIaCheckService,
         { provide: IaStructureService, useClass: IaStructureServiceStub },
+        { provide: TranslateService, useClass: TranslateServiceStub },
         {
           provide: HttpClient,
           useValue: {

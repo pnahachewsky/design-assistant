@@ -924,11 +924,15 @@ export class TopicDoormatIssueAnalysisService {
               doormat: this.buildTopicDoormatSectionLabel(1, doormatSummaries),
               doormatLabel: 'All doormats in section',
               issueId: 'outdated-topic-page-template',
-              issue: 'Topic page template is outdated',
-              evidence:
-                'This section uses legacy topic doormat markup: .gc-drmt or .mwsdoormat-links-container.',
-              recommendation:
-                'Update the page to use the current GCWeb topic page doormat template.',
+              issue: this.getTopicDoormatDeterministicText(
+                'outdatedTemplate.issue',
+              ),
+              evidence: this.getTopicDoormatDeterministicText(
+                'outdatedTemplate.evidence',
+              ),
+              recommendation: this.getTopicDoormatDeterministicText(
+                'outdatedTemplate.recommendation',
+              ),
               sectionIndex: 1,
               sectionTitle:
                 doormatSummaries.find((summary) => summary.sectionIndex === 1)
@@ -958,9 +962,13 @@ export class TopicDoormatIssueAnalysisService {
           doormatLabel: 'All doormats in section',
           issueId: 'too-many-doormats-in-section',
           issue: this.getTopicDoormatIssueLabel('too-many-doormats-in-section'),
-          evidence: `There are ${section.count} doormats in this section.`,
-          recommendation:
-            'Either remove doormats or break down the section into sections that have 9 or fewer doormats.',
+          evidence: this.getTopicDoormatDeterministicText(
+            'tooManyDoormats.evidence',
+            { count: section.count },
+          ),
+          recommendation: this.getTopicDoormatDeterministicText(
+            'tooManyDoormats.recommendation',
+          ),
           sectionIndex: section.sectionIndex,
           sectionTitle: section.sectionTitle,
         } satisfies TopicDoormatIssueRow,
@@ -1036,10 +1044,9 @@ export class TopicDoormatIssueAnalysisService {
           doormatLabel: summary.linkText || summary.href || 'Doormat',
           issueId: 'link-name-too-long',
           issue: this.getTopicDoormatIssueLabel('link-name-too-long'),
-          evidence: this.getTopicDoormatLinkNameLengthEvidence(),
+          evidence: '',
           evidenceMetric: metric,
           recommendation: this.getTopicDoormatLinkNameLengthRecommendation(
-            pageLanguage,
             limit,
           ),
           doormatIndex: summary.index || undefined,
@@ -1089,10 +1096,9 @@ export class TopicDoormatIssueAnalysisService {
           doormatLabel: summary.linkText || summary.href || 'Doormat',
           issueId: 'description-too-long',
           issue: this.getTopicDoormatIssueLabel('description-too-long'),
-          evidence: this.getTopicDoormatDescriptionLengthEvidence(),
+          evidence: '',
           evidenceMetric: metric,
           recommendation: this.getTopicDoormatDescriptionLengthRecommendation(
-            pageLanguage,
             limit,
           ),
           doormatIndex: summary.index || undefined,
@@ -1165,7 +1171,9 @@ export class TopicDoormatIssueAnalysisService {
           evidence: this.buildTopicDoormatSectionTrailingPunctuationEvidence(
             affected,
           ),
-          recommendation: 'Remove final punctuation from the descriptions.',
+          recommendation: this.getTopicDoormatDeterministicText(
+            'descriptionTrailingPunctuation.sectionRecommendation',
+          ),
           sectionIndex,
           sectionTitle: firstSummary.sectionTitle,
         } satisfies TopicDoormatIssueRow,
@@ -1199,10 +1207,12 @@ export class TopicDoormatIssueAnalysisService {
             'link-name-trailing-punctuation',
           ),
           evidence: this.buildTopicDoormatTrailingPunctuationEvidence(
-            'Link name',
+            'linkName',
             summary.linkText,
           ),
-          recommendation: 'Remove trailing punctuation from the link text.',
+          recommendation: this.getTopicDoormatDeterministicText(
+            'linkTrailingPunctuation.recommendation',
+          ),
         } satisfies TopicDoormatIssueRow);
       }
 
@@ -1220,10 +1230,12 @@ export class TopicDoormatIssueAnalysisService {
             'description-trailing-punctuation',
           ),
           evidence: this.buildTopicDoormatTrailingPunctuationEvidence(
-            'Description',
+            'description',
             summary.description,
           ),
-          recommendation: 'Remove final punctuation from the description.',
+          recommendation: this.getTopicDoormatDeterministicText(
+            'descriptionTrailingPunctuation.recommendation',
+          ),
         } satisfies TopicDoormatIssueRow);
       }
 
@@ -1238,12 +1250,18 @@ export class TopicDoormatIssueAnalysisService {
   }
 
   private buildTopicDoormatTrailingPunctuationEvidence(
-    label: 'Link name' | 'Description',
+    labelKey: 'linkName' | 'description',
     value: string,
   ): string {
     const trimmed = value.trim();
     const punctuation = trimmed.slice(-1);
-    return `${label} ends with '${punctuation}'.`;
+    return this.getTopicDoormatDeterministicText(
+      'trailingPunctuation.evidence',
+      {
+        label: this.getTopicDoormatDeterministicText(`labels.${labelKey}`),
+        punctuation,
+      },
+    );
   }
 
   private getLocalDescriptionTrailingPunctuationSectionIndexes(
@@ -1286,9 +1304,16 @@ export class TopicDoormatIssueAnalysisService {
       .filter((index) => index > 0)
       .join(', ');
     const count = doormatSummaries.length;
-    const descriptionLabel = count === 1 ? 'description' : 'descriptions';
-    const doormatLabel = count === 1 ? 'doormat' : 'doormats';
-    return `${count} ${descriptionLabel} end with punctuation: ${doormatLabel} ${indexes}.`;
+    const descriptionLabel = this.getTopicDoormatDeterministicText(
+      count === 1 ? 'labels.descriptionLower' : 'labels.descriptionsLower',
+    );
+    const doormatLabel = this.getTopicDoormatDeterministicText(
+      count === 1 ? 'labels.doormatLower' : 'labels.doormatsLower',
+    );
+    return this.getTopicDoormatDeterministicText(
+      'descriptionTrailingPunctuation.sectionEvidence',
+      { count, descriptionLabel, doormatLabel, indexes },
+    );
   }
 
   private buildLocalTopicDoormatMostRequestedDuplicateRows(
@@ -1333,8 +1358,9 @@ export class TopicDoormatIssueAnalysisService {
           evidence: this.buildTopicDoormatMostRequestedDuplicateEvidence(),
           evidenceLinkText: duplicate.text || duplicate.href,
           evidenceLinkHref: duplicate.href,
-          recommendation:
-            'Flag for manual review. In most cases, remove the duplicate from Most requested unless there is a strong page-specific reason to keep it.',
+          recommendation: this.getTopicDoormatDeterministicText(
+            'duplicateMostRequested.recommendation',
+          ),
           doormatIndex: summary.index || undefined,
           sectionIndex: summary.sectionIndex || undefined,
           sectionTitle: summary.sectionTitle || undefined,
@@ -1357,7 +1383,9 @@ export class TopicDoormatIssueAnalysisService {
   }
 
   private buildTopicDoormatMostRequestedDuplicateEvidence(): string {
-    return 'This doormat links to the same destination as this Most requested link:';
+    return this.getTopicDoormatDeterministicText(
+      'duplicateMostRequested.evidence',
+    );
   }
 
   private getTopicDoormatLengthLimit(
@@ -1367,34 +1395,30 @@ export class TopicDoormatIssueAnalysisService {
     return this.topicDoormatIssueLengthLimits[pageLanguage][issueId];
   }
 
-  private getTopicDoormatLinkNameLengthEvidence(): string {
+  private getTopicDoormatDeterministicText(
+    key: string,
+    params?: Record<string, unknown>,
+  ): string {
     return this.translate.instant(
-      'page.tools.guidance.topicDoormats.length.link.evidence',
-    );
-  }
-
-  private getTopicDoormatDescriptionLengthEvidence(): string {
-    return this.translate.instant(
-      'page.tools.guidance.topicDoormats.length.description.evidence',
+      `page.tools.guidance.topicDoormats.${key}`,
+      params,
     );
   }
 
   private getTopicDoormatLinkNameLengthRecommendation(
-    pageLanguage: TopicDoormatPageLanguage,
     limit: number,
   ): string {
     return this.translate.instant(
-      `page.tools.guidance.topicDoormats.length.link.recommendation.${pageLanguage}`,
+      'page.tools.guidance.topicDoormats.length.link.recommendation',
       { limit },
     );
   }
 
   private getTopicDoormatDescriptionLengthRecommendation(
-    pageLanguage: TopicDoormatPageLanguage,
     limit: number,
   ): string {
     return this.translate.instant(
-      `page.tools.guidance.topicDoormats.length.description.recommendation.${pageLanguage}`,
+      'page.tools.guidance.topicDoormats.length.description.recommendation',
       { limit },
     );
   }
@@ -1422,8 +1446,9 @@ export class TopicDoormatIssueAnalysisService {
           issueId: 'split-heading-link',
           issue: this.getTopicDoormatIssueLabel('split-heading-link'),
           evidence: this.buildTopicDoormatSplitHeadingLinkEvidence(summary),
-          recommendation:
-            'Use one link around the complete doormat heading text.',
+          recommendation: this.getTopicDoormatDeterministicText(
+            'splitHeadingLink.recommendation',
+          ),
         } satisfies TopicDoormatIssueRow);
       }
 
@@ -1434,8 +1459,9 @@ export class TopicDoormatIssueAnalysisService {
           issueId: 'description-contains-link',
           issue: this.getTopicDoormatIssueLabel('description-contains-link'),
           evidence: this.buildTopicDoormatDescriptionLinkEvidence(summary),
-          recommendation:
-            'Remove links from the description. The doormat heading should contain the only link.',
+          recommendation: this.getTopicDoormatDeterministicText(
+            'descriptionContainsLink.recommendation',
+          ),
         } satisfies TopicDoormatIssueRow);
       }
 
@@ -1449,8 +1475,9 @@ export class TopicDoormatIssueAnalysisService {
           issueId: 'multiple-links',
           issue: this.getTopicDoormatIssueLabel('multiple-links'),
           evidence: this.buildTopicDoormatMultipleLinksEvidence(summary),
-          recommendation:
-            'Use one link per doormat. Move any extra destination to a separate doormat if it is needed.',
+          recommendation: this.getTopicDoormatDeterministicText(
+            'multipleLinks.recommendation',
+          ),
         } satisfies TopicDoormatIssueRow);
       }
 
@@ -1463,9 +1490,14 @@ export class TopicDoormatIssueAnalysisService {
   ): string {
     const linkLabel =
       doormat.headingLinkCount === 1
-        ? '1 link'
-        : `${doormat.headingLinkCount} links`;
-    return `The doormat heading is split into ${linkLabel}: '${doormat.linkText}'.`;
+        ? this.getTopicDoormatDeterministicText('labels.oneLink')
+        : this.getTopicDoormatDeterministicText('labels.linkCount', {
+            count: doormat.headingLinkCount,
+          });
+    return this.getTopicDoormatDeterministicText(
+      'splitHeadingLink.evidence',
+      { linkLabel, linkText: doormat.linkText },
+    );
   }
 
   private buildTopicDoormatDescriptionLinkEvidence(
@@ -1473,9 +1505,14 @@ export class TopicDoormatIssueAnalysisService {
   ): string {
     const linkLabel =
       doormat.descriptionLinkCount === 1
-        ? '1 link'
-        : `${doormat.descriptionLinkCount} links`;
-    return `The doormat description contains ${linkLabel}.`;
+        ? this.getTopicDoormatDeterministicText('labels.oneLink')
+        : this.getTopicDoormatDeterministicText('labels.linkCount', {
+            count: doormat.descriptionLinkCount,
+          });
+    return this.getTopicDoormatDeterministicText(
+      'descriptionContainsLink.evidence',
+      { linkLabel },
+    );
   }
 
   private buildTopicDoormatMultipleLinksEvidence(
@@ -1483,8 +1520,15 @@ export class TopicDoormatIssueAnalysisService {
   ): string {
     const additionalLinkCount = Math.max(doormat.itemLinkCount - 1, 0);
     const additionalLabel =
-      additionalLinkCount === 1 ? '1 additional link' : `${additionalLinkCount} additional links`;
-    return `This doormat contains ${doormat.itemLinkCount} links: the main doormat link plus ${additionalLabel}.`;
+      additionalLinkCount === 1
+        ? this.getTopicDoormatDeterministicText('labels.oneAdditionalLink')
+        : this.getTopicDoormatDeterministicText('labels.additionalLinkCount', {
+            count: additionalLinkCount,
+          });
+    return this.getTopicDoormatDeterministicText(
+      'multipleLinks.evidence',
+      { linkCount: doormat.itemLinkCount, additionalLabel },
+    );
   }
 
   private buildLocalTopicDoormatRepeatedDescriptionOpeningRows(
@@ -1543,9 +1587,18 @@ export class TopicDoormatIssueAnalysisService {
               issue: this.getTopicDoormatIssueLabel(
                 'repeated-description-opening',
               ),
-              evidence: `${group.summaries.length} of ${sectionSummaries.length} descriptions begin with "${group.label}": doormats ${affectedIndexes.join(', ')}.`,
-              recommendation:
-                'Vary the description openings so users can scan and distinguish the doormats more easily.',
+              evidence: this.getTopicDoormatDeterministicText(
+                'repeatedDescriptionOpening.evidence',
+                {
+                  count: group.summaries.length,
+                  total: sectionSummaries.length,
+                  opening: group.label,
+                  indexes: affectedIndexes.join(', '),
+                },
+              ),
+              recommendation: this.getTopicDoormatDeterministicText(
+                'repeatedDescriptionOpening.recommendation',
+              ),
               sectionIndex,
               sectionTitle: firstSummary.sectionTitle,
             } satisfies TopicDoormatIssueRow,
@@ -1653,9 +1706,13 @@ export class TopicDoormatIssueAnalysisService {
               issue: this.getTopicDoormatIssueLabel(
                 'mixed-link-name-styles-in-section',
               ),
-              evidence: `Link name styles in this section: ${groups.join('; ')}.`,
-              recommendation:
-                'Rewrite the link names so they use one consistent link name style across the section.',
+              evidence: this.getTopicDoormatDeterministicText(
+                'mixedLinkNameStyles.evidence',
+                { groups: groups.join('; ') },
+              ),
+              recommendation: this.getTopicDoormatDeterministicText(
+                'mixedLinkNameStyles.recommendation',
+              ),
               sectionIndex,
               sectionTitle: firstSummary.sectionTitle,
             } satisfies TopicDoormatIssueRow,
@@ -1676,13 +1733,16 @@ export class TopicDoormatIssueAnalysisService {
           doormatLabel: summary.linkText || summary.href || 'Doormat',
           issueId: 'inconsistent-link-name-style',
           issue: this.getTopicDoormatIssueLabel('inconsistent-link-name-style'),
-          evidence: `The section mostly uses ${this.getTopicDoormatLinkStyleLabel(
-            dominantStyle,
-          )} link names; this doormat uses ${this.getTopicDoormatLinkStyleLabel(
-            style,
-          )}.`,
-          recommendation:
-            'Use the dominant link name style unless this doormat has a clear reason to differ.',
+          evidence: this.getTopicDoormatDeterministicText(
+            'inconsistentLinkNameStyle.evidence',
+            {
+              dominantStyle: this.getTopicDoormatLinkStyleLabel(dominantStyle),
+              style: this.getTopicDoormatLinkStyleLabel(style),
+            },
+          ),
+          recommendation: this.getTopicDoormatDeterministicText(
+            'inconsistentLinkNameStyle.recommendation',
+          ),
           doormatIndex: summary.index,
           sectionIndex: summary.sectionIndex,
           sectionTitle: summary.sectionTitle,
@@ -1695,11 +1755,7 @@ export class TopicDoormatIssueAnalysisService {
   private getTopicDoormatLinkStyleLabel(
     style: TopicDoormatLinkTextStyle,
   ): string {
-    if (style === 'action-verb') return 'action-verb';
-    if (style === 'noun-topic') return 'noun/topic';
-    if (style === 'product-or-service') return 'product/service';
-    if (style === 'audience-group') return 'audience/group';
-    return 'mixed/unclear';
+    return this.getTopicDoormatDeterministicText(`linkStyles.${style}`);
   }
 
   private buildLocalTopicDoormatDestinationMismatchRows(
@@ -1736,9 +1792,17 @@ export class TopicDoormatIssueAnalysisService {
           issue: this.getTopicDoormatIssueLabel(
             'link-name-too-different-from-destination-title',
           ),
-          evidence: `Link name: "${summary.linkText}". ${destinationEvidence} ${assessment.reason}`,
-          recommendation:
-            'Rewrite the link name so it accurately describes the destination topic, task, audience, and scope.',
+          evidence: this.getTopicDoormatDeterministicText(
+            'destinationMismatch.evidence',
+            {
+              linkText: summary.linkText,
+              destinationEvidence,
+              reason: assessment.reason,
+            },
+          ),
+          recommendation: this.getTopicDoormatDeterministicText(
+            'destinationMismatch.recommendation',
+          ),
           doormatIndex: summary.index,
           sectionIndex: summary.sectionIndex,
           sectionTitle: summary.sectionTitle,
@@ -1787,9 +1851,13 @@ export class TopicDoormatIssueAnalysisService {
           issue: this.getTopicDoormatIssueLabel(
             'description-missing-needed-information',
           ),
-          evidence: `Important destination elements not covered by the link text or description: ${evidenceParts.join('; ')}.`,
-          recommendation:
-            'Add the missing decision-making information to the description without repeating the link text.',
+          evidence: this.getTopicDoormatDeterministicText(
+            'contentGap.evidence',
+            { elements: evidenceParts.join('; ') },
+          ),
+          recommendation: this.getTopicDoormatDeterministicText(
+            'contentGap.recommendation',
+          ),
           doormatIndex: summary.index,
           sectionIndex: summary.sectionIndex,
           sectionTitle: summary.sectionTitle,
@@ -1865,8 +1933,9 @@ export class TopicDoormatIssueAnalysisService {
           'mixed-description-style-in-section',
         ),
         evidence: this.buildTopicDoormatMixedStyleEvidence(analysis),
-        recommendation:
-          'Rewrite the descriptions so they use one consistent description style across the section.',
+        recommendation: this.getTopicDoormatDeterministicText(
+          'mixedDescriptionStyle.recommendation',
+        ),
         sectionIndex: analysis.sectionIndex,
         sectionTitle: analysis.sectionTitle,
       });
@@ -1902,13 +1971,16 @@ export class TopicDoormatIssueAnalysisService {
         issue: this.getTopicDoormatIssueLabel(
           'section-description-style-outlier',
         ),
-        evidence: `This section uses ${this.getTopicDoormatStyleLabel(
-          sectionStyle,
-        )}, while the page mostly uses ${this.getTopicDoormatStyleLabel(
-          pageDominantStyle,
-        )}.`,
-        recommendation:
-          'Align this section with the dominant page description style unless the section has a clear reason to use a different pattern.',
+        evidence: this.getTopicDoormatDeterministicText(
+          'sectionDescriptionStyleOutlier.evidence',
+          {
+            sectionStyle: this.getTopicDoormatStyleLabel(sectionStyle),
+            pageStyle: this.getTopicDoormatStyleLabel(pageDominantStyle),
+          },
+        ),
+        recommendation: this.getTopicDoormatDeterministicText(
+          'sectionDescriptionStyleOutlier.recommendation',
+        ),
         sectionIndex: analysis.sectionIndex,
         sectionTitle: analysis.sectionTitle,
       });
@@ -2022,21 +2094,34 @@ export class TopicDoormatIssueAnalysisService {
     analysis: TopicDoormatSectionStyleAnalysis,
   ): string {
     const groups = this.buildTopicDoormatMixedStyleEvidenceGroups(analysis);
-    if (!groups.length) return 'Mixes description styles in this section.';
+    if (!groups.length) {
+      return this.getTopicDoormatDeterministicText(
+        'mixedDescriptionStyle.evidence.default',
+      );
+    }
 
     if (groups.length === 2) {
       const [first, second] = groups;
-      return [
-        `Mixes ${first.label} with ${second.label}.`,
-        `${first.exampleLabel} examples: ${first.examples.join(', ')}.`,
-        `${second.exampleLabel} examples: ${second.examples.join(', ')}.`,
-      ].join(' ');
+      return this.getTopicDoormatDeterministicText(
+        'mixedDescriptionStyle.evidence.twoGroups',
+        {
+          firstStyle: first.label,
+          secondStyle: second.label,
+          firstExampleLabel: first.exampleLabel,
+          firstExamples: first.examples.join(', '),
+          secondExampleLabel: second.exampleLabel,
+          secondExamples: second.examples.join(', '),
+        },
+      );
     }
 
     const styleParts = groups.map(
       (group) => `${group.exampleLabel} examples: ${group.examples.join(', ')}`,
     );
-    return `Mixes description styles in this section. ${styleParts.join('. ')}.`;
+    return this.getTopicDoormatDeterministicText(
+      'mixedDescriptionStyle.evidence.multipleGroups',
+      { styleParts: styleParts.join('. ') },
+    );
   }
 
   private buildTopicDoormatMixedStyleEvidenceGroups(
@@ -2056,21 +2141,15 @@ export class TopicDoormatIssueAnalysisService {
   private getTopicDoormatStyleLabel(
     style: Exclude<TopicDoormatDescriptionStyle, 'mixed-or-unclear'>,
   ): string {
-    if (style === 'action-verb-task-summary') return 'action/task summaries';
-    if (style === 'noun-topic-summary') return 'noun/topic summaries';
-    if (style === 'keyword-list') return 'keyword lists';
-    if (style === 'task-list') return 'task lists';
-    return 'eligibility or benefit summaries';
+    return this.getTopicDoormatDeterministicText(`descriptionStyles.${style}`);
   }
 
   private getTopicDoormatStyleEvidenceLabel(
     style: Exclude<TopicDoormatDescriptionStyle, 'mixed-or-unclear'>,
   ): string {
-    if (style === 'action-verb-task-summary') return 'Action/task';
-    if (style === 'noun-topic-summary') return 'Noun/topic';
-    if (style === 'keyword-list') return 'Keyword list';
-    if (style === 'task-list') return 'Task list';
-    return 'Eligibility/benefit';
+    return this.getTopicDoormatDeterministicText(
+      `descriptionStyleEvidenceLabels.${style}`,
+    );
   }
 
   private buildTopicDoormatSectionCounts(
@@ -2127,8 +2206,8 @@ export class TopicDoormatIssueAnalysisService {
       doormat: this.buildTopicDoormatLabel(doormat),
       doormatLabel: doormat.linkText || doormat.href || 'Doormat',
       issueId: 'no-issues',
-      issue: 'No issues',
-      evidence: 'No issues reported by AI.',
+      issue: this.getTopicDoormatDeterministicText('noIssues.issue'),
+      evidence: this.getTopicDoormatDeterministicText('noIssues.evidence'),
       recommendation: '',
       doormatIndex: doormat.index || undefined,
       sectionIndex: doormat.sectionIndex || undefined,

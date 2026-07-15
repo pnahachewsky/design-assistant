@@ -1,6 +1,7 @@
 import { LocationStrategy } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
+import { TranslateService } from '@ngx-translate/core';
 import { firstValueFrom } from 'rxjs';
 import { TreeNode } from 'primeng/api';
 import { UploadData } from '../../data/data.model';
@@ -31,6 +32,7 @@ export class TopicDoormatIaCheckService {
   private readonly iaStructure = inject(IaStructureService);
   private readonly http = inject(HttpClient);
   private readonly locationStrategy = inject(LocationStrategy);
+  private readonly translate = inject(TranslateService);
   private readonly visitsSourcePath = 'visits-urls.json';
   private visitsLoad?: Promise<{
     byUrl: Map<string, number>;
@@ -127,12 +129,13 @@ export class TopicDoormatIaCheckService {
         doormat: 'Topic page doormat set',
         doormatLabel: 'Doormat set',
         issueId: 'missing-needed-doormat',
-        issue: 'Missing a needed doormat',
-        evidence: 'Child page not found in doormats:',
+        issue: this.getTopicDoormatIaText('missingNeededDoormat.issue'),
+        evidence: this.getTopicDoormatIaText('missingNeededDoormat.evidence'),
         evidenceLinkText: child.label,
         evidenceLinkHref: child.url,
-        recommendation:
-          'Review and consider adding a doormat for the missing child page.',
+        recommendation: this.getTopicDoormatIaText(
+          'missingNeededDoormat.recommendation',
+        ),
       }));
   }
 
@@ -157,11 +160,11 @@ export class TopicDoormatIaCheckService {
           doormat: this.buildDoormatLabel(summary),
           doormatLabel: summary.linkText || summary.href || 'Doormat',
           issueId: 'unnecessary-doormat',
-          issue: 'Non-child-page doormat',
-          evidence:
-            'This doormat destination was not found as a direct child page in the IA crawl.',
-          recommendation:
-            'Flag for manual review and consider removing or replacing the doormat.',
+          issue: this.getTopicDoormatIaText('unnecessaryDoormat.issue'),
+          evidence: this.getTopicDoormatIaText('unnecessaryDoormat.evidence'),
+          recommendation: this.getTopicDoormatIaText(
+            'unnecessaryDoormat.recommendation',
+          ),
           doormatIndex: summary.index || undefined,
           sectionIndex: summary.sectionIndex || undefined,
           sectionTitle: summary.sectionTitle || undefined,
@@ -175,6 +178,16 @@ export class TopicDoormatIaCheckService {
         } satisfies TopicDoormatIssueRow,
       ];
     });
+  }
+
+  private getTopicDoormatIaText(
+    key: string,
+    params?: Record<string, unknown>,
+  ): string {
+    return this.translate.instant(
+      `page.tools.guidance.topicDoormats.${key}`,
+      params,
+    );
   }
 
   private buildDoormatMetaMap(

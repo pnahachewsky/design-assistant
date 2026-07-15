@@ -57,10 +57,6 @@ class HttpClientStub {
 
 class TranslateServiceStub {
   instant(key: string, params?: Record<string, unknown>): string {
-    if (key.includes('length.link.evidence')) return 'Link name is too long.';
-    if (key.includes('length.description.evidence')) {
-      return 'Description too long.';
-    }
     if (key.includes('length.link.recommendation')) {
       return `Shorten the link name to ${params?.['limit']} characters.`;
     }
