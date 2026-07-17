@@ -408,13 +408,13 @@
       "group": "Description clarity",
       "label": "Repeated description opening",
       "severity": "Low",
-      "condition": "Within one H2 section, two or more doormat descriptions begin with the same first two normalized words.",
+      "condition": "Within one H2 section, two or more doormat descriptions, representing at least 40% of the section, begin with the same first two normalized words.",
       "recommendation": "Vary the description openings so users can scan and distinguish the doormats more easily.",
       "local_deterministic": true,
-      "reporting": "AIDA reports one section-level issue per repeated two-word opening. Use Low when the opening occurs in 50% or less of the section and Medium when it occurs in more than 50% of the section. Adjacency does not affect reporting. Do not classify this as an accessibility conformance issue.",
+      "reporting": "AIDA reports at most one section-level issue per section for repeated two-word openings. If multiple openings each affect at least 40% of the section, report them together in the same section entry. Use Medium when any affected doormats are adjacent or when any opening affects more than 60% of the section; otherwise use Low. Do not classify this as an accessibility conformance issue.",
       "severity_override": {
-        "Low": "Use Low when the repeated opening affects two or more descriptions but no more than 50% of the section.",
-        "Medium": "Use Medium when the repeated opening affects more than 50% of the section."
+        "Low": "Use Low when the repeated opening affects at least 40% but no more than 60% of the section and the affected doormats are not adjacent.",
+        "Medium": "Use Medium when affected doormats are adjacent or when the repeated opening affects more than 60% of the section."
       }
     },
     {
@@ -555,8 +555,9 @@
       "group": "Choice of doormats",
       "label": "Non-child-page doormat",
       "severity": "Low",
-      "condition": "A doormat destination is not a direct child page in the IA crawl. Treat this as a review flag, not proof that the doormat is unnecessary.",
-      "recommendation": "Flag for manual review and consider removing or replacing the doormat."
+      "condition": "One or more doormat destinations in an H2 section are not direct child pages in the IA crawl. Treat this as a review flag, not proof that the doormats are unnecessary.",
+      "recommendation": "Flag for manual review and consider removing or replacing the doormats.",
+      "reporting": "AIDA reports this issue locally as one section-level row per affected H2 section, with evidence listing the section item numbers of all non-child-page doormats in that section."
     },
     {
       "id": "too-many-doormats-in-section",

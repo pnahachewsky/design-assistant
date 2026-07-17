@@ -1606,47 +1606,73 @@ export class TopicDoormatIssueAnalysisService {
           summariesByOpening.set(opening.key, group);
         });
 
-        return Array.from(summariesByOpening.values()).flatMap((group) => {
+        const repeatedOpeningGroups = Array.from(
+          summariesByOpening.values(),
+        ).flatMap((group) => {
           if (group.summaries.length < 2) return [];
           const affectedIndexes = group.summaries
             .map((summary) => summary.sectionItemIndex || summary.index)
             .sort((a, b) => a - b);
-          const severity =
-            group.summaries.length / sectionSummaries.length > 0.5
-              ? 'Medium'
-              : 'Low';
-          const firstSummary = group.summaries[0];
+          const repeatedRatio =
+            group.summaries.length / sectionSummaries.length;
+          if (repeatedRatio < 0.4) return [];
+          const hasAdjacentRepeatedOpening = affectedIndexes.some(
+            (index, position) =>
+              position > 0 && index === affectedIndexes[position - 1] + 1,
+          );
           return [
             {
-              include: true,
-              rowType: 'section',
-              severity,
-              doormat: this.buildTopicDoormatSectionLabel(
-                sectionIndex,
-                doormatSummaries,
-              ),
-              doormatLabel: 'Multiple doormats in section',
-              issueId: 'repeated-description-opening',
-              issue: this.getTopicDoormatIssueLabel(
-                'repeated-description-opening',
-              ),
-              evidence: this.getTopicDoormatDeterministicText(
-                'repeatedDescriptionOpening.evidence',
-                {
-                  count: group.summaries.length,
-                  total: sectionSummaries.length,
-                  opening: group.label,
-                  indexes: affectedIndexes.join(', '),
-                },
-              ),
-              recommendation: this.getTopicDoormatDeterministicText(
-                'repeatedDescriptionOpening.recommendation',
-              ),
-              sectionIndex,
-              sectionTitle: firstSummary.sectionTitle,
-            } satisfies TopicDoormatIssueRow,
+              group,
+              affectedIndexes,
+              severity:
+                hasAdjacentRepeatedOpening || repeatedRatio > 0.6
+                  ? 'Medium'
+                  : 'Low',
+            },
           ];
         });
+        if (!repeatedOpeningGroups.length) return [];
+
+        const severity = repeatedOpeningGroups.some(
+          (group) => group.severity === 'Medium',
+        )
+          ? 'Medium'
+          : 'Low';
+        const firstSummary = sectionSummaries[0];
+        return [
+          {
+            include: true,
+            rowType: 'section',
+            severity,
+            doormat: this.buildTopicDoormatSectionLabel(
+              sectionIndex,
+              doormatSummaries,
+            ),
+            doormatLabel: 'Multiple doormats in section',
+            issueId: 'repeated-description-opening',
+            issue: this.getTopicDoormatIssueLabel(
+              'repeated-description-opening',
+            ),
+            evidence: repeatedOpeningGroups
+              .map(({ group, affectedIndexes }) =>
+                this.getTopicDoormatDeterministicText(
+                  'repeatedDescriptionOpening.evidence',
+                  {
+                    count: group.summaries.length,
+                    total: sectionSummaries.length,
+                    opening: group.label,
+                    indexes: affectedIndexes.join(', '),
+                  },
+                ),
+              )
+              .join(' '),
+            recommendation: this.getTopicDoormatDeterministicText(
+              'repeatedDescriptionOpening.recommendation',
+            ),
+            sectionIndex,
+            sectionTitle: firstSummary.sectionTitle,
+          } satisfies TopicDoormatIssueRow,
+        ];
       },
     );
   }

@@ -69,7 +69,7 @@ export class TopicDoormatIaCheckService {
       rows: [
         ...(iaResult.length ? this.buildMissingRows(iaResult, doormatByKey) : []),
         ...(iaResult.length
-          ? this.buildExtraRows(doormatSummaries, childByKey, visits, topicUrl)
+          ? this.buildExtraRows(doormatSummaries, childByKey, topicUrl)
           : []),
       ],
       metaByDoormatIndex: this.buildDoormatMetaMap(
@@ -142,42 +142,46 @@ export class TopicDoormatIaCheckService {
   private buildExtraRows(
     doormatSummaries: TopicDoormatSummary[],
     childByKey: Map<string, ChildPageCandidate>,
-    visits: { byUrl: Map<string, number>; byPath: Map<string, number> },
     topicUrl: string,
   ): TopicDoormatIssueRow[] {
-    return doormatSummaries.flatMap((summary) => {
+    const extraSummariesBySection = new Map<number, TopicDoormatSummary[]>();
+    doormatSummaries.forEach((summary) => {
       const key = this.getComparableUrlKey(
         summary.destinationUrl || summary.href,
         topicUrl,
       );
-      if (!key || childByKey.has(key)) return [];
+      if (!key || childByKey.has(key)) return;
+      const sectionIndex = summary.sectionIndex || 0;
+      const summaries = extraSummariesBySection.get(sectionIndex) ?? [];
+      summaries.push(summary);
+      extraSummariesBySection.set(sectionIndex, summaries);
+    });
 
-      return [
-        {
+    return Array.from(extraSummariesBySection.entries()).map(
+      ([sectionIndex, summaries]) => {
+        const firstSummary = summaries[0];
+        const affectedIndexes = summaries
+          .map((summary) => summary.sectionItemIndex || summary.index)
+          .sort((a, b) => a - b);
+        return ({
           include: true,
-          rowType: 'doormat',
+          rowType: 'section',
           severity: 'Low',
-          doormat: this.buildDoormatLabel(summary),
-          doormatLabel: summary.linkText || summary.href || 'Doormat',
+          doormat: this.buildSectionLabel(sectionIndex, firstSummary),
+          doormatLabel: 'Multiple doormats in section',
           issueId: 'unnecessary-doormat',
           issue: this.getTopicDoormatIaText('unnecessaryDoormat.issue'),
-          evidence: this.getTopicDoormatIaText('unnecessaryDoormat.evidence'),
+          evidence: this.getTopicDoormatIaText('unnecessaryDoormat.evidence', {
+            indexes: affectedIndexes.join(', '),
+          }),
           recommendation: this.getTopicDoormatIaText(
             'unnecessaryDoormat.recommendation',
           ),
-          doormatIndex: summary.index || undefined,
-          sectionIndex: summary.sectionIndex || undefined,
-          sectionTitle: summary.sectionTitle || undefined,
-          sectionItemIndex: summary.sectionItemIndex || undefined,
-          sectionItemMeta: this.buildDoormatMeta(
-            summary,
-            childByKey,
-            visits,
-            topicUrl,
-          ),
-        } satisfies TopicDoormatIssueRow,
-      ];
-    });
+          sectionIndex: sectionIndex || undefined,
+          sectionTitle: firstSummary.sectionTitle || undefined,
+        } satisfies TopicDoormatIssueRow);
+      },
+    );
   }
 
   private getTopicDoormatIaText(
@@ -391,21 +395,11 @@ export class TopicDoormatIaCheckService {
     }
   }
 
-  private buildDoormatLabel(summary: TopicDoormatSummary): string {
-    const itemLabel = [
-      summary.sectionItemIndex ? `${summary.sectionItemIndex}.` : '',
-      summary.linkText || summary.href || 'Doormat',
-    ]
-      .filter(Boolean)
-      .join(' ');
-    return summary.sectionTitle
-      ? `${summary.sectionTitle}: ${itemLabel}`
-      : [
-          summary.index ? `${summary.index}.` : '',
-          summary.linkText || summary.href || 'Doormat',
-        ]
-          .filter(Boolean)
-          .join(' ');
+  private buildSectionLabel(
+    sectionIndex: number,
+    summary: TopicDoormatSummary,
+  ): string {
+    return summary.sectionTitle || `Section ${sectionIndex || 1}`;
   }
 
   private formatVisits(value: number): string {

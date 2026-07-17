@@ -66,6 +66,44 @@ class TranslateServiceStub {
     if (key.includes('brokenLink.recommendation')) {
       return 'Replace the link with a valid destination URL.';
     }
+    if (key.includes('mixedDescriptionStyle.evidence.twoGroups')) {
+      return `Mixes ${params?.['firstStyle']} with ${params?.['secondStyle']}. ${params?.['firstExampleLabel']} examples: ${params?.['firstExamples']}. ${params?.['secondExampleLabel']} examples: ${params?.['secondExamples']}.`;
+    }
+    if (key.includes('mixedDescriptionStyle.evidence.multipleGroups')) {
+      return `Mixes description styles in this section. ${params?.['styleParts']}.`;
+    }
+    if (key.includes('mixedDescriptionStyle.evidence.default')) {
+      return 'Mixes description styles in this section.';
+    }
+    if (key.includes('mixedDescriptionStyle.recommendation')) {
+      return 'Rewrite the descriptions so they use one consistent description style across the section.';
+    }
+    if (key.includes('descriptionStyles.sentence')) return 'sentences';
+    if (key.includes('descriptionStyles.phrase')) return 'phrases';
+    if (key.includes('descriptionStyles.keyword-list')) return 'keyword lists';
+    if (key.includes('descriptionStyleEvidenceLabels.sentence')) {
+      return 'Sentence';
+    }
+    if (key.includes('descriptionStyleEvidenceLabels.phrase')) {
+      return 'Phrase';
+    }
+    if (key.includes('descriptionStyleEvidenceLabels.keyword-list')) {
+      return 'Keyword list';
+    }
+    if (key.includes('repeatedDescriptionOpening.evidence')) {
+      return `${params?.['count']} of ${params?.['total']} descriptions begin with "${params?.['opening']}": doormats ${params?.['indexes']}.`;
+    }
+    if (key.includes('repeatedDescriptionOpening.recommendation')) {
+      return 'Vary the description openings so users can scan and distinguish the doormats more easily.';
+    }
+    if (key.includes('contentGap.evidence')) {
+      return `Important destination elements not covered by the link text or description: ${params?.['elements']}.`;
+    }
+    if (key.includes('contentGap.recommendation')) {
+      return 'Add the missing decision-making information to the description without repeating the link text.';
+    }
+    if (key.includes('noIssues.issue')) return 'No issues';
+    if (key.includes('noIssues.evidence')) return 'No issues reported by AI.';
     return key;
   }
 }
@@ -1001,7 +1039,34 @@ describe('TopicDoormatIssueAnalysisService', () => {
     );
   });
 
-  it('reports a repeated description opening as Low at 50 percent of a section', async () => {
+  it('does not report a repeated description opening below 40 percent of a section', async () => {
+    openRouter.call.and.resolveTo({
+      choices: [{ message: { content: '' } }],
+    });
+
+    const result = await service.analyze({
+      doormatSummaries: [
+        summary({ index: 1, sectionItemIndex: 1, description: 'Find benefit payment dates' }),
+        summary({ index: 2, sectionItemIndex: 2, description: 'Apply for a benefit' }),
+        summary({ index: 3, sectionItemIndex: 3, description: 'find benefit eligibility details' }),
+        summary({ index: 4, sectionItemIndex: 4, description: 'Manage your benefit account' }),
+        summary({ index: 5, sectionItemIndex: 5, description: 'Claim a tax credit' }),
+        summary({ index: 6, sectionItemIndex: 6, description: 'Review your payment dates' }),
+      ],
+      pageLanguage: 'en',
+      hasLegacyTopicDoormatTemplate: false,
+      mostRequestedLinks: [],
+      selectedModel: 'selected-model',
+    });
+
+    expect(
+      result.rows.some(
+        (row) => row.issueId === 'repeated-description-opening',
+      ),
+    ).toBeFalse();
+  });
+
+  it('reports a non-adjacent repeated description opening as Low at 40 percent of a section', async () => {
     openRouter.call.and.resolveTo({
       choices: [{ message: { content: '' } }],
     });
@@ -1012,6 +1077,7 @@ describe('TopicDoormatIssueAnalysisService', () => {
         summary({ index: 2, sectionItemIndex: 2, description: 'Apply for a benefit' }),
         summary({ index: 3, sectionItemIndex: 3, description: 'find benefit eligibility details' }),
         summary({ index: 4, sectionItemIndex: 4, description: 'Manage your benefit account' }),
+        summary({ index: 5, sectionItemIndex: 5, description: 'Claim a tax credit' }),
       ],
       pageLanguage: 'en',
       hasLegacyTopicDoormatTemplate: false,
@@ -1030,11 +1096,11 @@ describe('TopicDoormatIssueAnalysisService', () => {
       }),
     );
     expect(repeatedRow?.evidence).toContain(
-      '2 of 4 descriptions begin with "Find benefit": doormats 1, 3.',
+      '2 of 5 descriptions begin with "Find benefit": doormats 1, 3.',
     );
   });
 
-  it('reports a repeated description opening as Medium above 50 percent of a section', async () => {
+  it('reports multiple repeated description openings in one section entry', async () => {
     openRouter.call.and.resolveTo({
       choices: [{ message: { content: '' } }],
     });
@@ -1042,8 +1108,75 @@ describe('TopicDoormatIssueAnalysisService', () => {
     const result = await service.analyze({
       doormatSummaries: [
         summary({ index: 1, sectionItemIndex: 1, description: 'Find benefit payment dates' }),
-        summary({ index: 2, sectionItemIndex: 2, description: 'Manage your benefit account' }),
-        summary({ index: 3, sectionItemIndex: 3, description: 'Find benefit eligibility details' }),
+        summary({ index: 2, sectionItemIndex: 2, description: 'Apply for a benefit' }),
+        summary({ index: 3, sectionItemIndex: 3, description: 'find benefit eligibility details' }),
+        summary({ index: 4, sectionItemIndex: 4, description: 'Apply for tax credits' }),
+        summary({ index: 5, sectionItemIndex: 5, description: 'Claim a tax credit' }),
+      ],
+      pageLanguage: 'en',
+      hasLegacyTopicDoormatTemplate: false,
+      mostRequestedLinks: [],
+      selectedModel: 'selected-model',
+    });
+
+    const repeatedRows = result.rows.filter(
+      (row) => row.issueId === 'repeated-description-opening',
+    );
+    expect(repeatedRows.length).toBe(1);
+    expect(repeatedRows[0]).toEqual(
+      jasmine.objectContaining({
+        rowType: 'section',
+        severity: 'Low',
+        sectionIndex: 1,
+      }),
+    );
+    expect(repeatedRows[0].evidence).toContain(
+      '2 of 5 descriptions begin with "Find benefit": doormats 1, 3.',
+    );
+    expect(repeatedRows[0].evidence).toContain(
+      '2 of 5 descriptions begin with "Apply for": doormats 2, 4.',
+    );
+  });
+
+  it('reports adjacent repeated description openings as Medium', async () => {
+    openRouter.call.and.resolveTo({
+      choices: [{ message: { content: '' } }],
+    });
+
+    const result = await service.analyze({
+      doormatSummaries: [
+        summary({ index: 1, sectionItemIndex: 1, description: 'Find benefit payment dates' }),
+        summary({ index: 2, sectionItemIndex: 2, description: 'Find benefit eligibility details' }),
+        summary({ index: 3, sectionItemIndex: 3, description: 'Manage your benefit account' }),
+        summary({ index: 4, sectionItemIndex: 4, description: 'Claim a tax credit' }),
+        summary({ index: 5, sectionItemIndex: 5, description: 'Review your payment dates' }),
+      ],
+      pageLanguage: 'en',
+      hasLegacyTopicDoormatTemplate: false,
+      mostRequestedLinks: [],
+      selectedModel: 'selected-model',
+    });
+
+    expect(
+      result.rows.find(
+        (row) => row.issueId === 'repeated-description-opening',
+      ),
+    ).toEqual(
+      jasmine.objectContaining({ severity: 'Medium', sectionIndex: 1 }),
+    );
+  });
+
+  it('reports a repeated description opening as Medium above 60 percent of a section', async () => {
+    openRouter.call.and.resolveTo({
+      choices: [{ message: { content: '' } }],
+    });
+
+    const result = await service.analyze({
+      doormatSummaries: [
+        summary({ index: 1, sectionItemIndex: 1, description: 'Find benefit payment dates' }),
+        summary({ index: 2, sectionItemIndex: 2, description: 'Find benefit eligibility details' }),
+        summary({ index: 3, sectionItemIndex: 3, description: 'Find benefit account information' }),
+        summary({ index: 4, sectionItemIndex: 4, description: 'Manage your benefit account' }),
       ],
       pageLanguage: 'en',
       hasLegacyTopicDoormatTemplate: false,
@@ -1313,6 +1446,7 @@ describe('TopicDoormatIssueAnalysisService', () => {
           linkText: 'GST/HST break',
           href: '/en/services/taxes/child-and-family-benefits/gst-hst-break.html',
           description: 'Status: Closed Temporary tax relief',
+          labels: ['Status: Closed'],
           rawItemText: 'GST/HST break Status: Closed Temporary tax relief',
           destinationContextStatus: 'available',
           destinationIntroParagraphs: ['Status: Closed'],
