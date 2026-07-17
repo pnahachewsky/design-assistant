@@ -866,7 +866,10 @@ export class TopicDoormatIssueAnalysisService {
     );
     const representedIndexes = new Set(
       [...deterministicRows, ...localIaRows]
-        .map((row) => row.doormatIndex)
+        .flatMap((row) => [
+          row.doormatIndex,
+          ...(row.affectedDoormatIndexes ?? []),
+        ])
         .filter((index): index is number => typeof index === 'number' && index > 0),
     );
     const noIssueRows = doormatSummaries
@@ -1027,33 +1030,16 @@ export class TopicDoormatIssueAnalysisService {
       'link-name-too-long',
       pageLanguage,
     );
-    return doormatSummaries
-      .filter((summary) => summary.linkTextCharacterCount > limit)
-      .map((summary) => {
-        const count = summary.linkTextCharacterCount;
-        const metric = `${count}/${limit} characters`;
-        return {
-          include: true,
-          rowType: 'doormat',
-          severity: this.getTopicDoormatLinkNameLengthSeverity(
-            count,
-            pageLanguage,
-          ),
-          doormat: this.buildTopicDoormatLabel(summary),
-          doormatLabel: summary.linkText || summary.href || 'Doormat',
-          issueId: 'link-name-too-long',
-          issue: this.getTopicDoormatIssueLabel('link-name-too-long'),
-          evidence: '',
-          evidenceMetric: metric,
-          recommendation: this.getTopicDoormatLinkNameLengthRecommendation(
-            limit,
-          ),
-          doormatIndex: summary.index || undefined,
-          sectionIndex: summary.sectionIndex || undefined,
-          sectionTitle: summary.sectionTitle || undefined,
-          sectionItemIndex: summary.sectionItemIndex || undefined,
-        } satisfies TopicDoormatIssueRow;
-      });
+    const overLimitSummaries = doormatSummaries
+      .filter((summary) => summary.linkTextCharacterCount > limit);
+    return this.buildLocalTopicDoormatLengthSectionRows(
+      overLimitSummaries,
+      'link-name-too-long',
+      (summary) => summary.linkTextCharacterCount,
+      (count) => this.getTopicDoormatLinkNameLengthSeverity(count, pageLanguage),
+      this.getTopicDoormatLinkNameLengthRecommendation(limit),
+      limit,
+    );
   }
 
   private getTopicDoormatLinkNameLengthSeverity(
@@ -1079,33 +1065,91 @@ export class TopicDoormatIssueAnalysisService {
       'description-too-long',
       pageLanguage,
     );
-    return doormatSummaries
-      .filter((summary) => summary.descriptionCharacterCount > limit)
-      .map((summary) => {
-        const count = summary.descriptionCharacterCount;
-        const metric = `${count}/${limit} characters`;
+    const overLimitSummaries = doormatSummaries
+      .filter((summary) => summary.descriptionCharacterCount > limit);
+    return this.buildLocalTopicDoormatLengthSectionRows(
+      overLimitSummaries,
+      'description-too-long',
+      (summary) => summary.descriptionCharacterCount,
+      (count) =>
+        this.getTopicDoormatDescriptionLengthSeverity(count, pageLanguage),
+      this.getTopicDoormatDescriptionLengthRecommendation(limit),
+      limit,
+    );
+  }
+
+  private buildLocalTopicDoormatLengthSectionRows(
+    overLimitSummaries: TopicDoormatSummary[],
+    issueId: 'link-name-too-long' | 'description-too-long',
+    getCount: (summary: TopicDoormatSummary) => number,
+    getSeverity: (count: number) => string,
+    recommendation: string,
+    limit: number,
+  ): TopicDoormatIssueRow[] {
+    const summariesBySection = new Map<number, TopicDoormatSummary[]>();
+    overLimitSummaries.forEach((summary) => {
+      const sectionIndex = summary.sectionIndex || 0;
+      const summaries = summariesBySection.get(sectionIndex) ?? [];
+      summaries.push(summary);
+      summariesBySection.set(sectionIndex, summaries);
+    });
+
+    return Array.from(summariesBySection.entries()).map(
+      ([sectionIndex, summaries]) => {
+        const evidenceItems = summaries
+          .slice()
+          .sort(
+            (a, b) =>
+              (a.sectionItemIndex || a.index) - (b.sectionItemIndex || b.index),
+          )
+          .map((summary) => {
+            const count = getCount(summary);
+            return {
+              label: `Doormat ${summary.sectionItemIndex || summary.index}`,
+              metric: `${count}/${limit} characters`,
+              severity: getSeverity(count),
+            };
+          });
+        const affectedDoormatIndexes = summaries
+          .map((summary) => summary.index)
+          .filter((index): index is number => Number.isFinite(index));
+        const severity = this.getHighestTopicDoormatSeverity(
+          evidenceItems.map((item) => item.severity),
+        );
+
         return {
           include: true,
-          rowType: 'doormat',
-          severity: this.getTopicDoormatDescriptionLengthSeverity(
-            count,
-            pageLanguage,
+          rowType: 'section',
+          severity,
+          doormat: this.buildTopicDoormatSectionLabel(
+            sectionIndex,
+            overLimitSummaries,
           ),
-          doormat: this.buildTopicDoormatLabel(summary),
-          doormatLabel: summary.linkText || summary.href || 'Doormat',
-          issueId: 'description-too-long',
-          issue: this.getTopicDoormatIssueLabel('description-too-long'),
+          doormatLabel: 'Affected doormats in section',
+          issueId,
+          issue: `${this.getTopicDoormatIssueLabel(issueId)} (characters)`,
           evidence: '',
-          evidenceMetric: metric,
-          recommendation: this.getTopicDoormatDescriptionLengthRecommendation(
-            limit,
-          ),
-          doormatIndex: summary.index || undefined,
-          sectionIndex: summary.sectionIndex || undefined,
-          sectionTitle: summary.sectionTitle || undefined,
-          sectionItemIndex: summary.sectionItemIndex || undefined,
+          evidenceItems,
+          affectedDoormatIndexes,
+          recommendation,
+          sectionIndex: sectionIndex || undefined,
+          sectionTitle: summaries[0]?.sectionTitle || undefined,
         } satisfies TopicDoormatIssueRow;
-      });
+      },
+    );
+  }
+
+  private getHighestTopicDoormatSeverity(severities: string[]): string {
+    const rank: Record<string, number> = {
+      Low: 1,
+      Medium: 2,
+      High: 3,
+    };
+    return severities.reduce(
+      (highest, severity) =>
+        (rank[severity] ?? 0) > (rank[highest] ?? 0) ? severity : highest,
+      'Low',
+    );
   }
 
   private getTopicDoormatDescriptionLengthSeverity(
@@ -1765,7 +1809,7 @@ export class TopicDoormatIssueAnalysisService {
             {
               include: true,
               rowType: 'section',
-              severity: 'Medium',
+              severity: 'Low',
               doormat: this.buildTopicDoormatSectionLabel(
                 sectionIndex,
                 doormatSummaries,

@@ -676,11 +676,11 @@ describe('TopicDoormatIssueAnalysisService', () => {
       selectedModel: 'selected-model',
     });
 
-    expect(
-      result.rows.filter(
-        (row) => row.issueId === 'mixed-link-name-styles-in-section',
-      ).length,
-    ).toBe(1);
+    const mixedLinkStyleRows = result.rows.filter(
+      (row) => row.issueId === 'mixed-link-name-styles-in-section',
+    );
+    expect(mixedLinkStyleRows.length).toBe(1);
+    expect(mixedLinkStyleRows[0].severity).toBe('Low');
     expect(
       result.rows.some((row) => row.issueId === 'inconsistent-link-name-style'),
     ).toBeFalse();
@@ -1001,7 +1001,7 @@ describe('TopicDoormatIssueAnalysisService', () => {
     expect(result.rows.some((row) => row.issueId === 'no-issues')).toBeFalse();
   });
 
-  it('flags English descriptions only when they exceed 95 characters', async () => {
+  it('groups over-limit English descriptions into one section row', async () => {
     openRouter.call.and.resolveTo({
       choices: [{ message: { content: '' } }],
     });
@@ -1020,6 +1020,12 @@ describe('TopicDoormatIssueAnalysisService', () => {
           linkText: 'Too long description',
           descriptionCharacterCount: 96,
         }),
+        summary({
+          index: 3,
+          sectionItemIndex: 3,
+          linkText: 'Very long description',
+          descriptionCharacterCount: 121,
+        }),
       ],
       pageLanguage: 'en',
       hasLegacyTopicDoormatTemplate: false,
@@ -1033,8 +1039,21 @@ describe('TopicDoormatIssueAnalysisService', () => {
     expect(descriptionRows.length).toBe(1);
     expect(descriptionRows[0]).toEqual(
       jasmine.objectContaining({
-        doormatIndex: 2,
-        evidenceMetric: '96/95 characters',
+        rowType: 'section',
+        severity: 'High',
+        issue: 'Description too long (characters)',
+        evidenceItems: [
+          {
+            label: 'Doormat 2',
+            metric: '96/95 characters',
+            severity: 'Low',
+          },
+          {
+            label: 'Doormat 3',
+            metric: '121/95 characters',
+            severity: 'High',
+          },
+        ],
       }),
     );
   });

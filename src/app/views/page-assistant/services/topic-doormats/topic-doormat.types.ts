@@ -16,14 +16,22 @@ export interface TopicDoormatIssueRow {
   issue: string;
   evidence: string;
   evidenceMetric?: string;
+  evidenceItems?: TopicDoormatEvidenceItem[];
   evidenceLinkText?: string;
   evidenceLinkHref?: string;
   recommendation: string;
   doormatIndex?: number;
+  affectedDoormatIndexes?: number[];
   sectionIndex?: number;
   sectionTitle?: string;
   sectionItemIndex?: number;
   sectionItemMeta?: string;
+}
+
+export interface TopicDoormatEvidenceItem {
+  label: string;
+  metric: string;
+  severity?: string;
 }
 
 export interface TopicDoormatIssueGroup {

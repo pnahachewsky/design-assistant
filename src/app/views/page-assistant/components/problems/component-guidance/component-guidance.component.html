@@ -315,7 +315,23 @@
                           </td>
                           <td>{{ issue.issue }}</td>
                           <td>
-                            @if (issue.evidenceMetric) {
+                            @if (issue.evidenceItems?.length) {
+                              <ul class="topic-doormat-evidence-list">
+                                @for (item of issue.evidenceItems; track item.label + item.metric) {
+                                  <li>
+                                    <span>{{ item.label }}:</span>
+                                    <span
+                                      class="chip topic-doormat-evidence-metric"
+                                      [ngClass]="severityChip(item.severity || issue.severity)">
+                                      {{ item.metric }}
+                                    </span>
+                                  </li>
+                                }
+                              </ul>
+                              @if (issue.evidence) {
+                                <span>{{ issue.evidence }}</span>
+                              }
+                            } @else if (issue.evidenceMetric) {
                               <span
                                 class="chip topic-doormat-evidence-metric"
                                 [ngClass]="severityChip(issue.severity)">
@@ -384,7 +400,23 @@
                           </td>
                           <td>{{ issue.issue }}</td>
                           <td>
-                            @if (issue.evidenceMetric) {
+                            @if (issue.evidenceItems?.length) {
+                              <ul class="topic-doormat-evidence-list">
+                                @for (item of issue.evidenceItems; track item.label + item.metric) {
+                                  <li>
+                                    <span>{{ item.label }}:</span>
+                                    <span
+                                      class="chip topic-doormat-evidence-metric"
+                                      [ngClass]="severityChip(item.severity || issue.severity)">
+                                      {{ item.metric }}
+                                    </span>
+                                  </li>
+                                }
+                              </ul>
+                              @if (issue.evidence) {
+                                <span>{{ issue.evidence }}</span>
+                              }
+                            } @else if (issue.evidenceMetric) {
                               <span
                                 class="chip topic-doormat-evidence-metric"
                                 [ngClass]="severityChip(issue.severity)">

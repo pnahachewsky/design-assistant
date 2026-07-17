@@ -149,6 +149,21 @@ interface GuidanceRow {
         vertical-align: baseline;
       }
 
+      .topic-doormat-evidence-list {
+        list-style: none;
+        display: grid;
+        gap: 0.25rem;
+        margin: 0;
+        padding: 0;
+      }
+
+      .topic-doormat-evidence-list li {
+        display: flex;
+        align-items: center;
+        gap: 0.35rem;
+        flex-wrap: wrap;
+      }
+
       .ai-btn {
         font-weight: 600;
       }

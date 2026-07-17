@@ -286,7 +286,7 @@
       "condition": "The link text exceeds 35 characters, including spaces.",
       "recommendation": "Shorten the link text. Keep link text under 35 characters.",
       "local_deterministic": true,
-      "reporting": "AIDA reports this issue locally from linkTextCharacterCount. The model should not return this issue.",
+      "reporting": "AIDA reports this issue locally from linkTextCharacterCount. The model should not return this issue. AIDA reports one section-level row per affected H2 section, with a list of affected doormat numbers and character-count metrics.",
       "severity_override": {
         "Low": "Use Low when the link text is 36 to 45 characters.",
         "Medium": "Use Medium when the link text is 46 to 60 characters.",
@@ -297,7 +297,7 @@
       "id": "link-name-too-different-from-destination-title",
       "group": "Link name",
       "label": "Link name too different from destination",
-      "severity": "Medium",
+      "severity": "Low",
       "condition": "The link text does not need to exactly match the destination page title or heading. It should be reported only when the link name gives users a different or misleading information scent, such as a different topic, task, audience, service, or destination purpose. Ignore boilerplate title suffixes such as '- Canada.ca' and allow wording changes that make the link fit the doormat style on the page.",
       "recommendation": "Align the link text with the destination page meaning and information scent while keeping it concise and consistent with the page's doormat style.",
       "reporting": "Do not return this issue directly. Return destination_link_relationship, destination_link_relationship_basis, and destination_link_relationship_reason. AIDA reports this issue only for a grounded materially-different plus conflicting-core-concept classification."
@@ -372,7 +372,7 @@
       "condition": "The English description exceeds 95 characters, including spaces. The official limit for link descriptions is 120 characters in both official languages, and the English version should aim to stay under 95 characters to allow for French expansion.",
       "recommendation": "Shorten the description. Aim for the English version to be under 95 characters so the French version can stay under 120 characters.",
       "local_deterministic": true,
-      "reporting": "AIDA reports this issue locally from descriptionCharacterCount. The model should not return this issue.",
+      "reporting": "AIDA reports this issue locally from descriptionCharacterCount. The model should not return this issue. AIDA reports one section-level row per affected H2 section, with a list of affected doormat numbers and character-count metrics.",
       "severity_override": {
         "Low": "Use Low when the description is 96 to 105 characters.",
         "Medium": "Use Medium when the description is 106 to 120 characters.",
