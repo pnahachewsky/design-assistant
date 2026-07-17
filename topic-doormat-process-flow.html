@@ -566,7 +566,7 @@
         </article>
         <article class="card">
           <h3>Description and link style</h3>
-          <p>The model classifies each description and link by grammatical construction. Link styles are <span class="inline-code">task</span>, <span class="inline-code">topic</span>, <span class="inline-code">situation</span>, or <span class="inline-code">mixed-or-unclear</span>. Gerund action links are <span class="inline-code">task</span> when the core meaning is something the user can do or achieve, even if the link includes audience or circumstance context. When link text starts with an <span class="inline-code">-ing</span> word followed by an object, destination, result, or outcome, the model should default to <span class="inline-code">task</span> and should not override that because a later phrase starts with "for", "when", "if", "in", or "about". Description styles are <span class="inline-code">sentence</span>, <span class="inline-code">phrase</span>, <span class="inline-code">keyword-list</span>, or <span class="inline-code">mixed-or-unclear</span>. Descriptions with a subject and verb, including eligibility statements like "You may still be eligible if you are filing...", are <span class="inline-code">sentence</span> even without final punctuation. AIDA groups those labels by H2 section. For both link and description style, if no accepted style is dominant, AIDA creates one section-level style row. If a dominant style exists, AIDA reports one or two outliers as doormat-level rows and more than two outliers as a section-level row.</p>
+          <p>The model classifies each description and link by grammatical construction. Link styles are <span class="inline-code">task</span>, <span class="inline-code">topic</span>, <span class="inline-code">situation</span>, or <span class="inline-code">mixed-or-unclear</span>. Description styles are <span class="inline-code">sentence</span>, <span class="inline-code">phrase</span>, <span class="inline-code">keyword-list</span>, or <span class="inline-code">mixed-or-unclear</span>. AIDA groups those labels by H2 section and creates section-level style rows when warranted.</p>
         </article>
         <article class="card">
           <h3>Destination relationship</h3>
@@ -707,12 +707,11 @@
                   </ul>
                 </li>
                 <li>
-                  <strong>Description style mismatch</strong>
+                  <strong>Description has incorrect style</strong> (not sure of Marvin's wording on this)
                   <ul>
-                    <li>Descriptions are classified as sentence, phrase, keyword list, or mixed/unclear</li>
-                    <li>No dominant accepted style becomes a section-level issue</li>
-                    <li>One or two outliers from a dominant style become doormat-level issues</li>
-                    <li>More than two outliers become a section-level issue</li>
+                    <li>Action verbs that summarize what can be done on the page</li>
+                    <li>list of keywords that summarize information on the page</li>
+                    <li>list of tasks that can be accomplished on the page</li>
                     <li>
                       (We have examples of the style options in the UCDG
                       <a href="https://design.cra-arc.alpha.canada.ca/en/design-systems/gcweb/doormats/index.html">Doormats – GCWeb design system</a>)

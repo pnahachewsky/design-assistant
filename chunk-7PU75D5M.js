@@ -30082,7 +30082,7 @@ var TopicDoormatIaCheckService = class _TopicDoormatIaCheckService {
       return {
         rows: [
           ...iaResult.length ? this.buildMissingRows(iaResult, doormatByKey) : [],
-          ...iaResult.length ? this.buildExtraRows(doormatSummaries, childByKey, visits, topicUrl) : []
+          ...iaResult.length ? this.buildExtraRows(doormatSummaries, childByKey, topicUrl) : []
         ],
         metaByDoormatIndex: this.buildDoormatMetaMap(doormatSummaries, childByKey, visits, topicUrl)
       };
@@ -30123,29 +30123,35 @@ var TopicDoormatIaCheckService = class _TopicDoormatIaCheckService {
       recommendation: this.getTopicDoormatIaText("missingNeededDoormat.recommendation")
     }));
   }
-  buildExtraRows(doormatSummaries, childByKey, visits, topicUrl) {
-    return doormatSummaries.flatMap((summary) => {
+  buildExtraRows(doormatSummaries, childByKey, topicUrl) {
+    const extraSummariesBySection = /* @__PURE__ */ new Map();
+    doormatSummaries.forEach((summary) => {
       const key2 = this.getComparableUrlKey(summary.destinationUrl || summary.href, topicUrl);
       if (!key2 || childByKey.has(key2))
-        return [];
-      return [
-        {
-          include: true,
-          rowType: "doormat",
-          severity: "Low",
-          doormat: this.buildDoormatLabel(summary),
-          doormatLabel: summary.linkText || summary.href || "Doormat",
-          issueId: "unnecessary-doormat",
-          issue: this.getTopicDoormatIaText("unnecessaryDoormat.issue"),
-          evidence: this.getTopicDoormatIaText("unnecessaryDoormat.evidence"),
-          recommendation: this.getTopicDoormatIaText("unnecessaryDoormat.recommendation"),
-          doormatIndex: summary.index || void 0,
-          sectionIndex: summary.sectionIndex || void 0,
-          sectionTitle: summary.sectionTitle || void 0,
-          sectionItemIndex: summary.sectionItemIndex || void 0,
-          sectionItemMeta: this.buildDoormatMeta(summary, childByKey, visits, topicUrl)
-        }
-      ];
+        return;
+      const sectionIndex = summary.sectionIndex || 0;
+      const summaries = extraSummariesBySection.get(sectionIndex) ?? [];
+      summaries.push(summary);
+      extraSummariesBySection.set(sectionIndex, summaries);
+    });
+    return Array.from(extraSummariesBySection.entries()).map(([sectionIndex, summaries]) => {
+      const firstSummary = summaries[0];
+      const affectedIndexes = summaries.map((summary) => summary.sectionItemIndex || summary.index).sort((a, b) => a - b);
+      return {
+        include: true,
+        rowType: "section",
+        severity: "Low",
+        doormat: this.buildSectionLabel(sectionIndex, firstSummary),
+        doormatLabel: "Multiple doormats in section",
+        issueId: "unnecessary-doormat",
+        issue: this.getTopicDoormatIaText("unnecessaryDoormat.issue"),
+        evidence: this.getTopicDoormatIaText("unnecessaryDoormat.evidence", {
+          indexes: affectedIndexes.join(", ")
+        }),
+        recommendation: this.getTopicDoormatIaText("unnecessaryDoormat.recommendation"),
+        sectionIndex: sectionIndex || void 0,
+        sectionTitle: firstSummary.sectionTitle || void 0
+      };
     });
   }
   getTopicDoormatIaText(key2, params) {
@@ -30316,15 +30322,8 @@ var TopicDoormatIaCheckService = class _TopicDoormatIaCheckService {
       return url;
     }
   }
-  buildDoormatLabel(summary) {
-    const itemLabel = [
-      summary.sectionItemIndex ? `${summary.sectionItemIndex}.` : "",
-      summary.linkText || summary.href || "Doormat"
-    ].filter(Boolean).join(" ");
-    return summary.sectionTitle ? `${summary.sectionTitle}: ${itemLabel}` : [
-      summary.index ? `${summary.index}.` : "",
-      summary.linkText || summary.href || "Doormat"
-    ].filter(Boolean).join(" ");
+  buildSectionLabel(sectionIndex, summary) {
+    return summary.sectionTitle || `Section ${sectionIndex || 1}`;
   }
   formatVisits(value) {
     return new Intl.NumberFormat("en-CA").format(value);
@@ -30673,7 +30672,6 @@ var TopicDoormatIssueAnalysisService = class _TopicDoormatIssueAnalysisService {
   locallyOwnedTopicDoormatIssueIds = /* @__PURE__ */ new Set([
     "broken-link",
     "description-contains-link",
-    "description-incorrect-style",
     "description-missing-needed-information",
     "description-too-long",
     "description-trailing-punctuation",
@@ -30689,15 +30687,7 @@ var TopicDoormatIssueAnalysisService = class _TopicDoormatIssueAnalysisService {
     "split-heading-link",
     "too-many-doormats-in-section",
     "unnecessary-doormat",
-    "inconsistent-description-style",
     "inconsistent-link-name-style"
-  ]);
-  lowSeverityTopicDoormatStyleIssueIds = /* @__PURE__ */ new Set([
-    "description-incorrect-style",
-    "inconsistent-description-style",
-    "inconsistent-link-name-style",
-    "mixed-description-style-in-section",
-    "mixed-link-name-styles-in-section"
   ]);
   topicDoormatDescriptionStyleOrder = ["sentence", "phrase", "keyword-list"];
   topicDoormatLinkTextStyleOrder = ["task", "topic", "situation"];
@@ -30917,8 +30907,7 @@ var TopicDoormatIssueAnalysisService = class _TopicDoormatIssueAnalysisService {
           return null;
         const issue = rawIssue;
         const issueId = this.getTopicDoormatIssueId(issue);
-        const modelSeverity = this.normalizeTopicDoormatModelSeverity(issue["severity"]);
-        const severity = this.getTopicDoormatIssueSeverity(issueId, modelSeverity);
+        const severity = this.normalizeTopicDoormatModelSeverity(issue["severity"]);
         if (!this.topicDoormatIssueIdToLabel.has(issueId) || !severity) {
           return null;
         }
@@ -30968,7 +30957,7 @@ var TopicDoormatIssueAnalysisService = class _TopicDoormatIssueAnalysisService {
       analysis.sectionIndex,
       analysis
     ]));
-    const mixedDescriptionStyleSectionIndexes = new Set(descriptionStyleAnalyses.filter((analysis) => analysis.shouldReportSectionIssue).map((analysis) => analysis.sectionIndex));
+    const mixedDescriptionStyleSectionIndexes = new Set(descriptionStyleAnalyses.filter((analysis) => analysis.isMixed).map((analysis) => analysis.sectionIndex));
     const mixedLinkNameStyleSectionIndexes = new Set(reportableSectionIssueRows.filter((row) => row.issueId === "mixed-link-name-styles-in-section").map((row) => row.sectionIndex).filter((index) => typeof index === "number" && index > 0));
     const localDescriptionTrailingPunctuationSectionIndexes = this.getLocalDescriptionTrailingPunctuationSectionIndexes(doormatSummaries);
     const inconsistentLinkNameStyleCountsBySection = rows.reduce((counts, row) => {
@@ -31144,8 +31133,7 @@ var TopicDoormatIssueAnalysisService = class _TopicDoormatIssueAnalysisService {
   }
   buildTopicDoormatSectionIssueRow(issue, fallbackSectionIndex, doormatSummaries = []) {
     const issueId = this.getTopicDoormatIssueId(issue);
-    const modelSeverity = this.normalizeTopicDoormatModelSeverity(issue["severity"]);
-    const severity = this.getTopicDoormatIssueSeverity(issueId, modelSeverity);
+    const severity = this.normalizeTopicDoormatModelSeverity(issue["severity"]);
     if (!this.topicDoormatIssueIdToLabel.has(issueId) || !severity) {
       return null;
     }
@@ -31571,33 +31559,46 @@ var TopicDoormatIssueAnalysisService = class _TopicDoormatIssueAnalysisService {
         group.summaries.push(summary);
         summariesByOpening.set(opening.key, group);
       });
-      return Array.from(summariesByOpening.values()).flatMap((group) => {
+      const repeatedOpeningGroups = Array.from(summariesByOpening.values()).flatMap((group) => {
         if (group.summaries.length < 2)
           return [];
         const affectedIndexes = group.summaries.map((summary) => summary.sectionItemIndex || summary.index).sort((a, b) => a - b);
-        const severity = group.summaries.length / sectionSummaries.length > 0.5 ? "Medium" : "Low";
-        const firstSummary = group.summaries[0];
+        const repeatedRatio = group.summaries.length / sectionSummaries.length;
+        if (repeatedRatio < 0.4)
+          return [];
+        const hasAdjacentRepeatedOpening = affectedIndexes.some((index, position) => position > 0 && index === affectedIndexes[position - 1] + 1);
         return [
           {
-            include: true,
-            rowType: "section",
-            severity,
-            doormat: this.buildTopicDoormatSectionLabel(sectionIndex, doormatSummaries),
-            doormatLabel: "Multiple doormats in section",
-            issueId: "repeated-description-opening",
-            issue: this.getTopicDoormatIssueLabel("repeated-description-opening"),
-            evidence: this.getTopicDoormatDeterministicText("repeatedDescriptionOpening.evidence", {
-              count: group.summaries.length,
-              total: sectionSummaries.length,
-              opening: group.label,
-              indexes: affectedIndexes.join(", ")
-            }),
-            recommendation: this.getTopicDoormatDeterministicText("repeatedDescriptionOpening.recommendation"),
-            sectionIndex,
-            sectionTitle: firstSummary.sectionTitle
+            group,
+            affectedIndexes,
+            severity: hasAdjacentRepeatedOpening || repeatedRatio > 0.6 ? "Medium" : "Low"
           }
         ];
       });
+      if (!repeatedOpeningGroups.length)
+        return [];
+      const severity = repeatedOpeningGroups.some((group) => group.severity === "Medium") ? "Medium" : "Low";
+      const firstSummary = sectionSummaries[0];
+      return [
+        {
+          include: true,
+          rowType: "section",
+          severity,
+          doormat: this.buildTopicDoormatSectionLabel(sectionIndex, doormatSummaries),
+          doormatLabel: "Multiple doormats in section",
+          issueId: "repeated-description-opening",
+          issue: this.getTopicDoormatIssueLabel("repeated-description-opening"),
+          evidence: repeatedOpeningGroups.map(({ group, affectedIndexes }) => this.getTopicDoormatDeterministicText("repeatedDescriptionOpening.evidence", {
+            count: group.summaries.length,
+            total: sectionSummaries.length,
+            opening: group.label,
+            indexes: affectedIndexes.join(", ")
+          })).join(" "),
+          recommendation: this.getTopicDoormatDeterministicText("repeatedDescriptionOpening.recommendation"),
+          sectionIndex,
+          sectionTitle: firstSummary.sectionTitle
+        }
+      ];
     });
   }
   getTopicDoormatDescriptionOpening(description) {
@@ -31632,24 +31633,26 @@ var TopicDoormatIssueAnalysisService = class _TopicDoormatIssueAnalysisService {
       sections.set(summary.sectionIndex, summaries);
     });
     return Array.from(sections.entries()).flatMap(([sectionIndex, summaries]) => {
+      if (summaries.length < 3)
+        return [];
       const classified = summaries.map((summary) => ({
         summary,
         style: stylesByDoormatIndex.get(summary.index) ?? "mixed-or-unclear"
       }));
+      if (classified.some((entry) => entry.style === "mixed-or-unclear")) {
+        return [];
+      }
       const counts = /* @__PURE__ */ new Map();
       classified.forEach(({ style: style2 }) => {
         counts.set(style2, (counts.get(style2) ?? 0) + 1);
       });
-      const dominantStyle = this.getDominantTopicDoormatLinkStyle(counts, summaries.length);
-      const outliers = dominantStyle ? classified.filter((entry) => entry.style !== dominantStyle) : classified;
-      const shouldReportSectionIssue = summaries.length > 0 && (!dominantStyle || outliers.length > 2);
-      const shouldReportDoormatIssues = !!dominantStyle && outliers.length > 0 && outliers.length <= 2;
-      if (shouldReportSectionIssue) {
-        const styleOrder = [
-          ...this.topicDoormatLinkTextStyleOrder,
-          "mixed-or-unclear"
-        ];
-        const groups = styleOrder.filter((style2) => (counts.get(style2) ?? 0) > 0).map((style2) => {
+      const ranked = this.topicDoormatLinkTextStyleOrder.map((style2) => ({ style: style2, count: counts.get(style2) ?? 0 })).filter((entry) => entry.count > 0).sort((a, b) => b.count - a.count);
+      if (ranked.length < 2)
+        return [];
+      const secondStyleCount = ranked[1]?.count ?? 0;
+      const isSectionMix = secondStyleCount >= 2 || summaries.length <= 4;
+      if (isSectionMix) {
+        const groups = ranked.map(({ style: style2 }) => {
           const indexes = classified.filter((entry) => entry.style === style2).map((entry) => entry.summary.sectionItemIndex).slice(0, 4);
           return `${this.getTopicDoormatLinkStyleLabel(style2)}: ${indexes.join(", ")}`;
         });
@@ -31658,7 +31661,7 @@ var TopicDoormatIssueAnalysisService = class _TopicDoormatIssueAnalysisService {
           {
             include: true,
             rowType: "section",
-            severity: "Low",
+            severity: "Medium",
             doormat: this.buildTopicDoormatSectionLabel(sectionIndex, doormatSummaries),
             doormatLabel: "All doormats in section",
             issueId: "mixed-link-name-styles-in-section",
@@ -31670,7 +31673,11 @@ var TopicDoormatIssueAnalysisService = class _TopicDoormatIssueAnalysisService {
           }
         ];
       }
-      if (!shouldReportDoormatIssues || !dominantStyle)
+      if (ranked[0].count === ranked[1].count)
+        return [];
+      const dominantStyle = ranked[0].style;
+      const outliers = classified.filter((entry) => entry.style !== dominantStyle);
+      if (!outliers.length || outliers.length > 2)
         return [];
       return outliers.map(({ summary, style: style2 }) => ({
         include: true,
@@ -31691,19 +31698,6 @@ var TopicDoormatIssueAnalysisService = class _TopicDoormatIssueAnalysisService {
         sectionItemIndex: summary.sectionItemIndex
       }));
     });
-  }
-  getDominantTopicDoormatLinkStyle(styleCounts, sectionDoormatCount) {
-    if (sectionDoormatCount <= 0)
-      return null;
-    const candidates = this.topicDoormatLinkTextStyleOrder.map((style2) => ({ style: style2, count: styleCounts.get(style2) ?? 0 })).filter((entry) => entry.count > 0).sort((a, b) => b.count - a.count);
-    if (!candidates.length)
-      return null;
-    if (candidates.length > 1 && candidates[0].count === candidates[1].count) {
-      return null;
-    }
-    if (candidates[0].count / sectionDoormatCount < 0.4)
-      return null;
-    return candidates[0].style;
   }
   getTopicDoormatLinkStyleLabel(style2) {
     return this.getTopicDoormatDeterministicText(`linkStyles.${style2}`);
@@ -31802,45 +31796,20 @@ var TopicDoormatIssueAnalysisService = class _TopicDoormatIssueAnalysisService {
     const rows = [];
     analyses.forEach((analysis) => {
       const key2 = `${analysis.sectionIndex}|mixed-description-style-in-section`;
-      if (analysis.shouldReportSectionIssue && !existingIssueKeys.has(key2)) {
-        rows.push({
-          include: true,
-          rowType: "section",
-          severity: "Low",
-          doormat: this.buildTopicDoormatSectionLabel(analysis.sectionIndex, doormatSummaries),
-          doormatLabel: "All doormats in section",
-          issueId: "mixed-description-style-in-section",
-          issue: this.getTopicDoormatIssueLabel("mixed-description-style-in-section"),
-          evidence: this.buildTopicDoormatMixedStyleEvidence(analysis),
-          recommendation: this.getTopicDoormatDeterministicText("mixedDescriptionStyle.recommendation"),
-          sectionIndex: analysis.sectionIndex,
-          sectionTitle: analysis.sectionTitle
-        });
-      }
-      if (!analysis.shouldReportDoormatIssues || !analysis.dominantStyle) {
+      if (!analysis.isMixed || existingIssueKeys.has(key2))
         return;
-      }
-      const dominantStyle = analysis.dominantStyle;
-      analysis.outlierSummaries.forEach((summary) => {
-        const style2 = descriptionStylesByDoormatIndex.get(summary.index) ?? "mixed-or-unclear";
-        rows.push({
-          include: true,
-          rowType: "doormat",
-          severity: "Low",
-          doormat: this.buildTopicDoormatLabel(summary),
-          doormatLabel: summary.linkText || summary.href || "Doormat",
-          issueId: "inconsistent-description-style",
-          issue: this.getTopicDoormatIssueLabel("inconsistent-description-style"),
-          evidence: this.getTopicDoormatDeterministicText("inconsistentDescriptionStyle.evidence", {
-            dominantStyle: this.getTopicDoormatStyleLabel(dominantStyle),
-            style: this.getTopicDoormatStyleLabel(style2)
-          }),
-          recommendation: this.getTopicDoormatDeterministicText("inconsistentDescriptionStyle.recommendation"),
-          doormatIndex: summary.index,
-          sectionIndex: summary.sectionIndex,
-          sectionTitle: summary.sectionTitle,
-          sectionItemIndex: summary.sectionItemIndex
-        });
+      rows.push({
+        include: true,
+        rowType: "section",
+        severity: "Medium",
+        doormat: this.buildTopicDoormatSectionLabel(analysis.sectionIndex, doormatSummaries),
+        doormatLabel: "All doormats in section",
+        issueId: "mixed-description-style-in-section",
+        issue: this.getTopicDoormatIssueLabel("mixed-description-style-in-section"),
+        evidence: this.buildTopicDoormatMixedStyleEvidence(analysis),
+        recommendation: this.getTopicDoormatDeterministicText("mixedDescriptionStyle.recommendation"),
+        sectionIndex: analysis.sectionIndex,
+        sectionTitle: analysis.sectionTitle
       });
     });
     return rows;
@@ -31864,34 +31833,29 @@ var TopicDoormatIssueAnalysisService = class _TopicDoormatIssueAnalysisService {
         examples.push(summary.sectionItemIndex);
         examplesByStyle.set(style2, examples);
       });
-      const dominantStyle = this.getDominantTopicDoormatDescriptionStyle(styleCounts, summaries.length);
-      const outlierSummaries = dominantStyle ? summaries.filter((summary) => (descriptionStylesByDoormatIndex.get(summary.index) ?? "mixed-or-unclear") !== dominantStyle) : summaries;
-      const shouldReportSectionIssue = summaries.length > 0 && (!dominantStyle || outlierSummaries.length > 2);
-      const shouldReportDoormatIssues = !!dominantStyle && outlierSummaries.length > 0 && outlierSummaries.length <= 2;
+      const relevantStyles = this.topicDoormatDescriptionStyleOrder.filter((style2) => (styleCounts.get(style2) ?? 0) > 0);
+      const dominantStyle = this.getDominantTopicDoormatDescriptionStyle(styleCounts);
+      const rankedRelevantStyles = relevantStyles.map((style2) => ({ style: style2, count: styleCounts.get(style2) ?? 0 })).sort((a, b) => b.count - a.count);
+      const secondStyleCount = rankedRelevantStyles[1]?.count ?? 0;
+      const isMixed = summaries.length >= 3 && relevantStyles.length >= 2 && (secondStyleCount >= 2 || summaries.length <= 4);
       return {
         sectionIndex,
         sectionTitle: summaries[0]?.sectionTitle || `Section ${sectionIndex}`,
         summaries,
         dominantStyle,
-        outlierSummaries,
         styleCounts,
         examplesByStyle,
-        shouldReportSectionIssue,
-        shouldReportDoormatIssues
+        isMixed
       };
     }).sort((a, b) => a.sectionIndex - b.sectionIndex);
   }
-  getDominantTopicDoormatDescriptionStyle(styleCounts, sectionDoormatCount) {
-    if (sectionDoormatCount <= 0)
-      return null;
+  getDominantTopicDoormatDescriptionStyle(styleCounts) {
     const candidates = this.topicDoormatDescriptionStyleOrder.map((style2) => ({ style: style2, count: styleCounts.get(style2) ?? 0 })).filter((entry) => entry.count > 0).sort((a, b) => b.count - a.count);
     if (!candidates.length)
       return null;
     if (candidates.length > 1 && candidates[0].count === candidates[1].count) {
       return null;
     }
-    if (candidates[0].count / sectionDoormatCount < 0.4)
-      return null;
     return candidates[0].style;
   }
   buildTopicDoormatMixedStyleEvidence(analysis) {
@@ -31914,11 +31878,7 @@ var TopicDoormatIssueAnalysisService = class _TopicDoormatIssueAnalysisService {
     return this.getTopicDoormatDeterministicText("mixedDescriptionStyle.evidence.multipleGroups", { styleParts: styleParts.join(". ") });
   }
   buildTopicDoormatMixedStyleEvidenceGroups(analysis) {
-    const styleOrder = [
-      ...this.topicDoormatDescriptionStyleOrder,
-      "mixed-or-unclear"
-    ];
-    return styleOrder.map((style2) => ({
+    return this.topicDoormatDescriptionStyleOrder.map((style2) => ({
       label: this.getTopicDoormatStyleLabel(style2),
       exampleLabel: this.getTopicDoormatStyleEvidenceLabel(style2),
       examples: (analysis.examplesByStyle.get(style2) ?? []).sort((a, b) => a - b).slice(0, 4)
@@ -32028,8 +31988,6 @@ var TopicDoormatIssueAnalysisService = class _TopicDoormatIssueAnalysisService {
       "condition",
       "recommendation",
       "reporting",
-      "must_report_only_when",
-      "do_not_report_when",
       "evidence_required",
       "severity_override"
     ].forEach((key2) => {
@@ -32044,7 +32002,6 @@ var TopicDoormatIssueAnalysisService = class _TopicDoormatIssueAnalysisService {
       instruction: "This compact runtime contract is authoritative. Report only allowed_issue_categories. Complete the required per-doormat classification fields before reporting issues.",
       evidence_style: source["evidence_style"],
       runtime_editorial_evidence_overrides: source["runtime_editorial_evidence_overrides"],
-      style_detection: source["style_detection"],
       destination_content_assessment: source["destination_content_assessment"],
       destination_link_relationship: source["destination_link_relationship"],
       style_inconsistency_reporting: source["style_inconsistency_reporting"],
@@ -32379,13 +32336,6 @@ ${JSON.stringify(contract)}`;
     if (severity === "low")
       return "Low";
     return null;
-  }
-  getTopicDoormatIssueSeverity(issueId, modelSeverity) {
-    if (!modelSeverity)
-      return null;
-    if (this.lowSeverityTopicDoormatStyleIssueIds.has(issueId))
-      return "Low";
-    return modelSeverity;
   }
   stripCodeFences(value) {
     const trimmed = value.trim();
@@ -48160,4 +48110,4 @@ ${custom}` : promptBody;
 export {
   PageAssistantCompareComponent
 };
-//# sourceMappingURL=chunk-FBG3SOBC.js.map
+//# sourceMappingURL=chunk-7PU75D5M.js.map
