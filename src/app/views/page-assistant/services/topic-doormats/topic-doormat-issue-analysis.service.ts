@@ -93,6 +93,7 @@ export class TopicDoormatIssueAnalysisService {
     'description-missing-needed-information',
     'description-too-long',
     'description-trailing-punctuation',
+    'description-uses-first-or-second-person',
     'duplicate-link-in-most-requested',
     'link-name-too-long',
     'link-name-too-different-from-destination-title',
@@ -992,6 +993,7 @@ export class TopicDoormatIssueAnalysisService {
         doormatSummaries,
         existingRows,
       ),
+      ...this.buildLocalTopicDoormatDescriptionPersonRows(doormatSummaries),
       ...this.buildLocalTopicDoormatMostRequestedDuplicateRows(
         doormatSummaries,
         mostRequestedLinks,
@@ -1165,6 +1167,105 @@ export class TopicDoormatIssueAnalysisService {
     if (count <= 105) return 'Low';
     if (count <= 120) return 'Medium';
     return 'High';
+  }
+
+  private buildLocalTopicDoormatDescriptionPersonRows(
+    doormatSummaries: TopicDoormatSummary[],
+  ): TopicDoormatIssueRow[] {
+    return doormatSummaries.flatMap((summary) => {
+      const matchedPronoun = this.getFirstOrSecondPersonPronoun(
+        summary.description,
+      );
+      if (!matchedPronoun) return [];
+
+      return [
+        {
+          include: true,
+          rowType: 'doormat',
+          severity: 'Medium',
+          doormat: this.buildTopicDoormatLabel(summary),
+          doormatLabel: summary.linkText || summary.href || 'Doormat',
+          issueId: 'description-uses-first-or-second-person',
+          issue: this.getTopicDoormatIssueLabel(
+            'description-uses-first-or-second-person',
+          ),
+          evidence: this.getTopicDoormatDeterministicText(
+            'descriptionPerson.evidence',
+            { pronoun: matchedPronoun },
+          ),
+          recommendation: this.getTopicDoormatDeterministicText(
+            'descriptionPerson.recommendation',
+          ),
+          doormatIndex: summary.index || undefined,
+          sectionIndex: summary.sectionIndex || undefined,
+          sectionTitle: summary.sectionTitle || undefined,
+          sectionItemIndex: summary.sectionItemIndex || undefined,
+        } satisfies TopicDoormatIssueRow,
+      ];
+    });
+  }
+
+  private getFirstOrSecondPersonPronoun(description: string): string {
+    const text = this.cleanVisibleText(description);
+    const firstToken =
+      text.match(/^\s*["'(\[]?\s*([\p{L}\p{M}\p{N}_]+(?:['’][\p{L}\p{M}\p{N}_]+)?)/u)?.[1] ??
+      '';
+    if (firstToken === 'US') return '';
+
+    const normalizedToken = firstToken
+      .normalize('NFKC')
+      .replace(/[’]/g, "'")
+      .toLocaleLowerCase();
+    const normalizedBase = normalizedToken.split("'")[0];
+    const openingPronouns = new Set([
+      'i',
+      'me',
+      'my',
+      'mine',
+      'myself',
+      'we',
+      'us',
+      'our',
+      'ours',
+      'ourselves',
+      'you',
+      'your',
+      'yours',
+      'yourself',
+      'yourselves',
+      'je',
+      'j',
+      'm',
+      'moi',
+      'mon',
+      'ma',
+      'mes',
+      'nous',
+      'notre',
+      'nos',
+      'tu',
+      'te',
+      't',
+      'toi',
+      'ton',
+      'ta',
+      'tes',
+      'vous',
+      'votre',
+      'vos',
+    ]);
+    return openingPronouns.has(normalizedBase) ? firstToken : '';
+    /*
+    const pronounPattern =
+      /(?:^|[^\p{L}\p{M}\p{N}_])((?:i['’](?:m|ve|ll|d)|i|me|my|mine|myself|we['’](?:re|ve|ll|d)|we|us|our|ours|ourselves|you['’](?:re|ve|ll|d)|you|your|yours|yourself|yourselves|j['’]|je|m['’]|me|moi|mon|ma|mes|nous|notre|nos|t['’]|tu|te|toi|ton|ta|tes|vous|votre|vos))(?=$|[^\p{L}\p{M}\p{N}_])/giu;
+    let match: RegExpExecArray | null;
+    while ((match = pronounPattern.exec(text))) {
+      const pronoun = match?.[1] ?? '';
+      if (pronoun === 'US') continue;
+      return pronoun;
+    }
+    return '';
+    */
   }
 
   private buildLocalTopicDoormatTrailingPunctuationRows(

@@ -95,9 +95,9 @@ Use this skill for issue analysis of topic doormat sets.
   heading.
 - Do not report `broken-link`, `link-name-too-long`, `description-too-long`,
   `link-name-trailing-punctuation`, `description-trailing-punctuation`,
-  `duplicate-link-in-most-requested`, `missing-needed-doormat`, or
-  `unnecessary-doormat`, or `repeated-description-opening`; AIDA calculates and
-  reports those issues
+  `description-uses-first-or-second-person`, `duplicate-link-in-most-requested`,
+  `missing-needed-doormat`, `unnecessary-doormat`, or
+  `repeated-description-opening`; AIDA calculates and reports those issues
   deterministically from the extracted doormat text, Most requested links,
   destination HTTP status, IA child-page relationships, page-view data, and
   character counts

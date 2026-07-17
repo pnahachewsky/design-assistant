@@ -36,6 +36,10 @@ class HttpClientStub {
           id: 'description-missing-needed-information',
           label: 'Description has content gap',
         },
+        {
+          id: 'description-uses-first-or-second-person',
+          label: 'Description starts with first or second person',
+        },
         { id: 'description-lacks-clarity', label: 'Description lacks clarity' },
         { id: 'misdirected-link', label: 'Misdirected link' },
         {
@@ -101,6 +105,12 @@ class TranslateServiceStub {
     }
     if (key.includes('contentGap.recommendation')) {
       return 'Add the missing decision-making information to the description without repeating the link text.';
+    }
+    if (key.includes('descriptionPerson.evidence')) {
+      return `Description starts with first or second person: '${params?.['pronoun']}'.`;
+    }
+    if (key.includes('descriptionPerson.recommendation')) {
+      return 'Rewrite the description without first or second person.';
     }
     if (key.includes('noIssues.issue')) return 'No issues';
     if (key.includes('noIssues.evidence')) return 'No issues reported by AI.';
@@ -1056,6 +1066,74 @@ describe('TopicDoormatIssueAnalysisService', () => {
         ],
       }),
     );
+  });
+
+  it('flags descriptions that use first or second person', async () => {
+    openRouter.call.and.resolveTo({
+      choices: [{ message: { content: '' } }],
+    });
+
+    const result = await service.analyze({
+      doormatSummaries: [
+        summary({
+          linkText: 'Canada Carbon Rebate (CCR)',
+          labels: ['Closed'],
+          description:
+            'You may still be eligible if you are filing for a tax year 2021, 2022, 2023, or 2024',
+          linkTextCharacterCount: 26,
+          descriptionCharacterCount: 91,
+        }),
+      ],
+      pageLanguage: 'en',
+      hasLegacyTopicDoormatTemplate: false,
+      mostRequestedLinks: [],
+      selectedModel: 'selected-model',
+    });
+
+    const personRows = result.rows.filter(
+      (row) => row.issueId === 'description-uses-first-or-second-person',
+    );
+    expect(personRows.length).toBe(1);
+    expect(personRows[0]).toEqual(
+      jasmine.objectContaining({
+        rowType: 'doormat',
+        severity: 'Medium',
+        doormatIndex: 1,
+        evidence: "Description starts with first or second person: 'You'.",
+        recommendation: 'Rewrite the description without first or second person.',
+      }),
+    );
+  });
+
+  it('allows imperative descriptions and later second-person references', async () => {
+    openRouter.call.and.resolveTo({
+      choices: [{ message: { content: '' } }],
+    });
+
+    const result = await service.analyze({
+      doormatSummaries: [
+        summary({
+          index: 1,
+          sectionItemIndex: 1,
+          description: 'Find benefit payment dates',
+        }),
+        summary({
+          index: 2,
+          sectionItemIndex: 2,
+          description: 'Determine eligibility before you apply',
+        }),
+      ],
+      pageLanguage: 'en',
+      hasLegacyTopicDoormatTemplate: false,
+      mostRequestedLinks: [],
+      selectedModel: 'selected-model',
+    });
+
+    expect(
+      result.rows.some(
+        (row) => row.issueId === 'description-uses-first-or-second-person',
+      ),
+    ).toBeFalse();
   });
 
   it('does not report a repeated description opening below 40 percent of a section', async () => {

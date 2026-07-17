@@ -170,6 +170,8 @@
     "page.tools.guidance.topicDoormats.descriptionTrailingPunctuation.recommendation": "Supprimez la ponctuation finale de la description.",
     "page.tools.guidance.topicDoormats.trailingPunctuation.evidence": "{{label}} se termine par '{{punctuation}}'.",
     "page.tools.guidance.topicDoormats.descriptionTrailingPunctuation.sectionEvidence": "{{count}} {{descriptionLabel}} se terminent par une ponctuation: {{doormatLabel}} {{indexes}}.",
+    "page.tools.guidance.topicDoormats.descriptionPerson.evidence": "La description commence par la premiere ou la deuxieme personne: '{{pronoun}}'.",
+    "page.tools.guidance.topicDoormats.descriptionPerson.recommendation": "Reecrivez la description sans utiliser la premiere ou la deuxieme personne.",
     "page.tools.guidance.topicDoormats.duplicateMostRequested.evidence": "Ce menu d'accueil mene a la meme destination que ce lien Les plus demandes:",
     "page.tools.guidance.topicDoormats.duplicateMostRequested.recommendation": "Signalez pour examen manuel. Dans la plupart des cas, supprimez le doublon de Les plus demandes, sauf s'il existe une raison propre a la page de le conserver.",
     "page.tools.guidance.topicDoormats.splitHeadingLink.evidence": "Le titre du menu d'accueil est divise en {{linkLabel}}: '{{linkText}}'.",

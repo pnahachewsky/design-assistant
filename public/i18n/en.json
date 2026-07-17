@@ -176,6 +176,8 @@
   "page.tools.guidance.topicDoormats.descriptionTrailingPunctuation.recommendation": "Remove final punctuation from the description.",
   "page.tools.guidance.topicDoormats.trailingPunctuation.evidence": "{{label}} ends with '{{punctuation}}'.",
   "page.tools.guidance.topicDoormats.descriptionTrailingPunctuation.sectionEvidence": "{{count}} {{descriptionLabel}} end with punctuation: {{doormatLabel}} {{indexes}}.",
+  "page.tools.guidance.topicDoormats.descriptionPerson.evidence": "Description starts with first or second person: '{{pronoun}}'.",
+  "page.tools.guidance.topicDoormats.descriptionPerson.recommendation": "Rewrite the description without first or second person.",
   "page.tools.guidance.topicDoormats.duplicateMostRequested.evidence": "This doormat links to the same destination as this Most requested link:",
   "page.tools.guidance.topicDoormats.duplicateMostRequested.recommendation": "Flag for manual review. In most cases, remove the duplicate from Most requested unless there is a strong page-specific reason to keep it.",
   "page.tools.guidance.topicDoormats.splitHeadingLink.evidence": "The doormat heading is split into {{linkLabel}}: '{{linkText}}'.",

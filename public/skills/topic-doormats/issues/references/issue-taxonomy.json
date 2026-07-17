@@ -11,7 +11,7 @@
   "analysis_sequence": [
     {
       "pass": "deterministic_structural_checks",
-      "instruction": "Run these checks first. Do not return the response until every model-owned deterministic structural check has been evaluated for every doormat and every complete doormat section. Do not report broken-link, link-name-too-long, description-too-long, link-name-trailing-punctuation, description-trailing-punctuation, duplicate-link-in-most-requested, missing-needed-doormat, or unnecessary-doormat; AIDA calculates and reports those issues deterministically from the extracted doormat text, destination HTTP status, Most requested links, IA child-page relationships, page-view data, and character counts.",
+      "instruction": "Run these checks first. Do not return the response until every model-owned deterministic structural check has been evaluated for every doormat and every complete doormat section. Do not report broken-link, link-name-too-long, description-too-long, link-name-trailing-punctuation, description-trailing-punctuation, description-uses-first-or-second-person, duplicate-link-in-most-requested, missing-needed-doormat, or unnecessary-doormat; AIDA calculates and reports those issues deterministically from the extracted doormat text, destination HTTP status, Most requested links, IA child-page relationships, page-view data, and character counts.",
       "issue_ids": [
         "broken-link",
         "too-many-doormats-in-section",
@@ -517,6 +517,16 @@
       "severity": "Low",
       "condition": "The description ends with punctuation. Topic doormat descriptions should not end with punctuation, even when the description is classified as sentence.",
       "recommendation": "Remove final punctuation from the description."
+    },
+    {
+      "id": "description-uses-first-or-second-person",
+      "group": "Description wording",
+      "label": "Description starts with first or second person",
+      "severity": "Medium",
+      "condition": "The description starts with first- or second-person wording, such as I, we, our, you, or your. Imperative descriptions that start with a verb, such as Find or Determine, are acceptable.",
+      "recommendation": "Rewrite the description without first or second person.",
+      "local_deterministic": true,
+      "reporting": "AIDA reports this issue locally from the extracted description text. The model should not return this issue."
     },
     {
       "id": "description-contains-link",
