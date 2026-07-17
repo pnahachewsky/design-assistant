@@ -33,6 +33,22 @@ Use this skill for issue analysis of topic doormat sets.
 - Audit link name style within each H2 section. Report a section-level mixed
   link name style by returning exactly one `detected_link_text_style` for every
   doormat. Classify grammatical construction, not destination subject matter.
+- Classify link names as `task` when they are framed as an action, process,
+  outcome, or user goal. This includes imperative openings such as "Find",
+  "Apply", "Get", and "Determine", and gerund/action-noun openings such as
+  "Getting" when the link name means getting, finding, receiving, claiming,
+  updating, or managing something. Treat a gerund opening as `task` when it can
+  be paraphrased as "how to [verb/action]". For example, "Getting the right CRA
+  benefits and credits for your family" means "how to get the right CRA benefits
+  and credits for your family", so it is `task`, not `topic`.
+- For link name style disambiguation, use the frontloaded wording as the main
+  style signal because Canada.ca writing frontloads important information. Later
+  situation wording does not override a frontloaded task frame. For example,
+  "Getting your tax benefits and credits when in an abusive situation" is
+  `task`, not `situation`.
+- Classify link names as `topic` only when they are noun phrases, program names,
+  subject labels, or information categories that name what the destination is
+  about without framing it as an action or situation.
 - Return one `destination_link_relationship` and one
   `destination_link_relationship_basis` for every doormat by comparing meaning
   and information scent with the supplied destination title and H1. Use

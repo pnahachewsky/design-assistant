@@ -2456,6 +2456,7 @@ export class TopicDoormatIssueAnalysisService {
       evidence_style: source['evidence_style'],
       runtime_editorial_evidence_overrides:
         source['runtime_editorial_evidence_overrides'],
+      style_detection: source['style_detection'],
       destination_content_assessment:
         source['destination_content_assessment'],
       destination_link_relationship:

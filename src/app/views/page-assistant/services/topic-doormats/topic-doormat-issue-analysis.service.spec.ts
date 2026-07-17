@@ -12,6 +12,15 @@ import { TopicDoormatSummary } from './topic-doormat.types';
 class HttpClientStub {
   get = jasmine.createSpy('get').and.returnValue(
     of({
+      style_detection: {
+        link_text_style_definitions: {
+          task:
+            'A link name framed as an action, process, outcome, or user goal. Treat a gerund opening as task when it can be paraphrased as "how to [verb/action]". For example, "Getting the right CRA benefits and credits for your family" is task, not topic.',
+          topic: 'A noun phrase, program name, subject label, or information category.',
+          situation:
+            'A conditional, life-event, audience, or circumstance-framed link name. Later situation wording does not override a frontloaded task frame.',
+        },
+      },
       issue_categories: [
         { id: 'broken-link', label: 'Broken link' },
         { id: 'description-too-long', label: 'Description too long' },
@@ -258,6 +267,15 @@ describe('TopicDoormatIssueAnalysisService', () => {
     );
     const systemPrompt = openRouter.call.calls.mostRecent().args[1][0].content;
     expect(systemPrompt).toContain('Compact model-owned issue contract');
+    expect(systemPrompt).toContain('"style_detection"');
+    expect(systemPrompt).toContain('"link_text_style_definitions"');
+    expect(systemPrompt).toContain(
+      'Getting the right CRA benefits and credits for your family',
+    );
+    expect(systemPrompt).toContain('how to [verb/action]');
+    expect(systemPrompt).toContain(
+      'Later situation wording does not override a frontloaded task frame',
+    );
     expect(systemPrompt).toContain('"description-lacks-clarity"');
     expect(systemPrompt).not.toContain('"description-too-long"');
     expect(systemPrompt).not.toContain('"broken-link"');

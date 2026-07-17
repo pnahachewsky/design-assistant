@@ -101,6 +101,12 @@
       "situation",
       "mixed-or-unclear"
     ],
+    "link_text_style_definitions": {
+      "task": "A link name framed as an action, process, outcome, or user goal. This includes imperative verbs such as Find, Apply, Get, Determine, and gerund/action-noun openings such as Getting when the link name describes achieving, finding, receiving, claiming, updating, or managing something. Treat a gerund opening as task when it can be paraphrased as 'how to [verb/action]'. Because Canada.ca writing frontloads important information, the opening frame is the main style signal; later situation wording does not override a frontloaded task frame.",
+      "topic": "A noun phrase, program name, subject label, or information category that names what the destination is about without framing it as an action or situation.",
+      "situation": "A conditional, life-event, audience, or circumstance-framed link name where the situation is the frontloaded frame, often introduced by when, if, for, in, or similar situation wording. Do not classify as situation only because a task-framed link includes a later situation qualifier.",
+      "mixed-or-unclear": "Use only when the link name genuinely cannot be assigned one of the other styles."
+    },
     "description_styles": [
       "sentence",
       "phrase",
@@ -522,7 +528,7 @@
       "id": "description-uses-first-or-second-person",
       "group": "Description wording",
       "label": "Description starts with first or second person",
-      "severity": "Medium",
+      "severity": "Low",
       "condition": "The description starts with first- or second-person wording, such as I, we, our, you, or your. Imperative descriptions that start with a verb, such as Find or Determine, are acceptable.",
       "recommendation": "Rewrite the description without first or second person.",
       "local_deterministic": true,
