@@ -410,8 +410,8 @@
           <h2>Process summary</h2>
           <ol>
             <li>Detect topic doormat blocks with <span class="inline-code">.gc-srvinfo</span>.</li>
-            <li>Extract link text, destination, description, counts, and H2 section metadata.</li>
-            <li>Run local deterministic checks for counts and predictable structure issues.</li>
+            <li>Extract link text, labels, destination, description, counts, and H2 section metadata.</li>
+            <li>Run local deterministic checks for counts, link validity, and predictable structure issues.</li>
             <li>Send the complete doormat set to the Topic doormats issue skill.</li>
             <li>Ask the model to classify every doormat using constrained values and grounded evidence.</li>
             <li>Let AIDA validate and aggregate the classifications, apply local decision rules, and build the displayed issues.</li>
@@ -434,7 +434,7 @@
       <h2>Topic doormat review flow</h2>
       <p class="intro">
         The issue flow is set-based. AIDA sends all detected topic doormats together so
-        the model can compare the complete set while AIDA keeps deterministic checks local.
+        the model can classify each item in context while AIDA keeps deterministic checks local.
       </p>
       <div class="two-col">
         <article class="card">
@@ -442,9 +442,13 @@
           <h3>What AIDA sends</h3>
           <p>
             AIDA sends structured doormat summaries, including page order, section-local
-            order, link text, href, description, exact character counts, and extracted
-            H2 section metadata. For each reachable destination, AIDA also supplies the
-            page title, H1, introductory paragraphs before the first H2, and all H2 headings.
+            order, link text, extracted labels, href, description, exact character counts,
+            and H2 section metadata. AIDA also sends label-stripped
+            <span class="inline-code">analysisLinkText</span> and
+            <span class="inline-code">analysisDescription</span> for destination meaning
+            and content-coverage checks. For each resolved destination, AIDA supplies the
+            HTTP status when available, page title, H1, introductory paragraphs before the
+            first H2, and all H2 headings.
           </p>
         </article>
         <article class="card">
@@ -464,8 +468,8 @@
     <section class="panel" id="decision-boundary">
       <h2>Classification first, final decision in AIDA</h2>
       <p class="intro">
-        For checks that depend on comparing the complete doormat set, the model performs
-        the language judgment and AIDA owns the issue decision. This keeps semantic
+        For checks that depend on comparing doormats within a section or against a
+        destination, the model performs the language judgment and AIDA owns the issue decision. This keeps semantic
         classification flexible without letting one model response directly determine
         section-level findings, thresholds, severity, or suppression rules.
       </p>
@@ -476,7 +480,7 @@
           <p>
             The model must return values from defined enums, such as description style,
             link style, destination relationship and its basis, plus destination element
-            coverage. It identifies meaning and rhetorical construction; it does not
+            coverage. It identifies meaning and grammatical construction; it does not
             return the locally owned issue that may result from that classification.
           </p>
         </article>
@@ -513,9 +517,8 @@
     <section class="panel" id="section-rules">
       <h2>Section rules</h2>
       <p class="intro">
-        H2 headings define section-local numbering for the doormat limit. Other
-        consistency checks still compare the full supplied doormat set unless the
-        taxonomy explicitly scopes the check to one section.
+        H2 headings define section-local numbering for the doormat limit and section-level
+        style consistency.
       </p>
       <div class="grid">
         <article class="card">
@@ -535,11 +538,11 @@
           </p>
         </article>
         <article class="card">
-          <span class="label label-blue">Set comparison</span>
-          <h3>Consistency stays set-wide</h3>
+          <span class="label label-blue">Style scope</span>
+          <h3>Style checks stay within each section</h3>
           <p>
-            Style and consistency checks compare the complete doormat set so the model
-            can see patterns that cross H2 sections.
+            AIDA aggregates link-name and description style classifications inside each
+            H2 section.
           </p>
         </article>
       </div>
@@ -563,15 +566,23 @@
         </article>
         <article class="card">
           <h3>Description and link style</h3>
-          <p>The model classifies each description and link by grammatical construction. AIDA groups those labels, determines whether a section mix or genuine outlier meets the rule, and creates the issue row.</p>
+          <p>The model classifies each description and link by grammatical construction. Link styles are <span class="inline-code">task</span>, <span class="inline-code">topic</span>, <span class="inline-code">situation</span>, or <span class="inline-code">mixed-or-unclear</span>. Gerund action links are <span class="inline-code">task</span> when the core meaning is something the user can do or achieve, even if the link includes audience or circumstance context. When link text starts with an <span class="inline-code">-ing</span> word followed by an object, destination, result, or outcome, the model should default to <span class="inline-code">task</span> and should not override that because a later phrase starts with "for", "when", "if", "in", or "about". Description styles are <span class="inline-code">sentence</span>, <span class="inline-code">phrase</span>, <span class="inline-code">keyword-list</span>, or <span class="inline-code">mixed-or-unclear</span>. Descriptions with a subject and verb, including eligibility statements like "You may still be eligible if you are filing...", are <span class="inline-code">sentence</span> even without final punctuation. AIDA groups those labels by H2 section. For both link and description style, if no accepted style is dominant, AIDA creates one section-level style row. If a dominant style exists, AIDA reports one or two outliers as doormat-level rows and more than two outliers as a section-level row.</p>
         </article>
         <article class="card">
           <h3>Destination relationship</h3>
-          <p>The model classifies whether each link name is equivalent, accurately broader or narrower, materially different, or unavailable, and identifies the basis for that decision. AIDA reports only grounded core-concept conflicts and suppresses mismatches when normalized link text is contained in the destination title or H1.</p>
+          <p>The model classifies whether each link name is equivalent, accurately broader or narrower, materially different, or unavailable, and identifies the basis for that decision. AIDA compares the non-label link text with the destination title or H1 by meaning, not exact wording, and reports only grounded core-concept conflicts.</p>
+        </article>
+        <article class="card">
+          <h3>Doormat labels</h3>
+          <p>AIDA extracts visible label and badge text from each doormat. Original link text and descriptions remain available for display and evidence, but AIDA removes extracted labels from <span class="inline-code">analysisLinkText</span> and <span class="inline-code">analysisDescription</span> before destination matching and content-coverage assessment.</p>
+        </article>
+        <article class="card">
+          <h3>Broken links</h3>
+          <p>AIDA reports <span class="inline-code">broken-link</span> locally for objective link failures such as empty or invalid hrefs and fetched destination HTTP error statuses. The model does not report this issue directly.</p>
         </article>
         <article class="card">
           <h3>Description content gaps</h3>
-          <p>The model classifies supplied destination elements as important, covered, or missing by ID. AIDA reports a content gap only when a missing important ID matches extracted page context and passes the local safeguards.</p>
+          <p>The model classifies supplied destination elements as important, covered, or missing by ID. AIDA reports a content gap only when a missing important ID matches extracted page context and passes local safeguards, including not repeating a destination status line that is already exposed by the doormat.</p>
         </article>
         <article class="card">
           <h3>Repeated description openings</h3>
@@ -587,7 +598,7 @@
         </article>
         <article class="card">
           <h3>Fallback behaviour</h3>
-          <p>If the model response is empty or invalid, AIDA builds local No issues rows.</p>
+          <p>AIDA preserves the configured fallback order, logs request and response metrics for topic doormat issue calls, repairs invalid JSON when possible, and builds local <em>No issues</em> rows if no usable model output is available.</p>
         </article>
       </div>
     </section>
@@ -696,11 +707,12 @@
                   </ul>
                 </li>
                 <li>
-                  <strong>Description has incorrect style</strong> (not sure of Marvin's wording on this)
+                  <strong>Description style mismatch</strong>
                   <ul>
-                    <li>Action verbs that summarize what can be done on the page</li>
-                    <li>list of keywords that summarize information on the page</li>
-                    <li>list of tasks that can be accomplished on the page</li>
+                    <li>Descriptions are classified as sentence, phrase, keyword list, or mixed/unclear</li>
+                    <li>No dominant accepted style becomes a section-level issue</li>
+                    <li>One or two outliers from a dominant style become doormat-level issues</li>
+                    <li>More than two outliers become a section-level issue</li>
                     <li>
                       (We have examples of the style options in the UCDG
                       <a href="https://design.cra-arc.alpha.canada.ca/en/design-systems/gcweb/doormats/index.html">Doormats – GCWeb design system</a>)
@@ -720,7 +732,7 @@
                   </ul>
                 </li>
                 <li>
-                  Enhancement label
+                  <strong>Enhancement label</strong>
                   <ul>
                     <li>Only for a recent change (e.g. info label "New", Danger label "Closed")</li>
                   </ul>
@@ -765,32 +777,32 @@
               <code class="code-path">src/app/views/page-assistant/components/problems/component-guidance/component-guidance.component.ts</code>
             </li>
             <li>
-              Parses page HTML into doormat summaries, section metadata, language signals, and Most requested link context.
-              <code class="code-path">src/app/views/page-assistant/services/topic-doormat-extractor.service.ts</code>
+              Parses page HTML into doormat summaries, extracted labels, section metadata, language signals, destination context, destination HTTP status, and Most requested link context.
+              <code class="code-path">src/app/views/page-assistant/services/topic-doormats/topic-doormat-extractor.service.ts</code>
             </li>
             <li>
               Compares doormat destinations with IA child pages and page-view data.
-              <code class="code-path">src/app/views/page-assistant/services/topic-doormat-ia-check.service.ts</code>
+              <code class="code-path">src/app/views/page-assistant/services/topic-doormats/topic-doormat-ia-check.service.ts</code>
             </li>
             <li>
-              Composes the issue request, parses model JSON, applies deterministic issue rows, and resolves final rows.
-              <code class="code-path">src/app/views/page-assistant/services/topic-doormat-issue-analysis.service.ts</code>
+              Composes the issue request, adds label-stripped analysis text, parses model JSON, applies deterministic issue rows, and resolves final rows.
+              <code class="code-path">src/app/views/page-assistant/services/topic-doormats/topic-doormat-issue-analysis.service.ts</code>
             </li>
             <li>
-              Calls the selected model, rotates through fallbacks, and repairs invalid JSON responses.
-              <code class="code-path">src/app/views/page-assistant/services/topic-doormat-model-client.service.ts</code>
+              Calls the selected model, logs request and response metrics, rotates through fallbacks, and repairs invalid JSON responses.
+              <code class="code-path">src/app/views/page-assistant/services/topic-doormats/topic-doormat-model-client.service.ts</code>
             </li>
             <li>
               Groups issue rows, builds category summaries, and maps issues to the displayed health state. Global rows appear in the only real section when there is one; Section 0 is retained when there are multiple real sections.
-              <code class="code-path">src/app/views/page-assistant/services/topic-doormat-presenter.service.ts</code>
+              <code class="code-path">src/app/views/page-assistant/services/topic-doormats/topic-doormat-presenter.service.ts</code>
             </li>
             <li>
               Normalizes URL destinations for deterministic Most requested duplicate checks.
-              <code class="code-path">src/app/views/page-assistant/services/topic-doormat-url-comparison.service.ts</code>
+              <code class="code-path">src/app/views/page-assistant/services/topic-doormats/topic-doormat-url-comparison.service.ts</code>
             </li>
             <li>
               Defines shared Topic doormat interfaces used by the component and services.
-              <code class="code-path">src/app/views/page-assistant/services/topic-doormat.types.ts</code>
+              <code class="code-path">src/app/views/page-assistant/services/topic-doormats/topic-doormat.types.ts</code>
             </li>
             <li>
               Loads the active AIDA skill files, references, and schemas used to build the model prompt.
@@ -803,9 +815,9 @@
 
     <section class="panel">
       <div class="note">
-        <p>
-          Bottom line: AIDA evaluates Topic doormats as a complete set, uses H2
-          sections only where the rules require section-local structure, and keeps the
+        <p>Bottom line: AIDA evaluates Topic doormats together, uses H2 sections for
+          section-local limits and style consistency, strips doormat labels from
+          destination-analysis text, keeps deterministic checks local, and keeps the
           prompt files linked above as the active source of issue and rewrite guidance.
         </p>
       </div>

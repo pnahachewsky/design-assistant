@@ -19,21 +19,18 @@
         "detected_link_text_style": {
           "type": "string",
           "enum": [
-            "action-verb",
-            "noun-topic",
-            "product-or-service",
-            "audience-group",
+            "task",
+            "topic",
+            "situation",
             "mixed-or-unclear"
           ]
         },
         "detected_description_style": {
           "type": "string",
           "enum": [
-            "action-verb-task-summary",
-            "noun-topic-summary",
+            "sentence",
+            "phrase",
             "keyword-list",
-            "task-list",
-            "eligibility-or-benefit-summary",
             "mixed-or-unclear"
           ]
         },
@@ -105,21 +102,18 @@
           "detected_link_text_style": {
             "type": "string",
             "enum": [
-              "action-verb",
-              "noun-topic",
-              "product-or-service",
-              "audience-group",
+              "task",
+              "topic",
+              "situation",
               "mixed-or-unclear"
             ]
           },
           "detected_description_style": {
             "type": "string",
             "enum": [
-              "action-verb-task-summary",
-              "noun-topic-summary",
+              "sentence",
+              "phrase",
               "keyword-list",
-              "task-list",
-              "eligibility-or-benefit-summary",
               "mixed-or-unclear"
             ]
           },

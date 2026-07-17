@@ -2,17 +2,18 @@
   "version": "draft-2026-06-01",
   "scope": "Issue analysis for GCWeb topic page doormats.",
   "precondition": "Run this analysis only when AIDA heuristics have detected one or more topic doormat items. Missing doormat-section detection is handled before invoking this skill.",
-  "analysis_unit": "Analyze one complete topic doormat set at a time. Compare all doormats in the set before assigning issues. Also audit description style within each caller-provided H2 section. Use caller-provided H2 section metadata for section-local numbering, the 9-doormat limit, and section-level style issues.",
-  "reporting_unit": "Return issue reports for each affected doormat item. If an editorial issue applies to a whole section rather than a single doormat, return it in section_issues with the affected section_index. Do not repeat section-level issues on every doormat. Do not return mixed-description-style-in-section or section-description-style-outlier; AIDA derives them from the required per-doormat detected_description_style classifications. Report too-many-doormats-in-section as one section_issues item for the affected H2 section, not as repeated per-doormat issues.",
+  "analysis_unit": "Analyze one complete topic doormat set at a time. Compare doormats within each caller-provided H2 section before assigning section-scoped issues. Use caller-provided H2 section metadata for section-local numbering, the 9-doormat limit, and section-level style issues.",
+  "reporting_unit": "Return issue reports for each affected doormat item. If an editorial issue applies to a whole section rather than a single doormat, return it in section_issues with the affected section_index. Do not repeat section-level issues on every doormat. Do not return description style issues directly; AIDA derives mixed-description-style-in-section and inconsistent-description-style from the required per-doormat detected_description_style classifications. Report too-many-doormats-in-section as one section_issues item for the affected H2 section, not as repeated per-doormat issues.",
   "runtime_editorial_evidence_overrides": {
     "description-lacks-clarity": "Report only genuinely ambiguous wording. evidence_details.unclear_phrase must quote an exact phrase from the description and evidence_details.ambiguity_explanation must explain competing interpretations. Generic wording, missing detail, repetition, and incomplete destination coverage are not clarity issues.",
-    "misdirected-link": "Do not infer misdirection from URL path structure, site hierarchy, or section placement. Do not report when the normalized link name matches the destination title or H1. Section suitability is handled by AIDA's IA checks."
+    "misdirected-link": "Do not infer misdirection from URL path structure, site hierarchy, section placement, labels, or closed/archived/replaced destination states. Doormat labels are acceptable when the substantive link text still matches the destination title or H1 in meaning. Do not require exact wording. Section suitability is handled by AIDA's IA checks."
   },
   "analysis_sequence": [
     {
       "pass": "deterministic_structural_checks",
-      "instruction": "Run these checks first. Do not return the response until every model-owned deterministic structural check has been evaluated for every doormat and every complete doormat section. Do not report link-name-too-long, description-too-long, link-name-trailing-punctuation, description-trailing-punctuation, duplicate-link-in-most-requested, missing-needed-doormat, or unnecessary-doormat; AIDA calculates and reports those issues deterministically from the extracted doormat text, Most requested links, IA child-page relationships, page-view data, and character counts.",
+      "instruction": "Run these checks first. Do not return the response until every model-owned deterministic structural check has been evaluated for every doormat and every complete doormat section. Do not report broken-link, link-name-too-long, description-too-long, link-name-trailing-punctuation, description-trailing-punctuation, duplicate-link-in-most-requested, missing-needed-doormat, or unnecessary-doormat; AIDA calculates and reports those issues deterministically from the extracted doormat text, destination HTTP status, Most requested links, IA child-page relationships, page-view data, and character counts.",
       "issue_ids": [
+        "broken-link",
         "too-many-doormats-in-section",
         "split-heading-link",
         "multiple-links",
@@ -29,7 +30,6 @@
       "pass": "judgment_editorial_checks",
       "instruction": "Run these checks after the deterministic pass. Use only evidence available in the supplied doormat set, most requested links, destination context, or explicit page context. Do not guess missing traffic, priority, or destination facts.",
       "issue_ids": [
-        "broken-link",
         "misdirected-link",
         "link-name-lacks-clarity",
         "link-name-not-unique",
@@ -40,7 +40,6 @@
         "duplicate-or-near-duplicate-description",
         "mixed-description-style-in-section",
         "mixed-link-name-styles-in-section",
-        "section-description-style-outlier",
         "inconsistent-link-name-style",
         "inconsistent-description-style",
         "enhancement-label-not-needed",
@@ -57,25 +56,20 @@
     "section_level_issues": "Aim for under 180 characters. Summarize the pattern and include only representative doormat numbers. Do not list every doormat.",
     "doormat_level_issues": "Keep evidence concise. State the concrete fact and avoid repeating full link text or description text unless needed.",
     "url_evidence": "Do not include doormat_href, most_requested_href, destination URLs, or 'Most requested: n/a' in evidence unless the issue depends on broken links, misdirected links, duplicate links, destination-title comparison, or destination context.",
-    "mixed_description_style": "For mixed-description-style-in-section, name the style groups and include 2 to 4 representative doormat indexes per style group. Do not list every doormat. Do not quote full descriptions. Example: Mixes keyword-list and action-verb descriptions. Keyword-list examples: 1, 3, 5. Action-verb examples: 2, 6, 10."
+    "mixed_description_style": "For mixed-description-style-in-section, name the style groups and include 2 to 4 representative doormat indexes per style group. Do not list every doormat. Do not quote full descriptions. Example: Mixes keyword-list and sentence descriptions. Keyword-list examples: 1, 3, 5. Sentence examples: 2, 6, 10."
   },
   "mandatory_description_style_audit": {
-    "instruction": "Classify every doormat description using exactly one allowed detected_description_style value. Classify the rhetorical construction of the complete description, not the subject matter mentioned within it. Do not return mixed-description-style-in-section or section-description-style-outlier; AIDA aggregates the classifications and reports those issues. If a section is otherwise consistent and only one or two descriptions are clear outliers, inconsistent-description-style may still be reported on those doormats.",
+    "instruction": "Classify every doormat description using exactly one allowed detected_description_style value. Classify the grammatical construction of the complete description, not the subject matter mentioned within it. A sentence-like description remains sentence even when final punctuation is intentionally omitted. Do not return mixed-description-style-in-section, inconsistent-description-style, or description-incorrect-style; AIDA aggregates the classifications and reports the appropriate style issue.",
     "style_groups_to_compare": [
-      "noun/topic keyword-list descriptions",
-      "action-verb task phrases",
-      "How to phrases",
-      "audience or benefit summaries",
-      "sentence-style explanations",
-      "short keyword fragments"
+      "sentence-like descriptions",
+      "short phrases",
+      "keyword lists"
     ],
     "must_classify_as_distinct_styles_when": [
-      "The section mixes noun/topic keyword-list descriptions with action-verb task phrases.",
-      "The section mixes How to descriptions with noun/topic keyword-list descriptions.",
-      "The section mixes noun/topic or benefit-summary descriptions with imperative, question-answer, or How to descriptions.",
-      "A small section, including a section with 4 or fewer doormats, has a visible split between noun/topic summary descriptions and action-oriented or How to descriptions.",
-      "The section mixes short keyword fragments with sentence-style explanations or benefit summaries.",
-      "The section starts some descriptions with verbs and others with nouns or topic labels in a way that makes the set feel inconsistent."
+      "The section mixes sentence-like descriptions with short phrase descriptions.",
+      "The section mixes keyword-list descriptions with sentence or phrase descriptions.",
+      "A small section, including a section with 4 or fewer doormats, has a visible split between sentence-like descriptions and fragment-style descriptions.",
+      "The section starts some descriptions as complete actions or clauses and others as noun phrases or topic labels in a way that makes the set feel inconsistent."
     ],
     "reporting": "Return the classification on every doormat as detected_description_style. AIDA determines whether the classifications form a reportable section-level mix and constructs the evidence from representative doormat indexes.",
     "do_not_dismiss_because": [
@@ -102,35 +96,43 @@
   "style_detection": {
     "required": true,
     "link_text_styles": [
-      "action-verb",
-      "noun-topic",
-      "product-or-service",
-      "audience-group",
+      "task",
+      "topic",
+      "situation",
       "mixed-or-unclear"
     ],
     "description_styles": [
-      "action-verb-task-summary",
-      "noun-topic-summary",
+      "sentence",
+      "phrase",
       "keyword-list",
-      "task-list",
-      "eligibility-or-benefit-summary",
       "mixed-or-unclear"
     ],
+    "link_text_style_definitions": {
+      "task": "Action-oriented link text where the core meaning is something the user can do, get, apply for, find, update, submit, file, pay, calculate, report, or otherwise accomplish. An initial -ing word is task when it functions as an action gerund with an object or outcome, even when the link also includes an audience, purpose, or circumstance qualifier. Examples: 'Getting the right CRA benefits and credits for your family'; 'Getting your tax benefits and credits when in an abusive situation'; 'Filing a trust return'; 'Submitting documents online'.",
+      "topic": "Noun-led or subject-led link text where the core meaning is an information topic, program, benefit, credit, service, concept, or category rather than an action. Examples: 'Provincial and territorial benefits'; 'Disability tax credit'; 'Benefit payment dates'.",
+      "situation": "Circumstance-led link text where the core meaning is the user's condition, life event, audience context, or eligibility situation rather than an action. Examples: 'If you are experiencing abuse'; 'Benefits for families'; 'When payments are late'. Do not classify as situation merely because a task link contains a context phrase such as 'for your family' or 'when in an abusive situation'.",
+      "mixed-or-unclear": "Use only when the complete link text genuinely cannot be assigned one of the other styles."
+    },
     "description_style_definitions": {
-      "action-verb-task-summary": "A complete phrase or sentence framed around an action the user can take, including invitations to learn or find out. Classify by this framing even when the subject is eligibility, benefits, residency, dates, or status.",
-      "noun-topic-summary": "A noun-led phrase or declarative summary that describes a subject without framing it as a user action, list, eligibility statement, or benefit statement.",
-      "keyword-list": "A compact sequence of keywords or noun fragments rather than a complete summary.",
-      "task-list": "A list of parallel user tasks or commands, rather than one complete action-framed summary. Multiple details governed by one action lead-in are not a task list.",
-      "eligibility-or-benefit-summary": "A direct statement of who qualifies, what is available, or what benefit is provided, without an action-oriented lead-in.",
+      "sentence": "A complete sentence, sentence-like clause, imperative, question-answer construction, eligibility statement, conditional statement, or action-framed description. Descriptions with an explicit subject and verb are sentence even when final punctuation is omitted. The final period should be omitted for topic doormats, but the missing period must not prevent classification as sentence. Examples: 'You may still be eligible if you are filing for a tax year 2021, 2022, 2023, or 2024'; 'Find out whether you are eligible'; 'You can apply online'.",
+      "phrase": "A short descriptive phrase or fragment that is not a complete sentence and is not a visibly list-like sequence.",
+      "keyword-list": "A compact sequence of keywords, tasks, topics, or noun fragments, usually comma-separated or visibly list-like rather than a complete sentence.",
       "mixed-or-unclear": "Use only when the complete description genuinely cannot be assigned one of the other styles. Do not use merely because the description mentions several topics."
     },
     "classification_priority": [
-      "Classify rhetorical form before subject matter.",
-      "An action-oriented lead-in governs the complete description. For example, 'Find out whether you are eligible' is action-verb-task-summary, not eligibility-or-benefit-summary.",
-      "Use eligibility-or-benefit-summary only for a direct eligibility or benefit summary without action framing.",
+      "For link text, identify the core grammatical frame before qualifiers. If the core is an action or gerund action, classify it as task even when it includes audience or situation context.",
+      "When a link text starts with an -ing word followed by an object, destination, result, or outcome, default to task. Do not override task because a later phrase starts with for, when, if, in, or about.",
+      "Do not classify a link as situation merely because it contains words such as for, when, if, in, family, abuse, disability, or similar context terms. The core frame must be the circumstance itself.",
+      "Before using situation, ask whether the link would still be meaningful as a circumstance label without the action phrase. If the answer is no, classify the link as task.",
+      "Classify grammatical construction before subject matter.",
+      "A sentence-like description remains sentence even when the final period is omitted. For example, 'Find out whether you are eligible' is sentence, not phrase.",
+      "Descriptions that start with a subject and modal or auxiliary verb, such as 'You may', 'You can', 'You must', 'You need', 'You are', or 'You were', are sentence.",
+      "Conditional descriptions with if, when, or where clauses are sentence when they have a subject and verb. For example, 'You may still be eligible if you are filing for a tax year 2021, 2022, 2023, or 2024' is sentence, not phrase.",
+      "Use phrase only when the description is a fragment rather than a sentence-like construction.",
+      "Use keyword-list when the description is a compact list of keywords, tasks, topics, or fragments.",
       "Return one detected_description_style for every doormat before evaluating issues."
     ],
-    "instruction": "Return exactly one allowed detected_link_text_style and detected_description_style for every doormat. AIDA aggregates the classifications into section mixes and individual outliers. Do not return mixed-description-style-in-section, section-description-style-outlier, mixed-link-name-styles-in-section, or inconsistent-link-name-style directly."
+    "instruction": "Return exactly one allowed detected_link_text_style and detected_description_style for every doormat. AIDA aggregates the classifications into section mixes and individual outliers. Do not return mixed-description-style-in-section, inconsistent-description-style, description-incorrect-style, mixed-link-name-styles-in-section, or inconsistent-link-name-style directly."
   },
   "destination_link_relationship": {
     "required": true,
@@ -151,11 +153,11 @@
       "conflicting-core-concept",
       "unavailable"
     ],
-    "instruction": "Compare link meaning and information scent with the supplied destination title and H1. Added action wording, shortened wording, grammatical inflection, synonyms, paraphrases, acronyms, and program terminology remain accurate when they preserve meaning. Return the relationship basis separately. Use materially-different with conflicting-core-concept only for a different topic, task, audience, service, or scope and explain the conflict in destination_link_relationship_reason. AIDA creates link-name-too-different-from-destination-title only from that grounded pair."
+    "instruction": "Compare link meaning and information scent with the supplied destination title and H1. Use analysisLinkText and analysisDescription for this comparison when present; those fields remove doormat labels from the doormat text. Added action wording, shortened wording, grammatical inflection, synonyms, paraphrases, acronyms, and program terminology remain accurate when they preserve meaning. Return the relationship basis separately. Use materially-different with conflicting-core-concept only for a different topic, task, audience, service, or scope and explain the conflict in destination_link_relationship_reason. AIDA creates link-name-too-different-from-destination-title only from that grounded pair."
   },
   "destination_content_assessment": {
     "required": true,
-    "instruction": "For every doormat, assess the supplied destinationContext before reporting issues. Select important_element_ids only from supplied intro and H2 element IDs. Mark an element important only when users need it to decide whether this destination is relevant; do not select every H2 automatically. Compare both link text and description when determining coverage. missing_important_element_ids must be a subset of important_element_ids and must contain only supplied IDs that are not represented by covered_element_ids. When destinationContext.status is not available, return empty arrays.",
+    "instruction": "For every doormat, assess the supplied destinationContext before reporting issues. Select important_element_ids only from supplied intro and H2 element IDs. Mark an element important only when users need it to decide whether this destination is relevant; do not select every H2 automatically. Compare analysisLinkText and analysisDescription when present, otherwise compare link text and description, when determining coverage. missing_important_element_ids must be a subset of important_element_ids and must contain only supplied IDs that are not represented by covered_element_ids. When destinationContext.status is not available, return empty arrays.",
     "model_must_not_report": "Do not return description-missing-needed-information as an issue. AIDA validates the assessment IDs against the extracted destination context and creates the issue locally.",
     "important_element_examples": [
       "A primary audience or eligibility condition needed to know whether the destination applies.",
@@ -169,8 +171,9 @@
     ]
   },
   "link_name_style_reporting": {
-    "minimum_standard": "Return detected_link_text_style for every doormat. AIDA uses mixed-link-name-styles-in-section when an H2 section has multiple represented styles and inconsistent-link-name-style only for one or two outliers from a dominant style.",
-    "reporting": "Do not return mixed-link-name-styles-in-section or inconsistent-link-name-style directly. AIDA derives them from the classifications and does not report individual outliers when the section is mixed.",
+    "minimum_standard": "Return detected_link_text_style for every doormat. AIDA uses the same dominant-style rule as description style reporting.",
+    "aida_reporting_rule": "AIDA treats a link text style as dominant only when one accepted style, task, topic, or situation, is the unique highest style and covers at least 40% of the section. If no accepted style is dominant, AIDA reports mixed-link-name-styles-in-section. If a dominant style exists, AIDA reports inconsistent-link-name-style on one or two outlier doormats, including mixed-or-unclear outliers; when outliers exceed two, AIDA reports mixed-link-name-styles-in-section instead.",
+    "reporting": "Do not return mixed-link-name-styles-in-section or inconsistent-link-name-style directly. AIDA derives them from detected_link_text_style classifications.",
     "do_not_report_when": [
       "Most or all doormats in the section would receive the same link-name style issue.",
       "The section is internally consistent even if another section uses a different style.",
@@ -178,10 +181,11 @@
     ]
   },
   "style_inconsistency_reporting": {
-    "minimum_standard": "Do not report a style inconsistency just because descriptions are not identical. Return a detected_description_style for every doormat so AIDA can evaluate section-level mixes. Use inconsistent-description-style only for one or two clear outliers from an otherwise consistent section.",
+    "minimum_standard": "Do not report a style inconsistency just because descriptions are not identical. Return a detected_description_style for every doormat so AIDA can evaluate section-level mixes, dominant styles, and outliers.",
     "dominant_style_required": true,
     "outlier_only_reporting": true,
-    "mixed_section_reporting_allowed": false,
+    "mixed_section_reporting_allowed": true,
+    "aida_reporting_rule": "AIDA treats a description style as dominant only when one accepted style, sentence, phrase, or keyword-list, is the unique highest style and covers at least 40% of the section. If no accepted style is dominant, AIDA reports mixed-description-style-in-section. If a dominant style exists, AIDA reports inconsistent-description-style on one or two outlier doormats, including mixed-or-unclear outliers; when outliers exceed two, AIDA reports mixed-description-style-in-section instead.",
     "different_style_required": true,
     "same_style_is_not_inconsistent": "If dominant_style and outlier_style are the same style label, do not report inconsistent-link-name-style or inconsistent-description-style.",
     "style_issue_must_survive_length_fix": "If the doormat already has description-too-long, do not also report inconsistent-description-style unless the style problem would still exist after shortening the description.",
@@ -205,9 +209,8 @@
     "use_other_issue_instead": [
       "Use description-too-long for length issues; do not also report inconsistent-description-style for the same length evidence.",
       "Use description-lacks-clarity for unclear descriptions. For incomplete descriptions, return a grounded destination_content_assessment so AIDA can determine whether a content-gap issue applies; do not use inconsistent-description-style as a substitute.",
-      "Return accurate detected_description_style values when the set-wide style mix is the actual problem; AIDA creates mixed-description-style-in-section.",
-      "Return accurate detected_description_style values when one internally consistent section differs from the page pattern; AIDA creates section-description-style-outlier.",
-      "Use description-incorrect-style only when the description does not fit any accepted style."
+      "Return accurate detected_description_style values when the section-level style mix is the actual problem; AIDA creates mixed-description-style-in-section.",
+      "Use detected_description_style mixed-or-unclear when the description does not fit any accepted style; AIDA decides whether this becomes a section-level or doormat-level style issue."
     ],
     "evidence_required": [
       "dominant_style",
@@ -216,12 +219,11 @@
     ],
     "evidence_format": "Evidence for outlier style inconsistency must explicitly state dominant_style and outlier_style using two different values from the allowed style list. Keep evidence concise. Do not use length, verbosity, detail level, or complexity as the reason.",
     "severity_default": "Low",
-    "severity_escalation": "Use Medium only when the outlier style makes the doormat harder to compare with the rest of the set."
+    "severity_escalation": "Do not escalate style mismatch issues above Low."
   },
   "set_level_checks": [
-    "Check whether link texts use one grammatical style across the set, but report only clear outliers from a dominant style.",
-    "Classify every description so AIDA can check description style within each H2 section and across the complete set. Do not return mixed-description-style-in-section.",
-    "Classify every description so AIDA can compare internally consistent H2 sections. Do not return section-description-style-outlier.",
+    "Classify every link text so AIDA can check link style within each H2 section. Do not return link style issues directly.",
+    "Classify every description so AIDA can check description style within each H2 section. Do not return description style issues directly.",
     "Check whether each description is specific enough to distinguish its doormat from the others.",
     "Check for duplicate or near-duplicate descriptions across the set.",
     "Check for repeated generic task lists across the set.",
@@ -245,16 +247,18 @@
       "group": "Link code issue",
       "label": "Broken link",
       "severity": "High",
-      "condition": "The doormat link is empty, malformed, points to a known missing destination, or otherwise appears broken from the supplied page context.",
-      "recommendation": "Replace the link with a valid destination URL."
+      "condition": "The doormat link is empty, malformed, unsupported for a destination link, or the fetched destination returned an HTTP error status.",
+      "recommendation": "Replace the link with a valid destination URL.",
+      "reporting": "Do not return this issue directly. AIDA reports it deterministically from the extracted href and destination HTTP status. Do not classify resolved pages with outdated, closed, archived, or no-longer-available content as broken links unless the destination request itself returned an HTTP error status."
     },
     {
       "id": "misdirected-link",
       "group": "Link code issue",
       "label": "Misdirected link",
       "severity": "High",
-      "condition": "The doormat link points to the wrong page or wrong anchored location for the link text and description.",
-      "recommendation": "Update the href so the doormat points to the intended destination page or anchor."
+      "condition": "The doormat link points to the wrong page or wrong anchored location for the substantive, non-label meaning of the link text and description.",
+      "recommendation": "Update the href so the doormat points to the intended destination page or anchor.",
+      "reporting": "Report only when the non-label portion of the doormat points to a different destination topic, task, audience, service, or scope than the destination title or H1. Do not report because a destination is closed, archived, replaced, inactive, no longer available, or carries a visible label. Do not require exact title/H1 wording when the meaning and information scent match."
     },
     {
       "id": "split-heading-link",
@@ -331,7 +335,7 @@
       "group": "Link name",
       "label": "Link has trailing punctuation",
       "severity": "Low",
-      "condition": "The link text ends with a period, colon, question mark, exclamation mark, semicolon, or comma.",
+      "condition": "The link text ends with a period, colon, question mark, exclamation mark, semicolon, or comma. Link text should not end with punctuation regardless of whether it is classified as task, topic, or situation.",
       "recommendation": "Remove trailing punctuation from the link text."
     },
     {
@@ -339,9 +343,9 @@
       "group": "Link name",
       "label": "Inconsistent link name style",
       "severity": "Low",
-      "condition": "One or more doormat link texts are clear outliers from a dominant link text style used by the rest of the set, such as a lone action verb among noun/topic links.",
+      "condition": "One or two doormat link texts are clear outliers from a dominant accepted link text style used by the section. A dominant style must be the unique highest accepted style and cover at least 40% of the section.",
       "recommendation": "Use the dominant link text style for this outlier unless the page context clearly justifies the exception.",
-      "reporting": "Do not return this issue directly. AIDA derives it from detected_link_text_style only when a section has one dominant style and no reportable section-level mix.",
+      "reporting": "Do not return this issue directly. AIDA derives it from detected_link_text_style when a section has one or two outliers. If outliers exceed two, AIDA reports mixed-link-name-styles-in-section instead.",
       "evidence_required": [
         "dominant_style",
         "outlier_style",
@@ -393,9 +397,10 @@
       "id": "description-incorrect-style",
       "group": "Description clarity",
       "label": "Description has incorrect style",
-      "severity": "Medium",
-      "condition": "The description style does not fit one of the accepted styles: action verbs that summarize what can be done, keywords that summarize page information, or tasks that can be accomplished.",
-      "recommendation": "Rewrite using one accepted style and keep that style consistent across the set."
+      "severity": "Low",
+      "condition": "The description style does not fit one of the accepted styles: sentence, phrase, or keyword list.",
+      "recommendation": "Rewrite using one accepted style and keep that style consistent across the set.",
+      "reporting": "Do not return this issue directly. AIDA treats descriptions that do not fit an accepted style as detected_description_style mixed-or-unclear and reports either mixed-description-style-in-section or inconsistent-description-style depending on the section pattern."
     },
     {
       "id": "description-repeats-link-text",
@@ -431,8 +436,8 @@
       "id": "mixed-description-style-in-section",
       "group": "Description clarity",
       "label": "Mixed description styles in section",
-      "severity": "Medium",
-      "condition": "The doormat section mixes two or more description styles, such as noun/topic keyword lists, action-verb task phrases, imperative or question-answer descriptions, How to phrases, audience or benefit summaries, sentence-style explanations, or short keyword fragments. This includes small sections when the section has a visible split between noun/topic summaries and action-oriented or How to descriptions.",
+      "severity": "Low",
+      "condition": "The doormat section has no dominant accepted description style, or it has a dominant style with more than two outlier descriptions. A dominant style must be the unique highest accepted style and cover at least 40% of the section.",
       "recommendation": "Rewrite the descriptions so they use one consistent description style across the section.",
       "reporting": "Do not return this issue. AIDA reports it once for an affected section by aggregating detected_description_style values and constructs concise evidence with representative doormat indexes.",
       "evidence_required": [
@@ -442,24 +447,11 @@
       ]
     },
     {
-      "id": "section-description-style-outlier",
-      "group": "Description clarity",
-      "label": "Section (description) styles differ",
-      "severity": "Low",
-      "condition": "One H2 section is internally consistent, but its dominant description style clearly differs from the dominant description style used by other internally consistent H2 sections on the page. When there are only two internally consistent sections with different styles, the later section differs from the page precedent set by the first section.",
-      "recommendation": "Align this section with the dominant page description style unless the section has a clear reason to use a different pattern.",
-      "reporting": "Do not return this issue. AIDA derives it by comparing the dominant detected_description_style of internally consistent sections. AIDA does not report it when there is no clear dominant page-level section style, when the section is internally mixed, or when the difference is only length, detail, or topic.",
-      "evidence_required": [
-        "dominant_page_section_style",
-        "outlier_section_style"
-      ]
-    },
-    {
       "id": "mixed-link-name-styles-in-section",
       "group": "Link name",
       "label": "Mixed link styles in section",
-      "severity": "Medium",
-      "condition": "The doormat section mixes link name styles, such as noun/topic link names and action-verb link names, in a way that reduces scannability or comparability.",
+      "severity": "Low",
+      "condition": "The doormat section has no dominant accepted link text style, or it has a dominant style with more than two outlier link texts. A dominant style must be the unique highest accepted style and cover at least 40% of the section.",
       "recommendation": "Rewrite the link names so they use one consistent link name style across the section.",
       "reporting": "Do not return this issue directly. AIDA derives one section-level issue from detected_link_text_style and does not also report inconsistent-link-name-style for that section.",
       "evidence_required": [
@@ -472,8 +464,9 @@
       "group": "Description clarity",
       "label": "Inconsistent description style",
       "severity": "Low",
-      "condition": "One or more descriptions are clear outliers from a dominant description style used by the rest of the set, such as a lone sentence-style benefit summary among keyword-list descriptions.",
+      "condition": "One or two descriptions are clear outliers from a dominant accepted description style used by the section. A dominant style must be the unique highest accepted style and cover at least 40% of the section.",
       "recommendation": "Use the dominant description style for this outlier unless the page context clearly justifies the exception.",
+      "reporting": "Do not return this issue directly. AIDA derives it from detected_description_style when a section has one or two outliers. If outliers exceed two, AIDA reports mixed-description-style-in-section instead.",
       "evidence_required": [
         "dominant_style",
         "outlier_style",
@@ -538,7 +531,7 @@
       "group": "Description formatting",
       "label": "Description has trailing punctuation",
       "severity": "Low",
-      "condition": "The description ends with punctuation.",
+      "condition": "The description ends with punctuation. Topic doormat descriptions should not end with punctuation, even when the description is classified as sentence.",
       "recommendation": "Remove final punctuation from the description."
     },
     {

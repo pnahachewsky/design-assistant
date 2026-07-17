@@ -137,7 +137,7 @@ import {
   unblockBodyScroll,
   uuid,
   zindexutils
-} from "./chunk-ITA2SL4X.js";
+} from "./chunk-YXQMQU6C.js";
 import {
   ChangeDetectionStrategy,
   ChangeDetectorRef,
@@ -165,6 +165,7 @@ import {
   setClassMetadata,
   signal,
   style,
+  timeout,
   transition,
   trigger,
   useAnimation,
@@ -227,7 +228,7 @@ import {
   ɵɵtwoWayListener,
   ɵɵtwoWayProperty,
   ɵɵviewQuery
-} from "./chunk-7QCF5G4D.js";
+} from "./chunk-NVQYPOKC.js";
 import {
   __async,
   __commonJS,
@@ -21332,8 +21333,6 @@ var OpenRouterService = class _OpenRouterService {
   openRouterApiUrl = "https://openrouter.ai/api/v1/chat/completions";
   freeModelOrder = [
     AiModel.GptOSS20BFree,
-    AiModel.OwlAlpha,
-    AiModel.Zai,
     AiModel.NemotronNano,
     AiModel.GptOSSFree,
     AiModel.NemotronSuper
@@ -21364,11 +21363,15 @@ var OpenRouterService = class _OpenRouterService {
         temperature: options.temperature ?? 0
       };
       try {
-        const resp = yield this.http.post(this.openRouterApiUrl, payload, {
+        let request$ = this.http.post(this.openRouterApiUrl, payload, {
           headers,
           responseType: "text",
           observe: "response"
-        }).toPromise();
+        });
+        if (options.timeoutMs && options.timeoutMs > 0) {
+          request$ = request$.pipe(timeout(options.timeoutMs));
+        }
+        const resp = yield request$.toPromise();
         const ct = resp?.headers.get("content-type") || "";
         if (ct.includes("application/json") && typeof resp?.body === "string") {
           return JSON.parse(resp.body);
@@ -21381,6 +21384,15 @@ var OpenRouterService = class _OpenRouterService {
         }
         return void 0;
       } catch (err) {
+        const timeoutErr = err;
+        if (timeoutErr?.name === "TimeoutError") {
+          const message2 = `OpenRouter request timed out (model: ${model}, timeoutMs: ${options.timeoutMs})`;
+          console.error(message2);
+          if (options.throwOnError) {
+            throw new Error(message2);
+          }
+          return void 0;
+        }
         const httpErr = err;
         const status = httpErr?.status;
         const bodySnippet = typeof httpErr?.error === "string" ? httpErr.error.slice(0, 500) : JSON.stringify(httpErr?.error);
@@ -21741,7 +21753,7 @@ var severity_include_fallback_default = {
   "Non-text content": { severity: "High", include: true }
 };
 
-// src/app/views/page-assistant/services/alert-reportable.utils.ts
+// src/app/views/page-assistant/services/alerts/alert-reportable.utils.ts
 var HIDDEN_STYLE_RE = /(display\s*:\s*none|visibility\s*:\s*hidden)/i;
 var HIDDEN_CLASS_NAMES = /* @__PURE__ */ new Set(["hidden", "hide", "d-none", "is-hidden", "wb-inv"]);
 var IGNORED_ALERT_IDS = /* @__PURE__ */ new Set(["norun"]);
@@ -21822,7 +21834,7 @@ function isHiddenAlert(alert) {
   return Array.from(alert.classList).some((className) => HIDDEN_CLASS_NAMES.has(className.toLowerCase()));
 }
 
-// src/app/views/page-assistant/services/alert-ai.service.ts
+// src/app/views/page-assistant/services/alerts/alert-ai.service.ts
 var AlertAiService = class _AlertAiService {
   openRouter = inject(OpenRouterService);
   messageService = inject(MessageService);
@@ -21914,7 +21926,7 @@ var AlertAiService = class _AlertAiService {
               });
               generatingNotified = true;
             }
-            const issues = this.parseIssues(text);
+            const issues = this.validateAlertIssuesAgainstHtml(this.parseIssues(text), alertHtml);
             if (issues.length) {
               resolvedIssues = issues;
               this.messageService.add({
@@ -22000,7 +22012,15 @@ var AlertAiService = class _AlertAiService {
   }
   cacheIssues(alertHtml, issues) {
     const normalized = this.getCacheKey(alertHtml);
-    const copied = issues.map((issue) => __spreadValues({}, issue));
+    const validatedIssues = this.validateAlertIssuesAgainstHtml(issues, alertHtml);
+    const copied = validatedIssues.map((issue) => {
+      const category = this.cleanString(issue.category);
+      return category.toLowerCase() === "no issues" ? __spreadProps(__spreadValues({}, issue), {
+        category,
+        severity: "N/A",
+        include: false
+      }) : __spreadValues({}, issue);
+    });
     this.cachedAlertIssues.set(normalized, {
       html: alertHtml,
       issues: copied
@@ -22064,9 +22084,10 @@ var AlertAiService = class _AlertAiService {
       const category = this.cleanString(issue.category);
       const description = this.cleanString(issue.description);
       const recommendation = this.cleanString(issue.recommendation);
-      const severity = this.normalizeSeverity(issue.severity, category);
+      const isNoIssues = category.toLowerCase() === "no issues";
+      const severity = isNoIssues ? "N/A" : this.normalizeSeverity(issue.severity, category);
       const alertIndex = typeof issue.alertIndex === "number" ? issue.alertIndex : typeof issue.alertIndex === "string" ? Number.parseInt(issue.alertIndex, 10) : void 0;
-      const include = typeof issue.include === "boolean" ? issue.include : useIncludeFallback ? this.lookupFallbackInclude(category) ?? true : true;
+      const include = isNoIssues ? false : typeof issue.include === "boolean" ? issue.include : useIncludeFallback ? this.lookupFallbackInclude(category) ?? true : true;
       return __spreadProps(__spreadValues({}, issue), {
         alertIndex: Number.isFinite(alertIndex) ? alertIndex : void 0,
         category,
@@ -22076,6 +22097,63 @@ var AlertAiService = class _AlertAiService {
         include
       });
     });
+  }
+  validateAlertIssuesAgainstHtml(issues, sourceHtml) {
+    if (!issues.length || !sourceHtml)
+      return issues;
+    let alerts;
+    try {
+      const doc = new DOMParser().parseFromString(sourceHtml, "text/html");
+      alerts = getReportableAlerts(doc.body, {
+        interactiveResultLeadIns: this.getInteractiveResultLeadIns()
+      });
+    } catch {
+      return issues;
+    }
+    if (!alerts.length)
+      return issues;
+    const removedAlertIndexes = /* @__PURE__ */ new Set();
+    const validated = issues.filter((issue) => {
+      if (!this.claimsTargetBlankWithoutRel(issue))
+        return true;
+      const alertIndex = issue.alertIndex;
+      if (!alertIndex || !Number.isInteger(alertIndex))
+        return true;
+      const alert = alerts[alertIndex - 1];
+      if (!alert)
+        return true;
+      const hasTargetBlankWithoutRel = Array.from(alert.querySelectorAll("a[target]")).some((anchor) => {
+        const target = (anchor.getAttribute("target") || "").trim().toLowerCase();
+        const rel = (anchor.getAttribute("rel") || "").trim();
+        return target === "_blank" && !rel;
+      });
+      if (hasTargetBlankWithoutRel)
+        return true;
+      removedAlertIndexes.add(alertIndex);
+      return false;
+    });
+    for (const alertIndex of removedAlertIndexes) {
+      if (validated.some((issue) => issue.alertIndex === alertIndex))
+        continue;
+      validated.push({
+        alertIndex,
+        category: "No issues",
+        severity: "N/A",
+        description: `Alert ${alertIndex}: No issues found for this alert.`,
+        recommendation: "No changes required.",
+        include: false
+      });
+    }
+    return validated;
+  }
+  claimsTargetBlankWithoutRel(issue) {
+    if ((issue.category || "").trim().toLowerCase() !== "accessibility/code") {
+      return false;
+    }
+    const claim = `${issue.description || ""} ${issue.recommendation || ""}`;
+    const mentionsTargetBlank = /target\s*=\s*["']?_blank["']?/i.test(claim);
+    const claimsMissingRel = /(?:no|without|missing|lacks?)\s+(?:an?\s+)?rel\b/i.test(claim) || /\badd\s+rel\b/i.test(claim);
+    return mentionsTargetBlank && claimsMissingRel;
   }
   getShortModelName(model) {
     const normalizedModel = (model || "").trim().toLowerCase().replace(/-\d{8,}(?=:[a-z0-9-]+$|$)/g, "");
@@ -22205,7 +22283,7 @@ var AlertAiService = class _AlertAiService {
   }], null, null);
 })();
 
-// src/app/views/page-assistant/services/alert-context.service.ts
+// src/app/views/page-assistant/services/alerts/alert-context.service.ts
 var AlertContextService = class _AlertContextService {
   translate = inject(TranslateService);
   // Builds the compact alert-analysis payload used when we want the model to
@@ -22844,7 +22922,7 @@ var LinkWritingRulesService = class _LinkWritingRulesService {
   }], null, null);
 })();
 
-// src/app/views/page-assistant/services/alert-rewrite.service.ts
+// src/app/views/page-assistant/services/alerts/alert-rewrite.service.ts
 var AlertRewriteService = class _AlertRewriteService {
   linkWritingRules = inject(LinkWritingRulesService);
   examplesPath = new URL("skills/alerts/alerts-rewriting/references/examples.json", document.baseURI).toString();
@@ -23774,7 +23852,7 @@ var AlertRewriteService = class _AlertRewriteService {
   }], null, null);
 })();
 
-// src/app/views/page-assistant/services/alert-rewrite-guard.service.ts
+// src/app/views/page-assistant/services/alerts/alert-rewrite-guard.service.ts
 var AlertRewriteGuardService = class _AlertRewriteGuardService {
   alertRewrite = inject(AlertRewriteService);
   translate = inject(TranslateService);
@@ -24420,7 +24498,7 @@ var AlertRewriteGuardService = class _AlertRewriteGuardService {
   }], null, null);
 })();
 
-// src/app/views/page-assistant/services/alert-rewrite-orchestrator.service.ts
+// src/app/views/page-assistant/services/alerts/alert-rewrite-orchestrator.service.ts
 var AlertRewriteOrchestratorService = class _AlertRewriteOrchestratorService {
   alertRewrite = inject(AlertRewriteService);
   alertRewriteGuard = inject(AlertRewriteGuardService);
@@ -27730,7 +27808,7 @@ var AiOptionsComponent = class _AiOptionsComponent {
   selectedPrompts = [];
   promptOptions = [
     { id: PromptKey.Headings, label: "page.ai-options.prompt.Headings", disabled: false },
-    { id: PromptKey.Doormats, label: "page.ai-options.prompt.Doormats", disabled: false },
+    { id: PromptKey.Doormats, label: "page.ai-options.prompt.Doormats", disabled: true },
     { id: PromptKey.PlainLanguage, label: "page.ai-options.prompt.PlainLanguage", disabled: false },
     { id: PromptKey.AlertsRecommendations, label: "page.ai-options.prompt.Alerts", disabled: false }
   ];
@@ -27741,15 +27819,13 @@ var AiOptionsComponent = class _AiOptionsComponent {
     this.promptChange.emit(key2);
   }
   // Model and alert-specific options persisted through UploadStateService.
-  selectedAi = AiModel.OwlAlpha;
+  selectedAi = AiModel.Gemini;
   selectedAis = [];
   includeAlertRewriteExamples = true;
   useCompactAlertsPageContext = true;
   // Free and paid model groups are rendered separately in the UI.
   freeAiOptions = [
     { id: AiModel.GptOSS20BFree, label: "page.ai-options.model.GptOSS20BFree", disabled: false },
-    { id: AiModel.OwlAlpha, label: "page.ai-options.model.OwlAlpha", disabled: false },
-    { id: AiModel.Zai, label: "page.ai-options.model.Zai", disabled: false },
     { id: AiModel.NemotronNano, label: "page.ai-options.model.NemotronNano", disabled: false },
     { id: AiModel.GptOSSFree, label: "page.ai-options.model.GptOSSFree", disabled: false },
     { id: AiModel.NemotronSuper, label: "page.ai-options.model.NemotronSuper", disabled: false }
@@ -28367,6 +28443,7 @@ function AlertsGuidanceComponent_ng_template_2_Template(rf, ctx) {
     \u0275\u0275advance(2);
     \u0275\u0275property("binary", true);
     \u0275\u0275twoWayProperty("ngModel", issue_r2.include);
+    \u0275\u0275property("disabled", ctx_r2.isNoIssueRow(issue_r2));
     \u0275\u0275advance(2);
     \u0275\u0275property("ngClass", ctx_r2.severityClass(issue_r2.severity));
     \u0275\u0275advance();
@@ -28384,9 +28461,14 @@ var ALERT_SEVERITY_RANK = {
   medium: 2,
   low: 1
 };
+function isNoAlertIssue(issue) {
+  return (issue.category || "").trim().toLowerCase() === "no issues";
+}
 function computeAlertCategories(issues, rank = ALERT_SEVERITY_RANK) {
   const bestSeverity = /* @__PURE__ */ new Map();
   for (const issue of issues) {
+    if (isNoAlertIssue(issue))
+      continue;
     const cat = issue.category;
     if (!cat)
       continue;
@@ -28401,11 +28483,11 @@ function computeAlertCategories(issues, rank = ALERT_SEVERITY_RANK) {
   return Array.from(bestSeverity.entries()).map(([label, severity]) => ({ label, severity }));
 }
 function computeAlertMaxSeverity(issues, rank = ALERT_SEVERITY_RANK) {
-  if (!issues.length)
-    return null;
   let max = null;
   let maxRank = -1;
   for (const issue of issues) {
+    if (isNoAlertIssue(issue))
+      continue;
     const sev = (issue.severity || "").toLowerCase();
     const r = rank[sev] ?? -1;
     if (r > maxRank) {
@@ -28513,7 +28595,9 @@ var AlertsGuidanceComponent = class _AlertsGuidanceComponent {
       return;
     this.suppressIncludeToggle = true;
     try {
-      this.issues = this.issues.map((issue) => __spreadProps(__spreadValues({}, issue), { include: flag }));
+      this.issues = this.issues.map((issue) => __spreadProps(__spreadValues({}, issue), {
+        include: isNoAlertIssue(issue) ? false : flag
+      }));
       this.sortIssues();
     } finally {
       this.suppressIncludeToggle = false;
@@ -28549,6 +28633,9 @@ var AlertsGuidanceComponent = class _AlertsGuidanceComponent {
     if (s === "high")
       return "chip-severe";
     return "chip-unk";
+  }
+  isNoIssueRow(issue) {
+    return isNoAlertIssue(issue);
   }
   restoreOrAnalyze() {
     const html = this.uploadState.getWorkingHtml();
@@ -28633,10 +28720,10 @@ var AlertsGuidanceComponent = class _AlertsGuidanceComponent {
   static \u0275fac = function AlertsGuidanceComponent_Factory(__ngFactoryType__) {
     return new (__ngFactoryType__ || _AlertsGuidanceComponent)();
   };
-  static \u0275cmp = /* @__PURE__ */ \u0275\u0275defineComponent({ type: _AlertsGuidanceComponent, selectors: [["ca-alerts-guidance"]], inputs: { selectAll: "selectAll" }, outputs: { maxSeverityChange: "maxSeverityChange", categoriesChange: "categoriesChange", loadingChange: "loadingChange", errorChange: "errorChange" }, features: [\u0275\u0275NgOnChangesFeature], decls: 5, vars: 4, consts: [["styleClass", "p-datatable-sm alert-table", 3, "value"], ["pTemplate", "header"], ["pTemplate", "body"], [1, "alert-table-actions"], ["pButton", "", "type", "button", "label", "Re-analyse current webpage", "icon", "pi pi-refresh", 3, "click", "disabled"], [1, "include-col"], [1, "severity-col"], [1, "wrap-col"], [3, "ngModelChange", "onChange", "binary", "ngModel"], [1, "chip", 3, "ngClass"]], template: function AlertsGuidanceComponent_Template(rf, ctx) {
+  static \u0275cmp = /* @__PURE__ */ \u0275\u0275defineComponent({ type: _AlertsGuidanceComponent, selectors: [["ca-alerts-guidance"]], inputs: { selectAll: "selectAll" }, outputs: { maxSeverityChange: "maxSeverityChange", categoriesChange: "categoriesChange", loadingChange: "loadingChange", errorChange: "errorChange" }, features: [\u0275\u0275NgOnChangesFeature], decls: 5, vars: 4, consts: [["styleClass", "p-datatable-sm alert-table", 3, "value"], ["pTemplate", "header"], ["pTemplate", "body"], [1, "alert-table-actions"], ["pButton", "", "type", "button", "label", "Re-analyse current webpage", "icon", "pi pi-refresh", 3, "click", "disabled"], [1, "include-col"], [1, "severity-col"], [1, "wrap-col"], [3, "ngModelChange", "onChange", "binary", "ngModel", "disabled"], [1, "chip", 3, "ngClass"]], template: function AlertsGuidanceComponent_Template(rf, ctx) {
     if (rf & 1) {
       \u0275\u0275elementStart(0, "p-table", 0);
-      \u0275\u0275template(1, AlertsGuidanceComponent_ng_template_1_Template, 11, 0, "ng-template", 1)(2, AlertsGuidanceComponent_ng_template_2_Template, 12, 7, "ng-template", 2);
+      \u0275\u0275template(1, AlertsGuidanceComponent_ng_template_1_Template, 11, 0, "ng-template", 1)(2, AlertsGuidanceComponent_ng_template_2_Template, 12, 8, "ng-template", 2);
       \u0275\u0275elementEnd();
       \u0275\u0275elementStart(3, "div", 3)(4, "button", 4);
       \u0275\u0275listener("click", function AlertsGuidanceComponent_Template_button_click_4_listener() {
@@ -28650,7 +28737,7 @@ var AlertsGuidanceComponent = class _AlertsGuidanceComponent {
       \u0275\u0275classMap((ctx.reanalysisRecommended ? "p-button-primary" : "p-button-secondary") + " p-button-sm");
       \u0275\u0275property("disabled", ctx.reanalysisDisabled);
     }
-  }, dependencies: [CommonModule, NgClass, FormsModule, NgControlStatus, NgModel, TableModule, Table, PrimeTemplate, CheckboxModule, Checkbox, ButtonModule, ButtonDirective], styles: ["\n\n.alert-table[_ngcontent-%COMP%]   .p-datatable-tbody[_ngcontent-%COMP%]    > tr[_ngcontent-%COMP%]    > td[_ngcontent-%COMP%], \n.alert-table[_ngcontent-%COMP%]   .p-datatable-thead[_ngcontent-%COMP%]    > tr[_ngcontent-%COMP%]    > th[_ngcontent-%COMP%] {\n  white-space: normal !important;\n  word-break: normal;\n  overflow-wrap: normal;\n  vertical-align: top;\n}\n.alert-table[_ngcontent-%COMP%]   .wrap-col[_ngcontent-%COMP%] {\n  min-width: 140px;\n}\n.alert-table[_ngcontent-%COMP%]   .severity-col[_ngcontent-%COMP%]   .chip[_ngcontent-%COMP%] {\n  white-space: nowrap !important;\n  display: inline-flex;\n}\n.alert-table[_ngcontent-%COMP%]   .include-col[_ngcontent-%COMP%] {\n  width: 140px;\n  text-align: center;\n}\n.alert-table[_ngcontent-%COMP%]   .include-col[_ngcontent-%COMP%]   .p-checkbox[_ngcontent-%COMP%] {\n  display: inline-flex;\n}\n.alert-table[_ngcontent-%COMP%]   .p-datatable-table[_ngcontent-%COMP%] {\n  width: 100%;\n  border: 1px solid #d1d5db;\n  border-radius: 6px;\n}\n.alert-table[_ngcontent-%COMP%]   .p-datatable-wrapper[_ngcontent-%COMP%] {\n  width: 100%;\n  overflow-x: auto;\n}\n.alert-table[_ngcontent-%COMP%]   .p-datatable-table[_ngcontent-%COMP%] {\n  table-layout: auto !important;\n}\n.alert-table-actions[_ngcontent-%COMP%] {\n  display: flex;\n  justify-content: flex-end;\n  margin-top: 0.75rem;\n}\n.alert-table[_ngcontent-%COMP%]   .toggle-col[_ngcontent-%COMP%], \n.alert-table[_ngcontent-%COMP%]   .checkbox-col[_ngcontent-%COMP%] {\n  width: 1%;\n  white-space: nowrap;\n  text-align: center;\n  padding: 0;\n}\n.alert-table.p-datatable[_ngcontent-%COMP%]   .p-datatable-thead[_ngcontent-%COMP%]    > tr[_ngcontent-%COMP%]    > th.toggle-col[_ngcontent-%COMP%], \n.alert-table.p-datatable[_ngcontent-%COMP%]   .p-datatable-tbody[_ngcontent-%COMP%]    > tr[_ngcontent-%COMP%]    > td.toggle-col[_ngcontent-%COMP%], \n.alert-table.p-datatable[_ngcontent-%COMP%]   .p-datatable-thead[_ngcontent-%COMP%]    > tr[_ngcontent-%COMP%]    > th.checkbox-col[_ngcontent-%COMP%], \n.alert-table.p-datatable[_ngcontent-%COMP%]   .p-datatable-tbody[_ngcontent-%COMP%]    > tr[_ngcontent-%COMP%]    > td.checkbox-col[_ngcontent-%COMP%] {\n  width: 1% !important;\n  white-space: nowrap !important;\n  text-align: center;\n  padding: 0 0.25rem;\n}\n/*# sourceMappingURL=alerts-guidance.component.css.map */", "\n\n[_nghost-%COMP%]     .alert-table .p-datatable-table {\n  table-layout: auto !important;\n}\n[_nghost-%COMP%]     .alert-table.p-datatable .p-datatable-thead > tr > th.toggle-col, \n[_nghost-%COMP%]     .alert-table.p-datatable .p-datatable-tbody > tr > td.toggle-col {\n  width: 70px !important;\n  min-width: 70px;\n  max-width: 70px;\n  white-space: nowrap !important;\n  text-align: center;\n  padding: 0 0.25rem;\n}\n[_nghost-%COMP%]     .alert-table.p-datatable .p-datatable-thead > tr > th.checkbox-col, \n[_nghost-%COMP%]     .alert-table.p-datatable .p-datatable-tbody > tr > td.checkbox-col {\n  width: 70px !important;\n  min-width: 70px;\n  max-width: 70px;\n  white-space: nowrap !important;\n  text-align: center;\n  padding: 0 0.25rem;\n}\n[_nghost-%COMP%]     .topic-doormat-section-row > td {\n  background: #eef2f6;\n}\n.topic-doormat-group[_ngcontent-%COMP%] {\n  margin-top: 1rem;\n  border: 1px solid #d8dee6;\n  border-radius: 6px;\n  background: #fff;\n  overflow: hidden;\n}\n.topic-doormat-group[_ngcontent-%COMP%]    + .topic-doormat-group[_ngcontent-%COMP%] {\n  margin-top: 1.25rem;\n}\n.topic-doormat-group-header[_ngcontent-%COMP%] {\n  display: flex;\n  align-items: flex-start;\n  gap: 0.75rem;\n  padding: 1.1rem 1.25rem;\n  border-bottom: 1px solid #d8dee6;\n  background: #eef2f6;\n}\n.topic-doormat-group[_ngcontent-%COMP%]   h3[_ngcontent-%COMP%] {\n  margin: 0;\n  font-size: 1.25rem;\n  line-height: 1.25;\n}\n.topic-doormat-count[_ngcontent-%COMP%] {\n  flex: 0 0 auto;\n  padding: 0.4rem 0.8rem;\n  border: 1px solid #d8dee6;\n  border-radius: 999px;\n  background: #fff;\n  color: #202833;\n  font-size: 0.9rem;\n  font-weight: 700;\n}\n.topic-doormat-subheading[_ngcontent-%COMP%] {\n  margin: 1rem 1rem 0.4rem;\n  padding-bottom: 0.25rem;\n  border-bottom: 1px solid #eef2f6;\n  color: #202833;\n  font-size: 0.9rem;\n  font-weight: 700;\n}\n.topic-doormat-group[_ngcontent-%COMP%]   .expansion-table[_ngcontent-%COMP%] {\n  margin: 0 1rem 1rem;\n}\n.topic-doormat-empty[_ngcontent-%COMP%] {\n  padding: 0.75rem;\n  border: 1px solid #d8dee6;\n  border-radius: 4px;\n  background: #fff;\n}\n/*# sourceMappingURL=component-guidance.component.css.map */"] });
+  }, dependencies: [CommonModule, NgClass, FormsModule, NgControlStatus, NgModel, TableModule, Table, PrimeTemplate, CheckboxModule, Checkbox, ButtonModule, ButtonDirective], styles: ["\n\n.alert-table[_ngcontent-%COMP%]   .p-datatable-tbody[_ngcontent-%COMP%]    > tr[_ngcontent-%COMP%]    > td[_ngcontent-%COMP%], \n.alert-table[_ngcontent-%COMP%]   .p-datatable-thead[_ngcontent-%COMP%]    > tr[_ngcontent-%COMP%]    > th[_ngcontent-%COMP%] {\n  white-space: normal !important;\n  word-break: normal;\n  overflow-wrap: normal;\n  vertical-align: top;\n}\n.alert-table[_ngcontent-%COMP%]   .wrap-col[_ngcontent-%COMP%] {\n  min-width: 140px;\n}\n.alert-table[_ngcontent-%COMP%]   .severity-col[_ngcontent-%COMP%]   .chip[_ngcontent-%COMP%] {\n  white-space: nowrap !important;\n  display: inline-flex;\n}\n.alert-table[_ngcontent-%COMP%]   .include-col[_ngcontent-%COMP%] {\n  width: 140px;\n  text-align: center;\n}\n.alert-table[_ngcontent-%COMP%]   .include-col[_ngcontent-%COMP%]   .p-checkbox[_ngcontent-%COMP%] {\n  display: inline-flex;\n}\n.alert-table[_ngcontent-%COMP%]   .p-datatable-table[_ngcontent-%COMP%] {\n  width: 100%;\n  border: 1px solid #d1d5db;\n  border-radius: 6px;\n}\n.alert-table[_ngcontent-%COMP%]   .p-datatable-wrapper[_ngcontent-%COMP%] {\n  width: 100%;\n  overflow-x: auto;\n}\n.alert-table[_ngcontent-%COMP%]   .p-datatable-table[_ngcontent-%COMP%] {\n  table-layout: auto !important;\n}\n.alert-table-actions[_ngcontent-%COMP%] {\n  display: flex;\n  justify-content: flex-end;\n  margin-top: 0.75rem;\n}\n.alert-table[_ngcontent-%COMP%]   .toggle-col[_ngcontent-%COMP%], \n.alert-table[_ngcontent-%COMP%]   .checkbox-col[_ngcontent-%COMP%] {\n  width: 1%;\n  white-space: nowrap;\n  text-align: center;\n  padding: 0;\n}\n.alert-table.p-datatable[_ngcontent-%COMP%]   .p-datatable-thead[_ngcontent-%COMP%]    > tr[_ngcontent-%COMP%]    > th.toggle-col[_ngcontent-%COMP%], \n.alert-table.p-datatable[_ngcontent-%COMP%]   .p-datatable-tbody[_ngcontent-%COMP%]    > tr[_ngcontent-%COMP%]    > td.toggle-col[_ngcontent-%COMP%], \n.alert-table.p-datatable[_ngcontent-%COMP%]   .p-datatable-thead[_ngcontent-%COMP%]    > tr[_ngcontent-%COMP%]    > th.checkbox-col[_ngcontent-%COMP%], \n.alert-table.p-datatable[_ngcontent-%COMP%]   .p-datatable-tbody[_ngcontent-%COMP%]    > tr[_ngcontent-%COMP%]    > td.checkbox-col[_ngcontent-%COMP%] {\n  width: 1% !important;\n  white-space: nowrap !important;\n  text-align: center;\n  padding: 0 0.25rem;\n}\n/*# sourceMappingURL=alerts-guidance.component.css.map */", "\n\n[_nghost-%COMP%]     .alert-table .p-datatable-table {\n  table-layout: auto !important;\n}\n[_nghost-%COMP%]     .alert-table.p-datatable .p-datatable-thead > tr > th.toggle-col, \n[_nghost-%COMP%]     .alert-table.p-datatable .p-datatable-tbody > tr > td.toggle-col {\n  width: 70px !important;\n  min-width: 70px;\n  max-width: 70px;\n  white-space: nowrap !important;\n  text-align: center;\n  padding: 0 0.25rem;\n}\n[_nghost-%COMP%]     .alert-table.p-datatable .p-datatable-thead > tr > th.checkbox-col, \n[_nghost-%COMP%]     .alert-table.p-datatable .p-datatable-tbody > tr > td.checkbox-col {\n  width: 70px !important;\n  min-width: 70px;\n  max-width: 70px;\n  white-space: nowrap !important;\n  text-align: center;\n  padding: 0 0.25rem;\n}\n[_nghost-%COMP%]     .topic-doormat-section-row > td {\n  background: #eef2f6;\n}\n.topic-doormat-group[_ngcontent-%COMP%] {\n  margin-top: 1rem;\n  border: 1px solid #d8dee6;\n  border-radius: 6px;\n  background: #fff;\n  overflow: hidden;\n}\n.topic-doormat-group[_ngcontent-%COMP%]    + .topic-doormat-group[_ngcontent-%COMP%] {\n  margin-top: 1.25rem;\n}\n.topic-doormat-group-header[_ngcontent-%COMP%] {\n  display: flex;\n  align-items: flex-start;\n  gap: 0.75rem;\n  padding: 1.1rem 1.25rem;\n  border-bottom: 1px solid #d8dee6;\n  background: #eef2f6;\n}\n.topic-doormat-group[_ngcontent-%COMP%]   h3[_ngcontent-%COMP%] {\n  margin: 0;\n  font-size: 1.25rem;\n  line-height: 1.25;\n}\n.topic-doormat-count[_ngcontent-%COMP%] {\n  flex: 0 0 auto;\n  padding: 0.4rem 0.8rem;\n  border: 1px solid #d8dee6;\n  border-radius: 999px;\n  background: #fff;\n  color: #202833;\n  font-size: 0.9rem;\n  font-weight: 700;\n}\n.topic-doormat-subheading[_ngcontent-%COMP%] {\n  margin: 1rem 1rem 0.4rem;\n  padding-bottom: 0.25rem;\n  border-bottom: 1px solid #eef2f6;\n  color: #202833;\n  font-size: 0.9rem;\n  font-weight: 700;\n}\n.topic-doormat-group[_ngcontent-%COMP%]   .expansion-table[_ngcontent-%COMP%] {\n  margin: 0 1rem 1rem;\n}\n.topic-doormat-empty[_ngcontent-%COMP%] {\n  padding: 0.75rem;\n  border: 1px solid #d8dee6;\n  border-radius: 4px;\n  background: #fff;\n}\n.topic-doormat-recommendation[_ngcontent-%COMP%] {\n  white-space: pre-line;\n}\n/*# sourceMappingURL=component-guidance.component.css.map */"] });
 };
 (() => {
   (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(AlertsGuidanceComponent, [{
@@ -28668,7 +28755,12 @@ var AlertsGuidanceComponent = class _AlertsGuidanceComponent {
   <ng-template pTemplate="body" let-issue>
     <tr>
       <td class="include-col">
-        <p-checkbox [binary]="true" [(ngModel)]="issue.include" (onChange)="onIncludeToggle()"></p-checkbox>
+        <p-checkbox
+          [binary]="true"
+          [(ngModel)]="issue.include"
+          [disabled]="isNoIssueRow(issue)"
+          (onChange)="onIncludeToggle()"
+        ></p-checkbox>
       </td>
       <td class="severity-col">
         <span class="chip" [ngClass]="severityClass(issue.severity)">
@@ -28696,7 +28788,7 @@ var AlertsGuidanceComponent = class _AlertsGuidanceComponent {
     (click)="analyzeCurrentPage()"
   ></button>
 </div>
-`, styles: ["/* src/app/views/page-assistant/components/problems/component-guidance/alerts-guidance/alerts-guidance.component.css */\n.alert-table .p-datatable-tbody > tr > td,\n.alert-table .p-datatable-thead > tr > th {\n  white-space: normal !important;\n  word-break: normal;\n  overflow-wrap: normal;\n  vertical-align: top;\n}\n.alert-table .wrap-col {\n  min-width: 140px;\n}\n.alert-table .severity-col .chip {\n  white-space: nowrap !important;\n  display: inline-flex;\n}\n.alert-table .include-col {\n  width: 140px;\n  text-align: center;\n}\n.alert-table .include-col .p-checkbox {\n  display: inline-flex;\n}\n.alert-table .p-datatable-table {\n  width: 100%;\n  border: 1px solid #d1d5db;\n  border-radius: 6px;\n}\n.alert-table .p-datatable-wrapper {\n  width: 100%;\n  overflow-x: auto;\n}\n.alert-table .p-datatable-table {\n  table-layout: auto !important;\n}\n.alert-table-actions {\n  display: flex;\n  justify-content: flex-end;\n  margin-top: 0.75rem;\n}\n.alert-table .toggle-col,\n.alert-table .checkbox-col {\n  width: 1%;\n  white-space: nowrap;\n  text-align: center;\n  padding: 0;\n}\n.alert-table.p-datatable .p-datatable-thead > tr > th.toggle-col,\n.alert-table.p-datatable .p-datatable-tbody > tr > td.toggle-col,\n.alert-table.p-datatable .p-datatable-thead > tr > th.checkbox-col,\n.alert-table.p-datatable .p-datatable-tbody > tr > td.checkbox-col {\n  width: 1% !important;\n  white-space: nowrap !important;\n  text-align: center;\n  padding: 0 0.25rem;\n}\n/*# sourceMappingURL=alerts-guidance.component.css.map */\n", "/* src/app/views/page-assistant/components/problems/component-guidance/component-guidance.component.css */\n:host ::ng-deep .alert-table .p-datatable-table {\n  table-layout: auto !important;\n}\n:host ::ng-deep .alert-table.p-datatable .p-datatable-thead > tr > th.toggle-col,\n:host ::ng-deep .alert-table.p-datatable .p-datatable-tbody > tr > td.toggle-col {\n  width: 70px !important;\n  min-width: 70px;\n  max-width: 70px;\n  white-space: nowrap !important;\n  text-align: center;\n  padding: 0 0.25rem;\n}\n:host ::ng-deep .alert-table.p-datatable .p-datatable-thead > tr > th.checkbox-col,\n:host ::ng-deep .alert-table.p-datatable .p-datatable-tbody > tr > td.checkbox-col {\n  width: 70px !important;\n  min-width: 70px;\n  max-width: 70px;\n  white-space: nowrap !important;\n  text-align: center;\n  padding: 0 0.25rem;\n}\n:host ::ng-deep .topic-doormat-section-row > td {\n  background: #eef2f6;\n}\n.topic-doormat-group {\n  margin-top: 1rem;\n  border: 1px solid #d8dee6;\n  border-radius: 6px;\n  background: #fff;\n  overflow: hidden;\n}\n.topic-doormat-group + .topic-doormat-group {\n  margin-top: 1.25rem;\n}\n.topic-doormat-group-header {\n  display: flex;\n  align-items: flex-start;\n  gap: 0.75rem;\n  padding: 1.1rem 1.25rem;\n  border-bottom: 1px solid #d8dee6;\n  background: #eef2f6;\n}\n.topic-doormat-group h3 {\n  margin: 0;\n  font-size: 1.25rem;\n  line-height: 1.25;\n}\n.topic-doormat-count {\n  flex: 0 0 auto;\n  padding: 0.4rem 0.8rem;\n  border: 1px solid #d8dee6;\n  border-radius: 999px;\n  background: #fff;\n  color: #202833;\n  font-size: 0.9rem;\n  font-weight: 700;\n}\n.topic-doormat-subheading {\n  margin: 1rem 1rem 0.4rem;\n  padding-bottom: 0.25rem;\n  border-bottom: 1px solid #eef2f6;\n  color: #202833;\n  font-size: 0.9rem;\n  font-weight: 700;\n}\n.topic-doormat-group .expansion-table {\n  margin: 0 1rem 1rem;\n}\n.topic-doormat-empty {\n  padding: 0.75rem;\n  border: 1px solid #d8dee6;\n  border-radius: 4px;\n  background: #fff;\n}\n/*# sourceMappingURL=component-guidance.component.css.map */\n"] }]
+`, styles: ["/* src/app/views/page-assistant/components/problems/component-guidance/alerts-guidance/alerts-guidance.component.css */\n.alert-table .p-datatable-tbody > tr > td,\n.alert-table .p-datatable-thead > tr > th {\n  white-space: normal !important;\n  word-break: normal;\n  overflow-wrap: normal;\n  vertical-align: top;\n}\n.alert-table .wrap-col {\n  min-width: 140px;\n}\n.alert-table .severity-col .chip {\n  white-space: nowrap !important;\n  display: inline-flex;\n}\n.alert-table .include-col {\n  width: 140px;\n  text-align: center;\n}\n.alert-table .include-col .p-checkbox {\n  display: inline-flex;\n}\n.alert-table .p-datatable-table {\n  width: 100%;\n  border: 1px solid #d1d5db;\n  border-radius: 6px;\n}\n.alert-table .p-datatable-wrapper {\n  width: 100%;\n  overflow-x: auto;\n}\n.alert-table .p-datatable-table {\n  table-layout: auto !important;\n}\n.alert-table-actions {\n  display: flex;\n  justify-content: flex-end;\n  margin-top: 0.75rem;\n}\n.alert-table .toggle-col,\n.alert-table .checkbox-col {\n  width: 1%;\n  white-space: nowrap;\n  text-align: center;\n  padding: 0;\n}\n.alert-table.p-datatable .p-datatable-thead > tr > th.toggle-col,\n.alert-table.p-datatable .p-datatable-tbody > tr > td.toggle-col,\n.alert-table.p-datatable .p-datatable-thead > tr > th.checkbox-col,\n.alert-table.p-datatable .p-datatable-tbody > tr > td.checkbox-col {\n  width: 1% !important;\n  white-space: nowrap !important;\n  text-align: center;\n  padding: 0 0.25rem;\n}\n/*# sourceMappingURL=alerts-guidance.component.css.map */\n", "/* src/app/views/page-assistant/components/problems/component-guidance/component-guidance.component.css */\n:host ::ng-deep .alert-table .p-datatable-table {\n  table-layout: auto !important;\n}\n:host ::ng-deep .alert-table.p-datatable .p-datatable-thead > tr > th.toggle-col,\n:host ::ng-deep .alert-table.p-datatable .p-datatable-tbody > tr > td.toggle-col {\n  width: 70px !important;\n  min-width: 70px;\n  max-width: 70px;\n  white-space: nowrap !important;\n  text-align: center;\n  padding: 0 0.25rem;\n}\n:host ::ng-deep .alert-table.p-datatable .p-datatable-thead > tr > th.checkbox-col,\n:host ::ng-deep .alert-table.p-datatable .p-datatable-tbody > tr > td.checkbox-col {\n  width: 70px !important;\n  min-width: 70px;\n  max-width: 70px;\n  white-space: nowrap !important;\n  text-align: center;\n  padding: 0 0.25rem;\n}\n:host ::ng-deep .topic-doormat-section-row > td {\n  background: #eef2f6;\n}\n.topic-doormat-group {\n  margin-top: 1rem;\n  border: 1px solid #d8dee6;\n  border-radius: 6px;\n  background: #fff;\n  overflow: hidden;\n}\n.topic-doormat-group + .topic-doormat-group {\n  margin-top: 1.25rem;\n}\n.topic-doormat-group-header {\n  display: flex;\n  align-items: flex-start;\n  gap: 0.75rem;\n  padding: 1.1rem 1.25rem;\n  border-bottom: 1px solid #d8dee6;\n  background: #eef2f6;\n}\n.topic-doormat-group h3 {\n  margin: 0;\n  font-size: 1.25rem;\n  line-height: 1.25;\n}\n.topic-doormat-count {\n  flex: 0 0 auto;\n  padding: 0.4rem 0.8rem;\n  border: 1px solid #d8dee6;\n  border-radius: 999px;\n  background: #fff;\n  color: #202833;\n  font-size: 0.9rem;\n  font-weight: 700;\n}\n.topic-doormat-subheading {\n  margin: 1rem 1rem 0.4rem;\n  padding-bottom: 0.25rem;\n  border-bottom: 1px solid #eef2f6;\n  color: #202833;\n  font-size: 0.9rem;\n  font-weight: 700;\n}\n.topic-doormat-group .expansion-table {\n  margin: 0 1rem 1rem;\n}\n.topic-doormat-empty {\n  padding: 0.75rem;\n  border: 1px solid #d8dee6;\n  border-radius: 4px;\n  background: #fff;\n}\n.topic-doormat-recommendation {\n  white-space: pre-line;\n}\n/*# sourceMappingURL=component-guidance.component.css.map */\n"] }]
   }], () => [], { selectAll: [{
     type: Input
   }], maxSeverityChange: [{
@@ -28710,7 +28802,7 @@ var AlertsGuidanceComponent = class _AlertsGuidanceComponent {
   }] });
 })();
 (() => {
-  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(AlertsGuidanceComponent, { className: "AlertsGuidanceComponent", filePath: "app/views/page-assistant/components/problems/component-guidance/alerts-guidance/alerts-guidance.component.ts", lineNumber: 112 });
+  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(AlertsGuidanceComponent, { className: "AlertsGuidanceComponent", filePath: "app/views/page-assistant/components/problems/component-guidance/alerts-guidance/alerts-guidance.component.ts", lineNumber: 117 });
 })();
 
 // src/app/views/page-assistant/data/css-list.config.ts
@@ -29421,7 +29513,7 @@ Return ONLY compact JSON (no prose):
   }], null, null);
 })();
 
-// src/app/views/page-assistant/services/topic-doormat-extractor.service.ts
+// src/app/views/page-assistant/services/topic-doormats/topic-doormat-extractor.service.ts
 var TopicDoormatExtractorService = class _TopicDoormatExtractorService {
   fetchService = inject(FetchService);
   parseHtmlDocument(html) {
@@ -29511,6 +29603,7 @@ var TopicDoormatExtractorService = class _TopicDoormatExtractorService {
           index: summaries.length + 1,
           linkText,
           href,
+          labels: this.extractDoormatLabels(item),
           description,
           headingLevel: heading ? this.toNumber(heading.tagName.slice(1)) : null,
           itemLinkCount: item ? item.querySelectorAll("a[href]").length : 0,
@@ -29537,7 +29630,8 @@ var TopicDoormatExtractorService = class _TopicDoormatExtractorService {
         if (!link)
           return;
         const wrapper = heading.closest(".gc-srvinfo");
-        addSummary(link, wrapper, this.findItem(link, wrapper), heading.textContent ?? "");
+        const headingLinkCount = heading.querySelectorAll("a[href]").length;
+        addSummary(link, wrapper, this.findItem(link, wrapper), headingLinkCount > 1 ? heading.textContent ?? "" : "");
       });
       this.getLegacyLinks(doc).forEach(({ link, wrapper, item }) => {
         addSummary(link, wrapper, item);
@@ -29551,6 +29645,12 @@ var TopicDoormatExtractorService = class _TopicDoormatExtractorService {
     } catch {
       return [];
     }
+  }
+  extractDoormatLabels(item) {
+    if (!item)
+      return [];
+    const labels = Array.from(item.querySelectorAll('.label, .badge, [class*="label-"], [class*="badge-"]')).map((element) => this.cleanVisibleText(element.textContent)).filter(Boolean);
+    return Array.from(new Set(labels));
   }
   hasCandidates(doc) {
     return !!doc.querySelector(".gc-srvinfo") || !!doc.querySelector(".gc-drmt") || !!doc.querySelector(".mwsdoormat-links-container") || this.getLegacyLinks(doc).length >= 2;
@@ -29591,7 +29691,8 @@ var TopicDoormatExtractorService = class _TopicDoormatExtractorService {
   fetchDestinationContext(destinationUrl) {
     return __async(this, null, function* () {
       try {
-        const destinationDoc = yield this.fetchService.fetchContent(destinationUrl, "both", 1, "none");
+        const response = yield this.fetchService.fetchContentWithResponse(destinationUrl, "both", 1, "none");
+        const destinationDoc = response.document;
         const main = destinationDoc.querySelector("main");
         const heading = main?.querySelector("h1") ?? destinationDoc.querySelector("h1");
         const sectionHeadingElements = main ? Array.from(main.querySelectorAll("h2")) : [];
@@ -29604,17 +29705,26 @@ var TopicDoormatExtractorService = class _TopicDoormatExtractorService {
           destinationPageHeading: this.cleanVisibleText(heading?.textContent),
           destinationIntroParagraphs,
           destinationSectionHeadings,
+          destinationHttpStatus: response.status,
           destinationContextStatus: destinationIntroParagraphs.length || destinationSectionHeadings.length ? "available" : "insufficient"
         };
-      } catch {
+      } catch (error) {
         return {
           destinationUrl,
           destinationIntroParagraphs: [],
           destinationSectionHeadings: [],
-          destinationContextStatus: "failed"
+          destinationContextStatus: "failed",
+          destinationHttpStatus: this.getFetchErrorStatus(error),
+          destinationFetchError: error instanceof Error ? error.message : String(error)
         };
       }
     });
+  }
+  getFetchErrorStatus(error) {
+    if (!error || typeof error !== "object")
+      return void 0;
+    const status = error.status;
+    return typeof status === "number" && Number.isFinite(status) ? status : void 0;
   }
   isDestinationIntroParagraph(paragraph, heading, firstSectionHeading) {
     if (paragraph.closest('nav, header, footer, aside, details, [hidden], [aria-hidden="true"], .breadcrumb, .gc-most-requested, .pagedetails')) {
@@ -29943,11 +30053,12 @@ var IaStructureService = class _IaStructureService {
   }], null, null);
 })();
 
-// src/app/views/page-assistant/services/topic-doormat-ia-check.service.ts
+// src/app/views/page-assistant/services/topic-doormats/topic-doormat-ia-check.service.ts
 var TopicDoormatIaCheckService = class _TopicDoormatIaCheckService {
   iaStructure = inject(IaStructureService);
   http = inject(HttpClient);
   locationStrategy = inject(LocationStrategy);
+  translate = inject(TranslateService);
   visitsSourcePath = "visits-urls.json";
   visitsLoad;
   analyze(doormatSummaries, uploadData) {
@@ -30005,11 +30116,11 @@ var TopicDoormatIaCheckService = class _TopicDoormatIaCheckService {
       doormat: "Topic page doormat set",
       doormatLabel: "Doormat set",
       issueId: "missing-needed-doormat",
-      issue: "Missing a needed doormat",
-      evidence: "Child page not found in doormats:",
+      issue: this.getTopicDoormatIaText("missingNeededDoormat.issue"),
+      evidence: this.getTopicDoormatIaText("missingNeededDoormat.evidence"),
       evidenceLinkText: child.label,
       evidenceLinkHref: child.url,
-      recommendation: "Review and consider adding a doormat for the missing child page."
+      recommendation: this.getTopicDoormatIaText("missingNeededDoormat.recommendation")
     }));
   }
   buildExtraRows(doormatSummaries, childByKey, visits, topicUrl) {
@@ -30025,9 +30136,9 @@ var TopicDoormatIaCheckService = class _TopicDoormatIaCheckService {
           doormat: this.buildDoormatLabel(summary),
           doormatLabel: summary.linkText || summary.href || "Doormat",
           issueId: "unnecessary-doormat",
-          issue: "Non-child-page doormat",
-          evidence: "This doormat destination was not found as a direct child page in the IA crawl.",
-          recommendation: "Flag for manual review and consider removing or replacing the doormat.",
+          issue: this.getTopicDoormatIaText("unnecessaryDoormat.issue"),
+          evidence: this.getTopicDoormatIaText("unnecessaryDoormat.evidence"),
+          recommendation: this.getTopicDoormatIaText("unnecessaryDoormat.recommendation"),
           doormatIndex: summary.index || void 0,
           sectionIndex: summary.sectionIndex || void 0,
           sectionTitle: summary.sectionTitle || void 0,
@@ -30036,6 +30147,9 @@ var TopicDoormatIaCheckService = class _TopicDoormatIaCheckService {
         }
       ];
     });
+  }
+  getTopicDoormatIaText(key2, params) {
+    return this.translate.instant(`page.tools.guidance.topicDoormats.${key2}`, params);
   }
   buildDoormatMetaMap(doormatSummaries, childByKey, visits, topicUrl) {
     const metaByIndex = /* @__PURE__ */ new Map();
@@ -30230,10 +30344,11 @@ var TopicDoormatIaCheckService = class _TopicDoormatIaCheckService {
   }], null, null);
 })();
 
-// src/app/views/page-assistant/services/topic-doormat-model-client.service.ts
+// src/app/views/page-assistant/services/topic-doormats/topic-doormat-model-client.service.ts
 var TopicDoormatModelClientService = class _TopicDoormatModelClientService {
   openRouter = inject(OpenRouterService);
   topicDoormatForceParseFailureStorageKey = "pageAssistant.topicDoormatForceParseFailure";
+  topicDoormatModelAttemptTimeoutMs = 12e4;
   requestIssueJson(request) {
     return __async(this, null, function* () {
       const modelRotation = this.buildModelRotation(request.requestedModel);
@@ -30263,12 +30378,14 @@ var TopicDoormatModelClientService = class _TopicDoormatModelClientService {
           debug("model attempt started", {
             attempt: index + 1,
             totalAttempts: models.length,
-            model
+            model,
+            request: this.buildRequestMetrics(messages, doormatSummaries)
           });
           const resp = yield this.openRouter.call(model, messages, {
             temperature: 0,
             title: "Content Assistant - Topic Doormat Issues",
-            throwOnError: true
+            throwOnError: true,
+            timeoutMs: this.topicDoormatModelAttemptTimeoutMs
           });
           const text = resp?.choices?.[0]?.message?.content?.trim() || "";
           if (text) {
@@ -30363,10 +30480,16 @@ var TopicDoormatModelClientService = class _TopicDoormatModelClientService {
             })
           }
         ];
+        debug("model json repair request prepared", {
+          model,
+          request: this.buildRequestMetrics(repairMessages, doormatSummaries),
+          invalidResponseCharacters: invalidText.length
+        });
         const resp = yield this.openRouter.call(model, repairMessages, {
           temperature: 0,
           title: "Content Assistant - Topic Doormat JSON Repair",
-          throwOnError: true
+          throwOnError: true,
+          timeoutMs: this.topicDoormatModelAttemptTimeoutMs
         });
         return resp?.choices?.[0]?.message?.content?.trim() || "";
       } catch (err) {
@@ -30390,6 +30513,23 @@ var TopicDoormatModelClientService = class _TopicDoormatModelClientService {
       return "";
     }
   }
+  buildRequestMetrics(messages, doormatSummaries) {
+    const messageCharacterCounts = messages.map((message) => message.content.length);
+    const roleCharacterCounts = messages.reduce((counts, message) => {
+      counts[message.role] = (counts[message.role] ?? 0) + message.content.length;
+      return counts;
+    }, {});
+    const destinationContextCharacterCount = doormatSummaries.reduce((total, summary) => total + (summary.destinationPageTitle?.length ?? 0) + (summary.destinationPageHeading?.length ?? 0) + (summary.destinationIntroParagraphs ?? []).join("\n").length + (summary.destinationSectionHeadings ?? []).join("\n").length, 0);
+    return {
+      messageCount: messages.length,
+      totalCharacters: messageCharacterCounts.reduce((total, count) => total + count, 0),
+      messageCharacterCounts,
+      roleCharacterCounts,
+      doormatCount: doormatSummaries.length,
+      destinationContextAvailableCount: doormatSummaries.filter((summary) => summary.destinationContextStatus === "available").length,
+      destinationContextCharacterCount
+    };
+  }
   static \u0275fac = function TopicDoormatModelClientService_Factory(__ngFactoryType__) {
     return new (__ngFactoryType__ || _TopicDoormatModelClientService)();
   };
@@ -30402,7 +30542,7 @@ var TopicDoormatModelClientService = class _TopicDoormatModelClientService {
   }], null, null);
 })();
 
-// src/app/views/page-assistant/services/topic-doormat-url-comparison.service.ts
+// src/app/views/page-assistant/services/topic-doormats/topic-doormat-url-comparison.service.ts
 var TopicDoormatUrlComparisonService = class _TopicDoormatUrlComparisonService {
   findMostRequestedDuplicate(href, mostRequestedLinks, uploadData) {
     const doormatUrl = this.parseComparableUrl(href, uploadData);
@@ -30509,7 +30649,7 @@ var TopicDoormatUrlComparisonService = class _TopicDoormatUrlComparisonService {
   }], null, null);
 })();
 
-// src/app/views/page-assistant/services/topic-doormat-issue-analysis.service.ts
+// src/app/views/page-assistant/services/topic-doormats/topic-doormat-issue-analysis.service.ts
 var TopicDoormatIssueAnalysisService = class _TopicDoormatIssueAnalysisService {
   http = inject(HttpClient);
   translate = inject(TranslateService);
@@ -30531,7 +30671,9 @@ var TopicDoormatIssueAnalysisService = class _TopicDoormatIssueAnalysisService {
   };
   topicDoormatTrailingPunctuationPattern = /[.:;?!,]$/;
   locallyOwnedTopicDoormatIssueIds = /* @__PURE__ */ new Set([
+    "broken-link",
     "description-contains-link",
+    "description-incorrect-style",
     "description-missing-needed-information",
     "description-too-long",
     "description-trailing-punctuation",
@@ -30544,25 +30686,21 @@ var TopicDoormatIssueAnalysisService = class _TopicDoormatIssueAnalysisService {
     "mixed-link-name-styles-in-section",
     "multiple-links",
     "repeated-description-opening",
-    "section-description-style-outlier",
     "split-heading-link",
     "too-many-doormats-in-section",
     "unnecessary-doormat",
+    "inconsistent-description-style",
     "inconsistent-link-name-style"
   ]);
-  topicDoormatDescriptionStyleOrder = [
-    "action-verb-task-summary",
-    "noun-topic-summary",
-    "keyword-list",
-    "task-list",
-    "eligibility-or-benefit-summary"
-  ];
-  topicDoormatLinkTextStyleOrder = [
-    "action-verb",
-    "noun-topic",
-    "product-or-service",
-    "audience-group"
-  ];
+  lowSeverityTopicDoormatStyleIssueIds = /* @__PURE__ */ new Set([
+    "description-incorrect-style",
+    "inconsistent-description-style",
+    "inconsistent-link-name-style",
+    "mixed-description-style-in-section",
+    "mixed-link-name-styles-in-section"
+  ]);
+  topicDoormatDescriptionStyleOrder = ["sentence", "phrase", "keyword-list"];
+  topicDoormatLinkTextStyleOrder = ["task", "topic", "situation"];
   topicDoormatIssueTaxonomyLoad;
   topicDoormatModelIssueContract = "";
   topicDoormatIssueIdToLabel = /* @__PURE__ */ new Map();
@@ -30586,7 +30724,7 @@ var TopicDoormatIssueAnalysisService = class _TopicDoormatIssueAnalysisService {
         Array.from(this.locallyOwnedTopicDoormatIssueIds).join(", "),
         "You must still return exactly one allowed detected_description_style for every doormat.",
         "You must still return exactly one allowed detected_link_text_style, destination_link_relationship, and destination_link_relationship_basis for every doormat.",
-        "Classify the rhetorical construction, not the subject matter. An action-framed description remains action-verb-task-summary when it discusses eligibility, benefits, residency, dates, or status."
+        "Classify the grammatical construction, not the subject matter. A sentence-like description remains sentence even when final punctuation is intentionally omitted."
       ].join("\n");
       const systemPrompt = [
         composed.prompt,
@@ -30604,13 +30742,17 @@ var TopicDoormatIssueAnalysisService = class _TopicDoormatIssueAnalysisService {
             doormats: input.doormatSummaries.map((summary) => ({
               index: summary.index,
               linkText: summary.linkText,
+              analysisLinkText: this.removeTopicDoormatLabels(summary.linkText, summary.labels),
               href: summary.href,
               description: summary.description,
+              analysisDescription: this.removeTopicDoormatLabels(summary.description, summary.labels),
               destinationUrl: summary.destinationUrl,
+              destinationHttpStatus: summary.destinationHttpStatus,
               destinationPageTitle: summary.destinationPageTitle,
               destinationPageHeading: summary.destinationPageHeading,
               destinationContext: {
                 status: summary.destinationContextStatus ?? "insufficient",
+                httpStatus: summary.destinationHttpStatus,
                 pageTitle: summary.destinationPageTitle ?? "",
                 h1: summary.destinationPageHeading ?? "",
                 elements: this.buildTopicDoormatDestinationContextElements(summary)
@@ -30634,7 +30776,10 @@ var TopicDoormatIssueAnalysisService = class _TopicDoormatIssueAnalysisService {
           index: summary.index,
           linkText: summary.linkText,
           href: summary.href,
+          labels: summary.labels,
           destinationUrl: summary.destinationUrl,
+          destinationHttpStatus: summary.destinationHttpStatus,
+          destinationFetchError: summary.destinationFetchError,
           destinationPageTitle: summary.destinationPageTitle,
           destinationPageHeading: summary.destinationPageHeading,
           destinationContextStatus: summary.destinationContextStatus,
@@ -30772,7 +30917,8 @@ var TopicDoormatIssueAnalysisService = class _TopicDoormatIssueAnalysisService {
           return null;
         const issue = rawIssue;
         const issueId = this.getTopicDoormatIssueId(issue);
-        const severity = this.normalizeTopicDoormatModelSeverity(issue["severity"]);
+        const modelSeverity = this.normalizeTopicDoormatModelSeverity(issue["severity"]);
+        const severity = this.getTopicDoormatIssueSeverity(issueId, modelSeverity);
         if (!this.topicDoormatIssueIdToLabel.has(issueId) || !severity) {
           return null;
         }
@@ -30822,7 +30968,7 @@ var TopicDoormatIssueAnalysisService = class _TopicDoormatIssueAnalysisService {
       analysis.sectionIndex,
       analysis
     ]));
-    const mixedDescriptionStyleSectionIndexes = new Set(descriptionStyleAnalyses.filter((analysis) => analysis.isMixed).map((analysis) => analysis.sectionIndex));
+    const mixedDescriptionStyleSectionIndexes = new Set(descriptionStyleAnalyses.filter((analysis) => analysis.shouldReportSectionIssue).map((analysis) => analysis.sectionIndex));
     const mixedLinkNameStyleSectionIndexes = new Set(reportableSectionIssueRows.filter((row) => row.issueId === "mixed-link-name-styles-in-section").map((row) => row.sectionIndex).filter((index) => typeof index === "number" && index > 0));
     const localDescriptionTrailingPunctuationSectionIndexes = this.getLocalDescriptionTrailingPunctuationSectionIndexes(doormatSummaries);
     const inconsistentLinkNameStyleCountsBySection = rows.reduce((counts, row) => {
@@ -30908,6 +31054,7 @@ var TopicDoormatIssueAnalysisService = class _TopicDoormatIssueAnalysisService {
       destinationContentAssessmentsByDoormatIndex: doormatSummaries.map((summary) => ({
         doormatIndex: summary.index,
         contextStatus: summary.destinationContextStatus ?? "insufficient",
+        httpStatus: summary.destinationHttpStatus,
         contextElements: this.buildTopicDoormatDestinationContextElements(summary),
         assessment: destinationContentAssessmentsByDoormatIndex.get(summary.index) ?? null
       })),
@@ -30997,7 +31144,8 @@ var TopicDoormatIssueAnalysisService = class _TopicDoormatIssueAnalysisService {
   }
   buildTopicDoormatSectionIssueRow(issue, fallbackSectionIndex, doormatSummaries = []) {
     const issueId = this.getTopicDoormatIssueId(issue);
-    const severity = this.normalizeTopicDoormatModelSeverity(issue["severity"]);
+    const modelSeverity = this.normalizeTopicDoormatModelSeverity(issue["severity"]);
+    const severity = this.getTopicDoormatIssueSeverity(issueId, modelSeverity);
     if (!this.topicDoormatIssueIdToLabel.has(issueId) || !severity) {
       return null;
     }
@@ -31055,9 +31203,9 @@ var TopicDoormatIssueAnalysisService = class _TopicDoormatIssueAnalysisService {
         doormat: this.buildTopicDoormatSectionLabel(1, doormatSummaries),
         doormatLabel: "All doormats in section",
         issueId: "outdated-topic-page-template",
-        issue: "Topic page template is outdated",
-        evidence: "This section uses legacy topic doormat markup: .gc-drmt or .mwsdoormat-links-container.",
-        recommendation: "Update the page to use the current GCWeb topic page doormat template.",
+        issue: this.getTopicDoormatDeterministicText("outdatedTemplate.issue"),
+        evidence: this.getTopicDoormatDeterministicText("outdatedTemplate.evidence"),
+        recommendation: this.getTopicDoormatDeterministicText("outdatedTemplate.recommendation"),
         sectionIndex: 1,
         sectionTitle: doormatSummaries.find((summary) => summary.sectionIndex === 1)?.sectionTitle || ""
       }
@@ -31075,8 +31223,8 @@ var TopicDoormatIssueAnalysisService = class _TopicDoormatIssueAnalysisService {
           doormatLabel: "All doormats in section",
           issueId: "too-many-doormats-in-section",
           issue: this.getTopicDoormatIssueLabel("too-many-doormats-in-section"),
-          evidence: `There are ${section.count} doormats in this section.`,
-          recommendation: "Either remove doormats or break down the section into sections that have 9 or fewer doormats.",
+          evidence: this.getTopicDoormatDeterministicText("tooManyDoormats.evidence", { count: section.count }),
+          recommendation: this.getTopicDoormatDeterministicText("tooManyDoormats.recommendation"),
           sectionIndex: section.sectionIndex,
           sectionTitle: section.sectionTitle
         }
@@ -31110,9 +31258,9 @@ var TopicDoormatIssueAnalysisService = class _TopicDoormatIssueAnalysisService {
         doormatLabel: summary.linkText || summary.href || "Doormat",
         issueId: "link-name-too-long",
         issue: this.getTopicDoormatIssueLabel("link-name-too-long"),
-        evidence: this.getTopicDoormatLinkNameLengthEvidence(),
+        evidence: "",
         evidenceMetric: metric,
-        recommendation: this.getTopicDoormatLinkNameLengthRecommendation(pageLanguage, limit),
+        recommendation: this.getTopicDoormatLinkNameLengthRecommendation(limit),
         doormatIndex: summary.index || void 0,
         sectionIndex: summary.sectionIndex || void 0,
         sectionTitle: summary.sectionTitle || void 0,
@@ -31147,9 +31295,9 @@ var TopicDoormatIssueAnalysisService = class _TopicDoormatIssueAnalysisService {
         doormatLabel: summary.linkText || summary.href || "Doormat",
         issueId: "description-too-long",
         issue: this.getTopicDoormatIssueLabel("description-too-long"),
-        evidence: this.getTopicDoormatDescriptionLengthEvidence(),
+        evidence: "",
         evidenceMetric: metric,
-        recommendation: this.getTopicDoormatDescriptionLengthRecommendation(pageLanguage, limit),
+        recommendation: this.getTopicDoormatDescriptionLengthRecommendation(limit),
         doormatIndex: summary.index || void 0,
         sectionIndex: summary.sectionIndex || void 0,
         sectionTitle: summary.sectionTitle || void 0,
@@ -31193,7 +31341,7 @@ var TopicDoormatIssueAnalysisService = class _TopicDoormatIssueAnalysisService {
           issueId: "description-trailing-punctuation",
           issue: this.getTopicDoormatIssueLabel("description-trailing-punctuation"),
           evidence: this.buildTopicDoormatSectionTrailingPunctuationEvidence(affected),
-          recommendation: "Remove final punctuation from the descriptions.",
+          recommendation: this.getTopicDoormatDeterministicText("descriptionTrailingPunctuation.sectionRecommendation"),
           sectionIndex,
           sectionTitle: firstSummary.sectionTitle
         }
@@ -31216,16 +31364,16 @@ var TopicDoormatIssueAnalysisService = class _TopicDoormatIssueAnalysisService {
         rows.push(__spreadProps(__spreadValues({}, baseRow), {
           issueId: "link-name-trailing-punctuation",
           issue: this.getTopicDoormatIssueLabel("link-name-trailing-punctuation"),
-          evidence: this.buildTopicDoormatTrailingPunctuationEvidence("Link name", summary.linkText),
-          recommendation: "Remove trailing punctuation from the link text."
+          evidence: this.buildTopicDoormatTrailingPunctuationEvidence("linkName", summary.linkText),
+          recommendation: this.getTopicDoormatDeterministicText("linkTrailingPunctuation.recommendation")
         }));
       }
       if (this.hasTopicDoormatTrailingPunctuation(summary.description) && !sectionLevelDescriptionPunctuationIndexes.has(summary.sectionIndex) && !existingDoormatIssueKeys.has(`${summary.index}|description-trailing-punctuation`)) {
         rows.push(__spreadProps(__spreadValues({}, baseRow), {
           issueId: "description-trailing-punctuation",
           issue: this.getTopicDoormatIssueLabel("description-trailing-punctuation"),
-          evidence: this.buildTopicDoormatTrailingPunctuationEvidence("Description", summary.description),
-          recommendation: "Remove final punctuation from the description."
+          evidence: this.buildTopicDoormatTrailingPunctuationEvidence("description", summary.description),
+          recommendation: this.getTopicDoormatDeterministicText("descriptionTrailingPunctuation.recommendation")
         }));
       }
       return rows;
@@ -31235,10 +31383,13 @@ var TopicDoormatIssueAnalysisService = class _TopicDoormatIssueAnalysisService {
   hasTopicDoormatTrailingPunctuation(value) {
     return this.topicDoormatTrailingPunctuationPattern.test(value.trim());
   }
-  buildTopicDoormatTrailingPunctuationEvidence(label, value) {
+  buildTopicDoormatTrailingPunctuationEvidence(labelKey, value) {
     const trimmed = value.trim();
     const punctuation = trimmed.slice(-1);
-    return `${label} ends with '${punctuation}'.`;
+    return this.getTopicDoormatDeterministicText("trailingPunctuation.evidence", {
+      label: this.getTopicDoormatDeterministicText(`labels.${labelKey}`),
+      punctuation
+    });
   }
   getLocalDescriptionTrailingPunctuationSectionIndexes(doormatSummaries) {
     return new Set(Array.from(this.groupTopicDoormatsWithDescriptionTrailingPunctuation(doormatSummaries).entries()).filter(([, summaries]) => summaries.length > 1).map(([sectionIndex]) => sectionIndex));
@@ -31258,9 +31409,9 @@ var TopicDoormatIssueAnalysisService = class _TopicDoormatIssueAnalysisService {
   buildTopicDoormatSectionTrailingPunctuationEvidence(doormatSummaries) {
     const indexes = doormatSummaries.map((summary) => summary.sectionItemIndex || summary.index).filter((index) => index > 0).join(", ");
     const count = doormatSummaries.length;
-    const descriptionLabel = count === 1 ? "description" : "descriptions";
-    const doormatLabel = count === 1 ? "doormat" : "doormats";
-    return `${count} ${descriptionLabel} end with punctuation: ${doormatLabel} ${indexes}.`;
+    const descriptionLabel = this.getTopicDoormatDeterministicText(count === 1 ? "labels.descriptionLower" : "labels.descriptionsLower");
+    const doormatLabel = this.getTopicDoormatDeterministicText(count === 1 ? "labels.doormatLower" : "labels.doormatsLower");
+    return this.getTopicDoormatDeterministicText("descriptionTrailingPunctuation.sectionEvidence", { count, descriptionLabel, doormatLabel, indexes });
   }
   buildLocalTopicDoormatMostRequestedDuplicateRows(doormatSummaries, mostRequestedLinks, existingRows, uploadData) {
     if (!mostRequestedLinks.length)
@@ -31285,7 +31436,7 @@ var TopicDoormatIssueAnalysisService = class _TopicDoormatIssueAnalysisService {
           evidence: this.buildTopicDoormatMostRequestedDuplicateEvidence(),
           evidenceLinkText: duplicate.text || duplicate.href,
           evidenceLinkHref: duplicate.href,
-          recommendation: "Flag for manual review. In most cases, remove the duplicate from Most requested unless there is a strong page-specific reason to keep it.",
+          recommendation: this.getTopicDoormatDeterministicText("duplicateMostRequested.recommendation"),
           doormatIndex: summary.index || void 0,
           sectionIndex: summary.sectionIndex || void 0,
           sectionTitle: summary.sectionTitle || void 0,
@@ -31298,22 +31449,19 @@ var TopicDoormatIssueAnalysisService = class _TopicDoormatIssueAnalysisService {
     return this.urlComparison.findMostRequestedDuplicate(href, mostRequestedLinks, uploadData);
   }
   buildTopicDoormatMostRequestedDuplicateEvidence() {
-    return "This doormat links to the same destination as this Most requested link:";
+    return this.getTopicDoormatDeterministicText("duplicateMostRequested.evidence");
   }
   getTopicDoormatLengthLimit(issueId, pageLanguage) {
     return this.topicDoormatIssueLengthLimits[pageLanguage][issueId];
   }
-  getTopicDoormatLinkNameLengthEvidence() {
-    return this.translate.instant("page.tools.guidance.topicDoormats.length.link.evidence");
+  getTopicDoormatDeterministicText(key2, params) {
+    return this.translate.instant(`page.tools.guidance.topicDoormats.${key2}`, params);
   }
-  getTopicDoormatDescriptionLengthEvidence() {
-    return this.translate.instant("page.tools.guidance.topicDoormats.length.description.evidence");
+  getTopicDoormatLinkNameLengthRecommendation(limit) {
+    return this.translate.instant("page.tools.guidance.topicDoormats.length.link.recommendation", { limit });
   }
-  getTopicDoormatLinkNameLengthRecommendation(pageLanguage, limit) {
-    return this.translate.instant(`page.tools.guidance.topicDoormats.length.link.recommendation.${pageLanguage}`, { limit });
-  }
-  getTopicDoormatDescriptionLengthRecommendation(pageLanguage, limit) {
-    return this.translate.instant(`page.tools.guidance.topicDoormats.length.description.recommendation.${pageLanguage}`, { limit });
+  getTopicDoormatDescriptionLengthRecommendation(limit) {
+    return this.translate.instant("page.tools.guidance.topicDoormats.length.description.recommendation", { limit });
   }
   buildLocalTopicDoormatLinkCodeRows(doormatSummaries) {
     return doormatSummaries.flatMap((summary) => {
@@ -31334,7 +31482,16 @@ var TopicDoormatIssueAnalysisService = class _TopicDoormatIssueAnalysisService {
           issueId: "split-heading-link",
           issue: this.getTopicDoormatIssueLabel("split-heading-link"),
           evidence: this.buildTopicDoormatSplitHeadingLinkEvidence(summary),
-          recommendation: "Use one link around the complete doormat heading text."
+          recommendation: this.getTopicDoormatDeterministicText("splitHeadingLink.recommendation")
+        }));
+      }
+      const brokenLinkEvidence = this.getTopicDoormatBrokenLinkEvidence(summary);
+      if (brokenLinkEvidence) {
+        rows.push(__spreadProps(__spreadValues({}, baseRow), {
+          issueId: "broken-link",
+          issue: this.getTopicDoormatIssueLabel("broken-link"),
+          evidence: brokenLinkEvidence,
+          recommendation: this.getTopicDoormatDeterministicText("brokenLink.recommendation")
         }));
       }
       if (summary.hasDescriptionLink) {
@@ -31343,7 +31500,7 @@ var TopicDoormatIssueAnalysisService = class _TopicDoormatIssueAnalysisService {
           issueId: "description-contains-link",
           issue: this.getTopicDoormatIssueLabel("description-contains-link"),
           evidence: this.buildTopicDoormatDescriptionLinkEvidence(summary),
-          recommendation: "Remove links from the description. The doormat heading should contain the only link."
+          recommendation: this.getTopicDoormatDeterministicText("descriptionContainsLink.recommendation")
         }));
       }
       if (summary.itemLinkCount > 1 && !summary.hasSplitHeadingLink && !summary.hasDescriptionLink) {
@@ -31351,24 +31508,47 @@ var TopicDoormatIssueAnalysisService = class _TopicDoormatIssueAnalysisService {
           issueId: "multiple-links",
           issue: this.getTopicDoormatIssueLabel("multiple-links"),
           evidence: this.buildTopicDoormatMultipleLinksEvidence(summary),
-          recommendation: "Use one link per doormat. Move any extra destination to a separate doormat if it is needed."
+          recommendation: this.getTopicDoormatDeterministicText("multipleLinks.recommendation")
         }));
       }
       return rows;
     });
   }
+  getTopicDoormatBrokenLinkEvidence(doormat) {
+    const href = this.cleanString(doormat.href);
+    if (!href) {
+      return this.getTopicDoormatDeterministicText("brokenLink.emptyHrefEvidence");
+    }
+    const status = doormat.destinationHttpStatus;
+    if (typeof status === "number" && status >= 400) {
+      return this.getTopicDoormatDeterministicText("brokenLink.httpStatusEvidence", { status });
+    }
+    if (doormat.destinationUrl || href.startsWith("#"))
+      return "";
+    const hasUnsupportedScheme = /^[a-z][a-z0-9+.-]*:/i.test(href);
+    if (hasUnsupportedScheme || /[\s<>"]/.test(href)) {
+      return this.getTopicDoormatDeterministicText("brokenLink.invalidHrefEvidence", { href });
+    }
+    return "";
+  }
   buildTopicDoormatSplitHeadingLinkEvidence(doormat) {
-    const linkLabel = doormat.headingLinkCount === 1 ? "1 link" : `${doormat.headingLinkCount} links`;
-    return `The doormat heading is split into ${linkLabel}: '${doormat.linkText}'.`;
+    const linkLabel = doormat.headingLinkCount === 1 ? this.getTopicDoormatDeterministicText("labels.oneLink") : this.getTopicDoormatDeterministicText("labels.linkCount", {
+      count: doormat.headingLinkCount
+    });
+    return this.getTopicDoormatDeterministicText("splitHeadingLink.evidence", { linkLabel, linkText: doormat.linkText });
   }
   buildTopicDoormatDescriptionLinkEvidence(doormat) {
-    const linkLabel = doormat.descriptionLinkCount === 1 ? "1 link" : `${doormat.descriptionLinkCount} links`;
-    return `The doormat description contains ${linkLabel}.`;
+    const linkLabel = doormat.descriptionLinkCount === 1 ? this.getTopicDoormatDeterministicText("labels.oneLink") : this.getTopicDoormatDeterministicText("labels.linkCount", {
+      count: doormat.descriptionLinkCount
+    });
+    return this.getTopicDoormatDeterministicText("descriptionContainsLink.evidence", { linkLabel });
   }
   buildTopicDoormatMultipleLinksEvidence(doormat) {
     const additionalLinkCount = Math.max(doormat.itemLinkCount - 1, 0);
-    const additionalLabel = additionalLinkCount === 1 ? "1 additional link" : `${additionalLinkCount} additional links`;
-    return `This doormat contains ${doormat.itemLinkCount} links: the main doormat link plus ${additionalLabel}.`;
+    const additionalLabel = additionalLinkCount === 1 ? this.getTopicDoormatDeterministicText("labels.oneAdditionalLink") : this.getTopicDoormatDeterministicText("labels.additionalLinkCount", {
+      count: additionalLinkCount
+    });
+    return this.getTopicDoormatDeterministicText("multipleLinks.evidence", { linkCount: doormat.itemLinkCount, additionalLabel });
   }
   buildLocalTopicDoormatRepeatedDescriptionOpeningRows(doormatSummaries) {
     const summariesBySection = doormatSummaries.reduce((sections, summary) => {
@@ -31406,8 +31586,13 @@ var TopicDoormatIssueAnalysisService = class _TopicDoormatIssueAnalysisService {
             doormatLabel: "Multiple doormats in section",
             issueId: "repeated-description-opening",
             issue: this.getTopicDoormatIssueLabel("repeated-description-opening"),
-            evidence: `${group.summaries.length} of ${sectionSummaries.length} descriptions begin with "${group.label}": doormats ${affectedIndexes.join(", ")}.`,
-            recommendation: "Vary the description openings so users can scan and distinguish the doormats more easily.",
+            evidence: this.getTopicDoormatDeterministicText("repeatedDescriptionOpening.evidence", {
+              count: group.summaries.length,
+              total: sectionSummaries.length,
+              opening: group.label,
+              indexes: affectedIndexes.join(", ")
+            }),
+            recommendation: this.getTopicDoormatDeterministicText("repeatedDescriptionOpening.recommendation"),
             sectionIndex,
             sectionTitle: firstSummary.sectionTitle
           }
@@ -31447,26 +31632,24 @@ var TopicDoormatIssueAnalysisService = class _TopicDoormatIssueAnalysisService {
       sections.set(summary.sectionIndex, summaries);
     });
     return Array.from(sections.entries()).flatMap(([sectionIndex, summaries]) => {
-      if (summaries.length < 3)
-        return [];
       const classified = summaries.map((summary) => ({
         summary,
         style: stylesByDoormatIndex.get(summary.index) ?? "mixed-or-unclear"
       }));
-      if (classified.some((entry) => entry.style === "mixed-or-unclear")) {
-        return [];
-      }
       const counts = /* @__PURE__ */ new Map();
       classified.forEach(({ style: style2 }) => {
         counts.set(style2, (counts.get(style2) ?? 0) + 1);
       });
-      const ranked = this.topicDoormatLinkTextStyleOrder.map((style2) => ({ style: style2, count: counts.get(style2) ?? 0 })).filter((entry) => entry.count > 0).sort((a, b) => b.count - a.count);
-      if (ranked.length < 2)
-        return [];
-      const secondStyleCount = ranked[1]?.count ?? 0;
-      const isSectionMix = secondStyleCount >= 2 || summaries.length <= 4;
-      if (isSectionMix) {
-        const groups = ranked.map(({ style: style2 }) => {
+      const dominantStyle = this.getDominantTopicDoormatLinkStyle(counts, summaries.length);
+      const outliers = dominantStyle ? classified.filter((entry) => entry.style !== dominantStyle) : classified;
+      const shouldReportSectionIssue = summaries.length > 0 && (!dominantStyle || outliers.length > 2);
+      const shouldReportDoormatIssues = !!dominantStyle && outliers.length > 0 && outliers.length <= 2;
+      if (shouldReportSectionIssue) {
+        const styleOrder = [
+          ...this.topicDoormatLinkTextStyleOrder,
+          "mixed-or-unclear"
+        ];
+        const groups = styleOrder.filter((style2) => (counts.get(style2) ?? 0) > 0).map((style2) => {
           const indexes = classified.filter((entry) => entry.style === style2).map((entry) => entry.summary.sectionItemIndex).slice(0, 4);
           return `${this.getTopicDoormatLinkStyleLabel(style2)}: ${indexes.join(", ")}`;
         });
@@ -31475,23 +31658,19 @@ var TopicDoormatIssueAnalysisService = class _TopicDoormatIssueAnalysisService {
           {
             include: true,
             rowType: "section",
-            severity: "Medium",
+            severity: "Low",
             doormat: this.buildTopicDoormatSectionLabel(sectionIndex, doormatSummaries),
             doormatLabel: "All doormats in section",
             issueId: "mixed-link-name-styles-in-section",
             issue: this.getTopicDoormatIssueLabel("mixed-link-name-styles-in-section"),
-            evidence: `Link name styles in this section: ${groups.join("; ")}.`,
-            recommendation: "Rewrite the link names so they use one consistent link name style across the section.",
+            evidence: this.getTopicDoormatDeterministicText("mixedLinkNameStyles.evidence", { groups: groups.join("; ") }),
+            recommendation: this.getTopicDoormatDeterministicText("mixedLinkNameStyles.recommendation"),
             sectionIndex,
             sectionTitle: firstSummary.sectionTitle
           }
         ];
       }
-      if (ranked[0].count === ranked[1].count)
-        return [];
-      const dominantStyle = ranked[0].style;
-      const outliers = classified.filter((entry) => entry.style !== dominantStyle);
-      if (!outliers.length || outliers.length > 2)
+      if (!shouldReportDoormatIssues || !dominantStyle)
         return [];
       return outliers.map(({ summary, style: style2 }) => ({
         include: true,
@@ -31501,8 +31680,11 @@ var TopicDoormatIssueAnalysisService = class _TopicDoormatIssueAnalysisService {
         doormatLabel: summary.linkText || summary.href || "Doormat",
         issueId: "inconsistent-link-name-style",
         issue: this.getTopicDoormatIssueLabel("inconsistent-link-name-style"),
-        evidence: `The section mostly uses ${this.getTopicDoormatLinkStyleLabel(dominantStyle)} link names; this doormat uses ${this.getTopicDoormatLinkStyleLabel(style2)}.`,
-        recommendation: "Use the dominant link name style unless this doormat has a clear reason to differ.",
+        evidence: this.getTopicDoormatDeterministicText("inconsistentLinkNameStyle.evidence", {
+          dominantStyle: this.getTopicDoormatLinkStyleLabel(dominantStyle),
+          style: this.getTopicDoormatLinkStyleLabel(style2)
+        }),
+        recommendation: this.getTopicDoormatDeterministicText("inconsistentLinkNameStyle.recommendation"),
         doormatIndex: summary.index,
         sectionIndex: summary.sectionIndex,
         sectionTitle: summary.sectionTitle,
@@ -31510,16 +31692,21 @@ var TopicDoormatIssueAnalysisService = class _TopicDoormatIssueAnalysisService {
       }));
     });
   }
+  getDominantTopicDoormatLinkStyle(styleCounts, sectionDoormatCount) {
+    if (sectionDoormatCount <= 0)
+      return null;
+    const candidates = this.topicDoormatLinkTextStyleOrder.map((style2) => ({ style: style2, count: styleCounts.get(style2) ?? 0 })).filter((entry) => entry.count > 0).sort((a, b) => b.count - a.count);
+    if (!candidates.length)
+      return null;
+    if (candidates.length > 1 && candidates[0].count === candidates[1].count) {
+      return null;
+    }
+    if (candidates[0].count / sectionDoormatCount < 0.4)
+      return null;
+    return candidates[0].style;
+  }
   getTopicDoormatLinkStyleLabel(style2) {
-    if (style2 === "action-verb")
-      return "action-verb";
-    if (style2 === "noun-topic")
-      return "noun/topic";
-    if (style2 === "product-or-service")
-      return "product/service";
-    if (style2 === "audience-group")
-      return "audience/group";
-    return "mixed/unclear";
+    return this.getTopicDoormatDeterministicText(`linkStyles.${style2}`);
   }
   buildLocalTopicDoormatDestinationMismatchRows(doormatSummaries, assessmentsByDoormatIndex) {
     return doormatSummaries.flatMap((summary) => {
@@ -31539,8 +31726,12 @@ var TopicDoormatIssueAnalysisService = class _TopicDoormatIssueAnalysisService {
           doormatLabel: summary.linkText || summary.href || "Doormat",
           issueId: "link-name-too-different-from-destination-title",
           issue: this.getTopicDoormatIssueLabel("link-name-too-different-from-destination-title"),
-          evidence: `Link name: "${summary.linkText}". ${destinationEvidence} ${assessment.reason}`,
-          recommendation: "Rewrite the link name so it accurately describes the destination topic, task, audience, and scope.",
+          evidence: this.getTopicDoormatDeterministicText("destinationMismatch.evidence", {
+            linkText: summary.linkText,
+            destinationEvidence,
+            reason: assessment.reason
+          }),
+          recommendation: this.getTopicDoormatDeterministicText("destinationMismatch.recommendation"),
           doormatIndex: summary.index,
           sectionIndex: summary.sectionIndex,
           sectionTitle: summary.sectionTitle,
@@ -31571,8 +31762,8 @@ var TopicDoormatIssueAnalysisService = class _TopicDoormatIssueAnalysisService {
           doormatLabel: summary.linkText || summary.href || "Doormat",
           issueId: "description-missing-needed-information",
           issue: this.getTopicDoormatIssueLabel("description-missing-needed-information"),
-          evidence: `Important destination elements not covered by the link text or description: ${evidenceParts.join("; ")}.`,
-          recommendation: "Add the missing decision-making information to the description without repeating the link text.",
+          evidence: this.getTopicDoormatDeterministicText("contentGap.evidence", { elements: evidenceParts.join("; ") }),
+          recommendation: this.getTopicDoormatDeterministicText("contentGap.recommendation"),
           doormatIndex: summary.index,
           sectionIndex: summary.sectionIndex,
           sectionTitle: summary.sectionTitle,
@@ -31600,6 +31791,9 @@ var TopicDoormatIssueAnalysisService = class _TopicDoormatIssueAnalysisService {
       if (!element)
         return [];
       seen.add(id);
+      if (this.isTopicDoormatLifecycleStatusAlreadyCovered(summary, element)) {
+        return [];
+      }
       return [element];
     });
   }
@@ -31608,45 +31802,45 @@ var TopicDoormatIssueAnalysisService = class _TopicDoormatIssueAnalysisService {
     const rows = [];
     analyses.forEach((analysis) => {
       const key2 = `${analysis.sectionIndex}|mixed-description-style-in-section`;
-      if (!analysis.isMixed || existingIssueKeys.has(key2))
+      if (analysis.shouldReportSectionIssue && !existingIssueKeys.has(key2)) {
+        rows.push({
+          include: true,
+          rowType: "section",
+          severity: "Low",
+          doormat: this.buildTopicDoormatSectionLabel(analysis.sectionIndex, doormatSummaries),
+          doormatLabel: "All doormats in section",
+          issueId: "mixed-description-style-in-section",
+          issue: this.getTopicDoormatIssueLabel("mixed-description-style-in-section"),
+          evidence: this.buildTopicDoormatMixedStyleEvidence(analysis),
+          recommendation: this.getTopicDoormatDeterministicText("mixedDescriptionStyle.recommendation"),
+          sectionIndex: analysis.sectionIndex,
+          sectionTitle: analysis.sectionTitle
+        });
+      }
+      if (!analysis.shouldReportDoormatIssues || !analysis.dominantStyle) {
         return;
-      rows.push({
-        include: true,
-        rowType: "section",
-        severity: "Medium",
-        doormat: this.buildTopicDoormatSectionLabel(analysis.sectionIndex, doormatSummaries),
-        doormatLabel: "All doormats in section",
-        issueId: "mixed-description-style-in-section",
-        issue: this.getTopicDoormatIssueLabel("mixed-description-style-in-section"),
-        evidence: this.buildTopicDoormatMixedStyleEvidence(analysis),
-        recommendation: "Rewrite the descriptions so they use one consistent description style across the section.",
-        sectionIndex: analysis.sectionIndex,
-        sectionTitle: analysis.sectionTitle
-      });
-    });
-    const internallyConsistentAnalyses = analyses.filter((analysis) => !analysis.isMixed && !!analysis.dominantStyle);
-    const pageDominantStyle = this.getDominantTopicDoormatSectionStyle(internallyConsistentAnalyses) ?? this.getTwoSectionTopicDoormatReferenceStyle(internallyConsistentAnalyses);
-    if (!pageDominantStyle)
-      return rows;
-    internallyConsistentAnalyses.forEach((analysis) => {
-      const sectionStyle = analysis.dominantStyle;
-      if (!sectionStyle || sectionStyle === pageDominantStyle)
-        return;
-      const key2 = `${analysis.sectionIndex}|section-description-style-outlier`;
-      if (existingIssueKeys.has(key2))
-        return;
-      rows.push({
-        include: true,
-        rowType: "section",
-        severity: "Low",
-        doormat: this.buildTopicDoormatSectionLabel(analysis.sectionIndex, doormatSummaries),
-        doormatLabel: "All doormats in section",
-        issueId: "section-description-style-outlier",
-        issue: this.getTopicDoormatIssueLabel("section-description-style-outlier"),
-        evidence: `This section uses ${this.getTopicDoormatStyleLabel(sectionStyle)}, while the page mostly uses ${this.getTopicDoormatStyleLabel(pageDominantStyle)}.`,
-        recommendation: "Align this section with the dominant page description style unless the section has a clear reason to use a different pattern.",
-        sectionIndex: analysis.sectionIndex,
-        sectionTitle: analysis.sectionTitle
+      }
+      const dominantStyle = analysis.dominantStyle;
+      analysis.outlierSummaries.forEach((summary) => {
+        const style2 = descriptionStylesByDoormatIndex.get(summary.index) ?? "mixed-or-unclear";
+        rows.push({
+          include: true,
+          rowType: "doormat",
+          severity: "Low",
+          doormat: this.buildTopicDoormatLabel(summary),
+          doormatLabel: summary.linkText || summary.href || "Doormat",
+          issueId: "inconsistent-description-style",
+          issue: this.getTopicDoormatIssueLabel("inconsistent-description-style"),
+          evidence: this.getTopicDoormatDeterministicText("inconsistentDescriptionStyle.evidence", {
+            dominantStyle: this.getTopicDoormatStyleLabel(dominantStyle),
+            style: this.getTopicDoormatStyleLabel(style2)
+          }),
+          recommendation: this.getTopicDoormatDeterministicText("inconsistentDescriptionStyle.recommendation"),
+          doormatIndex: summary.index,
+          sectionIndex: summary.sectionIndex,
+          sectionTitle: summary.sectionTitle,
+          sectionItemIndex: summary.sectionItemIndex
+        });
       });
     });
     return rows;
@@ -31670,97 +31864,71 @@ var TopicDoormatIssueAnalysisService = class _TopicDoormatIssueAnalysisService {
         examples.push(summary.sectionItemIndex);
         examplesByStyle.set(style2, examples);
       });
-      const relevantStyles = this.topicDoormatDescriptionStyleOrder.filter((style2) => (styleCounts.get(style2) ?? 0) > 0);
-      const dominantStyle = this.getDominantTopicDoormatDescriptionStyle(styleCounts);
-      const rankedRelevantStyles = relevantStyles.map((style2) => ({ style: style2, count: styleCounts.get(style2) ?? 0 })).sort((a, b) => b.count - a.count);
-      const secondStyleCount = rankedRelevantStyles[1]?.count ?? 0;
-      const isMixed = summaries.length >= 3 && relevantStyles.length >= 2 && (secondStyleCount >= 2 || summaries.length <= 4);
+      const dominantStyle = this.getDominantTopicDoormatDescriptionStyle(styleCounts, summaries.length);
+      const outlierSummaries = dominantStyle ? summaries.filter((summary) => (descriptionStylesByDoormatIndex.get(summary.index) ?? "mixed-or-unclear") !== dominantStyle) : summaries;
+      const shouldReportSectionIssue = summaries.length > 0 && (!dominantStyle || outlierSummaries.length > 2);
+      const shouldReportDoormatIssues = !!dominantStyle && outlierSummaries.length > 0 && outlierSummaries.length <= 2;
       return {
         sectionIndex,
         sectionTitle: summaries[0]?.sectionTitle || `Section ${sectionIndex}`,
         summaries,
         dominantStyle,
+        outlierSummaries,
         styleCounts,
         examplesByStyle,
-        isMixed
+        shouldReportSectionIssue,
+        shouldReportDoormatIssues
       };
     }).sort((a, b) => a.sectionIndex - b.sectionIndex);
   }
-  getDominantTopicDoormatDescriptionStyle(styleCounts) {
+  getDominantTopicDoormatDescriptionStyle(styleCounts, sectionDoormatCount) {
+    if (sectionDoormatCount <= 0)
+      return null;
     const candidates = this.topicDoormatDescriptionStyleOrder.map((style2) => ({ style: style2, count: styleCounts.get(style2) ?? 0 })).filter((entry) => entry.count > 0).sort((a, b) => b.count - a.count);
     if (!candidates.length)
       return null;
     if (candidates.length > 1 && candidates[0].count === candidates[1].count) {
       return null;
     }
+    if (candidates[0].count / sectionDoormatCount < 0.4)
+      return null;
     return candidates[0].style;
-  }
-  getDominantTopicDoormatSectionStyle(analyses) {
-    const counts = /* @__PURE__ */ new Map();
-    analyses.forEach((analysis) => {
-      if (!analysis.dominantStyle)
-        return;
-      counts.set(analysis.dominantStyle, (counts.get(analysis.dominantStyle) ?? 0) + 1);
-    });
-    const ranked = Array.from(counts.entries()).sort((a, b) => b[1] - a[1]);
-    if (ranked.length < 2)
-      return null;
-    if (ranked[0][1] === ranked[1][1])
-      return null;
-    return ranked[0][0];
-  }
-  getTwoSectionTopicDoormatReferenceStyle(analyses) {
-    if (analyses.length !== 2)
-      return null;
-    const firstStyle = analyses[0].dominantStyle;
-    const secondStyle = analyses[1].dominantStyle;
-    if (!firstStyle || !secondStyle || firstStyle === secondStyle)
-      return null;
-    return firstStyle;
   }
   buildTopicDoormatMixedStyleEvidence(analysis) {
     const groups = this.buildTopicDoormatMixedStyleEvidenceGroups(analysis);
-    if (!groups.length)
-      return "Mixes description styles in this section.";
+    if (!groups.length) {
+      return this.getTopicDoormatDeterministicText("mixedDescriptionStyle.evidence.default");
+    }
     if (groups.length === 2) {
       const [first, second] = groups;
-      return [
-        `Mixes ${first.label} with ${second.label}.`,
-        `${first.exampleLabel} examples: ${first.examples.join(", ")}.`,
-        `${second.exampleLabel} examples: ${second.examples.join(", ")}.`
-      ].join(" ");
+      return this.getTopicDoormatDeterministicText("mixedDescriptionStyle.evidence.twoGroups", {
+        firstStyle: first.label,
+        secondStyle: second.label,
+        firstExampleLabel: first.exampleLabel,
+        firstExamples: first.examples.join(", "),
+        secondExampleLabel: second.exampleLabel,
+        secondExamples: second.examples.join(", ")
+      });
     }
     const styleParts = groups.map((group) => `${group.exampleLabel} examples: ${group.examples.join(", ")}`);
-    return `Mixes description styles in this section. ${styleParts.join(". ")}.`;
+    return this.getTopicDoormatDeterministicText("mixedDescriptionStyle.evidence.multipleGroups", { styleParts: styleParts.join(". ") });
   }
   buildTopicDoormatMixedStyleEvidenceGroups(analysis) {
-    return this.topicDoormatDescriptionStyleOrder.map((style2) => ({
+    const styleOrder = [
+      ...this.topicDoormatDescriptionStyleOrder,
+      "mixed-or-unclear"
+    ];
+    return styleOrder.map((style2) => ({
       label: this.getTopicDoormatStyleLabel(style2),
       exampleLabel: this.getTopicDoormatStyleEvidenceLabel(style2),
       examples: (analysis.examplesByStyle.get(style2) ?? []).sort((a, b) => a - b).slice(0, 4)
     })).filter((group) => group.examples.length > 0);
   }
   getTopicDoormatStyleLabel(style2) {
-    if (style2 === "action-verb-task-summary")
-      return "action/task summaries";
-    if (style2 === "noun-topic-summary")
-      return "noun/topic summaries";
-    if (style2 === "keyword-list")
-      return "keyword lists";
-    if (style2 === "task-list")
-      return "task lists";
-    return "eligibility or benefit summaries";
+    return this.getTopicDoormatDeterministicText(`descriptionStyles.${style2}`);
   }
   getTopicDoormatStyleEvidenceLabel(style2) {
-    if (style2 === "action-verb-task-summary")
-      return "Action/task";
-    if (style2 === "noun-topic-summary")
-      return "Noun/topic";
-    if (style2 === "keyword-list")
-      return "Keyword list";
-    if (style2 === "task-list")
-      return "Task list";
-    return "Eligibility/benefit";
+    return this.getTopicDoormatDeterministicText(`descriptionStyleEvidenceLabels.${style2}`);
   }
   buildTopicDoormatSectionCounts(doormatSummaries) {
     const counts = /* @__PURE__ */ new Map();
@@ -31795,8 +31963,8 @@ var TopicDoormatIssueAnalysisService = class _TopicDoormatIssueAnalysisService {
       doormat: this.buildTopicDoormatLabel(doormat),
       doormatLabel: doormat.linkText || doormat.href || "Doormat",
       issueId: "no-issues",
-      issue: "No issues",
-      evidence: "No issues reported by AI.",
+      issue: this.getTopicDoormatDeterministicText("noIssues.issue"),
+      evidence: this.getTopicDoormatDeterministicText("noIssues.evidence"),
       recommendation: "",
       doormatIndex: doormat.index || void 0,
       sectionIndex: doormat.sectionIndex || void 0,
@@ -31860,6 +32028,8 @@ var TopicDoormatIssueAnalysisService = class _TopicDoormatIssueAnalysisService {
       "condition",
       "recommendation",
       "reporting",
+      "must_report_only_when",
+      "do_not_report_when",
       "evidence_required",
       "severity_override"
     ].forEach((key2) => {
@@ -31874,6 +32044,7 @@ var TopicDoormatIssueAnalysisService = class _TopicDoormatIssueAnalysisService {
       instruction: "This compact runtime contract is authoritative. Report only allowed_issue_categories. Complete the required per-doormat classification fields before reporting issues.",
       evidence_style: source["evidence_style"],
       runtime_editorial_evidence_overrides: source["runtime_editorial_evidence_overrides"],
+      style_detection: source["style_detection"],
       destination_content_assessment: source["destination_content_assessment"],
       destination_link_relationship: source["destination_link_relationship"],
       style_inconsistency_reporting: source["style_inconsistency_reporting"],
@@ -31983,7 +32154,7 @@ ${JSON.stringify(contract)}`;
     if (!doormat?.linkText)
       return true;
     const details = issue["evidence_details"] && typeof issue["evidence_details"] === "object" ? issue["evidence_details"] : null;
-    const linkKey = this.normalizeTopicDoormatDestinationComparisonText(doormat.linkText);
+    const linkKey = this.normalizeTopicDoormatSubstantiveDestinationText(doormat.linkText, doormat.labels);
     if (!linkKey)
       return true;
     const destinationKeys = [
@@ -31991,23 +32162,90 @@ ${JSON.stringify(contract)}`;
       doormat.destinationPageHeading,
       this.cleanString(details?.["destination_page_title"]),
       this.cleanString(details?.["destination_page_heading"])
-    ].map((value) => this.normalizeTopicDoormatDestinationComparisonText(value)).filter(Boolean);
+    ].map((value) => this.normalizeTopicDoormatSubstantiveDestinationText(value)).filter(Boolean);
     if (!destinationKeys.length)
       return true;
-    return !destinationKeys.includes(linkKey);
+    return !destinationKeys.some((destinationKey) => this.hasTopicDoormatSubstantiveDestinationTextMatch(linkKey, destinationKey));
+  }
+  hasSubstantiveTopicDoormatDestinationSurfaceMatch(summary) {
+    const linkText = this.normalizeTopicDoormatSubstantiveDestinationText(summary.linkText, summary.labels);
+    if (!linkText)
+      return false;
+    return [summary.destinationPageTitle, summary.destinationPageHeading].map((value) => this.normalizeTopicDoormatSubstantiveDestinationText(value)).filter(Boolean).some((destinationText) => this.hasTopicDoormatSubstantiveDestinationTextMatch(linkText, destinationText));
+  }
+  hasTopicDoormatSubstantiveDestinationTextMatch(linkText, destinationText) {
+    const paddedDestinationText = ` ${destinationText} `;
+    const paddedLinkText = ` ${linkText} `;
+    if (destinationText === linkText || paddedDestinationText.includes(paddedLinkText) || paddedLinkText.includes(paddedDestinationText)) {
+      return true;
+    }
+    const linkTokens = this.getTopicDoormatMeaningfulDestinationTokens(linkText);
+    const destinationTokens = this.getTopicDoormatMeaningfulDestinationTokens(destinationText);
+    if (linkTokens.length < 2 || destinationTokens.length < 2) {
+      return false;
+    }
+    const destinationTokenSet = new Set(destinationTokens);
+    const matchingTokens = linkTokens.filter((token) => destinationTokenSet.has(token));
+    return matchingTokens.length >= 2 && matchingTokens.length / Math.min(linkTokens.length, destinationTokens.length) >= 0.6;
+  }
+  normalizeTopicDoormatSubstantiveDestinationText(value, labels = []) {
+    return this.normalizeTopicDoormatDestinationComparisonText(this.removeTopicDoormatLabels(value, labels));
+  }
+  removeTopicDoormatLabels(value, labels = []) {
+    let cleaned = this.cleanVisibleText(value);
+    labels.forEach((label) => {
+      const normalizedLabel = this.cleanVisibleText(label);
+      if (!normalizedLabel)
+        return;
+      cleaned = cleaned.replace(new RegExp(this.escapeRegExp(normalizedLabel), "gi"), " ");
+    });
+    return cleaned.replace(/\bstatus\s*:\s*[^.;|]+/gi, " ").replace(/\s+/g, " ").trim();
+  }
+  escapeRegExp(value) {
+    return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  }
+  getTopicDoormatMeaningfulDestinationTokens(value) {
+    const stopWords = /* @__PURE__ */ new Set([
+      "and",
+      "or",
+      "the",
+      "a",
+      "an",
+      "for",
+      "to",
+      "of",
+      "in",
+      "on",
+      "with",
+      "your",
+      "you",
+      "individuals",
+      "families",
+      "benefit",
+      "benefits",
+      "credit",
+      "credits",
+      "tax"
+    ]);
+    return value.split(/\s+/).filter((token) => token.length > 2 && !stopWords.has(token));
+  }
+  isTopicDoormatLifecycleStatusAlreadyCovered(summary, element) {
+    if (!this.isTopicDoormatLifecycleStatusElement(element.text))
+      return false;
+    return this.hasTopicDoormatLifecycleStatusText([summary.linkText, summary.description, summary.rawItemText].join(" "));
+  }
+  isTopicDoormatLifecycleStatusElement(value) {
+    const normalized = this.normalizeTopicDoormatDestinationComparisonText(value);
+    return /^status (?:closed|archived|inactive|expired|ended)\b/.test(normalized) || /^(?:closed|archived|inactive|expired|ended)$/.test(normalized);
+  }
+  hasTopicDoormatLifecycleStatusText(value) {
+    return /\b(?:status:\s*)?(?:closed|archived|inactive|expired|ended|replaced|no longer available|not available)\b/i.test(value);
   }
   normalizeTopicDoormatDestinationComparisonText(value) {
     return this.cleanVisibleText(value).replace(/\s*(?:[-|]\s*)?canada\.ca\s*$/i, "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[\u2018\u2019\u201b\u2032]/g, "'").replace(/[^a-z0-9]+/gi, " ").trim().toLowerCase();
   }
   hasEquivalentTopicDoormatDestinationSurface(summary) {
-    const linkText = this.normalizeTopicDoormatDestinationComparisonText(summary.linkText);
-    if (!linkText)
-      return false;
-    const paddedLinkText = ` ${linkText} `;
-    return [summary.destinationPageTitle, summary.destinationPageHeading].map((value) => this.normalizeTopicDoormatDestinationComparisonText(value)).filter(Boolean).some((destinationText) => {
-      const paddedDestinationText = ` ${destinationText} `;
-      return destinationText === linkText || paddedDestinationText.includes(paddedLinkText) || paddedLinkText.includes(paddedDestinationText);
-    });
+    return this.hasSubstantiveTopicDoormatDestinationSurfaceMatch(summary);
   }
   buildTopicDoormatEvidence(issue, doormat) {
     const evidence = this.cleanString(issue["evidence"]);
@@ -32142,6 +32380,13 @@ ${JSON.stringify(contract)}`;
       return "Low";
     return null;
   }
+  getTopicDoormatIssueSeverity(issueId, modelSeverity) {
+    if (!modelSeverity)
+      return null;
+    if (this.lowSeverityTopicDoormatStyleIssueIds.has(issueId))
+      return "Low";
+    return modelSeverity;
+  }
   stripCodeFences(value) {
     const trimmed = value.trim();
     const fencedJson = trimmed.match(/```(?:json)?\s*([\s\S]*?)\s*```/i);
@@ -32229,7 +32474,7 @@ ${JSON.stringify(contract)}`;
   }], null, null);
 })();
 
-// src/app/views/page-assistant/services/topic-doormat-presenter.service.ts
+// src/app/views/page-assistant/services/topic-doormats/topic-doormat-presenter.service.ts
 var SEVERITY_RANK = {
   high: 3,
   medium: 2,
@@ -32806,7 +33051,7 @@ function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Co
 }
 function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_11_Conditional_9_Conditional_2_Conditional_2_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275elementStart(0, "a", 56);
+    \u0275\u0275elementStart(0, "a", 57);
     \u0275\u0275text(1);
     \u0275\u0275elementEnd();
   }
@@ -32822,7 +33067,7 @@ function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Co
     \u0275\u0275elementStart(0, "span");
     \u0275\u0275text(1);
     \u0275\u0275elementEnd();
-    \u0275\u0275template(2, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_11_Conditional_9_Conditional_2_Conditional_2_Template, 2, 2, "a", 56);
+    \u0275\u0275template(2, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_11_Conditional_9_Conditional_2_Conditional_2_Template, 2, 2, "a", 57);
   }
   if (rf & 2) {
     const issue_r12 = \u0275\u0275nextContext(2).$implicit;
@@ -32834,7 +33079,7 @@ function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Co
 }
 function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_11_Conditional_9_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275elementStart(0, "span", 55);
+    \u0275\u0275elementStart(0, "span", 56);
     \u0275\u0275text(1);
     \u0275\u0275elementEnd();
     \u0275\u0275template(2, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_11_Conditional_9_Conditional_2_Template, 3, 2);
@@ -32851,7 +33096,7 @@ function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Co
 }
 function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_11_Conditional_10_Conditional_1_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275elementStart(0, "a", 56);
+    \u0275\u0275elementStart(0, "a", 57);
     \u0275\u0275text(1);
     \u0275\u0275elementEnd();
   }
@@ -32865,7 +33110,7 @@ function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Co
 function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_11_Conditional_10_Template(rf, ctx) {
   if (rf & 1) {
     \u0275\u0275text(0);
-    \u0275\u0275template(1, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_11_Conditional_10_Conditional_1_Template, 2, 2, "a", 56);
+    \u0275\u0275template(1, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_11_Conditional_10_Conditional_1_Template, 2, 2, "a", 57);
   }
   if (rf & 2) {
     const issue_r12 = \u0275\u0275nextContext().$implicit;
@@ -32893,7 +33138,7 @@ function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Co
     \u0275\u0275elementStart(8, "td");
     \u0275\u0275template(9, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_11_Conditional_9_Template, 3, 3)(10, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_11_Conditional_10_Template, 2, 2);
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(11, "td");
+    \u0275\u0275elementStart(11, "td", 55);
     \u0275\u0275text(12);
     \u0275\u0275elementEnd()();
   }
@@ -32918,7 +33163,7 @@ function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Co
 }
 function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_12_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275elementStart(0, "tr")(1, "td", 57)(2, "span", 25);
+    \u0275\u0275elementStart(0, "tr")(1, "td", 58)(2, "span", 25);
     \u0275\u0275text(3, "No section-level issues");
     \u0275\u0275elementEnd()()();
   }
@@ -32928,7 +33173,7 @@ function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Co
     \u0275\u0275elementStart(0, "tr")(1, "th", 50);
     \u0275\u0275text(2, "Include");
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(3, "th", 58);
+    \u0275\u0275elementStart(3, "th", 59);
     \u0275\u0275text(4, "#");
     \u0275\u0275elementEnd();
     \u0275\u0275elementStart(5, "th");
@@ -32962,7 +33207,7 @@ function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Co
 }
 function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_17_Conditional_14_Conditional_2_Conditional_2_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275elementStart(0, "a", 56);
+    \u0275\u0275elementStart(0, "a", 57);
     \u0275\u0275text(1);
     \u0275\u0275elementEnd();
   }
@@ -32978,7 +33223,7 @@ function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Co
     \u0275\u0275elementStart(0, "span");
     \u0275\u0275text(1);
     \u0275\u0275elementEnd();
-    \u0275\u0275template(2, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_17_Conditional_14_Conditional_2_Conditional_2_Template, 2, 2, "a", 56);
+    \u0275\u0275template(2, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_17_Conditional_14_Conditional_2_Conditional_2_Template, 2, 2, "a", 57);
   }
   if (rf & 2) {
     const issue_r14 = \u0275\u0275nextContext(2).$implicit;
@@ -32990,7 +33235,7 @@ function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Co
 }
 function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_17_Conditional_14_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275elementStart(0, "span", 55);
+    \u0275\u0275elementStart(0, "span", 56);
     \u0275\u0275text(1);
     \u0275\u0275elementEnd();
     \u0275\u0275template(2, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_17_Conditional_14_Conditional_2_Template, 3, 2);
@@ -33007,7 +33252,7 @@ function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Co
 }
 function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_17_Conditional_15_Conditional_1_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275elementStart(0, "a", 56);
+    \u0275\u0275elementStart(0, "a", 57);
     \u0275\u0275text(1);
     \u0275\u0275elementEnd();
   }
@@ -33021,7 +33266,7 @@ function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Co
 function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_17_Conditional_15_Template(rf, ctx) {
   if (rf & 1) {
     \u0275\u0275text(0);
-    \u0275\u0275template(1, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_17_Conditional_15_Conditional_1_Template, 2, 2, "a", 56);
+    \u0275\u0275template(1, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_17_Conditional_15_Conditional_1_Template, 2, 2, "a", 57);
   }
   if (rf & 2) {
     const issue_r14 = \u0275\u0275nextContext().$implicit;
@@ -33056,7 +33301,7 @@ function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Co
     \u0275\u0275elementStart(13, "td");
     \u0275\u0275template(14, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_17_Conditional_14_Template, 3, 3)(15, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_17_Conditional_15_Template, 2, 2);
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(16, "td");
+    \u0275\u0275elementStart(16, "td", 55);
     \u0275\u0275text(17);
     \u0275\u0275elementEnd()();
   }
@@ -33087,7 +33332,7 @@ function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Co
 }
 function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_18_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275elementStart(0, "tr")(1, "td", 59)(2, "span", 25);
+    \u0275\u0275elementStart(0, "tr")(1, "td", 60)(2, "span", 25);
     \u0275\u0275text(3, "No doormat-level issues");
     \u0275\u0275elementEnd()()();
   }
@@ -33598,7 +33843,7 @@ var ComponentGuidanceComponent = class _ComponentGuidanceComponent {
     }));
     this.alertCategories = this.sortCategories(computeAlertCategories(normalizedIssues));
     this.alertMaxSeverity = computeAlertMaxSeverity(normalizedIssues);
-    this.alertHasIssues = normalizedIssues.length > 0;
+    this.alertHasIssues = this.alertCategories.length > 0;
     this.alertLoading = false;
     this.alertError = false;
     this.alertLoadAttempted = true;
@@ -33918,7 +34163,7 @@ var ComponentGuidanceComponent = class _ComponentGuidanceComponent {
   static \u0275fac = function ComponentGuidanceComponent_Factory(__ngFactoryType__) {
     return new (__ngFactoryType__ || _ComponentGuidanceComponent)();
   };
-  static \u0275cmp = /* @__PURE__ */ \u0275\u0275defineComponent({ type: _ComponentGuidanceComponent, selectors: [["ca-component-guidance"]], outputs: { analysisAvailable: "analysisAvailable" }, decls: 10, vars: 10, consts: [["dt", ""], ["dataKey", "url", "styleClass", "p-datatable-sm", "selectionMode", "multiple", "expandableRows", "", 3, "selectionChange", "sortFunction", "onRowExpand", "onRowCollapse", "value", "selection", "customSort", "resizableColumns", "expandedRowKeys"], ["pTemplate", "caption"], ["pTemplate", "header"], ["pTemplate", "body"], ["pTemplate", "expandedrow"], [1, "mt-3"], ["pButton", "", "type", "button", "aria-label", "Get GenAI recommendations based on user data", "pTooltip", "Select one or more components", 1, "ai-btn", 3, "click", "label", "icon", "disabled", "showDelay", "hideDelay"], [1, "sr-only"], [1, "caption-actions"], ["pButton", "", "type", "button", "label", "Expand All", "icon", "pi pi-plus", 1, "p-button-text", 3, "click"], ["pButton", "", "type", "button", "label", "Collapse All", "icon", "pi pi-minus", 1, "p-button-text", 3, "click"], [2, "width", "3rem", "text-align", "center"], ["pSortableColumn", "order"], ["field", "order"], ["pSortableColumn", "health", 1, "health-col"], ["field", "health"], [3, "pSelectableRow"], [2, "text-align", "center"], ["pButton", "", "type", "button", "aria-label", "Toggle row", 1, "p-button-text", "p-button-rounded", "p-button-plain", 3, "pRowToggler"], ["aria-hidden", "true", 1, "pi", 3, "ngClass"], [3, "value"], ["target", "_blank", "rel", "noopener", 3, "href"], [1, "health-cell", "health-col"], [3, "label", "icon", "styleClass"], [1, "muted"], ["icon", "pi pi-question-circle", "styleClass", "chip chip-unk", 3, "label"], ["label", "OK", "icon", "pi pi-check-circle", "styleClass", "chip chip-ok"], [1, "alert-loading"], [1, "text-danger"], [1, "chip-list"], ["aria-hidden", "true", 1, "pi", "pi-spinner", "pi-spin"], [3, "label", "styleClass", 4, "ngFor", "ngForOf"], [3, "label", "styleClass"], ["styleClass", "chip chip-hghlght", 3, "label", 4, "ngFor", "ngForOf"], ["styleClass", "chip chip-hghlght", 3, "label"], ["colspan", "6"], [1, "p-3"], [1, "expansion-table", 3, "selectAll"], [1, "expansion-table", 3, "maxSeverityChange", "categoriesChange", "loadingChange", "errorChange", "selectAll"], ["styleClass", "p-datatable-sm expansion-table"], [1, "mb-3"], ["pButton", "", "type", "button", "label", "Analyze current page", "icon", "pi pi-refresh", 1, "p-button-text", "p-button-sm", 3, "click", "disabled"], [1, "topic-doormat-empty"], [1, "topic-doormat-group"], [1, "topic-doormat-group-header"], [1, "topic-doormat-count"], [1, "topic-doormat-subheading"], ["styleClass", "p-datatable-sm expansion-table", 3, "value"], ["pTemplate", "emptymessage"], [2, "width", "3rem"], [2, "width", "8rem"], [1, "topic-doormat-section-row"], [3, "ngModelChange", "binary", "ngModel", "disabled"], [1, "chip", 3, "ngClass"], [1, "chip", "topic-doormat-evidence-metric", 3, "ngClass"], ["target", "_blank", "rel", "noopener noreferrer", 3, "href"], ["colspan", "5"], [2, "width", "4rem"], ["colspan", "7"]], template: function ComponentGuidanceComponent_Template(rf, ctx) {
+  static \u0275cmp = /* @__PURE__ */ \u0275\u0275defineComponent({ type: _ComponentGuidanceComponent, selectors: [["ca-component-guidance"]], outputs: { analysisAvailable: "analysisAvailable" }, decls: 10, vars: 10, consts: [["dt", ""], ["dataKey", "url", "styleClass", "p-datatable-sm", "selectionMode", "multiple", "expandableRows", "", 3, "selectionChange", "sortFunction", "onRowExpand", "onRowCollapse", "value", "selection", "customSort", "resizableColumns", "expandedRowKeys"], ["pTemplate", "caption"], ["pTemplate", "header"], ["pTemplate", "body"], ["pTemplate", "expandedrow"], [1, "mt-3"], ["pButton", "", "type", "button", "aria-label", "Get GenAI recommendations based on user data", "pTooltip", "Select one or more components", 1, "ai-btn", 3, "click", "label", "icon", "disabled", "showDelay", "hideDelay"], [1, "sr-only"], [1, "caption-actions"], ["pButton", "", "type", "button", "label", "Expand All", "icon", "pi pi-plus", 1, "p-button-text", 3, "click"], ["pButton", "", "type", "button", "label", "Collapse All", "icon", "pi pi-minus", 1, "p-button-text", 3, "click"], [2, "width", "3rem", "text-align", "center"], ["pSortableColumn", "order"], ["field", "order"], ["pSortableColumn", "health", 1, "health-col"], ["field", "health"], [3, "pSelectableRow"], [2, "text-align", "center"], ["pButton", "", "type", "button", "aria-label", "Toggle row", 1, "p-button-text", "p-button-rounded", "p-button-plain", 3, "pRowToggler"], ["aria-hidden", "true", 1, "pi", 3, "ngClass"], [3, "value"], ["target", "_blank", "rel", "noopener", 3, "href"], [1, "health-cell", "health-col"], [3, "label", "icon", "styleClass"], [1, "muted"], ["icon", "pi pi-question-circle", "styleClass", "chip chip-unk", 3, "label"], ["label", "OK", "icon", "pi pi-check-circle", "styleClass", "chip chip-ok"], [1, "alert-loading"], [1, "text-danger"], [1, "chip-list"], ["aria-hidden", "true", 1, "pi", "pi-spinner", "pi-spin"], [3, "label", "styleClass", 4, "ngFor", "ngForOf"], [3, "label", "styleClass"], ["styleClass", "chip chip-hghlght", 3, "label", 4, "ngFor", "ngForOf"], ["styleClass", "chip chip-hghlght", 3, "label"], ["colspan", "6"], [1, "p-3"], [1, "expansion-table", 3, "selectAll"], [1, "expansion-table", 3, "maxSeverityChange", "categoriesChange", "loadingChange", "errorChange", "selectAll"], ["styleClass", "p-datatable-sm expansion-table"], [1, "mb-3"], ["pButton", "", "type", "button", "label", "Analyze current page", "icon", "pi pi-refresh", 1, "p-button-text", "p-button-sm", 3, "click", "disabled"], [1, "topic-doormat-empty"], [1, "topic-doormat-group"], [1, "topic-doormat-group-header"], [1, "topic-doormat-count"], [1, "topic-doormat-subheading"], ["styleClass", "p-datatable-sm expansion-table", 3, "value"], ["pTemplate", "emptymessage"], [2, "width", "3rem"], [2, "width", "8rem"], [1, "topic-doormat-section-row"], [3, "ngModelChange", "binary", "ngModel", "disabled"], [1, "chip", 3, "ngClass"], [1, "topic-doormat-recommendation"], [1, "chip", "topic-doormat-evidence-metric", 3, "ngClass"], ["target", "_blank", "rel", "noopener noreferrer", 3, "href"], ["colspan", "5"], [2, "width", "4rem"], ["colspan", "7"]], template: function ComponentGuidanceComponent_Template(rf, ctx) {
     if (rf & 1) {
       const _r1 = \u0275\u0275getCurrentView();
       \u0275\u0275elementStart(0, "p-table", 1, 0);
@@ -33984,7 +34229,7 @@ var ComponentGuidanceComponent = class _ComponentGuidanceComponent {
     Tooltip,
     TranslateModule,
     AlertsGuidanceComponent
-  ], styles: ["\n\n[_nghost-%COMP%]     .alert-table .p-datatable-table {\n  table-layout: auto !important;\n}\n[_nghost-%COMP%]     .alert-table.p-datatable .p-datatable-thead > tr > th.toggle-col, \n[_nghost-%COMP%]     .alert-table.p-datatable .p-datatable-tbody > tr > td.toggle-col {\n  width: 70px !important;\n  min-width: 70px;\n  max-width: 70px;\n  white-space: nowrap !important;\n  text-align: center;\n  padding: 0 0.25rem;\n}\n[_nghost-%COMP%]     .alert-table.p-datatable .p-datatable-thead > tr > th.checkbox-col, \n[_nghost-%COMP%]     .alert-table.p-datatable .p-datatable-tbody > tr > td.checkbox-col {\n  width: 70px !important;\n  min-width: 70px;\n  max-width: 70px;\n  white-space: nowrap !important;\n  text-align: center;\n  padding: 0 0.25rem;\n}\n[_nghost-%COMP%]     .topic-doormat-section-row > td {\n  background: #eef2f6;\n}\n.topic-doormat-group[_ngcontent-%COMP%] {\n  margin-top: 1rem;\n  border: 1px solid #d8dee6;\n  border-radius: 6px;\n  background: #fff;\n  overflow: hidden;\n}\n.topic-doormat-group[_ngcontent-%COMP%]    + .topic-doormat-group[_ngcontent-%COMP%] {\n  margin-top: 1.25rem;\n}\n.topic-doormat-group-header[_ngcontent-%COMP%] {\n  display: flex;\n  align-items: flex-start;\n  gap: 0.75rem;\n  padding: 1.1rem 1.25rem;\n  border-bottom: 1px solid #d8dee6;\n  background: #eef2f6;\n}\n.topic-doormat-group[_ngcontent-%COMP%]   h3[_ngcontent-%COMP%] {\n  margin: 0;\n  font-size: 1.25rem;\n  line-height: 1.25;\n}\n.topic-doormat-count[_ngcontent-%COMP%] {\n  flex: 0 0 auto;\n  padding: 0.4rem 0.8rem;\n  border: 1px solid #d8dee6;\n  border-radius: 999px;\n  background: #fff;\n  color: #202833;\n  font-size: 0.9rem;\n  font-weight: 700;\n}\n.topic-doormat-subheading[_ngcontent-%COMP%] {\n  margin: 1rem 1rem 0.4rem;\n  padding-bottom: 0.25rem;\n  border-bottom: 1px solid #eef2f6;\n  color: #202833;\n  font-size: 0.9rem;\n  font-weight: 700;\n}\n.topic-doormat-group[_ngcontent-%COMP%]   .expansion-table[_ngcontent-%COMP%] {\n  margin: 0 1rem 1rem;\n}\n.topic-doormat-empty[_ngcontent-%COMP%] {\n  padding: 0.75rem;\n  border: 1px solid #d8dee6;\n  border-radius: 4px;\n  background: #fff;\n}\n/*# sourceMappingURL=component-guidance.component.css.map */", "\n\n.muted[_ngcontent-%COMP%] {\n  color: #6b7280;\n  font-size: 12px;\n}\n.issues[_ngcontent-%COMP%] {\n  margin: 0;\n  padding-left: 1rem;\n}\n.health-cell[_ngcontent-%COMP%] {\n  gap: 0.4rem;\n  align-items: center;\n  flex-wrap: wrap;\n}\n.chip-list[_ngcontent-%COMP%] {\n  display: flex;\n  flex-wrap: wrap;\n  gap: 0.25rem;\n  padding: 0;\n  margin: 0;\n}\n.chip-list[_ngcontent-%COMP%]   .chip[_ngcontent-%COMP%], \n.chip-list[_ngcontent-%COMP%]   .p-chip[_ngcontent-%COMP%] {\n  white-space: normal;\n  word-break: break-word;\n  max-width: 100%;\n}\n.expansion-table[_ngcontent-%COMP%] {\n  width: 100%;\n  max-width: 100%;\n  overflow: hidden;\n}\n[_nghost-%COMP%]     .expansion-table .p-datatable-table {\n  width: 100%;\n  border: 1px solid #d1d5db;\n  border-radius: 6px;\n}\n[_nghost-%COMP%]     .expansion-table .p-datatable-wrapper {\n  width: 100%;\n  overflow-x: auto;\n}\n[_nghost-%COMP%]     .expansion-table .p-datatable-tbody > tr > td, \n[_nghost-%COMP%]     .expansion-table .p-datatable-thead > tr > th {\n  white-space: normal;\n  word-break: normal;\n  overflow-wrap: normal;\n}\n.tag[_ngcontent-%COMP%] {\n  font-size: 11px;\n  padding: 0.05rem 0.4rem;\n  border-radius: 6px;\n  border: 1px solid transparent;\n}\n.topic-doormat-evidence-metric[_ngcontent-%COMP%] {\n  display: inline-flex;\n  margin-right: 0.2rem;\n  vertical-align: baseline;\n}\n.ai-btn[_ngcontent-%COMP%] {\n  font-weight: 600;\n}\n.sr-only[_ngcontent-%COMP%] {\n  position: absolute;\n  width: 1px;\n  height: 1px;\n  padding: 0;\n  margin: -1px;\n  overflow: hidden;\n  clip: rect(0, 0, 0, 0);\n  white-space: nowrap;\n  border: 0;\n}\n/*# sourceMappingURL=component-guidance.component.css.map */", "\n\n.caption-actions[_ngcontent-%COMP%] {\n  display: flex;\n  align-items: center;\n  justify-content: flex-end;\n  gap: 0.5rem;\n}\n/*# sourceMappingURL=component-guidance.component.css.map */"] });
+  ], styles: ["\n\n[_nghost-%COMP%]     .alert-table .p-datatable-table {\n  table-layout: auto !important;\n}\n[_nghost-%COMP%]     .alert-table.p-datatable .p-datatable-thead > tr > th.toggle-col, \n[_nghost-%COMP%]     .alert-table.p-datatable .p-datatable-tbody > tr > td.toggle-col {\n  width: 70px !important;\n  min-width: 70px;\n  max-width: 70px;\n  white-space: nowrap !important;\n  text-align: center;\n  padding: 0 0.25rem;\n}\n[_nghost-%COMP%]     .alert-table.p-datatable .p-datatable-thead > tr > th.checkbox-col, \n[_nghost-%COMP%]     .alert-table.p-datatable .p-datatable-tbody > tr > td.checkbox-col {\n  width: 70px !important;\n  min-width: 70px;\n  max-width: 70px;\n  white-space: nowrap !important;\n  text-align: center;\n  padding: 0 0.25rem;\n}\n[_nghost-%COMP%]     .topic-doormat-section-row > td {\n  background: #eef2f6;\n}\n.topic-doormat-group[_ngcontent-%COMP%] {\n  margin-top: 1rem;\n  border: 1px solid #d8dee6;\n  border-radius: 6px;\n  background: #fff;\n  overflow: hidden;\n}\n.topic-doormat-group[_ngcontent-%COMP%]    + .topic-doormat-group[_ngcontent-%COMP%] {\n  margin-top: 1.25rem;\n}\n.topic-doormat-group-header[_ngcontent-%COMP%] {\n  display: flex;\n  align-items: flex-start;\n  gap: 0.75rem;\n  padding: 1.1rem 1.25rem;\n  border-bottom: 1px solid #d8dee6;\n  background: #eef2f6;\n}\n.topic-doormat-group[_ngcontent-%COMP%]   h3[_ngcontent-%COMP%] {\n  margin: 0;\n  font-size: 1.25rem;\n  line-height: 1.25;\n}\n.topic-doormat-count[_ngcontent-%COMP%] {\n  flex: 0 0 auto;\n  padding: 0.4rem 0.8rem;\n  border: 1px solid #d8dee6;\n  border-radius: 999px;\n  background: #fff;\n  color: #202833;\n  font-size: 0.9rem;\n  font-weight: 700;\n}\n.topic-doormat-subheading[_ngcontent-%COMP%] {\n  margin: 1rem 1rem 0.4rem;\n  padding-bottom: 0.25rem;\n  border-bottom: 1px solid #eef2f6;\n  color: #202833;\n  font-size: 0.9rem;\n  font-weight: 700;\n}\n.topic-doormat-group[_ngcontent-%COMP%]   .expansion-table[_ngcontent-%COMP%] {\n  margin: 0 1rem 1rem;\n}\n.topic-doormat-empty[_ngcontent-%COMP%] {\n  padding: 0.75rem;\n  border: 1px solid #d8dee6;\n  border-radius: 4px;\n  background: #fff;\n}\n.topic-doormat-recommendation[_ngcontent-%COMP%] {\n  white-space: pre-line;\n}\n/*# sourceMappingURL=component-guidance.component.css.map */", "\n\n.muted[_ngcontent-%COMP%] {\n  color: #6b7280;\n  font-size: 12px;\n}\n.issues[_ngcontent-%COMP%] {\n  margin: 0;\n  padding-left: 1rem;\n}\n.health-cell[_ngcontent-%COMP%] {\n  gap: 0.4rem;\n  align-items: center;\n  flex-wrap: wrap;\n}\n.chip-list[_ngcontent-%COMP%] {\n  display: flex;\n  flex-wrap: wrap;\n  gap: 0.25rem;\n  padding: 0;\n  margin: 0;\n}\n.chip-list[_ngcontent-%COMP%]   .chip[_ngcontent-%COMP%], \n.chip-list[_ngcontent-%COMP%]   .p-chip[_ngcontent-%COMP%] {\n  white-space: normal;\n  word-break: break-word;\n  max-width: 100%;\n}\n.expansion-table[_ngcontent-%COMP%] {\n  width: 100%;\n  max-width: 100%;\n  overflow: hidden;\n}\n[_nghost-%COMP%]     .expansion-table .p-datatable-table {\n  width: 100%;\n  border: 1px solid #d1d5db;\n  border-radius: 6px;\n}\n[_nghost-%COMP%]     .expansion-table .p-datatable-wrapper {\n  width: 100%;\n  overflow-x: auto;\n}\n[_nghost-%COMP%]     .expansion-table .p-datatable-tbody > tr > td, \n[_nghost-%COMP%]     .expansion-table .p-datatable-thead > tr > th {\n  white-space: normal;\n  word-break: normal;\n  overflow-wrap: normal;\n}\n.tag[_ngcontent-%COMP%] {\n  font-size: 11px;\n  padding: 0.05rem 0.4rem;\n  border-radius: 6px;\n  border: 1px solid transparent;\n}\n.topic-doormat-evidence-metric[_ngcontent-%COMP%] {\n  display: inline-flex;\n  margin-right: 0.2rem;\n  vertical-align: baseline;\n}\n.ai-btn[_ngcontent-%COMP%] {\n  font-weight: 600;\n}\n.sr-only[_ngcontent-%COMP%] {\n  position: absolute;\n  width: 1px;\n  height: 1px;\n  padding: 0;\n  margin: -1px;\n  overflow: hidden;\n  clip: rect(0, 0, 0, 0);\n  white-space: nowrap;\n  border: 0;\n}\n/*# sourceMappingURL=component-guidance.component.css.map */", "\n\n.caption-actions[_ngcontent-%COMP%] {\n  display: flex;\n  align-items: center;\n  justify-content: flex-end;\n  gap: 0.5rem;\n}\n/*# sourceMappingURL=component-guidance.component.css.map */"] });
 };
 (() => {
   (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(ComponentGuidanceComponent, [{
@@ -34335,7 +34580,7 @@ var ComponentGuidanceComponent = class _ComponentGuidanceComponent {
                               }
                             }
                           </td>
-                          <td>{{ issue.recommendation || '-' }}</td>
+                          <td class="topic-doormat-recommendation">{{ issue.recommendation || '-' }}</td>
                         </tr>
                       </ng-template>
                       <ng-template pTemplate="emptymessage">
@@ -34404,7 +34649,7 @@ var ComponentGuidanceComponent = class _ComponentGuidanceComponent {
                               }
                             }
                           </td>
-                          <td>{{ issue.recommendation || '-' }}</td>
+                          <td class="topic-doormat-recommendation">{{ issue.recommendation || '-' }}</td>
                         </tr>
                       </ng-template>
                       <ng-template pTemplate="emptymessage">
@@ -34473,7 +34718,7 @@ var ComponentGuidanceComponent = class _ComponentGuidanceComponent {
     <span class="sr-only">Get GenAI recommendations based on user data</span>
   </button>
 </div>
-`, styles: ["/* src/app/views/page-assistant/components/problems/component-guidance/component-guidance.component.css */\n:host ::ng-deep .alert-table .p-datatable-table {\n  table-layout: auto !important;\n}\n:host ::ng-deep .alert-table.p-datatable .p-datatable-thead > tr > th.toggle-col,\n:host ::ng-deep .alert-table.p-datatable .p-datatable-tbody > tr > td.toggle-col {\n  width: 70px !important;\n  min-width: 70px;\n  max-width: 70px;\n  white-space: nowrap !important;\n  text-align: center;\n  padding: 0 0.25rem;\n}\n:host ::ng-deep .alert-table.p-datatable .p-datatable-thead > tr > th.checkbox-col,\n:host ::ng-deep .alert-table.p-datatable .p-datatable-tbody > tr > td.checkbox-col {\n  width: 70px !important;\n  min-width: 70px;\n  max-width: 70px;\n  white-space: nowrap !important;\n  text-align: center;\n  padding: 0 0.25rem;\n}\n:host ::ng-deep .topic-doormat-section-row > td {\n  background: #eef2f6;\n}\n.topic-doormat-group {\n  margin-top: 1rem;\n  border: 1px solid #d8dee6;\n  border-radius: 6px;\n  background: #fff;\n  overflow: hidden;\n}\n.topic-doormat-group + .topic-doormat-group {\n  margin-top: 1.25rem;\n}\n.topic-doormat-group-header {\n  display: flex;\n  align-items: flex-start;\n  gap: 0.75rem;\n  padding: 1.1rem 1.25rem;\n  border-bottom: 1px solid #d8dee6;\n  background: #eef2f6;\n}\n.topic-doormat-group h3 {\n  margin: 0;\n  font-size: 1.25rem;\n  line-height: 1.25;\n}\n.topic-doormat-count {\n  flex: 0 0 auto;\n  padding: 0.4rem 0.8rem;\n  border: 1px solid #d8dee6;\n  border-radius: 999px;\n  background: #fff;\n  color: #202833;\n  font-size: 0.9rem;\n  font-weight: 700;\n}\n.topic-doormat-subheading {\n  margin: 1rem 1rem 0.4rem;\n  padding-bottom: 0.25rem;\n  border-bottom: 1px solid #eef2f6;\n  color: #202833;\n  font-size: 0.9rem;\n  font-weight: 700;\n}\n.topic-doormat-group .expansion-table {\n  margin: 0 1rem 1rem;\n}\n.topic-doormat-empty {\n  padding: 0.75rem;\n  border: 1px solid #d8dee6;\n  border-radius: 4px;\n  background: #fff;\n}\n/*# sourceMappingURL=component-guidance.component.css.map */\n", "/* angular:styles/component:css;430e57ca770217165e875d99e86a3dead87c45d69199439a33445ade7db50790;C:/my-working-files/GitHub/design-assistant/src/app/views/page-assistant/components/problems/component-guidance/component-guidance.component.ts */\n.muted {\n  color: #6b7280;\n  font-size: 12px;\n}\n.issues {\n  margin: 0;\n  padding-left: 1rem;\n}\n.health-cell {\n  gap: 0.4rem;\n  align-items: center;\n  flex-wrap: wrap;\n}\n.chip-list {\n  display: flex;\n  flex-wrap: wrap;\n  gap: 0.25rem;\n  padding: 0;\n  margin: 0;\n}\n.chip-list .chip,\n.chip-list .p-chip {\n  white-space: normal;\n  word-break: break-word;\n  max-width: 100%;\n}\n.expansion-table {\n  width: 100%;\n  max-width: 100%;\n  overflow: hidden;\n}\n:host ::ng-deep .expansion-table .p-datatable-table {\n  width: 100%;\n  border: 1px solid #d1d5db;\n  border-radius: 6px;\n}\n:host ::ng-deep .expansion-table .p-datatable-wrapper {\n  width: 100%;\n  overflow-x: auto;\n}\n:host ::ng-deep .expansion-table .p-datatable-tbody > tr > td,\n:host ::ng-deep .expansion-table .p-datatable-thead > tr > th {\n  white-space: normal;\n  word-break: normal;\n  overflow-wrap: normal;\n}\n.tag {\n  font-size: 11px;\n  padding: 0.05rem 0.4rem;\n  border-radius: 6px;\n  border: 1px solid transparent;\n}\n.topic-doormat-evidence-metric {\n  display: inline-flex;\n  margin-right: 0.2rem;\n  vertical-align: baseline;\n}\n.ai-btn {\n  font-weight: 600;\n}\n.sr-only {\n  position: absolute;\n  width: 1px;\n  height: 1px;\n  padding: 0;\n  margin: -1px;\n  overflow: hidden;\n  clip: rect(0, 0, 0, 0);\n  white-space: nowrap;\n  border: 0;\n}\n/*# sourceMappingURL=component-guidance.component.css.map */\n", "/* angular:styles/component:css;c0806e59c14ba3c53784f6243c5c92cc29bf483de8f80121dc534aca8504d932;C:/my-working-files/GitHub/design-assistant/src/app/views/page-assistant/components/problems/component-guidance/component-guidance.component.ts */\n.caption-actions {\n  display: flex;\n  align-items: center;\n  justify-content: flex-end;\n  gap: 0.5rem;\n}\n/*# sourceMappingURL=component-guidance.component.css.map */\n"] }]
+`, styles: ["/* src/app/views/page-assistant/components/problems/component-guidance/component-guidance.component.css */\n:host ::ng-deep .alert-table .p-datatable-table {\n  table-layout: auto !important;\n}\n:host ::ng-deep .alert-table.p-datatable .p-datatable-thead > tr > th.toggle-col,\n:host ::ng-deep .alert-table.p-datatable .p-datatable-tbody > tr > td.toggle-col {\n  width: 70px !important;\n  min-width: 70px;\n  max-width: 70px;\n  white-space: nowrap !important;\n  text-align: center;\n  padding: 0 0.25rem;\n}\n:host ::ng-deep .alert-table.p-datatable .p-datatable-thead > tr > th.checkbox-col,\n:host ::ng-deep .alert-table.p-datatable .p-datatable-tbody > tr > td.checkbox-col {\n  width: 70px !important;\n  min-width: 70px;\n  max-width: 70px;\n  white-space: nowrap !important;\n  text-align: center;\n  padding: 0 0.25rem;\n}\n:host ::ng-deep .topic-doormat-section-row > td {\n  background: #eef2f6;\n}\n.topic-doormat-group {\n  margin-top: 1rem;\n  border: 1px solid #d8dee6;\n  border-radius: 6px;\n  background: #fff;\n  overflow: hidden;\n}\n.topic-doormat-group + .topic-doormat-group {\n  margin-top: 1.25rem;\n}\n.topic-doormat-group-header {\n  display: flex;\n  align-items: flex-start;\n  gap: 0.75rem;\n  padding: 1.1rem 1.25rem;\n  border-bottom: 1px solid #d8dee6;\n  background: #eef2f6;\n}\n.topic-doormat-group h3 {\n  margin: 0;\n  font-size: 1.25rem;\n  line-height: 1.25;\n}\n.topic-doormat-count {\n  flex: 0 0 auto;\n  padding: 0.4rem 0.8rem;\n  border: 1px solid #d8dee6;\n  border-radius: 999px;\n  background: #fff;\n  color: #202833;\n  font-size: 0.9rem;\n  font-weight: 700;\n}\n.topic-doormat-subheading {\n  margin: 1rem 1rem 0.4rem;\n  padding-bottom: 0.25rem;\n  border-bottom: 1px solid #eef2f6;\n  color: #202833;\n  font-size: 0.9rem;\n  font-weight: 700;\n}\n.topic-doormat-group .expansion-table {\n  margin: 0 1rem 1rem;\n}\n.topic-doormat-empty {\n  padding: 0.75rem;\n  border: 1px solid #d8dee6;\n  border-radius: 4px;\n  background: #fff;\n}\n.topic-doormat-recommendation {\n  white-space: pre-line;\n}\n/*# sourceMappingURL=component-guidance.component.css.map */\n", "/* angular:styles/component:css;430e57ca770217165e875d99e86a3dead87c45d69199439a33445ade7db50790;C:/my-working-files/GitHub/design-assistant/src/app/views/page-assistant/components/problems/component-guidance/component-guidance.component.ts */\n.muted {\n  color: #6b7280;\n  font-size: 12px;\n}\n.issues {\n  margin: 0;\n  padding-left: 1rem;\n}\n.health-cell {\n  gap: 0.4rem;\n  align-items: center;\n  flex-wrap: wrap;\n}\n.chip-list {\n  display: flex;\n  flex-wrap: wrap;\n  gap: 0.25rem;\n  padding: 0;\n  margin: 0;\n}\n.chip-list .chip,\n.chip-list .p-chip {\n  white-space: normal;\n  word-break: break-word;\n  max-width: 100%;\n}\n.expansion-table {\n  width: 100%;\n  max-width: 100%;\n  overflow: hidden;\n}\n:host ::ng-deep .expansion-table .p-datatable-table {\n  width: 100%;\n  border: 1px solid #d1d5db;\n  border-radius: 6px;\n}\n:host ::ng-deep .expansion-table .p-datatable-wrapper {\n  width: 100%;\n  overflow-x: auto;\n}\n:host ::ng-deep .expansion-table .p-datatable-tbody > tr > td,\n:host ::ng-deep .expansion-table .p-datatable-thead > tr > th {\n  white-space: normal;\n  word-break: normal;\n  overflow-wrap: normal;\n}\n.tag {\n  font-size: 11px;\n  padding: 0.05rem 0.4rem;\n  border-radius: 6px;\n  border: 1px solid transparent;\n}\n.topic-doormat-evidence-metric {\n  display: inline-flex;\n  margin-right: 0.2rem;\n  vertical-align: baseline;\n}\n.ai-btn {\n  font-weight: 600;\n}\n.sr-only {\n  position: absolute;\n  width: 1px;\n  height: 1px;\n  padding: 0;\n  margin: -1px;\n  overflow: hidden;\n  clip: rect(0, 0, 0, 0);\n  white-space: nowrap;\n  border: 0;\n}\n/*# sourceMappingURL=component-guidance.component.css.map */\n", "/* angular:styles/component:css;c0806e59c14ba3c53784f6243c5c92cc29bf483de8f80121dc534aca8504d932;C:/my-working-files/GitHub/design-assistant/src/app/views/page-assistant/components/problems/component-guidance/component-guidance.component.ts */\n.caption-actions {\n  display: flex;\n  align-items: center;\n  justify-content: flex-end;\n  gap: 0.5rem;\n}\n/*# sourceMappingURL=component-guidance.component.css.map */\n"] }]
   }], () => [], { analysisAvailable: [{
     type: Output
   }] });
@@ -46764,7 +47009,7 @@ ${custom}` : promptBody;
     });
   }
   //AI Model
-  selectedAiModel = AiModel.OwlAlpha;
+  selectedAiModel = AiModel.Gemini;
   onAiChange(key2) {
     this.selectedAiModel = key2;
     this.uploadState.setSelectedAiModel(key2);
@@ -46803,8 +47048,6 @@ ${custom}` : promptBody;
   buildModelRotation(model) {
     const fallbackOrder = [
       AiModel.GptOSS20BFree,
-      AiModel.OwlAlpha,
-      AiModel.Zai,
       AiModel.NemotronNano,
       AiModel.GptOSSFree,
       AiModel.NemotronSuper
@@ -47064,8 +47307,9 @@ ${custom}` : promptBody;
             const normalizedIssues = issues.length ? this.alertAi.normalizeAlertIssues(issues, {
               useIncludeFallback: false
             }) : [];
-            this.alertAi.cacheIssues(html, normalizedIssues);
-            selectedIssues = normalizedIssues.filter((issue) => issue.include).map((issue) => __spreadValues({}, issue));
+            const validatedIssues = this.alertAi.validateAlertIssuesAgainstHtml(normalizedIssues, html);
+            this.alertAi.cacheIssues(html, validatedIssues);
+            selectedIssues = validatedIssues.filter((issue) => issue.include).map((issue) => __spreadValues({}, issue));
           }
           pendingAlertAnalysisHtml = "";
           if (selectedIssues.length) {
@@ -47916,4 +48160,4 @@ ${custom}` : promptBody;
 export {
   PageAssistantCompareComponent
 };
-//# sourceMappingURL=chunk-A7BZMDNA.js.map
+//# sourceMappingURL=chunk-FBG3SOBC.js.map

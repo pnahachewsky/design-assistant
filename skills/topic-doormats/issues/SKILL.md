@@ -13,86 +13,41 @@ Use this skill for issue analysis of topic doormat sets.
 
 - Use the issue taxonomy resource as the authoritative ruleset
 - Use the issues output schema as the required response shape
-- Run deterministic structural checks first, then judgment/editorial checks
 - Treat caller-provided H2 section metadata as authoritative for section-local
-  doormat numbering and the 9-doormat limit
-- Apply the 9-doormat limit per H2 section only; reset the count at each H2
-  section
-- Report `too-many-doormats-in-section` as one section-level issue for the
-  affected H2 section, not as repeated per-doormat issues
-- Apply consistency checks, including style consistency, across the complete
-  topic doormat set unless the taxonomy explicitly scopes a check to one
-  section
-- Classify every doormat description using exactly one
-  `detected_description_style` value from the output schema. Classify its
-  rhetorical construction, not the subject it discusses. For example, a
-  description framed as "Find out whether you are eligible" is an
-  `action-verb-task-summary`, not an `eligibility-or-benefit-summary`.
-- Do not return `mixed-description-style-in-section` or
-  `section-description-style-outlier`. AIDA derives those section issues by
-  aggregating the per-doormat description style classifications.
-- Audit link name style within each H2 section. Report a section-level mixed
-  link name style by returning exactly one `detected_link_text_style` for every
-  doormat. Classify grammatical construction, not destination subject matter.
-- Return one `destination_link_relationship` and one
-  `destination_link_relationship_basis` for every doormat by comparing meaning
-  and information scent with the supplied destination title and H1.
-  Added action wording, shortened wording, grammatical inflection, acronyms,
-  and program terminology are accurate when they preserve meaning. Use
-  `materially-different` only for a different topic, task, audience, or scope.
-  Pair it with `conflicting-core-concept` only when a core concept actually
-  conflicts, and explain the conflict in `destination_link_relationship_reason`.
-- Do not return `inconsistent-link-name-style`,
-  `mixed-link-name-styles-in-section`, or
-  `link-name-too-different-from-destination-title`. AIDA derives those issues
-  from the required classifications.
-- Compare internally consistent H2 sections with each other. Report a
-  section-level style outlier when one section's dominant description style
-  clearly differs from the dominant page-level section style
-- Use caller-provided `linkTextCharacterCount` and
-  `descriptionCharacterCount` values when present; do not recalculate
-  character counts from HTML
+  doormat numbering, the 9-doormat limit, and style consistency checks
+- Return exactly one allowed `detected_description_style` and
+  `detected_link_text_style` for every doormat; classify grammatical
+  construction, not destination subject matter
+- Do not return style issues directly. AIDA derives description and link style
+  issues from the required per-doormat classifications.
+- Return one `destination_link_relationship`,
+  `destination_link_relationship_basis`, and
+  `destination_link_relationship_reason` for every doormat. Compare meaning and
+  information scent, not exact wording.
 - Use caller-provided `destinationPageTitle` and `destinationPageHeading` values
-  as destination context when present, especially for
-  `link-name-too-different-from-destination-title`. Do not invent destination
-  titles or headings when these values are absent.
-- For every doormat, return `destination_content_assessment` before reporting
-  issues. Use only the supplied `destinationContext.elements` IDs. First select
-  the intro paragraphs and H2 headings that contain information users need to
-  decide whether to follow the doormat. Then identify which important elements
-  are covered by the link text and description and which are missing.
-- Do not treat every destination H2 as important. Secondary navigation,
-  supporting details, and information users can reasonably discover after
-  choosing the destination are not content gaps.
+  as destination context when present. Do not invent destination titles or
+  headings when these values are absent.
+- Return `destination_content_assessment` for every doormat. Use only supplied
+  `destinationContext.elements` IDs, select only elements users need to choose
+  the destination, and do not treat every H2 as important.
+- Doormat labels are acceptable. Do not report `misdirected-link` only because
+  of a label or because the destination is closed, archived, replaced,
+  inactive, or no longer available. Judge the non-label portion of the link
+  against the destination title/H1 by meaning and information scent, not exact
+  wording.
+- Do not treat a destination label/status line as a description content gap
+  when the doormat already exposes that same label/status state in its label or
+  visible item text.
 - When `destinationContext.status` is not `available`, return empty arrays for
   all destination content assessment fields.
-- Do not return `description-missing-needed-information`. AIDA reports that
-  issue only when `missing_important_element_ids` contains IDs grounded in the
-  supplied destination context.
 - Report `description-lacks-clarity` only when the wording itself is ambiguous.
   Return the exact ambiguous wording in `evidence_details.unclear_phrase` and
   explain the competing interpretations in
   `evidence_details.ambiguity_explanation`. Generic wording, missing detail,
   repetition, or failure to summarize destination content are not clarity
   issues.
-- Do not report `misdirected-link` from URL path structure or assumptions about
-  where a page belongs in the site hierarchy. When the link name matches the
-  destination title or H1, do not report it as misdirected. Section suitability
-  is handled by AIDA's IA checks.
-- For `link-name-too-different-from-destination-title`, compare meaning and
-  information scent, not exact wording. Ignore boilerplate suffixes such as
-  `- Canada.ca`. It is acceptable for the link name wording to be shortened or
-  adjusted to match the doormat style on the page. Report this issue only when
-  the link name is misleading, points to a different topic/task/audience, or
-  no longer gives users the same destination scent as the destination title or
-  heading.
-- Do not report `link-name-too-long`, `description-too-long`,
-  `link-name-trailing-punctuation`, `description-trailing-punctuation`,
-  `duplicate-link-in-most-requested`, `missing-needed-doormat`, or
-  `unnecessary-doormat`, or `repeated-description-opening`; AIDA calculates
-  and reports those issues
-  deterministically from the extracted doormat text, Most requested links,
-  IA child-page relationships, page-view data, and character counts
+- Do not return locally owned deterministic issues listed by the runtime
+  instruction; AIDA calculates and reports those issues
 - Return JSON only
 - Report issues per affected doormat
 - Report section-level problems in `section_issues` rather than repeating
@@ -105,8 +60,7 @@ Use this skill for issue analysis of topic doormat sets.
   the issue depends on links, destination matching, duplicate links, or
   destination context
 
-Do not invent issue categories outside the taxonomy unless the issue is
-important and no existing category fits.
+Do not invent issue categories outside the taxonomy.
 
 If this file conflicts with the issue taxonomy or output schema, follow the
 taxonomy or schema.

@@ -233,7 +233,7 @@ import {
   ɵɵtwoWayListener,
   ɵɵtwoWayProperty,
   ɵɵviewQuery
-} from "./chunk-7QCF5G4D.js";
+} from "./chunk-NVQYPOKC.js";
 import {
   __async,
   __commonJS,
@@ -38504,8 +38504,6 @@ var PromptKey;
 })(PromptKey || (PromptKey = {}));
 var AiModel;
 (function(AiModel2) {
-  AiModel2["OwlAlpha"] = "openrouter/owl-alpha";
-  AiModel2["Zai"] = "z-ai/glm-4.5-air:free";
   AiModel2["NemotronNano"] = "nvidia/nemotron-3-nano-30b-a3b:free";
   AiModel2["GptOSSFree"] = "openai/gpt-oss-120b:free";
   AiModel2["GptOSS20BFree"] = "openai/gpt-oss-20b:free";
@@ -38562,7 +38560,7 @@ var UploadStateService = class _UploadStateService {
     this.storage.saveData(this.uploadTypeKey, type);
   }
   // Primary AI model selected for the current session.
-  selectedAiModel = signal(AiModel.OwlAlpha);
+  selectedAiModel = signal(AiModel.Gemini);
   getSelectedAiModel = computed(() => this.selectedAiModel());
   setSelectedAiModel(model2) {
     this.selectedAiModel.set(model2);
@@ -38687,7 +38685,7 @@ var UploadStateService = class _UploadStateService {
   // Clear both in-memory state and the persisted assistant session.
   resetUploadFlow() {
     this.selectedUploadType.set("url");
-    this.selectedAiModel.set(AiModel.OwlAlpha);
+    this.selectedAiModel.set(AiModel.Gemini);
     this.editPromptText.set("");
     this.includeAlertRewriteExamples.set(true);
     this.useCompactAlertsPageContext.set(true);
@@ -40413,6 +40411,45 @@ var FetchService = class _FetchService {
       return new DOMParser().parseFromString(html, "text/html");
     });
   }
+  fetchContentWithResponse(url, hostMode = "both", retries = 3, delay = "none") {
+    return __async(this, null, function* () {
+      const validatedUrl = this.validateHost(url, hostMode);
+      for (let attempt = 1; attempt <= retries; attempt++) {
+        yield this.simulateDelay(delay);
+        try {
+          const response = yield fetch(validatedUrl);
+          if (response.ok) {
+            const html = yield response.text();
+            return {
+              document: new DOMParser().parseFromString(html, "text/html"),
+              status: response.status,
+              statusText: response.statusText,
+              url: response.url || validatedUrl
+            };
+          }
+          console.warn(`Fetch attempt #${attempt}. Status: ${response.status}. Method: GET`);
+          if (attempt < retries) {
+            const backoffDelay = Math.pow(2, attempt - 1) * 200;
+            yield this.delay(backoffDelay);
+            continue;
+          }
+          throw Object.assign(new Error(`Fetch failed ${attempt} times. Method: GET. Status: ${response.status} for ${validatedUrl}`), {
+            status: response.status,
+            statusText: response.statusText,
+            url: response.url || validatedUrl
+          });
+        } catch (error) {
+          if (attempt < retries) {
+            const backoffDelay = Math.pow(2, attempt - 1) * 200;
+            yield this.delay(backoffDelay);
+            continue;
+          }
+          throw error;
+        }
+      }
+      throw new Error(`Unexpected error for ${validatedUrl}`);
+    });
+  }
   fetchStatus(url, hostMode = "both", retries = 3, delay = "none", delayBetweenRequests = 50) {
     return __async(this, null, function* () {
       url = this.validateHost(url, hostMode);
@@ -40779,9 +40816,6 @@ var UrlDataService = class _UrlDataService {
       if (href) {
         if (href.startsWith("/")) {
           anchor.setAttribute("href", `${baseUrl}${href}`);
-          anchor.setAttribute("target", "_blank");
-        } else if (/^(http|https):\/\//.test(href)) {
-          anchor.setAttribute("target", "_blank");
         }
       }
     });
@@ -100395,4 +100429,4 @@ export {
    * License: MIT
    *)
 */
-//# sourceMappingURL=chunk-ITA2SL4X.js.map
+//# sourceMappingURL=chunk-YXQMQU6C.js.map
