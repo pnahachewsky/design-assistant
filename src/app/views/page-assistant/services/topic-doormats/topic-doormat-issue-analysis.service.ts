@@ -163,6 +163,7 @@ export class TopicDoormatIssueAnalysisService {
           doormats: input.doormatSummaries.map((summary) => ({
             index: summary.index,
             linkText: summary.linkText,
+            labels: summary.labels ?? [],
             analysisLinkText:
               this.removeTopicDoormatLabels(summary.linkText, summary.labels),
             href: summary.href,
@@ -178,6 +179,9 @@ export class TopicDoormatIssueAnalysisService {
               httpStatus: summary.destinationHttpStatus,
               pageTitle: summary.destinationPageTitle ?? '',
               h1: summary.destinationPageHeading ?? '',
+              labelEvidence: summary.labels?.length
+                ? summary.destinationLabelEvidence ?? []
+                : [],
               elements:
                 this.buildTopicDoormatDestinationContextElements(summary),
             },
@@ -212,6 +216,7 @@ export class TopicDoormatIssueAnalysisService {
         destinationContextStatus: summary.destinationContextStatus,
         destinationIntroParagraphs: summary.destinationIntroParagraphs,
         destinationSectionHeadings: summary.destinationSectionHeadings,
+        destinationLabelEvidence: summary.destinationLabelEvidence,
         linkTextCharacterCount: summary.linkTextCharacterCount,
         descriptionCharacterCount: summary.descriptionCharacterCount,
         headingLevel: summary.headingLevel,

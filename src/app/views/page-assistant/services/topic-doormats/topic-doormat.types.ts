@@ -58,6 +58,7 @@ export interface TopicDoormatSummary {
   destinationPageHeading?: string;
   destinationIntroParagraphs?: string[];
   destinationSectionHeadings?: string[];
+  destinationLabelEvidence?: string[];
   destinationContextStatus?: TopicDoormatDestinationContextStatus;
   destinationHttpStatus?: number;
   destinationFetchError?: string;

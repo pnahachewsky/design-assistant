@@ -35,6 +35,7 @@ export class TopicDoormatExtractorService {
         | 'destinationPageHeading'
         | 'destinationIntroParagraphs'
         | 'destinationSectionHeadings'
+        | 'destinationLabelEvidence'
         | 'destinationContextStatus'
         | 'destinationHttpStatus'
         | 'destinationFetchError'
@@ -302,6 +303,7 @@ export class TopicDoormatExtractorService {
       | 'destinationPageHeading'
       | 'destinationIntroParagraphs'
       | 'destinationSectionHeadings'
+      | 'destinationLabelEvidence'
       | 'destinationContextStatus'
       | 'destinationHttpStatus'
       | 'destinationFetchError'
@@ -349,6 +351,12 @@ export class TopicDoormatExtractorService {
             )
             .filter(Boolean)
         : [];
+      const destinationLabelEvidence = this.extractDestinationLabelEvidence(
+        destinationDoc,
+        main,
+        heading,
+        destinationIntroParagraphs,
+      );
       return {
         destinationUrl,
         destinationPageTitle: this.cleanVisibleText(
@@ -357,6 +365,7 @@ export class TopicDoormatExtractorService {
         destinationPageHeading: this.cleanVisibleText(heading?.textContent),
         destinationIntroParagraphs,
         destinationSectionHeadings,
+        destinationLabelEvidence,
         destinationHttpStatus: response.status,
         destinationContextStatus:
           destinationIntroParagraphs.length || destinationSectionHeadings.length
@@ -368,6 +377,7 @@ export class TopicDoormatExtractorService {
         destinationUrl,
         destinationIntroParagraphs: [],
         destinationSectionHeadings: [],
+        destinationLabelEvidence: [],
         destinationContextStatus: 'failed',
         destinationHttpStatus: this.getFetchErrorStatus(error),
         destinationFetchError:
@@ -382,6 +392,84 @@ export class TopicDoormatExtractorService {
     return typeof status === 'number' && Number.isFinite(status)
       ? status
       : undefined;
+  }
+
+  private extractDestinationLabelEvidence(
+    doc: Document,
+    main: HTMLElement | null,
+    heading: HTMLElement | null | undefined,
+    introParagraphs: string[],
+  ): string[] {
+    const evidence = new Set<string>();
+    [
+      this.cleanVisibleText(doc.querySelector('title')?.textContent),
+      this.cleanVisibleText(heading?.textContent),
+      ...introParagraphs,
+    ].forEach((text) => this.addDestinationLabelEvidence(evidence, text));
+
+    const root = main ?? doc.body;
+    Array.from(
+      root.querySelectorAll<HTMLElement>(
+        [
+          '.alert',
+          '[class*="alert"]',
+          '.label',
+          '.badge',
+          '[class*="label"]',
+          '[class*="badge"]',
+          'time',
+          '[datetime]',
+        ].join(', '),
+      ),
+    ).forEach((element) => {
+      this.addDestinationLabelEvidence(
+        evidence,
+        this.cleanVisibleText(
+          element.getAttribute('datetime') || element.textContent,
+        ),
+      );
+    });
+
+    Array.from(
+      doc.querySelectorAll<HTMLMetaElement>(
+        [
+          'meta[name="dcterms.modified"]',
+          'meta[name="dcterms.issued"]',
+          'meta[property="dcterms:modified"]',
+          'meta[property="article:modified_time"]',
+        ].join(', '),
+      ),
+    ).forEach((meta) => {
+      this.addDestinationLabelEvidence(evidence, meta.content);
+    });
+
+    return Array.from(evidence).slice(0, 8);
+  }
+
+  private addDestinationLabelEvidence(
+    evidence: Set<string>,
+    text: string,
+  ): void {
+    const cleaned = this.cleanVisibleText(text);
+    if (!cleaned) return;
+    if (
+      this.hasDestinationLabelStatusText(cleaned) ||
+      this.hasDestinationLabelDateText(cleaned)
+    ) {
+      evidence.add(cleaned.slice(0, 240));
+    }
+  }
+
+  private hasDestinationLabelStatusText(text: string): boolean {
+    return /\b(?:new|updated|modified|changed|launched|added|closed|archived|inactive|expired|ended|replaced|no longer available|not available)\b/i.test(
+      text,
+    );
+  }
+
+  private hasDestinationLabelDateText(text: string): boolean {
+    return /\b(?:20\d{2}(?:[-/]\d{1,2}){0,2}|(?:january|february|march|april|may|june|july|august|september|october|november|december)\s+\d{1,2},?\s+20\d{2}|(?:jan|feb|mar|apr|jun|jul|aug|sept?|oct|nov|dec)\.?\s+\d{1,2},?\s+20\d{2})\b/i.test(
+      text,
+    );
   }
 
   private isDestinationIntroParagraph(
