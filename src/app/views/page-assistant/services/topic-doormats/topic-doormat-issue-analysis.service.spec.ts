@@ -1026,10 +1026,16 @@ describe('TopicDoormatIssueAnalysisService', () => {
     expect(result.rows.map((row) => row.issueId)).toContain(
       'link-name-too-long',
     );
+    expect(result.rows).toContain(
+      jasmine.objectContaining({
+        issue: 'Opposite language link text may be too long',
+        severity: 'Low',
+      }),
+    );
     expect(result.rows.some((row) => row.issueId === 'no-issues')).toBeFalse();
   });
 
-  it('groups over-limit English descriptions into one section row', async () => {
+  it('separates opposite-language description warnings from too-long descriptions', async () => {
     openRouter.call.and.resolveTo({
       choices: [{ message: { content: '' } }],
     });
@@ -1051,6 +1057,12 @@ describe('TopicDoormatIssueAnalysisService', () => {
         summary({
           index: 3,
           sectionItemIndex: 3,
+          linkText: 'Opposite language description',
+          descriptionCharacterCount: 111,
+        }),
+        summary({
+          index: 4,
+          sectionItemIndex: 4,
           linkText: 'Very long description',
           descriptionCharacterCount: 121,
         }),
@@ -1064,12 +1076,12 @@ describe('TopicDoormatIssueAnalysisService', () => {
     const descriptionRows = result.rows.filter(
       (row) => row.issueId === 'description-too-long',
     );
-    expect(descriptionRows.length).toBe(1);
+    expect(descriptionRows.length).toBe(2);
     expect(descriptionRows[0]).toEqual(
       jasmine.objectContaining({
         rowType: 'section',
-        severity: 'High',
-        issue: 'Description too long (characters)',
+        severity: 'Medium',
+        issue: 'Opposite language description may be too long',
         evidenceItems: [
           {
             label: 'Doormat 2',
@@ -1078,6 +1090,20 @@ describe('TopicDoormatIssueAnalysisService', () => {
           },
           {
             label: 'Doormat 3',
+            metric: '111/95 characters',
+            severity: 'Medium',
+          },
+        ],
+      }),
+    );
+    expect(descriptionRows[1]).toEqual(
+      jasmine.objectContaining({
+        rowType: 'section',
+        severity: 'High',
+        issue: 'Description too long',
+        evidenceItems: [
+          {
+            label: 'Doormat 4',
             metric: '121/95 characters',
             severity: 'High',
           },

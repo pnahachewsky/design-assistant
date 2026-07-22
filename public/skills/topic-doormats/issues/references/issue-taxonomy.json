@@ -294,7 +294,7 @@
       "local_deterministic": true,
       "reporting": "AIDA reports this issue locally from linkTextCharacterCount. The model should not return this issue. AIDA reports one section-level row per affected H2 section, with a list of affected doormat numbers and character-count metrics.",
       "severity_override": {
-        "Low": "Use Low when the link text is 36 to 45 characters.",
+        "Low": "Use Low when the link text is 36 to 45 characters and label it as 'Opposite language link text may be too long'.",
         "Medium": "Use Medium when the link text is 46 to 60 characters.",
         "High": "Use High when the link text is 61 to 75 characters or longer."
       }
@@ -380,8 +380,8 @@
       "local_deterministic": true,
       "reporting": "AIDA reports this issue locally from descriptionCharacterCount. The model should not return this issue. AIDA reports one section-level row per affected H2 section, with a list of affected doormat numbers and character-count metrics.",
       "severity_override": {
-        "Low": "Use Low when the description is 96 to 105 characters.",
-        "Medium": "Use Medium when the description is 106 to 120 characters.",
+        "Low": "Use Low when the description is 96 to 110 characters and label it as 'Opposite language description may be too long'.",
+        "Medium": "Use Medium when the description is 111 to 120 characters and label it as 'Opposite language description may be too long'.",
         "High": "Use High when the description is 121 characters or longer."
       }
     },
