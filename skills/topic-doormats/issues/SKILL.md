@@ -33,6 +33,22 @@ Use this skill for issue analysis of topic doormat sets.
 - Audit link name style within each H2 section. Report a section-level mixed
   link name style by returning exactly one `detected_link_text_style` for every
   doormat. Classify grammatical construction, not destination subject matter.
+- Classify link names as `task` when they are framed as an action, process,
+  outcome, or user goal. This includes imperative openings such as "Find",
+  "Apply", "Get", and "Determine", and gerund/action-noun openings such as
+  "Getting" when the link name means getting, finding, receiving, claiming,
+  updating, or managing something. Treat a gerund opening as `task` when it can
+  be paraphrased as "how to [verb/action]". For example, "Getting the right CRA
+  benefits and credits for your family" means "how to get the right CRA benefits
+  and credits for your family", so it is `task`, not `topic`.
+- For link name style disambiguation, use the frontloaded wording as the main
+  style signal because Canada.ca writing frontloads important information. Later
+  situation wording does not override a frontloaded task frame. For example,
+  "Getting your tax benefits and credits when in an abusive situation" is
+  `task`, not `situation`.
+- Classify link names as `topic` only when they are noun phrases, program names,
+  subject labels, or information categories that name what the destination is
+  about without framing it as an action or situation.
 - Return one `destination_link_relationship` and one
   `destination_link_relationship_basis` for every doormat by comparing meaning
   and information scent with the supplied destination title and H1. Use
@@ -60,6 +76,12 @@ Use this skill for issue analysis of topic doormat sets.
   decide whether to follow the doormat. Then identify which important elements
   are covered by `analysisLinkText` and `analysisDescription` when present,
   otherwise the link text and description, and which are missing.
+- Treat an important destination element as covered when it is explicitly named
+  or when its topic is reasonably included within a broader topic, service,
+  audience, or task already represented in the doormat link text or description.
+- For acronym or program-name link text, treat an intro element that explains
+  what the program, credit, rebate, or benefit is as important unless the
+  doormat description already explains it.
 - Do not treat every destination H2 as important. Secondary navigation,
   supporting details, and information users can reasonably discover after
   choosing the destination are not content gaps.
@@ -71,6 +93,10 @@ Use this skill for issue analysis of topic doormat sets.
 - Do not treat a destination label/status line as a description content gap
   when the doormat already exposes that same label/status state in its label or
   visible item text.
+- Do not report `enhancement-label-not-needed` merely because the same status
+  appears in the destination title, H1, or destination label evidence. A
+  doormat label may be useful when it exposes a destination status before the
+  user follows the link.
 - When `destinationContext.status` is not `available`, return empty arrays for
   all destination content assessment fields.
 - Do not return `description-missing-needed-information`. AIDA reports that
@@ -95,9 +121,9 @@ Use this skill for issue analysis of topic doormat sets.
   heading.
 - Do not report `broken-link`, `link-name-too-long`, `description-too-long`,
   `link-name-trailing-punctuation`, `description-trailing-punctuation`,
-  `duplicate-link-in-most-requested`, `missing-needed-doormat`, or
-  `unnecessary-doormat`, or `repeated-description-opening`; AIDA calculates and
-  reports those issues
+  `description-uses-first-or-second-person`, `duplicate-link-in-most-requested`,
+  `missing-needed-doormat`, `unnecessary-doormat`, or
+  `repeated-description-opening`; AIDA calculates and reports those issues
   deterministically from the extracted doormat text, Most requested links,
   destination HTTP status, IA child-page relationships, page-view data, and
   character counts
