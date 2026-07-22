@@ -892,8 +892,8 @@ export class PageAssistantCompareComponent
   private buildModelRotation(model: AiModel): string[] {
     // Fallback order after the user-selected model.
     const fallbackOrder: AiModel[] = [
+      AiModel.NemotronUltra,
       AiModel.GptOSS20BFree,
-      AiModel.NemotronNano,
       AiModel.GptOSSFree,
       AiModel.NemotronSuper,
     ];

@@ -50,7 +50,7 @@ Your task:
 Return only the French HTML document.`;
 
   private readonly models: string[] = [
-    'nvidia/nemotron-3-nano-30b-a3b:free',
+    'nvidia/nemotron-3-ultra-550b-a55b:free',
     'openai/gpt-oss-20b:free',
     'google/gemma-4-26b-a4b-it:free',
     'nvidia/nemotron-nano-9b-v2:free',

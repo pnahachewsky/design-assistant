@@ -96,15 +96,16 @@ export enum PromptKey {
 // These values are also the canonical ids used for friendly-name resolution.
 export enum AiModel {
   // Free models
-  NemotronNano = 'nvidia/nemotron-3-nano-30b-a3b:free', //256k context, 30B parameters
+  NemotronUltra = 'nvidia/nemotron-3-ultra-550b-a55b:free',
   GptOSSFree = 'openai/gpt-oss-120b:free', //131k context free
   GptOSS20BFree = 'openai/gpt-oss-20b:free', //131k context free
   NemotronSuper = 'nvidia/nemotron-3-super-120b-a12b:free', //262k context, 263B weekly, 120B parameters
   // Paid models
   GptOSS20B = 'openai/gpt-oss-20b', // 131k context paid
-  Gemini = 'google/gemini-2.5-flash-lite', // 1.05M context paid - $0.10/M input, $0.40/M output
-  GPT5Mini = 'openai/gpt-5-mini', // 400k context paid
-  DeepSeek = 'deepseek/deepseek-v3.2',
+  Gemini = 'google/gemini-3.1-flash-lite',
+  GPT54Mini = 'openai/gpt-5.4-mini',
+  DeepSeekV4Flash = 'deepseek/deepseek-v4-flash',
+  DeepSeekV4Pro = 'deepseek/deepseek-v4-pro',
 }
 
 // Normalized link metadata used by rewrite/diff logic.
