@@ -76,12 +76,17 @@ Use this skill for issue analysis of topic doormat sets.
   decide whether to follow the doormat. Then identify which important elements
   are covered by `analysisLinkText` and `analysisDescription` when present,
   otherwise the link text and description, and which are missing.
-- Treat an important destination element as covered when it is explicitly named
-  or when its topic is reasonably included within a broader topic, service,
-  audience, or task already represented in the doormat link text or description.
-- For acronym or program-name link text, treat an intro element that explains
-  what the program, credit, rebate, or benefit is as important unless the
-  doormat description already explains it.
+- A doormat description should tell users what substantive information they can
+  find on the destination page or what broad task they can complete there. For
+  program, benefit, credit, rebate, payment, allowance, or relief pages, this
+  often includes what the program or benefit is or the broad purpose of the
+  page. A status such as Closed, No longer available, Replaced, or Formerly may
+  be included, but status alone does not cover the page description when the
+  destination also contains substantive program or benefit information.
+- Do not mark a destination intro or H2 as covered only because the doormat
+  includes a lifecycle/status statement. If the destination element explains
+  the page's broad subject, purpose, or task, mark it missing unless that broad
+  information is represented in the link text or description.
 - Do not treat every destination H2 as important. Secondary navigation,
   supporting details, and information users can reasonably discover after
   choosing the destination are not content gaps.
@@ -93,15 +98,16 @@ Use this skill for issue analysis of topic doormat sets.
 - Do not treat a destination label/status line as a description content gap
   when the doormat already exposes that same label/status state in its label or
   visible item text.
-- Do not report `enhancement-label-not-needed` merely because the same status
-  appears in the destination title, H1, or destination label evidence. A
-  doormat label may be useful when it exposes a destination status before the
-  user follows the link.
 - When `destinationContext.status` is not `available`, return empty arrays for
   all destination content assessment fields.
-- Do not return `description-missing-needed-information`. AIDA reports that
-  issue only when `missing_important_element_ids` contains IDs grounded in the
-  supplied destination context.
+- Do not return `description-missing-needed-information`. AIDA keeps
+  `destination_content_assessment` for diagnostics, but does not currently
+  surface content-gap rows from model-selected missing element IDs because this
+  issue is prone to over-reporting.
+- Do not return `description-missing-lifecycle-status`. AIDA reports this
+  narrow issue locally when supplied destination context contains a substantive
+  stopped, ended, replaced, or no-longer-available status and the doormat
+  description does not explain that change.
 - Report `description-lacks-clarity` only when the wording itself is ambiguous.
   Return the exact ambiguous wording in `evidence_details.unclear_phrase` and
   explain the competing interpretations in

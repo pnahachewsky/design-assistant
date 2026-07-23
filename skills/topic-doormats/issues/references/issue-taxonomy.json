@@ -6,13 +6,12 @@
   "reporting_unit": "Return issue reports for each affected doormat item. If an editorial issue applies to a whole section rather than a single doormat, return it in section_issues with the affected section_index. Do not repeat section-level issues on every doormat. Do not return mixed-description-style-in-section; AIDA derives it from the required per-doormat detected_description_style classifications. Report too-many-doormats-in-section as one section_issues item for the affected H2 section, not as repeated per-doormat issues.",
   "runtime_editorial_evidence_overrides": {
     "description-lacks-clarity": "Report only genuinely ambiguous wording. evidence_details.unclear_phrase must quote an exact phrase from the description and evidence_details.ambiguity_explanation must explain competing interpretations. Generic wording, missing detail, repetition, and incomplete destination coverage are not clarity issues.",
-    "misdirected-link": "Do not infer misdirection from URL path structure, site hierarchy, section placement, labels, or closed/archived/replaced destination states. Doormat labels are acceptable when the substantive link text still matches the destination title or H1 in meaning. Do not require exact wording. Section suitability is handled by AIDA's IA checks.",
-    "enhancement-label-not-needed": "Do not report merely because the same status appears in the destination title, H1, or destination label evidence. A doormat label may be useful when it exposes a destination status before the user follows the link."
+    "misdirected-link": "Do not infer misdirection from URL path structure, site hierarchy, section placement, labels, or closed/archived/replaced destination states. Doormat labels are acceptable when the substantive link text still matches the destination title or H1 in meaning. Do not require exact wording. Section suitability is handled by AIDA's IA checks."
   },
   "analysis_sequence": [
     {
       "pass": "deterministic_structural_checks",
-      "instruction": "Run these checks first. Do not return the response until every model-owned deterministic structural check has been evaluated for every doormat and every complete doormat section. Do not report broken-link, link-name-too-long, description-too-long, link-name-trailing-punctuation, description-trailing-punctuation, description-uses-first-or-second-person, duplicate-link-in-most-requested, missing-needed-doormat, or unnecessary-doormat; AIDA calculates and reports those issues deterministically from the extracted doormat text, destination HTTP status, Most requested links, IA child-page relationships, page-view data, and character counts.",
+      "instruction": "Run these checks first. Do not return the response until every model-owned deterministic structural check has been evaluated for every doormat and every complete doormat section. Do not report broken-link, link-name-too-long, description-too-long, description-missing-lifecycle-status, link-name-trailing-punctuation, description-trailing-punctuation, description-uses-first-or-second-person, duplicate-link-in-most-requested, missing-needed-doormat, or unnecessary-doormat; AIDA calculates and reports those issues deterministically from the extracted doormat text, destination context, destination HTTP status, Most requested links, IA child-page relationships, page-view data, and character counts.",
       "issue_ids": [
         "broken-link",
         "too-many-doormats-in-section",
@@ -152,8 +151,8 @@
   },
   "destination_content_assessment": {
     "required": true,
-    "instruction": "For every doormat, assess the supplied destinationContext before reporting issues. Select important_element_ids only from supplied intro and H2 element IDs. Mark an element important only when users need it to decide whether this destination is relevant; do not select every H2 automatically. Compare analysisLinkText and analysisDescription when present, otherwise compare link text and description, when determining coverage. Treat an important element as covered when it is explicitly named or when its topic is reasonably included within a broader represented topic, service, audience, or task. For acronym or program-name link text, treat an intro element that explains what the program, credit, rebate, or benefit is as important unless the doormat description already explains it. missing_important_element_ids must be a subset of important_element_ids and must contain only supplied IDs that are not represented by covered_element_ids. When destinationContext.status is not available, return empty arrays.",
-    "model_must_not_report": "Do not return description-missing-needed-information as an issue. AIDA validates the assessment IDs against the extracted destination context and creates the issue locally.",
+    "instruction": "For every doormat, assess the supplied destinationContext before reporting issues. Select important_element_ids only from supplied intro and H2 element IDs. Mark an element important only when users need it to decide whether this destination is relevant; do not select every H2 automatically. A doormat description should tell users what substantive information they can find on the destination page or what broad task they can complete there. For program, benefit, credit, rebate, payment, allowance, or relief pages, this often includes what the program or benefit is or the broad purpose of the page. A status such as Closed, No longer available, Replaced, or Formerly may be included, but status alone does not cover the page description when the destination also contains substantive program or benefit information. Compare analysisLinkText and analysisDescription when present, otherwise compare link text and description, when determining coverage. Do not mark a destination intro or H2 as covered only because the doormat includes a lifecycle/status statement. If the destination element explains the page's broad subject, purpose, or task, mark it missing unless that broad information is represented in the link text or description. missing_important_element_ids must be a subset of important_element_ids and must contain only supplied IDs that are not represented by covered_element_ids. When destinationContext.status is not available, return empty arrays.",
+    "model_must_not_report": "Do not return description-missing-needed-information as an issue. AIDA keeps destination_content_assessment for diagnostics, but does not currently surface content-gap rows from model-selected missing element IDs because this issue is prone to over-reporting.",
     "important_element_examples": [
       "A primary audience or eligibility condition needed to know whether the destination applies.",
       "A major task, service, option, deadline, document, or outcome needed to distinguish the destination.",
@@ -354,14 +353,23 @@
       "recommendation": "Rewrite the description with specific information, tasks, services, audiences, or benefits found on the destination page."
     },
     {
+      "id": "description-missing-lifecycle-status",
+      "group": "Description clarity",
+      "label": "Missing destination status information",
+      "severity": "Medium",
+      "condition": "The destination contains a substantive lifecycle or status change, such as a stopped, ended, replaced, or no-longer-available program, but the doormat description does not explain that change.",
+      "recommendation": "Explain the lifecycle or status change in the description. Do not rely on the enhancement label alone.",
+      "reporting": "AIDA reports this issue locally from supplied destination context. The model should not return this issue."
+    },
+    {
       "id": "description-missing-needed-information",
       "group": "Description clarity",
       "label": "Description has content gap",
       "severity": "Medium",
-      "condition": "One or more important intro paragraphs or H2 headings from the supplied destination context are not represented by the doormat link text or description, and the omission prevents users from deciding whether the destination is relevant. Do not treat an omitted H2 as missing when its topic is reasonably covered by a broader topic, service, audience, or task already represented in the doormat link text or description.",
+      "condition": "One or more important intro paragraphs or H2 headings from the supplied destination context are not represented by the doormat link text or description, and the omission prevents users from deciding whether the destination is relevant.",
       "recommendation": "Add the missing decision-making detail while keeping the description concise.",
-      "local_from_model_assessment": true,
-      "reporting": "Do not return this issue directly. Return destination_content_assessment with grounded element IDs. AIDA reports the issue only when missing_important_element_ids is a non-empty validated subset of important_element_ids from an available destination context."
+      "local_from_model_assessment": false,
+      "reporting": "Do not return this issue directly. Return destination_content_assessment with grounded element IDs. AIDA keeps this assessment for diagnostics, but does not currently surface content-gap rows from model-selected missing element IDs."
     },
     {
       "id": "missing-description",
@@ -549,8 +557,7 @@
       "label": "Enhancement label is not needed",
       "severity": "Medium",
       "condition": "A doormat uses an enhancement/status label such as New or Closed when there is no recent change or temporary status to justify it.",
-      "recommendation": "Remove the label unless it identifies a recent change or valid temporary status.",
-      "reporting": "Do not report merely because the same status appears in the destination title, H1, or destination label evidence. A doormat label may be useful when it exposes a destination status before the user follows the link."
+      "recommendation": "Remove the label unless it identifies a recent change or valid temporary status."
     },
     {
       "id": "enhancement-label-wrong-type",

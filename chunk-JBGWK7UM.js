@@ -38504,14 +38504,15 @@ var PromptKey;
 })(PromptKey || (PromptKey = {}));
 var AiModel;
 (function(AiModel2) {
-  AiModel2["NemotronNano"] = "nvidia/nemotron-3-nano-30b-a3b:free";
+  AiModel2["NemotronUltra"] = "nvidia/nemotron-3-ultra-550b-a55b:free";
   AiModel2["GptOSSFree"] = "openai/gpt-oss-120b:free";
   AiModel2["GptOSS20BFree"] = "openai/gpt-oss-20b:free";
   AiModel2["NemotronSuper"] = "nvidia/nemotron-3-super-120b-a12b:free";
   AiModel2["GptOSS20B"] = "openai/gpt-oss-20b";
-  AiModel2["Gemini"] = "google/gemini-2.5-flash-lite";
-  AiModel2["GPT5Mini"] = "openai/gpt-5-mini";
-  AiModel2["DeepSeek"] = "deepseek/deepseek-v3.2";
+  AiModel2["Gemini"] = "google/gemini-3.1-flash-lite";
+  AiModel2["GPT54Mini"] = "openai/gpt-5.4-mini";
+  AiModel2["DeepSeekV4Flash"] = "deepseek/deepseek-v4-flash";
+  AiModel2["DeepSeekV4Pro"] = "deepseek/deepseek-v4-pro";
 })(AiModel || (AiModel = {}));
 
 // src/app/services/local-storage.service.ts
@@ -100429,4 +100430,4 @@ export {
    * License: MIT
    *)
 */
-//# sourceMappingURL=chunk-YXQMQU6C.js.map
+//# sourceMappingURL=chunk-JBGWK7UM.js.map

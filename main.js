@@ -182,7 +182,7 @@ import {
   unblockBodyScroll,
   uuid,
   zindexutils
-} from "./chunk-YXQMQU6C.js";
+} from "./chunk-JBGWK7UM.js";
 import {
   ANIMATION_MODULE_TYPE,
   BehaviorSubject,
@@ -18511,7 +18511,7 @@ Your task:
 3. If the French text is one paragraph but the English input is split into multiple segments, split it appropriately.
 Return only the French HTML document.`;
   models = [
-    "nvidia/nemotron-3-nano-30b-a3b:free",
+    "nvidia/nemotron-3-ultra-550b-a55b:free",
     "openai/gpt-oss-20b:free",
     "google/gemma-4-26b-a4b-it:free",
     "nvidia/nemotron-nano-9b-v2:free",
@@ -42901,7 +42901,7 @@ var routes = [
       }
       return true;
     }],
-    loadComponent: () => import("./chunk-BAAVLS3Z.js").then((m) => m.PageAssistantCompareComponent)
+    loadComponent: () => import("./chunk-TZIEQS4A.js").then((m) => m.PageAssistantCompareComponent)
   },
   {
     path: "page-assistant/share",
