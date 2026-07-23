@@ -76,17 +76,6 @@ Use this skill for issue analysis of topic doormat sets.
   decide whether to follow the doormat. Then identify which important elements
   are covered by `analysisLinkText` and `analysisDescription` when present,
   otherwise the link text and description, and which are missing.
-- A doormat description should tell users what substantive information they can
-  find on the destination page or what broad task they can complete there. For
-  program, benefit, credit, rebate, payment, allowance, or relief pages, this
-  often includes what the program or benefit is or the broad purpose of the
-  page. A status such as Closed, No longer available, Replaced, or Formerly may
-  be included, but status alone does not cover the page description when the
-  destination also contains substantive program or benefit information.
-- Do not mark a destination intro or H2 as covered only because the doormat
-  includes a lifecycle/status statement. If the destination element explains
-  the page's broad subject, purpose, or task, mark it missing unless that broad
-  information is represented in the link text or description.
 - Do not treat every destination H2 as important. Secondary navigation,
   supporting details, and information users can reasonably discover after
   choosing the destination are not content gaps.
@@ -98,16 +87,22 @@ Use this skill for issue analysis of topic doormat sets.
 - Do not treat a destination label/status line as a description content gap
   when the doormat already exposes that same label/status state in its label or
   visible item text.
+- Doormat labels may carry lifecycle or status information such as Closed,
+  No longer available, Formerly, Replaced, New, or Updated. Do not require the
+  doormat description to repeat lifecycle/status information when it is already
+  exposed in the doormat label or visible doormat text. Evaluate the description
+  for whether it explains the destination page's broad subject, purpose, or
+  task, not whether it repeats the label.
+- When the link text is a program, benefit, credit, rebate, payment, allowance,
+  or relief name, do not treat the name alone as covering a destination intro
+  that explains what the program or benefit was or is. If the doormat
+  description only gives status, timing, eligibility, or residual filing
+  context, mark the intro explanation as missing.
 - When `destinationContext.status` is not `available`, return empty arrays for
   all destination content assessment fields.
-- Do not return `description-missing-needed-information`. AIDA keeps
-  `destination_content_assessment` for diagnostics, but does not currently
-  surface content-gap rows from model-selected missing element IDs because this
-  issue is prone to over-reporting.
-- Do not return `description-missing-lifecycle-status`. AIDA reports this
-  narrow issue locally when supplied destination context contains a substantive
-  stopped, ended, replaced, or no-longer-available status and the doormat
-  description does not explain that change.
+- Do not return `description-missing-needed-information`. AIDA reports that
+  issue only when `missing_important_element_ids` contains IDs grounded in the
+  supplied destination context.
 - Report `description-lacks-clarity` only when the wording itself is ambiguous.
   Return the exact ambiguous wording in `evidence_details.unclear_phrase` and
   explain the competing interpretations in

@@ -30721,7 +30721,6 @@ var TopicDoormatIssueAnalysisService = class _TopicDoormatIssueAnalysisService {
     "broken-link",
     "description-contains-link",
     "description-missing-needed-information",
-    "description-missing-lifecycle-status",
     "description-too-long",
     "description-trailing-punctuation",
     "description-uses-first-or-second-person",
@@ -30919,6 +30918,7 @@ var TopicDoormatIssueAnalysisService = class _TopicDoormatIssueAnalysisService {
     const sectionIssueRows = this.parseTopicDoormatSectionIssueRows(root["section_issues"], doormatSummaries);
     const sectionIssueKeys = new Set(sectionIssueRows.map((row) => `${row.sectionIndex ?? 0}|${row.issueId}`));
     const summariesByIndex = new Map(doormatSummaries.map((summary) => [summary.index, summary]));
+    const contentGapDoormatIndexes = new Set(doormatSummaries.filter((summary) => this.getValidatedTopicDoormatMissingElements(summary, destinationContentAssessmentsByDoormatIndex.get(summary.index)).length > 0).map((summary) => summary.index));
     const rows = doormats.flatMap((rawDoormat) => {
       if (!rawDoormat || typeof rawDoormat !== "object")
         return [];
@@ -30963,7 +30963,13 @@ var TopicDoormatIssueAnalysisService = class _TopicDoormatIssueAnalysisService {
         if (!this.topicDoormatIssueIdToLabel.has(issueId) || !severity) {
           return null;
         }
+        if (this.isTopicDoormatStatusRepetitionIssue(issueId, issue, summary)) {
+          return null;
+        }
         if (!this.isReportableTopicDoormatIssue(issue, summary, pageLanguage)) {
+          return null;
+        }
+        if (issueId === "description-lacks-clarity" && index && contentGapDoormatIndexes.has(index)) {
           return null;
         }
         if (issueId === "mixed-description-style-in-section" || issueId === "mixed-link-name-styles-in-section") {
@@ -31041,7 +31047,7 @@ var TopicDoormatIssueAnalysisService = class _TopicDoormatIssueAnalysisService {
       return sectionCount > 0 && flaggedCount >= Math.max(2, sectionCount - 1);
     });
     const modelIssueRows = rows.filter((row) => !suppressedModelIssueRows.includes(row));
-    const deterministicRows = this.buildDeterministicTopicDoormatIssueRows(doormatSummaries, [...modelIssueRows, ...reportableSectionIssueRows, ...localIaRows], hasLegacyTopicDoormatTemplate, pageLanguage, mostRequestedLinks, uploadData, descriptionStylesByDoormatIndex, linkStylesByDoormatIndex, destinationLinkAssessmentsByDoormatIndex);
+    const deterministicRows = this.buildDeterministicTopicDoormatIssueRows(doormatSummaries, [...modelIssueRows, ...reportableSectionIssueRows, ...localIaRows], hasLegacyTopicDoormatTemplate, pageLanguage, mostRequestedLinks, uploadData, descriptionStylesByDoormatIndex, destinationContentAssessmentsByDoormatIndex, linkStylesByDoormatIndex, destinationLinkAssessmentsByDoormatIndex);
     const representedIndexes = new Set([
       ...modelIssueRows,
       ...deterministicRows,
@@ -31233,7 +31239,7 @@ var TopicDoormatIssueAnalysisService = class _TopicDoormatIssueAnalysisService {
       return aIndex - bIndex;
     }));
   }
-  buildDeterministicTopicDoormatIssueRows(doormatSummaries, existingRows, hasLegacyTopicDoormatTemplate = false, pageLanguage = "en", mostRequestedLinks = [], uploadData, descriptionStylesByDoormatIndex = /* @__PURE__ */ new Map(), linkStylesByDoormatIndex = /* @__PURE__ */ new Map(), destinationLinkAssessmentsByDoormatIndex = /* @__PURE__ */ new Map()) {
+  buildDeterministicTopicDoormatIssueRows(doormatSummaries, existingRows, hasLegacyTopicDoormatTemplate = false, pageLanguage = "en", mostRequestedLinks = [], uploadData, descriptionStylesByDoormatIndex = /* @__PURE__ */ new Map(), destinationContentAssessmentsByDoormatIndex = /* @__PURE__ */ new Map(), linkStylesByDoormatIndex = /* @__PURE__ */ new Map(), destinationLinkAssessmentsByDoormatIndex = /* @__PURE__ */ new Map()) {
     const existingIssueKeys = new Set(existingRows.map((row) => `${row.sectionIndex ?? 0}|${row.issueId}`));
     const outdatedTemplateRows = hasLegacyTopicDoormatTemplate && !existingIssueKeys.has("1|outdated-topic-page-template") ? [
       {
@@ -31277,10 +31283,10 @@ var TopicDoormatIssueAnalysisService = class _TopicDoormatIssueAnalysisService {
       ...this.buildLocalTopicDoormatDescriptionLengthRows(doormatSummaries, pageLanguage),
       ...this.buildLocalTopicDoormatTrailingPunctuationRows(doormatSummaries, existingRows),
       ...this.buildLocalTopicDoormatDescriptionPersonRows(doormatSummaries),
-      ...this.buildLocalTopicDoormatLifecycleStatusRows(doormatSummaries),
       ...this.buildLocalTopicDoormatMostRequestedDuplicateRows(doormatSummaries, mostRequestedLinks, existingRows, uploadData),
       ...this.buildLocalTopicDoormatLinkCodeRows(doormatSummaries),
       ...this.buildLocalTopicDoormatRepeatedDescriptionOpeningRows(doormatSummaries),
+      ...this.buildLocalTopicDoormatContentGapRows(doormatSummaries, destinationContentAssessmentsByDoormatIndex),
       ...this.buildLocalTopicDoormatLinkStyleIssueRows(doormatSummaries, linkStylesByDoormatIndex),
       ...this.buildLocalTopicDoormatDestinationMismatchRows(doormatSummaries, destinationLinkAssessmentsByDoormatIndex),
       ...this.buildLocalTopicDoormatStyleIssueRows(doormatSummaries, existingIssueKeys, descriptionStylesByDoormatIndex)
@@ -31403,34 +31409,6 @@ var TopicDoormatIssueAnalysisService = class _TopicDoormatIssueAnalysisService {
           issue: this.getTopicDoormatIssueLabel("description-uses-first-or-second-person"),
           evidence: this.getTopicDoormatDeterministicText("descriptionPerson.evidence", { pronoun: matchedPronoun }),
           recommendation: this.getTopicDoormatDeterministicText("descriptionPerson.recommendation"),
-          doormatIndex: summary.index || void 0,
-          sectionIndex: summary.sectionIndex || void 0,
-          sectionTitle: summary.sectionTitle || void 0,
-          sectionItemIndex: summary.sectionItemIndex || void 0
-        }
-      ];
-    });
-  }
-  buildLocalTopicDoormatLifecycleStatusRows(doormatSummaries) {
-    return doormatSummaries.flatMap((summary) => {
-      const element = this.getTopicDoormatSubstantiveLifecycleElement(summary);
-      if (!element)
-        return [];
-      if (this.hasTopicDoormatSubstantiveLifecycleStatusText([summary.linkText, summary.description].join(" "), summary.labels)) {
-        return [];
-      }
-      const evidenceText = element.text.length > 180 ? `${element.text.slice(0, 177).trimEnd()}...` : element.text;
-      return [
-        {
-          include: true,
-          rowType: "doormat",
-          severity: "Medium",
-          doormat: this.buildTopicDoormatLabel(summary),
-          doormatLabel: summary.linkText || summary.href || "Doormat",
-          issueId: "description-missing-lifecycle-status",
-          issue: this.getTopicDoormatIssueLabel("description-missing-lifecycle-status"),
-          evidence: this.getTopicDoormatDeterministicText("lifecycleStatus.evidence", { text: evidenceText }),
-          recommendation: this.getTopicDoormatDeterministicText("lifecycleStatus.recommendation"),
           doormatIndex: summary.index || void 0,
           sectionIndex: summary.sectionIndex || void 0,
           sectionTitle: summary.sectionTitle || void 0,
@@ -31912,6 +31890,63 @@ var TopicDoormatIssueAnalysisService = class _TopicDoormatIssueAnalysisService {
       ];
     });
   }
+  buildLocalTopicDoormatContentGapRows(doormatSummaries, assessmentsByDoormatIndex) {
+    return doormatSummaries.flatMap((summary) => {
+      const assessment = assessmentsByDoormatIndex.get(summary.index);
+      const missingElements = this.getValidatedTopicDoormatMissingElements(summary, assessment);
+      if (!missingElements.length)
+        return [];
+      const evidenceParts = missingElements.slice(0, 3).map((element) => {
+        const text = element.text.length > 140 ? `${element.text.slice(0, 137).trimEnd()}...` : element.text;
+        return `${element.type === "h2" ? "H2" : "Intro"}: "${text}"`;
+      });
+      if (missingElements.length > evidenceParts.length) {
+        evidenceParts.push(`and ${missingElements.length - evidenceParts.length} more`);
+      }
+      return [
+        {
+          include: true,
+          rowType: "doormat",
+          severity: "Medium",
+          doormat: this.buildTopicDoormatLabel(summary),
+          doormatLabel: summary.linkText || summary.href || "Doormat",
+          issueId: "description-missing-needed-information",
+          issue: this.getTopicDoormatIssueLabel("description-missing-needed-information"),
+          evidence: this.getTopicDoormatDeterministicText("contentGap.evidence", { elements: evidenceParts.join("; ") }),
+          recommendation: this.getTopicDoormatDeterministicText("contentGap.recommendation"),
+          doormatIndex: summary.index,
+          sectionIndex: summary.sectionIndex,
+          sectionTitle: summary.sectionTitle,
+          sectionItemIndex: summary.sectionItemIndex
+        }
+      ];
+    });
+  }
+  getValidatedTopicDoormatMissingElements(summary, assessment) {
+    if (summary.destinationContextStatus !== "available" || !assessment) {
+      return [];
+    }
+    const elementsById = new Map(this.buildTopicDoormatDestinationContextElements(summary).map((element) => [
+      element.id,
+      element
+    ]));
+    const importantIds = new Set(assessment.importantElementIds.filter((id) => elementsById.has(id)));
+    const coveredIds = new Set(assessment.coveredElementIds.filter((id) => elementsById.has(id)));
+    const seen = /* @__PURE__ */ new Set();
+    return assessment.missingImportantElementIds.flatMap((id) => {
+      if (seen.has(id) || !importantIds.has(id) || coveredIds.has(id)) {
+        return [];
+      }
+      const element = elementsById.get(id);
+      if (!element)
+        return [];
+      seen.add(id);
+      if (this.isTopicDoormatLifecycleStatusAlreadyCovered(summary, element)) {
+        return [];
+      }
+      return [element];
+    });
+  }
   buildLocalTopicDoormatStyleIssueRows(doormatSummaries, existingIssueKeys, descriptionStylesByDoormatIndex) {
     const analyses = this.analyzeTopicDoormatDescriptionStyles(doormatSummaries, descriptionStylesByDoormatIndex);
     const rows = [];
@@ -32207,9 +32242,6 @@ ${JSON.stringify(contract)}`;
     if (issueCategory === "description-lacks-clarity") {
       return this.hasValidTopicDoormatClarityEvidence(issue, doormat);
     }
-    if (issueCategory === "enhancement-label-not-needed") {
-      return !this.hasSupportedTopicDoormatLifecycleLabel(doormat);
-    }
     if (issueCategory !== "link-name-too-long" && issueCategory !== "description-too-long") {
       return true;
     }
@@ -32311,32 +32343,50 @@ ${JSON.stringify(contract)}`;
     ]);
     return value.split(/\s+/).filter((token) => token.length > 2 && !stopWords.has(token));
   }
-  getTopicDoormatSubstantiveLifecycleElement(summary) {
-    if (summary.destinationContextStatus !== "available")
-      return null;
-    return this.buildTopicDoormatDestinationContextElements(summary).find((element) => this.isTopicDoormatSubstantiveLifecycleElement(element.text)) ?? null;
-  }
-  isTopicDoormatSubstantiveLifecycleElement(value) {
-    if (this.isTopicDoormatLifecycleStatusElement(value))
+  isTopicDoormatLifecycleStatusAlreadyCovered(summary, element) {
+    if (!this.hasTopicDoormatLifecycleStatusText(element.text))
       return false;
-    return this.hasTopicDoormatSubstantiveLifecycleStatusText(value);
-  }
-  hasSupportedTopicDoormatLifecycleLabel(summary) {
-    if (!summary?.labels?.some((label) => this.hasTopicDoormatLifecycleStatusText(label))) {
-      return false;
-    }
-    return !!this.getTopicDoormatSubstantiveLifecycleElement(summary);
+    return this.hasTopicDoormatLifecycleStatusText([
+      summary.linkText,
+      summary.description,
+      summary.rawItemText,
+      ...summary.labels ?? []
+    ].join(" "));
   }
   isTopicDoormatLifecycleStatusElement(value) {
     const normalized = this.normalizeTopicDoormatDestinationComparisonText(value);
     return /^status (?:closed|archived|inactive|expired|ended)\b/.test(normalized) || /^(?:closed|archived|inactive|expired|ended)$/.test(normalized);
   }
   hasTopicDoormatLifecycleStatusText(value) {
-    return /\b(?:status:\s*)?(?:closed|archived|inactive|expired|ended|replaced|no longer available|not available)\b/i.test(value);
+    return /\b(?:status:\s*)?(?:closed|archived|inactive|expired|ended|stopped|replaced|formerly|no longer available|not available|new|updated)\b/i.test(value);
   }
-  hasTopicDoormatSubstantiveLifecycleStatusText(value, labels = []) {
-    const text = this.removeTopicDoormatLabels(value, labels);
-    return /\b(?:stopped|ended|expired|discontinued|cancelled|canceled|replaced|formerly|no longer available|not available|no longer accepting|last payment|final payment)\b/i.test(text);
+  isTopicDoormatStatusRepetitionIssue(issueId, issue, summary) {
+    if (issueId !== "enhancement-label-not-needed" && issueId !== "description-lacks-clarity") {
+      return false;
+    }
+    if (!summary)
+      return false;
+    const visibleDoormatText = [
+      summary.linkText,
+      summary.description,
+      summary.rawItemText,
+      ...summary.labels ?? []
+    ].join(" ");
+    if (!this.hasTopicDoormatLifecycleStatusText(visibleDoormatText)) {
+      return false;
+    }
+    const issueText = this.getTopicDoormatIssueSearchText(issue);
+    return this.hasTopicDoormatLifecycleStatusText(issueText) && /\b(?:destination|title|h1|heading|label|status)\b/i.test(issueText);
+  }
+  getTopicDoormatIssueSearchText(issue) {
+    const details = issue["evidence_details"] && typeof issue["evidence_details"] === "object" ? JSON.stringify(issue["evidence_details"]) : "";
+    return [
+      issue["issue_category"],
+      issue["description"],
+      issue["evidence"],
+      issue["recommendation"],
+      details
+    ].map((value) => typeof value === "string" ? value : "").join(" ");
   }
   normalizeTopicDoormatDestinationComparisonText(value) {
     return this.cleanVisibleText(value).replace(/\s*(?:[-|]\s*)?canada\.ca\s*$/i, "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[\u2018\u2019\u201b\u2032]/g, "'").replace(/[^a-z0-9]+/gi, " ").trim().toLowerCase();
@@ -48379,4 +48429,4 @@ ${custom}` : promptBody;
 export {
   PageAssistantCompareComponent
 };
-//# sourceMappingURL=chunk-TZIEQS4A.js.map
+//# sourceMappingURL=chunk-XA7QRODV.js.map
