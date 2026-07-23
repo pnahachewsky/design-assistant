@@ -439,6 +439,15 @@ export class TopicDoormatIssueAnalysisService {
           ) {
             return null;
           }
+          if (
+            this.isTopicDoormatStatusRepetitionIssue(
+              issueId,
+              issue,
+              summary,
+            )
+          ) {
+            return null;
+          }
           if (!this.isReportableTopicDoormatIssue(
             issue,
             summary,
@@ -2829,9 +2838,14 @@ export class TopicDoormatIssueAnalysisService {
     summary: TopicDoormatSummary,
     element: TopicDoormatDestinationContextElement,
   ): boolean {
-    if (!this.isTopicDoormatLifecycleStatusElement(element.text)) return false;
+    if (!this.hasTopicDoormatLifecycleStatusText(element.text)) return false;
     return this.hasTopicDoormatLifecycleStatusText(
-      [summary.linkText, summary.description, summary.rawItemText].join(' '),
+      [
+        summary.linkText,
+        summary.description,
+        summary.rawItemText,
+        ...(summary.labels ?? []),
+      ].join(' '),
     );
   }
 
@@ -2844,9 +2858,56 @@ export class TopicDoormatIssueAnalysisService {
   }
 
   private hasTopicDoormatLifecycleStatusText(value: string): boolean {
-    return /\b(?:status:\s*)?(?:closed|archived|inactive|expired|ended|replaced|no longer available|not available)\b/i.test(
+    return /\b(?:status:\s*)?(?:closed|archived|inactive|expired|ended|stopped|replaced|formerly|no longer available|not available|new|updated)\b/i.test(
       value,
     );
+  }
+
+  private isTopicDoormatStatusRepetitionIssue(
+    issueId: string,
+    issue: Record<string, unknown>,
+    summary?: TopicDoormatSummary,
+  ): boolean {
+    if (
+      issueId !== 'enhancement-label-not-needed' &&
+      issueId !== 'description-lacks-clarity'
+    ) {
+      return false;
+    }
+    if (!summary) return false;
+    const visibleDoormatText = [
+      summary.linkText,
+      summary.description,
+      summary.rawItemText,
+      ...(summary.labels ?? []),
+    ].join(' ');
+    if (!this.hasTopicDoormatLifecycleStatusText(visibleDoormatText)) {
+      return false;
+    }
+
+    const issueText = this.getTopicDoormatIssueSearchText(issue);
+    return (
+      this.hasTopicDoormatLifecycleStatusText(issueText) &&
+      /\b(?:destination|title|h1|heading|label|status)\b/i.test(issueText)
+    );
+  }
+
+  private getTopicDoormatIssueSearchText(
+    issue: Record<string, unknown>,
+  ): string {
+    const details =
+      issue['evidence_details'] && typeof issue['evidence_details'] === 'object'
+        ? JSON.stringify(issue['evidence_details'])
+        : '';
+    return [
+      issue['issue_category'],
+      issue['description'],
+      issue['evidence'],
+      issue['recommendation'],
+      details,
+    ]
+      .map((value) => (typeof value === 'string' ? value : ''))
+      .join(' ');
   }
 
   private normalizeTopicDoormatDestinationComparisonText(

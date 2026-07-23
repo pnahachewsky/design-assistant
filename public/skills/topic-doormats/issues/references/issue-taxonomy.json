@@ -151,7 +151,7 @@
   },
   "destination_content_assessment": {
     "required": true,
-    "instruction": "For every doormat, assess the supplied destinationContext before reporting issues. Select important_element_ids only from supplied intro and H2 element IDs. Mark an element important only when users need it to decide whether this destination is relevant; do not select every H2 automatically. Compare analysisLinkText and analysisDescription when present, otherwise compare link text and description, when determining coverage. missing_important_element_ids must be a subset of important_element_ids and must contain only supplied IDs that are not represented by covered_element_ids. When destinationContext.status is not available, return empty arrays.",
+    "instruction": "For every doormat, assess the supplied destinationContext before reporting issues. Select important_element_ids only from supplied intro and H2 element IDs. Mark an element important only when users need it to decide whether this destination is relevant; do not select every H2 automatically. Compare analysisLinkText and analysisDescription when present, otherwise compare link text and description, when determining coverage. Doormat labels may carry lifecycle or status information such as Closed, No longer available, Formerly, Replaced, New, or Updated. Do not require the doormat description to repeat lifecycle/status information when it is already exposed in the doormat label or visible doormat text. Evaluate the description for whether it explains the destination page's broad subject, purpose, or task, not whether it repeats the label. When the link text is a program, benefit, credit, rebate, payment, allowance, or relief name, do not treat the name alone as covering a destination intro that explains what the program or benefit was or is. If the doormat description only gives status, timing, eligibility, or residual filing context, mark the intro explanation as missing. missing_important_element_ids must be a subset of important_element_ids and must contain only supplied IDs that are not represented by covered_element_ids. When destinationContext.status is not available, return empty arrays.",
     "model_must_not_report": "Do not return description-missing-needed-information as an issue. AIDA validates the assessment IDs against the extracted destination context and creates the issue locally.",
     "important_element_examples": [
       "A primary audience or eligibility condition needed to know whether the destination applies.",
@@ -548,7 +548,8 @@
       "label": "Enhancement label is not needed",
       "severity": "Medium",
       "condition": "A doormat uses an enhancement/status label such as New or Closed when there is no recent change or temporary status to justify it.",
-      "recommendation": "Remove the label unless it identifies a recent change or valid temporary status."
+      "recommendation": "Remove the label unless it identifies a recent change or valid temporary status.",
+      "reporting": "Do not report this issue merely because the same lifecycle/status information appears in the destination title, H1, or destination context. A label may be useful when it exposes destination status before the user follows the link."
     },
     {
       "id": "enhancement-label-wrong-type",

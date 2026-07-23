@@ -87,6 +87,17 @@ Use this skill for issue analysis of topic doormat sets.
 - Do not treat a destination label/status line as a description content gap
   when the doormat already exposes that same label/status state in its label or
   visible item text.
+- Doormat labels may carry lifecycle or status information such as Closed,
+  No longer available, Formerly, Replaced, New, or Updated. Do not require the
+  doormat description to repeat lifecycle/status information when it is already
+  exposed in the doormat label or visible doormat text. Evaluate the description
+  for whether it explains the destination page's broad subject, purpose, or
+  task, not whether it repeats the label.
+- When the link text is a program, benefit, credit, rebate, payment, allowance,
+  or relief name, do not treat the name alone as covering a destination intro
+  that explains what the program or benefit was or is. If the doormat
+  description only gives status, timing, eligibility, or residual filing
+  context, mark the intro explanation as missing.
 - When `destinationContext.status` is not `available`, return empty arrays for
   all destination content assessment fields.
 - Do not return `description-missing-needed-information`. AIDA reports that
