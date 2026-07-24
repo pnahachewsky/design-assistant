@@ -409,9 +409,10 @@
         <aside class="process-summary" aria-label="Process summary">
           <h2>Process summary</h2>
           <ol>
-            <li>Detect topic doormat blocks with <span class="inline-code">.gc-srvinfo</span>.</li>
-            <li>Extract link text, labels, destination, description, counts, and H2 section metadata.</li>
-            <li>Run local deterministic checks for counts, link validity, and predictable structure issues.</li>
+            <li>Detect current and legacy topic doormat blocks.</li>
+            <li>Extract link text, labels, destination, description, counts, language, and H2 section metadata.</li>
+            <li>Fetch destination context and local IA child-page context when available.</li>
+            <li>Run local deterministic checks for counts, link validity, structure, formatting, repeated openings, Most requested duplicates, and IA review flags.</li>
             <li>Send the complete doormat set to the Topic doormats issue skill.</li>
             <li>Ask the model to classify every doormat using constrained values and grounded evidence.</li>
             <li>Let AIDA validate and aggregate the classifications, apply local decision rules, and build the displayed issues.</li>
@@ -434,7 +435,8 @@
       <h2>Topic doormat review flow</h2>
       <p class="intro">
         The issue flow is set-based. AIDA sends all detected topic doormats together so
-        the model can classify each item in context while AIDA keeps deterministic checks local.
+        the model can classify each item in context while AIDA keeps deterministic and
+        classification-derived issue decisions local.
       </p>
       <div class="two-col">
         <article class="card">
@@ -443,12 +445,12 @@
           <p>
             AIDA sends structured doormat summaries, including page order, section-local
             order, link text, extracted labels, href, description, exact character counts,
-            and H2 section metadata. AIDA also sends label-stripped
+            language, structure flags, and H2 section metadata. AIDA also sends label-stripped
             <span class="inline-code">analysisLinkText</span> and
             <span class="inline-code">analysisDescription</span> for destination meaning
             and content-coverage checks. For each resolved destination, AIDA supplies the
             HTTP status when available, page title, H1, introductory paragraphs before the
-            first H2, and all H2 headings.
+            first H2, all H2 headings, and destination label/status evidence.
           </p>
         </article>
         <article class="card">
@@ -457,9 +459,9 @@
           <p>
             The model returns required description-style, link-style,
             destination-relationship, relationship-basis, and destination-content
-            classifications for every doormat. It may also return candidate rows for
-            model-owned editorial issues. These are structured inputs to AIDA, not the
-            final displayed report.
+            classifications for every doormat. It may also return bounded candidate
+            rows for the remaining model-owned editorial issues. These are structured
+            inputs to AIDA, not the final displayed report.
           </p>
         </article>
       </div>
@@ -480,8 +482,9 @@
           <p>
             The model must return values from defined enums, such as description style,
             link style, destination relationship and its basis, plus destination element
-            coverage. It identifies meaning and grammatical construction; it does not
-            return the locally owned issue that may result from that classification.
+            coverage. It identifies meaning, grammatical construction, and important
+            destination elements; it does not return locally owned issues such as length,
+            punctuation, broken links, IA flags, content gaps, or section style mixes.
           </p>
         </article>
         <article class="card">
@@ -489,8 +492,9 @@
           <h3>Ground classifications in supplied data</h3>
           <p>
             AIDA checks the response shape, allowed labels, doormat indexes, destination
-            element IDs, required reasons, and available page context. Invalid,
-            unsupported, or ungrounded classifications cannot create displayed issues.
+            element IDs, required reasons, destination status, label/status evidence,
+            and available page context. Invalid, unsupported, or ungrounded
+            classifications cannot create displayed issues.
           </p>
         </article>
         <article class="card">
@@ -506,9 +510,10 @@
           <span class="label label-blue">Editorial exception</span>
           <h3>Model-owned judgment remains bounded</h3>
           <p>
-            Some editorial issues cannot yet be derived from a stable local rule. The
-            model may return those candidate issue rows directly, but AIDA still validates
-            them against the taxonomy and response contract before displaying them.
+            Some editorial issues cannot yet be derived from a stable local rule, such as
+            genuinely ambiguous description wording or unjustified labels. The model may
+            return those candidate issue rows directly, but AIDA still validates them
+            against the taxonomy and response contract before displaying them.
           </p>
         </article>
       </div>
@@ -552,29 +557,34 @@
       <h2>How AIDA determines issues</h2>
       <p class="intro">
         The current flow separates model classification from AIDA decisions. AIDA owns
-        exact checks and final classification-derived issue rules; the model supplies
-        semantic classifications and handles the remaining model-owned editorial judgment.
+        exact checks, local IA review flags, and final classification-derived issue
+        rules; the model supplies semantic classifications and handles the remaining
+        model-owned editorial judgment.
       </p>
       <div class="grid">
         <article class="card">
           <h3>Exact character counts</h3>
-          <p>AIDA provides authoritative link text and description character counts.</p>
+          <p>AIDA provides authoritative link text and description character counts and reports length issues locally. English link names use a 35-character ideal threshold, English descriptions use a 95-character expansion threshold, and French uses 45 characters for link names and 120 characters for descriptions. Length rows are section-level summaries with severity bands based on how far the text exceeds the threshold.</p>
         </article>
         <article class="card">
           <h3>Doormat count limit</h3>
           <p>AIDA applies the 9-doormat limit per H2 section.</p>
         </article>
         <article class="card">
+          <h3>Structure and formatting</h3>
+          <p>AIDA reports objective structure and formatting issues locally where the page markup already proves the issue, including split heading links, multiple links in one doormat, links inside descriptions, trailing punctuation, first- or second-person description openings, and legacy topic doormat markup.</p>
+        </article>
+        <article class="card">
           <h3>Description and link style</h3>
-          <p>The model classifies each description and link by grammatical construction. Link styles are <span class="inline-code">task</span>, <span class="inline-code">topic</span>, <span class="inline-code">situation</span>, or <span class="inline-code">mixed-or-unclear</span>. Description styles are <span class="inline-code">sentence</span>, <span class="inline-code">phrase</span>, <span class="inline-code">keyword-list</span>, or <span class="inline-code">mixed-or-unclear</span>. AIDA groups those labels by H2 section and creates section-level style rows when warranted.</p>
+          <p>The model classifies each description and link by grammatical construction. Link styles are <span class="inline-code">task</span>, <span class="inline-code">topic</span>, <span class="inline-code">situation</span>, or <span class="inline-code">mixed-or-unclear</span>. Description styles are <span class="inline-code">sentence</span>, <span class="inline-code">phrase</span>, <span class="inline-code">keyword-list</span>, or <span class="inline-code">mixed-or-unclear</span>. AIDA groups those labels by H2 section and creates section-level mixed-style rows or individual outlier rows when warranted. AIDA does not report individual outliers when the whole section is already mixed.</p>
         </article>
         <article class="card">
           <h3>Destination relationship</h3>
-          <p>The model classifies whether each link name is equivalent, accurately broader or narrower, materially different, or unavailable, and identifies the basis for that decision. AIDA compares the non-label link text with the destination title or H1 by meaning, not exact wording, and reports only grounded core-concept conflicts.</p>
+          <p>The model classifies whether each link name is equivalent, accurately broader or narrower, materially different, or unavailable, and identifies the basis for that decision. AIDA compares the non-label link text with the destination title or H1 by meaning, not exact wording, ignores Canada.ca title suffixes, allows compatible wording shifts, and reports only grounded core-concept conflicts.</p>
         </article>
         <article class="card">
           <h3>Doormat labels</h3>
-          <p>AIDA extracts visible label and badge text from each doormat. Original link text and descriptions remain available for display and evidence, but AIDA removes extracted labels from <span class="inline-code">analysisLinkText</span> and <span class="inline-code">analysisDescription</span> before destination matching and content-coverage assessment.</p>
+          <p>AIDA extracts visible label and badge text from each doormat and destination label/status evidence from titles, H1s, intros, alerts, labels, badges, time elements, and date metadata. Original link text and descriptions remain available for display and evidence, but AIDA removes extracted labels from <span class="inline-code">analysisLinkText</span> and <span class="inline-code">analysisDescription</span> before destination matching and content-coverage assessment. Labels such as Closed, Formerly, Replaced, New, or Updated can be valid when they expose destination status before the user follows the link.</p>
         </article>
         <article class="card">
           <h3>Broken links</h3>
@@ -582,15 +592,19 @@
         </article>
         <article class="card">
           <h3>Description content gaps</h3>
-          <p>The model classifies supplied destination elements as important, covered, or missing by ID. AIDA reports a content gap only when a missing important ID matches extracted page context and passes local safeguards, including not repeating a destination status line that is already exposed by the doormat.</p>
+          <p>The model classifies supplied destination elements as important, covered, or missing by ID. AIDA reports a content gap only when a missing important ID matches extracted page context and passes local safeguards. Status-only destination lines are suppressed when the status is already visible in the doormat, but a program, benefit, credit, rebate, payment, allowance, or relief name alone does not count as covering an intro that explains what the destination is.</p>
         </article>
         <article class="card">
           <h3>Repeated description openings</h3>
-          <p>AIDA checks each H2 section locally for descriptions that begin with the same first two words.</p>
+          <p>AIDA checks each H2 section locally for descriptions that begin with the same first two normalized words. It reports at most one section-level row per section when an opening affects at least 40% of the section, with Medium severity when affected doormats are adjacent or the pattern affects more than 60%.</p>
         </article>
         <article class="card">
           <h3>Most requested duplicates</h3>
           <p>AIDA compares doormat links with Most requested links locally to identify duplicate destinations. URL fragments must also match.</p>
+        </article>
+        <article class="card">
+          <h3>Choice of doormats</h3>
+          <p>AIDA compares doormat destinations with direct child pages from the IA crawl. Missing child pages become Medium review flags, and non-child-page doormats become Low section-level review flags. AIDA also adds child-page and page-view metadata to displayed doormat rows when available.</p>
         </article>
         <article class="card">
           <h3>No issues rows</h3>
@@ -776,15 +790,15 @@
               <code class="code-path">src/app/views/page-assistant/components/problems/component-guidance/component-guidance.component.ts</code>
             </li>
             <li>
-              Parses page HTML into doormat summaries, extracted labels, section metadata, language signals, destination context, destination HTTP status, and Most requested link context.
+              Parses page HTML into doormat summaries, extracted labels, structure flags, section metadata, language signals, destination context, destination HTTP status, destination label evidence, and Most requested link context.
               <code class="code-path">src/app/views/page-assistant/services/topic-doormats/topic-doormat-extractor.service.ts</code>
             </li>
             <li>
-              Compares doormat destinations with IA child pages and page-view data.
+              Compares doormat destinations with IA child pages, builds missing and non-child-page review flags, and adds page-view metadata when available.
               <code class="code-path">src/app/views/page-assistant/services/topic-doormats/topic-doormat-ia-check.service.ts</code>
             </li>
             <li>
-              Composes the issue request, adds label-stripped analysis text, parses model JSON, applies deterministic issue rows, and resolves final rows.
+              Composes the issue request, adds label-stripped analysis text, parses model JSON, applies local deterministic rows, validates destination classifications and content-gap IDs, suppresses known status/label false positives, and resolves final rows.
               <code class="code-path">src/app/views/page-assistant/services/topic-doormats/topic-doormat-issue-analysis.service.ts</code>
             </li>
             <li>
@@ -815,9 +829,11 @@
     <section class="panel">
       <div class="note">
         <p>Bottom line: AIDA evaluates Topic doormats together, uses H2 sections for
-          section-local limits and style consistency, strips doormat labels from
-          destination-analysis text, keeps deterministic checks local, and keeps the
-          prompt files linked above as the active source of issue and rewrite guidance.
+          section-local limits, style consistency, repeated openings, and IA review
+          flags, strips doormat labels from destination-analysis text, validates
+          model classifications against supplied destination context, keeps
+          deterministic checks local, and keeps the prompt files linked above as the
+          active source of issue and rewrite guidance.
         </p>
       </div>
       <p class="small" style="margin-top: 12px;">
