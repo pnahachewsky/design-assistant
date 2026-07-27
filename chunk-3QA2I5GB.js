@@ -29545,6 +29545,38 @@ var TopicDoormatExtractorService = class _TopicDoormatExtractorService {
       })));
     });
   }
+  enrichOppositeLanguageLengths(doormatSummaries, uploadData, pageLanguage) {
+    return __async(this, null, function* () {
+      if (!doormatSummaries.length)
+        return doormatSummaries;
+      const alternateUrl = this.resolveAlternateLanguageUrl(uploadData);
+      if (!alternateUrl)
+        return doormatSummaries;
+      try {
+        const response = yield this.fetchService.fetchContentWithResponse(alternateUrl, "both", 1, "none");
+        const oppositeSummaries = this.extractSummaries(response.document);
+        if (!oppositeSummaries.length)
+          return doormatSummaries;
+        const oppositeByPosition = /* @__PURE__ */ new Map();
+        oppositeSummaries.forEach((summary) => {
+          oppositeByPosition.set(this.getSectionItemKey(summary.sectionIndex, summary.sectionItemIndex), summary);
+        });
+        const oppositeLanguage = pageLanguage === "fr" ? "en" : "fr";
+        return doormatSummaries.map((summary) => {
+          const opposite = oppositeByPosition.get(this.getSectionItemKey(summary.sectionIndex, summary.sectionItemIndex));
+          if (!opposite)
+            return summary;
+          return __spreadProps(__spreadValues({}, summary), {
+            oppositeLanguage,
+            oppositeLanguageLinkTextCharacterCount: opposite.linkTextCharacterCount,
+            oppositeLanguageDescriptionCharacterCount: opposite.descriptionCharacterCount
+          });
+        });
+      } catch {
+        return doormatSummaries;
+      }
+    });
+  }
   detectPageLanguage(doc, uploadData) {
     const htmlLang = doc.documentElement.getAttribute("lang") || doc.querySelector("html")?.getAttribute("lang") || "";
     const normalizedHtmlLang = htmlLang.trim().toLowerCase();
@@ -29688,6 +29720,24 @@ var TopicDoormatExtractorService = class _TopicDoormatExtractorService {
     } catch {
       return "";
     }
+  }
+  resolveAlternateLanguageUrl(uploadData) {
+    const alternate = this.cleanString(uploadData?.metadata?.find((item) => item.name === "alternate")?.content);
+    if (!alternate)
+      return "";
+    const pageUrl = this.cleanString(uploadData?.originalUrl) || this.cleanString(uploadData?.modifiedUrl);
+    try {
+      const resolved = pageUrl ? new URL(alternate, pageUrl) : new URL(alternate);
+      if (resolved.protocol !== "https:")
+        return "";
+      resolved.hash = "";
+      return resolved.toString();
+    } catch {
+      return "";
+    }
+  }
+  getSectionItemKey(sectionIndex, sectionItemIndex) {
+    return `${sectionIndex}|${sectionItemIndex}`;
   }
   fetchDestinationContext(destinationUrl) {
     return __async(this, null, function* () {
@@ -31293,11 +31343,22 @@ var TopicDoormatIssueAnalysisService = class _TopicDoormatIssueAnalysisService {
     ];
   }
   buildLocalTopicDoormatLinkNameLengthRows(doormatSummaries, pageLanguage) {
-    const limit = this.getTopicDoormatLengthLimit("link-name-too-long", pageLanguage);
-    const overLimitSummaries = doormatSummaries.filter((summary) => summary.linkTextCharacterCount > limit);
-    return this.buildLocalTopicDoormatLengthSectionRows(overLimitSummaries, "link-name-too-long", (summary) => summary.linkTextCharacterCount, (count) => this.getTopicDoormatLinkNameLengthSeverity(count, pageLanguage), (count) => this.getTopicDoormatLinkNameLengthIssueLabel(count, pageLanguage), this.getTopicDoormatLinkNameLengthRecommendation(limit), limit);
+    const fallbackLimit = this.getTopicDoormatLengthLimit("link-name-too-long", pageLanguage);
+    const overLimitSummaries = doormatSummaries.filter((summary) => {
+      const limit = this.hasTopicDoormatBilingualLinkLength(summary) ? 45 : fallbackLimit;
+      return this.getTopicDoormatLinkNameLengthCount(summary) > limit;
+    });
+    return this.buildLocalTopicDoormatLengthSectionRows(overLimitSummaries, "link-name-too-long", (summary) => this.getTopicDoormatLinkNameLengthSeverity(summary, pageLanguage), (summary) => this.getTopicDoormatLinkNameLengthIssueLabel(summary, pageLanguage), (summary) => this.buildTopicDoormatLengthMetric(summary, "link-name-too-long", pageLanguage), this.getTopicDoormatLinkNameLengthRecommendation());
   }
-  getTopicDoormatLinkNameLengthSeverity(count, pageLanguage = "en") {
+  getTopicDoormatLinkNameLengthSeverity(summary, pageLanguage = "en") {
+    const count = this.getTopicDoormatLinkNameLengthCount(summary);
+    if (this.hasTopicDoormatBilingualLinkLength(summary)) {
+      if (count <= 60)
+        return "Low";
+      if (count <= 75)
+        return "Medium";
+      return "High";
+    }
     if (pageLanguage === "fr") {
       if (count <= 60)
         return "Low";
@@ -31311,22 +31372,29 @@ var TopicDoormatIssueAnalysisService = class _TopicDoormatIssueAnalysisService {
       return "Medium";
     return "High";
   }
-  getTopicDoormatLinkNameLengthIssueLabel(count, pageLanguage = "en") {
+  getTopicDoormatLinkNameLengthIssueLabel(summary, pageLanguage = "en") {
+    const count = this.getTopicDoormatLinkNameLengthCount(summary);
+    if (this.hasTopicDoormatBilingualLinkLength(summary)) {
+      return this.buildTopicDoormatBilingualLengthIssueLabel(summary, "link-name-too-long", pageLanguage);
+    }
     if (pageLanguage === "en" && count <= 45) {
       return "Opposite language link text may be too long";
     }
     return this.getTopicDoormatIssueLabel("link-name-too-long");
   }
   buildLocalTopicDoormatDescriptionLengthRows(doormatSummaries, pageLanguage) {
-    const limit = this.getTopicDoormatLengthLimit("description-too-long", pageLanguage);
-    const overLimitSummaries = doormatSummaries.filter((summary) => summary.descriptionCharacterCount > limit);
-    return this.buildLocalTopicDoormatLengthSectionRows(overLimitSummaries, "description-too-long", (summary) => summary.descriptionCharacterCount, (count) => this.getTopicDoormatDescriptionLengthSeverity(count, pageLanguage), (count) => this.getTopicDoormatDescriptionLengthIssueLabel(count, pageLanguage), this.getTopicDoormatDescriptionLengthRecommendation(limit), limit);
+    const fallbackLimit = this.getTopicDoormatLengthLimit("description-too-long", pageLanguage);
+    const overLimitSummaries = doormatSummaries.filter((summary) => {
+      const limit = this.hasTopicDoormatBilingualDescriptionLength(summary) ? 120 : fallbackLimit;
+      return this.getTopicDoormatDescriptionLengthCount(summary) > limit;
+    });
+    return this.buildLocalTopicDoormatLengthSectionRows(overLimitSummaries, "description-too-long", (summary) => this.getTopicDoormatDescriptionLengthSeverity(summary, pageLanguage), (summary) => this.getTopicDoormatDescriptionLengthIssueLabel(summary, pageLanguage), (summary) => this.buildTopicDoormatLengthMetric(summary, "description-too-long", pageLanguage), this.getTopicDoormatDescriptionLengthRecommendation());
   }
-  buildLocalTopicDoormatLengthSectionRows(overLimitSummaries, issueId, getCount, getSeverity, getIssueLabel, recommendation, limit) {
+  buildLocalTopicDoormatLengthSectionRows(overLimitSummaries, issueId, getSeverity, getIssueLabel, getMetric, recommendation) {
     const summariesBySectionAndIssue = /* @__PURE__ */ new Map();
     overLimitSummaries.forEach((summary) => {
       const sectionIndex = summary.sectionIndex || 0;
-      const issue = getIssueLabel(getCount(summary));
+      const issue = getIssueLabel(summary);
       const key2 = `${sectionIndex}|${issue}`;
       const group = summariesBySectionAndIssue.get(key2) ?? {
         sectionIndex,
@@ -31339,11 +31407,10 @@ var TopicDoormatIssueAnalysisService = class _TopicDoormatIssueAnalysisService {
     });
     return Array.from(summariesBySectionAndIssue.values()).map(({ sectionIndex, issue, summaries }) => {
       const evidenceItems = summaries.slice().sort((a, b) => (a.sectionItemIndex || a.index) - (b.sectionItemIndex || b.index)).map((summary) => {
-        const count = getCount(summary);
         return {
           label: `Doormat ${summary.sectionItemIndex || summary.index}`,
-          metric: `${count}/${limit} characters`,
-          severity: getSeverity(count)
+          metric: getMetric(summary),
+          severity: getSeverity(summary)
         };
       });
       const affectedDoormatIndexes = summaries.map((summary) => summary.index).filter((index) => Number.isFinite(index));
@@ -31373,7 +31440,15 @@ var TopicDoormatIssueAnalysisService = class _TopicDoormatIssueAnalysisService {
     };
     return severities.reduce((highest, severity) => (rank[severity] ?? 0) > (rank[highest] ?? 0) ? severity : highest, "Low");
   }
-  getTopicDoormatDescriptionLengthSeverity(count, pageLanguage = "en") {
+  getTopicDoormatDescriptionLengthSeverity(summary, pageLanguage = "en") {
+    const count = this.getTopicDoormatDescriptionLengthCount(summary);
+    if (this.hasTopicDoormatBilingualDescriptionLength(summary)) {
+      if (count <= 130)
+        return "Low";
+      if (count <= 140)
+        return "Medium";
+      return "High";
+    }
     if (pageLanguage === "fr") {
       if (count <= 135)
         return "Low";
@@ -31387,11 +31462,66 @@ var TopicDoormatIssueAnalysisService = class _TopicDoormatIssueAnalysisService {
       return "Medium";
     return "High";
   }
-  getTopicDoormatDescriptionLengthIssueLabel(count, pageLanguage = "en") {
+  getTopicDoormatDescriptionLengthIssueLabel(summary, pageLanguage = "en") {
+    const count = this.getTopicDoormatDescriptionLengthCount(summary);
+    if (this.hasTopicDoormatBilingualDescriptionLength(summary)) {
+      return this.buildTopicDoormatBilingualLengthIssueLabel(summary, "description-too-long", pageLanguage);
+    }
     if (pageLanguage === "en" && count <= 120) {
       return "Opposite language description may be too long";
     }
     return this.getTopicDoormatIssueLabel("description-too-long");
+  }
+  getTopicDoormatLinkNameLengthCount(summary) {
+    const oppositeCount = summary.oppositeLanguageLinkTextCharacterCount;
+    return typeof oppositeCount === "number" ? Math.max(summary.linkTextCharacterCount, oppositeCount) : summary.linkTextCharacterCount;
+  }
+  getTopicDoormatDescriptionLengthCount(summary) {
+    const oppositeCount = summary.oppositeLanguageDescriptionCharacterCount;
+    return typeof oppositeCount === "number" ? Math.max(summary.descriptionCharacterCount, oppositeCount) : summary.descriptionCharacterCount;
+  }
+  getTopicDoormatLinkNameLengthLimit(summary, pageLanguage) {
+    return this.hasTopicDoormatBilingualLinkLength(summary) ? 45 : this.getTopicDoormatLengthLimit("link-name-too-long", pageLanguage);
+  }
+  getTopicDoormatDescriptionLengthLimit(summary, pageLanguage) {
+    return this.hasTopicDoormatBilingualDescriptionLength(summary) ? 120 : this.getTopicDoormatLengthLimit("description-too-long", pageLanguage);
+  }
+  hasTopicDoormatBilingualLinkLength(summary) {
+    return typeof summary.oppositeLanguageLinkTextCharacterCount === "number";
+  }
+  hasTopicDoormatBilingualDescriptionLength(summary) {
+    return typeof summary.oppositeLanguageDescriptionCharacterCount === "number";
+  }
+  buildTopicDoormatLengthMetric(summary, issueId, pageLanguage) {
+    const currentLabel = pageLanguage.toUpperCase();
+    const oppositeLabel = (summary.oppositeLanguage ?? (pageLanguage === "fr" ? "en" : "fr")).toUpperCase();
+    const currentCount = issueId === "link-name-too-long" ? summary.linkTextCharacterCount : summary.descriptionCharacterCount;
+    const oppositeCount = issueId === "link-name-too-long" ? summary.oppositeLanguageLinkTextCharacterCount : summary.oppositeLanguageDescriptionCharacterCount;
+    const limit = issueId === "link-name-too-long" ? this.getTopicDoormatLinkNameLengthLimit(summary, pageLanguage) : this.getTopicDoormatDescriptionLengthLimit(summary, pageLanguage);
+    if (typeof oppositeCount !== "number") {
+      return `${currentCount}/${limit} characters`;
+    }
+    return `${currentLabel} ${currentCount}/${limit}; ${oppositeLabel} ${oppositeCount}/${limit} characters`;
+  }
+  buildTopicDoormatBilingualLengthIssueLabel(summary, issueId, pageLanguage) {
+    const currentLanguage = pageLanguage.toUpperCase();
+    const oppositeLanguage = (summary.oppositeLanguage ?? (pageLanguage === "fr" ? "en" : "fr")).toUpperCase();
+    const currentCount = issueId === "link-name-too-long" ? summary.linkTextCharacterCount : summary.descriptionCharacterCount;
+    const oppositeCount = issueId === "link-name-too-long" ? summary.oppositeLanguageLinkTextCharacterCount : summary.oppositeLanguageDescriptionCharacterCount;
+    const limit = issueId === "link-name-too-long" ? 45 : 120;
+    const typeKey = issueId === "link-name-too-long" ? "link" : "description";
+    const currentTooLong = currentCount > limit;
+    const oppositeTooLong = typeof oppositeCount === "number" && oppositeCount > limit;
+    if (currentTooLong && oppositeTooLong) {
+      return this.getTopicDoormatDeterministicText(`length.${typeKey}.issue.bothLanguages`);
+    }
+    if (currentTooLong) {
+      return this.getTopicDoormatDeterministicText(`length.${typeKey}.issue.singleLanguage`, { language: currentLanguage });
+    }
+    if (oppositeTooLong) {
+      return this.getTopicDoormatDeterministicText(`length.${typeKey}.issue.singleLanguage`, { language: oppositeLanguage });
+    }
+    return this.getTopicDoormatIssueLabel(issueId);
   }
   buildLocalTopicDoormatDescriptionPersonRows(doormatSummaries) {
     return doormatSummaries.flatMap((summary) => {
@@ -31601,11 +31731,11 @@ var TopicDoormatIssueAnalysisService = class _TopicDoormatIssueAnalysisService {
   getTopicDoormatDeterministicText(key2, params) {
     return this.translate.instant(`page.tools.guidance.topicDoormats.${key2}`, params);
   }
-  getTopicDoormatLinkNameLengthRecommendation(limit) {
-    return this.translate.instant("page.tools.guidance.topicDoormats.length.link.recommendation", { limit });
+  getTopicDoormatLinkNameLengthRecommendation() {
+    return this.translate.instant("page.tools.guidance.topicDoormats.length.link.recommendation");
   }
-  getTopicDoormatDescriptionLengthRecommendation(limit) {
-    return this.translate.instant("page.tools.guidance.topicDoormats.length.description.recommendation", { limit });
+  getTopicDoormatDescriptionLengthRecommendation() {
+    return this.translate.instant("page.tools.guidance.topicDoormats.length.description.recommendation");
   }
   buildLocalTopicDoormatLinkCodeRows(doormatSummaries) {
     return doormatSummaries.flatMap((summary) => {
@@ -31957,7 +32087,7 @@ var TopicDoormatIssueAnalysisService = class _TopicDoormatIssueAnalysisService {
       rows.push({
         include: true,
         rowType: "section",
-        severity: "Medium",
+        severity: "Low",
         doormat: this.buildTopicDoormatSectionLabel(analysis.sectionIndex, doormatSummaries),
         doormatLabel: "All doormats in section",
         issueId: "mixed-description-style-in-section",
@@ -34172,10 +34302,11 @@ var ComponentGuidanceComponent = class _ComponentGuidanceComponent {
       this.updateTopicDoormatRowHealth("unknown");
       const analysisStart = performance.now();
       try {
-        const doormatSummaries = yield this.topicDoormatExtractor.enrichDestinationContext(extractedDoormatSummaries, uploadData);
+        const pageLanguage = this.topicDoormatExtractor.detectPageLanguage(doc, uploadData);
+        const bilingualDoormatSummaries = yield this.topicDoormatExtractor.enrichOppositeLanguageLengths(extractedDoormatSummaries, uploadData, pageLanguage);
+        const doormatSummaries = yield this.topicDoormatExtractor.enrichDestinationContext(bilingualDoormatSummaries, uploadData);
         if (this.uploadState.getWorkingHtml() !== html)
           return;
-        const pageLanguage = this.topicDoormatExtractor.detectPageLanguage(doc, uploadData);
         const hasLegacyTopicDoormatTemplate = this.topicDoormatExtractor.hasLegacyTemplate(doc);
         const mostRequestedLinks = this.topicDoormatExtractor.extractMostRequestedLinks(doc);
         const result = yield this.topicDoormatIssueAnalysis.analyze({
@@ -48429,4 +48560,4 @@ ${custom}` : promptBody;
 export {
   PageAssistantCompareComponent
 };
-//# sourceMappingURL=chunk-XA7QRODV.js.map
+//# sourceMappingURL=chunk-3QA2I5GB.js.map
