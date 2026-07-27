@@ -21511,7 +21511,10 @@ var SkillManagerService = class _SkillManagerService {
   scoreSkill(skill, request, normalizedQuery, queryTokens) {
     let score = 0;
     const reasons = [];
-    if (request.promptKey && (skill.promptKeys ?? []).includes(request.promptKey)) {
+    if (request.promptKey && skill.promptKeys?.length) {
+      if (!skill.promptKeys.includes(request.promptKey)) {
+        return { skill, score: -1e3, reasons: [`promptKeyMismatch:${request.promptKey}`] };
+      }
       score += 4;
       reasons.push(`promptKey:${request.promptKey}`);
     }
@@ -21522,7 +21525,7 @@ var SkillManagerService = class _SkillManagerService {
         score += 3;
         reasons.push(`outputMode:${requestedOutputMode}`);
       } else {
-        score -= 2;
+        return { skill, score: -1e3, reasons: [`outputModeMismatch:${requestedOutputMode}`] };
       }
     }
     const triggerHits = (skill.triggerPhrases ?? []).filter((phrase) => normalizedQuery.includes(this.normalize(phrase)));
@@ -24908,11 +24911,58 @@ var AlertRewriteOrchestratorService = class _AlertRewriteOrchestratorService {
   }], null, null);
 })();
 
+// src/app/views/page-assistant/services/topic-doormats/topic-doormat-analysis-state.service.ts
+var TopicDoormatAnalysisStateService = class _TopicDoormatAnalysisStateService {
+  analyzedHtml = signal("");
+  issueRows = signal([]);
+  responseReceived = signal(false);
+  getAnalyzedHtml = computed(() => this.analyzedHtml());
+  getIssueRows = computed(() => this.issueRows());
+  hasAnalysis = computed(() => this.responseReceived());
+  setAnalysis(html, rows) {
+    this.analyzedHtml.set(html || "");
+    this.issueRows.set(rows);
+    this.responseReceived.set(true);
+  }
+  clear() {
+    this.analyzedHtml.set("");
+    this.issueRows.set([]);
+    this.responseReceived.set(false);
+  }
+  getSelectedRewriteIssues() {
+    return this.issueRows().filter((row) => row.include && row.issueId !== "no-issues").map((row) => ({
+      rowType: row.rowType,
+      severity: row.severity,
+      issueId: row.issueId,
+      issue: row.issue,
+      recommendation: row.recommendation,
+      evidence: row.evidence || void 0,
+      evidenceMetric: row.evidenceMetric || void 0,
+      sectionIndex: row.sectionIndex,
+      sectionTitle: row.sectionTitle,
+      sectionItemIndex: row.sectionItemIndex,
+      doormatIndex: row.doormatIndex,
+      affectedDoormatIndexes: row.affectedDoormatIndexes,
+      doormatLabel: row.doormatLabel || void 0
+    }));
+  }
+  static \u0275fac = function TopicDoormatAnalysisStateService_Factory(__ngFactoryType__) {
+    return new (__ngFactoryType__ || _TopicDoormatAnalysisStateService)();
+  };
+  static \u0275prov = /* @__PURE__ */ \u0275\u0275defineInjectable({ token: _TopicDoormatAnalysisStateService, factory: _TopicDoormatAnalysisStateService.\u0275fac, providedIn: "root" });
+};
+(() => {
+  (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(TopicDoormatAnalysisStateService, [{
+    type: Injectable,
+    args: [{ providedIn: "root" }]
+  }], null, null);
+})();
+
 // src/app/views/page-assistant/data/ai-prompts.constants.ts
 var PROMPT_BASE_URL = new URL("ai-prompts/", document.baseURI);
 var promptFiles = {
   [PromptKey.Headings]: new URL("headings.txt", PROMPT_BASE_URL).toString(),
-  [PromptKey.Doormats]: new URL("doormats.txt", PROMPT_BASE_URL).toString(),
+  [PromptKey.Doormats]: new URL("unused-legacy-doormats.txt", PROMPT_BASE_URL).toString(),
   [PromptKey.PlainLanguage]: new URL("plain-language.txt", PROMPT_BASE_URL).toString()
 };
 var commsObjectivePath = new URL("comms-objective.txt", PROMPT_BASE_URL).toString();
@@ -27808,7 +27858,7 @@ var AiOptionsComponent = class _AiOptionsComponent {
   selectedPrompts = [];
   promptOptions = [
     { id: PromptKey.Headings, label: "page.ai-options.prompt.Headings", disabled: false },
-    { id: PromptKey.Doormats, label: "page.ai-options.prompt.Doormats", disabled: true },
+    { id: PromptKey.Doormats, label: "page.ai-options.prompt.Doormats", disabled: false },
     { id: PromptKey.PlainLanguage, label: "page.ai-options.prompt.PlainLanguage", disabled: false },
     { id: PromptKey.AlertsRecommendations, label: "page.ai-options.prompt.Alerts", disabled: false }
   ];
@@ -34088,6 +34138,7 @@ var ComponentGuidanceComponent = class _ComponentGuidanceComponent {
   topicDoormatExtractor = inject(TopicDoormatExtractorService);
   topicDoormatIssueAnalysis = inject(TopicDoormatIssueAnalysisService);
   topicDoormatPresenter = inject(TopicDoormatPresenterService);
+  topicDoormatAnalysisState = inject(TopicDoormatAnalysisStateService);
   alertIssuesSub;
   lastGuidanceRevision = -1;
   lastExpandedAlertAnalysisHtml = "";
@@ -34291,6 +34342,7 @@ var ComponentGuidanceComponent = class _ComponentGuidanceComponent {
     this.topicDoormatIssueGroups = [];
     this.topicDoormatIssueCategories = [];
     this.topicDoormatAnalyzedHtml = "";
+    this.topicDoormatAnalysisState.clear();
     this.updateTopicDoormatRowHealth("unknown");
   }
   getGuidanceSortRank(nameKey, id) {
@@ -34541,6 +34593,7 @@ var ComponentGuidanceComponent = class _ComponentGuidanceComponent {
         }
         this.topicDoormatIssueRows = result.rows;
         this.topicDoormatAnalyzedHtml = html;
+        this.topicDoormatAnalysisState.setAnalysis(html, this.topicDoormatIssueRows);
         this.topicDoormatIssueGroups = this.buildTopicDoormatIssueGroups(this.topicDoormatIssueRows);
         this.updateTopicDoormatSummaryState();
         this.topicDoormatIssueAnalysis.debug("response parsed", {
@@ -35349,7 +35402,7 @@ var ComponentGuidanceComponent = class _ComponentGuidanceComponent {
   }] });
 })();
 (() => {
-  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(ComponentGuidanceComponent, { className: "ComponentGuidanceComponent", filePath: "app/views/page-assistant/components/problems/component-guidance/component-guidance.component.ts", lineNumber: 193 });
+  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(ComponentGuidanceComponent, { className: "ComponentGuidanceComponent", filePath: "app/views/page-assistant/components/problems/component-guidance/component-guidance.component.ts", lineNumber: 194 });
 })();
 
 // src/app/views/page-assistant/components/problems/seo.component.ts
@@ -47077,6 +47130,7 @@ var PageAssistantCompareComponent = class _PageAssistantCompareComponent {
   alertAi = inject(AlertAiService);
   alertContext = inject(AlertContextService);
   alertRewriteOrchestrator = inject(AlertRewriteOrchestratorService);
+  topicDoormatAnalysisState = inject(TopicDoormatAnalysisStateService);
   openRouter = inject(OpenRouterService);
   skillManager = inject(SkillManagerService);
   urlDataService = inject(UrlDataService);
@@ -47430,6 +47484,20 @@ var PageAssistantCompareComponent = class _PageAssistantCompareComponent {
   getPromptForKey(key2) {
     return __async(this, null, function* () {
       const custom = this.customPromptText.trim();
+      if (key2 === PromptKey.Doormats) {
+        const composed = yield this.skillManager.composePrompt({
+          basePrompt: "Return the full HTML input with only the doormat section updated. Do not remove, reorder, or rewrite unrelated sections. Preserve page title, alerts, headings, and all other components exactly as provided. Return only updated HTML code with no other commentary.",
+          queryText: this.buildSkillQueryText(key2, custom),
+          promptKey: key2,
+          outputMode: "html",
+          includeReferences: true,
+          includeAssets: false,
+          requireSkill: true
+        });
+        return custom ? `${composed.prompt}
+
+${custom}` : composed.prompt;
+      }
       if (key2 === PromptKey.AlertsIssues || key2 === PromptKey.AlertsRecommendations) {
         const composed = yield this.skillManager.composePrompt({
           basePrompt: "",
@@ -47457,7 +47525,7 @@ ${custom}` : promptBody;
   buildSkillQueryText(key2, custom) {
     const promptIntents = {
       [PromptKey.Headings]: "heading hierarchy scanability h1 h2 h3",
-      [PromptKey.Doormats]: "doormat overview list content design",
+      [PromptKey.Doormats]: "rewrite topic doormats replacement updated html doormat overview list content design",
       [PromptKey.PlainLanguage]: "plain language simplify readability rewrite",
       [PromptKey.AlertsIssues]: "analyze alert issues wcag accessibility content design",
       [PromptKey.AlertsRecommendations]: "rewrite canada.ca alerts and provide corrected output"
@@ -47557,6 +47625,36 @@ ${custom}` : promptBody;
     if (parsed && typeof parsed === "object")
       return true;
     return /"(?:rewrittenAlertHtml|rewritten_alert_html|rewrittenAlert|rewritten_alert|appliedDirectives|applied_directives|replacements|issues)"\s*:/i.test(stripped);
+  }
+  buildDoormatRewriteUserContent(html) {
+    const selectedIssues = this.topicDoormatAnalysisState.getSelectedRewriteIssues();
+    const analyzedHtml = this.topicDoormatAnalysisState.getAnalyzedHtml();
+    const issueAnalysisStatus = this.topicDoormatAnalysisState.hasAnalysis() && analyzedHtml === html ? selectedIssues.length ? "selected-issues" : "analysis-available-no-selected-issues" : "not-available-for-current-html";
+    return JSON.stringify({
+      page_html: html,
+      topic_doormat_issue_analysis: {
+        status: issueAnalysisStatus,
+        instruction: "Use selected issues as rewrite priorities. Fix them when possible without violating the rewrite rules. If an issue cannot be fixed safely, preserve the safest wording and avoid creating new issues.",
+        selected_issues: selectedIssues.map((issue) => this.toDoormatRewriteIssuePayload(issue))
+      }
+    });
+  }
+  toDoormatRewriteIssuePayload(issue) {
+    return {
+      row_type: issue.rowType,
+      severity: issue.severity,
+      issue_id: issue.issueId,
+      issue: issue.issue,
+      recommendation: issue.recommendation,
+      evidence: issue.evidence,
+      evidence_metric: issue.evidenceMetric,
+      section_index: issue.sectionIndex,
+      section_title: issue.sectionTitle,
+      section_item_index: issue.sectionItemIndex,
+      doormat_index: issue.doormatIndex,
+      affected_doormat_indexes: issue.affectedDoormatIndexes,
+      doormat_label: issue.doormatLabel
+    };
   }
   // UI-facing summary of the alert rewrite options currently active.
   buildAlertRewriteStatusMessage() {
@@ -47712,8 +47810,9 @@ ${custom}` : promptBody;
         const uploadData = this.uploadState.getUploadData();
         const isAlertsRecommendations = this.selectedPromptKey === PromptKey.AlertsRecommendations;
         const isAlertsIssues = this.selectedPromptKey === PromptKey.AlertsIssues;
+        const isDoormats = this.selectedPromptKey === PromptKey.Doormats;
         const isAlertFlow = isAlertsRecommendations || isAlertsIssues;
-        const html = isAlertFlow ? this.uploadState.getWorkingHtml() : uploadData?.originalHtml;
+        const html = isAlertFlow || isDoormats ? this.uploadState.getWorkingHtml() : uploadData?.originalHtml;
         if (!html)
           throw new Error("No HTML to send");
         const promptKeyForRequest = isAlertsRecommendations ? PromptKey.AlertsIssues : this.selectedPromptKey;
@@ -47738,11 +47837,12 @@ ${custom}` : promptBody;
           interactiveResultLeadIns: this.getInteractiveResultLeadIns()
         }) : html;
         const alertsIssuesUserContent = useCompactAlertsPageContext ? JSON.stringify(this.alertContext.buildCompactAlertsIssuesPayload(html)) : sanitizedAlertsIssuesHtml;
+        const userContent = promptKeyForRequest === PromptKey.Doormats ? this.buildDoormatRewriteUserContent(html) : alertsIssuesUserContent;
         const payload = {
           models: this.buildModelRotation(model),
           messages: [
             { role: "system", content: prompt },
-            { role: "user", content: alertsIssuesUserContent }
+            { role: "user", content: userContent }
           ],
           temperature: 0,
           provider: {
@@ -48780,9 +48880,9 @@ ${custom}` : promptBody;
   }] });
 })();
 (() => {
-  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(PageAssistantCompareComponent, { className: "PageAssistantCompareComponent", filePath: "app/views/page-assistant/page-assistant.component.ts", lineNumber: 97 });
+  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(PageAssistantCompareComponent, { className: "PageAssistantCompareComponent", filePath: "app/views/page-assistant/page-assistant.component.ts", lineNumber: 101 });
 })();
 export {
   PageAssistantCompareComponent
 };
-//# sourceMappingURL=chunk-7LD444OQ.js.map
+//# sourceMappingURL=chunk-KIPPEZHU.js.map
