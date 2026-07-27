@@ -107,6 +107,36 @@ describe('TopicDoormatExtractorService', () => {
     expect(summaries[0].linkTextCharacterCount).toBe(14);
   });
 
+  it('excludes labels from split heading and description character counts', () => {
+    const doc = service.parseHtmlDocument(`
+      <main>
+        <h2>Benefits</h2>
+        <div class="gc-srvinfo">
+          <div class="col-lg-4 col-md-6">
+            <h3 class="h5">
+              <a href="/en/benefits/one.html">Benefit one</a>
+              <a href="/en/benefits/one.html" class="label label-info">New</a>
+            </h3>
+            <p>
+              Find benefit one information
+              <span class="label label-warning">Updated</span>
+            </p>
+          </div>
+        </div>
+      </main>
+    `);
+
+    expect(doc).not.toBeNull();
+    const summaries = service.extractSummaries(doc as Document);
+
+    expect(summaries.length).toBe(1);
+    expect(summaries[0].linkText).toBe('Benefit one');
+    expect(summaries[0].description).toBe('Find benefit one information');
+    expect(summaries[0].labels).toEqual(['New', 'Updated']);
+    expect(summaries[0].linkTextCharacterCount).toBe(11);
+    expect(summaries[0].descriptionCharacterCount).toBe(28);
+  });
+
   it('detects French pages from metadata and extracts Most requested links', () => {
     const doc = service.parseHtmlDocument(`
       <html>
@@ -172,6 +202,80 @@ describe('TopicDoormatExtractorService', () => {
     ]);
     expect(enriched[0].destinationContextStatus).toBe('available');
     expect(enriched[0].destinationHttpStatus).toBe(200);
+  });
+
+  it('adds opposite-language length counts from the alternate page by section item position', async () => {
+    fetchService.fetchContentWithResponse.and.callFake((url: string) => {
+      expect(url).toBe('https://www.canada.ca/fr/services/prestations.html');
+      return Promise.resolve({
+        document: new DOMParser().parseFromString(
+          `<html><body><main>
+            <h2>Prestations</h2>
+            <div class="gc-srvinfo">
+              <div>
+                <h3><a href="/fr/prestations/un.html">Nom de prestation un tres long</a></h3>
+                <p>
+                  Description francaise plus longue pour la prestation un
+                  <span class="label label-warning">Mise a jour</span>
+                </p>
+              </div>
+              <div>
+                <h3><a href="/fr/prestations/deux.html">Prestation deux</a></h3>
+                <p>Description deux</p>
+              </div>
+            </div>
+          </main></body></html>`,
+          'text/html',
+        ),
+        status: 200,
+        statusText: 'OK',
+        url,
+      });
+    });
+
+    const enriched = await service.enrichOppositeLanguageLengths(
+      [
+        {
+          index: 1,
+          linkText: 'Benefit one',
+          href: '/en/benefits/one.html',
+          description: 'Benefit one description',
+          headingLevel: 3,
+          itemLinkCount: 1,
+          headingLinkCount: 1,
+          descriptionLinkCount: 0,
+          hasSplitHeadingLink: false,
+          hasDescriptionLink: false,
+          hasDescriptionIconOrImage: false,
+          hasDescriptionSpecialFormatting: false,
+          rawItemText: '',
+          linkTextCharacterCount: 11,
+          descriptionCharacterCount: 23,
+          sectionIndex: 1,
+          sectionTitle: 'Benefits',
+          sectionItemIndex: 1,
+          sectionDoormatCount: 2,
+        },
+      ],
+      {
+        originalUrl: 'https://www.canada.ca/en/services/benefits.html',
+        metadata: [
+          {
+            name: 'alternate',
+            content: 'https://www.canada.ca/fr/services/prestations.html',
+          },
+        ],
+      },
+      'en',
+    );
+
+    expect(enriched[0]).toEqual(
+      jasmine.objectContaining({
+        oppositeLanguage: 'fr',
+        oppositeLanguageLinkTextCharacterCount: 30,
+        oppositeLanguageDescriptionCharacterCount: 55,
+      }),
+    );
   });
 
   it('keeps the destination HTTP status when destination context fetch fails', async () => {

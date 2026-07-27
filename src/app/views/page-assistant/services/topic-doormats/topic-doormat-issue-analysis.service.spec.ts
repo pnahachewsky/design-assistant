@@ -68,10 +68,16 @@ class HttpClientStub {
 class TranslateServiceStub {
   instant(key: string, params?: Record<string, unknown>): string {
     if (key.includes('length.link.recommendation')) {
-      return `Shorten the link name to ${params?.['limit']} characters.`;
+      return 'Ensure both French and English are close to the ideal length.';
+    }
+    if (key.includes('length.link.issue')) {
+      return 'Link is too long in at least one language';
     }
     if (key.includes('length.description.recommendation')) {
-      return `Shorten the description to ${params?.['limit']} characters.`;
+      return 'Ensure the French and English are both within 120 characters.';
+    }
+    if (key.includes('length.description.issue')) {
+      return 'Description is too long in at least one language';
     }
     if (key.includes('brokenLink.httpStatusEvidence')) {
       return `The destination request returned HTTP ${params?.['status']}.`;
@@ -1028,14 +1034,14 @@ describe('TopicDoormatIssueAnalysisService', () => {
     );
     expect(result.rows).toContain(
       jasmine.objectContaining({
-        issue: 'Opposite language link text may be too long',
+        issue: 'Link is too long in at least one language',
         severity: 'Low',
       }),
     );
     expect(result.rows.some((row) => row.issueId === 'no-issues')).toBeFalse();
   });
 
-  it('separates opposite-language description warnings from too-long descriptions', async () => {
+  it('combines description length findings into one section row', async () => {
     openRouter.call.and.resolveTo({
       choices: [{ message: { content: '' } }],
     });
@@ -1076,36 +1082,128 @@ describe('TopicDoormatIssueAnalysisService', () => {
     const descriptionRows = result.rows.filter(
       (row) => row.issueId === 'description-too-long',
     );
-    expect(descriptionRows.length).toBe(2);
+    expect(descriptionRows.length).toBe(1);
     expect(descriptionRows[0]).toEqual(
       jasmine.objectContaining({
         rowType: 'section',
-        severity: 'Medium',
-        issue: 'Opposite language description may be too long',
+        severity: 'High',
+        issue: 'Description is too long in at least one language',
         evidenceItems: [
           {
             label: 'Doormat 2',
-            metric: '96/95 characters',
+            metric: '96',
+            metricParts: [{ metric: '96', severity: 'Low' }],
             severity: 'Low',
           },
           {
             label: 'Doormat 3',
-            metric: '111/95 characters',
+            metric: '111',
+            metricParts: [{ metric: '111', severity: 'Medium' }],
             severity: 'Medium',
+          },
+          {
+            label: 'Doormat 4',
+            metric: '121',
+            metricParts: [{ metric: '121', severity: 'High' }],
+            severity: 'High',
           },
         ],
       }),
     );
-    expect(descriptionRows[1]).toEqual(
+  });
+
+  it('uses paired bilingual counts for length decisions when available', async () => {
+    openRouter.call.and.resolveTo({
+      choices: [{ message: { content: '' } }],
+    });
+
+    const result = await service.analyze({
+      doormatSummaries: [
+        summary({
+          index: 1,
+          sectionItemIndex: 1,
+          linkText: 'English warning fallback length',
+          linkTextCharacterCount: 40,
+          oppositeLanguage: 'fr',
+          oppositeLanguageLinkTextCharacterCount: 44,
+          descriptionCharacterCount: 100,
+          oppositeLanguageDescriptionCharacterCount: 119,
+        }),
+        summary({
+          index: 2,
+          sectionItemIndex: 2,
+          linkText: 'Bilingual link issue',
+          linkTextCharacterCount: 42,
+          oppositeLanguage: 'fr',
+          oppositeLanguageLinkTextCharacterCount: 61,
+          descriptionCharacterCount: 90,
+          oppositeLanguageDescriptionCharacterCount: 125,
+        }),
+        summary({
+          index: 3,
+          sectionItemIndex: 3,
+          linkText: 'Both bilingual link issue',
+          linkTextCharacterCount: 46,
+          oppositeLanguage: 'fr',
+          oppositeLanguageLinkTextCharacterCount: 50,
+          descriptionCharacterCount: 120,
+          oppositeLanguageDescriptionCharacterCount: 120,
+        }),
+      ],
+      pageLanguage: 'en',
+      hasLegacyTopicDoormatTemplate: false,
+      mostRequestedLinks: [],
+      selectedModel: 'selected-model',
+    });
+
+    const linkRows = result.rows.filter(
+      (row) => row.issueId === 'link-name-too-long',
+    );
+    const descriptionRows = result.rows.filter(
+      (row) => row.issueId === 'description-too-long',
+    );
+
+    expect(linkRows.length).toBe(1);
+    expect(linkRows[0]).toEqual(
       jasmine.objectContaining({
-        rowType: 'section',
-        severity: 'High',
-        issue: 'Description too long',
+        issue: 'Link is too long in at least one language',
+        severity: 'Medium',
         evidenceItems: [
           {
-            label: 'Doormat 4',
-            metric: '121/95 characters',
-            severity: 'High',
+            label: 'Doormat 2',
+            metric: 'EN 42/45; FR 61/45',
+            metricParts: [
+              { metric: 'EN 42/45', severity: 'OK' },
+              { metric: 'FR 61/45', severity: 'Medium' },
+            ],
+            severity: 'Medium',
+          },
+          {
+            label: 'Doormat 3',
+            metric: 'EN 46/45; FR 50/45',
+            metricParts: [
+              { metric: 'EN 46/45', severity: 'Low' },
+              { metric: 'FR 50/45', severity: 'Low' },
+            ],
+            severity: 'Low',
+          },
+        ],
+      }),
+    );
+    expect(descriptionRows.length).toBe(1);
+    expect(descriptionRows[0]).toEqual(
+      jasmine.objectContaining({
+        issue: 'Description is too long in at least one language',
+        severity: 'Low',
+        evidenceItems: [
+          {
+            label: 'Doormat 2',
+            metric: 'EN 90; FR 125',
+            metricParts: [
+              { metric: 'EN 90', severity: 'OK' },
+              { metric: 'FR 125', severity: 'Low' },
+            ],
+            severity: 'Low',
           },
         ],
       }),

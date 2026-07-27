@@ -31,6 +31,12 @@ export interface TopicDoormatIssueRow {
 export interface TopicDoormatEvidenceItem {
   label: string;
   metric: string;
+  metricParts?: TopicDoormatEvidenceMetricPart[];
+  severity?: string;
+}
+
+export interface TopicDoormatEvidenceMetricPart {
+  metric: string;
   severity?: string;
 }
 
@@ -74,6 +80,9 @@ export interface TopicDoormatSummary {
   rawItemText: string;
   linkTextCharacterCount: number;
   descriptionCharacterCount: number;
+  oppositeLanguage?: TopicDoormatPageLanguage;
+  oppositeLanguageLinkTextCharacterCount?: number;
+  oppositeLanguageDescriptionCharacterCount?: number;
   sectionIndex: number;
   sectionTitle: string;
   sectionItemIndex: number;

@@ -46,6 +46,7 @@ import { TopicDoormatExtractorService } from '../../../services/topic-doormats/t
 import { TopicDoormatIssueAnalysisService } from '../../../services/topic-doormats/topic-doormat-issue-analysis.service';
 import { TopicDoormatPresenterService } from '../../../services/topic-doormats/topic-doormat-presenter.service';
 import {
+  TopicDoormatEvidenceItem,
   TopicDoormatIssueGroup,
   TopicDoormatIssueRow,
   TopicDoormatIssueSummary,
@@ -732,15 +733,21 @@ export class ComponentGuidanceComponent implements OnInit, OnDestroy {
     const analysisStart = performance.now();
 
     try {
-      const doormatSummaries = await this.topicDoormatExtractor.enrichDestinationContext(
-        extractedDoormatSummaries,
-        uploadData,
-      );
-      if (this.uploadState.getWorkingHtml() !== html) return;
       const pageLanguage = this.topicDoormatExtractor.detectPageLanguage(
         doc,
         uploadData,
       );
+      const bilingualDoormatSummaries =
+        await this.topicDoormatExtractor.enrichOppositeLanguageLengths(
+          extractedDoormatSummaries,
+          uploadData,
+          pageLanguage,
+        );
+      const doormatSummaries = await this.topicDoormatExtractor.enrichDestinationContext(
+        bilingualDoormatSummaries,
+        uploadData,
+      );
+      if (this.uploadState.getWorkingHtml() !== html) return;
       const hasLegacyTopicDoormatTemplate =
         this.topicDoormatExtractor.hasLegacyTemplate(doc);
       const mostRequestedLinks =
@@ -989,6 +996,32 @@ export class ComponentGuidanceComponent implements OnInit, OnDestroy {
 
   isNoIssueRow(issue: TopicDoormatIssueRow): boolean {
     return issue.issueId === 'no-issues';
+  }
+
+  evidenceMetricParts(
+    item:
+      | Pick<TopicDoormatEvidenceItem, 'metric' | 'metricParts' | 'severity'>
+      | string
+      | undefined
+      | null,
+  ): { metric: string; severity?: string }[] {
+    if (typeof item === 'string' || !item) {
+      return (item || '')
+        .split(';')
+        .map((part) => part.trim())
+        .filter(Boolean)
+        .map((metric) => ({ metric }));
+    }
+
+    if (item.metricParts?.length) {
+      return item.metricParts;
+    }
+
+    return (item.metric || '')
+      .split(';')
+      .map((part) => part.trim())
+      .filter(Boolean)
+      .map((metric) => ({ metric, severity: item.severity }));
   }
 
   alertHealthLabel(severity: string | null): string {

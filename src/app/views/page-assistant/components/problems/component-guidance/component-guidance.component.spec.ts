@@ -30,6 +30,79 @@ describe('ComponentGuidanceComponent', () => {
     expect(component).toBeTruthy();
   });
 
+  it('splits bilingual evidence metrics into separate pill labels', () => {
+    expect(
+      component.evidenceMetricParts({
+        metric: 'EN 42/45; FR 61/45',
+        metricParts: [
+          { metric: 'EN 42/45', severity: 'OK' },
+          { metric: 'FR 61/45', severity: 'Medium' },
+        ],
+      }),
+    ).toEqual([
+      { metric: 'EN 42/45', severity: 'OK' },
+      { metric: 'FR 61/45', severity: 'Medium' },
+    ]);
+    expect(
+      component.evidenceMetricParts({ metric: '96/95', severity: 'Low' }),
+    ).toEqual([{ metric: '96/95', severity: 'Low' }]);
+  });
+
+  it('renders evidence metric pills from bilingual metric parts', () => {
+    component.rows = [
+      {
+        order: 1,
+        component: 'Topic doormats',
+        url: 'topic-doormats',
+        health: 'moderate',
+        __id: component.topicDoormatsId,
+      } as any,
+    ];
+    component.expandedRows = { 'topic-doormats': true };
+    component.topicDoormatIssuesResponseReceived = true;
+    component.topicDoormatIssueGroups = [
+      {
+        sectionIndex: 1,
+        sectionTitle: 'Benefits',
+        doormatCount: 1,
+        doormatRows: [],
+        sectionRows: [
+          {
+            include: true,
+            rowType: 'section',
+            severity: 'Medium',
+            doormat: 'Section 1',
+            doormatLabel: 'Affected doormats in section',
+            issueId: 'link-name-too-long',
+            issue: 'Link is too long in at least one language',
+            evidence: '',
+            evidenceItems: [
+              {
+                label: 'Doormat 2',
+                metric: 'EN 42/45; FR 61/45',
+                metricParts: [
+                  { metric: 'EN 42/45', severity: 'OK' },
+                  { metric: 'FR 61/45', severity: 'Medium' },
+                ],
+                severity: 'Medium',
+              },
+            ],
+            recommendation: 'Recommendation',
+            sectionIndex: 1,
+            sectionTitle: 'Benefits',
+          },
+        ],
+      },
+    ];
+
+    fixture.detectChanges();
+
+    const text = fixture.nativeElement.textContent as string;
+    expect(text).toContain('Doormat 2:');
+    expect(text).toContain('EN 42/45');
+    expect(text).toContain('FR 61/45');
+  });
+
   it('synchronizes the Topic doormat guidance row with working HTML', () => {
     const topicHtml = `
       <main>

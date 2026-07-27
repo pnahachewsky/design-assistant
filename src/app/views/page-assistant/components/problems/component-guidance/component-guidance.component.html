@@ -320,11 +320,13 @@
                                 @for (item of issue.evidenceItems; track item.label + item.metric) {
                                   <li>
                                     <span>{{ item.label }}:</span>
-                                    <span
-                                      class="chip topic-doormat-evidence-metric"
-                                      [ngClass]="severityChip(item.severity || issue.severity)">
-                                      {{ item.metric }}
-                                    </span>
+                                    @for (metric of evidenceMetricParts(item); track metric.metric) {
+                                      <span
+                                        class="chip topic-doormat-evidence-metric"
+                                        [ngClass]="severityChip(metric.severity || item.severity || issue.severity)">
+                                        {{ metric.metric }}
+                                      </span>
+                                    }
                                   </li>
                                 }
                               </ul>
@@ -405,11 +407,13 @@
                                 @for (item of issue.evidenceItems; track item.label + item.metric) {
                                   <li>
                                     <span>{{ item.label }}:</span>
-                                    <span
-                                      class="chip topic-doormat-evidence-metric"
-                                      [ngClass]="severityChip(item.severity || issue.severity)">
-                                      {{ item.metric }}
-                                    </span>
+                                    @for (metric of evidenceMetricParts(item); track metric.metric) {
+                                      <span
+                                        class="chip topic-doormat-evidence-metric"
+                                        [ngClass]="severityChip(metric.severity || item.severity || issue.severity)">
+                                        {{ metric.metric }}
+                                      </span>
+                                    }
                                   </li>
                                 }
                               </ul>

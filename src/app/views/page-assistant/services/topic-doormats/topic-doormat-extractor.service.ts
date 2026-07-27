@@ -65,6 +65,54 @@ export class TopicDoormatExtractorService {
     );
   }
 
+  async enrichOppositeLanguageLengths(
+    doormatSummaries: TopicDoormatSummary[],
+    uploadData: TopicDoormatUploadData,
+    pageLanguage: TopicDoormatPageLanguage,
+  ): Promise<TopicDoormatSummary[]> {
+    if (!doormatSummaries.length) return doormatSummaries;
+    const alternateUrl = this.resolveAlternateLanguageUrl(uploadData);
+    if (!alternateUrl) return doormatSummaries;
+
+    try {
+      const response = await this.fetchService.fetchContentWithResponse(
+        alternateUrl,
+        'both',
+        1,
+        'none',
+      );
+      const oppositeSummaries = this.extractSummaries(response.document);
+      if (!oppositeSummaries.length) return doormatSummaries;
+
+      const oppositeByPosition = new Map<string, TopicDoormatSummary>();
+      oppositeSummaries.forEach((summary) => {
+        oppositeByPosition.set(
+          this.getSectionItemKey(summary.sectionIndex, summary.sectionItemIndex),
+          summary,
+        );
+      });
+
+      const oppositeLanguage: TopicDoormatPageLanguage =
+        pageLanguage === 'fr' ? 'en' : 'fr';
+      return doormatSummaries.map((summary) => {
+        const opposite = oppositeByPosition.get(
+          this.getSectionItemKey(summary.sectionIndex, summary.sectionItemIndex),
+        );
+        if (!opposite) return summary;
+        return {
+          ...summary,
+          oppositeLanguage,
+          oppositeLanguageLinkTextCharacterCount:
+            opposite.linkTextCharacterCount,
+          oppositeLanguageDescriptionCharacterCount:
+            opposite.descriptionCharacterCount,
+        };
+      });
+    } catch {
+      return doormatSummaries;
+    }
+  }
+
   detectPageLanguage(
     doc: Document,
     uploadData?: TopicDoormatUploadData,
@@ -124,11 +172,11 @@ export class TopicDoormatExtractorService {
         const headingLinkCount = heading
           ? heading.querySelectorAll('a[href]').length
           : 1;
-        const headingText = this.cleanVisibleText(heading?.textContent);
+        const headingText = this.cleanVisibleElementText(heading);
         const linkText =
           this.cleanVisibleText(linkTextOverride) ||
           (headingLinkCount > 1 ? headingText : '') ||
-          this.cleanVisibleText(link.textContent);
+          this.cleanVisibleElementText(link);
         const href = link.getAttribute('href') || '';
         const key = item ? this.getItemKey(item) : `${href}|${linkText}`;
         if (!linkText && !href) return;
@@ -152,9 +200,7 @@ export class TopicDoormatExtractorService {
         const sectionRows = sectionSummaries.get(sectionIndex) ?? [];
         sectionSummaries.set(sectionIndex, sectionRows);
         const descriptionElement = item?.querySelector('p') ?? null;
-        const description = this.cleanVisibleText(
-          descriptionElement?.textContent,
-        );
+        const description = this.cleanVisibleElementText(descriptionElement);
         const summary: TopicDoormatSummary = {
           index: summaries.length + 1,
           linkText,
@@ -176,7 +222,7 @@ export class TopicDoormatExtractorService {
             !!descriptionElement?.querySelector(
               'strong, b, em, i, ul, ol, li, mark, code',
             ),
-          rawItemText: this.cleanVisibleText(item?.textContent).slice(0, 500),
+          rawItemText: this.cleanVisibleElementText(item).slice(0, 500),
           linkTextCharacterCount: linkText.length,
           descriptionCharacterCount: description.length,
           sectionIndex,
@@ -202,7 +248,7 @@ export class TopicDoormatExtractorService {
           link,
           wrapper,
           this.findItem(link, wrapper),
-          headingLinkCount > 1 ? (heading.textContent ?? '') : '',
+          headingLinkCount > 1 ? this.cleanVisibleElementText(heading) : '',
         );
       });
 
@@ -226,7 +272,7 @@ export class TopicDoormatExtractorService {
     if (!item) return [];
     const labels = Array.from(
       item.querySelectorAll<HTMLElement>(
-        '.label, .badge, [class*="label-"], [class*="badge-"]',
+        this.getDoormatLabelSelector(),
       ),
     )
       .map((element) => this.cleanVisibleText(element.textContent))
@@ -291,6 +337,32 @@ export class TopicDoormatExtractorService {
     } catch {
       return '';
     }
+  }
+
+  private resolveAlternateLanguageUrl(
+    uploadData?: TopicDoormatUploadData,
+  ): string {
+    const alternate = this.cleanString(
+      uploadData?.metadata?.find((item) => item.name === 'alternate')?.content,
+    );
+    if (!alternate) return '';
+    const pageUrl =
+      this.cleanString(uploadData?.originalUrl) ||
+      this.cleanString(uploadData?.modifiedUrl);
+    try {
+      const resolved = pageUrl
+        ? new URL(alternate, pageUrl)
+        : new URL(alternate);
+      if (resolved.protocol !== 'https:') return '';
+      resolved.hash = '';
+      return resolved.toString();
+    } catch {
+      return '';
+    }
+  }
+
+  private getSectionItemKey(sectionIndex: number, sectionItemIndex: number): string {
+    return `${sectionIndex}|${sectionItemIndex}`;
   }
 
   private async fetchDestinationContext(
@@ -701,6 +773,21 @@ export class TopicDoormatExtractorService {
 
   private cleanString(value: unknown): string {
     return typeof value === 'string' ? value.trim() : '';
+  }
+
+  private cleanVisibleElementText(
+    element: Element | null | undefined,
+  ): string {
+    if (!element) return '';
+    const clone = element.cloneNode(true) as Element;
+    clone
+      .querySelectorAll(this.getDoormatLabelSelector())
+      .forEach((label) => label.remove());
+    return this.cleanVisibleText(clone.textContent);
+  }
+
+  private getDoormatLabelSelector(): string {
+    return '.label, .badge, [class*="label-"], [class*="badge-"]';
   }
 
   private cleanVisibleText(value: string | null | undefined): string {
