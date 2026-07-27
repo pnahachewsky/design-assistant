@@ -29611,8 +29611,8 @@ var TopicDoormatExtractorService = class _TopicDoormatExtractorService {
       const addSummary = (link, wrapper, item, linkTextOverride = "") => {
         const heading = link.closest("h2, h3");
         const headingLinkCount = heading ? heading.querySelectorAll("a[href]").length : 1;
-        const headingText = this.cleanVisibleText(heading?.textContent);
-        const linkText = this.cleanVisibleText(linkTextOverride) || (headingLinkCount > 1 ? headingText : "") || this.cleanVisibleText(link.textContent);
+        const headingText = this.cleanVisibleElementText(heading);
+        const linkText = this.cleanVisibleText(linkTextOverride) || (headingLinkCount > 1 ? headingText : "") || this.cleanVisibleElementText(link);
         const href = link.getAttribute("href") || "";
         const key2 = item ? this.getItemKey(item) : `${href}|${linkText}`;
         if (!linkText && !href)
@@ -29631,7 +29631,7 @@ var TopicDoormatExtractorService = class _TopicDoormatExtractorService {
         const sectionRows = sectionSummaries.get(sectionIndex) ?? [];
         sectionSummaries.set(sectionIndex, sectionRows);
         const descriptionElement = item?.querySelector("p") ?? null;
-        const description = this.cleanVisibleText(descriptionElement?.textContent);
+        const description = this.cleanVisibleElementText(descriptionElement);
         const summary = {
           index: summaries.length + 1,
           linkText,
@@ -29646,7 +29646,7 @@ var TopicDoormatExtractorService = class _TopicDoormatExtractorService {
           hasDescriptionLink: !!descriptionElement?.querySelector("a[href]"),
           hasDescriptionIconOrImage: !!descriptionElement?.querySelector('img, svg, i[class*="glyphicon"], i[class*="fa"], span[class*="glyphicon"], span[class*="fa"]'),
           hasDescriptionSpecialFormatting: !!descriptionElement?.querySelector("strong, b, em, i, ul, ol, li, mark, code"),
-          rawItemText: this.cleanVisibleText(item?.textContent).slice(0, 500),
+          rawItemText: this.cleanVisibleElementText(item).slice(0, 500),
           linkTextCharacterCount: linkText.length,
           descriptionCharacterCount: description.length,
           sectionIndex,
@@ -29664,7 +29664,7 @@ var TopicDoormatExtractorService = class _TopicDoormatExtractorService {
           return;
         const wrapper = heading.closest(".gc-srvinfo");
         const headingLinkCount = heading.querySelectorAll("a[href]").length;
-        addSummary(link, wrapper, this.findItem(link, wrapper), headingLinkCount > 1 ? heading.textContent ?? "" : "");
+        addSummary(link, wrapper, this.findItem(link, wrapper), headingLinkCount > 1 ? this.cleanVisibleElementText(heading) : "");
       });
       this.getLegacyLinks(doc).forEach(({ link, wrapper, item }) => {
         addSummary(link, wrapper, item);
@@ -29682,7 +29682,7 @@ var TopicDoormatExtractorService = class _TopicDoormatExtractorService {
   extractDoormatLabels(item) {
     if (!item)
       return [];
-    const labels = Array.from(item.querySelectorAll('.label, .badge, [class*="label-"], [class*="badge-"]')).map((element) => this.cleanVisibleText(element.textContent)).filter(Boolean);
+    const labels = Array.from(item.querySelectorAll(this.getDoormatLabelSelector())).map((element) => this.cleanVisibleText(element.textContent)).filter(Boolean);
     return Array.from(new Set(labels));
   }
   hasCandidates(doc) {
@@ -29972,6 +29972,16 @@ var TopicDoormatExtractorService = class _TopicDoormatExtractorService {
   }
   cleanString(value) {
     return typeof value === "string" ? value.trim() : "";
+  }
+  cleanVisibleElementText(element) {
+    if (!element)
+      return "";
+    const clone = element.cloneNode(true);
+    clone.querySelectorAll(this.getDoormatLabelSelector()).forEach((label) => label.remove());
+    return this.cleanVisibleText(clone.textContent);
+  }
+  getDoormatLabelSelector() {
+    return '.label, .badge, [class*="label-"], [class*="badge-"]';
   }
   cleanVisibleText(value) {
     return (value || "").replace(/\s+/g, " ").trim();
@@ -31348,7 +31358,7 @@ var TopicDoormatIssueAnalysisService = class _TopicDoormatIssueAnalysisService {
       const limit = this.hasTopicDoormatBilingualLinkLength(summary) ? 45 : fallbackLimit;
       return this.getTopicDoormatLinkNameLengthCount(summary) > limit;
     });
-    return this.buildLocalTopicDoormatLengthSectionRows(overLimitSummaries, "link-name-too-long", (summary) => this.getTopicDoormatLinkNameLengthSeverity(summary, pageLanguage), (summary) => this.getTopicDoormatLinkNameLengthIssueLabel(summary, pageLanguage), (summary) => this.buildTopicDoormatLengthMetric(summary, "link-name-too-long", pageLanguage), this.getTopicDoormatLinkNameLengthRecommendation());
+    return this.buildLocalTopicDoormatLengthSectionRows(overLimitSummaries, "link-name-too-long", (summary) => this.getTopicDoormatLinkNameLengthSeverity(summary, pageLanguage), (summary) => this.buildTopicDoormatLengthMetric(summary, "link-name-too-long", pageLanguage), (summary) => this.buildTopicDoormatLengthMetricParts(summary, "link-name-too-long", pageLanguage), this.getTopicDoormatLinkNameLengthRecommendation());
   }
   getTopicDoormatLinkNameLengthSeverity(summary, pageLanguage = "en") {
     const count = this.getTopicDoormatLinkNameLengthCount(summary);
@@ -31372,33 +31382,22 @@ var TopicDoormatIssueAnalysisService = class _TopicDoormatIssueAnalysisService {
       return "Medium";
     return "High";
   }
-  getTopicDoormatLinkNameLengthIssueLabel(summary, pageLanguage = "en") {
-    const count = this.getTopicDoormatLinkNameLengthCount(summary);
-    if (this.hasTopicDoormatBilingualLinkLength(summary)) {
-      return this.buildTopicDoormatBilingualLengthIssueLabel(summary, "link-name-too-long", pageLanguage);
-    }
-    if (pageLanguage === "en" && count <= 45) {
-      return "Opposite language link text may be too long";
-    }
-    return this.getTopicDoormatIssueLabel("link-name-too-long");
-  }
   buildLocalTopicDoormatDescriptionLengthRows(doormatSummaries, pageLanguage) {
     const fallbackLimit = this.getTopicDoormatLengthLimit("description-too-long", pageLanguage);
     const overLimitSummaries = doormatSummaries.filter((summary) => {
       const limit = this.hasTopicDoormatBilingualDescriptionLength(summary) ? 120 : fallbackLimit;
       return this.getTopicDoormatDescriptionLengthCount(summary) > limit;
     });
-    return this.buildLocalTopicDoormatLengthSectionRows(overLimitSummaries, "description-too-long", (summary) => this.getTopicDoormatDescriptionLengthSeverity(summary, pageLanguage), (summary) => this.getTopicDoormatDescriptionLengthIssueLabel(summary, pageLanguage), (summary) => this.buildTopicDoormatLengthMetric(summary, "description-too-long", pageLanguage), this.getTopicDoormatDescriptionLengthRecommendation());
+    return this.buildLocalTopicDoormatLengthSectionRows(overLimitSummaries, "description-too-long", (summary) => this.getTopicDoormatDescriptionLengthSeverity(summary, pageLanguage), (summary) => this.buildTopicDoormatLengthMetric(summary, "description-too-long", pageLanguage), (summary) => this.buildTopicDoormatLengthMetricParts(summary, "description-too-long", pageLanguage), this.getTopicDoormatDescriptionLengthRecommendation());
   }
-  buildLocalTopicDoormatLengthSectionRows(overLimitSummaries, issueId, getSeverity, getIssueLabel, getMetric, recommendation) {
+  buildLocalTopicDoormatLengthSectionRows(overLimitSummaries, issueId, getSeverity, getMetric, getMetricParts, recommendation) {
     const summariesBySectionAndIssue = /* @__PURE__ */ new Map();
     overLimitSummaries.forEach((summary) => {
       const sectionIndex = summary.sectionIndex || 0;
-      const issue = getIssueLabel(summary);
-      const key2 = `${sectionIndex}|${issue}`;
+      const key2 = `${sectionIndex}|${issueId}`;
       const group = summariesBySectionAndIssue.get(key2) ?? {
         sectionIndex,
-        issue,
+        issue: this.getTopicDoormatLengthIssueLabel(issueId),
         summaries: []
       };
       const summaries = group.summaries;
@@ -31410,6 +31409,7 @@ var TopicDoormatIssueAnalysisService = class _TopicDoormatIssueAnalysisService {
         return {
           label: `Doormat ${summary.sectionItemIndex || summary.index}`,
           metric: getMetric(summary),
+          metricParts: getMetricParts(summary),
           severity: getSeverity(summary)
         };
       });
@@ -31462,16 +31462,6 @@ var TopicDoormatIssueAnalysisService = class _TopicDoormatIssueAnalysisService {
       return "Medium";
     return "High";
   }
-  getTopicDoormatDescriptionLengthIssueLabel(summary, pageLanguage = "en") {
-    const count = this.getTopicDoormatDescriptionLengthCount(summary);
-    if (this.hasTopicDoormatBilingualDescriptionLength(summary)) {
-      return this.buildTopicDoormatBilingualLengthIssueLabel(summary, "description-too-long", pageLanguage);
-    }
-    if (pageLanguage === "en" && count <= 120) {
-      return "Opposite language description may be too long";
-    }
-    return this.getTopicDoormatIssueLabel("description-too-long");
-  }
   getTopicDoormatLinkNameLengthCount(summary) {
     const oppositeCount = summary.oppositeLanguageLinkTextCharacterCount;
     return typeof oppositeCount === "number" ? Math.max(summary.linkTextCharacterCount, oppositeCount) : summary.linkTextCharacterCount;
@@ -31498,30 +31488,60 @@ var TopicDoormatIssueAnalysisService = class _TopicDoormatIssueAnalysisService {
     const currentCount = issueId === "link-name-too-long" ? summary.linkTextCharacterCount : summary.descriptionCharacterCount;
     const oppositeCount = issueId === "link-name-too-long" ? summary.oppositeLanguageLinkTextCharacterCount : summary.oppositeLanguageDescriptionCharacterCount;
     const limit = issueId === "link-name-too-long" ? this.getTopicDoormatLinkNameLengthLimit(summary, pageLanguage) : this.getTopicDoormatDescriptionLengthLimit(summary, pageLanguage);
+    const currentMetric = issueId === "description-too-long" ? `${currentCount}` : `${currentCount}/${limit}`;
     if (typeof oppositeCount !== "number") {
-      return `${currentCount}/${limit} characters`;
+      return currentMetric;
     }
-    return `${currentLabel} ${currentCount}/${limit}; ${oppositeLabel} ${oppositeCount}/${limit} characters`;
+    const oppositeMetric = issueId === "description-too-long" ? `${oppositeCount}` : `${oppositeCount}/${limit}`;
+    return `${currentLabel} ${currentMetric}; ${oppositeLabel} ${oppositeMetric}`;
   }
-  buildTopicDoormatBilingualLengthIssueLabel(summary, issueId, pageLanguage) {
-    const currentLanguage = pageLanguage.toUpperCase();
-    const oppositeLanguage = (summary.oppositeLanguage ?? (pageLanguage === "fr" ? "en" : "fr")).toUpperCase();
+  buildTopicDoormatLengthMetricParts(summary, issueId, pageLanguage) {
+    const currentLabel = pageLanguage.toUpperCase();
+    const oppositeLabel = (summary.oppositeLanguage ?? (pageLanguage === "fr" ? "en" : "fr")).toUpperCase();
     const currentCount = issueId === "link-name-too-long" ? summary.linkTextCharacterCount : summary.descriptionCharacterCount;
     const oppositeCount = issueId === "link-name-too-long" ? summary.oppositeLanguageLinkTextCharacterCount : summary.oppositeLanguageDescriptionCharacterCount;
-    const limit = issueId === "link-name-too-long" ? 45 : 120;
-    const typeKey = issueId === "link-name-too-long" ? "link" : "description";
-    const currentTooLong = currentCount > limit;
-    const oppositeTooLong = typeof oppositeCount === "number" && oppositeCount > limit;
-    if (currentTooLong && oppositeTooLong) {
-      return this.getTopicDoormatDeterministicText(`length.${typeKey}.issue.bothLanguages`);
+    const limit = issueId === "link-name-too-long" ? this.getTopicDoormatLinkNameLengthLimit(summary, pageLanguage) : this.getTopicDoormatDescriptionLengthLimit(summary, pageLanguage);
+    const currentMetric = issueId === "description-too-long" ? `${currentCount}` : `${currentCount}/${limit}`;
+    if (typeof oppositeCount !== "number") {
+      return [
+        {
+          metric: currentMetric,
+          severity: issueId === "link-name-too-long" ? this.getTopicDoormatLinkNameLengthSeverity(summary, pageLanguage) : this.getTopicDoormatDescriptionLengthSeverity(summary, pageLanguage)
+        }
+      ];
     }
-    if (currentTooLong) {
-      return this.getTopicDoormatDeterministicText(`length.${typeKey}.issue.singleLanguage`, { language: currentLanguage });
+    const oppositeMetric = issueId === "description-too-long" ? `${oppositeCount}` : `${oppositeCount}/${limit}`;
+    return [
+      {
+        metric: `${currentLabel} ${currentMetric}`,
+        severity: this.getTopicDoormatBilingualLengthSeverity(currentCount, issueId)
+      },
+      {
+        metric: `${oppositeLabel} ${oppositeMetric}`,
+        severity: this.getTopicDoormatBilingualLengthSeverity(oppositeCount, issueId)
+      }
+    ];
+  }
+  getTopicDoormatBilingualLengthSeverity(count, issueId) {
+    if (issueId === "link-name-too-long") {
+      if (count <= 45)
+        return "OK";
+      if (count <= 60)
+        return "Low";
+      if (count <= 75)
+        return "Medium";
+      return "High";
     }
-    if (oppositeTooLong) {
-      return this.getTopicDoormatDeterministicText(`length.${typeKey}.issue.singleLanguage`, { language: oppositeLanguage });
-    }
-    return this.getTopicDoormatIssueLabel(issueId);
+    if (count <= 120)
+      return "OK";
+    if (count <= 130)
+      return "Low";
+    if (count <= 140)
+      return "Medium";
+    return "High";
+  }
+  getTopicDoormatLengthIssueLabel(issueId) {
+    return this.getTopicDoormatDeterministicText(issueId === "link-name-too-long" ? "length.link.issue" : "length.description.issue");
   }
   buildLocalTopicDoormatDescriptionPersonRows(doormatSummaries) {
     return doormatSummaries.flatMap((summary) => {
@@ -32071,11 +32091,26 @@ var TopicDoormatIssueAnalysisService = class _TopicDoormatIssueAnalysisService {
       if (!element)
         return [];
       seen.add(id);
-      if (this.isTopicDoormatLifecycleStatusAlreadyCovered(summary, element)) {
+      if (this.isTopicDoormatContentGapNoise(summary, element)) {
         return [];
       }
       return [element];
     });
+  }
+  isTopicDoormatContentGapNoise(summary, element) {
+    if (this.isTopicDoormatLifecycleStatusAlreadyCovered(summary, element)) {
+      return true;
+    }
+    if (this.isTopicDoormatDestinationElementCovered(summary, element)) {
+      return true;
+    }
+    if (element.type === "intro" && this.isTopicDoormatLifecycleStatusElement(element.text) && !this.hasTopicDoormatDecisionCriticalText(element.text)) {
+      return true;
+    }
+    if (element.type === "h2") {
+      return this.isTopicDoormatLifecycleStatusElement(element.text) || !this.hasTopicDoormatDecisionCriticalText(element.text);
+    }
+    return false;
   }
   buildLocalTopicDoormatStyleIssueRows(doormatSummaries, existingIssueKeys, descriptionStylesByDoormatIndex) {
     const analyses = this.analyzeTopicDoormatDescriptionStyles(doormatSummaries, descriptionStylesByDoormatIndex);
@@ -32469,9 +32504,116 @@ ${JSON.stringify(contract)}`;
       "benefits",
       "credit",
       "credits",
-      "tax"
+      "tax",
+      "le",
+      "la",
+      "les",
+      "un",
+      "une",
+      "des",
+      "du",
+      "de",
+      "d",
+      "pour",
+      "aux",
+      "avec",
+      "dans",
+      "sur",
+      "vous",
+      "votre",
+      "vos",
+      "particuliers",
+      "familles",
+      "prestation",
+      "prestations",
+      "credit",
+      "credits",
+      "impot",
+      "impots"
     ]);
-    return value.split(/\s+/).filter((token) => token.length > 2 && !stopWords.has(token));
+    return Array.from(new Set(value.split(/\s+/).filter((token) => token.length > 2 && !stopWords.has(token))));
+  }
+  isTopicDoormatDestinationElementCovered(summary, element) {
+    const doormatText = this.normalizeTopicDoormatDestinationComparisonText([
+      summary.linkText,
+      summary.description,
+      summary.rawItemText,
+      ...summary.labels ?? []
+    ].join(" "));
+    const elementText = this.normalizeTopicDoormatDestinationComparisonText(element.text);
+    if (!doormatText || !elementText)
+      return false;
+    if (element.type === "h2") {
+      return this.isTopicDoormatConceptCovered(elementText, doormatText) || this.isTopicDoormatGenericEligibilityCovered(elementText, doormatText);
+    }
+    return this.isTopicDoormatIntroConceptCovered(elementText, doormatText) || this.hasTopicDoormatMeaningfulTokenCoverage(elementText, doormatText);
+  }
+  isTopicDoormatIntroConceptCovered(elementText, doormatText) {
+    const groups = this.getTopicDoormatCoveredConceptGroups(elementText, doormatText);
+    if (groups >= 2)
+      return true;
+    return groups >= 1 && this.hasTopicDoormatConcept(elementText, ["program"]) && this.hasTopicDoormatConcept(doormatText, ["program"]);
+  }
+  isTopicDoormatConceptCovered(elementText, doormatText) {
+    return this.getTopicDoormatCoveredConceptGroups(elementText, doormatText) > 0;
+  }
+  isTopicDoormatGenericEligibilityCovered(elementText, doormatText) {
+    if (!this.hasTopicDoormatConcept(elementText, ["eligibility"])) {
+      return false;
+    }
+    const criteria = [
+      ["audience"],
+      ["age"],
+      ["disability"],
+      ["income"],
+      ["family-status"]
+    ];
+    const coveredCriteria = criteria.filter((group) => this.hasTopicDoormatConcept(doormatText, group)).length;
+    return coveredCriteria >= 2;
+  }
+  getTopicDoormatCoveredConceptGroups(elementText, doormatText) {
+    const conceptGroups = [
+      ["eligibility"],
+      ["application"],
+      ["payment"],
+      ["amount"],
+      ["deadline"],
+      ["document"],
+      ["audience"],
+      ["program"]
+    ];
+    return conceptGroups.filter((group) => this.hasTopicDoormatConcept(elementText, group) && this.hasTopicDoormatConcept(doormatText, group)).length;
+  }
+  hasTopicDoormatConcept(value, groups) {
+    return groups.some((group) => {
+      const pattern = this.getTopicDoormatConceptPattern(group);
+      return pattern ? pattern.test(value) : false;
+    });
+  }
+  getTopicDoormatConceptPattern(group) {
+    const patterns = {
+      eligibility: /\b(?:eligibility|eligible|qualify|qualifies|admissibilite|admissible|admissibles|admissibilites)\b/,
+      application: /\b(?:apply|application|register|registration|claim|request|demande|demandes|inscription|inscrire|presenter une demande|faire une demande)\b/,
+      payment: /\b(?:payment|payments|pay|paid|quarterly|monthly|versement|versements|paiement|paiements|trimestriel|trimestriels|mensuel|mensuels)\b/,
+      amount: /\b(?:amount|amounts|rate|rates|maximum|minimum|montant|montants|taux|maximum|minimum)\b/,
+      deadline: /\b(?:deadline|due date|before|after|date limite|echeance|avant|apres)\b/,
+      document: /\b(?:document|documents|form|forms|proof|attestation|formulaire|formulaires|preuve|pieces justificatives)\b/,
+      audience: /\b(?:individual|individuals|family|families|child|children|person|people|resident|residents|particulier|particuliers|famille|familles|enfant|enfants|personne|personnes|resident|residents|menage|menages)\b/,
+      program: /\b(?:program|programs|benefit|benefits|credit|credits|rebate|allowance|relief|programme|programmes|prestation|prestations|credit|credits|remise|allocation|aide)\b/,
+      age: /\b(?:age|aged|under|over|younger|older|less than|more than|moins de|plus de|ans|years old)\b/,
+      disability: /\b(?:disability|disabled|impairment|severe|grave|handicap|handicape|handicapes|deficience|invalidite)\b/,
+      income: /\b(?:income|low income|middle income|revenu|faible revenu|revenu faible|revenu moyen)\b/,
+      "family-status": /\b(?:care|caring|support|supporting|s occupe|occupent|subvenir|subviennent|charge|soins)\b/
+    };
+    return patterns[group] ?? null;
+  }
+  hasTopicDoormatMeaningfulTokenCoverage(elementText, doormatText) {
+    const elementTokens = this.getTopicDoormatMeaningfulDestinationTokens(elementText);
+    if (elementTokens.length < 4)
+      return false;
+    const doormatTokenSet = new Set(this.getTopicDoormatMeaningfulDestinationTokens(doormatText));
+    const coveredCount = elementTokens.filter((token) => doormatTokenSet.has(token)).length;
+    return coveredCount >= 3 && coveredCount / elementTokens.length >= 0.3;
   }
   isTopicDoormatLifecycleStatusAlreadyCovered(summary, element) {
     if (!this.hasTopicDoormatLifecycleStatusText(element.text))
@@ -32485,10 +32627,15 @@ ${JSON.stringify(contract)}`;
   }
   isTopicDoormatLifecycleStatusElement(value) {
     const normalized = this.normalizeTopicDoormatDestinationComparisonText(value);
-    return /^status (?:closed|archived|inactive|expired|ended)\b/.test(normalized) || /^(?:closed|archived|inactive|expired|ended)$/.test(normalized);
+    return /^status (?:closed|archived|inactive|expired|ended)\b/.test(normalized) || /^(?:closed|archived|inactive|expired|ended)$/.test(normalized) || /\b(?:closed|archived|inactive|expired|ended|stopped|replaced|formerly|no longer available|not available|new|updated|temporary|provisional|final payment|no further payments)\b/.test(normalized) || /\b(?:ferme|fermee|archive|expire|termine|terminee|fin|remplace|remplacee|anciennement|plus disponible|n est plus disponible|ne sont plus disponibles|temporaire|provisoire|dernier versement|plus aucun versement|autres versements|nouveau|nouvelle|mis a jour|mise a jour)\b/.test(normalized);
   }
   hasTopicDoormatLifecycleStatusText(value) {
-    return /\b(?:status:\s*)?(?:closed|archived|inactive|expired|ended|stopped|replaced|formerly|no longer available|not available|new|updated)\b/i.test(value);
+    const normalized = this.normalizeTopicDoormatDestinationComparisonText(value);
+    return /\b(?:status )?(?:closed|archived|inactive|expired|ended|stopped|replaced|formerly|no longer available|not available|new|updated|temporary|provisional|final payment|no further payments)\b/.test(normalized) || /\b(?:ferme|fermee|archive|expire|termine|terminee|fin|remplace|remplacee|anciennement|plus disponible|n est plus disponible|ne sont plus disponibles|temporaire|provisoire|dernier versement|plus aucun versement|autres versements|nouveau|nouvelle|mis a jour|mise a jour)\b/.test(normalized);
+  }
+  hasTopicDoormatDecisionCriticalText(value) {
+    const normalized = this.normalizeTopicDoormatDestinationComparisonText(value);
+    return /\b(?:eligibility|eligible|qualify|who can|who is eligible|apply|application|register|deadline|due date|required document|documents required|amount|payment amount|rates|before you start|admissibilite|admissible|qui peut|faire une demande|presenter une demande|demande|inscription|date limite|echeance|document requis|documents requis|montant|montant du paiement|taux|avant de commencer)\b/.test(normalized);
   }
   isTopicDoormatStatusRepetitionIssue(issueId, issue, summary) {
     if (issueId !== "enhancement-label-not-needed" && issueId !== "description-lacks-clarity") {
@@ -32538,7 +32685,7 @@ ${JSON.stringify(contract)}`;
       const count = this.getTopicDoormatExactCharacterCount(issueCategory, doormat) ?? this.toNumber(details["actual_character_count"]);
       const limit = this.toNumber(details["character_limit"]);
       if (count != null && limit != null) {
-        detailParts.push(`${count}/${limit} characters`);
+        detailParts.push(issueCategory === "description-too-long" ? `${count}` : `${count}/${limit}`);
       }
       const doormatHref = this.cleanString(details["doormat_href"]);
       const mostRequestedHref = this.cleanString(details["most_requested_href"]);
@@ -32877,6 +33024,7 @@ var TopicDoormatPresenterService = class _TopicDoormatPresenterService {
 var _c06 = (a0, a1) => ({ "pi-chevron-down": a0, "pi-chevron-right": a1 });
 var _forTrack0 = ($index, $item) => $item.sectionIndex;
 var _forTrack1 = ($index, $item) => $item.label + $item.metric;
+var _forTrack2 = ($index, $item) => $item.metric;
 function ComponentGuidanceComponent_ng_template_2_Template(rf, ctx) {
   if (rf & 1) {
     const _r2 = \u0275\u0275getCurrentView();
@@ -33320,25 +33468,37 @@ function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Co
     \u0275\u0275elementEnd()();
   }
 }
+function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_11_Conditional_9_For_2_For_4_Template(rf, ctx) {
+  if (rf & 1) {
+    \u0275\u0275elementStart(0, "span", 57);
+    \u0275\u0275text(1);
+    \u0275\u0275elementEnd();
+  }
+  if (rf & 2) {
+    const metric_r13 = ctx.$implicit;
+    const item_r14 = \u0275\u0275nextContext().$implicit;
+    const issue_r12 = \u0275\u0275nextContext(2).$implicit;
+    const ctx_r2 = \u0275\u0275nextContext(6);
+    \u0275\u0275property("ngClass", ctx_r2.severityChip(metric_r13.severity || item_r14.severity || issue_r12.severity));
+    \u0275\u0275advance();
+    \u0275\u0275textInterpolate1(" ", metric_r13.metric, " ");
+  }
+}
 function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_11_Conditional_9_For_2_Template(rf, ctx) {
   if (rf & 1) {
     \u0275\u0275elementStart(0, "li")(1, "span");
     \u0275\u0275text(2);
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(3, "span", 57);
-    \u0275\u0275text(4);
-    \u0275\u0275elementEnd()();
+    \u0275\u0275repeaterCreate(3, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_11_Conditional_9_For_2_For_4_Template, 2, 2, "span", 57, _forTrack2);
+    \u0275\u0275elementEnd();
   }
   if (rf & 2) {
-    const item_r13 = ctx.$implicit;
-    const issue_r12 = \u0275\u0275nextContext(2).$implicit;
-    const ctx_r2 = \u0275\u0275nextContext(6);
+    const item_r14 = ctx.$implicit;
+    const ctx_r2 = \u0275\u0275nextContext(8);
     \u0275\u0275advance(2);
-    \u0275\u0275textInterpolate1("", item_r13.label, ":");
+    \u0275\u0275textInterpolate1("", item_r14.label, ":");
     \u0275\u0275advance();
-    \u0275\u0275property("ngClass", ctx_r2.severityChip(item_r13.severity || issue_r12.severity));
-    \u0275\u0275advance();
-    \u0275\u0275textInterpolate1(" ", item_r13.metric, " ");
+    \u0275\u0275repeater(ctx_r2.evidenceMetricParts(item_r14));
   }
 }
 function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_11_Conditional_9_Conditional_3_Template(rf, ctx) {
@@ -33356,7 +33516,7 @@ function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Co
 function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_11_Conditional_9_Template(rf, ctx) {
   if (rf & 1) {
     \u0275\u0275elementStart(0, "ul", 56);
-    \u0275\u0275repeaterCreate(1, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_11_Conditional_9_For_2_Template, 5, 3, "li", null, _forTrack1);
+    \u0275\u0275repeaterCreate(1, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_11_Conditional_9_For_2_Template, 5, 1, "li", null, _forTrack1);
     \u0275\u0275elementEnd();
     \u0275\u0275template(3, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_11_Conditional_9_Conditional_3_Template, 2, 1, "span");
   }
@@ -33519,9 +33679,25 @@ function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Co
     \u0275\u0275elementEnd();
   }
   if (rf & 2) {
-    const issue_r15 = \u0275\u0275nextContext().$implicit;
+    const issue_r16 = \u0275\u0275nextContext().$implicit;
     \u0275\u0275advance();
-    \u0275\u0275textInterpolate1("(", issue_r15.sectionItemMeta, ")");
+    \u0275\u0275textInterpolate1("(", issue_r16.sectionItemMeta, ")");
+  }
+}
+function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_17_Conditional_14_For_2_For_4_Template(rf, ctx) {
+  if (rf & 1) {
+    \u0275\u0275elementStart(0, "span", 57);
+    \u0275\u0275text(1);
+    \u0275\u0275elementEnd();
+  }
+  if (rf & 2) {
+    const metric_r17 = ctx.$implicit;
+    const item_r18 = \u0275\u0275nextContext().$implicit;
+    const issue_r16 = \u0275\u0275nextContext(2).$implicit;
+    const ctx_r2 = \u0275\u0275nextContext(6);
+    \u0275\u0275property("ngClass", ctx_r2.severityChip(metric_r17.severity || item_r18.severity || issue_r16.severity));
+    \u0275\u0275advance();
+    \u0275\u0275textInterpolate1(" ", metric_r17.metric, " ");
   }
 }
 function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_17_Conditional_14_For_2_Template(rf, ctx) {
@@ -33529,20 +33705,16 @@ function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Co
     \u0275\u0275elementStart(0, "li")(1, "span");
     \u0275\u0275text(2);
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(3, "span", 57);
-    \u0275\u0275text(4);
-    \u0275\u0275elementEnd()();
+    \u0275\u0275repeaterCreate(3, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_17_Conditional_14_For_2_For_4_Template, 2, 2, "span", 57, _forTrack2);
+    \u0275\u0275elementEnd();
   }
   if (rf & 2) {
-    const item_r16 = ctx.$implicit;
-    const issue_r15 = \u0275\u0275nextContext(2).$implicit;
-    const ctx_r2 = \u0275\u0275nextContext(6);
+    const item_r18 = ctx.$implicit;
+    const ctx_r2 = \u0275\u0275nextContext(8);
     \u0275\u0275advance(2);
-    \u0275\u0275textInterpolate1("", item_r16.label, ":");
+    \u0275\u0275textInterpolate1("", item_r18.label, ":");
     \u0275\u0275advance();
-    \u0275\u0275property("ngClass", ctx_r2.severityChip(item_r16.severity || issue_r15.severity));
-    \u0275\u0275advance();
-    \u0275\u0275textInterpolate1(" ", item_r16.metric, " ");
+    \u0275\u0275repeater(ctx_r2.evidenceMetricParts(item_r18));
   }
 }
 function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_17_Conditional_14_Conditional_3_Template(rf, ctx) {
@@ -33552,24 +33724,24 @@ function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Co
     \u0275\u0275elementEnd();
   }
   if (rf & 2) {
-    const issue_r15 = \u0275\u0275nextContext(2).$implicit;
+    const issue_r16 = \u0275\u0275nextContext(2).$implicit;
     \u0275\u0275advance();
-    \u0275\u0275textInterpolate(issue_r15.evidence);
+    \u0275\u0275textInterpolate(issue_r16.evidence);
   }
 }
 function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_17_Conditional_14_Template(rf, ctx) {
   if (rf & 1) {
     \u0275\u0275elementStart(0, "ul", 56);
-    \u0275\u0275repeaterCreate(1, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_17_Conditional_14_For_2_Template, 5, 3, "li", null, _forTrack1);
+    \u0275\u0275repeaterCreate(1, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_17_Conditional_14_For_2_Template, 5, 1, "li", null, _forTrack1);
     \u0275\u0275elementEnd();
     \u0275\u0275template(3, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_17_Conditional_14_Conditional_3_Template, 2, 1, "span");
   }
   if (rf & 2) {
-    const issue_r15 = \u0275\u0275nextContext().$implicit;
+    const issue_r16 = \u0275\u0275nextContext().$implicit;
     \u0275\u0275advance();
-    \u0275\u0275repeater(issue_r15.evidenceItems);
+    \u0275\u0275repeater(issue_r16.evidenceItems);
     \u0275\u0275advance(2);
-    \u0275\u0275conditional(issue_r15.evidence ? 3 : -1);
+    \u0275\u0275conditional(issue_r16.evidence ? 3 : -1);
   }
 }
 function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_17_Conditional_15_Conditional_2_Conditional_2_Template(rf, ctx) {
@@ -33579,10 +33751,10 @@ function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Co
     \u0275\u0275elementEnd();
   }
   if (rf & 2) {
-    const issue_r15 = \u0275\u0275nextContext(3).$implicit;
-    \u0275\u0275property("href", issue_r15.evidenceLinkHref, \u0275\u0275sanitizeUrl);
+    const issue_r16 = \u0275\u0275nextContext(3).$implicit;
+    \u0275\u0275property("href", issue_r16.evidenceLinkHref, \u0275\u0275sanitizeUrl);
     \u0275\u0275advance();
-    \u0275\u0275textInterpolate(issue_r15.evidenceLinkText);
+    \u0275\u0275textInterpolate(issue_r16.evidenceLinkText);
   }
 }
 function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_17_Conditional_15_Conditional_2_Template(rf, ctx) {
@@ -33593,11 +33765,11 @@ function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Co
     \u0275\u0275template(2, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_17_Conditional_15_Conditional_2_Conditional_2_Template, 2, 2, "a", 58);
   }
   if (rf & 2) {
-    const issue_r15 = \u0275\u0275nextContext(2).$implicit;
+    const issue_r16 = \u0275\u0275nextContext(2).$implicit;
     \u0275\u0275advance();
-    \u0275\u0275textInterpolate1(". ", issue_r15.evidence, "");
+    \u0275\u0275textInterpolate1(". ", issue_r16.evidence, "");
     \u0275\u0275advance();
-    \u0275\u0275conditional(issue_r15.evidenceLinkText && issue_r15.evidenceLinkHref ? 2 : -1);
+    \u0275\u0275conditional(issue_r16.evidenceLinkText && issue_r16.evidenceLinkHref ? 2 : -1);
   }
 }
 function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_17_Conditional_15_Template(rf, ctx) {
@@ -33608,13 +33780,13 @@ function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Co
     \u0275\u0275template(2, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_17_Conditional_15_Conditional_2_Template, 3, 2);
   }
   if (rf & 2) {
-    const issue_r15 = \u0275\u0275nextContext().$implicit;
+    const issue_r16 = \u0275\u0275nextContext().$implicit;
     const ctx_r2 = \u0275\u0275nextContext(6);
-    \u0275\u0275property("ngClass", ctx_r2.severityChip(issue_r15.severity));
+    \u0275\u0275property("ngClass", ctx_r2.severityChip(issue_r16.severity));
     \u0275\u0275advance();
-    \u0275\u0275textInterpolate1(" ", issue_r15.evidenceMetric, " ");
+    \u0275\u0275textInterpolate1(" ", issue_r16.evidenceMetric, " ");
     \u0275\u0275advance();
-    \u0275\u0275conditional(issue_r15.evidence ? 2 : -1);
+    \u0275\u0275conditional(issue_r16.evidence ? 2 : -1);
   }
 }
 function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_17_Conditional_16_Conditional_1_Template(rf, ctx) {
@@ -33624,10 +33796,10 @@ function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Co
     \u0275\u0275elementEnd();
   }
   if (rf & 2) {
-    const issue_r15 = \u0275\u0275nextContext(2).$implicit;
-    \u0275\u0275property("href", issue_r15.evidenceLinkHref, \u0275\u0275sanitizeUrl);
+    const issue_r16 = \u0275\u0275nextContext(2).$implicit;
+    \u0275\u0275property("href", issue_r16.evidenceLinkHref, \u0275\u0275sanitizeUrl);
     \u0275\u0275advance();
-    \u0275\u0275textInterpolate(issue_r15.evidenceLinkText);
+    \u0275\u0275textInterpolate(issue_r16.evidenceLinkText);
   }
 }
 function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_17_Conditional_16_Template(rf, ctx) {
@@ -33636,19 +33808,19 @@ function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Co
     \u0275\u0275template(1, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_17_Conditional_16_Conditional_1_Template, 2, 2, "a", 58);
   }
   if (rf & 2) {
-    const issue_r15 = \u0275\u0275nextContext().$implicit;
-    \u0275\u0275textInterpolate1(" ", issue_r15.evidence || "-", " ");
+    const issue_r16 = \u0275\u0275nextContext().$implicit;
+    \u0275\u0275textInterpolate1(" ", issue_r16.evidence || "-", " ");
     \u0275\u0275advance();
-    \u0275\u0275conditional(issue_r15.evidenceLinkText && issue_r15.evidenceLinkHref ? 1 : -1);
+    \u0275\u0275conditional(issue_r16.evidenceLinkText && issue_r16.evidenceLinkHref ? 1 : -1);
   }
 }
 function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_17_Template(rf, ctx) {
   if (rf & 1) {
-    const _r14 = \u0275\u0275getCurrentView();
+    const _r15 = \u0275\u0275getCurrentView();
     \u0275\u0275elementStart(0, "tr")(1, "td")(2, "p-checkbox", 53);
     \u0275\u0275twoWayListener("ngModelChange", function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_17_Template_p_checkbox_ngModelChange_2_listener($event) {
-      const issue_r15 = \u0275\u0275restoreView(_r14).$implicit;
-      \u0275\u0275twoWayBindingSet(issue_r15.include, $event) || (issue_r15.include = $event);
+      const issue_r16 = \u0275\u0275restoreView(_r15).$implicit;
+      \u0275\u0275twoWayBindingSet(issue_r16.include, $event) || (issue_r16.include = $event);
       return \u0275\u0275resetView($event);
     });
     \u0275\u0275elementEnd()();
@@ -33673,28 +33845,28 @@ function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Co
     \u0275\u0275elementEnd()();
   }
   if (rf & 2) {
-    const issue_r15 = ctx.$implicit;
+    const issue_r16 = ctx.$implicit;
     const ctx_r2 = \u0275\u0275nextContext(6);
     \u0275\u0275advance(2);
     \u0275\u0275property("binary", true);
-    \u0275\u0275twoWayProperty("ngModel", issue_r15.include);
-    \u0275\u0275property("disabled", ctx_r2.isNoIssueRow(issue_r15));
+    \u0275\u0275twoWayProperty("ngModel", issue_r16.include);
+    \u0275\u0275property("disabled", ctx_r2.isNoIssueRow(issue_r16));
     \u0275\u0275advance(2);
-    \u0275\u0275textInterpolate1(" ", issue_r15.sectionItemIndex || "-", " ");
+    \u0275\u0275textInterpolate1(" ", issue_r16.sectionItemIndex || "-", " ");
     \u0275\u0275advance();
-    \u0275\u0275conditional(issue_r15.sectionItemMeta ? 5 : -1);
+    \u0275\u0275conditional(issue_r16.sectionItemMeta ? 5 : -1);
     \u0275\u0275advance(2);
-    \u0275\u0275textInterpolate(issue_r15.doormatLabel || "-");
+    \u0275\u0275textInterpolate(issue_r16.doormatLabel || "-");
     \u0275\u0275advance(2);
-    \u0275\u0275property("ngClass", ctx_r2.severityChip(issue_r15.severity));
+    \u0275\u0275property("ngClass", ctx_r2.severityChip(issue_r16.severity));
     \u0275\u0275advance();
-    \u0275\u0275textInterpolate1(" ", issue_r15.severity, " ");
+    \u0275\u0275textInterpolate1(" ", issue_r16.severity, " ");
     \u0275\u0275advance(2);
-    \u0275\u0275textInterpolate(issue_r15.issue);
+    \u0275\u0275textInterpolate(issue_r16.issue);
     \u0275\u0275advance(2);
-    \u0275\u0275conditional((issue_r15.evidenceItems == null ? null : issue_r15.evidenceItems.length) ? 14 : issue_r15.evidenceMetric ? 15 : 16);
+    \u0275\u0275conditional((issue_r16.evidenceItems == null ? null : issue_r16.evidenceItems.length) ? 14 : issue_r16.evidenceMetric ? 15 : 16);
     \u0275\u0275advance(4);
-    \u0275\u0275textInterpolate(issue_r15.recommendation || "-");
+    \u0275\u0275textInterpolate(issue_r16.recommendation || "-");
   }
 }
 function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_18_Template(rf, ctx) {
@@ -33726,15 +33898,15 @@ function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Co
     \u0275\u0275elementEnd()();
   }
   if (rf & 2) {
-    const group_r17 = ctx.$implicit;
+    const group_r19 = ctx.$implicit;
     \u0275\u0275advance(4);
-    \u0275\u0275textInterpolate2(" Section ", group_r17.sectionIndex, ": ", group_r17.sectionTitle, " ");
+    \u0275\u0275textInterpolate2(" Section ", group_r19.sectionIndex, ": ", group_r19.sectionTitle, " ");
     \u0275\u0275advance(2);
-    \u0275\u0275textInterpolate1(" ", group_r17.doormatCount, " doormats ");
+    \u0275\u0275textInterpolate1(" ", group_r19.doormatCount, " doormats ");
     \u0275\u0275advance(3);
-    \u0275\u0275property("value", group_r17.sectionRows);
+    \u0275\u0275property("value", group_r19.sectionRows);
     \u0275\u0275advance(6);
-    \u0275\u0275property("value", group_r17.doormatRows);
+    \u0275\u0275property("value", group_r19.doormatRows);
   }
 }
 function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_Template(rf, ctx) {
@@ -33847,9 +34019,9 @@ function ComponentGuidanceComponent_ng_template_5_Conditional_4_Template(rf, ctx
     \u0275\u0275template(0, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Template, 6, 3)(1, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_1_Template, 3, 0, "p-table", 40);
   }
   if (rf & 2) {
-    const row_r18 = \u0275\u0275nextContext().$implicit;
+    const row_r20 = \u0275\u0275nextContext().$implicit;
     const ctx_r2 = \u0275\u0275nextContext();
-    \u0275\u0275conditional(row_r18.__id === ctx_r2.topicDoormatsId ? 0 : 1);
+    \u0275\u0275conditional(row_r20.__id === ctx_r2.topicDoormatsId ? 0 : 1);
   }
 }
 function ComponentGuidanceComponent_ng_template_5_Template(rf, ctx) {
@@ -33859,9 +34031,9 @@ function ComponentGuidanceComponent_ng_template_5_Template(rf, ctx) {
     \u0275\u0275elementEnd()()();
   }
   if (rf & 2) {
-    const row_r18 = ctx.$implicit;
+    const row_r20 = ctx.$implicit;
     \u0275\u0275advance(3);
-    \u0275\u0275conditional(row_r18.__nameKey === "page.tools.guidance.craVariant.alerts.title" ? 3 : 4);
+    \u0275\u0275conditional(row_r20.__nameKey === "page.tools.guidance.craVariant.alerts.title" ? 3 : 4);
   }
 }
 var ComponentGuidanceComponent = class _ComponentGuidanceComponent {
@@ -34506,6 +34678,15 @@ var ComponentGuidanceComponent = class _ComponentGuidanceComponent {
   isNoIssueRow(issue) {
     return issue.issueId === "no-issues";
   }
+  evidenceMetricParts(item) {
+    if (typeof item === "string" || !item) {
+      return (item || "").split(";").map((part) => part.trim()).filter(Boolean).map((metric) => ({ metric }));
+    }
+    if (item.metricParts?.length) {
+      return item.metricParts;
+    }
+    return (item.metric || "").split(";").map((part) => part.trim()).filter(Boolean).map((metric) => ({ metric, severity: item.severity }));
+  }
   alertHealthLabel(severity) {
     const s = (severity || "").toLowerCase();
     if (s === "high")
@@ -34934,11 +35115,13 @@ var ComponentGuidanceComponent = class _ComponentGuidanceComponent {
                                 @for (item of issue.evidenceItems; track item.label + item.metric) {
                                   <li>
                                     <span>{{ item.label }}:</span>
-                                    <span
-                                      class="chip topic-doormat-evidence-metric"
-                                      [ngClass]="severityChip(item.severity || issue.severity)">
-                                      {{ item.metric }}
-                                    </span>
+                                    @for (metric of evidenceMetricParts(item); track metric.metric) {
+                                      <span
+                                        class="chip topic-doormat-evidence-metric"
+                                        [ngClass]="severityChip(metric.severity || item.severity || issue.severity)">
+                                        {{ metric.metric }}
+                                      </span>
+                                    }
                                   </li>
                                 }
                               </ul>
@@ -35019,11 +35202,13 @@ var ComponentGuidanceComponent = class _ComponentGuidanceComponent {
                                 @for (item of issue.evidenceItems; track item.label + item.metric) {
                                   <li>
                                     <span>{{ item.label }}:</span>
-                                    <span
-                                      class="chip topic-doormat-evidence-metric"
-                                      [ngClass]="severityChip(item.severity || issue.severity)">
-                                      {{ item.metric }}
-                                    </span>
+                                    @for (metric of evidenceMetricParts(item); track metric.metric) {
+                                      <span
+                                        class="chip topic-doormat-evidence-metric"
+                                        [ngClass]="severityChip(metric.severity || item.severity || issue.severity)">
+                                        {{ metric.metric }}
+                                      </span>
+                                    }
                                   </li>
                                 }
                               </ul>
@@ -35124,7 +35309,7 @@ var ComponentGuidanceComponent = class _ComponentGuidanceComponent {
   }] });
 })();
 (() => {
-  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(ComponentGuidanceComponent, { className: "ComponentGuidanceComponent", filePath: "app/views/page-assistant/components/problems/component-guidance/component-guidance.component.ts", lineNumber: 192 });
+  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(ComponentGuidanceComponent, { className: "ComponentGuidanceComponent", filePath: "app/views/page-assistant/components/problems/component-guidance/component-guidance.component.ts", lineNumber: 193 });
 })();
 
 // src/app/views/page-assistant/components/problems/seo.component.ts
@@ -48560,4 +48745,4 @@ ${custom}` : promptBody;
 export {
   PageAssistantCompareComponent
 };
-//# sourceMappingURL=chunk-3QA2I5GB.js.map
+//# sourceMappingURL=chunk-CGJIIDC2.js.map
