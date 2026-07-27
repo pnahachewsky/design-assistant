@@ -1712,6 +1712,358 @@ describe('TopicDoormatIssueAnalysisService', () => {
     );
   });
 
+  it('suppresses French lifecycle-only destination content gaps', async () => {
+    openRouter.call.and.resolveTo({
+      choices: [
+        {
+          message: {
+            content: JSON.stringify({
+              doormats: [
+                {
+                  doormat_index: 1,
+                  link_text: 'Remise canadienne sur le carbone (RCC)',
+                  href: '/fr/services/impots/prestations/remise-carbone.html',
+                  description: 'Voyez les paiements pour les provinces admissibles',
+                  detected_description_style: 'phrase',
+                  ...defaultLinkClassifications(),
+                  destination_content_assessment: {
+                    important_element_ids: ['intro-1', 'intro-2'],
+                    covered_element_ids: [],
+                    missing_important_element_ids: ['intro-1', 'intro-2'],
+                  },
+                  issues: [],
+                },
+              ],
+            }),
+          },
+        },
+      ],
+    });
+
+    const result = await service.analyze({
+      doormatSummaries: [
+        summary({
+          linkText: 'Remise canadienne sur le carbone (RCC)',
+          href: '/fr/services/impots/prestations/remise-carbone.html',
+          description: 'Voyez les paiements pour les provinces admissibles',
+          destinationContextStatus: 'available',
+          destinationIntroParagraphs: [
+            'Le 15 mars 2025, le gouvernement du Canada a annoncé la fin de la redevance sur les combustibles et de la Remise canadienne sur le carbone.',
+            "Après le versement d'avril 2025, il n'y aura pas d'autres versements trimestriels.",
+          ],
+        }),
+      ],
+      pageLanguage: 'fr',
+      hasLegacyTopicDoormatTemplate: false,
+      mostRequestedLinks: [],
+      selectedModel: 'selected-model',
+    });
+
+    expect(result.rows.map((row) => row.issueId)).not.toContain(
+      'description-missing-needed-information',
+    );
+  });
+
+  it('suppresses non-decision-critical French H2 content gaps', async () => {
+    openRouter.call.and.resolveTo({
+      choices: [
+        {
+          message: {
+            content: JSON.stringify({
+              doormats: [
+                {
+                  doormat_index: 1,
+                  link_text: 'Programmes provinciaux et territoriaux',
+                  href: '/fr/services/impots/prestations/provinciaux.html',
+                  description: 'Programmes offerts par province et territoire',
+                  detected_description_style: 'phrase',
+                  ...defaultLinkClassifications(),
+                  destination_content_assessment: {
+                    important_element_ids: ['h2-1'],
+                    covered_element_ids: [],
+                    missing_important_element_ids: ['h2-1'],
+                  },
+                  issues: [],
+                },
+              ],
+            }),
+          },
+        },
+      ],
+    });
+
+    const result = await service.analyze({
+      doormatSummaries: [
+        summary({
+          linkText: 'Programmes provinciaux et territoriaux',
+          href: '/fr/services/impots/prestations/provinciaux.html',
+          description: 'Programmes offerts par province et territoire',
+          destinationContextStatus: 'available',
+          destinationSectionHeadings: ['Nouveau calcul des prestations'],
+        }),
+      ],
+      pageLanguage: 'fr',
+      hasLegacyTopicDoormatTemplate: false,
+      mostRequestedLinks: [],
+      selectedModel: 'selected-model',
+    });
+
+    expect(result.rows.map((row) => row.issueId)).not.toContain(
+      'description-missing-needed-information',
+    );
+  });
+
+  it('suppresses generic French H2 content gaps when the concept is covered', async () => {
+    openRouter.call.and.resolveTo({
+      choices: [
+        {
+          message: {
+            content: JSON.stringify({
+              doormats: [
+                {
+                  doormat_index: 1,
+	                  link_text: 'Prestation pour enfants handicapes',
+	                  href: '/fr/services/impots/prestations/enfants-handicapes.html',
+	                  description: 'Paiements pour les familles admissibles',
+                  detected_description_style: 'phrase',
+                  ...defaultLinkClassifications(),
+                  destination_content_assessment: {
+                    important_element_ids: ['h2-1'],
+                    covered_element_ids: [],
+                    missing_important_element_ids: ['h2-1'],
+                  },
+                  issues: [],
+                },
+              ],
+            }),
+          },
+        },
+      ],
+    });
+
+    const result = await service.analyze({
+      doormatSummaries: [
+        summary({
+	          linkText: 'Prestation pour enfants handicapes',
+	          href: '/fr/services/impots/prestations/enfants-handicapes.html',
+	          description: 'Paiements pour les familles admissibles',
+          destinationContextStatus: 'available',
+          destinationSectionHeadings: ['Admissibilite'],
+        }),
+      ],
+      pageLanguage: 'fr',
+      hasLegacyTopicDoormatTemplate: false,
+      mostRequestedLinks: [],
+      selectedModel: 'selected-model',
+    });
+
+    expect(result.rows.map((row) => row.issueId)).not.toContain(
+      'description-missing-needed-information',
+    );
+  });
+
+  it('suppresses encoded French H2 content gaps when the concept is covered', async () => {
+    openRouter.call.and.resolveTo({
+      choices: [
+        {
+          message: {
+            content: JSON.stringify({
+              doormats: [
+                {
+                  doormat_index: 1,
+                  link_text: 'Prestation pour enfants handicapés',
+                  href: '/fr/services/impots/prestations/enfants-handicapes.html',
+                  description: 'Paiements pour les familles admissibles',
+                  detected_description_style: 'phrase',
+                  ...defaultLinkClassifications(),
+                  destination_content_assessment: {
+                    important_element_ids: ['h2-1'],
+                    covered_element_ids: [],
+                    missing_important_element_ids: ['h2-1'],
+                  },
+                  issues: [],
+                },
+              ],
+            }),
+          },
+        },
+      ],
+    });
+
+    const result = await service.analyze({
+      doormatSummaries: [
+        summary({
+          linkText: 'Prestation pour enfants handicapés',
+          href: '/fr/services/impots/prestations/enfants-handicapes.html',
+          description: 'Paiements pour les familles admissibles',
+          destinationContextStatus: 'available',
+          destinationSectionHeadings: ['Admissibilité'],
+        }),
+      ],
+      pageLanguage: 'fr',
+      hasLegacyTopicDoormatTemplate: false,
+      mostRequestedLinks: [],
+      selectedModel: 'selected-model',
+    });
+
+    expect(result.rows.map((row) => row.issueId)).not.toContain(
+      'description-missing-needed-information',
+    );
+  });
+
+  it('suppresses generic eligibility H2 content gaps when the doormat includes concrete eligibility cues', async () => {
+    openRouter.call.and.resolveTo({
+      choices: [
+        {
+          message: {
+            content: JSON.stringify({
+              doormats: [
+                {
+                  doormat_index: 1,
+                  link_text: 'Prestation pour enfants handicapes',
+                  href: '/fr/agence-revenu/services/prestations-enfants-familles/prestation-enfants-handicapes.html',
+                  description:
+                    'Versement mensuel aux familles qui s occupent d un enfant de moins de 18 ans qui a une deficience grave',
+                  detected_description_style: 'phrase',
+                  ...defaultLinkClassifications(),
+                  destination_content_assessment: {
+                    important_element_ids: ['h2-1'],
+                    covered_element_ids: [],
+                    missing_important_element_ids: ['h2-1'],
+                  },
+                  issues: [],
+                },
+              ],
+            }),
+          },
+        },
+      ],
+    });
+
+    const result = await service.analyze({
+      doormatSummaries: [
+        summary({
+          linkText: 'Prestation pour enfants handicapes',
+          href: '/fr/agence-revenu/services/prestations-enfants-familles/prestation-enfants-handicapes.html',
+          description:
+            'Versement mensuel aux familles qui s occupent d un enfant de moins de 18 ans qui a une deficience grave',
+          destinationContextStatus: 'available',
+          destinationSectionHeadings: ['Admissibilite'],
+        }),
+      ],
+      pageLanguage: 'fr',
+      hasLegacyTopicDoormatTemplate: false,
+      mostRequestedLinks: [],
+      selectedModel: 'selected-model',
+    });
+
+    expect(result.rows.map((row) => row.issueId)).not.toContain(
+      'description-missing-needed-information',
+    );
+  });
+
+  it('keeps decision-critical French application H2 content gaps when the concept is missing', async () => {
+    openRouter.call.and.resolveTo({
+      choices: [
+        {
+          message: {
+            content: JSON.stringify({
+              doormats: [
+                {
+                  doormat_index: 1,
+                  link_text: 'Prestation pour enfants handicapes',
+                  href: '/fr/services/impots/prestations/enfants-handicapes.html',
+                  description: 'Paiements pour les familles admissibles',
+                  detected_description_style: 'phrase',
+                  ...defaultLinkClassifications(),
+                  destination_content_assessment: {
+                    important_element_ids: ['h2-1'],
+                    covered_element_ids: [],
+                    missing_important_element_ids: ['h2-1'],
+                  },
+                  issues: [],
+                },
+              ],
+            }),
+          },
+        },
+      ],
+    });
+
+    const result = await service.analyze({
+      doormatSummaries: [
+        summary({
+          linkText: 'Prestation pour enfants handicapes',
+          href: '/fr/services/impots/prestations/enfants-handicapes.html',
+          description: 'Paiements pour les familles admissibles',
+          destinationContextStatus: 'available',
+          destinationSectionHeadings: ['Faire une demande'],
+        }),
+      ],
+      pageLanguage: 'fr',
+      hasLegacyTopicDoormatTemplate: false,
+      mostRequestedLinks: [],
+      selectedModel: 'selected-model',
+    });
+
+    expect(result.rows.map((row) => row.issueId)).toContain(
+      'description-missing-needed-information',
+    );
+  });
+
+  it('suppresses French intro content gaps when the doormat covers the broad program definition', async () => {
+    openRouter.call.and.resolveTo({
+      choices: [
+        {
+          message: {
+            content: JSON.stringify({
+              doormats: [
+                {
+                  doormat_index: 1,
+                  link_text: 'Credit pour la TPS/TVH',
+                  href: '/fr/services/impots/prestations/tps-tvh.html',
+                  description:
+                    'Versements pour les particuliers et les familles a revenu faible ou moyen',
+                  detected_description_style: 'phrase',
+                  ...defaultLinkClassifications(),
+                  destination_content_assessment: {
+                    important_element_ids: ['intro-1'],
+                    covered_element_ids: [],
+                    missing_important_element_ids: ['intro-1'],
+                  },
+                  issues: [],
+                },
+              ],
+            }),
+          },
+        },
+      ],
+    });
+
+    const result = await service.analyze({
+      doormatSummaries: [
+        summary({
+          linkText: 'Credit pour la TPS/TVH',
+          href: '/fr/services/impots/prestations/tps-tvh.html',
+          description:
+            'Versements pour les particuliers et les familles a revenu faible ou moyen',
+          destinationContextStatus: 'available',
+          destinationIntroParagraphs: [
+            'Le credit pour la TPS/TVH etait un versement trimestriel non imposable verse aux particuliers et aux familles a revenu faible ou moyen.',
+          ],
+        }),
+      ],
+      pageLanguage: 'fr',
+      hasLegacyTopicDoormatTemplate: false,
+      mostRequestedLinks: [],
+      selectedModel: 'selected-model',
+    });
+
+    expect(result.rows.map((row) => row.issueId)).not.toContain(
+      'description-missing-needed-information',
+    );
+  });
+
   it('removes all extracted labels from model analysis text', async () => {
     openRouter.call.and.resolveTo({
       choices: [

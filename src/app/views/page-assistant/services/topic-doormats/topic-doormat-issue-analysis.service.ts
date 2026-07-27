@@ -2346,11 +2346,37 @@ export class TopicDoormatIssueAnalysisService {
       const element = elementsById.get(id);
       if (!element) return [];
       seen.add(id);
-      if (this.isTopicDoormatLifecycleStatusAlreadyCovered(summary, element)) {
+      if (this.isTopicDoormatContentGapNoise(summary, element)) {
         return [];
       }
       return [element];
     });
+  }
+
+  private isTopicDoormatContentGapNoise(
+    summary: TopicDoormatSummary,
+    element: TopicDoormatDestinationContextElement,
+  ): boolean {
+    if (this.isTopicDoormatLifecycleStatusAlreadyCovered(summary, element)) {
+      return true;
+    }
+    if (this.isTopicDoormatDestinationElementCovered(summary, element)) {
+      return true;
+    }
+    if (
+      element.type === 'intro' &&
+      this.isTopicDoormatLifecycleStatusElement(element.text) &&
+      !this.hasTopicDoormatDecisionCriticalText(element.text)
+    ) {
+      return true;
+    }
+    if (element.type === 'h2') {
+      return (
+        this.isTopicDoormatLifecycleStatusElement(element.text) ||
+        !this.hasTopicDoormatDecisionCriticalText(element.text)
+      );
+    }
+    return false;
   }
 
   private buildLocalTopicDoormatStyleIssueRows(
@@ -3013,10 +3039,186 @@ export class TopicDoormatIssueAnalysisService {
       'credit',
       'credits',
       'tax',
+      'le',
+      'la',
+      'les',
+      'un',
+      'une',
+      'des',
+      'du',
+      'de',
+      'd',
+      'pour',
+      'aux',
+      'avec',
+      'dans',
+      'sur',
+      'vous',
+      'votre',
+      'vos',
+      'particuliers',
+      'familles',
+      'prestation',
+      'prestations',
+      'credit',
+      'credits',
+      'impot',
+      'impots',
     ]);
-    return value
-      .split(/\s+/)
-      .filter((token) => token.length > 2 && !stopWords.has(token));
+    return Array.from(
+      new Set(
+        value
+          .split(/\s+/)
+          .filter((token) => token.length > 2 && !stopWords.has(token)),
+      ),
+    );
+  }
+
+  private isTopicDoormatDestinationElementCovered(
+    summary: TopicDoormatSummary,
+    element: TopicDoormatDestinationContextElement,
+  ): boolean {
+    const doormatText = this.normalizeTopicDoormatDestinationComparisonText(
+      [
+        summary.linkText,
+        summary.description,
+        summary.rawItemText,
+        ...(summary.labels ?? []),
+      ].join(' '),
+    );
+    const elementText = this.normalizeTopicDoormatDestinationComparisonText(
+      element.text,
+    );
+    if (!doormatText || !elementText) return false;
+
+    if (element.type === 'h2') {
+      return (
+        this.isTopicDoormatConceptCovered(elementText, doormatText) ||
+        this.isTopicDoormatGenericEligibilityCovered(elementText, doormatText)
+      );
+    }
+
+    return (
+      this.isTopicDoormatIntroConceptCovered(elementText, doormatText) ||
+      this.hasTopicDoormatMeaningfulTokenCoverage(elementText, doormatText)
+    );
+  }
+
+  private isTopicDoormatIntroConceptCovered(
+    elementText: string,
+    doormatText: string,
+  ): boolean {
+    const groups = this.getTopicDoormatCoveredConceptGroups(
+      elementText,
+      doormatText,
+    );
+    if (groups >= 2) return true;
+    return (
+      groups >= 1 &&
+      this.hasTopicDoormatConcept(elementText, ['program']) &&
+      this.hasTopicDoormatConcept(doormatText, ['program'])
+    );
+  }
+
+  private isTopicDoormatConceptCovered(
+    elementText: string,
+    doormatText: string,
+  ): boolean {
+    return this.getTopicDoormatCoveredConceptGroups(elementText, doormatText) > 0;
+  }
+
+  private isTopicDoormatGenericEligibilityCovered(
+    elementText: string,
+    doormatText: string,
+  ): boolean {
+    if (!this.hasTopicDoormatConcept(elementText, ['eligibility'])) {
+      return false;
+    }
+    const criteria = [
+      ['audience'],
+      ['age'],
+      ['disability'],
+      ['income'],
+      ['family-status'],
+    ];
+    const coveredCriteria = criteria.filter((group) =>
+      this.hasTopicDoormatConcept(doormatText, group),
+    ).length;
+    return coveredCriteria >= 2;
+  }
+
+  private getTopicDoormatCoveredConceptGroups(
+    elementText: string,
+    doormatText: string,
+  ): number {
+    const conceptGroups = [
+      ['eligibility'],
+      ['application'],
+      ['payment'],
+      ['amount'],
+      ['deadline'],
+      ['document'],
+      ['audience'],
+      ['program'],
+    ];
+    return conceptGroups.filter(
+      (group) =>
+        this.hasTopicDoormatConcept(elementText, group) &&
+        this.hasTopicDoormatConcept(doormatText, group),
+    ).length;
+  }
+
+  private hasTopicDoormatConcept(value: string, groups: string[]): boolean {
+    return groups.some((group) => {
+      const pattern = this.getTopicDoormatConceptPattern(group);
+      return pattern ? pattern.test(value) : false;
+    });
+  }
+
+  private getTopicDoormatConceptPattern(group: string): RegExp | null {
+    const patterns: Record<string, RegExp> = {
+      eligibility:
+        /\b(?:eligibility|eligible|qualify|qualifies|admissibilite|admissible|admissibles|admissibilites)\b/,
+      application:
+        /\b(?:apply|application|register|registration|claim|request|demande|demandes|inscription|inscrire|presenter une demande|faire une demande)\b/,
+      payment:
+        /\b(?:payment|payments|pay|paid|quarterly|monthly|versement|versements|paiement|paiements|trimestriel|trimestriels|mensuel|mensuels)\b/,
+      amount:
+        /\b(?:amount|amounts|rate|rates|maximum|minimum|montant|montants|taux|maximum|minimum)\b/,
+      deadline:
+        /\b(?:deadline|due date|before|after|date limite|echeance|avant|apres)\b/,
+      document:
+        /\b(?:document|documents|form|forms|proof|attestation|formulaire|formulaires|preuve|pieces justificatives)\b/,
+      audience:
+        /\b(?:individual|individuals|family|families|child|children|person|people|resident|residents|particulier|particuliers|famille|familles|enfant|enfants|personne|personnes|resident|residents|menage|menages)\b/,
+      program:
+        /\b(?:program|programs|benefit|benefits|credit|credits|rebate|allowance|relief|programme|programmes|prestation|prestations|credit|credits|remise|allocation|aide)\b/,
+      age:
+        /\b(?:age|aged|under|over|younger|older|less than|more than|moins de|plus de|ans|years old)\b/,
+      disability:
+        /\b(?:disability|disabled|impairment|severe|grave|handicap|handicape|handicapes|deficience|invalidite)\b/,
+      income:
+        /\b(?:income|low income|middle income|revenu|faible revenu|revenu faible|revenu moyen)\b/,
+      'family-status':
+        /\b(?:care|caring|support|supporting|s occupe|occupent|subvenir|subviennent|charge|soins)\b/,
+    };
+    return patterns[group] ?? null;
+  }
+
+  private hasTopicDoormatMeaningfulTokenCoverage(
+    elementText: string,
+    doormatText: string,
+  ): boolean {
+    const elementTokens =
+      this.getTopicDoormatMeaningfulDestinationTokens(elementText);
+    if (elementTokens.length < 4) return false;
+    const doormatTokenSet = new Set(
+      this.getTopicDoormatMeaningfulDestinationTokens(doormatText),
+    );
+    const coveredCount = elementTokens.filter((token) =>
+      doormatTokenSet.has(token),
+    ).length;
+    return coveredCount >= 3 && coveredCount / elementTokens.length >= 0.3;
   }
 
   private isTopicDoormatLifecycleStatusAlreadyCovered(
@@ -3038,13 +3240,32 @@ export class TopicDoormatIssueAnalysisService {
     const normalized = this.normalizeTopicDoormatDestinationComparisonText(value);
     return (
       /^status (?:closed|archived|inactive|expired|ended)\b/.test(normalized) ||
-      /^(?:closed|archived|inactive|expired|ended)$/.test(normalized)
+      /^(?:closed|archived|inactive|expired|ended)$/.test(normalized) ||
+      /\b(?:closed|archived|inactive|expired|ended|stopped|replaced|formerly|no longer available|not available|new|updated|temporary|provisional|final payment|no further payments)\b/.test(
+        normalized,
+      ) ||
+      /\b(?:ferme|fermee|archive|expire|termine|terminee|fin|remplace|remplacee|anciennement|plus disponible|n est plus disponible|ne sont plus disponibles|temporaire|provisoire|dernier versement|plus aucun versement|autres versements|nouveau|nouvelle|mis a jour|mise a jour)\b/.test(
+        normalized,
+      )
     );
   }
 
   private hasTopicDoormatLifecycleStatusText(value: string): boolean {
-    return /\b(?:status:\s*)?(?:closed|archived|inactive|expired|ended|stopped|replaced|formerly|no longer available|not available|new|updated)\b/i.test(
-      value,
+    const normalized = this.normalizeTopicDoormatDestinationComparisonText(value);
+    return (
+      /\b(?:status )?(?:closed|archived|inactive|expired|ended|stopped|replaced|formerly|no longer available|not available|new|updated|temporary|provisional|final payment|no further payments)\b/.test(
+        normalized,
+      ) ||
+      /\b(?:ferme|fermee|archive|expire|termine|terminee|fin|remplace|remplacee|anciennement|plus disponible|n est plus disponible|ne sont plus disponibles|temporaire|provisoire|dernier versement|plus aucun versement|autres versements|nouveau|nouvelle|mis a jour|mise a jour)\b/.test(
+        normalized,
+      )
+    );
+  }
+
+  private hasTopicDoormatDecisionCriticalText(value: string): boolean {
+    const normalized = this.normalizeTopicDoormatDestinationComparisonText(value);
+    return /\b(?:eligibility|eligible|qualify|who can|who is eligible|apply|application|register|deadline|due date|required document|documents required|amount|payment amount|rates|before you start|admissibilite|admissible|qui peut|faire une demande|presenter une demande|demande|inscription|date limite|echeance|document requis|documents requis|montant|montant du paiement|taux|avant de commencer)\b/.test(
+      normalized,
     );
   }
 
