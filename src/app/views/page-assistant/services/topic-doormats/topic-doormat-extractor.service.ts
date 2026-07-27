@@ -94,9 +94,14 @@ export class TopicDoormatExtractorService {
 
       const oppositeLanguage: TopicDoormatPageLanguage =
         pageLanguage === 'fr' ? 'en' : 'fr';
+      const canMatchByGlobalOrder =
+        oppositeSummaries.length === doormatSummaries.length;
       return doormatSummaries.map((summary) => {
-        const opposite = oppositeByPosition.get(
-          this.getSectionItemKey(summary.sectionIndex, summary.sectionItemIndex),
+        const opposite = this.findOppositeLanguageSummary(
+          summary,
+          oppositeByPosition,
+          oppositeSummaries,
+          canMatchByGlobalOrder,
         );
         if (!opposite) return summary;
         return {
@@ -111,6 +116,20 @@ export class TopicDoormatExtractorService {
     } catch {
       return doormatSummaries;
     }
+  }
+
+  private findOppositeLanguageSummary(
+    summary: TopicDoormatSummary,
+    oppositeByPosition: Map<string, TopicDoormatSummary>,
+    oppositeSummaries: TopicDoormatSummary[],
+    canMatchByGlobalOrder: boolean,
+  ): TopicDoormatSummary | undefined {
+    const positionMatch = oppositeByPosition.get(
+      this.getSectionItemKey(summary.sectionIndex, summary.sectionItemIndex),
+    );
+    if (positionMatch) return positionMatch;
+    if (!canMatchByGlobalOrder) return undefined;
+    return oppositeSummaries[summary.index - 1];
   }
 
   detectPageLanguage(
@@ -345,15 +364,34 @@ export class TopicDoormatExtractorService {
     const alternate = this.cleanString(
       uploadData?.metadata?.find((item) => item.name === 'alternate')?.content,
     );
-    if (!alternate) return '';
     const pageUrl =
       this.cleanString(uploadData?.originalUrl) ||
       this.cleanString(uploadData?.modifiedUrl);
+    if (!alternate) return this.resolveLanguageSwapUrl(pageUrl);
     try {
       const resolved = pageUrl
         ? new URL(alternate, pageUrl)
         : new URL(alternate);
       if (resolved.protocol !== 'https:') return '';
+      resolved.hash = '';
+      return resolved.toString();
+    } catch {
+      return '';
+    }
+  }
+
+  private resolveLanguageSwapUrl(pageUrl: string): string {
+    if (!pageUrl) return '';
+    try {
+      const resolved = new URL(pageUrl);
+      if (resolved.protocol !== 'https:') return '';
+      if (resolved.pathname.includes('/fr/')) {
+        resolved.pathname = resolved.pathname.replace('/fr/', '/en/');
+      } else if (resolved.pathname.includes('/en/')) {
+        resolved.pathname = resolved.pathname.replace('/en/', '/fr/');
+      } else {
+        return '';
+      }
       resolved.hash = '';
       return resolved.toString();
     } catch {

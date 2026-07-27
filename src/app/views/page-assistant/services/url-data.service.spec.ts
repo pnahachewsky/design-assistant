@@ -38,4 +38,37 @@ describe('UrlDataService', () => {
     expect(absolute?.hasAttribute('target')).toBeFalse();
     expect(authored?.getAttribute('target')).toBe('_blank');
   });
+
+  it('uses the visible language selector as alternate metadata when head alternate is missing', async () => {
+    const doc = new DOMParser().parseFromString(
+      `
+        <html lang="fr">
+          <head>
+            <meta name="dcterms.language" content="fra">
+          </head>
+          <body>
+            <section id="wb-lng">
+              <a lang="en" hreflang="en" href="https://www.canada.ca/en/revenue-agency/services/charities-giving/giving-charity-information-donors.html">
+                English
+              </a>
+            </section>
+            <main>
+              <h1>Faire un don</h1>
+            </main>
+          </body>
+        </html>
+      `,
+      'text/html',
+    );
+
+    const result = await service.extractContent(doc);
+
+    expect(result.metadata).toContain(
+      jasmine.objectContaining({
+        name: 'alternate',
+        content:
+          'https://www.canada.ca/en/revenue-agency/services/charities-giving/giving-charity-information-donors.html',
+      }),
+    );
+  });
 });

@@ -88,6 +88,86 @@ export class TopicDoormatIssueAnalysisService {
     },
   };
   private readonly topicDoormatTrailingPunctuationPattern = /[.:;?!,]$/;
+  private readonly topicDoormatDestinationStopWords = new Set([
+    'and',
+    'or',
+    'the',
+    'a',
+    'an',
+    'for',
+    'to',
+    'of',
+    'in',
+    'on',
+    'with',
+    'your',
+    'you',
+    'individuals',
+    'families',
+    'benefit',
+    'benefits',
+    'credit',
+    'credits',
+    'tax',
+    'le',
+    'la',
+    'les',
+    'un',
+    'une',
+    'des',
+    'du',
+    'de',
+    'd',
+    'pour',
+    'aux',
+    'avec',
+    'dans',
+    'sur',
+    'vous',
+    'votre',
+    'vos',
+    'particuliers',
+    'familles',
+    'prestation',
+    'prestations',
+    'impot',
+    'impots',
+  ]);
+  private readonly topicDoormatConceptPatterns: Record<string, RegExp> = {
+    eligibility:
+      /\b(?:eligibility|eligible|qualify|qualifies|admissibilite|admissible|admissibles|admissibilites)\b/,
+    application:
+      /\b(?:apply|application|register|registration|claim|request|demande|demandes|inscription|inscrire|presenter une demande|faire une demande)\b/,
+    payment:
+      /\b(?:payment|payments|pay|paid|quarterly|monthly|versement|versements|paiement|paiements|trimestriel|trimestriels|mensuel|mensuels)\b/,
+    amount:
+      /\b(?:amount|amounts|rate|rates|maximum|minimum|montant|montants|taux)\b/,
+    deadline:
+      /\b(?:deadline|due date|before|after|date limite|echeance|avant|apres)\b/,
+    document:
+      /\b(?:document|documents|form|forms|proof|attestation|formulaire|formulaires|preuve|pieces justificatives)\b/,
+    audience:
+      /\b(?:individual|individuals|family|families|child|children|person|people|resident|residents|particulier|particuliers|famille|familles|enfant|enfants|personne|personnes|menage|menages)\b/,
+    program:
+      /\b(?:program|programs|benefit|benefits|credit|credits|rebate|allowance|relief|programme|programmes|prestation|prestations|remise|allocation|aide)\b/,
+    age: /\b(?:age|aged|under|over|younger|older|less than|more than|moins de|plus de|ans|years old)\b/,
+    disability:
+      /\b(?:disability|disabled|impairment|severe|grave|handicap|handicape|handicapes|deficience|invalidite)\b/,
+    income:
+      /\b(?:income|low income|middle income|revenu|faible revenu|revenu faible|revenu moyen)\b/,
+    'family-status':
+      /\b(?:care|caring|support|supporting|s occupe|occupent|subvenir|subviennent|charge|soins)\b/,
+  };
+  private readonly topicDoormatLifecycleStatusElementPatterns = [
+    /^status (?:closed|archived|inactive|expired|ended)\b/,
+    /^(?:closed|archived|inactive|expired|ended)$/,
+    /\b(?:closed|archived|inactive|expired|ended|stopped|replaced|formerly|no longer available|not available|new|updated|temporary|provisional|final payment|no further payments)\b/,
+    /\b(?:ferme|fermee|archive|expire|termine|terminee|fin|remplace|remplacee|anciennement|plus disponible|n est plus disponible|ne sont plus disponibles|temporaire|provisoire|dernier versement|plus aucun versement|autres versements|nouveau|nouvelle|mis a jour|mise a jour)\b/,
+  ];
+  private readonly topicDoormatLifecycleStatusTextPatterns = [
+    /\b(?:status )?(?:closed|archived|inactive|expired|ended|stopped|replaced|formerly|no longer available|not available|new|updated|temporary|provisional|final payment|no further payments)\b/,
+    /\b(?:ferme|fermee|archive|expire|termine|terminee|fin|remplace|remplacee|anciennement|plus disponible|n est plus disponible|ne sont plus disponibles|temporaire|provisoire|dernier versement|plus aucun versement|autres versements|nouveau|nouvelle|mis a jour|mise a jour)\b/,
+  ];
   private readonly locallyOwnedTopicDoormatIssueIds = new Set([
     'broken-link',
     'description-contains-link',
@@ -913,19 +993,19 @@ export class TopicDoormatIssueAnalysisService {
     descriptionStylesByDoormatIndex: Map<
       number,
       TopicDoormatDescriptionStyle
-    > = new Map(),
+    > = new Map<number, TopicDoormatDescriptionStyle>(),
     destinationContentAssessmentsByDoormatIndex: Map<
       number,
       TopicDoormatDestinationContentAssessment
-    > = new Map(),
+    > = new Map<number, TopicDoormatDestinationContentAssessment>(),
     linkStylesByDoormatIndex: Map<
       number,
       TopicDoormatLinkTextStyle
-    > = new Map(),
+    > = new Map<number, TopicDoormatLinkTextStyle>(),
     destinationLinkAssessmentsByDoormatIndex: Map<
       number,
       TopicDoormatDestinationLinkAssessment
-    > = new Map(),
+    > = new Map<number, TopicDoormatDestinationLinkAssessment>(),
   ): TopicDoormatIssueRow[] {
     const existingIssueKeys = new Set(
       existingRows.map((row) => `${row.sectionIndex ?? 0}|${row.issueId}`),
@@ -1287,36 +1367,17 @@ export class TopicDoormatIssueAnalysisService {
     issueId: 'link-name-too-long' | 'description-too-long',
     pageLanguage: TopicDoormatPageLanguage,
   ): string {
-    const currentLabel = pageLanguage.toUpperCase();
-    const oppositeLabel = (summary.oppositeLanguage ??
-      (pageLanguage === 'fr' ? 'en' : 'fr')).toUpperCase();
-    const currentCount =
-      issueId === 'link-name-too-long'
-        ? summary.linkTextCharacterCount
-        : summary.descriptionCharacterCount;
-    const oppositeCount =
-      issueId === 'link-name-too-long'
-        ? summary.oppositeLanguageLinkTextCharacterCount
-        : summary.oppositeLanguageDescriptionCharacterCount;
-    const limit =
-      issueId === 'link-name-too-long'
-        ? this.getTopicDoormatLinkNameLengthLimit(summary, pageLanguage)
-        : this.getTopicDoormatDescriptionLengthLimit(summary, pageLanguage);
-    const currentMetric =
-      issueId === 'description-too-long'
-        ? `${currentCount}`
-        : `${currentCount}/${limit}`;
+    const metrics = this.getTopicDoormatLengthMetricData(
+      summary,
+      issueId,
+      pageLanguage,
+    );
 
-    if (typeof oppositeCount !== 'number') {
-      return currentMetric;
+    if (!metrics.oppositeMetric) {
+      return metrics.currentMetric;
     }
 
-    const oppositeMetric =
-      issueId === 'description-too-long'
-        ? `${oppositeCount}`
-        : `${oppositeCount}/${limit}`;
-
-    return `${currentLabel} ${currentMetric}; ${oppositeLabel} ${oppositeMetric}`;
+    return `${metrics.currentLabel} ${metrics.currentMetric}; ${metrics.oppositeLabel} ${metrics.oppositeMetric}`;
   }
 
   private buildTopicDoormatLengthMetricParts(
@@ -1324,30 +1385,16 @@ export class TopicDoormatIssueAnalysisService {
     issueId: 'link-name-too-long' | 'description-too-long',
     pageLanguage: TopicDoormatPageLanguage,
   ): TopicDoormatEvidenceMetricPart[] {
-    const currentLabel = pageLanguage.toUpperCase();
-    const oppositeLabel = (summary.oppositeLanguage ??
-      (pageLanguage === 'fr' ? 'en' : 'fr')).toUpperCase();
-    const currentCount =
-      issueId === 'link-name-too-long'
-        ? summary.linkTextCharacterCount
-        : summary.descriptionCharacterCount;
-    const oppositeCount =
-      issueId === 'link-name-too-long'
-        ? summary.oppositeLanguageLinkTextCharacterCount
-        : summary.oppositeLanguageDescriptionCharacterCount;
-    const limit =
-      issueId === 'link-name-too-long'
-        ? this.getTopicDoormatLinkNameLengthLimit(summary, pageLanguage)
-        : this.getTopicDoormatDescriptionLengthLimit(summary, pageLanguage);
-    const currentMetric =
-      issueId === 'description-too-long'
-        ? `${currentCount}`
-        : `${currentCount}/${limit}`;
+    const metrics = this.getTopicDoormatLengthMetricData(
+      summary,
+      issueId,
+      pageLanguage,
+    );
 
-    if (typeof oppositeCount !== 'number') {
+    if (typeof metrics.oppositeCount !== 'number' || !metrics.oppositeMetric) {
       return [
         {
-          metric: currentMetric,
+          metric: metrics.currentMetric,
           severity:
             issueId === 'link-name-too-long'
               ? this.getTopicDoormatLinkNameLengthSeverity(summary, pageLanguage)
@@ -1359,27 +1406,61 @@ export class TopicDoormatIssueAnalysisService {
       ];
     }
 
-    const oppositeMetric =
-      issueId === 'description-too-long'
-        ? `${oppositeCount}`
-        : `${oppositeCount}/${limit}`;
-
     return [
       {
-        metric: `${currentLabel} ${currentMetric}`,
+        metric: `${metrics.currentLabel} ${metrics.currentMetric}`,
         severity: this.getTopicDoormatBilingualLengthSeverity(
-          currentCount,
+          metrics.currentCount,
           issueId,
         ),
       },
       {
-        metric: `${oppositeLabel} ${oppositeMetric}`,
+        metric: `${metrics.oppositeLabel} ${metrics.oppositeMetric}`,
         severity: this.getTopicDoormatBilingualLengthSeverity(
-          oppositeCount,
+          metrics.oppositeCount,
           issueId,
         ),
       },
     ];
+  }
+
+  private getTopicDoormatLengthMetricData(
+    summary: TopicDoormatSummary,
+    issueId: 'link-name-too-long' | 'description-too-long',
+    pageLanguage: TopicDoormatPageLanguage,
+  ): {
+    currentLabel: string;
+    oppositeLabel: string;
+    currentCount: number;
+    oppositeCount?: number;
+    currentMetric: string;
+    oppositeMetric?: string;
+  } {
+    const isLinkLengthIssue = issueId === 'link-name-too-long';
+    const currentCount = isLinkLengthIssue
+      ? summary.linkTextCharacterCount
+      : summary.descriptionCharacterCount;
+    const oppositeCount = isLinkLengthIssue
+      ? summary.oppositeLanguageLinkTextCharacterCount
+      : summary.oppositeLanguageDescriptionCharacterCount;
+    const limit = isLinkLengthIssue
+      ? this.getTopicDoormatLinkNameLengthLimit(summary, pageLanguage)
+      : this.getTopicDoormatDescriptionLengthLimit(summary, pageLanguage);
+    const formatMetric = (count: number): string =>
+      isLinkLengthIssue ? `${count}/${limit}` : `${count}`;
+
+    return {
+      currentLabel: pageLanguage.toUpperCase(),
+      oppositeLabel: (summary.oppositeLanguage ??
+        (pageLanguage === 'fr' ? 'en' : 'fr')).toUpperCase(),
+      currentCount,
+      oppositeCount,
+      currentMetric: formatMetric(currentCount),
+      oppositeMetric:
+        typeof oppositeCount === 'number'
+          ? formatMetric(oppositeCount)
+          : undefined,
+    };
   }
 
   private getTopicDoormatBilingualLengthSeverity(
@@ -1448,7 +1529,7 @@ export class TopicDoormatIssueAnalysisService {
   private getFirstOrSecondPersonPronoun(description: string): string {
     const text = this.cleanVisibleText(description);
     const firstToken =
-      text.match(/^\s*["'(\[]?\s*([\p{L}\p{M}\p{N}_]+(?:['’][\p{L}\p{M}\p{N}_]+)?)/u)?.[1] ??
+      text.match(/^\s*["'([]?\s*([\p{L}\p{M}\p{N}_]+(?:['’][\p{L}\p{M}\p{N}_]+)?)/u)?.[1] ??
       '';
     if (firstToken === 'US') return '';
 
@@ -2061,7 +2142,7 @@ export class TopicDoormatIssueAnalysisService {
   ): { key: string; label: string } | null {
     const words =
       this.cleanVisibleText(description).match(
-        /[\p{L}\p{M}\p{N}]+(?:['’\-][\p{L}\p{M}\p{N}]+)*/gu,
+        /[\p{L}\p{M}\p{N}]+(?:['’-][\p{L}\p{M}\p{N}]+)*/gu,
       ) ?? [];
     if (words.length < 2) return null;
     const firstTwoWords = words.slice(0, 2);
@@ -3018,58 +3099,15 @@ export class TopicDoormatIssueAnalysisService {
   }
 
   private getTopicDoormatMeaningfulDestinationTokens(value: string): string[] {
-    const stopWords = new Set([
-      'and',
-      'or',
-      'the',
-      'a',
-      'an',
-      'for',
-      'to',
-      'of',
-      'in',
-      'on',
-      'with',
-      'your',
-      'you',
-      'individuals',
-      'families',
-      'benefit',
-      'benefits',
-      'credit',
-      'credits',
-      'tax',
-      'le',
-      'la',
-      'les',
-      'un',
-      'une',
-      'des',
-      'du',
-      'de',
-      'd',
-      'pour',
-      'aux',
-      'avec',
-      'dans',
-      'sur',
-      'vous',
-      'votre',
-      'vos',
-      'particuliers',
-      'familles',
-      'prestation',
-      'prestations',
-      'credit',
-      'credits',
-      'impot',
-      'impots',
-    ]);
     return Array.from(
       new Set(
         value
           .split(/\s+/)
-          .filter((token) => token.length > 2 && !stopWords.has(token)),
+          .filter(
+            (token) =>
+              token.length > 2 &&
+              !this.topicDoormatDestinationStopWords.has(token),
+          ),
       ),
     );
   }
@@ -3176,33 +3214,7 @@ export class TopicDoormatIssueAnalysisService {
   }
 
   private getTopicDoormatConceptPattern(group: string): RegExp | null {
-    const patterns: Record<string, RegExp> = {
-      eligibility:
-        /\b(?:eligibility|eligible|qualify|qualifies|admissibilite|admissible|admissibles|admissibilites)\b/,
-      application:
-        /\b(?:apply|application|register|registration|claim|request|demande|demandes|inscription|inscrire|presenter une demande|faire une demande)\b/,
-      payment:
-        /\b(?:payment|payments|pay|paid|quarterly|monthly|versement|versements|paiement|paiements|trimestriel|trimestriels|mensuel|mensuels)\b/,
-      amount:
-        /\b(?:amount|amounts|rate|rates|maximum|minimum|montant|montants|taux|maximum|minimum)\b/,
-      deadline:
-        /\b(?:deadline|due date|before|after|date limite|echeance|avant|apres)\b/,
-      document:
-        /\b(?:document|documents|form|forms|proof|attestation|formulaire|formulaires|preuve|pieces justificatives)\b/,
-      audience:
-        /\b(?:individual|individuals|family|families|child|children|person|people|resident|residents|particulier|particuliers|famille|familles|enfant|enfants|personne|personnes|resident|residents|menage|menages)\b/,
-      program:
-        /\b(?:program|programs|benefit|benefits|credit|credits|rebate|allowance|relief|programme|programmes|prestation|prestations|credit|credits|remise|allocation|aide)\b/,
-      age:
-        /\b(?:age|aged|under|over|younger|older|less than|more than|moins de|plus de|ans|years old)\b/,
-      disability:
-        /\b(?:disability|disabled|impairment|severe|grave|handicap|handicape|handicapes|deficience|invalidite)\b/,
-      income:
-        /\b(?:income|low income|middle income|revenu|faible revenu|revenu faible|revenu moyen)\b/,
-      'family-status':
-        /\b(?:care|caring|support|supporting|s occupe|occupent|subvenir|subviennent|charge|soins)\b/,
-    };
-    return patterns[group] ?? null;
+    return this.topicDoormatConceptPatterns[group] ?? null;
   }
 
   private hasTopicDoormatMeaningfulTokenCoverage(
@@ -3238,27 +3250,15 @@ export class TopicDoormatIssueAnalysisService {
 
   private isTopicDoormatLifecycleStatusElement(value: string): boolean {
     const normalized = this.normalizeTopicDoormatDestinationComparisonText(value);
-    return (
-      /^status (?:closed|archived|inactive|expired|ended)\b/.test(normalized) ||
-      /^(?:closed|archived|inactive|expired|ended)$/.test(normalized) ||
-      /\b(?:closed|archived|inactive|expired|ended|stopped|replaced|formerly|no longer available|not available|new|updated|temporary|provisional|final payment|no further payments)\b/.test(
-        normalized,
-      ) ||
-      /\b(?:ferme|fermee|archive|expire|termine|terminee|fin|remplace|remplacee|anciennement|plus disponible|n est plus disponible|ne sont plus disponibles|temporaire|provisoire|dernier versement|plus aucun versement|autres versements|nouveau|nouvelle|mis a jour|mise a jour)\b/.test(
-        normalized,
-      )
+    return this.topicDoormatLifecycleStatusElementPatterns.some((pattern) =>
+      pattern.test(normalized),
     );
   }
 
   private hasTopicDoormatLifecycleStatusText(value: string): boolean {
     const normalized = this.normalizeTopicDoormatDestinationComparisonText(value);
-    return (
-      /\b(?:status )?(?:closed|archived|inactive|expired|ended|stopped|replaced|formerly|no longer available|not available|new|updated|temporary|provisional|final payment|no further payments)\b/.test(
-        normalized,
-      ) ||
-      /\b(?:ferme|fermee|archive|expire|termine|terminee|fin|remplace|remplacee|anciennement|plus disponible|n est plus disponible|ne sont plus disponibles|temporaire|provisoire|dernier versement|plus aucun versement|autres versements|nouveau|nouvelle|mis a jour|mise a jour)\b/.test(
-        normalized,
-      )
+    return this.topicDoormatLifecycleStatusTextPatterns.some((pattern) =>
+      pattern.test(normalized),
     );
   }
 

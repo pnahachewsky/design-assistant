@@ -278,6 +278,135 @@ describe('TopicDoormatExtractorService', () => {
     );
   });
 
+  it('falls back to global doormat order when alternate section positions do not match', async () => {
+    fetchService.fetchContentWithResponse.and.callFake((url: string) => {
+      expect(url).toBe('https://www.canada.ca/fr/services/prestations.html');
+      return Promise.resolve({
+        document: new DOMParser().parseFromString(
+          `<html><body><main>
+            <h2>Renseignements</h2>
+            <div class="gc-srvinfo">
+              <div>
+                <h3><a href="/fr/prestations/un.html">Nom de prestation un</a></h3>
+                <p>Description francaise un</p>
+              </div>
+            </div>
+          </main></body></html>`,
+          'text/html',
+        ),
+        status: 200,
+        statusText: 'OK',
+        url,
+      });
+    });
+
+    const enriched = await service.enrichOppositeLanguageLengths(
+      [
+        {
+          index: 1,
+          linkText: 'Benefit one',
+          href: '/en/benefits/one.html',
+          description: 'Benefit one description',
+          headingLevel: 3,
+          itemLinkCount: 1,
+          headingLinkCount: 1,
+          descriptionLinkCount: 0,
+          hasSplitHeadingLink: false,
+          hasDescriptionLink: false,
+          hasDescriptionIconOrImage: false,
+          hasDescriptionSpecialFormatting: false,
+          rawItemText: '',
+          linkTextCharacterCount: 11,
+          descriptionCharacterCount: 23,
+          sectionIndex: 1,
+          sectionTitle: 'Benefits',
+          sectionItemIndex: 2,
+          sectionDoormatCount: 2,
+        },
+      ],
+      {
+        originalUrl: 'https://www.canada.ca/en/services/benefits.html',
+        metadata: [
+          {
+            name: 'alternate',
+            content: 'https://www.canada.ca/fr/services/prestations.html',
+          },
+        ],
+      },
+      'en',
+    );
+
+    expect(enriched[0]).toEqual(
+      jasmine.objectContaining({
+        oppositeLanguage: 'fr',
+        oppositeLanguageLinkTextCharacterCount: 20,
+        oppositeLanguageDescriptionCharacterCount: 24,
+      }),
+    );
+  });
+
+  it('derives the opposite-language URL from the page URL when alternate metadata is missing', async () => {
+    fetchService.fetchContentWithResponse.and.callFake((url: string) => {
+      expect(url).toBe('https://www.canada.ca/en/services/benefits.html');
+      return Promise.resolve({
+        document: new DOMParser().parseFromString(
+          `<html><body><main>
+            <h2>Benefits</h2>
+            <div class="gc-srvinfo">
+              <div>
+                <h3><a href="/en/benefits/one.html">Benefit one</a></h3>
+                <p>English benefit description</p>
+              </div>
+            </div>
+          </main></body></html>`,
+          'text/html',
+        ),
+        status: 200,
+        statusText: 'OK',
+        url,
+      });
+    });
+
+    const enriched = await service.enrichOppositeLanguageLengths(
+      [
+        {
+          index: 1,
+          linkText: 'Prestation un',
+          href: '/fr/prestations/un.html',
+          description: 'Description francaise',
+          headingLevel: 3,
+          itemLinkCount: 1,
+          headingLinkCount: 1,
+          descriptionLinkCount: 0,
+          hasSplitHeadingLink: false,
+          hasDescriptionLink: false,
+          hasDescriptionIconOrImage: false,
+          hasDescriptionSpecialFormatting: false,
+          rawItemText: '',
+          linkTextCharacterCount: 12,
+          descriptionCharacterCount: 21,
+          sectionIndex: 1,
+          sectionTitle: 'Prestations',
+          sectionItemIndex: 1,
+          sectionDoormatCount: 1,
+        },
+      ],
+      {
+        originalUrl: 'https://www.canada.ca/fr/services/benefits.html',
+        metadata: [],
+      },
+      'fr',
+    );
+
+    expect(enriched[0]).toEqual(
+      jasmine.objectContaining({
+        oppositeLanguage: 'en',
+        oppositeLanguageLinkTextCharacterCount: 11,
+        oppositeLanguageDescriptionCharacterCount: 27,
+      }),
+    );
+  });
+
   it('keeps the destination HTTP status when destination context fetch fails', async () => {
     fetchService.fetchContentWithResponse.and.returnValue(Promise.reject(
       Object.assign(new Error('Fetch failed. Status: 410'), {
