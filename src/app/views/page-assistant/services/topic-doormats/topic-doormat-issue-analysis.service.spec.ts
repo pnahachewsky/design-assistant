@@ -370,7 +370,7 @@ describe('TopicDoormatIssueAnalysisService', () => {
                   issue_category: 'mixed-description-style-in-section',
                   description: 'The section mixes description styles.',
                   recommendation: 'Use one style.',
-                  severity: 'Medium',
+                  severity: 'Low',
                 },
               ],
               doormats: descriptions.map((description, index) => ({
@@ -580,7 +580,7 @@ describe('TopicDoormatIssueAnalysisService', () => {
     expect(mixedStyleRow).toEqual(
       jasmine.objectContaining({
         rowType: 'section',
-        severity: 'Medium',
+        severity: 'Low',
         sectionIndex: 1,
       }),
     );

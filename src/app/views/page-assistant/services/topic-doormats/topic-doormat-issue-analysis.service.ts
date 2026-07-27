@@ -2188,7 +2188,7 @@ export class TopicDoormatIssueAnalysisService {
       rows.push({
         include: true,
         rowType: 'section',
-        severity: 'Medium',
+        severity: 'Low',
         doormat: this.buildTopicDoormatSectionLabel(
           analysis.sectionIndex,
           doormatSummaries,
