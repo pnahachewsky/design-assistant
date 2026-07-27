@@ -40887,14 +40887,22 @@ var UrlDataService = class _UrlDataService {
     });
     const currLang = metaArray.find((m) => m.name === "dcterms.language");
     const oppLang = currLang?.content?.toLowerCase() === "fra" ? "en" : "fr";
-    const altLink = doc.querySelector(`link[rel="alternate"][hreflang="${oppLang}"]`);
+    const altLink = this.getAlternateLanguageLink(doc, oppLang);
     if (altLink) {
       metaArray.push({
         name: "alternate",
-        content: altLink.getAttribute("href") || ""
+        content: altLink
       });
     }
     return metaArray;
+  }
+  getAlternateLanguageLink(doc, oppLang) {
+    const headAlternate = doc.querySelector(`link[rel="alternate"][hreflang="${oppLang}"]`);
+    const headAlternateHref = headAlternate?.getAttribute("href") || "";
+    if (headAlternateHref)
+      return headAlternateHref;
+    const languageSelectorLink = doc.querySelector(`#wb-lng a[hreflang="${oppLang}"], a[hreflang="${oppLang}"][lang="${oppLang}"]`);
+    return languageSelectorLink?.getAttribute("href") || "";
   }
   //Get Breadcrumb
   getBreadcrumb(doc, baseUrl) {
@@ -100430,4 +100438,4 @@ export {
    * License: MIT
    *)
 */
-//# sourceMappingURL=chunk-JBGWK7UM.js.map
+//# sourceMappingURL=chunk-FBMWQ3SO.js.map
