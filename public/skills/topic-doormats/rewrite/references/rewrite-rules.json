@@ -36,7 +36,7 @@
     },
     {
       "id": "description-style",
-      "text": "Use one description style across the set. Prefer concise comma-separated keywords or task phrases. Use a sentence-like description only when fragments cannot clearly describe the destination, and do not add final punctuation."
+      "text": "Use one description style across the set. Prefer concise comma-separated keywords or task phrases. For keyword-list descriptions, separate parallel phrases with commas only; do not add 'and' before the final item unless it is part of a fixed phrase, program name, service name, common combined concept, or task phrase. Use a sentence-like description only when fragments cannot clearly describe the destination, and do not add final punctuation."
     },
     {
       "id": "description-quality",
