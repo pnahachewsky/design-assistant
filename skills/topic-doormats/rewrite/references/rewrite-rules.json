@@ -16,7 +16,7 @@
     },
     {
       "id": "use-issue-analysis",
-      "text": "When selected topic doormat issues are supplied, use them as rewrite priorities. Fix each selected issue when possible without creating new length, style, destination, structure, or consistency problems. If an issue cannot be fixed safely, preserve the safest wording."
+      "text": "When selected topic doormat issues are supplied, use them as rewrite priorities. Fix each selected issue when possible without creating new length, style, destination, structure, or consistency problems. Preserve doormats that do not have selected issues. If an issue cannot be fixed safely, preserve the safest wording."
     },
     {
       "id": "link-text",
@@ -24,7 +24,7 @@
     },
     {
       "id": "description-evidence",
-      "text": "Ground each description in supplied destination evidence: title, H1, intro paragraphs, section headings, labels, current doormat text, and opposite-language doormat data when available. Use destination terminology when clear; do not invent unsupported programs, services, forms, benefits, credits, eligibility concepts, deadlines, or tasks."
+      "text": "Ground each rewritten description in supplied destination evidence for the affected doormat: title, H1, intro paragraphs, section headings, labels, cleaned destination main HTML, current doormat text, and opposite-language doormat data when available. Use destination terminology when clear; do not invent unsupported programs, services, forms, benefits, credits, eligibility concepts, deadlines, or tasks."
     },
     {
       "id": "description-purpose",
@@ -36,7 +36,7 @@
     },
     {
       "id": "description-style",
-      "text": "Use one description style across the set. Prefer concise comma-separated keywords or task phrases. Use a sentence-like description only when fragments cannot clearly describe the destination, and do not add final punctuation."
+      "text": "Use one description style across the set. Prefer concise comma-separated keywords or task phrases. For keyword-list descriptions, separate parallel phrases with commas only; do not add 'and' before the final item unless it is part of a fixed phrase, program name, service name, common combined concept, or task phrase. Use a sentence-like description only when fragments cannot clearly describe the destination, and do not add final punctuation."
     },
     {
       "id": "description-quality",

@@ -19,6 +19,11 @@ Use this skill for rewriting topic doormat sets.
 - Keep descriptions concise, specific, and parallel across the set
 - If the user payload includes `topic_doormat_issue_analysis.selected_issues`,
   use those issues as rewrite priorities while still following the rewrite rules
+- If the user payload includes `doormats_with_selected_issues`, use each
+  affected doormat's destination title, H1, intro paragraphs, H2 headings,
+  labels, and cleaned destination main HTML as source evidence for the rewrite
+- Preserve doormats that do not have selected issues unless changing them is
+  required to maintain valid HTML after editing the affected doormats
 - If the user payload includes `page_html`, rewrite that HTML and return only the
   requested output format
 

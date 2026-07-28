@@ -24915,18 +24915,22 @@ var AlertRewriteOrchestratorService = class _AlertRewriteOrchestratorService {
 var TopicDoormatAnalysisStateService = class _TopicDoormatAnalysisStateService {
   analyzedHtml = signal("");
   issueRows = signal([]);
+  doormatSummaries = signal([]);
   responseReceived = signal(false);
   getAnalyzedHtml = computed(() => this.analyzedHtml());
   getIssueRows = computed(() => this.issueRows());
+  getDoormatSummaries = computed(() => this.doormatSummaries());
   hasAnalysis = computed(() => this.responseReceived());
-  setAnalysis(html, rows) {
+  setAnalysis(html, rows, doormatSummaries = []) {
     this.analyzedHtml.set(html || "");
     this.issueRows.set(rows);
+    this.doormatSummaries.set(doormatSummaries);
     this.responseReceived.set(true);
   }
   clear() {
     this.analyzedHtml.set("");
     this.issueRows.set([]);
+    this.doormatSummaries.set([]);
     this.responseReceived.set(false);
   }
   getSelectedRewriteIssues() {
@@ -24958,4615 +24962,10 @@ var TopicDoormatAnalysisStateService = class _TopicDoormatAnalysisStateService {
   }], null, null);
 })();
 
-// src/app/views/page-assistant/data/ai-prompts.constants.ts
-var PROMPT_BASE_URL = new URL("ai-prompts/", document.baseURI);
-var promptFiles = {
-  [PromptKey.Headings]: new URL("headings.txt", PROMPT_BASE_URL).toString(),
-  [PromptKey.Doormats]: new URL("unused-legacy-doormats.txt", PROMPT_BASE_URL).toString(),
-  [PromptKey.PlainLanguage]: new URL("plain-language.txt", PROMPT_BASE_URL).toString()
-};
-var commsObjectivePath = new URL("comms-objective.txt", PROMPT_BASE_URL).toString();
-var promptCache = /* @__PURE__ */ new Map();
-function loadPromptText(path) {
-  return __async(this, null, function* () {
-    const cached = promptCache.get(path);
-    if (cached)
-      return cached;
-    const resp = yield fetch(path);
-    if (!resp.ok) {
-      throw new Error(`Prompt file request failed (${resp.status}): ${path}`);
-    }
-    const text = yield resp.text();
-    promptCache.set(path, text);
-    return text;
-  });
-}
-function getPromptTemplate(key2) {
-  return __async(this, null, function* () {
-    return loadPromptText(promptFiles[key2]);
-  });
-}
-function getCommsObjectivePrompt() {
-  return __async(this, null, function* () {
-    return loadPromptText(commsObjectivePath);
-  });
-}
-
-// node_modules/primeng/fesm2022/primeng-drawer.mjs
-var _c02 = ["header"];
-var _c12 = ["footer"];
-var _c22 = ["content"];
-var _c32 = ["closeicon"];
-var _c42 = ["headless"];
-var _c52 = ["maskRef"];
-var _c62 = ["container"];
-var _c72 = ["closeButton"];
-var _c82 = ["*"];
-var _c92 = (a0, a1, a2, a3, a4, a5) => ({
-  "p-drawer": true,
-  "p-drawer-active": a0,
-  "p-drawer-left": a1,
-  "p-drawer-right": a2,
-  "p-drawer-top": a3,
-  "p-drawer-bottom": a4,
-  "p-drawer-full": a5
-});
-var _c102 = (a0, a1) => ({
-  transform: a0,
-  transition: a1
-});
-var _c11 = (a0) => ({
-  value: "visible",
-  params: a0
-});
-function Drawer_div_0_Conditional_2_ng_container_0_Template(rf, ctx) {
-  if (rf & 1) {
-    \u0275\u0275elementContainer(0);
-  }
-}
-function Drawer_div_0_Conditional_2_Template(rf, ctx) {
-  if (rf & 1) {
-    \u0275\u0275template(0, Drawer_div_0_Conditional_2_ng_container_0_Template, 1, 0, "ng-container", 4);
-  }
-  if (rf & 2) {
-    const ctx_r1 = \u0275\u0275nextContext(2);
-    \u0275\u0275property("ngTemplateOutlet", ctx_r1.headlessTemplate || ctx_r1._headlessTemplate);
-  }
-}
-function Drawer_div_0_Conditional_3_ng_container_1_Template(rf, ctx) {
-  if (rf & 1) {
-    \u0275\u0275elementContainer(0);
-  }
-}
-function Drawer_div_0_Conditional_3_div_2_Template(rf, ctx) {
-  if (rf & 1) {
-    \u0275\u0275elementStart(0, "div");
-    \u0275\u0275text(1);
-    \u0275\u0275elementEnd();
-  }
-  if (rf & 2) {
-    const ctx_r1 = \u0275\u0275nextContext(3);
-    \u0275\u0275classMap(ctx_r1.cx("title"));
-    \u0275\u0275advance();
-    \u0275\u0275textInterpolate(ctx_r1.header);
-  }
-}
-function Drawer_div_0_Conditional_3_p_button_3_ng_template_1_TimesIcon_0_Template(rf, ctx) {
-  if (rf & 1) {
-    \u0275\u0275element(0, "TimesIcon");
-  }
-  if (rf & 2) {
-    \u0275\u0275attribute("data-pc-section", "closeicon");
-  }
-}
-function Drawer_div_0_Conditional_3_p_button_3_ng_template_1_1_ng_template_0_Template(rf, ctx) {
-}
-function Drawer_div_0_Conditional_3_p_button_3_ng_template_1_1_Template(rf, ctx) {
-  if (rf & 1) {
-    \u0275\u0275template(0, Drawer_div_0_Conditional_3_p_button_3_ng_template_1_1_ng_template_0_Template, 0, 0, "ng-template");
-  }
-}
-function Drawer_div_0_Conditional_3_p_button_3_ng_template_1_Template(rf, ctx) {
-  if (rf & 1) {
-    \u0275\u0275template(0, Drawer_div_0_Conditional_3_p_button_3_ng_template_1_TimesIcon_0_Template, 1, 1, "TimesIcon", 8)(1, Drawer_div_0_Conditional_3_p_button_3_ng_template_1_1_Template, 1, 0, null, 4);
-  }
-  if (rf & 2) {
-    const ctx_r1 = \u0275\u0275nextContext(4);
-    \u0275\u0275property("ngIf", !ctx_r1.closeIconTemplate && !ctx_r1._closeIconTemplate);
-    \u0275\u0275advance();
-    \u0275\u0275property("ngTemplateOutlet", ctx_r1.closeIconTemplate || ctx_r1._closeIconTemplate);
-  }
-}
-function Drawer_div_0_Conditional_3_p_button_3_Template(rf, ctx) {
-  if (rf & 1) {
-    const _r3 = \u0275\u0275getCurrentView();
-    \u0275\u0275elementStart(0, "p-button", 9);
-    \u0275\u0275listener("onClick", function Drawer_div_0_Conditional_3_p_button_3_Template_p_button_onClick_0_listener($event) {
-      \u0275\u0275restoreView(_r3);
-      const ctx_r1 = \u0275\u0275nextContext(3);
-      return \u0275\u0275resetView(ctx_r1.close($event));
-    })("keydown.enter", function Drawer_div_0_Conditional_3_p_button_3_Template_p_button_keydown_enter_0_listener($event) {
-      \u0275\u0275restoreView(_r3);
-      const ctx_r1 = \u0275\u0275nextContext(3);
-      return \u0275\u0275resetView(ctx_r1.close($event));
-    });
-    \u0275\u0275template(1, Drawer_div_0_Conditional_3_p_button_3_ng_template_1_Template, 2, 2, "ng-template", null, 1, \u0275\u0275templateRefExtractor);
-    \u0275\u0275elementEnd();
-  }
-  if (rf & 2) {
-    const ctx_r1 = \u0275\u0275nextContext(3);
-    \u0275\u0275property("ngClass", ctx_r1.cx("closeButton"))("buttonProps", ctx_r1.closeButtonProps)("ariaLabel", ctx_r1.ariaCloseLabel);
-    \u0275\u0275attribute("data-pc-section", "closebutton")("data-pc-group-section", "iconcontainer");
-  }
-}
-function Drawer_div_0_Conditional_3_ng_container_6_Template(rf, ctx) {
-  if (rf & 1) {
-    \u0275\u0275elementContainer(0);
-  }
-}
-function Drawer_div_0_Conditional_3_ng_container_7_ng_container_2_Template(rf, ctx) {
-  if (rf & 1) {
-    \u0275\u0275elementContainer(0);
-  }
-}
-function Drawer_div_0_Conditional_3_ng_container_7_Template(rf, ctx) {
-  if (rf & 1) {
-    \u0275\u0275elementContainerStart(0);
-    \u0275\u0275elementStart(1, "div", 5);
-    \u0275\u0275template(2, Drawer_div_0_Conditional_3_ng_container_7_ng_container_2_Template, 1, 0, "ng-container", 4);
-    \u0275\u0275elementEnd();
-    \u0275\u0275elementContainerEnd();
-  }
-  if (rf & 2) {
-    const ctx_r1 = \u0275\u0275nextContext(3);
-    \u0275\u0275advance();
-    \u0275\u0275property("ngClass", ctx_r1.cx("footer"));
-    \u0275\u0275attribute("data-pc-section", "footer");
-    \u0275\u0275advance();
-    \u0275\u0275property("ngTemplateOutlet", ctx_r1.footerTemplate || ctx_r1._footerTemplate);
-  }
-}
-function Drawer_div_0_Conditional_3_Template(rf, ctx) {
-  if (rf & 1) {
-    \u0275\u0275elementStart(0, "div", 5);
-    \u0275\u0275template(1, Drawer_div_0_Conditional_3_ng_container_1_Template, 1, 0, "ng-container", 4)(2, Drawer_div_0_Conditional_3_div_2_Template, 2, 3, "div", 6)(3, Drawer_div_0_Conditional_3_p_button_3_Template, 3, 5, "p-button", 7);
-    \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(4, "div", 5);
-    \u0275\u0275projection(5);
-    \u0275\u0275template(6, Drawer_div_0_Conditional_3_ng_container_6_Template, 1, 0, "ng-container", 4);
-    \u0275\u0275elementEnd();
-    \u0275\u0275template(7, Drawer_div_0_Conditional_3_ng_container_7_Template, 3, 3, "ng-container", 8);
-  }
-  if (rf & 2) {
-    const ctx_r1 = \u0275\u0275nextContext(2);
-    \u0275\u0275property("ngClass", ctx_r1.cx("header"));
-    \u0275\u0275attribute("data-pc-section", "header");
-    \u0275\u0275advance();
-    \u0275\u0275property("ngTemplateOutlet", ctx_r1.headerTemplate || ctx_r1._headerTemplate);
-    \u0275\u0275advance();
-    \u0275\u0275property("ngIf", ctx_r1.header);
-    \u0275\u0275advance();
-    \u0275\u0275property("ngIf", ctx_r1.showCloseIcon && ctx_r1.closable);
-    \u0275\u0275advance();
-    \u0275\u0275property("ngClass", ctx_r1.cx("content"));
-    \u0275\u0275attribute("data-pc-section", "content");
-    \u0275\u0275advance(2);
-    \u0275\u0275property("ngTemplateOutlet", ctx_r1.contentTemplate || ctx_r1._contentTemplate);
-    \u0275\u0275advance();
-    \u0275\u0275property("ngIf", ctx_r1.footerTemplate || ctx_r1._footerTemplate);
-  }
-}
-function Drawer_div_0_Template(rf, ctx) {
-  if (rf & 1) {
-    const _r1 = \u0275\u0275getCurrentView();
-    \u0275\u0275elementStart(0, "div", 3, 0);
-    \u0275\u0275listener("@panelState.start", function Drawer_div_0_Template_div_animation_panelState_start_0_listener($event) {
-      \u0275\u0275restoreView(_r1);
-      const ctx_r1 = \u0275\u0275nextContext();
-      return \u0275\u0275resetView(ctx_r1.onAnimationStart($event));
-    })("@panelState.done", function Drawer_div_0_Template_div_animation_panelState_done_0_listener($event) {
-      \u0275\u0275restoreView(_r1);
-      const ctx_r1 = \u0275\u0275nextContext();
-      return \u0275\u0275resetView(ctx_r1.onAnimationEnd($event));
-    })("keydown", function Drawer_div_0_Template_div_keydown_0_listener($event) {
-      \u0275\u0275restoreView(_r1);
-      const ctx_r1 = \u0275\u0275nextContext();
-      return \u0275\u0275resetView(ctx_r1.onKeyDown($event));
-    });
-    \u0275\u0275template(2, Drawer_div_0_Conditional_2_Template, 1, 1, "ng-container")(3, Drawer_div_0_Conditional_3_Template, 8, 9);
-    \u0275\u0275elementEnd();
-  }
-  if (rf & 2) {
-    const ctx_r1 = \u0275\u0275nextContext();
-    \u0275\u0275styleMap(ctx_r1.style);
-    \u0275\u0275classMap(ctx_r1.styleClass);
-    \u0275\u0275property("ngClass", \u0275\u0275pureFunction6(9, _c92, ctx_r1.visible, ctx_r1.position === "left" && !ctx_r1.fullScreen, ctx_r1.position === "right" && !ctx_r1.fullScreen, ctx_r1.position === "top" && !ctx_r1.fullScreen, ctx_r1.position === "bottom" && !ctx_r1.fullScreen, ctx_r1.fullScreen || ctx_r1.position === "full"))("@panelState", \u0275\u0275pureFunction1(19, _c11, \u0275\u0275pureFunction2(16, _c102, ctx_r1.transformOptions, ctx_r1.transitionOptions)));
-    \u0275\u0275attribute("data-pc-name", "sidebar")("data-pc-section", "root");
-    \u0275\u0275advance(2);
-    \u0275\u0275conditional(ctx_r1.headlessTemplate || ctx_r1._headlessTemplate ? 2 : 3);
-  }
-}
-var theme2 = ({
-  dt
-}) => `
-.p-drawer {
-    display: flex;
-    flex-direction: column;
-    pointer-events: auto;
-    transform: translate3d(0px, 0px, 0px);
-    position: fixed;
-    transition: transform 0.3s;
-    background: ${dt("drawer.background")};
-    color: ${dt("drawer.color")};
-    border: 1px solid ${dt("drawer.border.color")};
-    box-shadow: ${dt("drawer.shadow")};
-}
-
-.p-drawer-content {
-    overflow-y: auto;
-    flex-grow: 1;
-    padding: ${dt("drawer.content.padding")};
-}
-
-.p-drawer-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    flex-shrink: 0;
-    padding: ${dt("drawer.header.padding")};
-}
-
-.p-drawer-footer {
-    padding: ${dt("drawer.header.padding")};
-}
-
-.p-drawer-title {
-    font-weight: ${dt("drawer.title.font.weight")};
-    font-size: ${dt("drawer.title.font.size")};
-}
-
-.p-drawer-full .p-drawer {
-    transition: none;
-    transform: none;
-    width: 100vw !important;
-    height: 100vh !important;
-    max-height: 100%;
-    top: 0px !important;
-    left: 0px !important;
-    border-width: 1px;
-}
-
-.p-drawer-left .p-drawer {
-    align-self: start;
-    width: 20rem;
-    height: 100%;
-    border-right-width: 1px;
-}
-
-.p-drawer-right .p-drawer {
-    align-self: end;
-    width: 20rem;
-    height: 100%;
-    border-left-width: 1px;
-}
-
-.p-drawer-top .p-drawer {
-    height: 10rem;
-    width: 100%;
-    border-bottom-width: 1px;
-}
-
-.p-drawer-bottom .p-drawer {
-    height: 10rem;
-    width: 100%;
-    border-top-width: 1px;
-}
-
-.p-drawer-left .p-drawer-content,
-.p-drawer-right .p-drawer-content,
-.p-drawer-top .p-drawer-content,
-.p-drawer-bottom .p-drawer-content {
-    width: 100%;
-    height: 100%;
-}
-
-.p-drawer-open {
-    display: flex;
-}
-
-.p-drawer-top {
-    justify-content: flex-start;
-}
-
-.p-drawer-bottom {
-    justify-content: flex-end;
-}
-
-.p-drawer {
-    position: fixed;
-    transition: transform 0.3s;
-    display: flex;
-    flex-direction: column;
-}
-
-.p-drawer-content {
-    position: relative;
-    overflow-y: auto;
-    flex-grow: 1;
-}
-
-.p-drawer-header {
-    display: flex;
-    align-items: center;
-}
-
-.p-drawer-footer {
-    margin-top: auto;
-}
-
-.p-drawer-icon {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin-left: auto;
-}
-
-.p-drawer-left {
-    top: 0;
-    left: 0;
-    width: 20rem;
-    height: 100%;
-}
-
-.p-drawer-right {
-    top: 0;
-    right: 0;
-    width: 20rem;
-    height: 100%;
-}
-
-.p-drawer-top {
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 10rem;
-}
-
-.p-drawer-bottom {
-    bottom: 0;
-    left: 0;
-    width: 100%;
-    height: 10rem;
-}
-
-.p-drawer-full {
-    width: 100%;
-    height: 100%;
-    top: 0;
-    left: 0;
-    -webkit-transition: none;
-    transition: none;
-}
-
-.p-drawer-mask {
-    background-color: rgba(0, 0, 0, 0.4);
-    transition-duration: 0.2s;
-}
-
-.p-overlay-mask {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-}
-
-.p-overlay-mask:dir(rtl) {
-    flex-direction: row-reverse;
-}
-
-.p-overlay-mask-enter {
-    animation: p-overlay-mask-enter-animation 150ms forwards;
-}
-
-.p-overlay-mask-leave {
-    animation: p-overlay-mask-leave-animation 150ms forwards;
-}
-
-@keyframes p-overlay-mask-enter-animation {
-    from {
-        background-color: transparent;
-    }
-    to {
-        background-color: rgba(0, 0, 0, 0.4);
-    }
-}
-@keyframes p-overlay-mask-leave-animation {
-    from {
-        background-color: rgba(0, 0, 0, 0.4);
-    }
-    to {
-        background-color: transparent;
-    }
-}
-`;
-var inlineStyles = {
-  mask: ({
-    instance
-  }) => ({
-    position: "fixed",
-    height: "100%",
-    width: "100%",
-    left: 0,
-    top: 0,
-    display: "flex",
-    flexDirection: "column",
-    alignItems: instance.position === "top" ? "flex-start" : instance.position === "bottom" ? "flex-end" : "center"
-  })
-};
-var classes2 = {
-  mask: ({
-    instance
-  }) => ({
-    "p-drawer-mask": true,
-    "p-overlay-mask p-overlay-mask-enter": instance.modal,
-    "p-drawer-open": instance.containerVisible,
-    "p-drawer-full": instance.fullScreen,
-    [`p-drawer-${instance.position}`]: !!instance.position
-  }),
-  root: ({
-    instance
-  }) => ({
-    "p-drawer p-component": true,
-    "p-drawer-full": instance.fullScreen
-  }),
-  header: "p-drawer-header",
-  title: "p-drawer-title",
-  pcCloseButton: "p-drawer-close-button",
-  content: "p-drawer-content",
-  footer: "p-drawer-footer"
-};
-var DrawerStyle = class _DrawerStyle extends BaseStyle {
-  name = "drawer";
-  theme = theme2;
-  classes = classes2;
-  inlineStyles = inlineStyles;
-  static \u0275fac = /* @__PURE__ */ (() => {
-    let \u0275DrawerStyle_BaseFactory;
-    return function DrawerStyle_Factory(__ngFactoryType__) {
-      return (\u0275DrawerStyle_BaseFactory || (\u0275DrawerStyle_BaseFactory = \u0275\u0275getInheritedFactory(_DrawerStyle)))(__ngFactoryType__ || _DrawerStyle);
-    };
-  })();
-  static \u0275prov = /* @__PURE__ */ \u0275\u0275defineInjectable({
-    token: _DrawerStyle,
-    factory: _DrawerStyle.\u0275fac
-  });
-};
-(() => {
-  (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(DrawerStyle, [{
-    type: Injectable
-  }], null, null);
-})();
-var DrawerClasses;
-(function(DrawerClasses2) {
-  DrawerClasses2["mask"] = "p-drawer-mask";
-  DrawerClasses2["root"] = "p-drawer";
-  DrawerClasses2["header"] = "p-drawer-header";
-  DrawerClasses2["title"] = "p-drawer-title";
-  DrawerClasses2["pcCloseButton"] = "p-drawer-close-button";
-  DrawerClasses2["content"] = "p-drawer-content";
-})(DrawerClasses || (DrawerClasses = {}));
-var showAnimation2 = animation([style({
-  transform: "{{transform}}",
-  opacity: 0
-}), animate("{{transition}}")]);
-var hideAnimation2 = animation([animate("{{transition}}", style({
-  transform: "{{transform}}",
-  opacity: 0
-}))]);
-var Drawer = class _Drawer extends BaseComponent {
-  /**
-   *  Target element to attach the dialog, valid values are "body" or a local ng-template variable of another element (note: use binding with brackets for template variables, e.g. [appendTo]="mydiv" for a div element having #mydiv as variable name).
-   * @group Props
-   */
-  appendTo = "body";
-  /**
-   * Whether to block scrolling of the document when drawer is active.
-   * @group Props
-   */
-  blockScroll = false;
-  /**
-   * Inline style of the component.
-   * @group Props
-   */
-  style;
-  /**
-   * Style class of the component.
-   * @group Props
-   */
-  styleClass;
-  /**
-   * Aria label of the close icon.
-   * @group Props
-   */
-  ariaCloseLabel;
-  /**
-   * Whether to automatically manage layering.
-   * @group Props
-   */
-  autoZIndex = true;
-  /**
-   * Base zIndex value to use in layering.
-   * @group Props
-   */
-  baseZIndex = 0;
-  /**
-   * Whether an overlay mask is displayed behind the drawer.
-   * @group Props
-   */
-  modal = true;
-  /**
-   * Used to pass all properties of the ButtonProps to the Button component.
-   * @group Props
-   */
-  closeButtonProps = {
-    severity: "secondary",
-    text: true,
-    rounded: true
-  };
-  /**
-   * Whether to dismiss drawer on click of the mask.
-   * @group Props
-   */
-  dismissible = true;
-  /**
-   * Whether to display the close icon.
-   * @group Props
-   * @deprecated use 'closable' instead.
-   */
-  showCloseIcon = true;
-  /**
-   * Specifies if pressing escape key should hide the drawer.
-   * @group Props
-   */
-  closeOnEscape = true;
-  /**
-   * Transition options of the animation.
-   * @group Props
-   */
-  transitionOptions = "150ms cubic-bezier(0, 0, 0.2, 1)";
-  /**
-   * Specifies the visibility of the dialog.
-   * @group Props
-   */
-  get visible() {
-    return this._visible;
-  }
-  set visible(val) {
-    this._visible = val;
-  }
-  /**
-   * Specifies the position of the drawer, valid values are "left", "right", "bottom" and "top".
-   * @group Props
-   */
-  get position() {
-    return this._position;
-  }
-  set position(value) {
-    this._position = value;
-    if (value === "full") {
-      this.transformOptions = "none";
-      return;
-    }
-    switch (value) {
-      case "left":
-        this.transformOptions = "translate3d(-100%, 0px, 0px)";
-        break;
-      case "right":
-        this.transformOptions = "translate3d(100%, 0px, 0px)";
-        break;
-      case "bottom":
-        this.transformOptions = "translate3d(0px, 100%, 0px)";
-        break;
-      case "top":
-        this.transformOptions = "translate3d(0px, -100%, 0px)";
-        break;
-    }
-  }
-  /**
-   * Adds a close icon to the header to hide the dialog.
-   * @group Props
-   */
-  get fullScreen() {
-    return this._fullScreen;
-  }
-  set fullScreen(value) {
-    this._fullScreen = value;
-    if (value) this.transformOptions = "none";
-  }
-  /**
-   * Title content of the dialog.
-   * @group Props
-   */
-  header;
-  /**
-   * Style of the mask.
-   * @group Props
-   */
-  maskStyle;
-  /**
-   * Whether to display close button.
-   * @group Props
-   * @defaultValue true
-   */
-  closable = true;
-  /**
-   * Callback to invoke when dialog is shown.
-   * @group Emits
-   */
-  onShow = new EventEmitter();
-  /**
-   * Callback to invoke when dialog is hidden.
-   * @group Emits
-   */
-  onHide = new EventEmitter();
-  /**
-   * Callback to invoke when dialog visibility is changed.
-   * @param {boolean} value - Visible value.
-   * @group Emits
-   */
-  visibleChange = new EventEmitter();
-  maskRef;
-  containerViewChild;
-  closeButtonViewChild;
-  initialized;
-  _visible;
-  _position = "left";
-  _fullScreen = false;
-  container;
-  transformOptions = "translate3d(-100%, 0px, 0px)";
-  mask;
-  maskClickListener;
-  documentEscapeListener;
-  animationEndListener;
-  _componentStyle = inject(DrawerStyle);
-  ngAfterViewInit() {
-    super.ngAfterViewInit();
-    this.initialized = true;
-  }
-  /**
-   * Content template for the content of the drawer.
-   * @group Templates
-   */
-  headerTemplate;
-  /**
-   * Header template for the header of the drawer.
-   * @group Templates
-   */
-  footerTemplate;
-  /**
-   * Content template for the footer of the drawer.
-   * @group Templates
-   */
-  contentTemplate;
-  /**
-   * Close icon template for the close icon of the drawer.
-   * @group Templates
-   */
-  closeIconTemplate;
-  /**
-   * Headless template for the headless drawer.
-   * @group Templates
-   */
-  headlessTemplate;
-  _headerTemplate;
-  _footerTemplate;
-  _contentTemplate;
-  _closeIconTemplate;
-  _headlessTemplate;
-  templates;
-  ngAfterContentInit() {
-    this.templates?.forEach((item) => {
-      switch (item.getType()) {
-        case "content":
-          this._contentTemplate = item.template;
-          break;
-        case "header":
-          this._headerTemplate = item.template;
-          break;
-        case "footer":
-          this._footerTemplate = item.template;
-          break;
-        case "closeicon":
-          this._closeIconTemplate = item.template;
-          break;
-        case "headless":
-          this._headlessTemplate = item.template;
-          break;
-        default:
-          this._contentTemplate = item.template;
-          break;
-      }
-    });
-  }
-  onKeyDown(event) {
-    if (event.code === "Escape") {
-      this.hide(false);
-    }
-  }
-  show() {
-    this.container.setAttribute(this.attrSelector, "");
-    if (this.autoZIndex) {
-      zindexutils.set("modal", this.container, this.baseZIndex || this.config.zIndex.modal);
-    }
-    if (this.modal) {
-      this.enableModality();
-    }
-    this.onShow.emit({});
-    this.visibleChange.emit(true);
-  }
-  hide(emit = true) {
-    if (emit) {
-      this.onHide.emit({});
-    }
-    if (this.modal) {
-      this.disableModality();
-    }
-  }
-  close(event) {
-    this.hide();
-    this.visibleChange.emit(false);
-    event.preventDefault();
-  }
-  enableModality() {
-    const activeDrawers = this.document.querySelectorAll(".p-drawer-active");
-    const activeDrawersLength = activeDrawers.length;
-    const zIndex = activeDrawersLength == 1 ? String(parseInt(this.container.style.zIndex) - 1) : String(parseInt(activeDrawers[activeDrawersLength - 1].style.zIndex) - 1);
-    if (!this.mask) {
-      this.mask = this.renderer.createElement("div");
-      this.renderer.setStyle(this.mask, "zIndex", zIndex);
-      setAttribute(this.mask, "style", this.maskStyle);
-      addClass(this.mask, "p-overlay-mask p-drawer-mask p-overlay-mask-enter");
-      if (this.dismissible) {
-        this.maskClickListener = this.renderer.listen(this.mask, "click", (event) => {
-          if (this.dismissible) {
-            this.close(event);
-          }
-        });
-      }
-      this.renderer.appendChild(this.document.body, this.mask);
-      if (this.blockScroll) {
-        blockBodyScroll();
-      }
-    }
-  }
-  disableModality() {
-    if (this.mask) {
-      addClass(this.mask, "p-overlay-mask-leave");
-      this.animationEndListener = this.renderer.listen(this.mask, "animationend", this.destroyModal.bind(this));
-    }
-  }
-  destroyModal() {
-    this.unbindMaskClickListener();
-    if (this.mask) {
-      this.renderer.removeChild(this.document.body, this.mask);
-    }
-    if (this.blockScroll) {
-      unblockBodyScroll();
-    }
-    this.unbindAnimationEndListener();
-    this.mask = null;
-  }
-  onAnimationStart(event) {
-    switch (event.toState) {
-      case "visible":
-        this.container = event.element;
-        this.appendContainer();
-        this.show();
-        if (this.closeOnEscape) {
-          this.bindDocumentEscapeListener();
-        }
-        break;
-    }
-  }
-  onAnimationEnd(event) {
-    switch (event.toState) {
-      case "void":
-        this.hide(false);
-        zindexutils.clear(this.container);
-        this.unbindGlobalListeners();
-        break;
-    }
-  }
-  appendContainer() {
-    if (this.appendTo) {
-      if (this.appendTo === "body") this.renderer.appendChild(this.document.body, this.container);
-      else appendChild(this.appendTo, this.container);
-    }
-  }
-  bindDocumentEscapeListener() {
-    const documentTarget = this.el ? this.el.nativeElement.ownerDocument : this.document;
-    this.documentEscapeListener = this.renderer.listen(documentTarget, "keydown", (event) => {
-      if (event.which == 27) {
-        if (parseInt(this.container.style.zIndex) === zindexutils.get(this.container)) {
-          this.close(event);
-        }
-      }
-    });
-  }
-  unbindDocumentEscapeListener() {
-    if (this.documentEscapeListener) {
-      this.documentEscapeListener();
-      this.documentEscapeListener = null;
-    }
-  }
-  unbindMaskClickListener() {
-    if (this.maskClickListener) {
-      this.maskClickListener();
-      this.maskClickListener = null;
-    }
-  }
-  unbindGlobalListeners() {
-    this.unbindMaskClickListener();
-    this.unbindDocumentEscapeListener();
-  }
-  unbindAnimationEndListener() {
-    if (this.animationEndListener && this.mask) {
-      this.animationEndListener();
-      this.animationEndListener = null;
-    }
-  }
-  ngOnDestroy() {
-    this.initialized = false;
-    if (this.visible && this.modal) {
-      this.destroyModal();
-    }
-    if (this.appendTo && this.container) {
-      this.renderer.appendChild(this.el.nativeElement, this.container);
-    }
-    if (this.container && this.autoZIndex) {
-      zindexutils.clear(this.container);
-    }
-    this.container = null;
-    this.unbindGlobalListeners();
-    this.unbindAnimationEndListener();
-  }
-  static \u0275fac = /* @__PURE__ */ (() => {
-    let \u0275Drawer_BaseFactory;
-    return function Drawer_Factory(__ngFactoryType__) {
-      return (\u0275Drawer_BaseFactory || (\u0275Drawer_BaseFactory = \u0275\u0275getInheritedFactory(_Drawer)))(__ngFactoryType__ || _Drawer);
-    };
-  })();
-  static \u0275cmp = /* @__PURE__ */ \u0275\u0275defineComponent({
-    type: _Drawer,
-    selectors: [["p-drawer"]],
-    contentQueries: function Drawer_ContentQueries(rf, ctx, dirIndex) {
-      if (rf & 1) {
-        \u0275\u0275contentQuery(dirIndex, _c02, 4);
-        \u0275\u0275contentQuery(dirIndex, _c12, 4);
-        \u0275\u0275contentQuery(dirIndex, _c22, 4);
-        \u0275\u0275contentQuery(dirIndex, _c32, 4);
-        \u0275\u0275contentQuery(dirIndex, _c42, 4);
-        \u0275\u0275contentQuery(dirIndex, PrimeTemplate, 4);
-      }
-      if (rf & 2) {
-        let _t;
-        \u0275\u0275queryRefresh(_t = \u0275\u0275loadQuery()) && (ctx.headerTemplate = _t.first);
-        \u0275\u0275queryRefresh(_t = \u0275\u0275loadQuery()) && (ctx.footerTemplate = _t.first);
-        \u0275\u0275queryRefresh(_t = \u0275\u0275loadQuery()) && (ctx.contentTemplate = _t.first);
-        \u0275\u0275queryRefresh(_t = \u0275\u0275loadQuery()) && (ctx.closeIconTemplate = _t.first);
-        \u0275\u0275queryRefresh(_t = \u0275\u0275loadQuery()) && (ctx.headlessTemplate = _t.first);
-        \u0275\u0275queryRefresh(_t = \u0275\u0275loadQuery()) && (ctx.templates = _t);
-      }
-    },
-    viewQuery: function Drawer_Query(rf, ctx) {
-      if (rf & 1) {
-        \u0275\u0275viewQuery(_c52, 5);
-        \u0275\u0275viewQuery(_c62, 5);
-        \u0275\u0275viewQuery(_c72, 5);
-      }
-      if (rf & 2) {
-        let _t;
-        \u0275\u0275queryRefresh(_t = \u0275\u0275loadQuery()) && (ctx.maskRef = _t.first);
-        \u0275\u0275queryRefresh(_t = \u0275\u0275loadQuery()) && (ctx.containerViewChild = _t.first);
-        \u0275\u0275queryRefresh(_t = \u0275\u0275loadQuery()) && (ctx.closeButtonViewChild = _t.first);
-      }
-    },
-    inputs: {
-      appendTo: "appendTo",
-      blockScroll: [2, "blockScroll", "blockScroll", booleanAttribute],
-      style: "style",
-      styleClass: "styleClass",
-      ariaCloseLabel: "ariaCloseLabel",
-      autoZIndex: [2, "autoZIndex", "autoZIndex", booleanAttribute],
-      baseZIndex: [2, "baseZIndex", "baseZIndex", numberAttribute],
-      modal: [2, "modal", "modal", booleanAttribute],
-      closeButtonProps: "closeButtonProps",
-      dismissible: [2, "dismissible", "dismissible", booleanAttribute],
-      showCloseIcon: [2, "showCloseIcon", "showCloseIcon", booleanAttribute],
-      closeOnEscape: [2, "closeOnEscape", "closeOnEscape", booleanAttribute],
-      transitionOptions: "transitionOptions",
-      visible: "visible",
-      position: "position",
-      fullScreen: "fullScreen",
-      header: "header",
-      maskStyle: "maskStyle",
-      closable: [2, "closable", "closable", booleanAttribute]
-    },
-    outputs: {
-      onShow: "onShow",
-      onHide: "onHide",
-      visibleChange: "visibleChange"
-    },
-    features: [\u0275\u0275ProvidersFeature([DrawerStyle]), \u0275\u0275InheritDefinitionFeature],
-    ngContentSelectors: _c82,
-    decls: 1,
-    vars: 1,
-    consts: [["container", ""], ["icon", ""], ["role", "complementary", 3, "ngClass", "style", "class", "keydown", 4, "ngIf"], ["role", "complementary", 3, "keydown", "ngClass"], [4, "ngTemplateOutlet"], [3, "ngClass"], [3, "class", 4, "ngIf"], [3, "ngClass", "buttonProps", "ariaLabel", "onClick", "keydown.enter", 4, "ngIf"], [4, "ngIf"], [3, "onClick", "keydown.enter", "ngClass", "buttonProps", "ariaLabel"]],
-    template: function Drawer_Template(rf, ctx) {
-      if (rf & 1) {
-        \u0275\u0275projectionDef();
-        \u0275\u0275template(0, Drawer_div_0_Template, 4, 21, "div", 2);
-      }
-      if (rf & 2) {
-        \u0275\u0275property("ngIf", ctx.visible);
-      }
-    },
-    dependencies: [CommonModule, NgClass, NgIf, NgTemplateOutlet, Button, TimesIcon, SharedModule],
-    encapsulation: 2,
-    data: {
-      animation: [trigger("panelState", [transition("void => visible", [useAnimation(showAnimation2)]), transition("visible => void", [useAnimation(hideAnimation2)])])]
-    },
-    changeDetection: 0
-  });
-};
-(() => {
-  (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(Drawer, [{
-    type: Component,
-    args: [{
-      selector: "p-drawer",
-      standalone: true,
-      imports: [CommonModule, Button, TimesIcon, SharedModule],
-      template: `
-        <div
-            #container
-            [ngClass]="{
-                'p-drawer': true,
-                'p-drawer-active': visible,
-                'p-drawer-left': position === 'left' && !fullScreen,
-                'p-drawer-right': position === 'right' && !fullScreen,
-                'p-drawer-top': position === 'top' && !fullScreen,
-                'p-drawer-bottom': position === 'bottom' && !fullScreen,
-                'p-drawer-full': fullScreen || position === 'full'
-            }"
-            *ngIf="visible"
-            [@panelState]="{ value: 'visible', params: { transform: transformOptions, transition: transitionOptions } }"
-            (@panelState.start)="onAnimationStart($event)"
-            (@panelState.done)="onAnimationEnd($event)"
-            [style]="style"
-            [class]="styleClass"
-            role="complementary"
-            [attr.data-pc-name]="'sidebar'"
-            [attr.data-pc-section]="'root'"
-            (keydown)="onKeyDown($event)"
-        >
-            @if (headlessTemplate || _headlessTemplate) {
-                <ng-container *ngTemplateOutlet="headlessTemplate || _headlessTemplate"></ng-container>
-            } @else {
-                <div [ngClass]="cx('header')" [attr.data-pc-section]="'header'">
-                    <ng-container *ngTemplateOutlet="headerTemplate || _headerTemplate"></ng-container>
-                    <div *ngIf="header" [class]="cx('title')">{{ header }}</div>
-                    <p-button
-                        *ngIf="showCloseIcon && closable"
-                        [ngClass]="cx('closeButton')"
-                        (onClick)="close($event)"
-                        (keydown.enter)="close($event)"
-                        [buttonProps]="closeButtonProps"
-                        [ariaLabel]="ariaCloseLabel"
-                        [attr.data-pc-section]="'closebutton'"
-                        [attr.data-pc-group-section]="'iconcontainer'"
-                    >
-                        <ng-template #icon>
-                            <TimesIcon *ngIf="!closeIconTemplate && !_closeIconTemplate" [attr.data-pc-section]="'closeicon'" />
-                            <ng-template *ngTemplateOutlet="closeIconTemplate || _closeIconTemplate"></ng-template>
-                        </ng-template>
-                    </p-button>
-                </div>
-
-                <div [ngClass]="cx('content')" [attr.data-pc-section]="'content'">
-                    <ng-content></ng-content>
-                    <ng-container *ngTemplateOutlet="contentTemplate || _contentTemplate"></ng-container>
-                </div>
-
-                <ng-container *ngIf="footerTemplate || _footerTemplate">
-                    <div [ngClass]="cx('footer')" [attr.data-pc-section]="'footer'">
-                        <ng-container *ngTemplateOutlet="footerTemplate || _footerTemplate"></ng-container>
-                    </div>
-                </ng-container>
-            }
-        </div>
-    `,
-      animations: [trigger("panelState", [transition("void => visible", [useAnimation(showAnimation2)]), transition("visible => void", [useAnimation(hideAnimation2)])])],
-      changeDetection: ChangeDetectionStrategy.OnPush,
-      encapsulation: ViewEncapsulation.None,
-      providers: [DrawerStyle]
-    }]
-  }], null, {
-    appendTo: [{
-      type: Input
-    }],
-    blockScroll: [{
-      type: Input,
-      args: [{
-        transform: booleanAttribute
-      }]
-    }],
-    style: [{
-      type: Input
-    }],
-    styleClass: [{
-      type: Input
-    }],
-    ariaCloseLabel: [{
-      type: Input
-    }],
-    autoZIndex: [{
-      type: Input,
-      args: [{
-        transform: booleanAttribute
-      }]
-    }],
-    baseZIndex: [{
-      type: Input,
-      args: [{
-        transform: numberAttribute
-      }]
-    }],
-    modal: [{
-      type: Input,
-      args: [{
-        transform: booleanAttribute
-      }]
-    }],
-    closeButtonProps: [{
-      type: Input
-    }],
-    dismissible: [{
-      type: Input,
-      args: [{
-        transform: booleanAttribute
-      }]
-    }],
-    showCloseIcon: [{
-      type: Input,
-      args: [{
-        transform: booleanAttribute
-      }]
-    }],
-    closeOnEscape: [{
-      type: Input,
-      args: [{
-        transform: booleanAttribute
-      }]
-    }],
-    transitionOptions: [{
-      type: Input
-    }],
-    visible: [{
-      type: Input
-    }],
-    position: [{
-      type: Input
-    }],
-    fullScreen: [{
-      type: Input
-    }],
-    header: [{
-      type: Input
-    }],
-    maskStyle: [{
-      type: Input
-    }],
-    closable: [{
-      type: Input,
-      args: [{
-        transform: booleanAttribute
-      }]
-    }],
-    onShow: [{
-      type: Output
-    }],
-    onHide: [{
-      type: Output
-    }],
-    visibleChange: [{
-      type: Output
-    }],
-    maskRef: [{
-      type: ViewChild,
-      args: ["maskRef"]
-    }],
-    containerViewChild: [{
-      type: ViewChild,
-      args: ["container"]
-    }],
-    closeButtonViewChild: [{
-      type: ViewChild,
-      args: ["closeButton"]
-    }],
-    headerTemplate: [{
-      type: ContentChild,
-      args: ["header", {
-        descendants: false
-      }]
-    }],
-    footerTemplate: [{
-      type: ContentChild,
-      args: ["footer", {
-        descendants: false
-      }]
-    }],
-    contentTemplate: [{
-      type: ContentChild,
-      args: ["content", {
-        descendants: false
-      }]
-    }],
-    closeIconTemplate: [{
-      type: ContentChild,
-      args: ["closeicon", {
-        descendants: false
-      }]
-    }],
-    headlessTemplate: [{
-      type: ContentChild,
-      args: ["headless", {
-        descendants: false
-      }]
-    }],
-    templates: [{
-      type: ContentChildren,
-      args: [PrimeTemplate]
-    }]
-  });
-})();
-var DrawerModule = class _DrawerModule {
-  static \u0275fac = function DrawerModule_Factory(__ngFactoryType__) {
-    return new (__ngFactoryType__ || _DrawerModule)();
-  };
-  static \u0275mod = /* @__PURE__ */ \u0275\u0275defineNgModule({
-    type: _DrawerModule,
-    imports: [Drawer, SharedModule],
-    exports: [Drawer, SharedModule]
-  });
-  static \u0275inj = /* @__PURE__ */ \u0275\u0275defineInjector({
-    imports: [Drawer, SharedModule, SharedModule]
-  });
-};
-(() => {
-  (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(DrawerModule, [{
-    type: NgModule,
-    args: [{
-      imports: [Drawer, SharedModule],
-      exports: [Drawer, SharedModule]
-    }]
-  }], null, null);
-})();
-
-// node_modules/primeng/fesm2022/primeng-slider.mjs
-var _c03 = ["sliderHandle"];
-var _c13 = ["sliderHandleStart"];
-var _c23 = ["sliderHandleEnd"];
-var _c33 = (a0, a1, a2, a3) => ({
-  "p-slider p-component": true,
-  "p-disabled": a0,
-  "p-slider-horizontal": a1,
-  "p-slider-vertical": a2,
-  "p-slider-animate": a3
-});
-var _c43 = (a0, a1) => ({
-  position: "absolute",
-  "inset-inline-start": a0,
-  width: a1
-});
-var _c53 = (a0, a1) => ({
-  position: "absolute",
-  bottom: a0,
-  height: a1
-});
-var _c63 = (a0) => ({
-  position: "absolute",
-  height: a0
-});
-var _c73 = (a0) => ({
-  position: "absolute",
-  width: a0
-});
-var _c83 = (a0, a1) => ({
-  position: "absolute",
-  "inset-inline-start": a0,
-  bottom: a1
-});
-var _c93 = (a0) => ({
-  "p-slider-handle-active": a0
-});
-function Slider_span_1_Template(rf, ctx) {
-  if (rf & 1) {
-    \u0275\u0275element(0, "span", 8);
-  }
-  if (rf & 2) {
-    const ctx_r0 = \u0275\u0275nextContext();
-    \u0275\u0275property("ngStyle", \u0275\u0275pureFunction2(2, _c43, ctx_r0.offset !== null && ctx_r0.offset !== void 0 ? ctx_r0.offset + "%" : ctx_r0.handleValues[0] + "%", ctx_r0.diff ? ctx_r0.diff + "%" : ctx_r0.handleValues[1] - ctx_r0.handleValues[0] + "%"));
-    \u0275\u0275attribute("data-pc-section", "range");
-  }
-}
-function Slider_span_2_Template(rf, ctx) {
-  if (rf & 1) {
-    \u0275\u0275element(0, "span", 8);
-  }
-  if (rf & 2) {
-    const ctx_r0 = \u0275\u0275nextContext();
-    \u0275\u0275property("ngStyle", \u0275\u0275pureFunction2(2, _c53, ctx_r0.offset !== null && ctx_r0.offset !== void 0 ? ctx_r0.offset + "%" : ctx_r0.handleValues[0] + "%", ctx_r0.diff ? ctx_r0.diff + "%" : ctx_r0.handleValues[1] - ctx_r0.handleValues[0] + "%"));
-    \u0275\u0275attribute("data-pc-section", "range");
-  }
-}
-function Slider_span_3_Template(rf, ctx) {
-  if (rf & 1) {
-    \u0275\u0275element(0, "span", 8);
-  }
-  if (rf & 2) {
-    const ctx_r0 = \u0275\u0275nextContext();
-    \u0275\u0275property("ngStyle", \u0275\u0275pureFunction1(2, _c63, ctx_r0.handleValue + "%"));
-    \u0275\u0275attribute("data-pc-section", "range");
-  }
-}
-function Slider_span_4_Template(rf, ctx) {
-  if (rf & 1) {
-    \u0275\u0275element(0, "span", 8);
-  }
-  if (rf & 2) {
-    const ctx_r0 = \u0275\u0275nextContext();
-    \u0275\u0275property("ngStyle", \u0275\u0275pureFunction1(2, _c73, ctx_r0.handleValue + "%"));
-    \u0275\u0275attribute("data-pc-section", "range");
-  }
-}
-function Slider_span_5_Template(rf, ctx) {
-  if (rf & 1) {
-    const _r2 = \u0275\u0275getCurrentView();
-    \u0275\u0275elementStart(0, "span", 9, 0);
-    \u0275\u0275listener("touchstart", function Slider_span_5_Template_span_touchstart_0_listener($event) {
-      \u0275\u0275restoreView(_r2);
-      const ctx_r0 = \u0275\u0275nextContext();
-      return \u0275\u0275resetView(ctx_r0.onDragStart($event));
-    })("touchmove", function Slider_span_5_Template_span_touchmove_0_listener($event) {
-      \u0275\u0275restoreView(_r2);
-      const ctx_r0 = \u0275\u0275nextContext();
-      return \u0275\u0275resetView(ctx_r0.onDrag($event));
-    })("touchend", function Slider_span_5_Template_span_touchend_0_listener($event) {
-      \u0275\u0275restoreView(_r2);
-      const ctx_r0 = \u0275\u0275nextContext();
-      return \u0275\u0275resetView(ctx_r0.onDragEnd($event));
-    })("mousedown", function Slider_span_5_Template_span_mousedown_0_listener($event) {
-      \u0275\u0275restoreView(_r2);
-      const ctx_r0 = \u0275\u0275nextContext();
-      return \u0275\u0275resetView(ctx_r0.onMouseDown($event));
-    })("keydown", function Slider_span_5_Template_span_keydown_0_listener($event) {
-      \u0275\u0275restoreView(_r2);
-      const ctx_r0 = \u0275\u0275nextContext();
-      return \u0275\u0275resetView(ctx_r0.onKeyDown($event));
-    });
-    \u0275\u0275elementEnd();
-  }
-  if (rf & 2) {
-    const ctx_r0 = \u0275\u0275nextContext();
-    \u0275\u0275styleProp("transition", ctx_r0.dragging ? "none" : null);
-    \u0275\u0275property("ngStyle", \u0275\u0275pureFunction2(12, _c83, ctx_r0.orientation == "horizontal" ? ctx_r0.handleValue + "%" : null, ctx_r0.orientation == "vertical" ? ctx_r0.handleValue + "%" : null))("pAutoFocus", ctx_r0.autofocus);
-    \u0275\u0275attribute("tabindex", ctx_r0.disabled ? null : ctx_r0.tabindex)("aria-valuemin", ctx_r0.min)("aria-valuenow", ctx_r0.value)("aria-valuemax", ctx_r0.max)("aria-labelledby", ctx_r0.ariaLabelledBy)("aria-label", ctx_r0.ariaLabel)("aria-orientation", ctx_r0.orientation)("data-pc-section", "handle");
-  }
-}
-function Slider_span_6_Template(rf, ctx) {
-  if (rf & 1) {
-    const _r3 = \u0275\u0275getCurrentView();
-    \u0275\u0275elementStart(0, "span", 10, 1);
-    \u0275\u0275listener("keydown", function Slider_span_6_Template_span_keydown_0_listener($event) {
-      \u0275\u0275restoreView(_r3);
-      const ctx_r0 = \u0275\u0275nextContext();
-      return \u0275\u0275resetView(ctx_r0.onKeyDown($event, 0));
-    })("mousedown", function Slider_span_6_Template_span_mousedown_0_listener($event) {
-      \u0275\u0275restoreView(_r3);
-      const ctx_r0 = \u0275\u0275nextContext();
-      return \u0275\u0275resetView(ctx_r0.onMouseDown($event, 0));
-    })("touchstart", function Slider_span_6_Template_span_touchstart_0_listener($event) {
-      \u0275\u0275restoreView(_r3);
-      const ctx_r0 = \u0275\u0275nextContext();
-      return \u0275\u0275resetView(ctx_r0.onDragStart($event, 0));
-    })("touchmove", function Slider_span_6_Template_span_touchmove_0_listener($event) {
-      \u0275\u0275restoreView(_r3);
-      const ctx_r0 = \u0275\u0275nextContext();
-      return \u0275\u0275resetView(ctx_r0.onDrag($event));
-    })("touchend", function Slider_span_6_Template_span_touchend_0_listener($event) {
-      \u0275\u0275restoreView(_r3);
-      const ctx_r0 = \u0275\u0275nextContext();
-      return \u0275\u0275resetView(ctx_r0.onDragEnd($event));
-    });
-    \u0275\u0275elementEnd();
-  }
-  if (rf & 2) {
-    const ctx_r0 = \u0275\u0275nextContext();
-    \u0275\u0275styleProp("transition", ctx_r0.dragging ? "none" : null);
-    \u0275\u0275property("ngStyle", \u0275\u0275pureFunction2(13, _c83, ctx_r0.rangeStartLeft, ctx_r0.rangeStartBottom))("ngClass", \u0275\u0275pureFunction1(16, _c93, ctx_r0.handleIndex == 0))("pAutoFocus", ctx_r0.autofocus);
-    \u0275\u0275attribute("tabindex", ctx_r0.disabled ? null : ctx_r0.tabindex)("aria-valuemin", ctx_r0.min)("aria-valuenow", ctx_r0.value ? ctx_r0.value[0] : null)("aria-valuemax", ctx_r0.max)("aria-labelledby", ctx_r0.ariaLabelledBy)("aria-label", ctx_r0.ariaLabel)("aria-orientation", ctx_r0.orientation)("data-pc-section", "startHandler");
-  }
-}
-function Slider_span_7_Template(rf, ctx) {
-  if (rf & 1) {
-    const _r4 = \u0275\u0275getCurrentView();
-    \u0275\u0275elementStart(0, "span", 11, 2);
-    \u0275\u0275listener("keydown", function Slider_span_7_Template_span_keydown_0_listener($event) {
-      \u0275\u0275restoreView(_r4);
-      const ctx_r0 = \u0275\u0275nextContext();
-      return \u0275\u0275resetView(ctx_r0.onKeyDown($event, 1));
-    })("mousedown", function Slider_span_7_Template_span_mousedown_0_listener($event) {
-      \u0275\u0275restoreView(_r4);
-      const ctx_r0 = \u0275\u0275nextContext();
-      return \u0275\u0275resetView(ctx_r0.onMouseDown($event, 1));
-    })("touchstart", function Slider_span_7_Template_span_touchstart_0_listener($event) {
-      \u0275\u0275restoreView(_r4);
-      const ctx_r0 = \u0275\u0275nextContext();
-      return \u0275\u0275resetView(ctx_r0.onDragStart($event, 1));
-    })("touchmove", function Slider_span_7_Template_span_touchmove_0_listener($event) {
-      \u0275\u0275restoreView(_r4);
-      const ctx_r0 = \u0275\u0275nextContext();
-      return \u0275\u0275resetView(ctx_r0.onDrag($event));
-    })("touchend", function Slider_span_7_Template_span_touchend_0_listener($event) {
-      \u0275\u0275restoreView(_r4);
-      const ctx_r0 = \u0275\u0275nextContext();
-      return \u0275\u0275resetView(ctx_r0.onDragEnd($event));
-    });
-    \u0275\u0275elementEnd();
-  }
-  if (rf & 2) {
-    const ctx_r0 = \u0275\u0275nextContext();
-    \u0275\u0275styleProp("transition", ctx_r0.dragging ? "none" : null);
-    \u0275\u0275property("ngStyle", \u0275\u0275pureFunction2(12, _c83, ctx_r0.rangeEndLeft, ctx_r0.rangeEndBottom))("ngClass", \u0275\u0275pureFunction1(15, _c93, ctx_r0.handleIndex == 1));
-    \u0275\u0275attribute("tabindex", ctx_r0.disabled ? null : ctx_r0.tabindex)("aria-valuemin", ctx_r0.min)("aria-valuenow", ctx_r0.value ? ctx_r0.value[1] : null)("aria-valuemax", ctx_r0.max)("aria-labelledby", ctx_r0.ariaLabelledBy)("aria-label", ctx_r0.ariaLabel)("aria-orientation", ctx_r0.orientation)("data-pc-section", "endHandler");
-  }
-}
-var theme3 = ({
-  dt
-}) => `
-.p-slider {
-    position: relative;
-    background: ${dt("slider.track.background")};
-    border-radius: ${dt("slider.border.radius")};
-}
-
-.p-slider-handle {
-    cursor: grab;
-    touch-action: none;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: ${dt("slider.handle.height")};
-    width: ${dt("slider.handle.width")};
-    background: ${dt("slider.handle.background")};
-    border-radius: ${dt("slider.handle.border.radius")};
-    transition: background ${dt("slider.transition.duration")}, color ${dt("slider.transition.duration")}, border-color ${dt("slider.transition.duration")}, box-shadow ${dt("slider.transition.duration")}, outline-color ${dt("slider.transition.duration")};
-    outline-color: transparent;
-}
-
-.p-slider-handle::before {
-    content: "";
-    width: ${dt("slider.handle.content.width")};
-    height: ${dt("slider.handle.content.height")};
-    display: block;
-    background: ${dt("slider.handle.content.background")};
-    border-radius: ${dt("slider.handle.content.border.radius")};
-    box-shadow: ${dt("slider.handle.content.shadow")};
-    transition: background ${dt("slider.transition.duration")};
-}
-
-.p-slider:not(.p-disabled) .p-slider-handle:hover {
-    background: ${dt("slider.handle.hover.background")};
-}
-
-.p-slider:not(.p-disabled) .p-slider-handle:hover::before {
-    background: ${dt("slider.handle.content.hover.background")};
-}
-
-.p-slider-handle:focus-visible {
-    border-color: ${dt("slider.handle.focus.border.color")};
-    box-shadow: ${dt("slider.handle.focus.ring.shadow")};
-    outline: ${dt("slider.handle.focus.ring.width")} ${dt("slider.handle.focus.ring.style")} ${dt("slider.handle.focus.ring.color")};
-    outline-offset: ${dt("slider.handle.focus.ring.offset")};
-}
-
-.p-slider-range {
-    display: block;
-    background: ${dt("slider.range.background")};
-    border-radius: ${dt("slider.border.radius")};
-}
-
-.p-slider.p-slider-horizontal {
-    height: ${dt("slider.track.size")};
-}
-
-.p-slider-horizontal .p-slider-range {
-    top: 0;
-    inset-inline-start: 0;
-    height: 100%;
-}
-
-.p-slider-horizontal .p-slider-handle {
-    top: 50%;
-    margin-top: calc(-1 * calc(${dt("slider.handle.height")} / 2));
-    margin-inline-start: calc(-1 * calc(${dt("slider.handle.width")} / 2));
-}
-
-.p-slider-vertical {
-    min-height: 100px;
-    width: ${dt("slider.track.size")};
-}
-
-.p-slider-vertical .p-slider-handle {
-    inset-inline-start: 50%;
-    margin-inline-start: calc(-1 * calc(${dt("slider.handle.width")} / 2));
-    margin-bottom: calc(-1 * calc(${dt("slider.handle.height")} / 2));
-}
-
-.p-slider-vertical .p-slider-range {
-    bottom: 0;
-    inset-inline-start: 0;
-    width: 100%;
-}
-`;
-var inlineStyles2 = {
-  handle: {
-    position: "absolute"
-  },
-  range: {
-    position: "absolute"
-  }
-};
-var classes3 = {
-  root: ({
-    props
-  }) => ["p-slider p-component", {
-    "p-disabled": props.disabled,
-    "p-slider-horizontal": props.orientation === "horizontal",
-    "p-slider-vertical": props.orientation === "vertical"
-  }],
-  range: "p-slider-range",
-  handle: "p-slider-handle"
-};
-var SliderStyle = class _SliderStyle extends BaseStyle {
-  name = "slider";
-  theme = theme3;
-  classes = classes3;
-  inlineStyles = inlineStyles2;
-  static \u0275fac = /* @__PURE__ */ (() => {
-    let \u0275SliderStyle_BaseFactory;
-    return function SliderStyle_Factory(__ngFactoryType__) {
-      return (\u0275SliderStyle_BaseFactory || (\u0275SliderStyle_BaseFactory = \u0275\u0275getInheritedFactory(_SliderStyle)))(__ngFactoryType__ || _SliderStyle);
-    };
-  })();
-  static \u0275prov = /* @__PURE__ */ \u0275\u0275defineInjectable({
-    token: _SliderStyle,
-    factory: _SliderStyle.\u0275fac
-  });
-};
-(() => {
-  (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(SliderStyle, [{
-    type: Injectable
-  }], null, null);
-})();
-var SliderClasses;
-(function(SliderClasses2) {
-  SliderClasses2["root"] = "p-slider";
-  SliderClasses2["range"] = "p-slider-range";
-  SliderClasses2["handle"] = "p-slider-handle";
-})(SliderClasses || (SliderClasses = {}));
-var SLIDER_VALUE_ACCESSOR = {
-  provide: NG_VALUE_ACCESSOR,
-  useExisting: forwardRef(() => Slider),
-  multi: true
-};
-var Slider = class _Slider extends BaseComponent {
-  /**
-   * When enabled, displays an animation on click of the slider bar.
-   * @group Props
-   */
-  animate;
-  /**
-   * When present, it specifies that the element should be disabled.
-   * @group Props
-   */
-  disabled;
-  /**
-   * Mininum boundary value.
-   * @group Props
-   */
-  min = 0;
-  /**
-   * Maximum boundary value.
-   * @group Props
-   */
-  max = 100;
-  /**
-   * Orientation of the slider.
-   * @group Props
-   */
-  orientation = "horizontal";
-  /**
-   * Step factor to increment/decrement the value.
-   * @group Props
-   */
-  step;
-  /**
-   * When specified, allows two boundary values to be picked.
-   * @group Props
-   */
-  range;
-  /**
-   * Inline style of the component.
-   * @group Props
-   */
-  style;
-  /**
-   * Style class of the component.
-   * @group Props
-   */
-  styleClass;
-  /**
-   * Defines a string that labels the input for accessibility.
-   * @group Props
-   */
-  ariaLabel;
-  /**
-   * Establishes relationships between the component and label(s) where its value should be one or more element IDs.
-   * @group Props
-   */
-  ariaLabelledBy;
-  /**
-   * Index of the element in tabbing order.
-   * @group Props
-   */
-  tabindex = 0;
-  /**
-   * When present, it specifies that the component should automatically get focus on load.
-   * @group Props
-   */
-  autofocus;
-  /**
-   * Callback to invoke on value change.
-   * @param {SliderChangeEvent} event - Custom value change event.
-   * @group Emits
-   */
-  onChange = new EventEmitter();
-  /**
-   * Callback to invoke when slide ended.
-   * @param {SliderSlideEndEvent} event - Custom slide end event.
-   * @group Emits
-   */
-  onSlideEnd = new EventEmitter();
-  sliderHandle;
-  sliderHandleStart;
-  sliderHandleEnd;
-  _componentStyle = inject(SliderStyle);
-  value;
-  values;
-  handleValue;
-  handleValues = [];
-  diff;
-  offset;
-  bottom;
-  onModelChange = () => {
-  };
-  onModelTouched = () => {
-  };
-  dragging;
-  dragListener;
-  mouseupListener;
-  initX;
-  initY;
-  barWidth;
-  barHeight;
-  sliderHandleClick;
-  handleIndex = 0;
-  startHandleValue;
-  startx;
-  starty;
-  ngZone = inject(NgZone);
-  onMouseDown(event, index) {
-    if (this.disabled) {
-      return;
-    }
-    this.dragging = true;
-    this.updateDomData();
-    this.sliderHandleClick = true;
-    if (this.range && this.handleValues && this.handleValues[0] === this.max) {
-      this.handleIndex = 0;
-    } else {
-      this.handleIndex = index;
-    }
-    this.bindDragListeners();
-    event.target.focus();
-    event.preventDefault();
-    if (this.animate) {
-      removeClass(this.el.nativeElement.children[0], "p-slider-animate");
-    }
-  }
-  onDragStart(event, index) {
-    if (this.disabled) {
-      return;
-    }
-    var touchobj = event.changedTouches[0];
-    this.startHandleValue = this.range ? this.handleValues[index] : this.handleValue;
-    this.dragging = true;
-    if (this.range && this.handleValues && this.handleValues[0] === this.max) {
-      this.handleIndex = 0;
-    } else {
-      this.handleIndex = index;
-    }
-    if (this.orientation === "horizontal") {
-      this.startx = parseInt(touchobj.clientX, 10);
-      this.barWidth = this.el.nativeElement.children[0].offsetWidth;
-    } else {
-      this.starty = parseInt(touchobj.clientY, 10);
-      this.barHeight = this.el.nativeElement.children[0].offsetHeight;
-    }
-    if (this.animate) {
-      removeClass(this.el.nativeElement.children[0], "p-slider-animate");
-    }
-    event.preventDefault();
-  }
-  onDrag(event) {
-    if (this.disabled) {
-      return;
-    }
-    var touchobj = event.changedTouches[0], handleValue = 0;
-    if (this.orientation === "horizontal") {
-      handleValue = Math.floor((parseInt(touchobj.clientX, 10) - this.startx) * 100 / this.barWidth) + this.startHandleValue;
-    } else {
-      handleValue = Math.floor((this.starty - parseInt(touchobj.clientY, 10)) * 100 / this.barHeight) + this.startHandleValue;
-    }
-    this.setValueFromHandle(event, handleValue);
-    event.preventDefault();
-  }
-  onDragEnd(event) {
-    if (this.disabled) {
-      return;
-    }
-    this.dragging = false;
-    if (this.range) this.onSlideEnd.emit({
-      originalEvent: event,
-      values: this.values
-    });
-    else this.onSlideEnd.emit({
-      originalEvent: event,
-      value: this.value
-    });
-    if (this.animate) {
-      addClass(this.el.nativeElement.children[0], "p-slider-animate");
-    }
-    event.preventDefault();
-  }
-  onBarClick(event) {
-    if (this.disabled) {
-      return;
-    }
-    if (!this.sliderHandleClick) {
-      this.updateDomData();
-      this.handleChange(event);
-      if (this.range) this.onSlideEnd.emit({
-        originalEvent: event,
-        values: this.values
-      });
-      else this.onSlideEnd.emit({
-        originalEvent: event,
-        value: this.value
-      });
-    }
-    this.sliderHandleClick = false;
-  }
-  onKeyDown(event, index) {
-    this.handleIndex = index;
-    switch (event.code) {
-      case "ArrowDown":
-      case "ArrowLeft":
-        this.decrementValue(event, index);
-        event.preventDefault();
-        break;
-      case "ArrowUp":
-      case "ArrowRight":
-        this.incrementValue(event, index);
-        event.preventDefault();
-        break;
-      case "PageDown":
-        this.decrementValue(event, index, true);
-        event.preventDefault();
-        break;
-      case "PageUp":
-        this.incrementValue(event, index, true);
-        event.preventDefault();
-        break;
-      case "Home":
-        this.updateValue(this.min, event);
-        event.preventDefault();
-        break;
-      case "End":
-        this.updateValue(this.max, event);
-        event.preventDefault();
-        break;
-      default:
-        break;
-    }
-  }
-  decrementValue(event, index, pageKey = false) {
-    let newValue;
-    if (this.range) {
-      if (this.step) newValue = this.values[index] - this.step;
-      else newValue = this.values[index] - 1;
-    } else {
-      if (this.step) newValue = this.value - this.step;
-      else if (!this.step && pageKey) newValue = this.value - 10;
-      else newValue = this.value - 1;
-    }
-    this.updateValue(newValue, event);
-    event.preventDefault();
-  }
-  incrementValue(event, index, pageKey = false) {
-    let newValue;
-    if (this.range) {
-      if (this.step) newValue = this.values[index] + this.step;
-      else newValue = this.values[index] + 1;
-    } else {
-      if (this.step) newValue = this.value + this.step;
-      else if (!this.step && pageKey) newValue = this.value + 10;
-      else newValue = this.value + 1;
-    }
-    this.updateValue(newValue, event);
-    event.preventDefault();
-  }
-  handleChange(event) {
-    let handleValue = this.calculateHandleValue(event);
-    this.setValueFromHandle(event, handleValue);
-  }
-  bindDragListeners() {
-    if (isPlatformBrowser(this.platformId)) {
-      this.ngZone.runOutsideAngular(() => {
-        const documentTarget = this.el ? this.el.nativeElement.ownerDocument : this.document;
-        if (!this.dragListener) {
-          this.dragListener = this.renderer.listen(documentTarget, "mousemove", (event) => {
-            if (this.dragging) {
-              this.ngZone.run(() => {
-                this.handleChange(event);
-              });
-            }
-          });
-        }
-        if (!this.mouseupListener) {
-          this.mouseupListener = this.renderer.listen(documentTarget, "mouseup", (event) => {
-            if (this.dragging) {
-              this.dragging = false;
-              this.ngZone.run(() => {
-                if (this.range) this.onSlideEnd.emit({
-                  originalEvent: event,
-                  values: this.values
-                });
-                else this.onSlideEnd.emit({
-                  originalEvent: event,
-                  value: this.value
-                });
-                if (this.animate) {
-                  addClass(this.el.nativeElement.children[0], "p-slider-animate");
-                }
-              });
-            }
-          });
-        }
-      });
-    }
-  }
-  unbindDragListeners() {
-    if (this.dragListener) {
-      this.dragListener();
-      this.dragListener = null;
-    }
-    if (this.mouseupListener) {
-      this.mouseupListener();
-      this.mouseupListener = null;
-    }
-  }
-  setValueFromHandle(event, handleValue) {
-    let newValue = this.getValueFromHandle(handleValue);
-    if (this.range) {
-      if (this.step) {
-        this.handleStepChange(newValue, this.values[this.handleIndex]);
-      } else {
-        this.handleValues[this.handleIndex] = handleValue;
-        this.updateValue(newValue, event);
-      }
-    } else {
-      if (this.step) {
-        this.handleStepChange(newValue, this.value);
-      } else {
-        this.handleValue = handleValue;
-        this.updateValue(newValue, event);
-      }
-    }
-    this.cd.markForCheck();
-  }
-  handleStepChange(newValue, oldValue) {
-    let diff = newValue - oldValue;
-    let val = oldValue;
-    let _step = this.step;
-    if (diff < 0) {
-      val = oldValue + Math.ceil(newValue / _step - oldValue / _step) * _step;
-    } else if (diff > 0) {
-      val = oldValue + Math.floor(newValue / _step - oldValue / _step) * _step;
-    }
-    this.updateValue(val);
-    this.updateHandleValue();
-  }
-  writeValue(value) {
-    if (this.range) this.values = value || [0, 0];
-    else this.value = value || 0;
-    this.updateHandleValue();
-    this.updateDiffAndOffset();
-    this.cd.markForCheck();
-  }
-  registerOnChange(fn) {
-    this.onModelChange = fn;
-  }
-  registerOnTouched(fn) {
-    this.onModelTouched = fn;
-  }
-  setDisabledState(val) {
-    this.disabled = val;
-    this.cd.markForCheck();
-  }
-  get rangeStartLeft() {
-    if (!this.isVertical()) return this.handleValues[0] > 100 ? "100%" : this.handleValues[0] + "%";
-    return null;
-  }
-  get rangeStartBottom() {
-    return this.isVertical() ? this.handleValues[0] + "%" : "auto";
-  }
-  get rangeEndLeft() {
-    return this.isVertical() ? null : this.handleValues[1] + "%";
-  }
-  get rangeEndBottom() {
-    return this.isVertical() ? this.handleValues[1] + "%" : "auto";
-  }
-  isVertical() {
-    return this.orientation === "vertical";
-  }
-  updateDomData() {
-    let rect = this.el.nativeElement.children[0].getBoundingClientRect();
-    this.initX = rect.left + getWindowScrollLeft();
-    this.initY = rect.top + getWindowScrollTop();
-    this.barWidth = this.el.nativeElement.children[0].offsetWidth;
-    this.barHeight = this.el.nativeElement.children[0].offsetHeight;
-  }
-  calculateHandleValue(event) {
-    if (this.orientation === "horizontal") {
-      if (isRTL(this.el.nativeElement)) {
-        return (this.initX + this.barWidth - event.pageX) * 100 / this.barWidth;
-      } else {
-        return (event.pageX - this.initX) * 100 / this.barWidth;
-      }
-    } else {
-      return (this.initY + this.barHeight - event.pageY) * 100 / this.barHeight;
-    }
-  }
-  updateHandleValue() {
-    if (this.range) {
-      this.handleValues[0] = (this.values[0] < this.min ? 0 : this.values[0] - this.min) * 100 / (this.max - this.min);
-      this.handleValues[1] = (this.values[1] > this.max ? 100 : this.values[1] - this.min) * 100 / (this.max - this.min);
-    } else {
-      if (this.value < this.min) this.handleValue = 0;
-      else if (this.value > this.max) this.handleValue = 100;
-      else this.handleValue = (this.value - this.min) * 100 / (this.max - this.min);
-    }
-    if (this.step) {
-      this.updateDiffAndOffset();
-    }
-  }
-  updateDiffAndOffset() {
-    this.diff = this.getDiff();
-    this.offset = this.getOffset();
-  }
-  getDiff() {
-    return Math.abs(this.handleValues[0] - this.handleValues[1]);
-  }
-  getOffset() {
-    return Math.min(this.handleValues[0], this.handleValues[1]);
-  }
-  updateValue(val, event) {
-    if (this.range) {
-      let value = val;
-      if (this.handleIndex == 0) {
-        if (value < this.min) {
-          value = this.min;
-          this.handleValues[0] = 0;
-        } else if (value > this.values[1]) {
-          if (value > this.max) {
-            value = this.max;
-            this.handleValues[0] = 100;
-          }
-        }
-        this.sliderHandleStart?.nativeElement.focus();
-      } else {
-        if (value > this.max) {
-          value = this.max;
-          this.handleValues[1] = 100;
-          this.offset = this.handleValues[1];
-        } else if (value < this.min) {
-          value = this.min;
-          this.handleValues[1] = 0;
-        } else if (value < this.values[0]) {
-          this.offset = this.handleValues[1];
-        }
-        this.sliderHandleEnd?.nativeElement.focus();
-      }
-      if (this.step) {
-        this.updateHandleValue();
-      } else {
-        this.updateDiffAndOffset();
-      }
-      this.values[this.handleIndex] = this.getNormalizedValue(value);
-      let newValues = [this.minVal, this.maxVal];
-      this.onModelChange(newValues);
-      this.onChange.emit({
-        event,
-        values: this.values
-      });
-    } else {
-      if (val < this.min) {
-        val = this.min;
-        this.handleValue = 0;
-      } else if (val > this.max) {
-        val = this.max;
-        this.handleValue = 100;
-      }
-      this.value = this.getNormalizedValue(val);
-      this.onModelChange(this.value);
-      this.onChange.emit({
-        event,
-        value: this.value
-      });
-      this.sliderHandle?.nativeElement.focus();
-    }
-    this.updateHandleValue();
-  }
-  getValueFromHandle(handleValue) {
-    return (this.max - this.min) * (handleValue / 100) + this.min;
-  }
-  getDecimalsCount(value) {
-    if (value && Math.floor(value) !== value) return value.toString().split(".")[1].length || 0;
-    return 0;
-  }
-  getNormalizedValue(val) {
-    let decimalsCount = this.getDecimalsCount(this.step);
-    if (decimalsCount > 0) {
-      return +parseFloat(val.toString()).toFixed(decimalsCount);
-    } else {
-      return Math.floor(val);
-    }
-  }
-  ngOnDestroy() {
-    this.unbindDragListeners();
-    super.ngOnDestroy();
-  }
-  get minVal() {
-    return Math.min(this.values[1], this.values[0]);
-  }
-  get maxVal() {
-    return Math.max(this.values[1], this.values[0]);
-  }
-  static \u0275fac = /* @__PURE__ */ (() => {
-    let \u0275Slider_BaseFactory;
-    return function Slider_Factory(__ngFactoryType__) {
-      return (\u0275Slider_BaseFactory || (\u0275Slider_BaseFactory = \u0275\u0275getInheritedFactory(_Slider)))(__ngFactoryType__ || _Slider);
-    };
-  })();
-  static \u0275cmp = /* @__PURE__ */ \u0275\u0275defineComponent({
-    type: _Slider,
-    selectors: [["p-slider"]],
-    viewQuery: function Slider_Query(rf, ctx) {
-      if (rf & 1) {
-        \u0275\u0275viewQuery(_c03, 5);
-        \u0275\u0275viewQuery(_c13, 5);
-        \u0275\u0275viewQuery(_c23, 5);
-      }
-      if (rf & 2) {
-        let _t;
-        \u0275\u0275queryRefresh(_t = \u0275\u0275loadQuery()) && (ctx.sliderHandle = _t.first);
-        \u0275\u0275queryRefresh(_t = \u0275\u0275loadQuery()) && (ctx.sliderHandleStart = _t.first);
-        \u0275\u0275queryRefresh(_t = \u0275\u0275loadQuery()) && (ctx.sliderHandleEnd = _t.first);
-      }
-    },
-    inputs: {
-      animate: [2, "animate", "animate", booleanAttribute],
-      disabled: [2, "disabled", "disabled", booleanAttribute],
-      min: [2, "min", "min", numberAttribute],
-      max: [2, "max", "max", numberAttribute],
-      orientation: "orientation",
-      step: [2, "step", "step", numberAttribute],
-      range: [2, "range", "range", booleanAttribute],
-      style: "style",
-      styleClass: "styleClass",
-      ariaLabel: "ariaLabel",
-      ariaLabelledBy: "ariaLabelledBy",
-      tabindex: [2, "tabindex", "tabindex", numberAttribute],
-      autofocus: [2, "autofocus", "autofocus", booleanAttribute]
-    },
-    outputs: {
-      onChange: "onChange",
-      onSlideEnd: "onSlideEnd"
-    },
-    features: [\u0275\u0275ProvidersFeature([SLIDER_VALUE_ACCESSOR, SliderStyle]), \u0275\u0275InheritDefinitionFeature],
-    decls: 8,
-    vars: 18,
-    consts: [["sliderHandle", ""], ["sliderHandleStart", ""], ["sliderHandleEnd", ""], [3, "click", "ngStyle", "ngClass"], ["class", "p-slider-range", 3, "ngStyle", 4, "ngIf"], ["class", "p-slider-handle", "role", "slider", 3, "transition", "ngStyle", "pAutoFocus", "touchstart", "touchmove", "touchend", "mousedown", "keydown", 4, "ngIf"], ["class", "p-slider-handle", "role", "slider", 3, "transition", "ngStyle", "ngClass", "pAutoFocus", "keydown", "mousedown", "touchstart", "touchmove", "touchend", 4, "ngIf"], ["class", "p-slider-handle", "role", "slider", 3, "transition", "ngStyle", "ngClass", "keydown", "mousedown", "touchstart", "touchmove", "touchend", 4, "ngIf"], [1, "p-slider-range", 3, "ngStyle"], ["role", "slider", 1, "p-slider-handle", 3, "touchstart", "touchmove", "touchend", "mousedown", "keydown", "ngStyle", "pAutoFocus"], ["role", "slider", 1, "p-slider-handle", 3, "keydown", "mousedown", "touchstart", "touchmove", "touchend", "ngStyle", "ngClass", "pAutoFocus"], ["role", "slider", 1, "p-slider-handle", 3, "keydown", "mousedown", "touchstart", "touchmove", "touchend", "ngStyle", "ngClass"]],
-    template: function Slider_Template(rf, ctx) {
-      if (rf & 1) {
-        \u0275\u0275elementStart(0, "div", 3);
-        \u0275\u0275listener("click", function Slider_Template_div_click_0_listener($event) {
-          return ctx.onBarClick($event);
-        });
-        \u0275\u0275template(1, Slider_span_1_Template, 1, 5, "span", 4)(2, Slider_span_2_Template, 1, 5, "span", 4)(3, Slider_span_3_Template, 1, 4, "span", 4)(4, Slider_span_4_Template, 1, 4, "span", 4)(5, Slider_span_5_Template, 2, 15, "span", 5)(6, Slider_span_6_Template, 2, 18, "span", 6)(7, Slider_span_7_Template, 2, 17, "span", 7);
-        \u0275\u0275elementEnd();
-      }
-      if (rf & 2) {
-        \u0275\u0275classMap(ctx.styleClass);
-        \u0275\u0275property("ngStyle", ctx.style)("ngClass", \u0275\u0275pureFunction4(13, _c33, ctx.disabled, ctx.orientation == "horizontal", ctx.orientation == "vertical", ctx.animate));
-        \u0275\u0275attribute("data-pc-name", "slider")("data-pc-section", "root");
-        \u0275\u0275advance();
-        \u0275\u0275property("ngIf", ctx.range && ctx.orientation == "horizontal");
-        \u0275\u0275advance();
-        \u0275\u0275property("ngIf", ctx.range && ctx.orientation == "vertical");
-        \u0275\u0275advance();
-        \u0275\u0275property("ngIf", !ctx.range && ctx.orientation == "vertical");
-        \u0275\u0275advance();
-        \u0275\u0275property("ngIf", !ctx.range && ctx.orientation == "horizontal");
-        \u0275\u0275advance();
-        \u0275\u0275property("ngIf", !ctx.range);
-        \u0275\u0275advance();
-        \u0275\u0275property("ngIf", ctx.range);
-        \u0275\u0275advance();
-        \u0275\u0275property("ngIf", ctx.range);
-      }
-    },
-    dependencies: [CommonModule, NgClass, NgIf, NgStyle, AutoFocus, SharedModule],
-    encapsulation: 2,
-    changeDetection: 0
-  });
-};
-(() => {
-  (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(Slider, [{
-    type: Component,
-    args: [{
-      selector: "p-slider",
-      standalone: true,
-      imports: [CommonModule, AutoFocus, SharedModule],
-      template: `
-        <div
-            [ngStyle]="style"
-            [class]="styleClass"
-            [ngClass]="{
-                'p-slider p-component': true,
-                'p-disabled': disabled,
-                'p-slider-horizontal': orientation == 'horizontal',
-                'p-slider-vertical': orientation == 'vertical',
-                'p-slider-animate': animate
-            }"
-            (click)="onBarClick($event)"
-            [attr.data-pc-name]="'slider'"
-            [attr.data-pc-section]="'root'"
-        >
-            <span
-                *ngIf="range && orientation == 'horizontal'"
-                class="p-slider-range"
-                [ngStyle]="{
-                    position: 'absolute',
-                    'inset-inline-start': offset !== null && offset !== undefined ? offset + '%' : handleValues[0] + '%',
-                    width: diff ? diff + '%' : handleValues[1] - handleValues[0] + '%'
-                }"
-                [attr.data-pc-section]="'range'"
-            ></span>
-            <span
-                *ngIf="range && orientation == 'vertical'"
-                class="p-slider-range"
-                [ngStyle]="{
-                    position: 'absolute',
-                    bottom: offset !== null && offset !== undefined ? offset + '%' : handleValues[0] + '%',
-                    height: diff ? diff + '%' : handleValues[1] - handleValues[0] + '%'
-                }"
-                [attr.data-pc-section]="'range'"
-            ></span>
-            <span *ngIf="!range && orientation == 'vertical'" class="p-slider-range" [attr.data-pc-section]="'range'" [ngStyle]="{ position: 'absolute', height: handleValue + '%' }"></span>
-            <span *ngIf="!range && orientation == 'horizontal'" class="p-slider-range" [attr.data-pc-section]="'range'" [ngStyle]="{ position: 'absolute', width: handleValue + '%' }"></span>
-            <span
-                *ngIf="!range"
-                #sliderHandle
-                class="p-slider-handle"
-                [style.transition]="dragging ? 'none' : null"
-                [ngStyle]="{
-                    position: 'absolute',
-                    'inset-inline-start': orientation == 'horizontal' ? handleValue + '%' : null,
-                    bottom: orientation == 'vertical' ? handleValue + '%' : null
-                }"
-                (touchstart)="onDragStart($event)"
-                (touchmove)="onDrag($event)"
-                (touchend)="onDragEnd($event)"
-                (mousedown)="onMouseDown($event)"
-                (keydown)="onKeyDown($event)"
-                [attr.tabindex]="disabled ? null : tabindex"
-                role="slider"
-                [attr.aria-valuemin]="min"
-                [attr.aria-valuenow]="value"
-                [attr.aria-valuemax]="max"
-                [attr.aria-labelledby]="ariaLabelledBy"
-                [attr.aria-label]="ariaLabel"
-                [attr.aria-orientation]="orientation"
-                [attr.data-pc-section]="'handle'"
-                [pAutoFocus]="autofocus"
-            ></span>
-            <span
-                *ngIf="range"
-                #sliderHandleStart
-                [style.transition]="dragging ? 'none' : null"
-                class="p-slider-handle"
-                [ngStyle]="{ position: 'absolute', 'inset-inline-start': rangeStartLeft, bottom: rangeStartBottom }"
-                [ngClass]="{ 'p-slider-handle-active': handleIndex == 0 }"
-                (keydown)="onKeyDown($event, 0)"
-                (mousedown)="onMouseDown($event, 0)"
-                (touchstart)="onDragStart($event, 0)"
-                (touchmove)="onDrag($event)"
-                (touchend)="onDragEnd($event)"
-                [attr.tabindex]="disabled ? null : tabindex"
-                role="slider"
-                [attr.aria-valuemin]="min"
-                [attr.aria-valuenow]="value ? value[0] : null"
-                [attr.aria-valuemax]="max"
-                [attr.aria-labelledby]="ariaLabelledBy"
-                [attr.aria-label]="ariaLabel"
-                [attr.aria-orientation]="orientation"
-                [attr.data-pc-section]="'startHandler'"
-                [pAutoFocus]="autofocus"
-            ></span>
-            <span
-                *ngIf="range"
-                #sliderHandleEnd
-                [style.transition]="dragging ? 'none' : null"
-                class="p-slider-handle"
-                [ngStyle]="{ position: 'absolute', 'inset-inline-start': rangeEndLeft, bottom: rangeEndBottom }"
-                [ngClass]="{ 'p-slider-handle-active': handleIndex == 1 }"
-                (keydown)="onKeyDown($event, 1)"
-                (mousedown)="onMouseDown($event, 1)"
-                (touchstart)="onDragStart($event, 1)"
-                (touchmove)="onDrag($event)"
-                (touchend)="onDragEnd($event)"
-                [attr.tabindex]="disabled ? null : tabindex"
-                role="slider"
-                [attr.aria-valuemin]="min"
-                [attr.aria-valuenow]="value ? value[1] : null"
-                [attr.aria-valuemax]="max"
-                [attr.aria-labelledby]="ariaLabelledBy"
-                [attr.aria-label]="ariaLabel"
-                [attr.aria-orientation]="orientation"
-                [attr.data-pc-section]="'endHandler'"
-            ></span>
-        </div>
-    `,
-      providers: [SLIDER_VALUE_ACCESSOR, SliderStyle],
-      changeDetection: ChangeDetectionStrategy.OnPush,
-      encapsulation: ViewEncapsulation.None
-    }]
-  }], null, {
-    animate: [{
-      type: Input,
-      args: [{
-        transform: booleanAttribute
-      }]
-    }],
-    disabled: [{
-      type: Input,
-      args: [{
-        transform: booleanAttribute
-      }]
-    }],
-    min: [{
-      type: Input,
-      args: [{
-        transform: numberAttribute
-      }]
-    }],
-    max: [{
-      type: Input,
-      args: [{
-        transform: numberAttribute
-      }]
-    }],
-    orientation: [{
-      type: Input
-    }],
-    step: [{
-      type: Input,
-      args: [{
-        transform: numberAttribute
-      }]
-    }],
-    range: [{
-      type: Input,
-      args: [{
-        transform: booleanAttribute
-      }]
-    }],
-    style: [{
-      type: Input
-    }],
-    styleClass: [{
-      type: Input
-    }],
-    ariaLabel: [{
-      type: Input
-    }],
-    ariaLabelledBy: [{
-      type: Input
-    }],
-    tabindex: [{
-      type: Input,
-      args: [{
-        transform: numberAttribute
-      }]
-    }],
-    autofocus: [{
-      type: Input,
-      args: [{
-        transform: booleanAttribute
-      }]
-    }],
-    onChange: [{
-      type: Output
-    }],
-    onSlideEnd: [{
-      type: Output
-    }],
-    sliderHandle: [{
-      type: ViewChild,
-      args: ["sliderHandle"]
-    }],
-    sliderHandleStart: [{
-      type: ViewChild,
-      args: ["sliderHandleStart"]
-    }],
-    sliderHandleEnd: [{
-      type: ViewChild,
-      args: ["sliderHandleEnd"]
-    }]
-  });
-})();
-var SliderModule = class _SliderModule {
-  static \u0275fac = function SliderModule_Factory(__ngFactoryType__) {
-    return new (__ngFactoryType__ || _SliderModule)();
-  };
-  static \u0275mod = /* @__PURE__ */ \u0275\u0275defineNgModule({
-    type: _SliderModule,
-    imports: [Slider, SharedModule],
-    exports: [Slider, SharedModule]
-  });
-  static \u0275inj = /* @__PURE__ */ \u0275\u0275defineInjector({
-    imports: [Slider, SharedModule, SharedModule]
-  });
-};
-(() => {
-  (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(SliderModule, [{
-    type: NgModule,
-    args: [{
-      imports: [Slider, SharedModule],
-      exports: [Slider, SharedModule]
-    }]
-  }], null, null);
-})();
-
-// src/app/views/page-assistant/components/ai-options.component.ts
-var _c04 = () => ({ width: "30rem" });
-var _c14 = () => ["1", "2"];
-function AiOptionsComponent_ng_container_15_Template(rf, ctx) {
-  if (rf & 1) {
-    const _r1 = \u0275\u0275getCurrentView();
-    \u0275\u0275elementContainerStart(0);
-    \u0275\u0275elementStart(1, "div", 13)(2, "p-radioButton", 14);
-    \u0275\u0275twoWayListener("ngModelChange", function AiOptionsComponent_ng_container_15_Template_p_radioButton_ngModelChange_2_listener($event) {
-      \u0275\u0275restoreView(_r1);
-      const ctx_r1 = \u0275\u0275nextContext();
-      \u0275\u0275twoWayBindingSet(ctx_r1.selectedTask, $event) || (ctx_r1.selectedTask = $event);
-      return \u0275\u0275resetView($event);
-    });
-    \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(3, "label", 15);
-    \u0275\u0275text(4);
-    \u0275\u0275pipe(5, "translate");
-    \u0275\u0275elementEnd()();
-    \u0275\u0275elementContainerEnd();
-  }
-  if (rf & 2) {
-    const option_r3 = ctx.$implicit;
-    const ctx_r1 = \u0275\u0275nextContext();
-    \u0275\u0275advance(2);
-    \u0275\u0275property("value", option_r3.id);
-    \u0275\u0275twoWayProperty("ngModel", ctx_r1.selectedTask);
-    \u0275\u0275property("inputId", option_r3.id)("disabled", option_r3.disabled);
-    \u0275\u0275advance();
-    \u0275\u0275property("for", option_r3.id);
-    \u0275\u0275advance();
-    \u0275\u0275textInterpolate(\u0275\u0275pipeBind1(5, 6, option_r3.label));
-  }
-}
-function AiOptionsComponent_Conditional_16_Conditional_10_ng_container_0_Template(rf, ctx) {
-  if (rf & 1) {
-    const _r5 = \u0275\u0275getCurrentView();
-    \u0275\u0275elementContainerStart(0);
-    \u0275\u0275elementStart(1, "div", 13)(2, "p-radioButton", 23);
-    \u0275\u0275twoWayListener("ngModelChange", function AiOptionsComponent_Conditional_16_Conditional_10_ng_container_0_Template_p_radioButton_ngModelChange_2_listener($event) {
-      \u0275\u0275restoreView(_r5);
-      const ctx_r1 = \u0275\u0275nextContext(3);
-      \u0275\u0275twoWayBindingSet(ctx_r1.selectedPrompt, $event) || (ctx_r1.selectedPrompt = $event);
-      return \u0275\u0275resetView($event);
-    });
-    \u0275\u0275listener("onClick", function AiOptionsComponent_Conditional_16_Conditional_10_ng_container_0_Template_p_radioButton_onClick_2_listener() {
-      \u0275\u0275restoreView(_r5);
-      const ctx_r1 = \u0275\u0275nextContext(3);
-      return \u0275\u0275resetView(ctx_r1.onPromptSelect(ctx_r1.selectedPrompt));
-    });
-    \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(3, "label", 15);
-    \u0275\u0275text(4);
-    \u0275\u0275pipe(5, "translate");
-    \u0275\u0275elementEnd()();
-    \u0275\u0275elementContainerEnd();
-  }
-  if (rf & 2) {
-    const option_r6 = ctx.$implicit;
-    const ctx_r1 = \u0275\u0275nextContext(3);
-    \u0275\u0275advance(2);
-    \u0275\u0275property("value", option_r6.id);
-    \u0275\u0275twoWayProperty("ngModel", ctx_r1.selectedPrompt);
-    \u0275\u0275property("inputId", option_r6.id)("disabled", option_r6.disabled);
-    \u0275\u0275advance();
-    \u0275\u0275property("for", option_r6.id);
-    \u0275\u0275advance();
-    \u0275\u0275textInterpolate(\u0275\u0275pipeBind1(5, 6, option_r6.label));
-  }
-}
-function AiOptionsComponent_Conditional_16_Conditional_10_Template(rf, ctx) {
-  if (rf & 1) {
-    \u0275\u0275template(0, AiOptionsComponent_Conditional_16_Conditional_10_ng_container_0_Template, 6, 8, "ng-container", 8);
-  }
-  if (rf & 2) {
-    const ctx_r1 = \u0275\u0275nextContext(2);
-    \u0275\u0275property("ngForOf", ctx_r1.promptOptions)("ngForTrackBy", ctx_r1.trackById);
-  }
-}
-function AiOptionsComponent_Conditional_16_Conditional_11_ng_container_0_Template(rf, ctx) {
-  if (rf & 1) {
-    const _r7 = \u0275\u0275getCurrentView();
-    \u0275\u0275elementContainerStart(0);
-    \u0275\u0275elementStart(1, "div", 24)(2, "p-checkbox", 25);
-    \u0275\u0275twoWayListener("ngModelChange", function AiOptionsComponent_Conditional_16_Conditional_11_ng_container_0_Template_p_checkbox_ngModelChange_2_listener($event) {
-      \u0275\u0275restoreView(_r7);
-      const ctx_r1 = \u0275\u0275nextContext(3);
-      \u0275\u0275twoWayBindingSet(ctx_r1.selectedPrompts, $event) || (ctx_r1.selectedPrompts = $event);
-      return \u0275\u0275resetView($event);
-    });
-    \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(3, "label", 15);
-    \u0275\u0275text(4);
-    \u0275\u0275pipe(5, "translate");
-    \u0275\u0275elementEnd()();
-    \u0275\u0275elementContainerEnd();
-  }
-  if (rf & 2) {
-    const option_r8 = ctx.$implicit;
-    const ctx_r1 = \u0275\u0275nextContext(3);
-    \u0275\u0275advance(2);
-    \u0275\u0275property("value", option_r8.id);
-    \u0275\u0275twoWayProperty("ngModel", ctx_r1.selectedPrompts);
-    \u0275\u0275property("inputId", option_r8.id)("disabled", option_r8.disabled || ctx_r1.isPromptCheckboxDisabled(option_r8.id));
-    \u0275\u0275advance();
-    \u0275\u0275property("for", option_r8.id);
-    \u0275\u0275advance();
-    \u0275\u0275textInterpolate(\u0275\u0275pipeBind1(5, 6, option_r8.label));
-  }
-}
-function AiOptionsComponent_Conditional_16_Conditional_11_Template(rf, ctx) {
-  if (rf & 1) {
-    \u0275\u0275template(0, AiOptionsComponent_Conditional_16_Conditional_11_ng_container_0_Template, 6, 8, "ng-container", 8);
-  }
-  if (rf & 2) {
-    const ctx_r1 = \u0275\u0275nextContext(2);
-    \u0275\u0275property("ngForOf", ctx_r1.promptOptions)("ngForTrackBy", ctx_r1.trackById);
-  }
-}
-function AiOptionsComponent_Conditional_16_Conditional_17_Template(rf, ctx) {
-  if (rf & 1) {
-    const _r9 = \u0275\u0275getCurrentView();
-    \u0275\u0275elementStart(0, "p-iftalabel")(1, "textarea", 26);
-    \u0275\u0275twoWayListener("ngModelChange", function AiOptionsComponent_Conditional_16_Conditional_17_Template_textarea_ngModelChange_1_listener($event) {
-      \u0275\u0275restoreView(_r9);
-      const ctx_r1 = \u0275\u0275nextContext(2);
-      \u0275\u0275twoWayBindingSet(ctx_r1.customInstruction, $event) || (ctx_r1.customInstruction = $event);
-      return \u0275\u0275resetView($event);
-    });
-    \u0275\u0275listener("blur", function AiOptionsComponent_Conditional_16_Conditional_17_Template_textarea_blur_1_listener() {
-      \u0275\u0275restoreView(_r9);
-      const ctx_r1 = \u0275\u0275nextContext(2);
-      return \u0275\u0275resetView(ctx_r1.emitCustomPrompt(ctx_r1.customInstruction));
-    });
-    \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(2, "label", 27);
-    \u0275\u0275text(3);
-    \u0275\u0275pipe(4, "translate");
-    \u0275\u0275elementEnd()();
-  }
-  if (rf & 2) {
-    const ctx_r1 = \u0275\u0275nextContext(2);
-    \u0275\u0275advance();
-    \u0275\u0275twoWayProperty("ngModel", ctx_r1.customInstruction);
-    \u0275\u0275property("autoResize", true);
-    \u0275\u0275advance(2);
-    \u0275\u0275textInterpolate(\u0275\u0275pipeBind1(4, 3, "page.ai-options.prompt.textarea"));
-  }
-}
-function AiOptionsComponent_Conditional_16_Conditional_22_Template(rf, ctx) {
-  if (rf & 1) {
-    const _r10 = \u0275\u0275getCurrentView();
-    \u0275\u0275elementStart(0, "div", 22)(1, "div", 28)(2, "p-checkbox", 29);
-    \u0275\u0275twoWayListener("ngModelChange", function AiOptionsComponent_Conditional_16_Conditional_22_Template_p_checkbox_ngModelChange_2_listener($event) {
-      \u0275\u0275restoreView(_r10);
-      const ctx_r1 = \u0275\u0275nextContext(2);
-      \u0275\u0275twoWayBindingSet(ctx_r1.useCompactAlertsPageContext, $event) || (ctx_r1.useCompactAlertsPageContext = $event);
-      return \u0275\u0275resetView($event);
-    });
-    \u0275\u0275listener("onChange", function AiOptionsComponent_Conditional_16_Conditional_22_Template_p_checkbox_onChange_2_listener() {
-      \u0275\u0275restoreView(_r10);
-      const ctx_r1 = \u0275\u0275nextContext(2);
-      return \u0275\u0275resetView(ctx_r1.onUseCompactAlertsPageContextSelect(ctx_r1.useCompactAlertsPageContext));
-    });
-    \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(3, "label", 30);
-    \u0275\u0275text(4, " Compact context (smaller models, < 120B) ");
-    \u0275\u0275elementEnd()();
-    \u0275\u0275elementStart(5, "div", 24)(6, "p-checkbox", 31);
-    \u0275\u0275twoWayListener("ngModelChange", function AiOptionsComponent_Conditional_16_Conditional_22_Template_p_checkbox_ngModelChange_6_listener($event) {
-      \u0275\u0275restoreView(_r10);
-      const ctx_r1 = \u0275\u0275nextContext(2);
-      \u0275\u0275twoWayBindingSet(ctx_r1.includeAlertRewriteExamples, $event) || (ctx_r1.includeAlertRewriteExamples = $event);
-      return \u0275\u0275resetView($event);
-    });
-    \u0275\u0275listener("onChange", function AiOptionsComponent_Conditional_16_Conditional_22_Template_p_checkbox_onChange_6_listener() {
-      \u0275\u0275restoreView(_r10);
-      const ctx_r1 = \u0275\u0275nextContext(2);
-      return \u0275\u0275resetView(ctx_r1.onIncludeAlertRewriteExamplesSelect(ctx_r1.includeAlertRewriteExamples));
-    });
-    \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(7, "label", 32);
-    \u0275\u0275text(8, " Use examples for rewriting ");
-    \u0275\u0275elementEnd()()();
-  }
-  if (rf & 2) {
-    const ctx_r1 = \u0275\u0275nextContext(2);
-    \u0275\u0275advance(2);
-    \u0275\u0275twoWayProperty("ngModel", ctx_r1.useCompactAlertsPageContext);
-    \u0275\u0275property("binary", true);
-    \u0275\u0275advance(4);
-    \u0275\u0275twoWayProperty("ngModel", ctx_r1.includeAlertRewriteExamples);
-    \u0275\u0275property("binary", true);
-  }
-}
-function AiOptionsComponent_Conditional_16_Template(rf, ctx) {
-  if (rf & 1) {
-    const _r4 = \u0275\u0275getCurrentView();
-    \u0275\u0275elementStart(0, "p-accordion-panel", 9)(1, "p-accordion-header");
-    \u0275\u0275text(2);
-    \u0275\u0275pipe(3, "translate");
-    \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(4, "p-accordion-content")(5, "fieldset", 5)(6, "legend", 6);
-    \u0275\u0275text(7);
-    \u0275\u0275pipe(8, "translate");
-    \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(9, "div", 7);
-    \u0275\u0275template(10, AiOptionsComponent_Conditional_16_Conditional_10_Template, 1, 2, "ng-container")(11, AiOptionsComponent_Conditional_16_Conditional_11_Template, 1, 2, "ng-container");
-    \u0275\u0275elementStart(12, "div", 16)(13, "p-checkbox", 17);
-    \u0275\u0275twoWayListener("ngModelChange", function AiOptionsComponent_Conditional_16_Template_p_checkbox_ngModelChange_13_listener($event) {
-      \u0275\u0275restoreView(_r4);
-      const ctx_r1 = \u0275\u0275nextContext();
-      \u0275\u0275twoWayBindingSet(ctx_r1.addCustom, $event) || (ctx_r1.addCustom = $event);
-      return \u0275\u0275resetView($event);
-    });
-    \u0275\u0275listener("onChange", function AiOptionsComponent_Conditional_16_Template_p_checkbox_onChange_13_listener() {
-      \u0275\u0275restoreView(_r4);
-      const ctx_r1 = \u0275\u0275nextContext();
-      return \u0275\u0275resetView(ctx_r1.resetCustom());
-    });
-    \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(14, "label", 18);
-    \u0275\u0275text(15);
-    \u0275\u0275pipe(16, "translate");
-    \u0275\u0275elementEnd()();
-    \u0275\u0275template(17, AiOptionsComponent_Conditional_16_Conditional_17_Template, 5, 5, "p-iftalabel");
-    \u0275\u0275elementStart(18, "div", 19)(19, "p", 20);
-    \u0275\u0275text(20);
-    \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(21, "p-slider", 21);
-    \u0275\u0275twoWayListener("ngModelChange", function AiOptionsComponent_Conditional_16_Template_p_slider_ngModelChange_21_listener($event) {
-      \u0275\u0275restoreView(_r4);
-      const ctx_r1 = \u0275\u0275nextContext();
-      \u0275\u0275twoWayBindingSet(ctx_r1.editLevel, $event) || (ctx_r1.editLevel = $event);
-      return \u0275\u0275resetView($event);
-    });
-    \u0275\u0275listener("onChange", function AiOptionsComponent_Conditional_16_Template_p_slider_onChange_21_listener() {
-      \u0275\u0275restoreView(_r4);
-      const ctx_r1 = \u0275\u0275nextContext();
-      return \u0275\u0275resetView(ctx_r1.emitEditPrompt(ctx_r1.currentEditLevel.prompt));
-    });
-    \u0275\u0275elementEnd()();
-    \u0275\u0275template(22, AiOptionsComponent_Conditional_16_Conditional_22_Template, 9, 4, "div", 22);
-    \u0275\u0275elementEnd()()()();
-  }
-  if (rf & 2) {
-    const ctx_r1 = \u0275\u0275nextContext();
-    \u0275\u0275advance(2);
-    \u0275\u0275textInterpolate(\u0275\u0275pipeBind1(3, 12, "page.ai-options.prompt.header"));
-    \u0275\u0275advance(5);
-    \u0275\u0275textInterpolate(\u0275\u0275pipeBind1(8, 14, "page.ai-options.prompt.legend"));
-    \u0275\u0275advance(3);
-    \u0275\u0275conditional(!ctx_r1.isTwoPrompts ? 10 : -1);
-    \u0275\u0275advance();
-    \u0275\u0275conditional(ctx_r1.isTwoPrompts ? 11 : -1);
-    \u0275\u0275advance(2);
-    \u0275\u0275twoWayProperty("ngModel", ctx_r1.addCustom);
-    \u0275\u0275property("binary", true);
-    \u0275\u0275advance(2);
-    \u0275\u0275textInterpolate(\u0275\u0275pipeBind1(16, 16, "page.ai-options.prompt.checkbox"));
-    \u0275\u0275advance(2);
-    \u0275\u0275conditional(ctx_r1.addCustom ? 17 : -1);
-    \u0275\u0275advance(3);
-    \u0275\u0275textInterpolate(ctx_r1.currentEditLevel == null ? null : ctx_r1.currentEditLevel.label);
-    \u0275\u0275advance();
-    \u0275\u0275twoWayProperty("ngModel", ctx_r1.editLevel);
-    \u0275\u0275property("step", 25);
-    \u0275\u0275advance();
-    \u0275\u0275conditional(ctx_r1.selectedPrompt === "alertsRecommendations" ? 22 : -1);
-  }
-}
-function AiOptionsComponent_Conditional_17_Conditional_10_ng_container_3_Template(rf, ctx) {
-  if (rf & 1) {
-    const _r11 = \u0275\u0275getCurrentView();
-    \u0275\u0275elementContainerStart(0);
-    \u0275\u0275elementStart(1, "div", 13)(2, "p-radioButton", 35);
-    \u0275\u0275twoWayListener("ngModelChange", function AiOptionsComponent_Conditional_17_Conditional_10_ng_container_3_Template_p_radioButton_ngModelChange_2_listener($event) {
-      \u0275\u0275restoreView(_r11);
-      const ctx_r1 = \u0275\u0275nextContext(3);
-      \u0275\u0275twoWayBindingSet(ctx_r1.selectedAi, $event) || (ctx_r1.selectedAi = $event);
-      return \u0275\u0275resetView($event);
-    });
-    \u0275\u0275listener("onClick", function AiOptionsComponent_Conditional_17_Conditional_10_ng_container_3_Template_p_radioButton_onClick_2_listener() {
-      \u0275\u0275restoreView(_r11);
-      const ctx_r1 = \u0275\u0275nextContext(3);
-      return \u0275\u0275resetView(ctx_r1.onAiSelect(ctx_r1.selectedAi));
-    });
-    \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(3, "label", 15);
-    \u0275\u0275text(4);
-    \u0275\u0275pipe(5, "translate");
-    \u0275\u0275elementEnd()();
-    \u0275\u0275elementContainerEnd();
-  }
-  if (rf & 2) {
-    const option_r12 = ctx.$implicit;
-    const ctx_r1 = \u0275\u0275nextContext(3);
-    \u0275\u0275advance(2);
-    \u0275\u0275property("value", option_r12.id);
-    \u0275\u0275twoWayProperty("ngModel", ctx_r1.selectedAi);
-    \u0275\u0275property("inputId", option_r12.id)("disabled", option_r12.disabled);
-    \u0275\u0275advance();
-    \u0275\u0275property("for", option_r12.id);
-    \u0275\u0275advance();
-    \u0275\u0275textInterpolate(\u0275\u0275pipeBind1(5, 6, option_r12.label));
-  }
-}
-function AiOptionsComponent_Conditional_17_Conditional_10_ng_container_7_Template(rf, ctx) {
-  if (rf & 1) {
-    const _r13 = \u0275\u0275getCurrentView();
-    \u0275\u0275elementContainerStart(0);
-    \u0275\u0275elementStart(1, "div", 13)(2, "p-radioButton", 35);
-    \u0275\u0275twoWayListener("ngModelChange", function AiOptionsComponent_Conditional_17_Conditional_10_ng_container_7_Template_p_radioButton_ngModelChange_2_listener($event) {
-      \u0275\u0275restoreView(_r13);
-      const ctx_r1 = \u0275\u0275nextContext(3);
-      \u0275\u0275twoWayBindingSet(ctx_r1.selectedAi, $event) || (ctx_r1.selectedAi = $event);
-      return \u0275\u0275resetView($event);
-    });
-    \u0275\u0275listener("onClick", function AiOptionsComponent_Conditional_17_Conditional_10_ng_container_7_Template_p_radioButton_onClick_2_listener() {
-      \u0275\u0275restoreView(_r13);
-      const ctx_r1 = \u0275\u0275nextContext(3);
-      return \u0275\u0275resetView(ctx_r1.onAiSelect(ctx_r1.selectedAi));
-    });
-    \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(3, "label", 15);
-    \u0275\u0275text(4);
-    \u0275\u0275pipe(5, "translate");
-    \u0275\u0275element(6, "p-chip", 36);
-    \u0275\u0275pipe(7, "translate");
-    \u0275\u0275elementEnd()();
-    \u0275\u0275elementContainerEnd();
-  }
-  if (rf & 2) {
-    const option_r14 = ctx.$implicit;
-    const ctx_r1 = \u0275\u0275nextContext(3);
-    \u0275\u0275advance(2);
-    \u0275\u0275property("value", option_r14.id);
-    \u0275\u0275twoWayProperty("ngModel", ctx_r1.selectedAi);
-    \u0275\u0275property("inputId", option_r14.id)("disabled", option_r14.disabled);
-    \u0275\u0275advance();
-    \u0275\u0275property("for", option_r14.id);
-    \u0275\u0275advance();
-    \u0275\u0275textInterpolate1(" ", \u0275\u0275pipeBind1(5, 7, option_r14.label), " ");
-    \u0275\u0275advance(2);
-    \u0275\u0275property("label", \u0275\u0275pipeBind1(7, 9, "page.ai-options.model.paidBadge"));
-  }
-}
-function AiOptionsComponent_Conditional_17_Conditional_10_Template(rf, ctx) {
-  if (rf & 1) {
-    \u0275\u0275elementStart(0, "p", 33);
-    \u0275\u0275text(1);
-    \u0275\u0275pipe(2, "translate");
-    \u0275\u0275elementEnd();
-    \u0275\u0275template(3, AiOptionsComponent_Conditional_17_Conditional_10_ng_container_3_Template, 6, 8, "ng-container", 8);
-    \u0275\u0275elementStart(4, "p", 34);
-    \u0275\u0275text(5);
-    \u0275\u0275pipe(6, "translate");
-    \u0275\u0275elementEnd();
-    \u0275\u0275template(7, AiOptionsComponent_Conditional_17_Conditional_10_ng_container_7_Template, 8, 11, "ng-container", 8);
-  }
-  if (rf & 2) {
-    const ctx_r1 = \u0275\u0275nextContext(2);
-    \u0275\u0275advance();
-    \u0275\u0275textInterpolate(\u0275\u0275pipeBind1(2, 6, "page.ai-options.model.free"));
-    \u0275\u0275advance(2);
-    \u0275\u0275property("ngForOf", ctx_r1.freeAiOptions)("ngForTrackBy", ctx_r1.trackById);
-    \u0275\u0275advance(2);
-    \u0275\u0275textInterpolate(\u0275\u0275pipeBind1(6, 8, "page.ai-options.model.paid"));
-    \u0275\u0275advance(2);
-    \u0275\u0275property("ngForOf", ctx_r1.paidAiOptions)("ngForTrackBy", ctx_r1.trackById);
-  }
-}
-function AiOptionsComponent_Conditional_17_Conditional_11_ng_container_3_Template(rf, ctx) {
-  if (rf & 1) {
-    const _r15 = \u0275\u0275getCurrentView();
-    \u0275\u0275elementContainerStart(0);
-    \u0275\u0275elementStart(1, "div", 24)(2, "p-checkbox", 25);
-    \u0275\u0275twoWayListener("ngModelChange", function AiOptionsComponent_Conditional_17_Conditional_11_ng_container_3_Template_p_checkbox_ngModelChange_2_listener($event) {
-      \u0275\u0275restoreView(_r15);
-      const ctx_r1 = \u0275\u0275nextContext(3);
-      \u0275\u0275twoWayBindingSet(ctx_r1.selectedAis, $event) || (ctx_r1.selectedAis = $event);
-      return \u0275\u0275resetView($event);
-    });
-    \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(3, "label", 15);
-    \u0275\u0275text(4);
-    \u0275\u0275pipe(5, "translate");
-    \u0275\u0275elementEnd()();
-    \u0275\u0275elementContainerEnd();
-  }
-  if (rf & 2) {
-    const option_r16 = ctx.$implicit;
-    const ctx_r1 = \u0275\u0275nextContext(3);
-    \u0275\u0275advance(2);
-    \u0275\u0275property("value", option_r16.id);
-    \u0275\u0275twoWayProperty("ngModel", ctx_r1.selectedAis);
-    \u0275\u0275property("inputId", option_r16.id)("disabled", option_r16.disabled || ctx_r1.isAiCheckboxDisabled(option_r16.id));
-    \u0275\u0275advance();
-    \u0275\u0275property("for", option_r16.id);
-    \u0275\u0275advance();
-    \u0275\u0275textInterpolate(\u0275\u0275pipeBind1(5, 6, option_r16.label));
-  }
-}
-function AiOptionsComponent_Conditional_17_Conditional_11_ng_container_7_Template(rf, ctx) {
-  if (rf & 1) {
-    const _r17 = \u0275\u0275getCurrentView();
-    \u0275\u0275elementContainerStart(0);
-    \u0275\u0275elementStart(1, "div", 24)(2, "p-checkbox", 25);
-    \u0275\u0275twoWayListener("ngModelChange", function AiOptionsComponent_Conditional_17_Conditional_11_ng_container_7_Template_p_checkbox_ngModelChange_2_listener($event) {
-      \u0275\u0275restoreView(_r17);
-      const ctx_r1 = \u0275\u0275nextContext(3);
-      \u0275\u0275twoWayBindingSet(ctx_r1.selectedAis, $event) || (ctx_r1.selectedAis = $event);
-      return \u0275\u0275resetView($event);
-    });
-    \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(3, "label", 15);
-    \u0275\u0275text(4);
-    \u0275\u0275pipe(5, "translate");
-    \u0275\u0275element(6, "p-chip", 36);
-    \u0275\u0275pipe(7, "translate");
-    \u0275\u0275elementEnd()();
-    \u0275\u0275elementContainerEnd();
-  }
-  if (rf & 2) {
-    const option_r18 = ctx.$implicit;
-    const ctx_r1 = \u0275\u0275nextContext(3);
-    \u0275\u0275advance(2);
-    \u0275\u0275property("value", option_r18.id);
-    \u0275\u0275twoWayProperty("ngModel", ctx_r1.selectedAis);
-    \u0275\u0275property("inputId", option_r18.id)("disabled", option_r18.disabled || ctx_r1.isAiCheckboxDisabled(option_r18.id));
-    \u0275\u0275advance();
-    \u0275\u0275property("for", option_r18.id);
-    \u0275\u0275advance();
-    \u0275\u0275textInterpolate1(" ", \u0275\u0275pipeBind1(5, 7, option_r18.label), " ");
-    \u0275\u0275advance(2);
-    \u0275\u0275property("label", \u0275\u0275pipeBind1(7, 9, "page.ai-options.model.paidBadge"));
-  }
-}
-function AiOptionsComponent_Conditional_17_Conditional_11_Template(rf, ctx) {
-  if (rf & 1) {
-    \u0275\u0275elementStart(0, "p", 33);
-    \u0275\u0275text(1);
-    \u0275\u0275pipe(2, "translate");
-    \u0275\u0275elementEnd();
-    \u0275\u0275template(3, AiOptionsComponent_Conditional_17_Conditional_11_ng_container_3_Template, 6, 8, "ng-container", 8);
-    \u0275\u0275elementStart(4, "p", 34);
-    \u0275\u0275text(5);
-    \u0275\u0275pipe(6, "translate");
-    \u0275\u0275elementEnd();
-    \u0275\u0275template(7, AiOptionsComponent_Conditional_17_Conditional_11_ng_container_7_Template, 8, 11, "ng-container", 8);
-  }
-  if (rf & 2) {
-    const ctx_r1 = \u0275\u0275nextContext(2);
-    \u0275\u0275advance();
-    \u0275\u0275textInterpolate(\u0275\u0275pipeBind1(2, 6, "page.ai-options.model.free"));
-    \u0275\u0275advance(2);
-    \u0275\u0275property("ngForOf", ctx_r1.freeAiOptions)("ngForTrackBy", ctx_r1.trackById);
-    \u0275\u0275advance(2);
-    \u0275\u0275textInterpolate(\u0275\u0275pipeBind1(6, 8, "page.ai-options.model.paid"));
-    \u0275\u0275advance(2);
-    \u0275\u0275property("ngForOf", ctx_r1.paidAiOptions)("ngForTrackBy", ctx_r1.trackById);
-  }
-}
-function AiOptionsComponent_Conditional_17_Template(rf, ctx) {
-  if (rf & 1) {
-    \u0275\u0275elementStart(0, "p-accordion-panel", 10)(1, "p-accordion-header");
-    \u0275\u0275text(2);
-    \u0275\u0275pipe(3, "translate");
-    \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(4, "p-accordion-content")(5, "fieldset", 5)(6, "legend", 6);
-    \u0275\u0275text(7);
-    \u0275\u0275pipe(8, "translate");
-    \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(9, "div", 7);
-    \u0275\u0275template(10, AiOptionsComponent_Conditional_17_Conditional_10_Template, 8, 10)(11, AiOptionsComponent_Conditional_17_Conditional_11_Template, 8, 10);
-    \u0275\u0275elementEnd()()()();
-  }
-  if (rf & 2) {
-    const ctx_r1 = \u0275\u0275nextContext();
-    \u0275\u0275advance(2);
-    \u0275\u0275textInterpolate(\u0275\u0275pipeBind1(3, 4, "page.ai-options.model.header"));
-    \u0275\u0275advance(5);
-    \u0275\u0275textInterpolate(\u0275\u0275pipeBind1(8, 6, "page.ai-options.model.legend"));
-    \u0275\u0275advance(3);
-    \u0275\u0275conditional(!ctx_r1.isTwoAis ? 10 : -1);
-    \u0275\u0275advance();
-    \u0275\u0275conditional(ctx_r1.isTwoAis ? 11 : -1);
-  }
-}
-function AiOptionsComponent_Conditional_18_Template(rf, ctx) {
-  if (rf & 1) {
-    const _r19 = \u0275\u0275getCurrentView();
-    \u0275\u0275elementStart(0, "p-button", 37);
-    \u0275\u0275pipe(1, "translate");
-    \u0275\u0275listener("click", function AiOptionsComponent_Conditional_18_Template_p_button_click_0_listener() {
-      \u0275\u0275restoreView(_r19);
-      const ctx_r1 = \u0275\u0275nextContext();
-      return \u0275\u0275resetView(ctx_r1.onSubmit());
-    });
-    \u0275\u0275elementEnd();
-  }
-  if (rf & 2) {
-    \u0275\u0275property("label", \u0275\u0275pipeBind1(1, 1, "page.compare.button.genai"));
-  }
-}
-function AiOptionsComponent_Conditional_19_ca_upload_url_1_Template(rf, ctx) {
-  if (rf & 1) {
-    \u0275\u0275element(0, "ca-upload-url", 39);
-  }
-  if (rf & 2) {
-    \u0275\u0275property("showSampleDataButton", false);
-  }
-}
-function AiOptionsComponent_Conditional_19_ca_upload_paste_2_Template(rf, ctx) {
-  if (rf & 1) {
-    \u0275\u0275element(0, "ca-upload-paste", 39);
-  }
-  if (rf & 2) {
-    \u0275\u0275property("showSampleDataButton", false);
-  }
-}
-function AiOptionsComponent_Conditional_19_ca_upload_word_3_Template(rf, ctx) {
-  if (rf & 1) {
-    \u0275\u0275element(0, "ca-upload-word", 39);
-  }
-  if (rf & 2) {
-    \u0275\u0275property("showSampleDataButton", false);
-  }
-}
-function AiOptionsComponent_Conditional_19_Template(rf, ctx) {
-  if (rf & 1) {
-    \u0275\u0275elementContainerStart(0, 12);
-    \u0275\u0275template(1, AiOptionsComponent_Conditional_19_ca_upload_url_1_Template, 1, 1, "ca-upload-url", 38)(2, AiOptionsComponent_Conditional_19_ca_upload_paste_2_Template, 1, 1, "ca-upload-paste", 38)(3, AiOptionsComponent_Conditional_19_ca_upload_word_3_Template, 1, 1, "ca-upload-word", 38);
-    \u0275\u0275elementContainerEnd();
-  }
-  if (rf & 2) {
-    const ctx_r1 = \u0275\u0275nextContext();
-    \u0275\u0275property("ngSwitch", ctx_r1.uploadType);
-    \u0275\u0275advance();
-    \u0275\u0275property("ngSwitchCase", "url");
-    \u0275\u0275advance();
-    \u0275\u0275property("ngSwitchCase", "paste");
-    \u0275\u0275advance();
-    \u0275\u0275property("ngSwitchCase", "word");
-  }
-}
-var AiOptionsComponent = class _AiOptionsComponent {
-  uploadState = inject(UploadStateService);
-  promptChange = new EventEmitter();
-  customPrompt = new EventEmitter();
-  editPrompt = new EventEmitter();
-  aiChange = new EventEmitter();
-  aiSubmit = new EventEmitter();
-  visible = false;
-  // The upload picker changes when the workflow is "compare with prototype".
-  get uploadType() {
-    return this.uploadState.getSelectedUploadType();
-  }
-  trackById(index, item) {
-    return item.id;
-  }
-  // Top-level compare workflow selection that drives which controls are shown.
-  _selectedTask = CompareTask.AiGenerated;
-  isTwoPrompts = false;
-  isTwoAis = false;
-  isPrototype = false;
-  get selectedTask() {
-    return this._selectedTask;
-  }
-  set selectedTask(value) {
-    this._selectedTask = value;
-    this.isTwoPrompts = value === CompareTask.TwoPrompts;
-    this.isTwoAis = value === CompareTask.TwoModels;
-    this.isPrototype = value === CompareTask.PrototypeUrl;
-  }
-  taskOptions = [
-    { id: CompareTask.AiGenerated, label: "page.ai-options.task.AiGenerated", disabled: false },
-    { id: CompareTask.PrototypeUrl, label: "page.ai-options.task.PrototypeUrl", disabled: false },
-    { id: CompareTask.TwoModels, label: "page.ai-options.task.TwoModels", disabled: false },
-    { id: CompareTask.TwoPrompts, label: "page.ai-options.task.TwoPrompts", disabled: false }
-  ];
-  // Prompt family selection for single- and dual-prompt runs.
-  selectedPrompt = PromptKey.AlertsRecommendations;
-  selectedPrompts = [];
-  promptOptions = [
-    { id: PromptKey.Headings, label: "page.ai-options.prompt.Headings", disabled: false },
-    { id: PromptKey.Doormats, label: "page.ai-options.prompt.Doormats", disabled: false },
-    { id: PromptKey.PlainLanguage, label: "page.ai-options.prompt.PlainLanguage", disabled: false },
-    { id: PromptKey.AlertsRecommendations, label: "page.ai-options.prompt.Alerts", disabled: false }
-  ];
-  isPromptCheckboxDisabled(id) {
-    return !this.selectedPrompts.includes(id) && this.selectedPrompts.length >= 2;
-  }
-  onPromptSelect(key2) {
-    this.promptChange.emit(key2);
-  }
-  // Model and alert-specific options persisted through UploadStateService.
-  selectedAi = AiModel.Gemini;
-  selectedAis = [];
-  includeAlertRewriteExamples = true;
-  useCompactAlertsPageContext = true;
-  // Free and paid model groups are rendered separately in the UI.
-  freeAiOptions = [
-    { id: AiModel.NemotronUltra, label: "page.ai-options.model.NemotronUltra", disabled: false },
-    { id: AiModel.GptOSS20BFree, label: "page.ai-options.model.GptOSS20BFree", disabled: false },
-    { id: AiModel.GptOSSFree, label: "page.ai-options.model.GptOSSFree", disabled: false },
-    { id: AiModel.NemotronSuper, label: "page.ai-options.model.NemotronSuper", disabled: false }
-  ];
-  paidAiOptions = [
-    { id: AiModel.GptOSS20B, label: "page.ai-options.model.GptOSS20B", disabled: false },
-    { id: AiModel.DeepSeekV4Flash, label: "page.ai-options.model.DeepSeekV4Flash", disabled: false },
-    { id: AiModel.DeepSeekV4Pro, label: "page.ai-options.model.DeepSeekV4Pro", disabled: false },
-    { id: AiModel.Gemini, label: "page.ai-options.model.Gemini", disabled: false },
-    { id: AiModel.GPT54Mini, label: "page.ai-options.model.GPT54Mini", disabled: false }
-  ];
-  ngOnInit() {
-    const freeIds = new Set(this.freeAiOptions.map((option) => option.id));
-    const modelIds = /* @__PURE__ */ new Set([
-      ...this.freeAiOptions.map((option) => option.id),
-      ...this.paidAiOptions.map((option) => option.id)
-    ]);
-    this.selectedAi = this.uploadState.getSelectedAiModel();
-    if (!modelIds.has(this.selectedAi)) {
-      this.selectedAi = this.freeAiOptions[0]?.id ?? this.selectedAi;
-    }
-    this.selectedAis = this.selectedAis.filter((id) => freeIds.has(id));
-    this.includeAlertRewriteExamples = this.uploadState.getIncludeAlertRewriteExamples();
-    this.useCompactAlertsPageContext = this.uploadState.getUseCompactAlertsPageContext();
-  }
-  isAiCheckboxDisabled(id) {
-    return !this.selectedAis.includes(id) && this.selectedAis.length >= 2;
-  }
-  onAiSelect(key2) {
-    this.aiChange.emit(key2);
-  }
-  onIncludeAlertRewriteExamplesSelect(include) {
-    this.includeAlertRewriteExamples = include;
-    this.uploadState.setIncludeAlertRewriteExamples(include);
-  }
-  onUseCompactAlertsPageContextSelect(useCompact) {
-    this.useCompactAlertsPageContext = useCompact;
-    this.uploadState.setUseCompactAlertsPageContext(useCompact);
-  }
-  // Close the drawer and let the parent component execute the request.
-  onSubmit() {
-    this.visible = false;
-    this.aiSubmit.emit();
-  }
-  // Optional free-form instructions appended after the base/skill prompt.
-  addCustom = false;
-  customInstruction = "";
-  emitCustomPrompt(prompt) {
-    this.customPrompt.emit(prompt);
-  }
-  resetCustom() {
-    if (!this.addCustom) {
-      this.customInstruction = "";
-      this.emitCustomPrompt("");
-    }
-  }
-  // Slider presets that prepend an edit-strength instruction to non-alert prompts.
-  editLevel = 50;
-  editLevels = [
-    { value: 0, label: "Grammar and spelling only", prompt: "Make minor edits to correct spelling or grammar errors only. Mostly ignore the other instructions provided." },
-    { value: 25, label: "Minor edits", prompt: "Make minor edits only to improve readability. Loosely follow the other instructions provided without making unnecessary changes." },
-    { value: 50, label: "Normal edits", prompt: "" },
-    { value: 75, label: "Extensive edits", prompt: "Heavily rewrite and reorganize the content to follow the instructions provided." },
-    { value: 100, label: "Complete rewrite", prompt: "Aggressively rewrite the content. If there is a clear task on the page, feel free to remove unrelated content." }
-  ];
-  get currentEditLevel() {
-    return this.editLevels.find((level) => level.value === this.editLevel);
-  }
-  emitEditPrompt(prompt) {
-    this.editPrompt.emit(prompt);
-  }
-  static \u0275fac = function AiOptionsComponent_Factory(__ngFactoryType__) {
-    return new (__ngFactoryType__ || _AiOptionsComponent)();
-  };
-  static \u0275cmp = /* @__PURE__ */ \u0275\u0275defineComponent({ type: _AiOptionsComponent, selectors: [["ca-ai-options"]], outputs: { promptChange: "promptChange", customPrompt: "customPrompt", editPrompt: "editPrompt", aiChange: "aiChange", aiSubmit: "aiSubmit" }, decls: 20, vars: 22, consts: [["label", "Options", "icon", "pi pi-bars", "severity", "info", 3, "click"], ["position", "right", 3, "visibleChange", "visible", "header"], [1, "flex", "flex-column", "gap-3"], [1, "flex", "flex-column", "gap-3", 3, "value", "multiple"], ["value", "0", 1, "border-1", "border-round-md", "border-surface"], [1, "border-none"], [1, "font-bold", "mb-2"], [1, "flex", "flex-column", "gap-2"], [4, "ngFor", "ngForOf", "ngForTrackBy"], ["value", "1", 1, "border-1", "border-round-md", "border-surface"], ["value", "2", 1, "border-1", "border-round-md", "border-surface"], ["icon", "pi pi-comments", "severity", "primary", 3, "label"], [3, "ngSwitch"], [1, "p-field-radiobutton"], ["name", "taskOptions", 3, "ngModelChange", "value", "ngModel", "inputId", "disabled"], [1, "pl-2", 3, "for"], [1, "p-field-checkbox", "mt-3"], ["inputId", "appendCustom", 3, "ngModelChange", "onChange", "ngModel", "binary"], ["for", "appendCustom", 1, "pl-2"], [1, "flex", "flex-column", "gap-3", "mt-3"], ["id", "ai-changes"], ["ariaLabelledBy", "ai-changes", "fluid", "", 3, "ngModelChange", "onChange", "ngModel", "step"], [1, "flex", "flex-column", "gap-2", "mt-3"], ["name", "promptOptions", 3, "ngModelChange", "onClick", "value", "ngModel", "inputId", "disabled"], [1, "p-field-checkbox"], [3, "ngModelChange", "value", "ngModel", "inputId", "disabled"], ["pTextarea", "", "id", "customPrompt", "fluid", "", 3, "ngModelChange", "blur", "ngModel", "autoResize"], ["for", "customPrompt"], [1, "p-field-checkbox", "mt-2"], ["inputId", "useCompactAlertsPageContext", 3, "ngModelChange", "onChange", "ngModel", "binary"], ["for", "useCompactAlertsPageContext", 1, "pl-2"], ["inputId", "includeAlertRewriteExamples", 3, "ngModelChange", "onChange", "ngModel", "binary"], ["for", "includeAlertRewriteExamples", 1, "pl-2"], [1, "text-xs", "text-500"], [1, "text-xs", "text-500", "mt-3"], ["name", "aiOptions", 3, "ngModelChange", "onClick", "value", "ngModel", "inputId", "disabled"], ["styleClass", "chip chip-severe ml-2", 3, "label"], ["icon", "pi pi-comments", "severity", "primary", 3, "click", "label"], ["mode", "prototype", 3, "showSampleDataButton", 4, "ngSwitchCase"], ["mode", "prototype", 3, "showSampleDataButton"]], template: function AiOptionsComponent_Template(rf, ctx) {
-    if (rf & 1) {
-      \u0275\u0275elementStart(0, "p-button", 0);
-      \u0275\u0275listener("click", function AiOptionsComponent_Template_p_button_click_0_listener() {
-        return ctx.visible = true;
-      });
-      \u0275\u0275elementEnd();
-      \u0275\u0275elementStart(1, "p-drawer", 1);
-      \u0275\u0275pipe(2, "translate");
-      \u0275\u0275twoWayListener("visibleChange", function AiOptionsComponent_Template_p_drawer_visibleChange_1_listener($event) {
-        \u0275\u0275twoWayBindingSet(ctx.visible, $event) || (ctx.visible = $event);
-        return $event;
-      });
-      \u0275\u0275elementStart(3, "div", 2)(4, "p-accordion", 3)(5, "p-accordion-panel", 4)(6, "p-accordion-header");
-      \u0275\u0275text(7);
-      \u0275\u0275pipe(8, "translate");
-      \u0275\u0275elementEnd();
-      \u0275\u0275elementStart(9, "p-accordion-content")(10, "fieldset", 5)(11, "legend", 6);
-      \u0275\u0275text(12);
-      \u0275\u0275pipe(13, "translate");
-      \u0275\u0275elementEnd();
-      \u0275\u0275elementStart(14, "div", 7);
-      \u0275\u0275template(15, AiOptionsComponent_ng_container_15_Template, 6, 8, "ng-container", 8);
-      \u0275\u0275elementEnd()()()();
-      \u0275\u0275template(16, AiOptionsComponent_Conditional_16_Template, 23, 18, "p-accordion-panel", 9)(17, AiOptionsComponent_Conditional_17_Template, 12, 8, "p-accordion-panel", 10);
-      \u0275\u0275elementEnd();
-      \u0275\u0275template(18, AiOptionsComponent_Conditional_18_Template, 2, 3, "p-button", 11)(19, AiOptionsComponent_Conditional_19_Template, 4, 4, "ng-container", 12);
-      \u0275\u0275elementEnd()();
-    }
-    if (rf & 2) {
-      \u0275\u0275advance();
-      \u0275\u0275styleMap(\u0275\u0275pureFunction0(20, _c04));
-      \u0275\u0275twoWayProperty("visible", ctx.visible);
-      \u0275\u0275property("header", \u0275\u0275pipeBind1(2, 14, "page.ai-options.header"));
-      \u0275\u0275advance(3);
-      \u0275\u0275property("value", \u0275\u0275pureFunction0(21, _c14))("multiple", true);
-      \u0275\u0275advance(3);
-      \u0275\u0275textInterpolate(\u0275\u0275pipeBind1(8, 16, "page.ai-options.task.header"));
-      \u0275\u0275advance(5);
-      \u0275\u0275textInterpolate(\u0275\u0275pipeBind1(13, 18, "page.ai-options.task.legend"));
-      \u0275\u0275advance(3);
-      \u0275\u0275property("ngForOf", ctx.taskOptions)("ngForTrackBy", ctx.trackById);
-      \u0275\u0275advance();
-      \u0275\u0275conditional(!ctx.isPrototype ? 16 : -1);
-      \u0275\u0275advance();
-      \u0275\u0275conditional(!ctx.isPrototype ? 17 : -1);
-      \u0275\u0275advance();
-      \u0275\u0275conditional(!ctx.isPrototype ? 18 : -1);
-      \u0275\u0275advance();
-      \u0275\u0275conditional(ctx.isPrototype ? 19 : -1);
-    }
-  }, dependencies: [TranslateModule, TranslatePipe, CommonModule, NgForOf, NgSwitch, NgSwitchCase, FormsModule, DefaultValueAccessor, NgControlStatus, NgModel, ButtonModule, Button, DrawerModule, Drawer, RadioButtonModule, RadioButton, CheckboxModule, Checkbox, AccordionModule, Accordion, AccordionPanel, AccordionHeader, AccordionContent, ChipModule, Chip, TextareaModule, Textarea, IftaLabelModule, IftaLabel, SliderModule, Slider, UploadUrlComponent, UploadPasteComponent, UploadWordComponent], encapsulation: 2 });
-};
-(() => {
-  (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(AiOptionsComponent, [{
-    type: Component,
-    args: [{ selector: "ca-ai-options", imports: [
-      TranslateModule,
-      CommonModule,
-      FormsModule,
-      ButtonModule,
-      DrawerModule,
-      RadioButtonModule,
-      CheckboxModule,
-      AccordionModule,
-      ChipModule,
-      TextareaModule,
-      IftaLabelModule,
-      SliderModule,
-      UploadUrlComponent,
-      UploadPasteComponent,
-      UploadWordComponent
-    ], template: `<p-button label="Options" icon="pi pi-bars" (click)="visible=true" severity="info" />\r
-<p-drawer [(visible)]="visible" [header]="'page.ai-options.header' | translate" position="right"\r
-          [style]="{ width: '30rem'}">\r
-  <div class="flex flex-column gap-3">\r
-    <p-accordion [value]="['1', '2']" [multiple]="true" class="flex flex-column gap-3">\r
-      <!--TASK OPTIONS-->\r
-      <p-accordion-panel value="0" class="border-1 border-round-md border-surface">\r
-        <p-accordion-header>{{ 'page.ai-options.task.header' | translate }}</p-accordion-header>\r
-        <p-accordion-content>\r
-\r
-          <fieldset class="border-none">\r
-            <legend class="font-bold mb-2">{{ 'page.ai-options.task.legend' | translate }}</legend>\r
-            <div class="flex flex-column gap-2">\r
-              <ng-container *ngFor="let option of taskOptions; trackBy: trackById">\r
-                <div class="p-field-radiobutton">\r
-                  <p-radioButton name="taskOptions" [value]="option.id" [(ngModel)]="selectedTask" [inputId]="option.id"\r
-                                 [disabled]="option.disabled" />\r
-                  <label [for]="option.id" class="pl-2">{{ option.label | translate }}</label>\r
-                </div>\r
-              </ng-container>\r
-            </div>\r
-          </fieldset>\r
-\r
-        </p-accordion-content>\r
-      </p-accordion-panel>\r
-      <!--PROMPT OPTIONS-->\r
-      @if (!isPrototype) {\r
-        <p-accordion-panel value="1" class="border-1 border-round-md border-surface">\r
-          <p-accordion-header>{{ 'page.ai-options.prompt.header' | translate }}</p-accordion-header>\r
-          <p-accordion-content>\r
-\r
-            <fieldset class="border-none">\r
-              <legend class="font-bold mb-2">{{ 'page.ai-options.prompt.legend' | translate }}</legend>\r
-              <div class="flex flex-column gap-2">\r
-                @if (!isTwoPrompts) {\r
-                  <ng-container *ngFor="let option of promptOptions; trackBy: trackById">\r
-                    <div class="p-field-radiobutton">\r
-                      <p-radioButton name="promptOptions" [value]="option.id" [(ngModel)]="selectedPrompt"\r
-                                     [inputId]="option.id" [disabled]="option.disabled" (onClick)="onPromptSelect(selectedPrompt)" />\r
-                      <label [for]="option.id" class="pl-2">{{ option.label | translate }}</label>\r
-                    </div>\r
-                  </ng-container>\r
-                }\r
-                @if (isTwoPrompts) {\r
-                  <ng-container *ngFor="let option of promptOptions; trackBy: trackById">\r
-                    <div class="p-field-checkbox">\r
-                      <p-checkbox [value]="option.id" [(ngModel)]="selectedPrompts" [inputId]="option.id"\r
-                                  [disabled]="option.disabled || isPromptCheckboxDisabled(option.id)" />\r
-                      <label [for]="option.id" class="pl-2">{{ option.label | translate }}</label>\r
-                    </div>\r
-                  </ng-container>\r
-                }\r
-                <!--Append custom prompt-->\r
-                <div class="p-field-checkbox mt-3">\r
-                  <p-checkbox [(ngModel)]="addCustom" [binary]="true" inputId="appendCustom" (onChange)="resetCustom()" />\r
-                  <label for="appendCustom" class="pl-2">{{ "page.ai-options.prompt.checkbox" | translate }}</label>\r
-                </div>\r
-                @if (addCustom) {\r
-                  <p-iftalabel>\r
-                    <textarea pTextarea id="customPrompt" [(ngModel)]="customInstruction" [autoResize]="true"\r
-                              (blur)="emitCustomPrompt(customInstruction)" fluid></textarea>\r
-                    <label for="customPrompt">{{ 'page.ai-options.prompt.textarea' | translate }}</label>\r
-                  </p-iftalabel>\r
-                }\r
-                <!--Slider for number of AI changes-->\r
-                <div class="flex flex-column gap-3 mt-3">\r
-                  <p id="ai-changes">{{ currentEditLevel?.label }}</p>\r
-                  <p-slider [(ngModel)]="editLevel" [step]="25" ariaLabelledBy="ai-changes"\r
-                            (onChange)="emitEditPrompt(currentEditLevel!.prompt)" fluid />\r
-                </div>\r
-\r
-                @if (selectedPrompt === 'alertsRecommendations') {\r
-                  <div class="flex flex-column gap-2 mt-3">\r
-                    <div class="p-field-checkbox mt-2">\r
-                      <p-checkbox\r
-                        [(ngModel)]="useCompactAlertsPageContext"\r
-                        [binary]="true"\r
-                        inputId="useCompactAlertsPageContext"\r
-                        (onChange)="onUseCompactAlertsPageContextSelect(useCompactAlertsPageContext)"\r
-                      />\r
-                      <label for="useCompactAlertsPageContext" class="pl-2">\r
-                        Compact context (smaller models, < 120B)\r
-                      </label>\r
-                    </div>\r
-                    <div class="p-field-checkbox">\r
-                      <p-checkbox\r
-                        [(ngModel)]="includeAlertRewriteExamples"\r
-                        [binary]="true"\r
-                        inputId="includeAlertRewriteExamples"\r
-                        (onChange)="onIncludeAlertRewriteExamplesSelect(includeAlertRewriteExamples)"\r
-                      />\r
-                      <label for="includeAlertRewriteExamples" class="pl-2">\r
-                        Use examples for rewriting\r
-                      </label>\r
-                    </div>\r
-                  </div>\r
-                }\r
-              </div>\r
-            </fieldset>\r
-\r
-          </p-accordion-content>\r
-        </p-accordion-panel>\r
-      }\r
-      <!--AI OPTIONS-->\r
-      @if (!isPrototype) {\r
-        <p-accordion-panel value="2" class="border-1 border-round-md border-surface">\r
-          <p-accordion-header>{{ 'page.ai-options.model.header' | translate }}</p-accordion-header>\r
-          <p-accordion-content>\r
-\r
-            <fieldset class="border-none">\r
-              <legend class="font-bold mb-2">{{ 'page.ai-options.model.legend' | translate }}</legend>\r
-              <div class="flex flex-column gap-2">\r
-                @if (!isTwoAis) {\r
-                  <p class="text-xs text-500">{{ 'page.ai-options.model.free' | translate }}</p>\r
-                  <ng-container *ngFor="let option of freeAiOptions; trackBy: trackById">\r
-                    <div class="p-field-radiobutton">\r
-                      <p-radioButton name="aiOptions" [value]="option.id" [(ngModel)]="selectedAi" [inputId]="option.id"\r
-                                     [disabled]="option.disabled" (onClick)="onAiSelect(selectedAi)" />\r
-                      <label [for]="option.id" class="pl-2">{{ option.label | translate }}</label>\r
-                    </div>\r
-                  </ng-container>\r
-                  <p class="text-xs text-500 mt-3">{{ 'page.ai-options.model.paid' | translate }}</p>\r
-                  <ng-container *ngFor="let option of paidAiOptions; trackBy: trackById">\r
-                    <div class="p-field-radiobutton">\r
-                      <p-radioButton name="aiOptions" [value]="option.id" [(ngModel)]="selectedAi" [inputId]="option.id"\r
-                                     [disabled]="option.disabled" (onClick)="onAiSelect(selectedAi)" />\r
-                      <label [for]="option.id" class="pl-2">\r
-                        {{ option.label | translate }}\r
-                        <p-chip\r
-                          [label]="'page.ai-options.model.paidBadge' | translate"\r
-                          styleClass="chip chip-severe ml-2">\r
-                        </p-chip>\r
-                      </label>\r
-                    </div>\r
-                  </ng-container>\r
-                }\r
-                @if (isTwoAis) {\r
-                  <p class="text-xs text-500">{{ 'page.ai-options.model.free' | translate }}</p>\r
-                  <ng-container *ngFor="let option of freeAiOptions; trackBy: trackById">\r
-                    <div class="p-field-checkbox">\r
-                      <p-checkbox [value]="option.id" [(ngModel)]="selectedAis" [inputId]="option.id"\r
-                                  [disabled]="option.disabled || isAiCheckboxDisabled(option.id)" />\r
-                      <label [for]="option.id" class="pl-2">{{ option.label | translate }}</label>\r
-                    </div>\r
-                  </ng-container>\r
-                  <p class="text-xs text-500 mt-3">{{ 'page.ai-options.model.paid' | translate }}</p>\r
-                  <ng-container *ngFor="let option of paidAiOptions; trackBy: trackById">\r
-                    <div class="p-field-checkbox">\r
-                      <p-checkbox [value]="option.id" [(ngModel)]="selectedAis" [inputId]="option.id"\r
-                                  [disabled]="option.disabled || isAiCheckboxDisabled(option.id)" />\r
-                      <label [for]="option.id" class="pl-2">\r
-                        {{ option.label | translate }}\r
-                        <p-chip\r
-                          [label]="'page.ai-options.model.paidBadge' | translate"\r
-                          styleClass="chip chip-severe ml-2">\r
-                        </p-chip>\r
-                      </label>\r
-                    </div>\r
-                  </ng-container>\r
-                }\r
-              </div>\r
-            </fieldset>\r
-\r
-          </p-accordion-content>\r
-        </p-accordion-panel>\r
-      }\r
-    </p-accordion>\r
-\r
-    <!--Close drawer and emit event-->\r
-    @if (!isPrototype) {\r
-      <p-button [label]="'page.compare.button.genai' | translate" icon="pi pi-comments"\r
-                severity="primary" (click)="onSubmit()"></p-button>\r
-    }\r
-\r
-    <!--Upload options if task = compare with prototype-->\r
-    @if (isPrototype) {\r
-      <ng-container [ngSwitch]="uploadType">\r
-        <ca-upload-url *ngSwitchCase="'url'" mode="prototype" [showSampleDataButton]="false" />\r
-        <ca-upload-paste *ngSwitchCase="'paste'" mode="prototype" [showSampleDataButton]="false" />\r
-        <ca-upload-word *ngSwitchCase="'word'" mode="prototype" [showSampleDataButton]="false" />\r
-      </ng-container>\r
-    }\r
-  </div>\r
-</p-drawer>\r
-` }]
-  }], null, { promptChange: [{
-    type: Output
-  }], customPrompt: [{
-    type: Output
-  }], editPrompt: [{
-    type: Output
-  }], aiChange: [{
-    type: Output
-  }], aiSubmit: [{
-    type: Output
-  }] });
-})();
-(() => {
-  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(AiOptionsComponent, { className: "AiOptionsComponent", filePath: "app/views/page-assistant/components/ai-options.component.ts", lineNumber: 32 });
-})();
-
-// src/app/views/page-assistant/components/problems/heading-structure.component.ts
-var _c05 = () => ({ "min-width": "50rem" });
-function HeadingStructureComponent_ng_template_1_th_2_Template(rf, ctx) {
-  if (rf & 1) {
-    \u0275\u0275elementStart(0, "th");
-    \u0275\u0275text(1);
-    \u0275\u0275elementEnd();
-  }
-  if (rf & 2) {
-    const col_r2 = ctx.$implicit;
-    \u0275\u0275advance();
-    \u0275\u0275textInterpolate1(" ", col_r2.header, " ");
-  }
-}
-function HeadingStructureComponent_ng_template_1_Template(rf, ctx) {
-  if (rf & 1) {
-    \u0275\u0275elementStart(0, "tr");
-    \u0275\u0275element(1, "th", 3);
-    \u0275\u0275template(2, HeadingStructureComponent_ng_template_1_th_2_Template, 2, 1, "th", 4);
-    \u0275\u0275elementStart(3, "th");
-    \u0275\u0275text(4, "Action");
-    \u0275\u0275elementEnd()();
-  }
-  if (rf & 2) {
-    const columns_r3 = ctx.$implicit;
-    \u0275\u0275advance(2);
-    \u0275\u0275property("ngForOf", columns_r3);
-  }
-}
-function HeadingStructureComponent_ng_template_3_Template(rf, ctx) {
-  if (rf & 1) {
-    \u0275\u0275elementStart(0, "tr", 5)(1, "td");
-    \u0275\u0275element(2, "span", 6);
-    \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(3, "td");
-    \u0275\u0275text(4);
-    \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(5, "td");
-    \u0275\u0275text(6);
-    \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(7, "td", 7);
-    \u0275\u0275text(8);
-    \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(9, "td");
-    \u0275\u0275text(10, "Add buttons!");
-    \u0275\u0275elementEnd()();
-  }
-  if (rf & 2) {
-    const rowData_r4 = ctx.$implicit;
-    const index_r5 = ctx.rowIndex;
-    const ctx_r5 = \u0275\u0275nextContext();
-    \u0275\u0275property("pReorderableRow", index_r5)("pSelectableRow", rowData_r4);
-    \u0275\u0275advance(4);
-    \u0275\u0275textInterpolate(rowData_r4.order);
-    \u0275\u0275advance(2);
-    \u0275\u0275textInterpolate(rowData_r4.type);
-    \u0275\u0275advance();
-    \u0275\u0275property("ngClass", ctx_r5.getTextClass(rowData_r4))("ngStyle", ctx_r5.getTextStyle(rowData_r4));
-    \u0275\u0275advance();
-    \u0275\u0275textInterpolate1(" ", rowData_r4.text, " ");
-  }
-}
-var HeadingStructureComponent = class _HeadingStructureComponent {
-  uploadState = inject(UploadStateService);
-  translate = inject(TranslateService);
-  ngOnInit() {
-    this.fetchHeadings();
-    this.cols = [
-      { field: "order", header: "Original order" },
-      { field: "type", header: "Heading type" },
-      { field: "text", header: "Text" }
-    ];
-  }
-  headings = [];
-  selectedHeading;
-  cols;
-  headingTypes = ["h1", "h2", "h3", "h4", "h5", "h6", "summary"];
-  fetchHeadings() {
-    try {
-      const data = this.uploadState.getUploadData();
-      if (!data || !data.originalHtml)
-        return;
-      const parser = new DOMParser();
-      const doc = parser.parseFromString(data.originalHtml, "text/html");
-      const selector = this.headingTypes.join(", ");
-      const elements = doc.querySelectorAll(selector);
-      this.headings = Array.from(elements).map((el, index) => ({
-        order: index + 1,
-        //this is so we can track the original order
-        type: el.tagName.toLowerCase(),
-        text: el.textContent?.trim() || ""
-      }));
-    } catch (err) {
-      console.error("Failed to get heading from HTML data", err);
-    }
-  }
-  //In-line styles
-  getTextStyle(row) {
-    switch (row.type) {
-      case "h1":
-        return { fontWeight: "bold" };
-      case "h2":
-        return { fontWeight: "bold" };
-      case "h6":
-        return { color: "gray" };
-      case "summary":
-        return { color: "blue" };
-      default:
-        return {};
-    }
-  }
-  //Classes
-  getTextClass(heading) {
-    switch (heading.type) {
-      case "h1":
-        return { "": heading.type === "h1" };
-      case "h2":
-        return { "pl-4": heading.type === "h2" };
-      case "h3":
-        return { "pl-6": heading.type === "h3" };
-      case "h4":
-        return { "pl-7": heading.type === "h4" };
-      case "h5":
-        return { "pl-8": heading.type === "h5" };
-      case "h6":
-        return { "pl-8": heading.type === "h6" };
-      case "summary":
-        return { "pl-8": heading.type === "summary" };
-      default:
-        return {};
-    }
-  }
-  static \u0275fac = function HeadingStructureComponent_Factory(__ngFactoryType__) {
-    return new (__ngFactoryType__ || _HeadingStructureComponent)();
-  };
-  static \u0275cmp = /* @__PURE__ */ \u0275\u0275defineComponent({ type: _HeadingStructureComponent, selectors: [["ca-heading-structure"]], decls: 5, vars: 6, consts: [["header", ""], ["body", ""], ["size", "small", "stripedRows", "", "selectionMode", "single", "dataKey", "order", "metaKeySelection", "false", 3, "selectionChange", "columns", "value", "tableStyle", "reorderableColumns", "selection"], [2, "width", "3rem"], [4, "ngFor", "ngForOf"], [3, "pReorderableRow", "pSelectableRow"], ["pReorderableRowHandle", "", 1, "pi", "pi-bars"], [3, "ngClass", "ngStyle"]], template: function HeadingStructureComponent_Template(rf, ctx) {
-    if (rf & 1) {
-      const _r1 = \u0275\u0275getCurrentView();
-      \u0275\u0275elementStart(0, "p-table", 2);
-      \u0275\u0275twoWayListener("selectionChange", function HeadingStructureComponent_Template_p_table_selectionChange_0_listener($event) {
-        \u0275\u0275restoreView(_r1);
-        \u0275\u0275twoWayBindingSet(ctx.selectedHeading, $event) || (ctx.selectedHeading = $event);
-        return \u0275\u0275resetView($event);
-      });
-      \u0275\u0275template(1, HeadingStructureComponent_ng_template_1_Template, 5, 1, "ng-template", null, 0, \u0275\u0275templateRefExtractor)(3, HeadingStructureComponent_ng_template_3_Template, 11, 7, "ng-template", null, 1, \u0275\u0275templateRefExtractor);
-      \u0275\u0275elementEnd();
-    }
-    if (rf & 2) {
-      \u0275\u0275property("columns", ctx.cols)("value", ctx.headings)("tableStyle", \u0275\u0275pureFunction0(5, _c05))("reorderableColumns", true);
-      \u0275\u0275twoWayProperty("selection", ctx.selectedHeading);
-    }
-  }, dependencies: [
-    CommonModule,
-    NgClass,
-    NgForOf,
-    NgStyle,
-    FormsModule,
-    TranslateModule,
-    TableModule,
-    Table,
-    SelectableRow,
-    ReorderableRowHandle,
-    ReorderableRow,
-    ButtonModule
-  ], encapsulation: 2 });
-};
-(() => {
-  (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(HeadingStructureComponent, [{
-    type: Component,
-    args: [{ selector: "ca-heading-structure", imports: [
-      CommonModule,
-      FormsModule,
-      TranslateModule,
-      TableModule,
-      ButtonModule
-    ], template: `<p-table\r
-  [columns]="cols"\r
-  [value]="headings"\r
-  size="small"\r
-  stripedRows\r
-  [tableStyle]="{ 'min-width': '50rem' }"\r
-  [reorderableColumns]="true"\r
-  selectionMode="single"\r
-  [(selection)]="selectedHeading"\r
-  dataKey="order"\r
-  metaKeySelection="false"\r
->\r
-  <ng-template #header let-columns>\r
-    <tr>\r
-      <th style="width: 3rem"></th>\r
-      <th *ngFor="let col of columns">\r
-        {{ col.header }}\r
-      </th>\r
-      <th>Action</th>\r
-    </tr>\r
-  </ng-template>\r
-  <ng-template #body let-rowData let-columns="columns" let-index="rowIndex">\r
-    <tr [pReorderableRow]="index" [pSelectableRow]="rowData">\r
-      <td>\r
-        <span class="pi pi-bars" pReorderableRowHandle></span>\r
-      </td>\r
-      <td>{{ rowData.order }}</td>\r
-      <td>{{ rowData.type }}</td>\r
-      <td [ngClass]="getTextClass(rowData)" [ngStyle]="getTextStyle(rowData)">\r
-        {{ rowData.text }}\r
-      </td>\r
-      <td>Add buttons!</td>\r
-    </tr>\r
-  </ng-template>\r
-</p-table>\r
-` }]
-  }], null, null);
-})();
-(() => {
-  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(HeadingStructureComponent, { className: "HeadingStructureComponent", filePath: "app/views/page-assistant/components/problems/heading-structure.component.ts", lineNumber: 37 });
-})();
-
-// src/app/views/page-assistant/components/problems/component-guidance/alerts-guidance/alerts-guidance.component.ts
-function AlertsGuidanceComponent_ng_template_1_Template(rf, ctx) {
-  if (rf & 1) {
-    \u0275\u0275elementStart(0, "tr")(1, "th", 5);
-    \u0275\u0275text(2, "Include in fix");
-    \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(3, "th", 6);
-    \u0275\u0275text(4, "Severity");
-    \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(5, "th");
-    \u0275\u0275text(6, "Pain point category");
-    \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(7, "th", 7);
-    \u0275\u0275text(8, "Description");
-    \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(9, "th", 7);
-    \u0275\u0275text(10, "Recommendation");
-    \u0275\u0275elementEnd()();
-  }
-}
-function AlertsGuidanceComponent_ng_template_2_Template(rf, ctx) {
-  if (rf & 1) {
-    const _r1 = \u0275\u0275getCurrentView();
-    \u0275\u0275elementStart(0, "tr")(1, "td", 5)(2, "p-checkbox", 8);
-    \u0275\u0275twoWayListener("ngModelChange", function AlertsGuidanceComponent_ng_template_2_Template_p_checkbox_ngModelChange_2_listener($event) {
-      const issue_r2 = \u0275\u0275restoreView(_r1).$implicit;
-      \u0275\u0275twoWayBindingSet(issue_r2.include, $event) || (issue_r2.include = $event);
-      return \u0275\u0275resetView($event);
-    });
-    \u0275\u0275listener("onChange", function AlertsGuidanceComponent_ng_template_2_Template_p_checkbox_onChange_2_listener() {
-      \u0275\u0275restoreView(_r1);
-      const ctx_r2 = \u0275\u0275nextContext();
-      return \u0275\u0275resetView(ctx_r2.onIncludeToggle());
-    });
-    \u0275\u0275elementEnd()();
-    \u0275\u0275elementStart(3, "td", 6)(4, "span", 9);
-    \u0275\u0275text(5);
-    \u0275\u0275elementEnd()();
-    \u0275\u0275elementStart(6, "td");
-    \u0275\u0275text(7);
-    \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(8, "td", 7);
-    \u0275\u0275text(9);
-    \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(10, "td", 7);
-    \u0275\u0275text(11);
-    \u0275\u0275elementEnd()();
-  }
-  if (rf & 2) {
-    const issue_r2 = ctx.$implicit;
-    const ctx_r2 = \u0275\u0275nextContext();
-    \u0275\u0275advance(2);
-    \u0275\u0275property("binary", true);
-    \u0275\u0275twoWayProperty("ngModel", issue_r2.include);
-    \u0275\u0275property("disabled", ctx_r2.isNoIssueRow(issue_r2));
-    \u0275\u0275advance(2);
-    \u0275\u0275property("ngClass", ctx_r2.severityClass(issue_r2.severity));
-    \u0275\u0275advance();
-    \u0275\u0275textInterpolate1(" ", issue_r2.severity, " ");
-    \u0275\u0275advance(2);
-    \u0275\u0275textInterpolate(issue_r2.category);
-    \u0275\u0275advance(2);
-    \u0275\u0275textInterpolate(issue_r2.description);
-    \u0275\u0275advance(2);
-    \u0275\u0275textInterpolate(issue_r2.recommendation);
-  }
-}
-var ALERT_SEVERITY_RANK = {
-  high: 3,
-  medium: 2,
-  low: 1
-};
-function isNoAlertIssue(issue) {
-  return (issue.category || "").trim().toLowerCase() === "no issues";
-}
-function computeAlertCategories(issues, rank = ALERT_SEVERITY_RANK) {
-  const bestSeverity = /* @__PURE__ */ new Map();
-  for (const issue of issues) {
-    if (isNoAlertIssue(issue))
-      continue;
-    const cat = issue.category;
-    if (!cat)
-      continue;
-    const current = bestSeverity.get(cat);
-    const next = issue.severity ?? "";
-    const currentRank = current ? rank[current.toLowerCase()] ?? 0 : -1;
-    const nextRank = rank[next.toLowerCase()] ?? 0;
-    if (nextRank >= currentRank) {
-      bestSeverity.set(cat, next);
-    }
-  }
-  return Array.from(bestSeverity.entries()).map(([label, severity]) => ({ label, severity }));
-}
-function computeAlertMaxSeverity(issues, rank = ALERT_SEVERITY_RANK) {
-  let max = null;
-  let maxRank = -1;
-  for (const issue of issues) {
-    if (isNoAlertIssue(issue))
-      continue;
-    const sev = (issue.severity || "").toLowerCase();
-    const r = rank[sev] ?? -1;
-    if (r > maxRank) {
-      maxRank = r;
-      max = issue.severity;
-    }
-  }
-  return max;
-}
-var AlertsGuidanceComponent = class _AlertsGuidanceComponent {
-  uploadState = inject(UploadStateService);
-  alertAi = inject(AlertAiService);
-  issuesUpdatedSub;
-  analysisStateSub;
-  suppressIncludeToggle = false;
-  selectAll = true;
-  maxSeverityChange = new EventEmitter();
-  categoriesChange = new EventEmitter();
-  loadingChange = new EventEmitter();
-  errorChange = new EventEmitter();
-  issues = [];
-  isLoading = false;
-  reanalysisRecommended = true;
-  analyzedHtml = "";
-  analyzedRevision = -1;
-  requestHtml = "";
-  constructor() {
-    effect(() => {
-      const revision = this.uploadState.getWorkingContentRevision();
-      const html = this.uploadState.getWorkingHtml();
-      this.uploadState.getRecommendationReviewPending();
-      if (this.analyzedRevision >= 0 && revision !== this.analyzedRevision) {
-        this.reanalysisRecommended = true;
-      }
-      if (this.requestHtml && html !== this.requestHtml) {
-        this.reanalysisRecommended = true;
-      }
-    });
-  }
-  ngOnInit() {
-    this.sortIssues();
-    this.applySelectAll(this.selectAll);
-    this.emitDerived();
-    this.issuesUpdatedSub = this.alertAi.issuesUpdated$.subscribe((update) => {
-      const html = this.uploadState.getWorkingHtml();
-      if (!html)
-        return;
-      const cached = this.alertAi.getCachedIssues(html);
-      if (cached === null) {
-        if (update.html !== html)
-          return;
-        this.issues = [];
-        this.analyzedHtml = "";
-        this.analyzedRevision = -1;
-        this.reanalysisRecommended = true;
-        this.emitDerived();
-        return;
-      }
-      this.applyAnalysis(cached, html, false);
-    });
-    this.analysisStateSub = this.alertAi.analysisState$.subscribe((state) => {
-      if (state.html !== this.uploadState.getWorkingHtml())
-        return;
-      this.setLoading(state.loading);
-      this.setError(state.error);
-    });
-    this.restoreOrAnalyze();
-  }
-  ngOnChanges(changes) {
-    if (changes["selectAll"] && !changes["selectAll"].firstChange) {
-      this.applySelectAll(this.selectAll);
-      this.emitDerived();
-    }
-  }
-  ngOnDestroy() {
-    this.issuesUpdatedSub?.unsubscribe();
-    this.analysisStateSub?.unsubscribe();
-  }
-  onIncludeToggle() {
-    if (this.suppressIncludeToggle)
-      return;
-    this.sortIssues();
-    this.emitDerived();
-    this.syncCache();
-  }
-  get reanalysisDisabled() {
-    return this.isLoading || this.uploadState.getRecommendationReviewPending();
-  }
-  analyzeCurrentPage() {
-    return __async(this, null, function* () {
-      const html = this.uploadState.getWorkingHtml();
-      if (!html || this.reanalysisDisabled)
-        return;
-      this.alertAi.prepareForReanalysis(html);
-      this.issues = [];
-      this.analyzedHtml = "";
-      this.analyzedRevision = -1;
-      this.reanalysisRecommended = true;
-      this.emitDerived();
-      yield this.loadFromAi(true);
-    });
-  }
-  applySelectAll(flag, sync = true) {
-    if (!sync)
-      return;
-    this.suppressIncludeToggle = true;
-    try {
-      this.issues = this.issues.map((issue) => __spreadProps(__spreadValues({}, issue), {
-        include: isNoAlertIssue(issue) ? false : flag
-      }));
-      this.sortIssues();
-    } finally {
-      this.suppressIncludeToggle = false;
-    }
-    this.syncCache();
-  }
-  sortIssues() {
-    this.issues = [...this.issues].sort((a, b) => {
-      const ra = ALERT_SEVERITY_RANK[a.severity.toLowerCase()] ?? -1;
-      const rb = ALERT_SEVERITY_RANK[b.severity.toLowerCase()] ?? -1;
-      if (ra !== rb)
-        return rb - ra;
-      return a.category.localeCompare(b.category, void 0, { sensitivity: "base" });
-    });
-  }
-  emitDerived() {
-    this.maxSeverityChange.emit(computeAlertMaxSeverity(this.issues));
-    this.categoriesChange.emit(computeAlertCategories(this.issues));
-  }
-  normalizeCategoryLabel(label) {
-    const trimmed = (label || "").trim();
-    if (!trimmed)
-      return trimmed;
-    const lower = trimmed.toLowerCase();
-    return lower.charAt(0).toUpperCase() + lower.slice(1);
-  }
-  severityClass(severity) {
-    const s = (severity || "").toLowerCase();
-    if (s === "low")
-      return "chip-minor";
-    if (s === "medium")
-      return "chip-med";
-    if (s === "high")
-      return "chip-severe";
-    return "chip-unk";
-  }
-  isNoIssueRow(issue) {
-    return isNoAlertIssue(issue);
-  }
-  restoreOrAnalyze() {
-    const html = this.uploadState.getWorkingHtml();
-    if (!html)
-      return;
-    const cached = this.alertAi.getCachedIssues(html);
-    if (cached !== null) {
-      this.applyAnalysis(cached, html, false);
-      return;
-    }
-    const latest = this.alertAi.getLatestCachedAnalysis();
-    if (latest) {
-      this.applyAnalysis(latest.issues, latest.html, true);
-      return;
-    }
-    void this.loadFromAi();
-  }
-  loadFromAi(force = false) {
-    return __async(this, null, function* () {
-      const html = this.uploadState.getWorkingHtml();
-      if (!html || this.isLoading)
-        return;
-      const cached = this.alertAi.getCachedIssues(html);
-      if (!force && cached !== null) {
-        this.applyAnalysis(cached, html, false);
-        return;
-      }
-      const requestHtml = html;
-      this.setLoading(true);
-      this.setError(false);
-      this.requestHtml = requestHtml;
-      try {
-        const selectedModel = this.uploadState.getSelectedAiModel();
-        const aiIssues = yield this.alertAi.analyze(requestHtml, void 0, selectedModel);
-        if (this.uploadState.getWorkingHtml() !== requestHtml) {
-          this.reanalysisRecommended = true;
-          return;
-        }
-        const normalizedIssues = aiIssues.map((issue) => __spreadProps(__spreadValues({}, issue), {
-          category: this.normalizeCategoryLabel(issue.category),
-          severity: issue.severity || "Unknown",
-          include: issue.include ?? true
-        }));
-        this.alertAi.cacheIssues(requestHtml, normalizedIssues);
-        this.applyAnalysis(normalizedIssues, requestHtml, false);
-      } catch (err) {
-        console.error("Alert AI call failed", err);
-        this.reanalysisRecommended = true;
-        this.alertAi.failAnalysis(requestHtml);
-        this.setError(true);
-      } finally {
-        this.requestHtml = "";
-        this.setLoading(false);
-      }
-    });
-  }
-  applyAnalysis(issues, analyzedHtml, reanalysisRecommended) {
-    this.issues = this.alertAi.normalizeAlertIssues(issues).map((issue) => __spreadProps(__spreadValues({}, issue), {
-      category: this.normalizeCategoryLabel(issue.category)
-    }));
-    this.analyzedHtml = analyzedHtml;
-    this.analyzedRevision = this.uploadState.getWorkingContentRevision();
-    this.reanalysisRecommended = reanalysisRecommended;
-    this.sortIssues();
-    this.applySelectAll(this.selectAll, false);
-    this.emitDerived();
-    this.setError(false);
-  }
-  setLoading(flag) {
-    this.isLoading = flag;
-    this.loadingChange.emit(flag);
-  }
-  setError(flag) {
-    this.errorChange.emit(flag);
-  }
-  syncCache() {
-    const html = this.analyzedHtml || this.uploadState.getWorkingHtml();
-    if (!html || !this.issues.length)
-      return;
-    this.alertAi.cacheIssues(html, this.issues);
-  }
-  static \u0275fac = function AlertsGuidanceComponent_Factory(__ngFactoryType__) {
-    return new (__ngFactoryType__ || _AlertsGuidanceComponent)();
-  };
-  static \u0275cmp = /* @__PURE__ */ \u0275\u0275defineComponent({ type: _AlertsGuidanceComponent, selectors: [["ca-alerts-guidance"]], inputs: { selectAll: "selectAll" }, outputs: { maxSeverityChange: "maxSeverityChange", categoriesChange: "categoriesChange", loadingChange: "loadingChange", errorChange: "errorChange" }, features: [\u0275\u0275NgOnChangesFeature], decls: 5, vars: 4, consts: [["styleClass", "p-datatable-sm alert-table", 3, "value"], ["pTemplate", "header"], ["pTemplate", "body"], [1, "alert-table-actions"], ["pButton", "", "type", "button", "label", "Re-analyse current webpage", "icon", "pi pi-refresh", 3, "click", "disabled"], [1, "include-col"], [1, "severity-col"], [1, "wrap-col"], [3, "ngModelChange", "onChange", "binary", "ngModel", "disabled"], [1, "chip", 3, "ngClass"]], template: function AlertsGuidanceComponent_Template(rf, ctx) {
-    if (rf & 1) {
-      \u0275\u0275elementStart(0, "p-table", 0);
-      \u0275\u0275template(1, AlertsGuidanceComponent_ng_template_1_Template, 11, 0, "ng-template", 1)(2, AlertsGuidanceComponent_ng_template_2_Template, 12, 8, "ng-template", 2);
-      \u0275\u0275elementEnd();
-      \u0275\u0275elementStart(3, "div", 3)(4, "button", 4);
-      \u0275\u0275listener("click", function AlertsGuidanceComponent_Template_button_click_4_listener() {
-        return ctx.analyzeCurrentPage();
-      });
-      \u0275\u0275elementEnd()();
-    }
-    if (rf & 2) {
-      \u0275\u0275property("value", ctx.issues);
-      \u0275\u0275advance(4);
-      \u0275\u0275classMap((ctx.reanalysisRecommended ? "p-button-primary" : "p-button-secondary") + " p-button-sm");
-      \u0275\u0275property("disabled", ctx.reanalysisDisabled);
-    }
-  }, dependencies: [CommonModule, NgClass, FormsModule, NgControlStatus, NgModel, TableModule, Table, PrimeTemplate, CheckboxModule, Checkbox, ButtonModule, ButtonDirective], styles: ["\n\n.alert-table[_ngcontent-%COMP%]   .p-datatable-tbody[_ngcontent-%COMP%]    > tr[_ngcontent-%COMP%]    > td[_ngcontent-%COMP%], \n.alert-table[_ngcontent-%COMP%]   .p-datatable-thead[_ngcontent-%COMP%]    > tr[_ngcontent-%COMP%]    > th[_ngcontent-%COMP%] {\n  white-space: normal !important;\n  word-break: normal;\n  overflow-wrap: normal;\n  vertical-align: top;\n}\n.alert-table[_ngcontent-%COMP%]   .wrap-col[_ngcontent-%COMP%] {\n  min-width: 140px;\n}\n.alert-table[_ngcontent-%COMP%]   .severity-col[_ngcontent-%COMP%]   .chip[_ngcontent-%COMP%] {\n  white-space: nowrap !important;\n  display: inline-flex;\n}\n.alert-table[_ngcontent-%COMP%]   .include-col[_ngcontent-%COMP%] {\n  width: 140px;\n  text-align: center;\n}\n.alert-table[_ngcontent-%COMP%]   .include-col[_ngcontent-%COMP%]   .p-checkbox[_ngcontent-%COMP%] {\n  display: inline-flex;\n}\n.alert-table[_ngcontent-%COMP%]   .p-datatable-table[_ngcontent-%COMP%] {\n  width: 100%;\n  border: 1px solid #d1d5db;\n  border-radius: 6px;\n}\n.alert-table[_ngcontent-%COMP%]   .p-datatable-wrapper[_ngcontent-%COMP%] {\n  width: 100%;\n  overflow-x: auto;\n}\n.alert-table[_ngcontent-%COMP%]   .p-datatable-table[_ngcontent-%COMP%] {\n  table-layout: auto !important;\n}\n.alert-table-actions[_ngcontent-%COMP%] {\n  display: flex;\n  justify-content: flex-end;\n  margin-top: 0.75rem;\n}\n.alert-table[_ngcontent-%COMP%]   .toggle-col[_ngcontent-%COMP%], \n.alert-table[_ngcontent-%COMP%]   .checkbox-col[_ngcontent-%COMP%] {\n  width: 1%;\n  white-space: nowrap;\n  text-align: center;\n  padding: 0;\n}\n.alert-table.p-datatable[_ngcontent-%COMP%]   .p-datatable-thead[_ngcontent-%COMP%]    > tr[_ngcontent-%COMP%]    > th.toggle-col[_ngcontent-%COMP%], \n.alert-table.p-datatable[_ngcontent-%COMP%]   .p-datatable-tbody[_ngcontent-%COMP%]    > tr[_ngcontent-%COMP%]    > td.toggle-col[_ngcontent-%COMP%], \n.alert-table.p-datatable[_ngcontent-%COMP%]   .p-datatable-thead[_ngcontent-%COMP%]    > tr[_ngcontent-%COMP%]    > th.checkbox-col[_ngcontent-%COMP%], \n.alert-table.p-datatable[_ngcontent-%COMP%]   .p-datatable-tbody[_ngcontent-%COMP%]    > tr[_ngcontent-%COMP%]    > td.checkbox-col[_ngcontent-%COMP%] {\n  width: 1% !important;\n  white-space: nowrap !important;\n  text-align: center;\n  padding: 0 0.25rem;\n}\n/*# sourceMappingURL=alerts-guidance.component.css.map */", "\n\n[_nghost-%COMP%]     .alert-table .p-datatable-table {\n  table-layout: auto !important;\n}\n[_nghost-%COMP%]     .alert-table.p-datatable .p-datatable-thead > tr > th.toggle-col, \n[_nghost-%COMP%]     .alert-table.p-datatable .p-datatable-tbody > tr > td.toggle-col {\n  width: 70px !important;\n  min-width: 70px;\n  max-width: 70px;\n  white-space: nowrap !important;\n  text-align: center;\n  padding: 0 0.25rem;\n}\n[_nghost-%COMP%]     .alert-table.p-datatable .p-datatable-thead > tr > th.checkbox-col, \n[_nghost-%COMP%]     .alert-table.p-datatable .p-datatable-tbody > tr > td.checkbox-col {\n  width: 70px !important;\n  min-width: 70px;\n  max-width: 70px;\n  white-space: nowrap !important;\n  text-align: center;\n  padding: 0 0.25rem;\n}\n[_nghost-%COMP%]     .topic-doormat-section-row > td {\n  background: #eef2f6;\n}\n.topic-doormat-group[_ngcontent-%COMP%] {\n  margin-top: 1rem;\n  border: 1px solid #d8dee6;\n  border-radius: 6px;\n  background: #fff;\n  overflow: hidden;\n}\n.topic-doormat-group[_ngcontent-%COMP%]    + .topic-doormat-group[_ngcontent-%COMP%] {\n  margin-top: 1.25rem;\n}\n.topic-doormat-group-header[_ngcontent-%COMP%] {\n  display: flex;\n  align-items: flex-start;\n  gap: 0.75rem;\n  padding: 1.1rem 1.25rem;\n  border-bottom: 1px solid #d8dee6;\n  background: #eef2f6;\n}\n.topic-doormat-group[_ngcontent-%COMP%]   h3[_ngcontent-%COMP%] {\n  margin: 0;\n  font-size: 1.25rem;\n  line-height: 1.25;\n}\n.topic-doormat-count[_ngcontent-%COMP%] {\n  flex: 0 0 auto;\n  padding: 0.4rem 0.8rem;\n  border: 1px solid #d8dee6;\n  border-radius: 999px;\n  background: #fff;\n  color: #202833;\n  font-size: 0.9rem;\n  font-weight: 700;\n}\n.topic-doormat-subheading[_ngcontent-%COMP%] {\n  margin: 1rem 1rem 0.4rem;\n  padding-bottom: 0.25rem;\n  border-bottom: 1px solid #eef2f6;\n  color: #202833;\n  font-size: 0.9rem;\n  font-weight: 700;\n}\n.topic-doormat-group[_ngcontent-%COMP%]   .expansion-table[_ngcontent-%COMP%] {\n  margin: 0 1rem 1rem;\n}\n.topic-doormat-empty[_ngcontent-%COMP%] {\n  padding: 0.75rem;\n  border: 1px solid #d8dee6;\n  border-radius: 4px;\n  background: #fff;\n}\n.topic-doormat-recommendation[_ngcontent-%COMP%] {\n  white-space: pre-line;\n}\n/*# sourceMappingURL=component-guidance.component.css.map */"] });
-};
-(() => {
-  (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(AlertsGuidanceComponent, [{
-    type: Component,
-    args: [{ selector: "ca-alerts-guidance", standalone: true, imports: [CommonModule, FormsModule, TableModule, CheckboxModule, ButtonModule], template: `<p-table [value]="issues" styleClass="p-datatable-sm alert-table">
-  <ng-template pTemplate="header">
-    <tr>
-      <th class="include-col">Include in fix</th>
-      <th class="severity-col">Severity</th>
-      <th>Pain point category</th>
-      <th class="wrap-col">Description</th>
-      <th class="wrap-col">Recommendation</th>
-    </tr>
-  </ng-template>
-  <ng-template pTemplate="body" let-issue>
-    <tr>
-      <td class="include-col">
-        <p-checkbox
-          [binary]="true"
-          [(ngModel)]="issue.include"
-          [disabled]="isNoIssueRow(issue)"
-          (onChange)="onIncludeToggle()"
-        ></p-checkbox>
-      </td>
-      <td class="severity-col">
-        <span class="chip" [ngClass]="severityClass(issue.severity)">
-          {{ issue.severity }}
-        </span>
-      </td>
-      <td>{{ issue.category }}</td>
-      <td class="wrap-col">{{ issue.description }}</td>
-      <td class="wrap-col">{{ issue.recommendation }}</td>
-    </tr>
-  </ng-template>
-</p-table>
-
-<div class="alert-table-actions">
-  <button
-    pButton
-    type="button"
-    label="Re-analyse current webpage"
-    icon="pi pi-refresh"
-    [class]="
-      (reanalysisRecommended ? 'p-button-primary' : 'p-button-secondary') +
-      ' p-button-sm'
-    "
-    [disabled]="reanalysisDisabled"
-    (click)="analyzeCurrentPage()"
-  ></button>
-</div>
-`, styles: ["/* src/app/views/page-assistant/components/problems/component-guidance/alerts-guidance/alerts-guidance.component.css */\n.alert-table .p-datatable-tbody > tr > td,\n.alert-table .p-datatable-thead > tr > th {\n  white-space: normal !important;\n  word-break: normal;\n  overflow-wrap: normal;\n  vertical-align: top;\n}\n.alert-table .wrap-col {\n  min-width: 140px;\n}\n.alert-table .severity-col .chip {\n  white-space: nowrap !important;\n  display: inline-flex;\n}\n.alert-table .include-col {\n  width: 140px;\n  text-align: center;\n}\n.alert-table .include-col .p-checkbox {\n  display: inline-flex;\n}\n.alert-table .p-datatable-table {\n  width: 100%;\n  border: 1px solid #d1d5db;\n  border-radius: 6px;\n}\n.alert-table .p-datatable-wrapper {\n  width: 100%;\n  overflow-x: auto;\n}\n.alert-table .p-datatable-table {\n  table-layout: auto !important;\n}\n.alert-table-actions {\n  display: flex;\n  justify-content: flex-end;\n  margin-top: 0.75rem;\n}\n.alert-table .toggle-col,\n.alert-table .checkbox-col {\n  width: 1%;\n  white-space: nowrap;\n  text-align: center;\n  padding: 0;\n}\n.alert-table.p-datatable .p-datatable-thead > tr > th.toggle-col,\n.alert-table.p-datatable .p-datatable-tbody > tr > td.toggle-col,\n.alert-table.p-datatable .p-datatable-thead > tr > th.checkbox-col,\n.alert-table.p-datatable .p-datatable-tbody > tr > td.checkbox-col {\n  width: 1% !important;\n  white-space: nowrap !important;\n  text-align: center;\n  padding: 0 0.25rem;\n}\n/*# sourceMappingURL=alerts-guidance.component.css.map */\n", "/* src/app/views/page-assistant/components/problems/component-guidance/component-guidance.component.css */\n:host ::ng-deep .alert-table .p-datatable-table {\n  table-layout: auto !important;\n}\n:host ::ng-deep .alert-table.p-datatable .p-datatable-thead > tr > th.toggle-col,\n:host ::ng-deep .alert-table.p-datatable .p-datatable-tbody > tr > td.toggle-col {\n  width: 70px !important;\n  min-width: 70px;\n  max-width: 70px;\n  white-space: nowrap !important;\n  text-align: center;\n  padding: 0 0.25rem;\n}\n:host ::ng-deep .alert-table.p-datatable .p-datatable-thead > tr > th.checkbox-col,\n:host ::ng-deep .alert-table.p-datatable .p-datatable-tbody > tr > td.checkbox-col {\n  width: 70px !important;\n  min-width: 70px;\n  max-width: 70px;\n  white-space: nowrap !important;\n  text-align: center;\n  padding: 0 0.25rem;\n}\n:host ::ng-deep .topic-doormat-section-row > td {\n  background: #eef2f6;\n}\n.topic-doormat-group {\n  margin-top: 1rem;\n  border: 1px solid #d8dee6;\n  border-radius: 6px;\n  background: #fff;\n  overflow: hidden;\n}\n.topic-doormat-group + .topic-doormat-group {\n  margin-top: 1.25rem;\n}\n.topic-doormat-group-header {\n  display: flex;\n  align-items: flex-start;\n  gap: 0.75rem;\n  padding: 1.1rem 1.25rem;\n  border-bottom: 1px solid #d8dee6;\n  background: #eef2f6;\n}\n.topic-doormat-group h3 {\n  margin: 0;\n  font-size: 1.25rem;\n  line-height: 1.25;\n}\n.topic-doormat-count {\n  flex: 0 0 auto;\n  padding: 0.4rem 0.8rem;\n  border: 1px solid #d8dee6;\n  border-radius: 999px;\n  background: #fff;\n  color: #202833;\n  font-size: 0.9rem;\n  font-weight: 700;\n}\n.topic-doormat-subheading {\n  margin: 1rem 1rem 0.4rem;\n  padding-bottom: 0.25rem;\n  border-bottom: 1px solid #eef2f6;\n  color: #202833;\n  font-size: 0.9rem;\n  font-weight: 700;\n}\n.topic-doormat-group .expansion-table {\n  margin: 0 1rem 1rem;\n}\n.topic-doormat-empty {\n  padding: 0.75rem;\n  border: 1px solid #d8dee6;\n  border-radius: 4px;\n  background: #fff;\n}\n.topic-doormat-recommendation {\n  white-space: pre-line;\n}\n/*# sourceMappingURL=component-guidance.component.css.map */\n"] }]
-  }], () => [], { selectAll: [{
-    type: Input
-  }], maxSeverityChange: [{
-    type: Output
-  }], categoriesChange: [{
-    type: Output
-  }], loadingChange: [{
-    type: Output
-  }], errorChange: [{
-    type: Output
-  }] });
-})();
-(() => {
-  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(AlertsGuidanceComponent, { className: "AlertsGuidanceComponent", filePath: "app/views/page-assistant/components/problems/component-guidance/alerts-guidance/alerts-guidance.component.ts", lineNumber: 117 });
-})();
-
-// src/app/views/page-assistant/data/css-list.config.ts
-var allowedElements = [
-  "header",
-  "footer",
-  "main",
-  "body",
-  "div",
-  "span",
-  "section",
-  "nav",
-  "time",
-  "abbr",
-  "p",
-  "h1",
-  "h2",
-  "h3",
-  "h4",
-  "h5",
-  "h6",
-  "ul",
-  "ol",
-  "li",
-  "dl",
-  "dt",
-  "dd",
-  "table",
-  "thead",
-  "tbody",
-  "tfoot",
-  "tr",
-  "td",
-  "th",
-  "form",
-  "input",
-  "label",
-  "fieldset",
-  "legend",
-  "button",
-  "strong",
-  "aside",
-  "summary",
-  "details",
-  "a",
-  "img",
-  "figure",
-  "figcaption"
-];
-var allowedClasses = [
-  //AEM
-  /^(mwsgeneric-base-html|mwstitle|mwsbodytext|parbase)$/,
-  // Alerts / Status
-  /^alert(-(danger|dismissable|dismissible|info|link|success|warning))?$/,
-  /^(danger|success|warning|info|secondary|error|errmsg|has-(error|feedback|success|warning))$/,
-  // Alignment / Layout / Display
-  /^align-(bottom|middle|top|items-(center|sm-center)|self-(center|end))$/,
-  /\b(center|full-width|flex(-column|-sm-wrap)?|hide|invisible|left|pre-scrollable|right|row-no-gutters|show|stretched-link|text-hide|small|sm|xxsmallview|xlargeview)\b/,
-  /^d(-(sm-)?flex)?$/,
-  /^pull-(left|right)$/,
-  /^(top(-(left|right))?|bottom(-(left|right))?)$/,
-  /^mrgn-(tp|bttm|lft|rght)-(0|xs|sm|md|lg|xl)$/,
-  /^(m|p)([trblxy]?)-(auto|[0-5])$/,
-  /^(m|p)([trblxy]?)-(lg|md|sm)-?(auto|[0-5])$/,
-  /^pstn-(bttm|lft|rght|tp)-(lg|md|sm|xs)$/,
-  /^margin-(top|bottom)-(none|large|medium)$/,
-  /^(cnt-wdth-lmtd|container(-fluid)?|max-content|allow-wrap|nowrap|position-relative|grow|)$/,
-  /^(hght-inhrt|eqht-trgt)$/,
-  // Backgrounds
-  /^bg-(center|cover|danger|dark(er)?|gctheme|img-hdng|info|light|norepeat|pnkDy|primary|success|warning)$/,
-  /(no-)?backgroundsize/,
-  // Borders
-  /^brdr-(0|bttm|lft|rght|tp|rds-0)$/,
-  // Calendar
-  /^cal-(cnt-fluid|curr-day|days|evt|evt-lnk|nav)$/,
-  // Carousel / Slideshows
-  /^carousel(-(caption|control|indicators|inner|s[12]))?$/,
-  /\b(fd-(slider|wdgt)(-(bar|handle|range))?|slide|slidefade|slidevert)\b/,
-  // Clearfix
-  /^clr-(lft|rght)-(lg|md|sm)$/,
-  // Columns / Grid system
-  /^col-?(xs|sm|md|lg)?-?([0-9]{1,2}|auto)?$/,
-  /^col-(xs|sm|md|lg)-(offset|push|pull)-[0-9]{1,2}$/,
-  /^colcount-(xxs|xs|sm|md|lg|xl)-[2-4]$/,
-  "colcount-no-break",
-  /^row(border)?$/,
-  // Embeds
-  /^embed-responsive(-(16by9|4by3|item))?$/,
-  // Headings
-  /^h(1|2|3|4|5|6)$/,
-  // File extensions
-  /\b(jpg|png|woff2?|ttf|eot|svg)\b/,
-  // Forms / Inputs / UI controls
-  /^btn(-(block|call-to-action|cnt|danger|default|group(-(justified|lg|sm|vertical|xs))?|info|lg|link|primary|sm|success|toolbar|warning|xs|all-services))?$/,
-  /^form-(control(-(feedback|static))?|group(-(lg|sm))?|horizontal|inline)$/,
-  /\b(checkbox(-inline|-standalone)?|radio(-inline)?|control(-label)?|controls|inputs-zone|submit|reset|picker-overlay|datepicker-format)\b/,
-  /^(input-(group(-(addon|btn|lg|sm))?|lg|sm)|form-(control(-(feedback|static))?|group(-(lg|sm))?|horizontal|inline))$/,
-  /\b(active|disabled|selected|hover|required(-no-asterisk)?)\b/,
-  /\b(buttons|basic-link|legend-brdr-bttm|legend-label-only)\b/,
-  /^dropdown-?(backdrop|header|menu-?(left|right)?|toggle)?$|^dropup$/,
-  // Geomap
-  /^geomap-(aoi|clear-format|geoloc(-aoi-btn)?|help-(btn|dialog)|legend-(detail|element|label|symbol(-text)?)|lgnd(-layer)?|progress)$/,
-  "geoloc-progress",
-  // Labels
-  /^label(-(danger|default|info|inline|primary|success|warning))?$/,
-  // Lists
-  /^list-col-(xs|sm|md|lg)-[1-4]$/,
-  /^list-group(?:-item(?:-(?:danger|heading|info|success|text|warning))?)?$/,
-  /^list-(advanced|inline|responsive|unstyled)$/,
-  /^lst-(?:spcd(?:-2)?|lwr-(?:alph|rmn)|upr-(?:alph|rmn)|none|num)$/,
-  /^dl-(horizontal|inline)$/,
-  "disc",
-  // Media & Images
-  /\b(media(-(body|bottom|heading|left|middle|object|right))?|audio|video|feed|feeds-(cont|date)|figcaption|pln|highlighted|fun|quiz|question|mark)\b/,
-  /^(thumbnail|badge(-dept)?|avatar|cmpgn-(img|sctns)|cndwrdmrk)$/,
-  /^img-(circle|responsive|rounded|thumbnail)$/,
-  // Modals
-  /^modal-?(backdrop|body|content|dialog|footer|header|lg|open|scrollbar-measure|sm|title)?$/,
-  /^mfp-[a-z0-9-]+$/,
-  /^overlay(-bg|-close|-def)?$/,
-  // Navbar
-  /^navbar-?(brand|btn|collapse|default|fixed-(bottom|top)|form|header|inverse|left|link|nav|right|static-top|text|toggle)?$/,
-  /^nav-?(tabs|justified|pills|stacked|divider)?$/,
-  /^(nvbar|current)$/,
-  // Opacity
-  /^opct-(10|20|30|40|50|60|70|80|90|100)$/,
-  // Pagination / Sorting
-  /^(paginate-?(next|prev)|pagntn-prv-nxt|pgntn-lbl|pager|page-(header|type-(ilp|nav|search|theme))|_button)$/,
-  /^pagination(-lg)?$/,
-  /^sorting(_(1|2|3|asc(_disabled)?|desc(_disabled)?)|(-cnt|-icons))?$/,
-  /^(next|nxt|previous|prev)$/,
-  // Panels
-  /^panel-?(body|collapse|danger|default|footer|group|heading|info|primary|success|title|warning)?$/,
-  /^well(-(bold|lg|sm))?$/,
-  /\b(sm-pnl|lastpnl|tgl-panel|frstpnl|sec-pnl|info-pnl)\b/,
-  /^tab-?(content|count|pane|panels|acc)$/,
-  "expanded",
-  // Progress bar
-  /^progress(-bar(-(danger|info|striped|success|warning))?|Striped|Bar|Text)?$/,
-  // Tables
-  /^table-?(bordered|columnfloat|condensed|hover|responsive|striped)?$/,
-  /^(data(T|t)ables?_?(empty|filter|info|length|paginate|processing|scroll(Body|Head)?|sizing|wrapper)?)$/,
-  /^nws-tbl-?(date|dept|desc|ttl|type)?$/,
-  // Tooltips / Popovers
-  /^(tooltip-?(arrow|inner|txt)|popover-?(content|title)?)?$/,
-  // Text
-  /^text-(center|left|right|sm-left|sm-right|danger|info|justify|lowercase|muted|nowrap|primary|success|uppercase|warning|white|capitalize)$/,
-  "lead",
-  // Visibility
-  /^visible-(xs|sm|md|lg|print)(-(block|inline|inline-block))?$/,
-  /^hidden(-(xs|sm|md|lg|print|hd))?$/,
-  /^sr-only(-focusable)?$/,
-  // Skeleton
-  /^skeleton-lgnd-(1|2|3)$/,
-  // Multi-step UI
-  /\b(steps-wrapper|stepsquiz|expand-collapse-buttons)\b/,
-  // Social media
-  /\b(facebook|twitter(-timeline(-loading|-rendered)?)?|instagram|linkedin|tumblr|reddit|pinterest|youtube|gmail|yahoomail|googleplus|diigo|foursquare|myspace|periscope|x(-social)?|whatsapp|github|social-lnk)\b/,
-  // Framework / WET / GC
-  /^wb-[a-z0-9-]+$/,
-  /^gc-[a-z0-9-]+$/,
-  /^gcds[a-z0-9-]*$/,
-  /^ol(-[a-z0-9-]+)?$/,
-  // Page elements
-  /\b(pagebrand|pagedetails|section|sect-lnks|sctn-desc|breadcrumb|caption|title|subtitle|datemod|departments|features|followus|gcweb-menu|menu|profile|intro|most-requested-bullets)\b/,
-  // Product elements
-  /\bproduct(-data-(compressed|expanded|hidden)|-department|-icon|-language|-link(-container|-list)?|-listing|-name|-platforms|-record|-shortdescription|-longdescription)?\b/,
-  // Icons
-  /^glyphicon(-[a-z0-9-]+)?$/,
-  /^icon-?(bar|next|prev|warning-light)$/
-];
-var disallowedAttributes = [
-  /^on.*/
-  // inline JS handler like onclick, onmouseover
-  //'style'      // inline styles, these are added by page assistant so needs extra check or change added styles to a class
-];
-var guidanceMap = [
-  {
-    name: "page.tools.guidance.craSpecific.andor.title",
-    url: "page.tools.guidance.craSpecific.andor.url",
-    patterns: [/^cnjnctn-(type-(or|and)|xs|sm|md|lg|col(-[2-9][05])?)$/]
-  },
-  {
-    name: "page.tools.guidance.craVariant.alerts.title",
-    url: "page.tools.guidance.craVariant.alerts.url",
-    patterns: [/^alert(-(danger|dismissable|dismissible|info|link|success|warning))?$/]
-  },
-  {
-    id: "topicDoormats",
-    name: "page.tools.guidance.craVariant.topicDoormats.title",
-    url: "page.tools.guidance.craVariant.doormats.url",
-    patterns: ["gc-srvinfo", "gc-drmt", "mwsdoormat-links-container"]
-  },
-  {
-    id: "subwayDoormats",
-    name: "page.tools.guidance.craVariant.subwayDoormats.title",
-    url: "page.tools.guidance.craVariant.doormats.url",
-    patterns: []
-  },
-  {
-    name: "page.tools.guidance.craVariant.fieldflow.title",
-    url: "page.tools.guidance.craVariant.fieldflow.url",
-    patterns: ["wb-fieldflow"]
-  },
-  {
-    name: "page.tools.guidance.craVariant.lists.title",
-    url: "page.tools.guidance.craVariant.lists.url",
-    patterns: [
-      /^list-col-(xs|sm|md|lg)-[1-4]$/,
-      /^list-group(?:-item(?:-(?:danger|heading|info|success|text|warning))?)?$/,
-      /^list-(advanced|inline|responsive|unstyled)$/,
-      /^lst-(?:spcd(?:-2)?|lwr-(?:alph|rmn)|upr-(?:alph|rmn)|none|num)$/,
-      /^dl-(horizontal|inline)$/,
-      "disc"
-    ]
-  },
-  {
-    name: "page.tools.guidance.craVariant.subway.title",
-    url: "page.tools.guidance.craVariant.subway.url",
-    patterns: [/^gc-subway(-pagination)?$/]
-  },
-  {
-    name: "page.tools.guidance.craVariant.tables.title",
-    url: "page.tools.guidance.craVariant.tables.url",
-    patterns: [
-      /^table-?(bordered|columnfloat|condensed|hover|responsive|striped)?$/,
-      /^(data(T|t)ables?_?(empty|filter|info|length|paginate|processing|scroll(Body|Head)?|sizing|wrapper)?)$/
-    ]
-  },
-  {
-    name: "page.tools.guidance.gcCore.badges.title",
-    url: "page.tools.guidance.gcCore.badges.url",
-    patterns: ["badge"]
-  },
-  {
-    name: "page.tools.guidance.gcCore.borders.title",
-    url: "page.tools.guidance.gcCore.borders.url",
-    patterns: [/^brdr-(0|bttm|lft|rght|tp|rds-0)$/]
-  },
-  {
-    name: "page.tools.guidance.gcCore.buttons.title",
-    url: "page.tools.guidance.gcCore.buttons.url",
-    patterns: [/^btn(-(block|call-to-action|cnt|danger|default|group(-(justified|lg|sm|vertical|xs))?|info|lg|link|primary|sm|success|toolbar|warning|xs|all-services))?$/]
-  },
-  {
-    name: "page.tools.guidance.gcCore.calendar.title",
-    url: "page.tools.guidance.gcCore.calendar.url",
-    patterns: ["wb-calevt"]
-  },
-  {
-    name: "page.tools.guidance.gcCore.carousel.title",
-    url: "page.tools.guidance.gcCore.carousel.url",
-    patterns: [
-      /^carousel(-(caption|control|indicators|inner|s[12]))?$/,
-      /\b(fd-(slider|wdgt)(-(bar|handle|range))?|slide|slidefade|slidevert)\b/
-    ]
-  },
-  {
-    name: "page.tools.guidance.gcCore.charts.title",
-    url: "page.tools.guidance.gcCore.charts.url",
-    patterns: ["wb-charts"]
-  },
-  {
-    name: "page.tools.guidance.gcCore.features.title",
-    url: "page.tools.guidance.gcCore.features.url",
-    patterns: ["gc-features"]
-  },
-  {
-    name: "page.tools.guidance.gcCore.inview.title",
-    url: "page.tools.guidance.gcCore.inview.url",
-    patterns: ["wb-inview"]
-  },
-  {
-    name: "page.tools.guidance.gcCore.dismissable.title",
-    url: "page.tools.guidance.gcCore.dismissable.url",
-    patterns: ["wb-dismissable"]
-  },
-  {
-    name: "page.tools.guidance.gcCore.equalHeight.title",
-    url: "page.tools.guidance.gcCore.equalHeight.url",
-    patterns: ["wb-eqht"]
-  },
-  {
-    name: "page.tools.guidance.gcCore.footnote.title",
-    url: "page.tools.guidance.gcCore.footnote.url",
-    patterns: ["wb-fnote"]
-  },
-  {
-    name: "page.tools.guidance.gcCore.forms.title",
-    url: "page.tools.guidance.gcCore.forms.url",
-    patterns: [
-      /^btn(-(block|call-to-action|cnt|danger|default|group(-(justified|lg|sm|vertical|xs))?|info|lg|link|primary|sm|success|toolbar|warning|xs|all-services))?$/,
-      /^form-(control(-(feedback|static))?|group(-(lg|sm))?|horizontal|inline)$/,
-      /\b(checkbox(-inline|-standalone)?|radio(-inline)?|control(-label)?|controls|inputs-zone|submit|reset|picker-overlay|datepicker-format)\b/,
-      /^(input-(group(-(addon|btn|lg|sm))?|lg|sm)|form-(control(-(feedback|static))?|group(-(lg|sm))?|horizontal|inline))$/,
-      /\b(active|disabled|selected|hover|required(-no-asterisk)?)\b/,
-      /\b(buttons|basic-link|legend-brdr-bttm|legend-label-only)\b/,
-      /^dropdown-?(backdrop|header|menu-?(left|right)?|toggle)?$|^dropup$/
-    ]
-  },
-  {
-    name: "page.tools.guidance.gcCore.forms.title",
-    url: "page.tools.guidance.gcCore.forms.url",
-    patterns: [
-      /^col-?(xs|sm|md|lg)?-?([0-9]{1,2}|auto)?$/,
-      /^col-(xs|sm|md|lg)-(offset|push|pull)-[0-9]{1,2}$/,
-      /^colcount-(xxs|xs|sm|md|lg|xl)-[2-4]$/,
-      "colcount-no-break",
-      /^row(border)?$/
-    ]
-  },
-  {
-    name: "page.tools.guidance.gcCore.hidden.title",
-    url: "page.tools.guidance.gcCore.hidden.url",
-    patterns: [
-      /^visible-(xs|sm|md|lg|print)(-(block|inline|inline-block))?$/,
-      /^hidden(-(xs|sm|md|lg|print|hd))?$/,
-      /^sr-only(-focusable)?$/
-    ]
-  },
-  {
-    name: "page.tools.guidance.gcCore.label.title",
-    url: "page.tools.guidance.gcCore.label.url",
-    patterns: ["label"]
-  },
-  {
-    name: "page.tools.guidance.gcCore.checkboxAndRadio.title",
-    url: "page.tools.guidance.gcCore.checkboxAndRadio.url",
-    patterns: ["gc-chckbxrdio"]
-  },
-  {
-    name: "page.tools.guidance.gcCore.margin.title",
-    url: "page.tools.guidance.gcCore.margin.url",
-    patterns: [
-      /^mrgn-(tp|bttm|lft|rght)-(0|xs|sm|md|lg|xl)$/,
-      /^(m|p)([trblxy]?)-(auto|[0-5])$/,
-      /^(m|p)([trblxy]?)-(lg|md|sm)-?(auto|[0-5])$/,
-      /^margin-(top|bottom)-(none|large|medium)$/
-    ]
-  }
-];
-var guidanceExclusionMap = [
-  {
-    name: "page.tools.guidance.craVariant.basicPage.title",
-    url: "page.tools.guidance.craVariant.basicPage.url",
-    patterns: [/^(gc-srvinfo|list-group)$/, /^gc-subway(-pagination)?$/]
-  }
-];
-var guidanceContentMap = [
-  {
-    name: "page.tools.guidance.craSpecific.contact.title",
-    url: "page.tools.guidance.craSpecific.contact.url",
-    tag: "dt",
-    patterns: [/^Online$/i, /^By phone$/i, /^By mail$/i]
-  },
-  {
-    name: "page.tools.guidance.craSpecific.toc.title",
-    url: "page.tools.guidance.craSpecific.toc.url",
-    tag: "h2",
-    patterns: [/^On this page$/i, /^Table of contents$/i]
-  },
-  {
-    name: "page.tools.guidance.craVariant.links.title",
-    url: "page.tools.guidance.craVariant.links.url",
-    tag: "a",
-    patterns: [/^.*?$/]
-  },
-  {
-    name: "page.tools.guidance.craVariant.headings.title",
-    url: "page.tools.guidance.craVariant.headings.url",
-    tag: /^h[1-6]$/,
-    patterns: [/^.*?$/]
-  },
-  {
-    name: "page.tools.guidance.craVariant.borders.title",
-    url: "page.tools.guidance.craVariant.borders.url",
-    tag: "br",
-    patterns: [/^.*?$/]
-  },
-  {
-    name: "page.tools.guidance.gcCore.code.title",
-    url: "page.tools.guidance.gcCore.code.url",
-    tag: /^(code|pre)$/,
-    patterns: [/^.*?$/]
-  },
-  {
-    name: "page.tools.guidance.gcCore.exHide.title",
-    url: "page.tools.guidance.gcCore.exHide.url",
-    tag: /^(details|summary)$/,
-    patterns: [/^.*?$/]
-  },
-  {
-    name: "page.tools.guidance.gcCore.images.title",
-    url: "page.tools.guidance.gcCore.images.url",
-    tag: "img",
-    patterns: [/^.*?$/]
-  },
-  {
-    name: "page.tools.guidance.gcCore.keyboardKeys.title",
-    url: "page.tools.guidance.gcCore.keyboardKeys.url",
-    tag: "kbd",
-    patterns: [/^.*?$/]
-  }
-];
-
-// src/app/views/page-assistant/services/validator.service.ts
-var SUBWAY_DOORMATS_GUIDANCE = {
-  id: "subwayDoormats",
-  name: "page.tools.guidance.craVariant.subwayDoormats.title",
-  url: "page.tools.guidance.craVariant.doormats.url"
-};
-var TOPIC_DOORMATS_GUIDANCE = {
-  id: "topicDoormats",
-  name: "page.tools.guidance.craVariant.topicDoormats.title",
-  url: "page.tools.guidance.craVariant.doormats.url"
-};
-var ValidatorService = class _ValidatorService {
-  validateHtml(html) {
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(html, "text/html");
-    const violations = [];
-    this.walkNodes(doc.body, violations);
-    return violations;
-  }
-  walkNodes(node, violations) {
-    if (node.nodeType === Node.ELEMENT_NODE) {
-      const tagName = node.tagName.toLowerCase();
-      if (!allowedElements.includes(tagName)) {
-        violations.push({
-          type: "element",
-          detail: `Unexpected element <${tagName}>`,
-          node
-        });
-      }
-      node.classList.forEach((cls) => {
-        if (!this.isClassAllowed(cls)) {
-          violations.push({
-            type: "class",
-            detail: `Unexpected class "${cls}" on <${tagName}>`,
-            node
-          });
-        }
-      });
-      Array.from(node.attributes).forEach((attr) => {
-        if (this.isAttributeDisallowed(attr.name)) {
-          violations.push({
-            type: "attribute",
-            detail: `Disallowed attribute "${attr.name}" on <${tagName}>`,
-            node
-          });
-        }
-      });
-    }
-    node.childNodes.forEach((child) => {
-      if (child.nodeType === Node.ELEMENT_NODE) {
-        this.walkNodes(child, violations);
-      }
-    });
-  }
-  isClassAllowed(cls) {
-    return allowedClasses.some((allowed) => {
-      if (typeof allowed === "string")
-        return allowed === cls;
-      if (allowed instanceof RegExp)
-        return allowed.test(cls);
-      return false;
-    });
-  }
-  isAttributeDisallowed(attr) {
-    return disallowedAttributes.some((bad) => {
-      if (typeof bad === "string")
-        return bad === attr;
-      if (bad instanceof RegExp)
-        return bad.test(attr);
-      return false;
-    });
-  }
-  collectGuidanceUrls(html) {
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(html, "text/html");
-    const found = /* @__PURE__ */ new Map();
-    this.walkForGuidance(doc.body, found);
-    this.walkForContentGuidance(doc.body, found);
-    this.collectStructuralGuidance(doc.body, found);
-    this.walkForGuidanceByExclusion(doc.body, found);
-    return Array.from(found.values());
-  }
-  collectStructuralGuidance(root, found) {
-    if (root.querySelector("nav.gc-subway dl dt a") && root.querySelector("nav.gc-subway dl dd")) {
-      this.addGuidance(found, SUBWAY_DOORMATS_GUIDANCE);
-    }
-    if (this.hasLegacyTopicDoormatStructure(root)) {
-      this.addGuidance(found, TOPIC_DOORMATS_GUIDANCE);
-    }
-  }
-  hasLegacyTopicDoormatStructure(root) {
-    if (root.querySelector(".gc-srvinfo") || root.querySelector(".gc-drmt") || root.querySelector(".mwsdoormat-links-container")) {
-      return true;
-    }
-    const topicsHeading = Array.from(root.querySelectorAll("h2, h3")).find((heading) => (heading.textContent || "").replace(/\s+/g, " ").trim().toLowerCase() === "topics");
-    if (!topicsHeading)
-      return false;
-    let linkedHeadingCount = 0;
-    let current = topicsHeading.nextElementSibling;
-    while (current && linkedHeadingCount < 2) {
-      const text = (current.textContent || "").replace(/\s+/g, " ").trim().toLowerCase();
-      if (current.matches("h2") && text && text !== "topics") {
-        break;
-      }
-      if (current.matches("h2, h3") && current.querySelectorAll("a[href]").length === 1) {
-        linkedHeadingCount += 1;
-      }
-      current = current.nextElementSibling;
-    }
-    return linkedHeadingCount >= 2;
-  }
-  walkForGuidance(node, found) {
-    if (node.nodeType === Node.ELEMENT_NODE) {
-      node.classList.forEach((cls) => {
-        for (const group of guidanceMap) {
-          if (group.patterns.some((pat) => typeof pat === "string" ? pat === cls : pat.test(cls))) {
-            this.addGuidance(found, group);
-          }
-        }
-      });
-    }
-    node.childNodes.forEach((child) => {
-      if (child.nodeType === Node.ELEMENT_NODE) {
-        this.walkForGuidance(child, found);
-      }
-    });
-  }
-  walkForContentGuidance(node, found) {
-    if (node.nodeType === Node.ELEMENT_NODE) {
-      const tagName = node.tagName.toLowerCase();
-      const text = node.textContent?.trim();
-      if (text) {
-        for (const group of guidanceContentMap) {
-          const tagMatches = typeof group.tag === "string" ? group.tag === tagName : group.tag.test(tagName);
-          if (tagMatches && group.patterns.some((pat) => typeof pat === "string" ? pat === text : pat.test(text))) {
-            this.addGuidance(found, group);
-          }
-        }
-      }
-    }
-    node.childNodes.forEach((child) => {
-      if (child.nodeType === Node.ELEMENT_NODE) {
-        this.walkForContentGuidance(child, found);
-      }
-    });
-  }
-  //Adds guidance if specific classes aren't found (example: it's probably a basic page if no doormats or subway pattern detected)
-  walkForGuidanceByExclusion(root, found) {
-    for (const group of guidanceExclusionMap) {
-      const hasExclusion = group.patterns.some((pat) => {
-        if (typeof pat === "string") {
-          return root.querySelector(`.${pat}`) !== null;
-        } else {
-          return Array.from(root.querySelectorAll("[class]")).some((el) => el.className.split(/\s+/).some((cls) => pat.test(cls)));
-        }
-      });
-      if (!hasExclusion) {
-        this.addGuidance(found, group);
-      }
-    }
-  }
-  addGuidance(found, group) {
-    found.set(`${group.id ?? group.name}|${group.name}|${group.url}`, {
-      id: group.id,
-      name: group.name,
-      url: group.url
-    });
-  }
-  static \u0275fac = function ValidatorService_Factory(__ngFactoryType__) {
-    return new (__ngFactoryType__ || _ValidatorService)();
-  };
-  static \u0275prov = /* @__PURE__ */ \u0275\u0275defineInjectable({ token: _ValidatorService, factory: _ValidatorService.\u0275fac, providedIn: "root" });
-};
-(() => {
-  (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(ValidatorService, [{
-    type: Injectable,
-    args: [{
-      providedIn: "root"
-    }]
-  }], null, null);
-})();
-
-// src/app/views/page-assistant/services/component-ai.service.ts
-var ComponentAiService = class _ComponentAiService {
-  openRouter = inject(OpenRouterService);
-  models = this.openRouter.freeModels;
-  /** Batch assess selected components; returns a result per input (same order). */
-  assess(components) {
-    return __async(this, null, function* () {
-      const results = [];
-      for (const c of components) {
-        const one = yield this.assessOne(c);
-        results.push(one);
-      }
-      return results;
-    });
-  }
-  /** Assess a single component with minimal, strictly-JSON output. */
-  assessOne(input) {
-    return __async(this, null, function* () {
-      const system = `You are a senior CRA web UI reviewer.
-Given a component label, its UCDG guidance URL, and a small HTML snippet showing how it's used on a page:
-- Judge if the component choice is appropriate for its apparent purpose (UX/writing perspective).
-- Judge if the code looks up to date with GCWeb/GCDS/UCDG guidance (class names, structure hints).
-- If you\u2019re unsure, return "unknown".
-
-Return ONLY compact JSON (no prose):
-{
-  "health": "ok" | "issue" | "unknown",
-  "confidence": 0..1,
-  "codeUpToDate": true|false,
-  "issues": ["short bullet 1","short bullet 2"],
-  "rationale": "\u226425 words"
-}`;
-      const snippet = (input.htmlSnippet || "").slice(0, 25e3);
-      const user = {
-        componentLabel: input.componentLabel,
-        guidanceUrl: input.guidanceUrl || null,
-        htmlSnippet: snippet || null
-      };
-      const messages = [
-        { role: "system", content: system },
-        { role: "user", content: JSON.stringify(user) }
-      ];
-      for (const model of this.models) {
-        const resp = yield this.openRouter.call(model, messages, {
-          temperature: 0,
-          title: "Content Assistant - Component Guidance"
-        });
-        const text = resp?.choices?.[0]?.message?.content;
-        if (!text)
-          continue;
-        const cleaned = this.stripCodeFences(text);
-        const parsed = this.looseJsonParse(cleaned);
-        const out = this.toResult(parsed, input.componentLabel);
-        if (out)
-          return out;
-      }
-      return {
-        componentLabel: input.componentLabel,
-        health: "unknown",
-        confidence: 0,
-        codeUpToDate: void 0,
-        issues: [],
-        rationale: "No AI response."
-      };
-    });
-  }
-  // ---------- Output hygiene ----------
-  stripCodeFences(s) {
-    return s.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/i, "").trim();
-  }
-  tryParseJSON(s) {
-    try {
-      return JSON.parse(s);
-    } catch {
-      return null;
-    }
-  }
-  looseJsonParse(s) {
-    const direct = this.tryParseJSON(s);
-    if (direct !== null)
-      return direct;
-    const m = s.match(/\{[\s\S]*\}/);
-    return m ? this.tryParseJSON(m[0]) : null;
-  }
-  toResult(j, componentLabel) {
-    if (!j || typeof j !== "object")
-      return null;
-    const o = j;
-    const health = o["health"];
-    if (health !== "ok" && health !== "issue" && health !== "unknown")
-      return null;
-    let confidence = Number(o["confidence"]);
-    if (!Number.isFinite(confidence))
-      confidence = 0;
-    confidence = Math.max(0, Math.min(1, confidence));
-    const res = {
-      componentLabel,
-      health,
-      confidence
-    };
-    if (typeof o["codeUpToDate"] === "boolean")
-      res.codeUpToDate = o["codeUpToDate"];
-    if (typeof o["rationale"] === "string")
-      res.rationale = o["rationale"];
-    if (Array.isArray(o["issues"])) {
-      res.issues = o["issues"].filter((x) => typeof x === "string").slice(0, 6);
-    } else {
-      res.issues = [];
-    }
-    return res;
-  }
-  static \u0275fac = function ComponentAiService_Factory(__ngFactoryType__) {
-    return new (__ngFactoryType__ || _ComponentAiService)();
-  };
-  static \u0275prov = /* @__PURE__ */ \u0275\u0275defineInjectable({ token: _ComponentAiService, factory: _ComponentAiService.\u0275fac, providedIn: "root" });
-};
-(() => {
-  (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(ComponentAiService, [{
-    type: Injectable,
-    args: [{ providedIn: "root" }]
-  }], null, null);
-})();
-
 // src/app/views/page-assistant/services/topic-doormats/topic-doormat-extractor.service.ts
 var TopicDoormatExtractorService = class _TopicDoormatExtractorService {
   fetchService = inject(FetchService);
+  destinationMainHtmlCharacterLimit = 12e3;
   parseHtmlDocument(html) {
     if (!html)
       return null;
@@ -29830,10 +25229,13 @@ var TopicDoormatExtractorService = class _TopicDoormatExtractorService {
         const destinationIntroParagraphs = main && heading ? Array.from(main.querySelectorAll("p")).filter((paragraph) => this.isDestinationIntroParagraph(paragraph, heading, firstSectionHeading)).map((paragraph) => this.cleanVisibleText(paragraph.textContent)).filter(Boolean) : [];
         const destinationSectionHeadings = main ? sectionHeadingElements.map((sectionHeading) => this.cleanVisibleText(sectionHeading.textContent)).filter(Boolean) : [];
         const destinationLabelEvidence = this.extractDestinationLabelEvidence(destinationDoc, main, heading, destinationIntroParagraphs);
+        const mainHtml = this.extractDestinationMainHtml(main);
         return {
           destinationUrl,
           destinationPageTitle: this.cleanVisibleText(destinationDoc.querySelector("title")?.textContent),
           destinationPageHeading: this.cleanVisibleText(heading?.textContent),
+          destinationMainHtml: mainHtml.html,
+          destinationMainHtmlTruncated: mainHtml.truncated,
           destinationIntroParagraphs,
           destinationSectionHeadings,
           destinationLabelEvidence,
@@ -29846,6 +25248,8 @@ var TopicDoormatExtractorService = class _TopicDoormatExtractorService {
           destinationIntroParagraphs: [],
           destinationSectionHeadings: [],
           destinationLabelEvidence: [],
+          destinationMainHtml: "",
+          destinationMainHtmlTruncated: false,
           destinationContextStatus: "failed",
           destinationHttpStatus: this.getFetchErrorStatus(error),
           destinationFetchError: error instanceof Error ? error.message : String(error)
@@ -30064,6 +25468,44 @@ var TopicDoormatExtractorService = class _TopicDoormatExtractorService {
   }
   cleanVisibleText(value) {
     return (value || "").replace(/\s+/g, " ").trim();
+  }
+  extractDestinationMainHtml(main) {
+    if (!main)
+      return { html: "", truncated: false };
+    const clone = main.cloneNode(true);
+    clone.querySelectorAll([
+      "script",
+      "style",
+      "noscript",
+      "svg",
+      "canvas",
+      "iframe",
+      "form",
+      "nav",
+      "aside",
+      "[hidden]",
+      '[aria-hidden="true"]',
+      ".pagedetails",
+      ".wb-share",
+      ".wb-disable",
+      ".gc-most-requested",
+      ".gc-srvinfo",
+      ".gc-followus",
+      ".gc-contributors",
+      ".gc-contextual",
+      ".reportaproblem",
+      '[class*="pagedetails"]',
+      '[class*="feedback"]',
+      '[class*="social"]'
+    ].join(", ")).forEach((element) => element.remove());
+    const html = clone.innerHTML.replace(/\s+/g, " ").trim();
+    if (html.length <= this.destinationMainHtmlCharacterLimit) {
+      return { html, truncated: false };
+    }
+    return {
+      html: html.slice(0, this.destinationMainHtmlCharacterLimit),
+      truncated: true
+    };
   }
   static \u0275fac = function TopicDoormatExtractorService_Factory(__ngFactoryType__) {
     return new (__ngFactoryType__ || _TopicDoormatExtractorService)();
@@ -32981,6 +28423,4612 @@ ${JSON.stringify(contract)}`;
   }], null, null);
 })();
 
+// src/app/views/page-assistant/data/ai-prompts.constants.ts
+var PROMPT_BASE_URL = new URL("ai-prompts/", document.baseURI);
+var promptFiles = {
+  [PromptKey.Headings]: new URL("headings.txt", PROMPT_BASE_URL).toString(),
+  [PromptKey.Doormats]: new URL("unused-legacy-doormats.txt", PROMPT_BASE_URL).toString(),
+  [PromptKey.PlainLanguage]: new URL("plain-language.txt", PROMPT_BASE_URL).toString()
+};
+var commsObjectivePath = new URL("comms-objective.txt", PROMPT_BASE_URL).toString();
+var promptCache = /* @__PURE__ */ new Map();
+function loadPromptText(path) {
+  return __async(this, null, function* () {
+    const cached = promptCache.get(path);
+    if (cached)
+      return cached;
+    const resp = yield fetch(path);
+    if (!resp.ok) {
+      throw new Error(`Prompt file request failed (${resp.status}): ${path}`);
+    }
+    const text = yield resp.text();
+    promptCache.set(path, text);
+    return text;
+  });
+}
+function getPromptTemplate(key2) {
+  return __async(this, null, function* () {
+    return loadPromptText(promptFiles[key2]);
+  });
+}
+function getCommsObjectivePrompt() {
+  return __async(this, null, function* () {
+    return loadPromptText(commsObjectivePath);
+  });
+}
+
+// node_modules/primeng/fesm2022/primeng-drawer.mjs
+var _c02 = ["header"];
+var _c12 = ["footer"];
+var _c22 = ["content"];
+var _c32 = ["closeicon"];
+var _c42 = ["headless"];
+var _c52 = ["maskRef"];
+var _c62 = ["container"];
+var _c72 = ["closeButton"];
+var _c82 = ["*"];
+var _c92 = (a0, a1, a2, a3, a4, a5) => ({
+  "p-drawer": true,
+  "p-drawer-active": a0,
+  "p-drawer-left": a1,
+  "p-drawer-right": a2,
+  "p-drawer-top": a3,
+  "p-drawer-bottom": a4,
+  "p-drawer-full": a5
+});
+var _c102 = (a0, a1) => ({
+  transform: a0,
+  transition: a1
+});
+var _c11 = (a0) => ({
+  value: "visible",
+  params: a0
+});
+function Drawer_div_0_Conditional_2_ng_container_0_Template(rf, ctx) {
+  if (rf & 1) {
+    \u0275\u0275elementContainer(0);
+  }
+}
+function Drawer_div_0_Conditional_2_Template(rf, ctx) {
+  if (rf & 1) {
+    \u0275\u0275template(0, Drawer_div_0_Conditional_2_ng_container_0_Template, 1, 0, "ng-container", 4);
+  }
+  if (rf & 2) {
+    const ctx_r1 = \u0275\u0275nextContext(2);
+    \u0275\u0275property("ngTemplateOutlet", ctx_r1.headlessTemplate || ctx_r1._headlessTemplate);
+  }
+}
+function Drawer_div_0_Conditional_3_ng_container_1_Template(rf, ctx) {
+  if (rf & 1) {
+    \u0275\u0275elementContainer(0);
+  }
+}
+function Drawer_div_0_Conditional_3_div_2_Template(rf, ctx) {
+  if (rf & 1) {
+    \u0275\u0275elementStart(0, "div");
+    \u0275\u0275text(1);
+    \u0275\u0275elementEnd();
+  }
+  if (rf & 2) {
+    const ctx_r1 = \u0275\u0275nextContext(3);
+    \u0275\u0275classMap(ctx_r1.cx("title"));
+    \u0275\u0275advance();
+    \u0275\u0275textInterpolate(ctx_r1.header);
+  }
+}
+function Drawer_div_0_Conditional_3_p_button_3_ng_template_1_TimesIcon_0_Template(rf, ctx) {
+  if (rf & 1) {
+    \u0275\u0275element(0, "TimesIcon");
+  }
+  if (rf & 2) {
+    \u0275\u0275attribute("data-pc-section", "closeicon");
+  }
+}
+function Drawer_div_0_Conditional_3_p_button_3_ng_template_1_1_ng_template_0_Template(rf, ctx) {
+}
+function Drawer_div_0_Conditional_3_p_button_3_ng_template_1_1_Template(rf, ctx) {
+  if (rf & 1) {
+    \u0275\u0275template(0, Drawer_div_0_Conditional_3_p_button_3_ng_template_1_1_ng_template_0_Template, 0, 0, "ng-template");
+  }
+}
+function Drawer_div_0_Conditional_3_p_button_3_ng_template_1_Template(rf, ctx) {
+  if (rf & 1) {
+    \u0275\u0275template(0, Drawer_div_0_Conditional_3_p_button_3_ng_template_1_TimesIcon_0_Template, 1, 1, "TimesIcon", 8)(1, Drawer_div_0_Conditional_3_p_button_3_ng_template_1_1_Template, 1, 0, null, 4);
+  }
+  if (rf & 2) {
+    const ctx_r1 = \u0275\u0275nextContext(4);
+    \u0275\u0275property("ngIf", !ctx_r1.closeIconTemplate && !ctx_r1._closeIconTemplate);
+    \u0275\u0275advance();
+    \u0275\u0275property("ngTemplateOutlet", ctx_r1.closeIconTemplate || ctx_r1._closeIconTemplate);
+  }
+}
+function Drawer_div_0_Conditional_3_p_button_3_Template(rf, ctx) {
+  if (rf & 1) {
+    const _r3 = \u0275\u0275getCurrentView();
+    \u0275\u0275elementStart(0, "p-button", 9);
+    \u0275\u0275listener("onClick", function Drawer_div_0_Conditional_3_p_button_3_Template_p_button_onClick_0_listener($event) {
+      \u0275\u0275restoreView(_r3);
+      const ctx_r1 = \u0275\u0275nextContext(3);
+      return \u0275\u0275resetView(ctx_r1.close($event));
+    })("keydown.enter", function Drawer_div_0_Conditional_3_p_button_3_Template_p_button_keydown_enter_0_listener($event) {
+      \u0275\u0275restoreView(_r3);
+      const ctx_r1 = \u0275\u0275nextContext(3);
+      return \u0275\u0275resetView(ctx_r1.close($event));
+    });
+    \u0275\u0275template(1, Drawer_div_0_Conditional_3_p_button_3_ng_template_1_Template, 2, 2, "ng-template", null, 1, \u0275\u0275templateRefExtractor);
+    \u0275\u0275elementEnd();
+  }
+  if (rf & 2) {
+    const ctx_r1 = \u0275\u0275nextContext(3);
+    \u0275\u0275property("ngClass", ctx_r1.cx("closeButton"))("buttonProps", ctx_r1.closeButtonProps)("ariaLabel", ctx_r1.ariaCloseLabel);
+    \u0275\u0275attribute("data-pc-section", "closebutton")("data-pc-group-section", "iconcontainer");
+  }
+}
+function Drawer_div_0_Conditional_3_ng_container_6_Template(rf, ctx) {
+  if (rf & 1) {
+    \u0275\u0275elementContainer(0);
+  }
+}
+function Drawer_div_0_Conditional_3_ng_container_7_ng_container_2_Template(rf, ctx) {
+  if (rf & 1) {
+    \u0275\u0275elementContainer(0);
+  }
+}
+function Drawer_div_0_Conditional_3_ng_container_7_Template(rf, ctx) {
+  if (rf & 1) {
+    \u0275\u0275elementContainerStart(0);
+    \u0275\u0275elementStart(1, "div", 5);
+    \u0275\u0275template(2, Drawer_div_0_Conditional_3_ng_container_7_ng_container_2_Template, 1, 0, "ng-container", 4);
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementContainerEnd();
+  }
+  if (rf & 2) {
+    const ctx_r1 = \u0275\u0275nextContext(3);
+    \u0275\u0275advance();
+    \u0275\u0275property("ngClass", ctx_r1.cx("footer"));
+    \u0275\u0275attribute("data-pc-section", "footer");
+    \u0275\u0275advance();
+    \u0275\u0275property("ngTemplateOutlet", ctx_r1.footerTemplate || ctx_r1._footerTemplate);
+  }
+}
+function Drawer_div_0_Conditional_3_Template(rf, ctx) {
+  if (rf & 1) {
+    \u0275\u0275elementStart(0, "div", 5);
+    \u0275\u0275template(1, Drawer_div_0_Conditional_3_ng_container_1_Template, 1, 0, "ng-container", 4)(2, Drawer_div_0_Conditional_3_div_2_Template, 2, 3, "div", 6)(3, Drawer_div_0_Conditional_3_p_button_3_Template, 3, 5, "p-button", 7);
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(4, "div", 5);
+    \u0275\u0275projection(5);
+    \u0275\u0275template(6, Drawer_div_0_Conditional_3_ng_container_6_Template, 1, 0, "ng-container", 4);
+    \u0275\u0275elementEnd();
+    \u0275\u0275template(7, Drawer_div_0_Conditional_3_ng_container_7_Template, 3, 3, "ng-container", 8);
+  }
+  if (rf & 2) {
+    const ctx_r1 = \u0275\u0275nextContext(2);
+    \u0275\u0275property("ngClass", ctx_r1.cx("header"));
+    \u0275\u0275attribute("data-pc-section", "header");
+    \u0275\u0275advance();
+    \u0275\u0275property("ngTemplateOutlet", ctx_r1.headerTemplate || ctx_r1._headerTemplate);
+    \u0275\u0275advance();
+    \u0275\u0275property("ngIf", ctx_r1.header);
+    \u0275\u0275advance();
+    \u0275\u0275property("ngIf", ctx_r1.showCloseIcon && ctx_r1.closable);
+    \u0275\u0275advance();
+    \u0275\u0275property("ngClass", ctx_r1.cx("content"));
+    \u0275\u0275attribute("data-pc-section", "content");
+    \u0275\u0275advance(2);
+    \u0275\u0275property("ngTemplateOutlet", ctx_r1.contentTemplate || ctx_r1._contentTemplate);
+    \u0275\u0275advance();
+    \u0275\u0275property("ngIf", ctx_r1.footerTemplate || ctx_r1._footerTemplate);
+  }
+}
+function Drawer_div_0_Template(rf, ctx) {
+  if (rf & 1) {
+    const _r1 = \u0275\u0275getCurrentView();
+    \u0275\u0275elementStart(0, "div", 3, 0);
+    \u0275\u0275listener("@panelState.start", function Drawer_div_0_Template_div_animation_panelState_start_0_listener($event) {
+      \u0275\u0275restoreView(_r1);
+      const ctx_r1 = \u0275\u0275nextContext();
+      return \u0275\u0275resetView(ctx_r1.onAnimationStart($event));
+    })("@panelState.done", function Drawer_div_0_Template_div_animation_panelState_done_0_listener($event) {
+      \u0275\u0275restoreView(_r1);
+      const ctx_r1 = \u0275\u0275nextContext();
+      return \u0275\u0275resetView(ctx_r1.onAnimationEnd($event));
+    })("keydown", function Drawer_div_0_Template_div_keydown_0_listener($event) {
+      \u0275\u0275restoreView(_r1);
+      const ctx_r1 = \u0275\u0275nextContext();
+      return \u0275\u0275resetView(ctx_r1.onKeyDown($event));
+    });
+    \u0275\u0275template(2, Drawer_div_0_Conditional_2_Template, 1, 1, "ng-container")(3, Drawer_div_0_Conditional_3_Template, 8, 9);
+    \u0275\u0275elementEnd();
+  }
+  if (rf & 2) {
+    const ctx_r1 = \u0275\u0275nextContext();
+    \u0275\u0275styleMap(ctx_r1.style);
+    \u0275\u0275classMap(ctx_r1.styleClass);
+    \u0275\u0275property("ngClass", \u0275\u0275pureFunction6(9, _c92, ctx_r1.visible, ctx_r1.position === "left" && !ctx_r1.fullScreen, ctx_r1.position === "right" && !ctx_r1.fullScreen, ctx_r1.position === "top" && !ctx_r1.fullScreen, ctx_r1.position === "bottom" && !ctx_r1.fullScreen, ctx_r1.fullScreen || ctx_r1.position === "full"))("@panelState", \u0275\u0275pureFunction1(19, _c11, \u0275\u0275pureFunction2(16, _c102, ctx_r1.transformOptions, ctx_r1.transitionOptions)));
+    \u0275\u0275attribute("data-pc-name", "sidebar")("data-pc-section", "root");
+    \u0275\u0275advance(2);
+    \u0275\u0275conditional(ctx_r1.headlessTemplate || ctx_r1._headlessTemplate ? 2 : 3);
+  }
+}
+var theme2 = ({
+  dt
+}) => `
+.p-drawer {
+    display: flex;
+    flex-direction: column;
+    pointer-events: auto;
+    transform: translate3d(0px, 0px, 0px);
+    position: fixed;
+    transition: transform 0.3s;
+    background: ${dt("drawer.background")};
+    color: ${dt("drawer.color")};
+    border: 1px solid ${dt("drawer.border.color")};
+    box-shadow: ${dt("drawer.shadow")};
+}
+
+.p-drawer-content {
+    overflow-y: auto;
+    flex-grow: 1;
+    padding: ${dt("drawer.content.padding")};
+}
+
+.p-drawer-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-shrink: 0;
+    padding: ${dt("drawer.header.padding")};
+}
+
+.p-drawer-footer {
+    padding: ${dt("drawer.header.padding")};
+}
+
+.p-drawer-title {
+    font-weight: ${dt("drawer.title.font.weight")};
+    font-size: ${dt("drawer.title.font.size")};
+}
+
+.p-drawer-full .p-drawer {
+    transition: none;
+    transform: none;
+    width: 100vw !important;
+    height: 100vh !important;
+    max-height: 100%;
+    top: 0px !important;
+    left: 0px !important;
+    border-width: 1px;
+}
+
+.p-drawer-left .p-drawer {
+    align-self: start;
+    width: 20rem;
+    height: 100%;
+    border-right-width: 1px;
+}
+
+.p-drawer-right .p-drawer {
+    align-self: end;
+    width: 20rem;
+    height: 100%;
+    border-left-width: 1px;
+}
+
+.p-drawer-top .p-drawer {
+    height: 10rem;
+    width: 100%;
+    border-bottom-width: 1px;
+}
+
+.p-drawer-bottom .p-drawer {
+    height: 10rem;
+    width: 100%;
+    border-top-width: 1px;
+}
+
+.p-drawer-left .p-drawer-content,
+.p-drawer-right .p-drawer-content,
+.p-drawer-top .p-drawer-content,
+.p-drawer-bottom .p-drawer-content {
+    width: 100%;
+    height: 100%;
+}
+
+.p-drawer-open {
+    display: flex;
+}
+
+.p-drawer-top {
+    justify-content: flex-start;
+}
+
+.p-drawer-bottom {
+    justify-content: flex-end;
+}
+
+.p-drawer {
+    position: fixed;
+    transition: transform 0.3s;
+    display: flex;
+    flex-direction: column;
+}
+
+.p-drawer-content {
+    position: relative;
+    overflow-y: auto;
+    flex-grow: 1;
+}
+
+.p-drawer-header {
+    display: flex;
+    align-items: center;
+}
+
+.p-drawer-footer {
+    margin-top: auto;
+}
+
+.p-drawer-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-left: auto;
+}
+
+.p-drawer-left {
+    top: 0;
+    left: 0;
+    width: 20rem;
+    height: 100%;
+}
+
+.p-drawer-right {
+    top: 0;
+    right: 0;
+    width: 20rem;
+    height: 100%;
+}
+
+.p-drawer-top {
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 10rem;
+}
+
+.p-drawer-bottom {
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 10rem;
+}
+
+.p-drawer-full {
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    -webkit-transition: none;
+    transition: none;
+}
+
+.p-drawer-mask {
+    background-color: rgba(0, 0, 0, 0.4);
+    transition-duration: 0.2s;
+}
+
+.p-overlay-mask {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+}
+
+.p-overlay-mask:dir(rtl) {
+    flex-direction: row-reverse;
+}
+
+.p-overlay-mask-enter {
+    animation: p-overlay-mask-enter-animation 150ms forwards;
+}
+
+.p-overlay-mask-leave {
+    animation: p-overlay-mask-leave-animation 150ms forwards;
+}
+
+@keyframes p-overlay-mask-enter-animation {
+    from {
+        background-color: transparent;
+    }
+    to {
+        background-color: rgba(0, 0, 0, 0.4);
+    }
+}
+@keyframes p-overlay-mask-leave-animation {
+    from {
+        background-color: rgba(0, 0, 0, 0.4);
+    }
+    to {
+        background-color: transparent;
+    }
+}
+`;
+var inlineStyles = {
+  mask: ({
+    instance
+  }) => ({
+    position: "fixed",
+    height: "100%",
+    width: "100%",
+    left: 0,
+    top: 0,
+    display: "flex",
+    flexDirection: "column",
+    alignItems: instance.position === "top" ? "flex-start" : instance.position === "bottom" ? "flex-end" : "center"
+  })
+};
+var classes2 = {
+  mask: ({
+    instance
+  }) => ({
+    "p-drawer-mask": true,
+    "p-overlay-mask p-overlay-mask-enter": instance.modal,
+    "p-drawer-open": instance.containerVisible,
+    "p-drawer-full": instance.fullScreen,
+    [`p-drawer-${instance.position}`]: !!instance.position
+  }),
+  root: ({
+    instance
+  }) => ({
+    "p-drawer p-component": true,
+    "p-drawer-full": instance.fullScreen
+  }),
+  header: "p-drawer-header",
+  title: "p-drawer-title",
+  pcCloseButton: "p-drawer-close-button",
+  content: "p-drawer-content",
+  footer: "p-drawer-footer"
+};
+var DrawerStyle = class _DrawerStyle extends BaseStyle {
+  name = "drawer";
+  theme = theme2;
+  classes = classes2;
+  inlineStyles = inlineStyles;
+  static \u0275fac = /* @__PURE__ */ (() => {
+    let \u0275DrawerStyle_BaseFactory;
+    return function DrawerStyle_Factory(__ngFactoryType__) {
+      return (\u0275DrawerStyle_BaseFactory || (\u0275DrawerStyle_BaseFactory = \u0275\u0275getInheritedFactory(_DrawerStyle)))(__ngFactoryType__ || _DrawerStyle);
+    };
+  })();
+  static \u0275prov = /* @__PURE__ */ \u0275\u0275defineInjectable({
+    token: _DrawerStyle,
+    factory: _DrawerStyle.\u0275fac
+  });
+};
+(() => {
+  (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(DrawerStyle, [{
+    type: Injectable
+  }], null, null);
+})();
+var DrawerClasses;
+(function(DrawerClasses2) {
+  DrawerClasses2["mask"] = "p-drawer-mask";
+  DrawerClasses2["root"] = "p-drawer";
+  DrawerClasses2["header"] = "p-drawer-header";
+  DrawerClasses2["title"] = "p-drawer-title";
+  DrawerClasses2["pcCloseButton"] = "p-drawer-close-button";
+  DrawerClasses2["content"] = "p-drawer-content";
+})(DrawerClasses || (DrawerClasses = {}));
+var showAnimation2 = animation([style({
+  transform: "{{transform}}",
+  opacity: 0
+}), animate("{{transition}}")]);
+var hideAnimation2 = animation([animate("{{transition}}", style({
+  transform: "{{transform}}",
+  opacity: 0
+}))]);
+var Drawer = class _Drawer extends BaseComponent {
+  /**
+   *  Target element to attach the dialog, valid values are "body" or a local ng-template variable of another element (note: use binding with brackets for template variables, e.g. [appendTo]="mydiv" for a div element having #mydiv as variable name).
+   * @group Props
+   */
+  appendTo = "body";
+  /**
+   * Whether to block scrolling of the document when drawer is active.
+   * @group Props
+   */
+  blockScroll = false;
+  /**
+   * Inline style of the component.
+   * @group Props
+   */
+  style;
+  /**
+   * Style class of the component.
+   * @group Props
+   */
+  styleClass;
+  /**
+   * Aria label of the close icon.
+   * @group Props
+   */
+  ariaCloseLabel;
+  /**
+   * Whether to automatically manage layering.
+   * @group Props
+   */
+  autoZIndex = true;
+  /**
+   * Base zIndex value to use in layering.
+   * @group Props
+   */
+  baseZIndex = 0;
+  /**
+   * Whether an overlay mask is displayed behind the drawer.
+   * @group Props
+   */
+  modal = true;
+  /**
+   * Used to pass all properties of the ButtonProps to the Button component.
+   * @group Props
+   */
+  closeButtonProps = {
+    severity: "secondary",
+    text: true,
+    rounded: true
+  };
+  /**
+   * Whether to dismiss drawer on click of the mask.
+   * @group Props
+   */
+  dismissible = true;
+  /**
+   * Whether to display the close icon.
+   * @group Props
+   * @deprecated use 'closable' instead.
+   */
+  showCloseIcon = true;
+  /**
+   * Specifies if pressing escape key should hide the drawer.
+   * @group Props
+   */
+  closeOnEscape = true;
+  /**
+   * Transition options of the animation.
+   * @group Props
+   */
+  transitionOptions = "150ms cubic-bezier(0, 0, 0.2, 1)";
+  /**
+   * Specifies the visibility of the dialog.
+   * @group Props
+   */
+  get visible() {
+    return this._visible;
+  }
+  set visible(val) {
+    this._visible = val;
+  }
+  /**
+   * Specifies the position of the drawer, valid values are "left", "right", "bottom" and "top".
+   * @group Props
+   */
+  get position() {
+    return this._position;
+  }
+  set position(value) {
+    this._position = value;
+    if (value === "full") {
+      this.transformOptions = "none";
+      return;
+    }
+    switch (value) {
+      case "left":
+        this.transformOptions = "translate3d(-100%, 0px, 0px)";
+        break;
+      case "right":
+        this.transformOptions = "translate3d(100%, 0px, 0px)";
+        break;
+      case "bottom":
+        this.transformOptions = "translate3d(0px, 100%, 0px)";
+        break;
+      case "top":
+        this.transformOptions = "translate3d(0px, -100%, 0px)";
+        break;
+    }
+  }
+  /**
+   * Adds a close icon to the header to hide the dialog.
+   * @group Props
+   */
+  get fullScreen() {
+    return this._fullScreen;
+  }
+  set fullScreen(value) {
+    this._fullScreen = value;
+    if (value) this.transformOptions = "none";
+  }
+  /**
+   * Title content of the dialog.
+   * @group Props
+   */
+  header;
+  /**
+   * Style of the mask.
+   * @group Props
+   */
+  maskStyle;
+  /**
+   * Whether to display close button.
+   * @group Props
+   * @defaultValue true
+   */
+  closable = true;
+  /**
+   * Callback to invoke when dialog is shown.
+   * @group Emits
+   */
+  onShow = new EventEmitter();
+  /**
+   * Callback to invoke when dialog is hidden.
+   * @group Emits
+   */
+  onHide = new EventEmitter();
+  /**
+   * Callback to invoke when dialog visibility is changed.
+   * @param {boolean} value - Visible value.
+   * @group Emits
+   */
+  visibleChange = new EventEmitter();
+  maskRef;
+  containerViewChild;
+  closeButtonViewChild;
+  initialized;
+  _visible;
+  _position = "left";
+  _fullScreen = false;
+  container;
+  transformOptions = "translate3d(-100%, 0px, 0px)";
+  mask;
+  maskClickListener;
+  documentEscapeListener;
+  animationEndListener;
+  _componentStyle = inject(DrawerStyle);
+  ngAfterViewInit() {
+    super.ngAfterViewInit();
+    this.initialized = true;
+  }
+  /**
+   * Content template for the content of the drawer.
+   * @group Templates
+   */
+  headerTemplate;
+  /**
+   * Header template for the header of the drawer.
+   * @group Templates
+   */
+  footerTemplate;
+  /**
+   * Content template for the footer of the drawer.
+   * @group Templates
+   */
+  contentTemplate;
+  /**
+   * Close icon template for the close icon of the drawer.
+   * @group Templates
+   */
+  closeIconTemplate;
+  /**
+   * Headless template for the headless drawer.
+   * @group Templates
+   */
+  headlessTemplate;
+  _headerTemplate;
+  _footerTemplate;
+  _contentTemplate;
+  _closeIconTemplate;
+  _headlessTemplate;
+  templates;
+  ngAfterContentInit() {
+    this.templates?.forEach((item) => {
+      switch (item.getType()) {
+        case "content":
+          this._contentTemplate = item.template;
+          break;
+        case "header":
+          this._headerTemplate = item.template;
+          break;
+        case "footer":
+          this._footerTemplate = item.template;
+          break;
+        case "closeicon":
+          this._closeIconTemplate = item.template;
+          break;
+        case "headless":
+          this._headlessTemplate = item.template;
+          break;
+        default:
+          this._contentTemplate = item.template;
+          break;
+      }
+    });
+  }
+  onKeyDown(event) {
+    if (event.code === "Escape") {
+      this.hide(false);
+    }
+  }
+  show() {
+    this.container.setAttribute(this.attrSelector, "");
+    if (this.autoZIndex) {
+      zindexutils.set("modal", this.container, this.baseZIndex || this.config.zIndex.modal);
+    }
+    if (this.modal) {
+      this.enableModality();
+    }
+    this.onShow.emit({});
+    this.visibleChange.emit(true);
+  }
+  hide(emit = true) {
+    if (emit) {
+      this.onHide.emit({});
+    }
+    if (this.modal) {
+      this.disableModality();
+    }
+  }
+  close(event) {
+    this.hide();
+    this.visibleChange.emit(false);
+    event.preventDefault();
+  }
+  enableModality() {
+    const activeDrawers = this.document.querySelectorAll(".p-drawer-active");
+    const activeDrawersLength = activeDrawers.length;
+    const zIndex = activeDrawersLength == 1 ? String(parseInt(this.container.style.zIndex) - 1) : String(parseInt(activeDrawers[activeDrawersLength - 1].style.zIndex) - 1);
+    if (!this.mask) {
+      this.mask = this.renderer.createElement("div");
+      this.renderer.setStyle(this.mask, "zIndex", zIndex);
+      setAttribute(this.mask, "style", this.maskStyle);
+      addClass(this.mask, "p-overlay-mask p-drawer-mask p-overlay-mask-enter");
+      if (this.dismissible) {
+        this.maskClickListener = this.renderer.listen(this.mask, "click", (event) => {
+          if (this.dismissible) {
+            this.close(event);
+          }
+        });
+      }
+      this.renderer.appendChild(this.document.body, this.mask);
+      if (this.blockScroll) {
+        blockBodyScroll();
+      }
+    }
+  }
+  disableModality() {
+    if (this.mask) {
+      addClass(this.mask, "p-overlay-mask-leave");
+      this.animationEndListener = this.renderer.listen(this.mask, "animationend", this.destroyModal.bind(this));
+    }
+  }
+  destroyModal() {
+    this.unbindMaskClickListener();
+    if (this.mask) {
+      this.renderer.removeChild(this.document.body, this.mask);
+    }
+    if (this.blockScroll) {
+      unblockBodyScroll();
+    }
+    this.unbindAnimationEndListener();
+    this.mask = null;
+  }
+  onAnimationStart(event) {
+    switch (event.toState) {
+      case "visible":
+        this.container = event.element;
+        this.appendContainer();
+        this.show();
+        if (this.closeOnEscape) {
+          this.bindDocumentEscapeListener();
+        }
+        break;
+    }
+  }
+  onAnimationEnd(event) {
+    switch (event.toState) {
+      case "void":
+        this.hide(false);
+        zindexutils.clear(this.container);
+        this.unbindGlobalListeners();
+        break;
+    }
+  }
+  appendContainer() {
+    if (this.appendTo) {
+      if (this.appendTo === "body") this.renderer.appendChild(this.document.body, this.container);
+      else appendChild(this.appendTo, this.container);
+    }
+  }
+  bindDocumentEscapeListener() {
+    const documentTarget = this.el ? this.el.nativeElement.ownerDocument : this.document;
+    this.documentEscapeListener = this.renderer.listen(documentTarget, "keydown", (event) => {
+      if (event.which == 27) {
+        if (parseInt(this.container.style.zIndex) === zindexutils.get(this.container)) {
+          this.close(event);
+        }
+      }
+    });
+  }
+  unbindDocumentEscapeListener() {
+    if (this.documentEscapeListener) {
+      this.documentEscapeListener();
+      this.documentEscapeListener = null;
+    }
+  }
+  unbindMaskClickListener() {
+    if (this.maskClickListener) {
+      this.maskClickListener();
+      this.maskClickListener = null;
+    }
+  }
+  unbindGlobalListeners() {
+    this.unbindMaskClickListener();
+    this.unbindDocumentEscapeListener();
+  }
+  unbindAnimationEndListener() {
+    if (this.animationEndListener && this.mask) {
+      this.animationEndListener();
+      this.animationEndListener = null;
+    }
+  }
+  ngOnDestroy() {
+    this.initialized = false;
+    if (this.visible && this.modal) {
+      this.destroyModal();
+    }
+    if (this.appendTo && this.container) {
+      this.renderer.appendChild(this.el.nativeElement, this.container);
+    }
+    if (this.container && this.autoZIndex) {
+      zindexutils.clear(this.container);
+    }
+    this.container = null;
+    this.unbindGlobalListeners();
+    this.unbindAnimationEndListener();
+  }
+  static \u0275fac = /* @__PURE__ */ (() => {
+    let \u0275Drawer_BaseFactory;
+    return function Drawer_Factory(__ngFactoryType__) {
+      return (\u0275Drawer_BaseFactory || (\u0275Drawer_BaseFactory = \u0275\u0275getInheritedFactory(_Drawer)))(__ngFactoryType__ || _Drawer);
+    };
+  })();
+  static \u0275cmp = /* @__PURE__ */ \u0275\u0275defineComponent({
+    type: _Drawer,
+    selectors: [["p-drawer"]],
+    contentQueries: function Drawer_ContentQueries(rf, ctx, dirIndex) {
+      if (rf & 1) {
+        \u0275\u0275contentQuery(dirIndex, _c02, 4);
+        \u0275\u0275contentQuery(dirIndex, _c12, 4);
+        \u0275\u0275contentQuery(dirIndex, _c22, 4);
+        \u0275\u0275contentQuery(dirIndex, _c32, 4);
+        \u0275\u0275contentQuery(dirIndex, _c42, 4);
+        \u0275\u0275contentQuery(dirIndex, PrimeTemplate, 4);
+      }
+      if (rf & 2) {
+        let _t;
+        \u0275\u0275queryRefresh(_t = \u0275\u0275loadQuery()) && (ctx.headerTemplate = _t.first);
+        \u0275\u0275queryRefresh(_t = \u0275\u0275loadQuery()) && (ctx.footerTemplate = _t.first);
+        \u0275\u0275queryRefresh(_t = \u0275\u0275loadQuery()) && (ctx.contentTemplate = _t.first);
+        \u0275\u0275queryRefresh(_t = \u0275\u0275loadQuery()) && (ctx.closeIconTemplate = _t.first);
+        \u0275\u0275queryRefresh(_t = \u0275\u0275loadQuery()) && (ctx.headlessTemplate = _t.first);
+        \u0275\u0275queryRefresh(_t = \u0275\u0275loadQuery()) && (ctx.templates = _t);
+      }
+    },
+    viewQuery: function Drawer_Query(rf, ctx) {
+      if (rf & 1) {
+        \u0275\u0275viewQuery(_c52, 5);
+        \u0275\u0275viewQuery(_c62, 5);
+        \u0275\u0275viewQuery(_c72, 5);
+      }
+      if (rf & 2) {
+        let _t;
+        \u0275\u0275queryRefresh(_t = \u0275\u0275loadQuery()) && (ctx.maskRef = _t.first);
+        \u0275\u0275queryRefresh(_t = \u0275\u0275loadQuery()) && (ctx.containerViewChild = _t.first);
+        \u0275\u0275queryRefresh(_t = \u0275\u0275loadQuery()) && (ctx.closeButtonViewChild = _t.first);
+      }
+    },
+    inputs: {
+      appendTo: "appendTo",
+      blockScroll: [2, "blockScroll", "blockScroll", booleanAttribute],
+      style: "style",
+      styleClass: "styleClass",
+      ariaCloseLabel: "ariaCloseLabel",
+      autoZIndex: [2, "autoZIndex", "autoZIndex", booleanAttribute],
+      baseZIndex: [2, "baseZIndex", "baseZIndex", numberAttribute],
+      modal: [2, "modal", "modal", booleanAttribute],
+      closeButtonProps: "closeButtonProps",
+      dismissible: [2, "dismissible", "dismissible", booleanAttribute],
+      showCloseIcon: [2, "showCloseIcon", "showCloseIcon", booleanAttribute],
+      closeOnEscape: [2, "closeOnEscape", "closeOnEscape", booleanAttribute],
+      transitionOptions: "transitionOptions",
+      visible: "visible",
+      position: "position",
+      fullScreen: "fullScreen",
+      header: "header",
+      maskStyle: "maskStyle",
+      closable: [2, "closable", "closable", booleanAttribute]
+    },
+    outputs: {
+      onShow: "onShow",
+      onHide: "onHide",
+      visibleChange: "visibleChange"
+    },
+    features: [\u0275\u0275ProvidersFeature([DrawerStyle]), \u0275\u0275InheritDefinitionFeature],
+    ngContentSelectors: _c82,
+    decls: 1,
+    vars: 1,
+    consts: [["container", ""], ["icon", ""], ["role", "complementary", 3, "ngClass", "style", "class", "keydown", 4, "ngIf"], ["role", "complementary", 3, "keydown", "ngClass"], [4, "ngTemplateOutlet"], [3, "ngClass"], [3, "class", 4, "ngIf"], [3, "ngClass", "buttonProps", "ariaLabel", "onClick", "keydown.enter", 4, "ngIf"], [4, "ngIf"], [3, "onClick", "keydown.enter", "ngClass", "buttonProps", "ariaLabel"]],
+    template: function Drawer_Template(rf, ctx) {
+      if (rf & 1) {
+        \u0275\u0275projectionDef();
+        \u0275\u0275template(0, Drawer_div_0_Template, 4, 21, "div", 2);
+      }
+      if (rf & 2) {
+        \u0275\u0275property("ngIf", ctx.visible);
+      }
+    },
+    dependencies: [CommonModule, NgClass, NgIf, NgTemplateOutlet, Button, TimesIcon, SharedModule],
+    encapsulation: 2,
+    data: {
+      animation: [trigger("panelState", [transition("void => visible", [useAnimation(showAnimation2)]), transition("visible => void", [useAnimation(hideAnimation2)])])]
+    },
+    changeDetection: 0
+  });
+};
+(() => {
+  (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(Drawer, [{
+    type: Component,
+    args: [{
+      selector: "p-drawer",
+      standalone: true,
+      imports: [CommonModule, Button, TimesIcon, SharedModule],
+      template: `
+        <div
+            #container
+            [ngClass]="{
+                'p-drawer': true,
+                'p-drawer-active': visible,
+                'p-drawer-left': position === 'left' && !fullScreen,
+                'p-drawer-right': position === 'right' && !fullScreen,
+                'p-drawer-top': position === 'top' && !fullScreen,
+                'p-drawer-bottom': position === 'bottom' && !fullScreen,
+                'p-drawer-full': fullScreen || position === 'full'
+            }"
+            *ngIf="visible"
+            [@panelState]="{ value: 'visible', params: { transform: transformOptions, transition: transitionOptions } }"
+            (@panelState.start)="onAnimationStart($event)"
+            (@panelState.done)="onAnimationEnd($event)"
+            [style]="style"
+            [class]="styleClass"
+            role="complementary"
+            [attr.data-pc-name]="'sidebar'"
+            [attr.data-pc-section]="'root'"
+            (keydown)="onKeyDown($event)"
+        >
+            @if (headlessTemplate || _headlessTemplate) {
+                <ng-container *ngTemplateOutlet="headlessTemplate || _headlessTemplate"></ng-container>
+            } @else {
+                <div [ngClass]="cx('header')" [attr.data-pc-section]="'header'">
+                    <ng-container *ngTemplateOutlet="headerTemplate || _headerTemplate"></ng-container>
+                    <div *ngIf="header" [class]="cx('title')">{{ header }}</div>
+                    <p-button
+                        *ngIf="showCloseIcon && closable"
+                        [ngClass]="cx('closeButton')"
+                        (onClick)="close($event)"
+                        (keydown.enter)="close($event)"
+                        [buttonProps]="closeButtonProps"
+                        [ariaLabel]="ariaCloseLabel"
+                        [attr.data-pc-section]="'closebutton'"
+                        [attr.data-pc-group-section]="'iconcontainer'"
+                    >
+                        <ng-template #icon>
+                            <TimesIcon *ngIf="!closeIconTemplate && !_closeIconTemplate" [attr.data-pc-section]="'closeicon'" />
+                            <ng-template *ngTemplateOutlet="closeIconTemplate || _closeIconTemplate"></ng-template>
+                        </ng-template>
+                    </p-button>
+                </div>
+
+                <div [ngClass]="cx('content')" [attr.data-pc-section]="'content'">
+                    <ng-content></ng-content>
+                    <ng-container *ngTemplateOutlet="contentTemplate || _contentTemplate"></ng-container>
+                </div>
+
+                <ng-container *ngIf="footerTemplate || _footerTemplate">
+                    <div [ngClass]="cx('footer')" [attr.data-pc-section]="'footer'">
+                        <ng-container *ngTemplateOutlet="footerTemplate || _footerTemplate"></ng-container>
+                    </div>
+                </ng-container>
+            }
+        </div>
+    `,
+      animations: [trigger("panelState", [transition("void => visible", [useAnimation(showAnimation2)]), transition("visible => void", [useAnimation(hideAnimation2)])])],
+      changeDetection: ChangeDetectionStrategy.OnPush,
+      encapsulation: ViewEncapsulation.None,
+      providers: [DrawerStyle]
+    }]
+  }], null, {
+    appendTo: [{
+      type: Input
+    }],
+    blockScroll: [{
+      type: Input,
+      args: [{
+        transform: booleanAttribute
+      }]
+    }],
+    style: [{
+      type: Input
+    }],
+    styleClass: [{
+      type: Input
+    }],
+    ariaCloseLabel: [{
+      type: Input
+    }],
+    autoZIndex: [{
+      type: Input,
+      args: [{
+        transform: booleanAttribute
+      }]
+    }],
+    baseZIndex: [{
+      type: Input,
+      args: [{
+        transform: numberAttribute
+      }]
+    }],
+    modal: [{
+      type: Input,
+      args: [{
+        transform: booleanAttribute
+      }]
+    }],
+    closeButtonProps: [{
+      type: Input
+    }],
+    dismissible: [{
+      type: Input,
+      args: [{
+        transform: booleanAttribute
+      }]
+    }],
+    showCloseIcon: [{
+      type: Input,
+      args: [{
+        transform: booleanAttribute
+      }]
+    }],
+    closeOnEscape: [{
+      type: Input,
+      args: [{
+        transform: booleanAttribute
+      }]
+    }],
+    transitionOptions: [{
+      type: Input
+    }],
+    visible: [{
+      type: Input
+    }],
+    position: [{
+      type: Input
+    }],
+    fullScreen: [{
+      type: Input
+    }],
+    header: [{
+      type: Input
+    }],
+    maskStyle: [{
+      type: Input
+    }],
+    closable: [{
+      type: Input,
+      args: [{
+        transform: booleanAttribute
+      }]
+    }],
+    onShow: [{
+      type: Output
+    }],
+    onHide: [{
+      type: Output
+    }],
+    visibleChange: [{
+      type: Output
+    }],
+    maskRef: [{
+      type: ViewChild,
+      args: ["maskRef"]
+    }],
+    containerViewChild: [{
+      type: ViewChild,
+      args: ["container"]
+    }],
+    closeButtonViewChild: [{
+      type: ViewChild,
+      args: ["closeButton"]
+    }],
+    headerTemplate: [{
+      type: ContentChild,
+      args: ["header", {
+        descendants: false
+      }]
+    }],
+    footerTemplate: [{
+      type: ContentChild,
+      args: ["footer", {
+        descendants: false
+      }]
+    }],
+    contentTemplate: [{
+      type: ContentChild,
+      args: ["content", {
+        descendants: false
+      }]
+    }],
+    closeIconTemplate: [{
+      type: ContentChild,
+      args: ["closeicon", {
+        descendants: false
+      }]
+    }],
+    headlessTemplate: [{
+      type: ContentChild,
+      args: ["headless", {
+        descendants: false
+      }]
+    }],
+    templates: [{
+      type: ContentChildren,
+      args: [PrimeTemplate]
+    }]
+  });
+})();
+var DrawerModule = class _DrawerModule {
+  static \u0275fac = function DrawerModule_Factory(__ngFactoryType__) {
+    return new (__ngFactoryType__ || _DrawerModule)();
+  };
+  static \u0275mod = /* @__PURE__ */ \u0275\u0275defineNgModule({
+    type: _DrawerModule,
+    imports: [Drawer, SharedModule],
+    exports: [Drawer, SharedModule]
+  });
+  static \u0275inj = /* @__PURE__ */ \u0275\u0275defineInjector({
+    imports: [Drawer, SharedModule, SharedModule]
+  });
+};
+(() => {
+  (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(DrawerModule, [{
+    type: NgModule,
+    args: [{
+      imports: [Drawer, SharedModule],
+      exports: [Drawer, SharedModule]
+    }]
+  }], null, null);
+})();
+
+// node_modules/primeng/fesm2022/primeng-slider.mjs
+var _c03 = ["sliderHandle"];
+var _c13 = ["sliderHandleStart"];
+var _c23 = ["sliderHandleEnd"];
+var _c33 = (a0, a1, a2, a3) => ({
+  "p-slider p-component": true,
+  "p-disabled": a0,
+  "p-slider-horizontal": a1,
+  "p-slider-vertical": a2,
+  "p-slider-animate": a3
+});
+var _c43 = (a0, a1) => ({
+  position: "absolute",
+  "inset-inline-start": a0,
+  width: a1
+});
+var _c53 = (a0, a1) => ({
+  position: "absolute",
+  bottom: a0,
+  height: a1
+});
+var _c63 = (a0) => ({
+  position: "absolute",
+  height: a0
+});
+var _c73 = (a0) => ({
+  position: "absolute",
+  width: a0
+});
+var _c83 = (a0, a1) => ({
+  position: "absolute",
+  "inset-inline-start": a0,
+  bottom: a1
+});
+var _c93 = (a0) => ({
+  "p-slider-handle-active": a0
+});
+function Slider_span_1_Template(rf, ctx) {
+  if (rf & 1) {
+    \u0275\u0275element(0, "span", 8);
+  }
+  if (rf & 2) {
+    const ctx_r0 = \u0275\u0275nextContext();
+    \u0275\u0275property("ngStyle", \u0275\u0275pureFunction2(2, _c43, ctx_r0.offset !== null && ctx_r0.offset !== void 0 ? ctx_r0.offset + "%" : ctx_r0.handleValues[0] + "%", ctx_r0.diff ? ctx_r0.diff + "%" : ctx_r0.handleValues[1] - ctx_r0.handleValues[0] + "%"));
+    \u0275\u0275attribute("data-pc-section", "range");
+  }
+}
+function Slider_span_2_Template(rf, ctx) {
+  if (rf & 1) {
+    \u0275\u0275element(0, "span", 8);
+  }
+  if (rf & 2) {
+    const ctx_r0 = \u0275\u0275nextContext();
+    \u0275\u0275property("ngStyle", \u0275\u0275pureFunction2(2, _c53, ctx_r0.offset !== null && ctx_r0.offset !== void 0 ? ctx_r0.offset + "%" : ctx_r0.handleValues[0] + "%", ctx_r0.diff ? ctx_r0.diff + "%" : ctx_r0.handleValues[1] - ctx_r0.handleValues[0] + "%"));
+    \u0275\u0275attribute("data-pc-section", "range");
+  }
+}
+function Slider_span_3_Template(rf, ctx) {
+  if (rf & 1) {
+    \u0275\u0275element(0, "span", 8);
+  }
+  if (rf & 2) {
+    const ctx_r0 = \u0275\u0275nextContext();
+    \u0275\u0275property("ngStyle", \u0275\u0275pureFunction1(2, _c63, ctx_r0.handleValue + "%"));
+    \u0275\u0275attribute("data-pc-section", "range");
+  }
+}
+function Slider_span_4_Template(rf, ctx) {
+  if (rf & 1) {
+    \u0275\u0275element(0, "span", 8);
+  }
+  if (rf & 2) {
+    const ctx_r0 = \u0275\u0275nextContext();
+    \u0275\u0275property("ngStyle", \u0275\u0275pureFunction1(2, _c73, ctx_r0.handleValue + "%"));
+    \u0275\u0275attribute("data-pc-section", "range");
+  }
+}
+function Slider_span_5_Template(rf, ctx) {
+  if (rf & 1) {
+    const _r2 = \u0275\u0275getCurrentView();
+    \u0275\u0275elementStart(0, "span", 9, 0);
+    \u0275\u0275listener("touchstart", function Slider_span_5_Template_span_touchstart_0_listener($event) {
+      \u0275\u0275restoreView(_r2);
+      const ctx_r0 = \u0275\u0275nextContext();
+      return \u0275\u0275resetView(ctx_r0.onDragStart($event));
+    })("touchmove", function Slider_span_5_Template_span_touchmove_0_listener($event) {
+      \u0275\u0275restoreView(_r2);
+      const ctx_r0 = \u0275\u0275nextContext();
+      return \u0275\u0275resetView(ctx_r0.onDrag($event));
+    })("touchend", function Slider_span_5_Template_span_touchend_0_listener($event) {
+      \u0275\u0275restoreView(_r2);
+      const ctx_r0 = \u0275\u0275nextContext();
+      return \u0275\u0275resetView(ctx_r0.onDragEnd($event));
+    })("mousedown", function Slider_span_5_Template_span_mousedown_0_listener($event) {
+      \u0275\u0275restoreView(_r2);
+      const ctx_r0 = \u0275\u0275nextContext();
+      return \u0275\u0275resetView(ctx_r0.onMouseDown($event));
+    })("keydown", function Slider_span_5_Template_span_keydown_0_listener($event) {
+      \u0275\u0275restoreView(_r2);
+      const ctx_r0 = \u0275\u0275nextContext();
+      return \u0275\u0275resetView(ctx_r0.onKeyDown($event));
+    });
+    \u0275\u0275elementEnd();
+  }
+  if (rf & 2) {
+    const ctx_r0 = \u0275\u0275nextContext();
+    \u0275\u0275styleProp("transition", ctx_r0.dragging ? "none" : null);
+    \u0275\u0275property("ngStyle", \u0275\u0275pureFunction2(12, _c83, ctx_r0.orientation == "horizontal" ? ctx_r0.handleValue + "%" : null, ctx_r0.orientation == "vertical" ? ctx_r0.handleValue + "%" : null))("pAutoFocus", ctx_r0.autofocus);
+    \u0275\u0275attribute("tabindex", ctx_r0.disabled ? null : ctx_r0.tabindex)("aria-valuemin", ctx_r0.min)("aria-valuenow", ctx_r0.value)("aria-valuemax", ctx_r0.max)("aria-labelledby", ctx_r0.ariaLabelledBy)("aria-label", ctx_r0.ariaLabel)("aria-orientation", ctx_r0.orientation)("data-pc-section", "handle");
+  }
+}
+function Slider_span_6_Template(rf, ctx) {
+  if (rf & 1) {
+    const _r3 = \u0275\u0275getCurrentView();
+    \u0275\u0275elementStart(0, "span", 10, 1);
+    \u0275\u0275listener("keydown", function Slider_span_6_Template_span_keydown_0_listener($event) {
+      \u0275\u0275restoreView(_r3);
+      const ctx_r0 = \u0275\u0275nextContext();
+      return \u0275\u0275resetView(ctx_r0.onKeyDown($event, 0));
+    })("mousedown", function Slider_span_6_Template_span_mousedown_0_listener($event) {
+      \u0275\u0275restoreView(_r3);
+      const ctx_r0 = \u0275\u0275nextContext();
+      return \u0275\u0275resetView(ctx_r0.onMouseDown($event, 0));
+    })("touchstart", function Slider_span_6_Template_span_touchstart_0_listener($event) {
+      \u0275\u0275restoreView(_r3);
+      const ctx_r0 = \u0275\u0275nextContext();
+      return \u0275\u0275resetView(ctx_r0.onDragStart($event, 0));
+    })("touchmove", function Slider_span_6_Template_span_touchmove_0_listener($event) {
+      \u0275\u0275restoreView(_r3);
+      const ctx_r0 = \u0275\u0275nextContext();
+      return \u0275\u0275resetView(ctx_r0.onDrag($event));
+    })("touchend", function Slider_span_6_Template_span_touchend_0_listener($event) {
+      \u0275\u0275restoreView(_r3);
+      const ctx_r0 = \u0275\u0275nextContext();
+      return \u0275\u0275resetView(ctx_r0.onDragEnd($event));
+    });
+    \u0275\u0275elementEnd();
+  }
+  if (rf & 2) {
+    const ctx_r0 = \u0275\u0275nextContext();
+    \u0275\u0275styleProp("transition", ctx_r0.dragging ? "none" : null);
+    \u0275\u0275property("ngStyle", \u0275\u0275pureFunction2(13, _c83, ctx_r0.rangeStartLeft, ctx_r0.rangeStartBottom))("ngClass", \u0275\u0275pureFunction1(16, _c93, ctx_r0.handleIndex == 0))("pAutoFocus", ctx_r0.autofocus);
+    \u0275\u0275attribute("tabindex", ctx_r0.disabled ? null : ctx_r0.tabindex)("aria-valuemin", ctx_r0.min)("aria-valuenow", ctx_r0.value ? ctx_r0.value[0] : null)("aria-valuemax", ctx_r0.max)("aria-labelledby", ctx_r0.ariaLabelledBy)("aria-label", ctx_r0.ariaLabel)("aria-orientation", ctx_r0.orientation)("data-pc-section", "startHandler");
+  }
+}
+function Slider_span_7_Template(rf, ctx) {
+  if (rf & 1) {
+    const _r4 = \u0275\u0275getCurrentView();
+    \u0275\u0275elementStart(0, "span", 11, 2);
+    \u0275\u0275listener("keydown", function Slider_span_7_Template_span_keydown_0_listener($event) {
+      \u0275\u0275restoreView(_r4);
+      const ctx_r0 = \u0275\u0275nextContext();
+      return \u0275\u0275resetView(ctx_r0.onKeyDown($event, 1));
+    })("mousedown", function Slider_span_7_Template_span_mousedown_0_listener($event) {
+      \u0275\u0275restoreView(_r4);
+      const ctx_r0 = \u0275\u0275nextContext();
+      return \u0275\u0275resetView(ctx_r0.onMouseDown($event, 1));
+    })("touchstart", function Slider_span_7_Template_span_touchstart_0_listener($event) {
+      \u0275\u0275restoreView(_r4);
+      const ctx_r0 = \u0275\u0275nextContext();
+      return \u0275\u0275resetView(ctx_r0.onDragStart($event, 1));
+    })("touchmove", function Slider_span_7_Template_span_touchmove_0_listener($event) {
+      \u0275\u0275restoreView(_r4);
+      const ctx_r0 = \u0275\u0275nextContext();
+      return \u0275\u0275resetView(ctx_r0.onDrag($event));
+    })("touchend", function Slider_span_7_Template_span_touchend_0_listener($event) {
+      \u0275\u0275restoreView(_r4);
+      const ctx_r0 = \u0275\u0275nextContext();
+      return \u0275\u0275resetView(ctx_r0.onDragEnd($event));
+    });
+    \u0275\u0275elementEnd();
+  }
+  if (rf & 2) {
+    const ctx_r0 = \u0275\u0275nextContext();
+    \u0275\u0275styleProp("transition", ctx_r0.dragging ? "none" : null);
+    \u0275\u0275property("ngStyle", \u0275\u0275pureFunction2(12, _c83, ctx_r0.rangeEndLeft, ctx_r0.rangeEndBottom))("ngClass", \u0275\u0275pureFunction1(15, _c93, ctx_r0.handleIndex == 1));
+    \u0275\u0275attribute("tabindex", ctx_r0.disabled ? null : ctx_r0.tabindex)("aria-valuemin", ctx_r0.min)("aria-valuenow", ctx_r0.value ? ctx_r0.value[1] : null)("aria-valuemax", ctx_r0.max)("aria-labelledby", ctx_r0.ariaLabelledBy)("aria-label", ctx_r0.ariaLabel)("aria-orientation", ctx_r0.orientation)("data-pc-section", "endHandler");
+  }
+}
+var theme3 = ({
+  dt
+}) => `
+.p-slider {
+    position: relative;
+    background: ${dt("slider.track.background")};
+    border-radius: ${dt("slider.border.radius")};
+}
+
+.p-slider-handle {
+    cursor: grab;
+    touch-action: none;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: ${dt("slider.handle.height")};
+    width: ${dt("slider.handle.width")};
+    background: ${dt("slider.handle.background")};
+    border-radius: ${dt("slider.handle.border.radius")};
+    transition: background ${dt("slider.transition.duration")}, color ${dt("slider.transition.duration")}, border-color ${dt("slider.transition.duration")}, box-shadow ${dt("slider.transition.duration")}, outline-color ${dt("slider.transition.duration")};
+    outline-color: transparent;
+}
+
+.p-slider-handle::before {
+    content: "";
+    width: ${dt("slider.handle.content.width")};
+    height: ${dt("slider.handle.content.height")};
+    display: block;
+    background: ${dt("slider.handle.content.background")};
+    border-radius: ${dt("slider.handle.content.border.radius")};
+    box-shadow: ${dt("slider.handle.content.shadow")};
+    transition: background ${dt("slider.transition.duration")};
+}
+
+.p-slider:not(.p-disabled) .p-slider-handle:hover {
+    background: ${dt("slider.handle.hover.background")};
+}
+
+.p-slider:not(.p-disabled) .p-slider-handle:hover::before {
+    background: ${dt("slider.handle.content.hover.background")};
+}
+
+.p-slider-handle:focus-visible {
+    border-color: ${dt("slider.handle.focus.border.color")};
+    box-shadow: ${dt("slider.handle.focus.ring.shadow")};
+    outline: ${dt("slider.handle.focus.ring.width")} ${dt("slider.handle.focus.ring.style")} ${dt("slider.handle.focus.ring.color")};
+    outline-offset: ${dt("slider.handle.focus.ring.offset")};
+}
+
+.p-slider-range {
+    display: block;
+    background: ${dt("slider.range.background")};
+    border-radius: ${dt("slider.border.radius")};
+}
+
+.p-slider.p-slider-horizontal {
+    height: ${dt("slider.track.size")};
+}
+
+.p-slider-horizontal .p-slider-range {
+    top: 0;
+    inset-inline-start: 0;
+    height: 100%;
+}
+
+.p-slider-horizontal .p-slider-handle {
+    top: 50%;
+    margin-top: calc(-1 * calc(${dt("slider.handle.height")} / 2));
+    margin-inline-start: calc(-1 * calc(${dt("slider.handle.width")} / 2));
+}
+
+.p-slider-vertical {
+    min-height: 100px;
+    width: ${dt("slider.track.size")};
+}
+
+.p-slider-vertical .p-slider-handle {
+    inset-inline-start: 50%;
+    margin-inline-start: calc(-1 * calc(${dt("slider.handle.width")} / 2));
+    margin-bottom: calc(-1 * calc(${dt("slider.handle.height")} / 2));
+}
+
+.p-slider-vertical .p-slider-range {
+    bottom: 0;
+    inset-inline-start: 0;
+    width: 100%;
+}
+`;
+var inlineStyles2 = {
+  handle: {
+    position: "absolute"
+  },
+  range: {
+    position: "absolute"
+  }
+};
+var classes3 = {
+  root: ({
+    props
+  }) => ["p-slider p-component", {
+    "p-disabled": props.disabled,
+    "p-slider-horizontal": props.orientation === "horizontal",
+    "p-slider-vertical": props.orientation === "vertical"
+  }],
+  range: "p-slider-range",
+  handle: "p-slider-handle"
+};
+var SliderStyle = class _SliderStyle extends BaseStyle {
+  name = "slider";
+  theme = theme3;
+  classes = classes3;
+  inlineStyles = inlineStyles2;
+  static \u0275fac = /* @__PURE__ */ (() => {
+    let \u0275SliderStyle_BaseFactory;
+    return function SliderStyle_Factory(__ngFactoryType__) {
+      return (\u0275SliderStyle_BaseFactory || (\u0275SliderStyle_BaseFactory = \u0275\u0275getInheritedFactory(_SliderStyle)))(__ngFactoryType__ || _SliderStyle);
+    };
+  })();
+  static \u0275prov = /* @__PURE__ */ \u0275\u0275defineInjectable({
+    token: _SliderStyle,
+    factory: _SliderStyle.\u0275fac
+  });
+};
+(() => {
+  (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(SliderStyle, [{
+    type: Injectable
+  }], null, null);
+})();
+var SliderClasses;
+(function(SliderClasses2) {
+  SliderClasses2["root"] = "p-slider";
+  SliderClasses2["range"] = "p-slider-range";
+  SliderClasses2["handle"] = "p-slider-handle";
+})(SliderClasses || (SliderClasses = {}));
+var SLIDER_VALUE_ACCESSOR = {
+  provide: NG_VALUE_ACCESSOR,
+  useExisting: forwardRef(() => Slider),
+  multi: true
+};
+var Slider = class _Slider extends BaseComponent {
+  /**
+   * When enabled, displays an animation on click of the slider bar.
+   * @group Props
+   */
+  animate;
+  /**
+   * When present, it specifies that the element should be disabled.
+   * @group Props
+   */
+  disabled;
+  /**
+   * Mininum boundary value.
+   * @group Props
+   */
+  min = 0;
+  /**
+   * Maximum boundary value.
+   * @group Props
+   */
+  max = 100;
+  /**
+   * Orientation of the slider.
+   * @group Props
+   */
+  orientation = "horizontal";
+  /**
+   * Step factor to increment/decrement the value.
+   * @group Props
+   */
+  step;
+  /**
+   * When specified, allows two boundary values to be picked.
+   * @group Props
+   */
+  range;
+  /**
+   * Inline style of the component.
+   * @group Props
+   */
+  style;
+  /**
+   * Style class of the component.
+   * @group Props
+   */
+  styleClass;
+  /**
+   * Defines a string that labels the input for accessibility.
+   * @group Props
+   */
+  ariaLabel;
+  /**
+   * Establishes relationships between the component and label(s) where its value should be one or more element IDs.
+   * @group Props
+   */
+  ariaLabelledBy;
+  /**
+   * Index of the element in tabbing order.
+   * @group Props
+   */
+  tabindex = 0;
+  /**
+   * When present, it specifies that the component should automatically get focus on load.
+   * @group Props
+   */
+  autofocus;
+  /**
+   * Callback to invoke on value change.
+   * @param {SliderChangeEvent} event - Custom value change event.
+   * @group Emits
+   */
+  onChange = new EventEmitter();
+  /**
+   * Callback to invoke when slide ended.
+   * @param {SliderSlideEndEvent} event - Custom slide end event.
+   * @group Emits
+   */
+  onSlideEnd = new EventEmitter();
+  sliderHandle;
+  sliderHandleStart;
+  sliderHandleEnd;
+  _componentStyle = inject(SliderStyle);
+  value;
+  values;
+  handleValue;
+  handleValues = [];
+  diff;
+  offset;
+  bottom;
+  onModelChange = () => {
+  };
+  onModelTouched = () => {
+  };
+  dragging;
+  dragListener;
+  mouseupListener;
+  initX;
+  initY;
+  barWidth;
+  barHeight;
+  sliderHandleClick;
+  handleIndex = 0;
+  startHandleValue;
+  startx;
+  starty;
+  ngZone = inject(NgZone);
+  onMouseDown(event, index) {
+    if (this.disabled) {
+      return;
+    }
+    this.dragging = true;
+    this.updateDomData();
+    this.sliderHandleClick = true;
+    if (this.range && this.handleValues && this.handleValues[0] === this.max) {
+      this.handleIndex = 0;
+    } else {
+      this.handleIndex = index;
+    }
+    this.bindDragListeners();
+    event.target.focus();
+    event.preventDefault();
+    if (this.animate) {
+      removeClass(this.el.nativeElement.children[0], "p-slider-animate");
+    }
+  }
+  onDragStart(event, index) {
+    if (this.disabled) {
+      return;
+    }
+    var touchobj = event.changedTouches[0];
+    this.startHandleValue = this.range ? this.handleValues[index] : this.handleValue;
+    this.dragging = true;
+    if (this.range && this.handleValues && this.handleValues[0] === this.max) {
+      this.handleIndex = 0;
+    } else {
+      this.handleIndex = index;
+    }
+    if (this.orientation === "horizontal") {
+      this.startx = parseInt(touchobj.clientX, 10);
+      this.barWidth = this.el.nativeElement.children[0].offsetWidth;
+    } else {
+      this.starty = parseInt(touchobj.clientY, 10);
+      this.barHeight = this.el.nativeElement.children[0].offsetHeight;
+    }
+    if (this.animate) {
+      removeClass(this.el.nativeElement.children[0], "p-slider-animate");
+    }
+    event.preventDefault();
+  }
+  onDrag(event) {
+    if (this.disabled) {
+      return;
+    }
+    var touchobj = event.changedTouches[0], handleValue = 0;
+    if (this.orientation === "horizontal") {
+      handleValue = Math.floor((parseInt(touchobj.clientX, 10) - this.startx) * 100 / this.barWidth) + this.startHandleValue;
+    } else {
+      handleValue = Math.floor((this.starty - parseInt(touchobj.clientY, 10)) * 100 / this.barHeight) + this.startHandleValue;
+    }
+    this.setValueFromHandle(event, handleValue);
+    event.preventDefault();
+  }
+  onDragEnd(event) {
+    if (this.disabled) {
+      return;
+    }
+    this.dragging = false;
+    if (this.range) this.onSlideEnd.emit({
+      originalEvent: event,
+      values: this.values
+    });
+    else this.onSlideEnd.emit({
+      originalEvent: event,
+      value: this.value
+    });
+    if (this.animate) {
+      addClass(this.el.nativeElement.children[0], "p-slider-animate");
+    }
+    event.preventDefault();
+  }
+  onBarClick(event) {
+    if (this.disabled) {
+      return;
+    }
+    if (!this.sliderHandleClick) {
+      this.updateDomData();
+      this.handleChange(event);
+      if (this.range) this.onSlideEnd.emit({
+        originalEvent: event,
+        values: this.values
+      });
+      else this.onSlideEnd.emit({
+        originalEvent: event,
+        value: this.value
+      });
+    }
+    this.sliderHandleClick = false;
+  }
+  onKeyDown(event, index) {
+    this.handleIndex = index;
+    switch (event.code) {
+      case "ArrowDown":
+      case "ArrowLeft":
+        this.decrementValue(event, index);
+        event.preventDefault();
+        break;
+      case "ArrowUp":
+      case "ArrowRight":
+        this.incrementValue(event, index);
+        event.preventDefault();
+        break;
+      case "PageDown":
+        this.decrementValue(event, index, true);
+        event.preventDefault();
+        break;
+      case "PageUp":
+        this.incrementValue(event, index, true);
+        event.preventDefault();
+        break;
+      case "Home":
+        this.updateValue(this.min, event);
+        event.preventDefault();
+        break;
+      case "End":
+        this.updateValue(this.max, event);
+        event.preventDefault();
+        break;
+      default:
+        break;
+    }
+  }
+  decrementValue(event, index, pageKey = false) {
+    let newValue;
+    if (this.range) {
+      if (this.step) newValue = this.values[index] - this.step;
+      else newValue = this.values[index] - 1;
+    } else {
+      if (this.step) newValue = this.value - this.step;
+      else if (!this.step && pageKey) newValue = this.value - 10;
+      else newValue = this.value - 1;
+    }
+    this.updateValue(newValue, event);
+    event.preventDefault();
+  }
+  incrementValue(event, index, pageKey = false) {
+    let newValue;
+    if (this.range) {
+      if (this.step) newValue = this.values[index] + this.step;
+      else newValue = this.values[index] + 1;
+    } else {
+      if (this.step) newValue = this.value + this.step;
+      else if (!this.step && pageKey) newValue = this.value + 10;
+      else newValue = this.value + 1;
+    }
+    this.updateValue(newValue, event);
+    event.preventDefault();
+  }
+  handleChange(event) {
+    let handleValue = this.calculateHandleValue(event);
+    this.setValueFromHandle(event, handleValue);
+  }
+  bindDragListeners() {
+    if (isPlatformBrowser(this.platformId)) {
+      this.ngZone.runOutsideAngular(() => {
+        const documentTarget = this.el ? this.el.nativeElement.ownerDocument : this.document;
+        if (!this.dragListener) {
+          this.dragListener = this.renderer.listen(documentTarget, "mousemove", (event) => {
+            if (this.dragging) {
+              this.ngZone.run(() => {
+                this.handleChange(event);
+              });
+            }
+          });
+        }
+        if (!this.mouseupListener) {
+          this.mouseupListener = this.renderer.listen(documentTarget, "mouseup", (event) => {
+            if (this.dragging) {
+              this.dragging = false;
+              this.ngZone.run(() => {
+                if (this.range) this.onSlideEnd.emit({
+                  originalEvent: event,
+                  values: this.values
+                });
+                else this.onSlideEnd.emit({
+                  originalEvent: event,
+                  value: this.value
+                });
+                if (this.animate) {
+                  addClass(this.el.nativeElement.children[0], "p-slider-animate");
+                }
+              });
+            }
+          });
+        }
+      });
+    }
+  }
+  unbindDragListeners() {
+    if (this.dragListener) {
+      this.dragListener();
+      this.dragListener = null;
+    }
+    if (this.mouseupListener) {
+      this.mouseupListener();
+      this.mouseupListener = null;
+    }
+  }
+  setValueFromHandle(event, handleValue) {
+    let newValue = this.getValueFromHandle(handleValue);
+    if (this.range) {
+      if (this.step) {
+        this.handleStepChange(newValue, this.values[this.handleIndex]);
+      } else {
+        this.handleValues[this.handleIndex] = handleValue;
+        this.updateValue(newValue, event);
+      }
+    } else {
+      if (this.step) {
+        this.handleStepChange(newValue, this.value);
+      } else {
+        this.handleValue = handleValue;
+        this.updateValue(newValue, event);
+      }
+    }
+    this.cd.markForCheck();
+  }
+  handleStepChange(newValue, oldValue) {
+    let diff = newValue - oldValue;
+    let val = oldValue;
+    let _step = this.step;
+    if (diff < 0) {
+      val = oldValue + Math.ceil(newValue / _step - oldValue / _step) * _step;
+    } else if (diff > 0) {
+      val = oldValue + Math.floor(newValue / _step - oldValue / _step) * _step;
+    }
+    this.updateValue(val);
+    this.updateHandleValue();
+  }
+  writeValue(value) {
+    if (this.range) this.values = value || [0, 0];
+    else this.value = value || 0;
+    this.updateHandleValue();
+    this.updateDiffAndOffset();
+    this.cd.markForCheck();
+  }
+  registerOnChange(fn) {
+    this.onModelChange = fn;
+  }
+  registerOnTouched(fn) {
+    this.onModelTouched = fn;
+  }
+  setDisabledState(val) {
+    this.disabled = val;
+    this.cd.markForCheck();
+  }
+  get rangeStartLeft() {
+    if (!this.isVertical()) return this.handleValues[0] > 100 ? "100%" : this.handleValues[0] + "%";
+    return null;
+  }
+  get rangeStartBottom() {
+    return this.isVertical() ? this.handleValues[0] + "%" : "auto";
+  }
+  get rangeEndLeft() {
+    return this.isVertical() ? null : this.handleValues[1] + "%";
+  }
+  get rangeEndBottom() {
+    return this.isVertical() ? this.handleValues[1] + "%" : "auto";
+  }
+  isVertical() {
+    return this.orientation === "vertical";
+  }
+  updateDomData() {
+    let rect = this.el.nativeElement.children[0].getBoundingClientRect();
+    this.initX = rect.left + getWindowScrollLeft();
+    this.initY = rect.top + getWindowScrollTop();
+    this.barWidth = this.el.nativeElement.children[0].offsetWidth;
+    this.barHeight = this.el.nativeElement.children[0].offsetHeight;
+  }
+  calculateHandleValue(event) {
+    if (this.orientation === "horizontal") {
+      if (isRTL(this.el.nativeElement)) {
+        return (this.initX + this.barWidth - event.pageX) * 100 / this.barWidth;
+      } else {
+        return (event.pageX - this.initX) * 100 / this.barWidth;
+      }
+    } else {
+      return (this.initY + this.barHeight - event.pageY) * 100 / this.barHeight;
+    }
+  }
+  updateHandleValue() {
+    if (this.range) {
+      this.handleValues[0] = (this.values[0] < this.min ? 0 : this.values[0] - this.min) * 100 / (this.max - this.min);
+      this.handleValues[1] = (this.values[1] > this.max ? 100 : this.values[1] - this.min) * 100 / (this.max - this.min);
+    } else {
+      if (this.value < this.min) this.handleValue = 0;
+      else if (this.value > this.max) this.handleValue = 100;
+      else this.handleValue = (this.value - this.min) * 100 / (this.max - this.min);
+    }
+    if (this.step) {
+      this.updateDiffAndOffset();
+    }
+  }
+  updateDiffAndOffset() {
+    this.diff = this.getDiff();
+    this.offset = this.getOffset();
+  }
+  getDiff() {
+    return Math.abs(this.handleValues[0] - this.handleValues[1]);
+  }
+  getOffset() {
+    return Math.min(this.handleValues[0], this.handleValues[1]);
+  }
+  updateValue(val, event) {
+    if (this.range) {
+      let value = val;
+      if (this.handleIndex == 0) {
+        if (value < this.min) {
+          value = this.min;
+          this.handleValues[0] = 0;
+        } else if (value > this.values[1]) {
+          if (value > this.max) {
+            value = this.max;
+            this.handleValues[0] = 100;
+          }
+        }
+        this.sliderHandleStart?.nativeElement.focus();
+      } else {
+        if (value > this.max) {
+          value = this.max;
+          this.handleValues[1] = 100;
+          this.offset = this.handleValues[1];
+        } else if (value < this.min) {
+          value = this.min;
+          this.handleValues[1] = 0;
+        } else if (value < this.values[0]) {
+          this.offset = this.handleValues[1];
+        }
+        this.sliderHandleEnd?.nativeElement.focus();
+      }
+      if (this.step) {
+        this.updateHandleValue();
+      } else {
+        this.updateDiffAndOffset();
+      }
+      this.values[this.handleIndex] = this.getNormalizedValue(value);
+      let newValues = [this.minVal, this.maxVal];
+      this.onModelChange(newValues);
+      this.onChange.emit({
+        event,
+        values: this.values
+      });
+    } else {
+      if (val < this.min) {
+        val = this.min;
+        this.handleValue = 0;
+      } else if (val > this.max) {
+        val = this.max;
+        this.handleValue = 100;
+      }
+      this.value = this.getNormalizedValue(val);
+      this.onModelChange(this.value);
+      this.onChange.emit({
+        event,
+        value: this.value
+      });
+      this.sliderHandle?.nativeElement.focus();
+    }
+    this.updateHandleValue();
+  }
+  getValueFromHandle(handleValue) {
+    return (this.max - this.min) * (handleValue / 100) + this.min;
+  }
+  getDecimalsCount(value) {
+    if (value && Math.floor(value) !== value) return value.toString().split(".")[1].length || 0;
+    return 0;
+  }
+  getNormalizedValue(val) {
+    let decimalsCount = this.getDecimalsCount(this.step);
+    if (decimalsCount > 0) {
+      return +parseFloat(val.toString()).toFixed(decimalsCount);
+    } else {
+      return Math.floor(val);
+    }
+  }
+  ngOnDestroy() {
+    this.unbindDragListeners();
+    super.ngOnDestroy();
+  }
+  get minVal() {
+    return Math.min(this.values[1], this.values[0]);
+  }
+  get maxVal() {
+    return Math.max(this.values[1], this.values[0]);
+  }
+  static \u0275fac = /* @__PURE__ */ (() => {
+    let \u0275Slider_BaseFactory;
+    return function Slider_Factory(__ngFactoryType__) {
+      return (\u0275Slider_BaseFactory || (\u0275Slider_BaseFactory = \u0275\u0275getInheritedFactory(_Slider)))(__ngFactoryType__ || _Slider);
+    };
+  })();
+  static \u0275cmp = /* @__PURE__ */ \u0275\u0275defineComponent({
+    type: _Slider,
+    selectors: [["p-slider"]],
+    viewQuery: function Slider_Query(rf, ctx) {
+      if (rf & 1) {
+        \u0275\u0275viewQuery(_c03, 5);
+        \u0275\u0275viewQuery(_c13, 5);
+        \u0275\u0275viewQuery(_c23, 5);
+      }
+      if (rf & 2) {
+        let _t;
+        \u0275\u0275queryRefresh(_t = \u0275\u0275loadQuery()) && (ctx.sliderHandle = _t.first);
+        \u0275\u0275queryRefresh(_t = \u0275\u0275loadQuery()) && (ctx.sliderHandleStart = _t.first);
+        \u0275\u0275queryRefresh(_t = \u0275\u0275loadQuery()) && (ctx.sliderHandleEnd = _t.first);
+      }
+    },
+    inputs: {
+      animate: [2, "animate", "animate", booleanAttribute],
+      disabled: [2, "disabled", "disabled", booleanAttribute],
+      min: [2, "min", "min", numberAttribute],
+      max: [2, "max", "max", numberAttribute],
+      orientation: "orientation",
+      step: [2, "step", "step", numberAttribute],
+      range: [2, "range", "range", booleanAttribute],
+      style: "style",
+      styleClass: "styleClass",
+      ariaLabel: "ariaLabel",
+      ariaLabelledBy: "ariaLabelledBy",
+      tabindex: [2, "tabindex", "tabindex", numberAttribute],
+      autofocus: [2, "autofocus", "autofocus", booleanAttribute]
+    },
+    outputs: {
+      onChange: "onChange",
+      onSlideEnd: "onSlideEnd"
+    },
+    features: [\u0275\u0275ProvidersFeature([SLIDER_VALUE_ACCESSOR, SliderStyle]), \u0275\u0275InheritDefinitionFeature],
+    decls: 8,
+    vars: 18,
+    consts: [["sliderHandle", ""], ["sliderHandleStart", ""], ["sliderHandleEnd", ""], [3, "click", "ngStyle", "ngClass"], ["class", "p-slider-range", 3, "ngStyle", 4, "ngIf"], ["class", "p-slider-handle", "role", "slider", 3, "transition", "ngStyle", "pAutoFocus", "touchstart", "touchmove", "touchend", "mousedown", "keydown", 4, "ngIf"], ["class", "p-slider-handle", "role", "slider", 3, "transition", "ngStyle", "ngClass", "pAutoFocus", "keydown", "mousedown", "touchstart", "touchmove", "touchend", 4, "ngIf"], ["class", "p-slider-handle", "role", "slider", 3, "transition", "ngStyle", "ngClass", "keydown", "mousedown", "touchstart", "touchmove", "touchend", 4, "ngIf"], [1, "p-slider-range", 3, "ngStyle"], ["role", "slider", 1, "p-slider-handle", 3, "touchstart", "touchmove", "touchend", "mousedown", "keydown", "ngStyle", "pAutoFocus"], ["role", "slider", 1, "p-slider-handle", 3, "keydown", "mousedown", "touchstart", "touchmove", "touchend", "ngStyle", "ngClass", "pAutoFocus"], ["role", "slider", 1, "p-slider-handle", 3, "keydown", "mousedown", "touchstart", "touchmove", "touchend", "ngStyle", "ngClass"]],
+    template: function Slider_Template(rf, ctx) {
+      if (rf & 1) {
+        \u0275\u0275elementStart(0, "div", 3);
+        \u0275\u0275listener("click", function Slider_Template_div_click_0_listener($event) {
+          return ctx.onBarClick($event);
+        });
+        \u0275\u0275template(1, Slider_span_1_Template, 1, 5, "span", 4)(2, Slider_span_2_Template, 1, 5, "span", 4)(3, Slider_span_3_Template, 1, 4, "span", 4)(4, Slider_span_4_Template, 1, 4, "span", 4)(5, Slider_span_5_Template, 2, 15, "span", 5)(6, Slider_span_6_Template, 2, 18, "span", 6)(7, Slider_span_7_Template, 2, 17, "span", 7);
+        \u0275\u0275elementEnd();
+      }
+      if (rf & 2) {
+        \u0275\u0275classMap(ctx.styleClass);
+        \u0275\u0275property("ngStyle", ctx.style)("ngClass", \u0275\u0275pureFunction4(13, _c33, ctx.disabled, ctx.orientation == "horizontal", ctx.orientation == "vertical", ctx.animate));
+        \u0275\u0275attribute("data-pc-name", "slider")("data-pc-section", "root");
+        \u0275\u0275advance();
+        \u0275\u0275property("ngIf", ctx.range && ctx.orientation == "horizontal");
+        \u0275\u0275advance();
+        \u0275\u0275property("ngIf", ctx.range && ctx.orientation == "vertical");
+        \u0275\u0275advance();
+        \u0275\u0275property("ngIf", !ctx.range && ctx.orientation == "vertical");
+        \u0275\u0275advance();
+        \u0275\u0275property("ngIf", !ctx.range && ctx.orientation == "horizontal");
+        \u0275\u0275advance();
+        \u0275\u0275property("ngIf", !ctx.range);
+        \u0275\u0275advance();
+        \u0275\u0275property("ngIf", ctx.range);
+        \u0275\u0275advance();
+        \u0275\u0275property("ngIf", ctx.range);
+      }
+    },
+    dependencies: [CommonModule, NgClass, NgIf, NgStyle, AutoFocus, SharedModule],
+    encapsulation: 2,
+    changeDetection: 0
+  });
+};
+(() => {
+  (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(Slider, [{
+    type: Component,
+    args: [{
+      selector: "p-slider",
+      standalone: true,
+      imports: [CommonModule, AutoFocus, SharedModule],
+      template: `
+        <div
+            [ngStyle]="style"
+            [class]="styleClass"
+            [ngClass]="{
+                'p-slider p-component': true,
+                'p-disabled': disabled,
+                'p-slider-horizontal': orientation == 'horizontal',
+                'p-slider-vertical': orientation == 'vertical',
+                'p-slider-animate': animate
+            }"
+            (click)="onBarClick($event)"
+            [attr.data-pc-name]="'slider'"
+            [attr.data-pc-section]="'root'"
+        >
+            <span
+                *ngIf="range && orientation == 'horizontal'"
+                class="p-slider-range"
+                [ngStyle]="{
+                    position: 'absolute',
+                    'inset-inline-start': offset !== null && offset !== undefined ? offset + '%' : handleValues[0] + '%',
+                    width: diff ? diff + '%' : handleValues[1] - handleValues[0] + '%'
+                }"
+                [attr.data-pc-section]="'range'"
+            ></span>
+            <span
+                *ngIf="range && orientation == 'vertical'"
+                class="p-slider-range"
+                [ngStyle]="{
+                    position: 'absolute',
+                    bottom: offset !== null && offset !== undefined ? offset + '%' : handleValues[0] + '%',
+                    height: diff ? diff + '%' : handleValues[1] - handleValues[0] + '%'
+                }"
+                [attr.data-pc-section]="'range'"
+            ></span>
+            <span *ngIf="!range && orientation == 'vertical'" class="p-slider-range" [attr.data-pc-section]="'range'" [ngStyle]="{ position: 'absolute', height: handleValue + '%' }"></span>
+            <span *ngIf="!range && orientation == 'horizontal'" class="p-slider-range" [attr.data-pc-section]="'range'" [ngStyle]="{ position: 'absolute', width: handleValue + '%' }"></span>
+            <span
+                *ngIf="!range"
+                #sliderHandle
+                class="p-slider-handle"
+                [style.transition]="dragging ? 'none' : null"
+                [ngStyle]="{
+                    position: 'absolute',
+                    'inset-inline-start': orientation == 'horizontal' ? handleValue + '%' : null,
+                    bottom: orientation == 'vertical' ? handleValue + '%' : null
+                }"
+                (touchstart)="onDragStart($event)"
+                (touchmove)="onDrag($event)"
+                (touchend)="onDragEnd($event)"
+                (mousedown)="onMouseDown($event)"
+                (keydown)="onKeyDown($event)"
+                [attr.tabindex]="disabled ? null : tabindex"
+                role="slider"
+                [attr.aria-valuemin]="min"
+                [attr.aria-valuenow]="value"
+                [attr.aria-valuemax]="max"
+                [attr.aria-labelledby]="ariaLabelledBy"
+                [attr.aria-label]="ariaLabel"
+                [attr.aria-orientation]="orientation"
+                [attr.data-pc-section]="'handle'"
+                [pAutoFocus]="autofocus"
+            ></span>
+            <span
+                *ngIf="range"
+                #sliderHandleStart
+                [style.transition]="dragging ? 'none' : null"
+                class="p-slider-handle"
+                [ngStyle]="{ position: 'absolute', 'inset-inline-start': rangeStartLeft, bottom: rangeStartBottom }"
+                [ngClass]="{ 'p-slider-handle-active': handleIndex == 0 }"
+                (keydown)="onKeyDown($event, 0)"
+                (mousedown)="onMouseDown($event, 0)"
+                (touchstart)="onDragStart($event, 0)"
+                (touchmove)="onDrag($event)"
+                (touchend)="onDragEnd($event)"
+                [attr.tabindex]="disabled ? null : tabindex"
+                role="slider"
+                [attr.aria-valuemin]="min"
+                [attr.aria-valuenow]="value ? value[0] : null"
+                [attr.aria-valuemax]="max"
+                [attr.aria-labelledby]="ariaLabelledBy"
+                [attr.aria-label]="ariaLabel"
+                [attr.aria-orientation]="orientation"
+                [attr.data-pc-section]="'startHandler'"
+                [pAutoFocus]="autofocus"
+            ></span>
+            <span
+                *ngIf="range"
+                #sliderHandleEnd
+                [style.transition]="dragging ? 'none' : null"
+                class="p-slider-handle"
+                [ngStyle]="{ position: 'absolute', 'inset-inline-start': rangeEndLeft, bottom: rangeEndBottom }"
+                [ngClass]="{ 'p-slider-handle-active': handleIndex == 1 }"
+                (keydown)="onKeyDown($event, 1)"
+                (mousedown)="onMouseDown($event, 1)"
+                (touchstart)="onDragStart($event, 1)"
+                (touchmove)="onDrag($event)"
+                (touchend)="onDragEnd($event)"
+                [attr.tabindex]="disabled ? null : tabindex"
+                role="slider"
+                [attr.aria-valuemin]="min"
+                [attr.aria-valuenow]="value ? value[1] : null"
+                [attr.aria-valuemax]="max"
+                [attr.aria-labelledby]="ariaLabelledBy"
+                [attr.aria-label]="ariaLabel"
+                [attr.aria-orientation]="orientation"
+                [attr.data-pc-section]="'endHandler'"
+            ></span>
+        </div>
+    `,
+      providers: [SLIDER_VALUE_ACCESSOR, SliderStyle],
+      changeDetection: ChangeDetectionStrategy.OnPush,
+      encapsulation: ViewEncapsulation.None
+    }]
+  }], null, {
+    animate: [{
+      type: Input,
+      args: [{
+        transform: booleanAttribute
+      }]
+    }],
+    disabled: [{
+      type: Input,
+      args: [{
+        transform: booleanAttribute
+      }]
+    }],
+    min: [{
+      type: Input,
+      args: [{
+        transform: numberAttribute
+      }]
+    }],
+    max: [{
+      type: Input,
+      args: [{
+        transform: numberAttribute
+      }]
+    }],
+    orientation: [{
+      type: Input
+    }],
+    step: [{
+      type: Input,
+      args: [{
+        transform: numberAttribute
+      }]
+    }],
+    range: [{
+      type: Input,
+      args: [{
+        transform: booleanAttribute
+      }]
+    }],
+    style: [{
+      type: Input
+    }],
+    styleClass: [{
+      type: Input
+    }],
+    ariaLabel: [{
+      type: Input
+    }],
+    ariaLabelledBy: [{
+      type: Input
+    }],
+    tabindex: [{
+      type: Input,
+      args: [{
+        transform: numberAttribute
+      }]
+    }],
+    autofocus: [{
+      type: Input,
+      args: [{
+        transform: booleanAttribute
+      }]
+    }],
+    onChange: [{
+      type: Output
+    }],
+    onSlideEnd: [{
+      type: Output
+    }],
+    sliderHandle: [{
+      type: ViewChild,
+      args: ["sliderHandle"]
+    }],
+    sliderHandleStart: [{
+      type: ViewChild,
+      args: ["sliderHandleStart"]
+    }],
+    sliderHandleEnd: [{
+      type: ViewChild,
+      args: ["sliderHandleEnd"]
+    }]
+  });
+})();
+var SliderModule = class _SliderModule {
+  static \u0275fac = function SliderModule_Factory(__ngFactoryType__) {
+    return new (__ngFactoryType__ || _SliderModule)();
+  };
+  static \u0275mod = /* @__PURE__ */ \u0275\u0275defineNgModule({
+    type: _SliderModule,
+    imports: [Slider, SharedModule],
+    exports: [Slider, SharedModule]
+  });
+  static \u0275inj = /* @__PURE__ */ \u0275\u0275defineInjector({
+    imports: [Slider, SharedModule, SharedModule]
+  });
+};
+(() => {
+  (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(SliderModule, [{
+    type: NgModule,
+    args: [{
+      imports: [Slider, SharedModule],
+      exports: [Slider, SharedModule]
+    }]
+  }], null, null);
+})();
+
+// src/app/views/page-assistant/components/ai-options.component.ts
+var _c04 = () => ({ width: "30rem" });
+var _c14 = () => ["1", "2"];
+function AiOptionsComponent_ng_container_15_Template(rf, ctx) {
+  if (rf & 1) {
+    const _r1 = \u0275\u0275getCurrentView();
+    \u0275\u0275elementContainerStart(0);
+    \u0275\u0275elementStart(1, "div", 13)(2, "p-radioButton", 14);
+    \u0275\u0275twoWayListener("ngModelChange", function AiOptionsComponent_ng_container_15_Template_p_radioButton_ngModelChange_2_listener($event) {
+      \u0275\u0275restoreView(_r1);
+      const ctx_r1 = \u0275\u0275nextContext();
+      \u0275\u0275twoWayBindingSet(ctx_r1.selectedTask, $event) || (ctx_r1.selectedTask = $event);
+      return \u0275\u0275resetView($event);
+    });
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(3, "label", 15);
+    \u0275\u0275text(4);
+    \u0275\u0275pipe(5, "translate");
+    \u0275\u0275elementEnd()();
+    \u0275\u0275elementContainerEnd();
+  }
+  if (rf & 2) {
+    const option_r3 = ctx.$implicit;
+    const ctx_r1 = \u0275\u0275nextContext();
+    \u0275\u0275advance(2);
+    \u0275\u0275property("value", option_r3.id);
+    \u0275\u0275twoWayProperty("ngModel", ctx_r1.selectedTask);
+    \u0275\u0275property("inputId", option_r3.id)("disabled", option_r3.disabled);
+    \u0275\u0275advance();
+    \u0275\u0275property("for", option_r3.id);
+    \u0275\u0275advance();
+    \u0275\u0275textInterpolate(\u0275\u0275pipeBind1(5, 6, option_r3.label));
+  }
+}
+function AiOptionsComponent_Conditional_16_Conditional_10_ng_container_0_Template(rf, ctx) {
+  if (rf & 1) {
+    const _r5 = \u0275\u0275getCurrentView();
+    \u0275\u0275elementContainerStart(0);
+    \u0275\u0275elementStart(1, "div", 13)(2, "p-radioButton", 23);
+    \u0275\u0275twoWayListener("ngModelChange", function AiOptionsComponent_Conditional_16_Conditional_10_ng_container_0_Template_p_radioButton_ngModelChange_2_listener($event) {
+      \u0275\u0275restoreView(_r5);
+      const ctx_r1 = \u0275\u0275nextContext(3);
+      \u0275\u0275twoWayBindingSet(ctx_r1.selectedPrompt, $event) || (ctx_r1.selectedPrompt = $event);
+      return \u0275\u0275resetView($event);
+    });
+    \u0275\u0275listener("onClick", function AiOptionsComponent_Conditional_16_Conditional_10_ng_container_0_Template_p_radioButton_onClick_2_listener() {
+      \u0275\u0275restoreView(_r5);
+      const ctx_r1 = \u0275\u0275nextContext(3);
+      return \u0275\u0275resetView(ctx_r1.onPromptSelect(ctx_r1.selectedPrompt));
+    });
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(3, "label", 15);
+    \u0275\u0275text(4);
+    \u0275\u0275pipe(5, "translate");
+    \u0275\u0275elementEnd()();
+    \u0275\u0275elementContainerEnd();
+  }
+  if (rf & 2) {
+    const option_r6 = ctx.$implicit;
+    const ctx_r1 = \u0275\u0275nextContext(3);
+    \u0275\u0275advance(2);
+    \u0275\u0275property("value", option_r6.id);
+    \u0275\u0275twoWayProperty("ngModel", ctx_r1.selectedPrompt);
+    \u0275\u0275property("inputId", option_r6.id)("disabled", option_r6.disabled);
+    \u0275\u0275advance();
+    \u0275\u0275property("for", option_r6.id);
+    \u0275\u0275advance();
+    \u0275\u0275textInterpolate(\u0275\u0275pipeBind1(5, 6, option_r6.label));
+  }
+}
+function AiOptionsComponent_Conditional_16_Conditional_10_Template(rf, ctx) {
+  if (rf & 1) {
+    \u0275\u0275template(0, AiOptionsComponent_Conditional_16_Conditional_10_ng_container_0_Template, 6, 8, "ng-container", 8);
+  }
+  if (rf & 2) {
+    const ctx_r1 = \u0275\u0275nextContext(2);
+    \u0275\u0275property("ngForOf", ctx_r1.promptOptions)("ngForTrackBy", ctx_r1.trackById);
+  }
+}
+function AiOptionsComponent_Conditional_16_Conditional_11_ng_container_0_Template(rf, ctx) {
+  if (rf & 1) {
+    const _r7 = \u0275\u0275getCurrentView();
+    \u0275\u0275elementContainerStart(0);
+    \u0275\u0275elementStart(1, "div", 24)(2, "p-checkbox", 25);
+    \u0275\u0275twoWayListener("ngModelChange", function AiOptionsComponent_Conditional_16_Conditional_11_ng_container_0_Template_p_checkbox_ngModelChange_2_listener($event) {
+      \u0275\u0275restoreView(_r7);
+      const ctx_r1 = \u0275\u0275nextContext(3);
+      \u0275\u0275twoWayBindingSet(ctx_r1.selectedPrompts, $event) || (ctx_r1.selectedPrompts = $event);
+      return \u0275\u0275resetView($event);
+    });
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(3, "label", 15);
+    \u0275\u0275text(4);
+    \u0275\u0275pipe(5, "translate");
+    \u0275\u0275elementEnd()();
+    \u0275\u0275elementContainerEnd();
+  }
+  if (rf & 2) {
+    const option_r8 = ctx.$implicit;
+    const ctx_r1 = \u0275\u0275nextContext(3);
+    \u0275\u0275advance(2);
+    \u0275\u0275property("value", option_r8.id);
+    \u0275\u0275twoWayProperty("ngModel", ctx_r1.selectedPrompts);
+    \u0275\u0275property("inputId", option_r8.id)("disabled", option_r8.disabled || ctx_r1.isPromptCheckboxDisabled(option_r8.id));
+    \u0275\u0275advance();
+    \u0275\u0275property("for", option_r8.id);
+    \u0275\u0275advance();
+    \u0275\u0275textInterpolate(\u0275\u0275pipeBind1(5, 6, option_r8.label));
+  }
+}
+function AiOptionsComponent_Conditional_16_Conditional_11_Template(rf, ctx) {
+  if (rf & 1) {
+    \u0275\u0275template(0, AiOptionsComponent_Conditional_16_Conditional_11_ng_container_0_Template, 6, 8, "ng-container", 8);
+  }
+  if (rf & 2) {
+    const ctx_r1 = \u0275\u0275nextContext(2);
+    \u0275\u0275property("ngForOf", ctx_r1.promptOptions)("ngForTrackBy", ctx_r1.trackById);
+  }
+}
+function AiOptionsComponent_Conditional_16_Conditional_17_Template(rf, ctx) {
+  if (rf & 1) {
+    const _r9 = \u0275\u0275getCurrentView();
+    \u0275\u0275elementStart(0, "p-iftalabel")(1, "textarea", 26);
+    \u0275\u0275twoWayListener("ngModelChange", function AiOptionsComponent_Conditional_16_Conditional_17_Template_textarea_ngModelChange_1_listener($event) {
+      \u0275\u0275restoreView(_r9);
+      const ctx_r1 = \u0275\u0275nextContext(2);
+      \u0275\u0275twoWayBindingSet(ctx_r1.customInstruction, $event) || (ctx_r1.customInstruction = $event);
+      return \u0275\u0275resetView($event);
+    });
+    \u0275\u0275listener("blur", function AiOptionsComponent_Conditional_16_Conditional_17_Template_textarea_blur_1_listener() {
+      \u0275\u0275restoreView(_r9);
+      const ctx_r1 = \u0275\u0275nextContext(2);
+      return \u0275\u0275resetView(ctx_r1.emitCustomPrompt(ctx_r1.customInstruction));
+    });
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(2, "label", 27);
+    \u0275\u0275text(3);
+    \u0275\u0275pipe(4, "translate");
+    \u0275\u0275elementEnd()();
+  }
+  if (rf & 2) {
+    const ctx_r1 = \u0275\u0275nextContext(2);
+    \u0275\u0275advance();
+    \u0275\u0275twoWayProperty("ngModel", ctx_r1.customInstruction);
+    \u0275\u0275property("autoResize", true);
+    \u0275\u0275advance(2);
+    \u0275\u0275textInterpolate(\u0275\u0275pipeBind1(4, 3, "page.ai-options.prompt.textarea"));
+  }
+}
+function AiOptionsComponent_Conditional_16_Conditional_22_Template(rf, ctx) {
+  if (rf & 1) {
+    const _r10 = \u0275\u0275getCurrentView();
+    \u0275\u0275elementStart(0, "div", 22)(1, "div", 28)(2, "p-checkbox", 29);
+    \u0275\u0275twoWayListener("ngModelChange", function AiOptionsComponent_Conditional_16_Conditional_22_Template_p_checkbox_ngModelChange_2_listener($event) {
+      \u0275\u0275restoreView(_r10);
+      const ctx_r1 = \u0275\u0275nextContext(2);
+      \u0275\u0275twoWayBindingSet(ctx_r1.useCompactAlertsPageContext, $event) || (ctx_r1.useCompactAlertsPageContext = $event);
+      return \u0275\u0275resetView($event);
+    });
+    \u0275\u0275listener("onChange", function AiOptionsComponent_Conditional_16_Conditional_22_Template_p_checkbox_onChange_2_listener() {
+      \u0275\u0275restoreView(_r10);
+      const ctx_r1 = \u0275\u0275nextContext(2);
+      return \u0275\u0275resetView(ctx_r1.onUseCompactAlertsPageContextSelect(ctx_r1.useCompactAlertsPageContext));
+    });
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(3, "label", 30);
+    \u0275\u0275text(4, " Compact context (smaller models, < 120B) ");
+    \u0275\u0275elementEnd()();
+    \u0275\u0275elementStart(5, "div", 24)(6, "p-checkbox", 31);
+    \u0275\u0275twoWayListener("ngModelChange", function AiOptionsComponent_Conditional_16_Conditional_22_Template_p_checkbox_ngModelChange_6_listener($event) {
+      \u0275\u0275restoreView(_r10);
+      const ctx_r1 = \u0275\u0275nextContext(2);
+      \u0275\u0275twoWayBindingSet(ctx_r1.includeAlertRewriteExamples, $event) || (ctx_r1.includeAlertRewriteExamples = $event);
+      return \u0275\u0275resetView($event);
+    });
+    \u0275\u0275listener("onChange", function AiOptionsComponent_Conditional_16_Conditional_22_Template_p_checkbox_onChange_6_listener() {
+      \u0275\u0275restoreView(_r10);
+      const ctx_r1 = \u0275\u0275nextContext(2);
+      return \u0275\u0275resetView(ctx_r1.onIncludeAlertRewriteExamplesSelect(ctx_r1.includeAlertRewriteExamples));
+    });
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(7, "label", 32);
+    \u0275\u0275text(8, " Use examples for rewriting ");
+    \u0275\u0275elementEnd()()();
+  }
+  if (rf & 2) {
+    const ctx_r1 = \u0275\u0275nextContext(2);
+    \u0275\u0275advance(2);
+    \u0275\u0275twoWayProperty("ngModel", ctx_r1.useCompactAlertsPageContext);
+    \u0275\u0275property("binary", true);
+    \u0275\u0275advance(4);
+    \u0275\u0275twoWayProperty("ngModel", ctx_r1.includeAlertRewriteExamples);
+    \u0275\u0275property("binary", true);
+  }
+}
+function AiOptionsComponent_Conditional_16_Template(rf, ctx) {
+  if (rf & 1) {
+    const _r4 = \u0275\u0275getCurrentView();
+    \u0275\u0275elementStart(0, "p-accordion-panel", 9)(1, "p-accordion-header");
+    \u0275\u0275text(2);
+    \u0275\u0275pipe(3, "translate");
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(4, "p-accordion-content")(5, "fieldset", 5)(6, "legend", 6);
+    \u0275\u0275text(7);
+    \u0275\u0275pipe(8, "translate");
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(9, "div", 7);
+    \u0275\u0275template(10, AiOptionsComponent_Conditional_16_Conditional_10_Template, 1, 2, "ng-container")(11, AiOptionsComponent_Conditional_16_Conditional_11_Template, 1, 2, "ng-container");
+    \u0275\u0275elementStart(12, "div", 16)(13, "p-checkbox", 17);
+    \u0275\u0275twoWayListener("ngModelChange", function AiOptionsComponent_Conditional_16_Template_p_checkbox_ngModelChange_13_listener($event) {
+      \u0275\u0275restoreView(_r4);
+      const ctx_r1 = \u0275\u0275nextContext();
+      \u0275\u0275twoWayBindingSet(ctx_r1.addCustom, $event) || (ctx_r1.addCustom = $event);
+      return \u0275\u0275resetView($event);
+    });
+    \u0275\u0275listener("onChange", function AiOptionsComponent_Conditional_16_Template_p_checkbox_onChange_13_listener() {
+      \u0275\u0275restoreView(_r4);
+      const ctx_r1 = \u0275\u0275nextContext();
+      return \u0275\u0275resetView(ctx_r1.resetCustom());
+    });
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(14, "label", 18);
+    \u0275\u0275text(15);
+    \u0275\u0275pipe(16, "translate");
+    \u0275\u0275elementEnd()();
+    \u0275\u0275template(17, AiOptionsComponent_Conditional_16_Conditional_17_Template, 5, 5, "p-iftalabel");
+    \u0275\u0275elementStart(18, "div", 19)(19, "p", 20);
+    \u0275\u0275text(20);
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(21, "p-slider", 21);
+    \u0275\u0275twoWayListener("ngModelChange", function AiOptionsComponent_Conditional_16_Template_p_slider_ngModelChange_21_listener($event) {
+      \u0275\u0275restoreView(_r4);
+      const ctx_r1 = \u0275\u0275nextContext();
+      \u0275\u0275twoWayBindingSet(ctx_r1.editLevel, $event) || (ctx_r1.editLevel = $event);
+      return \u0275\u0275resetView($event);
+    });
+    \u0275\u0275listener("onChange", function AiOptionsComponent_Conditional_16_Template_p_slider_onChange_21_listener() {
+      \u0275\u0275restoreView(_r4);
+      const ctx_r1 = \u0275\u0275nextContext();
+      return \u0275\u0275resetView(ctx_r1.emitEditPrompt(ctx_r1.currentEditLevel.prompt));
+    });
+    \u0275\u0275elementEnd()();
+    \u0275\u0275template(22, AiOptionsComponent_Conditional_16_Conditional_22_Template, 9, 4, "div", 22);
+    \u0275\u0275elementEnd()()()();
+  }
+  if (rf & 2) {
+    const ctx_r1 = \u0275\u0275nextContext();
+    \u0275\u0275advance(2);
+    \u0275\u0275textInterpolate(\u0275\u0275pipeBind1(3, 12, "page.ai-options.prompt.header"));
+    \u0275\u0275advance(5);
+    \u0275\u0275textInterpolate(\u0275\u0275pipeBind1(8, 14, "page.ai-options.prompt.legend"));
+    \u0275\u0275advance(3);
+    \u0275\u0275conditional(!ctx_r1.isTwoPrompts ? 10 : -1);
+    \u0275\u0275advance();
+    \u0275\u0275conditional(ctx_r1.isTwoPrompts ? 11 : -1);
+    \u0275\u0275advance(2);
+    \u0275\u0275twoWayProperty("ngModel", ctx_r1.addCustom);
+    \u0275\u0275property("binary", true);
+    \u0275\u0275advance(2);
+    \u0275\u0275textInterpolate(\u0275\u0275pipeBind1(16, 16, "page.ai-options.prompt.checkbox"));
+    \u0275\u0275advance(2);
+    \u0275\u0275conditional(ctx_r1.addCustom ? 17 : -1);
+    \u0275\u0275advance(3);
+    \u0275\u0275textInterpolate(ctx_r1.currentEditLevel == null ? null : ctx_r1.currentEditLevel.label);
+    \u0275\u0275advance();
+    \u0275\u0275twoWayProperty("ngModel", ctx_r1.editLevel);
+    \u0275\u0275property("step", 25);
+    \u0275\u0275advance();
+    \u0275\u0275conditional(ctx_r1.selectedPrompt === "alertsRecommendations" ? 22 : -1);
+  }
+}
+function AiOptionsComponent_Conditional_17_Conditional_10_ng_container_3_Template(rf, ctx) {
+  if (rf & 1) {
+    const _r11 = \u0275\u0275getCurrentView();
+    \u0275\u0275elementContainerStart(0);
+    \u0275\u0275elementStart(1, "div", 13)(2, "p-radioButton", 35);
+    \u0275\u0275twoWayListener("ngModelChange", function AiOptionsComponent_Conditional_17_Conditional_10_ng_container_3_Template_p_radioButton_ngModelChange_2_listener($event) {
+      \u0275\u0275restoreView(_r11);
+      const ctx_r1 = \u0275\u0275nextContext(3);
+      \u0275\u0275twoWayBindingSet(ctx_r1.selectedAi, $event) || (ctx_r1.selectedAi = $event);
+      return \u0275\u0275resetView($event);
+    });
+    \u0275\u0275listener("onClick", function AiOptionsComponent_Conditional_17_Conditional_10_ng_container_3_Template_p_radioButton_onClick_2_listener() {
+      \u0275\u0275restoreView(_r11);
+      const ctx_r1 = \u0275\u0275nextContext(3);
+      return \u0275\u0275resetView(ctx_r1.onAiSelect(ctx_r1.selectedAi));
+    });
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(3, "label", 15);
+    \u0275\u0275text(4);
+    \u0275\u0275pipe(5, "translate");
+    \u0275\u0275elementEnd()();
+    \u0275\u0275elementContainerEnd();
+  }
+  if (rf & 2) {
+    const option_r12 = ctx.$implicit;
+    const ctx_r1 = \u0275\u0275nextContext(3);
+    \u0275\u0275advance(2);
+    \u0275\u0275property("value", option_r12.id);
+    \u0275\u0275twoWayProperty("ngModel", ctx_r1.selectedAi);
+    \u0275\u0275property("inputId", option_r12.id)("disabled", option_r12.disabled);
+    \u0275\u0275advance();
+    \u0275\u0275property("for", option_r12.id);
+    \u0275\u0275advance();
+    \u0275\u0275textInterpolate(\u0275\u0275pipeBind1(5, 6, option_r12.label));
+  }
+}
+function AiOptionsComponent_Conditional_17_Conditional_10_ng_container_7_Template(rf, ctx) {
+  if (rf & 1) {
+    const _r13 = \u0275\u0275getCurrentView();
+    \u0275\u0275elementContainerStart(0);
+    \u0275\u0275elementStart(1, "div", 13)(2, "p-radioButton", 35);
+    \u0275\u0275twoWayListener("ngModelChange", function AiOptionsComponent_Conditional_17_Conditional_10_ng_container_7_Template_p_radioButton_ngModelChange_2_listener($event) {
+      \u0275\u0275restoreView(_r13);
+      const ctx_r1 = \u0275\u0275nextContext(3);
+      \u0275\u0275twoWayBindingSet(ctx_r1.selectedAi, $event) || (ctx_r1.selectedAi = $event);
+      return \u0275\u0275resetView($event);
+    });
+    \u0275\u0275listener("onClick", function AiOptionsComponent_Conditional_17_Conditional_10_ng_container_7_Template_p_radioButton_onClick_2_listener() {
+      \u0275\u0275restoreView(_r13);
+      const ctx_r1 = \u0275\u0275nextContext(3);
+      return \u0275\u0275resetView(ctx_r1.onAiSelect(ctx_r1.selectedAi));
+    });
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(3, "label", 15);
+    \u0275\u0275text(4);
+    \u0275\u0275pipe(5, "translate");
+    \u0275\u0275element(6, "p-chip", 36);
+    \u0275\u0275pipe(7, "translate");
+    \u0275\u0275elementEnd()();
+    \u0275\u0275elementContainerEnd();
+  }
+  if (rf & 2) {
+    const option_r14 = ctx.$implicit;
+    const ctx_r1 = \u0275\u0275nextContext(3);
+    \u0275\u0275advance(2);
+    \u0275\u0275property("value", option_r14.id);
+    \u0275\u0275twoWayProperty("ngModel", ctx_r1.selectedAi);
+    \u0275\u0275property("inputId", option_r14.id)("disabled", option_r14.disabled);
+    \u0275\u0275advance();
+    \u0275\u0275property("for", option_r14.id);
+    \u0275\u0275advance();
+    \u0275\u0275textInterpolate1(" ", \u0275\u0275pipeBind1(5, 7, option_r14.label), " ");
+    \u0275\u0275advance(2);
+    \u0275\u0275property("label", \u0275\u0275pipeBind1(7, 9, "page.ai-options.model.paidBadge"));
+  }
+}
+function AiOptionsComponent_Conditional_17_Conditional_10_Template(rf, ctx) {
+  if (rf & 1) {
+    \u0275\u0275elementStart(0, "p", 33);
+    \u0275\u0275text(1);
+    \u0275\u0275pipe(2, "translate");
+    \u0275\u0275elementEnd();
+    \u0275\u0275template(3, AiOptionsComponent_Conditional_17_Conditional_10_ng_container_3_Template, 6, 8, "ng-container", 8);
+    \u0275\u0275elementStart(4, "p", 34);
+    \u0275\u0275text(5);
+    \u0275\u0275pipe(6, "translate");
+    \u0275\u0275elementEnd();
+    \u0275\u0275template(7, AiOptionsComponent_Conditional_17_Conditional_10_ng_container_7_Template, 8, 11, "ng-container", 8);
+  }
+  if (rf & 2) {
+    const ctx_r1 = \u0275\u0275nextContext(2);
+    \u0275\u0275advance();
+    \u0275\u0275textInterpolate(\u0275\u0275pipeBind1(2, 6, "page.ai-options.model.free"));
+    \u0275\u0275advance(2);
+    \u0275\u0275property("ngForOf", ctx_r1.freeAiOptions)("ngForTrackBy", ctx_r1.trackById);
+    \u0275\u0275advance(2);
+    \u0275\u0275textInterpolate(\u0275\u0275pipeBind1(6, 8, "page.ai-options.model.paid"));
+    \u0275\u0275advance(2);
+    \u0275\u0275property("ngForOf", ctx_r1.paidAiOptions)("ngForTrackBy", ctx_r1.trackById);
+  }
+}
+function AiOptionsComponent_Conditional_17_Conditional_11_ng_container_3_Template(rf, ctx) {
+  if (rf & 1) {
+    const _r15 = \u0275\u0275getCurrentView();
+    \u0275\u0275elementContainerStart(0);
+    \u0275\u0275elementStart(1, "div", 24)(2, "p-checkbox", 25);
+    \u0275\u0275twoWayListener("ngModelChange", function AiOptionsComponent_Conditional_17_Conditional_11_ng_container_3_Template_p_checkbox_ngModelChange_2_listener($event) {
+      \u0275\u0275restoreView(_r15);
+      const ctx_r1 = \u0275\u0275nextContext(3);
+      \u0275\u0275twoWayBindingSet(ctx_r1.selectedAis, $event) || (ctx_r1.selectedAis = $event);
+      return \u0275\u0275resetView($event);
+    });
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(3, "label", 15);
+    \u0275\u0275text(4);
+    \u0275\u0275pipe(5, "translate");
+    \u0275\u0275elementEnd()();
+    \u0275\u0275elementContainerEnd();
+  }
+  if (rf & 2) {
+    const option_r16 = ctx.$implicit;
+    const ctx_r1 = \u0275\u0275nextContext(3);
+    \u0275\u0275advance(2);
+    \u0275\u0275property("value", option_r16.id);
+    \u0275\u0275twoWayProperty("ngModel", ctx_r1.selectedAis);
+    \u0275\u0275property("inputId", option_r16.id)("disabled", option_r16.disabled || ctx_r1.isAiCheckboxDisabled(option_r16.id));
+    \u0275\u0275advance();
+    \u0275\u0275property("for", option_r16.id);
+    \u0275\u0275advance();
+    \u0275\u0275textInterpolate(\u0275\u0275pipeBind1(5, 6, option_r16.label));
+  }
+}
+function AiOptionsComponent_Conditional_17_Conditional_11_ng_container_7_Template(rf, ctx) {
+  if (rf & 1) {
+    const _r17 = \u0275\u0275getCurrentView();
+    \u0275\u0275elementContainerStart(0);
+    \u0275\u0275elementStart(1, "div", 24)(2, "p-checkbox", 25);
+    \u0275\u0275twoWayListener("ngModelChange", function AiOptionsComponent_Conditional_17_Conditional_11_ng_container_7_Template_p_checkbox_ngModelChange_2_listener($event) {
+      \u0275\u0275restoreView(_r17);
+      const ctx_r1 = \u0275\u0275nextContext(3);
+      \u0275\u0275twoWayBindingSet(ctx_r1.selectedAis, $event) || (ctx_r1.selectedAis = $event);
+      return \u0275\u0275resetView($event);
+    });
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(3, "label", 15);
+    \u0275\u0275text(4);
+    \u0275\u0275pipe(5, "translate");
+    \u0275\u0275element(6, "p-chip", 36);
+    \u0275\u0275pipe(7, "translate");
+    \u0275\u0275elementEnd()();
+    \u0275\u0275elementContainerEnd();
+  }
+  if (rf & 2) {
+    const option_r18 = ctx.$implicit;
+    const ctx_r1 = \u0275\u0275nextContext(3);
+    \u0275\u0275advance(2);
+    \u0275\u0275property("value", option_r18.id);
+    \u0275\u0275twoWayProperty("ngModel", ctx_r1.selectedAis);
+    \u0275\u0275property("inputId", option_r18.id)("disabled", option_r18.disabled || ctx_r1.isAiCheckboxDisabled(option_r18.id));
+    \u0275\u0275advance();
+    \u0275\u0275property("for", option_r18.id);
+    \u0275\u0275advance();
+    \u0275\u0275textInterpolate1(" ", \u0275\u0275pipeBind1(5, 7, option_r18.label), " ");
+    \u0275\u0275advance(2);
+    \u0275\u0275property("label", \u0275\u0275pipeBind1(7, 9, "page.ai-options.model.paidBadge"));
+  }
+}
+function AiOptionsComponent_Conditional_17_Conditional_11_Template(rf, ctx) {
+  if (rf & 1) {
+    \u0275\u0275elementStart(0, "p", 33);
+    \u0275\u0275text(1);
+    \u0275\u0275pipe(2, "translate");
+    \u0275\u0275elementEnd();
+    \u0275\u0275template(3, AiOptionsComponent_Conditional_17_Conditional_11_ng_container_3_Template, 6, 8, "ng-container", 8);
+    \u0275\u0275elementStart(4, "p", 34);
+    \u0275\u0275text(5);
+    \u0275\u0275pipe(6, "translate");
+    \u0275\u0275elementEnd();
+    \u0275\u0275template(7, AiOptionsComponent_Conditional_17_Conditional_11_ng_container_7_Template, 8, 11, "ng-container", 8);
+  }
+  if (rf & 2) {
+    const ctx_r1 = \u0275\u0275nextContext(2);
+    \u0275\u0275advance();
+    \u0275\u0275textInterpolate(\u0275\u0275pipeBind1(2, 6, "page.ai-options.model.free"));
+    \u0275\u0275advance(2);
+    \u0275\u0275property("ngForOf", ctx_r1.freeAiOptions)("ngForTrackBy", ctx_r1.trackById);
+    \u0275\u0275advance(2);
+    \u0275\u0275textInterpolate(\u0275\u0275pipeBind1(6, 8, "page.ai-options.model.paid"));
+    \u0275\u0275advance(2);
+    \u0275\u0275property("ngForOf", ctx_r1.paidAiOptions)("ngForTrackBy", ctx_r1.trackById);
+  }
+}
+function AiOptionsComponent_Conditional_17_Template(rf, ctx) {
+  if (rf & 1) {
+    \u0275\u0275elementStart(0, "p-accordion-panel", 10)(1, "p-accordion-header");
+    \u0275\u0275text(2);
+    \u0275\u0275pipe(3, "translate");
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(4, "p-accordion-content")(5, "fieldset", 5)(6, "legend", 6);
+    \u0275\u0275text(7);
+    \u0275\u0275pipe(8, "translate");
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(9, "div", 7);
+    \u0275\u0275template(10, AiOptionsComponent_Conditional_17_Conditional_10_Template, 8, 10)(11, AiOptionsComponent_Conditional_17_Conditional_11_Template, 8, 10);
+    \u0275\u0275elementEnd()()()();
+  }
+  if (rf & 2) {
+    const ctx_r1 = \u0275\u0275nextContext();
+    \u0275\u0275advance(2);
+    \u0275\u0275textInterpolate(\u0275\u0275pipeBind1(3, 4, "page.ai-options.model.header"));
+    \u0275\u0275advance(5);
+    \u0275\u0275textInterpolate(\u0275\u0275pipeBind1(8, 6, "page.ai-options.model.legend"));
+    \u0275\u0275advance(3);
+    \u0275\u0275conditional(!ctx_r1.isTwoAis ? 10 : -1);
+    \u0275\u0275advance();
+    \u0275\u0275conditional(ctx_r1.isTwoAis ? 11 : -1);
+  }
+}
+function AiOptionsComponent_Conditional_18_Template(rf, ctx) {
+  if (rf & 1) {
+    const _r19 = \u0275\u0275getCurrentView();
+    \u0275\u0275elementStart(0, "p-button", 37);
+    \u0275\u0275pipe(1, "translate");
+    \u0275\u0275listener("click", function AiOptionsComponent_Conditional_18_Template_p_button_click_0_listener() {
+      \u0275\u0275restoreView(_r19);
+      const ctx_r1 = \u0275\u0275nextContext();
+      return \u0275\u0275resetView(ctx_r1.onSubmit());
+    });
+    \u0275\u0275elementEnd();
+  }
+  if (rf & 2) {
+    \u0275\u0275property("label", \u0275\u0275pipeBind1(1, 1, "page.compare.button.genai"));
+  }
+}
+function AiOptionsComponent_Conditional_19_ca_upload_url_1_Template(rf, ctx) {
+  if (rf & 1) {
+    \u0275\u0275element(0, "ca-upload-url", 39);
+  }
+  if (rf & 2) {
+    \u0275\u0275property("showSampleDataButton", false);
+  }
+}
+function AiOptionsComponent_Conditional_19_ca_upload_paste_2_Template(rf, ctx) {
+  if (rf & 1) {
+    \u0275\u0275element(0, "ca-upload-paste", 39);
+  }
+  if (rf & 2) {
+    \u0275\u0275property("showSampleDataButton", false);
+  }
+}
+function AiOptionsComponent_Conditional_19_ca_upload_word_3_Template(rf, ctx) {
+  if (rf & 1) {
+    \u0275\u0275element(0, "ca-upload-word", 39);
+  }
+  if (rf & 2) {
+    \u0275\u0275property("showSampleDataButton", false);
+  }
+}
+function AiOptionsComponent_Conditional_19_Template(rf, ctx) {
+  if (rf & 1) {
+    \u0275\u0275elementContainerStart(0, 12);
+    \u0275\u0275template(1, AiOptionsComponent_Conditional_19_ca_upload_url_1_Template, 1, 1, "ca-upload-url", 38)(2, AiOptionsComponent_Conditional_19_ca_upload_paste_2_Template, 1, 1, "ca-upload-paste", 38)(3, AiOptionsComponent_Conditional_19_ca_upload_word_3_Template, 1, 1, "ca-upload-word", 38);
+    \u0275\u0275elementContainerEnd();
+  }
+  if (rf & 2) {
+    const ctx_r1 = \u0275\u0275nextContext();
+    \u0275\u0275property("ngSwitch", ctx_r1.uploadType);
+    \u0275\u0275advance();
+    \u0275\u0275property("ngSwitchCase", "url");
+    \u0275\u0275advance();
+    \u0275\u0275property("ngSwitchCase", "paste");
+    \u0275\u0275advance();
+    \u0275\u0275property("ngSwitchCase", "word");
+  }
+}
+var AiOptionsComponent = class _AiOptionsComponent {
+  uploadState = inject(UploadStateService);
+  promptChange = new EventEmitter();
+  customPrompt = new EventEmitter();
+  editPrompt = new EventEmitter();
+  aiChange = new EventEmitter();
+  aiSubmit = new EventEmitter();
+  visible = false;
+  // The upload picker changes when the workflow is "compare with prototype".
+  get uploadType() {
+    return this.uploadState.getSelectedUploadType();
+  }
+  trackById(index, item) {
+    return item.id;
+  }
+  // Top-level compare workflow selection that drives which controls are shown.
+  _selectedTask = CompareTask.AiGenerated;
+  isTwoPrompts = false;
+  isTwoAis = false;
+  isPrototype = false;
+  get selectedTask() {
+    return this._selectedTask;
+  }
+  set selectedTask(value) {
+    this._selectedTask = value;
+    this.isTwoPrompts = value === CompareTask.TwoPrompts;
+    this.isTwoAis = value === CompareTask.TwoModels;
+    this.isPrototype = value === CompareTask.PrototypeUrl;
+  }
+  taskOptions = [
+    { id: CompareTask.AiGenerated, label: "page.ai-options.task.AiGenerated", disabled: false },
+    { id: CompareTask.PrototypeUrl, label: "page.ai-options.task.PrototypeUrl", disabled: false },
+    { id: CompareTask.TwoModels, label: "page.ai-options.task.TwoModels", disabled: false },
+    { id: CompareTask.TwoPrompts, label: "page.ai-options.task.TwoPrompts", disabled: false }
+  ];
+  // Prompt family selection for single- and dual-prompt runs.
+  selectedPrompt = PromptKey.Doormats;
+  selectedPrompts = [];
+  promptOptions = [
+    { id: PromptKey.Headings, label: "page.ai-options.prompt.Headings", disabled: false },
+    { id: PromptKey.Doormats, label: "page.ai-options.prompt.Doormats", disabled: false },
+    { id: PromptKey.PlainLanguage, label: "page.ai-options.prompt.PlainLanguage", disabled: false },
+    { id: PromptKey.AlertsRecommendations, label: "page.ai-options.prompt.Alerts", disabled: false }
+  ];
+  isPromptCheckboxDisabled(id) {
+    return !this.selectedPrompts.includes(id) && this.selectedPrompts.length >= 2;
+  }
+  onPromptSelect(key2) {
+    this.promptChange.emit(key2);
+  }
+  // Model and alert-specific options persisted through UploadStateService.
+  selectedAi = AiModel.Gemini;
+  selectedAis = [];
+  includeAlertRewriteExamples = true;
+  useCompactAlertsPageContext = true;
+  // Free and paid model groups are rendered separately in the UI.
+  freeAiOptions = [
+    { id: AiModel.NemotronUltra, label: "page.ai-options.model.NemotronUltra", disabled: false },
+    { id: AiModel.GptOSS20BFree, label: "page.ai-options.model.GptOSS20BFree", disabled: false },
+    { id: AiModel.GptOSSFree, label: "page.ai-options.model.GptOSSFree", disabled: false },
+    { id: AiModel.NemotronSuper, label: "page.ai-options.model.NemotronSuper", disabled: false }
+  ];
+  paidAiOptions = [
+    { id: AiModel.GptOSS20B, label: "page.ai-options.model.GptOSS20B", disabled: false },
+    { id: AiModel.DeepSeekV4Flash, label: "page.ai-options.model.DeepSeekV4Flash", disabled: false },
+    { id: AiModel.DeepSeekV4Pro, label: "page.ai-options.model.DeepSeekV4Pro", disabled: false },
+    { id: AiModel.Gemini, label: "page.ai-options.model.Gemini", disabled: false },
+    { id: AiModel.GPT54Mini, label: "page.ai-options.model.GPT54Mini", disabled: false }
+  ];
+  ngOnInit() {
+    const freeIds = new Set(this.freeAiOptions.map((option) => option.id));
+    const modelIds = /* @__PURE__ */ new Set([
+      ...this.freeAiOptions.map((option) => option.id),
+      ...this.paidAiOptions.map((option) => option.id)
+    ]);
+    this.selectedAi = this.uploadState.getSelectedAiModel();
+    if (!modelIds.has(this.selectedAi)) {
+      this.selectedAi = this.freeAiOptions[0]?.id ?? this.selectedAi;
+    }
+    this.selectedAis = this.selectedAis.filter((id) => freeIds.has(id));
+    this.includeAlertRewriteExamples = this.uploadState.getIncludeAlertRewriteExamples();
+    this.useCompactAlertsPageContext = this.uploadState.getUseCompactAlertsPageContext();
+  }
+  isAiCheckboxDisabled(id) {
+    return !this.selectedAis.includes(id) && this.selectedAis.length >= 2;
+  }
+  onAiSelect(key2) {
+    this.aiChange.emit(key2);
+  }
+  onIncludeAlertRewriteExamplesSelect(include) {
+    this.includeAlertRewriteExamples = include;
+    this.uploadState.setIncludeAlertRewriteExamples(include);
+  }
+  onUseCompactAlertsPageContextSelect(useCompact) {
+    this.useCompactAlertsPageContext = useCompact;
+    this.uploadState.setUseCompactAlertsPageContext(useCompact);
+  }
+  // Close the drawer and let the parent component execute the request.
+  onSubmit() {
+    this.visible = false;
+    this.aiSubmit.emit();
+  }
+  // Optional free-form instructions appended after the base/skill prompt.
+  addCustom = false;
+  customInstruction = "";
+  emitCustomPrompt(prompt) {
+    this.customPrompt.emit(prompt);
+  }
+  resetCustom() {
+    if (!this.addCustom) {
+      this.customInstruction = "";
+      this.emitCustomPrompt("");
+    }
+  }
+  // Slider presets that prepend an edit-strength instruction to non-alert prompts.
+  editLevel = 50;
+  editLevels = [
+    { value: 0, label: "Grammar and spelling only", prompt: "Make minor edits to correct spelling or grammar errors only. Mostly ignore the other instructions provided." },
+    { value: 25, label: "Minor edits", prompt: "Make minor edits only to improve readability. Loosely follow the other instructions provided without making unnecessary changes." },
+    { value: 50, label: "Normal edits", prompt: "" },
+    { value: 75, label: "Extensive edits", prompt: "Heavily rewrite and reorganize the content to follow the instructions provided." },
+    { value: 100, label: "Complete rewrite", prompt: "Aggressively rewrite the content. If there is a clear task on the page, feel free to remove unrelated content." }
+  ];
+  get currentEditLevel() {
+    return this.editLevels.find((level) => level.value === this.editLevel);
+  }
+  emitEditPrompt(prompt) {
+    this.editPrompt.emit(prompt);
+  }
+  static \u0275fac = function AiOptionsComponent_Factory(__ngFactoryType__) {
+    return new (__ngFactoryType__ || _AiOptionsComponent)();
+  };
+  static \u0275cmp = /* @__PURE__ */ \u0275\u0275defineComponent({ type: _AiOptionsComponent, selectors: [["ca-ai-options"]], outputs: { promptChange: "promptChange", customPrompt: "customPrompt", editPrompt: "editPrompt", aiChange: "aiChange", aiSubmit: "aiSubmit" }, decls: 20, vars: 22, consts: [["label", "Options", "icon", "pi pi-bars", "severity", "info", 3, "click"], ["position", "right", 3, "visibleChange", "visible", "header"], [1, "flex", "flex-column", "gap-3"], [1, "flex", "flex-column", "gap-3", 3, "value", "multiple"], ["value", "0", 1, "border-1", "border-round-md", "border-surface"], [1, "border-none"], [1, "font-bold", "mb-2"], [1, "flex", "flex-column", "gap-2"], [4, "ngFor", "ngForOf", "ngForTrackBy"], ["value", "1", 1, "border-1", "border-round-md", "border-surface"], ["value", "2", 1, "border-1", "border-round-md", "border-surface"], ["icon", "pi pi-comments", "severity", "primary", 3, "label"], [3, "ngSwitch"], [1, "p-field-radiobutton"], ["name", "taskOptions", 3, "ngModelChange", "value", "ngModel", "inputId", "disabled"], [1, "pl-2", 3, "for"], [1, "p-field-checkbox", "mt-3"], ["inputId", "appendCustom", 3, "ngModelChange", "onChange", "ngModel", "binary"], ["for", "appendCustom", 1, "pl-2"], [1, "flex", "flex-column", "gap-3", "mt-3"], ["id", "ai-changes"], ["ariaLabelledBy", "ai-changes", "fluid", "", 3, "ngModelChange", "onChange", "ngModel", "step"], [1, "flex", "flex-column", "gap-2", "mt-3"], ["name", "promptOptions", 3, "ngModelChange", "onClick", "value", "ngModel", "inputId", "disabled"], [1, "p-field-checkbox"], [3, "ngModelChange", "value", "ngModel", "inputId", "disabled"], ["pTextarea", "", "id", "customPrompt", "fluid", "", 3, "ngModelChange", "blur", "ngModel", "autoResize"], ["for", "customPrompt"], [1, "p-field-checkbox", "mt-2"], ["inputId", "useCompactAlertsPageContext", 3, "ngModelChange", "onChange", "ngModel", "binary"], ["for", "useCompactAlertsPageContext", 1, "pl-2"], ["inputId", "includeAlertRewriteExamples", 3, "ngModelChange", "onChange", "ngModel", "binary"], ["for", "includeAlertRewriteExamples", 1, "pl-2"], [1, "text-xs", "text-500"], [1, "text-xs", "text-500", "mt-3"], ["name", "aiOptions", 3, "ngModelChange", "onClick", "value", "ngModel", "inputId", "disabled"], ["styleClass", "chip chip-severe ml-2", 3, "label"], ["icon", "pi pi-comments", "severity", "primary", 3, "click", "label"], ["mode", "prototype", 3, "showSampleDataButton", 4, "ngSwitchCase"], ["mode", "prototype", 3, "showSampleDataButton"]], template: function AiOptionsComponent_Template(rf, ctx) {
+    if (rf & 1) {
+      \u0275\u0275elementStart(0, "p-button", 0);
+      \u0275\u0275listener("click", function AiOptionsComponent_Template_p_button_click_0_listener() {
+        return ctx.visible = true;
+      });
+      \u0275\u0275elementEnd();
+      \u0275\u0275elementStart(1, "p-drawer", 1);
+      \u0275\u0275pipe(2, "translate");
+      \u0275\u0275twoWayListener("visibleChange", function AiOptionsComponent_Template_p_drawer_visibleChange_1_listener($event) {
+        \u0275\u0275twoWayBindingSet(ctx.visible, $event) || (ctx.visible = $event);
+        return $event;
+      });
+      \u0275\u0275elementStart(3, "div", 2)(4, "p-accordion", 3)(5, "p-accordion-panel", 4)(6, "p-accordion-header");
+      \u0275\u0275text(7);
+      \u0275\u0275pipe(8, "translate");
+      \u0275\u0275elementEnd();
+      \u0275\u0275elementStart(9, "p-accordion-content")(10, "fieldset", 5)(11, "legend", 6);
+      \u0275\u0275text(12);
+      \u0275\u0275pipe(13, "translate");
+      \u0275\u0275elementEnd();
+      \u0275\u0275elementStart(14, "div", 7);
+      \u0275\u0275template(15, AiOptionsComponent_ng_container_15_Template, 6, 8, "ng-container", 8);
+      \u0275\u0275elementEnd()()()();
+      \u0275\u0275template(16, AiOptionsComponent_Conditional_16_Template, 23, 18, "p-accordion-panel", 9)(17, AiOptionsComponent_Conditional_17_Template, 12, 8, "p-accordion-panel", 10);
+      \u0275\u0275elementEnd();
+      \u0275\u0275template(18, AiOptionsComponent_Conditional_18_Template, 2, 3, "p-button", 11)(19, AiOptionsComponent_Conditional_19_Template, 4, 4, "ng-container", 12);
+      \u0275\u0275elementEnd()();
+    }
+    if (rf & 2) {
+      \u0275\u0275advance();
+      \u0275\u0275styleMap(\u0275\u0275pureFunction0(20, _c04));
+      \u0275\u0275twoWayProperty("visible", ctx.visible);
+      \u0275\u0275property("header", \u0275\u0275pipeBind1(2, 14, "page.ai-options.header"));
+      \u0275\u0275advance(3);
+      \u0275\u0275property("value", \u0275\u0275pureFunction0(21, _c14))("multiple", true);
+      \u0275\u0275advance(3);
+      \u0275\u0275textInterpolate(\u0275\u0275pipeBind1(8, 16, "page.ai-options.task.header"));
+      \u0275\u0275advance(5);
+      \u0275\u0275textInterpolate(\u0275\u0275pipeBind1(13, 18, "page.ai-options.task.legend"));
+      \u0275\u0275advance(3);
+      \u0275\u0275property("ngForOf", ctx.taskOptions)("ngForTrackBy", ctx.trackById);
+      \u0275\u0275advance();
+      \u0275\u0275conditional(!ctx.isPrototype ? 16 : -1);
+      \u0275\u0275advance();
+      \u0275\u0275conditional(!ctx.isPrototype ? 17 : -1);
+      \u0275\u0275advance();
+      \u0275\u0275conditional(!ctx.isPrototype ? 18 : -1);
+      \u0275\u0275advance();
+      \u0275\u0275conditional(ctx.isPrototype ? 19 : -1);
+    }
+  }, dependencies: [TranslateModule, TranslatePipe, CommonModule, NgForOf, NgSwitch, NgSwitchCase, FormsModule, DefaultValueAccessor, NgControlStatus, NgModel, ButtonModule, Button, DrawerModule, Drawer, RadioButtonModule, RadioButton, CheckboxModule, Checkbox, AccordionModule, Accordion, AccordionPanel, AccordionHeader, AccordionContent, ChipModule, Chip, TextareaModule, Textarea, IftaLabelModule, IftaLabel, SliderModule, Slider, UploadUrlComponent, UploadPasteComponent, UploadWordComponent], encapsulation: 2 });
+};
+(() => {
+  (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(AiOptionsComponent, [{
+    type: Component,
+    args: [{ selector: "ca-ai-options", imports: [
+      TranslateModule,
+      CommonModule,
+      FormsModule,
+      ButtonModule,
+      DrawerModule,
+      RadioButtonModule,
+      CheckboxModule,
+      AccordionModule,
+      ChipModule,
+      TextareaModule,
+      IftaLabelModule,
+      SliderModule,
+      UploadUrlComponent,
+      UploadPasteComponent,
+      UploadWordComponent
+    ], template: `<p-button label="Options" icon="pi pi-bars" (click)="visible=true" severity="info" />\r
+<p-drawer [(visible)]="visible" [header]="'page.ai-options.header' | translate" position="right"\r
+          [style]="{ width: '30rem'}">\r
+  <div class="flex flex-column gap-3">\r
+    <p-accordion [value]="['1', '2']" [multiple]="true" class="flex flex-column gap-3">\r
+      <!--TASK OPTIONS-->\r
+      <p-accordion-panel value="0" class="border-1 border-round-md border-surface">\r
+        <p-accordion-header>{{ 'page.ai-options.task.header' | translate }}</p-accordion-header>\r
+        <p-accordion-content>\r
+\r
+          <fieldset class="border-none">\r
+            <legend class="font-bold mb-2">{{ 'page.ai-options.task.legend' | translate }}</legend>\r
+            <div class="flex flex-column gap-2">\r
+              <ng-container *ngFor="let option of taskOptions; trackBy: trackById">\r
+                <div class="p-field-radiobutton">\r
+                  <p-radioButton name="taskOptions" [value]="option.id" [(ngModel)]="selectedTask" [inputId]="option.id"\r
+                                 [disabled]="option.disabled" />\r
+                  <label [for]="option.id" class="pl-2">{{ option.label | translate }}</label>\r
+                </div>\r
+              </ng-container>\r
+            </div>\r
+          </fieldset>\r
+\r
+        </p-accordion-content>\r
+      </p-accordion-panel>\r
+      <!--PROMPT OPTIONS-->\r
+      @if (!isPrototype) {\r
+        <p-accordion-panel value="1" class="border-1 border-round-md border-surface">\r
+          <p-accordion-header>{{ 'page.ai-options.prompt.header' | translate }}</p-accordion-header>\r
+          <p-accordion-content>\r
+\r
+            <fieldset class="border-none">\r
+              <legend class="font-bold mb-2">{{ 'page.ai-options.prompt.legend' | translate }}</legend>\r
+              <div class="flex flex-column gap-2">\r
+                @if (!isTwoPrompts) {\r
+                  <ng-container *ngFor="let option of promptOptions; trackBy: trackById">\r
+                    <div class="p-field-radiobutton">\r
+                      <p-radioButton name="promptOptions" [value]="option.id" [(ngModel)]="selectedPrompt"\r
+                                     [inputId]="option.id" [disabled]="option.disabled" (onClick)="onPromptSelect(selectedPrompt)" />\r
+                      <label [for]="option.id" class="pl-2">{{ option.label | translate }}</label>\r
+                    </div>\r
+                  </ng-container>\r
+                }\r
+                @if (isTwoPrompts) {\r
+                  <ng-container *ngFor="let option of promptOptions; trackBy: trackById">\r
+                    <div class="p-field-checkbox">\r
+                      <p-checkbox [value]="option.id" [(ngModel)]="selectedPrompts" [inputId]="option.id"\r
+                                  [disabled]="option.disabled || isPromptCheckboxDisabled(option.id)" />\r
+                      <label [for]="option.id" class="pl-2">{{ option.label | translate }}</label>\r
+                    </div>\r
+                  </ng-container>\r
+                }\r
+                <!--Append custom prompt-->\r
+                <div class="p-field-checkbox mt-3">\r
+                  <p-checkbox [(ngModel)]="addCustom" [binary]="true" inputId="appendCustom" (onChange)="resetCustom()" />\r
+                  <label for="appendCustom" class="pl-2">{{ "page.ai-options.prompt.checkbox" | translate }}</label>\r
+                </div>\r
+                @if (addCustom) {\r
+                  <p-iftalabel>\r
+                    <textarea pTextarea id="customPrompt" [(ngModel)]="customInstruction" [autoResize]="true"\r
+                              (blur)="emitCustomPrompt(customInstruction)" fluid></textarea>\r
+                    <label for="customPrompt">{{ 'page.ai-options.prompt.textarea' | translate }}</label>\r
+                  </p-iftalabel>\r
+                }\r
+                <!--Slider for number of AI changes-->\r
+                <div class="flex flex-column gap-3 mt-3">\r
+                  <p id="ai-changes">{{ currentEditLevel?.label }}</p>\r
+                  <p-slider [(ngModel)]="editLevel" [step]="25" ariaLabelledBy="ai-changes"\r
+                            (onChange)="emitEditPrompt(currentEditLevel!.prompt)" fluid />\r
+                </div>\r
+\r
+                @if (selectedPrompt === 'alertsRecommendations') {\r
+                  <div class="flex flex-column gap-2 mt-3">\r
+                    <div class="p-field-checkbox mt-2">\r
+                      <p-checkbox\r
+                        [(ngModel)]="useCompactAlertsPageContext"\r
+                        [binary]="true"\r
+                        inputId="useCompactAlertsPageContext"\r
+                        (onChange)="onUseCompactAlertsPageContextSelect(useCompactAlertsPageContext)"\r
+                      />\r
+                      <label for="useCompactAlertsPageContext" class="pl-2">\r
+                        Compact context (smaller models, < 120B)\r
+                      </label>\r
+                    </div>\r
+                    <div class="p-field-checkbox">\r
+                      <p-checkbox\r
+                        [(ngModel)]="includeAlertRewriteExamples"\r
+                        [binary]="true"\r
+                        inputId="includeAlertRewriteExamples"\r
+                        (onChange)="onIncludeAlertRewriteExamplesSelect(includeAlertRewriteExamples)"\r
+                      />\r
+                      <label for="includeAlertRewriteExamples" class="pl-2">\r
+                        Use examples for rewriting\r
+                      </label>\r
+                    </div>\r
+                  </div>\r
+                }\r
+              </div>\r
+            </fieldset>\r
+\r
+          </p-accordion-content>\r
+        </p-accordion-panel>\r
+      }\r
+      <!--AI OPTIONS-->\r
+      @if (!isPrototype) {\r
+        <p-accordion-panel value="2" class="border-1 border-round-md border-surface">\r
+          <p-accordion-header>{{ 'page.ai-options.model.header' | translate }}</p-accordion-header>\r
+          <p-accordion-content>\r
+\r
+            <fieldset class="border-none">\r
+              <legend class="font-bold mb-2">{{ 'page.ai-options.model.legend' | translate }}</legend>\r
+              <div class="flex flex-column gap-2">\r
+                @if (!isTwoAis) {\r
+                  <p class="text-xs text-500">{{ 'page.ai-options.model.free' | translate }}</p>\r
+                  <ng-container *ngFor="let option of freeAiOptions; trackBy: trackById">\r
+                    <div class="p-field-radiobutton">\r
+                      <p-radioButton name="aiOptions" [value]="option.id" [(ngModel)]="selectedAi" [inputId]="option.id"\r
+                                     [disabled]="option.disabled" (onClick)="onAiSelect(selectedAi)" />\r
+                      <label [for]="option.id" class="pl-2">{{ option.label | translate }}</label>\r
+                    </div>\r
+                  </ng-container>\r
+                  <p class="text-xs text-500 mt-3">{{ 'page.ai-options.model.paid' | translate }}</p>\r
+                  <ng-container *ngFor="let option of paidAiOptions; trackBy: trackById">\r
+                    <div class="p-field-radiobutton">\r
+                      <p-radioButton name="aiOptions" [value]="option.id" [(ngModel)]="selectedAi" [inputId]="option.id"\r
+                                     [disabled]="option.disabled" (onClick)="onAiSelect(selectedAi)" />\r
+                      <label [for]="option.id" class="pl-2">\r
+                        {{ option.label | translate }}\r
+                        <p-chip\r
+                          [label]="'page.ai-options.model.paidBadge' | translate"\r
+                          styleClass="chip chip-severe ml-2">\r
+                        </p-chip>\r
+                      </label>\r
+                    </div>\r
+                  </ng-container>\r
+                }\r
+                @if (isTwoAis) {\r
+                  <p class="text-xs text-500">{{ 'page.ai-options.model.free' | translate }}</p>\r
+                  <ng-container *ngFor="let option of freeAiOptions; trackBy: trackById">\r
+                    <div class="p-field-checkbox">\r
+                      <p-checkbox [value]="option.id" [(ngModel)]="selectedAis" [inputId]="option.id"\r
+                                  [disabled]="option.disabled || isAiCheckboxDisabled(option.id)" />\r
+                      <label [for]="option.id" class="pl-2">{{ option.label | translate }}</label>\r
+                    </div>\r
+                  </ng-container>\r
+                  <p class="text-xs text-500 mt-3">{{ 'page.ai-options.model.paid' | translate }}</p>\r
+                  <ng-container *ngFor="let option of paidAiOptions; trackBy: trackById">\r
+                    <div class="p-field-checkbox">\r
+                      <p-checkbox [value]="option.id" [(ngModel)]="selectedAis" [inputId]="option.id"\r
+                                  [disabled]="option.disabled || isAiCheckboxDisabled(option.id)" />\r
+                      <label [for]="option.id" class="pl-2">\r
+                        {{ option.label | translate }}\r
+                        <p-chip\r
+                          [label]="'page.ai-options.model.paidBadge' | translate"\r
+                          styleClass="chip chip-severe ml-2">\r
+                        </p-chip>\r
+                      </label>\r
+                    </div>\r
+                  </ng-container>\r
+                }\r
+              </div>\r
+            </fieldset>\r
+\r
+          </p-accordion-content>\r
+        </p-accordion-panel>\r
+      }\r
+    </p-accordion>\r
+\r
+    <!--Close drawer and emit event-->\r
+    @if (!isPrototype) {\r
+      <p-button [label]="'page.compare.button.genai' | translate" icon="pi pi-comments"\r
+                severity="primary" (click)="onSubmit()"></p-button>\r
+    }\r
+\r
+    <!--Upload options if task = compare with prototype-->\r
+    @if (isPrototype) {\r
+      <ng-container [ngSwitch]="uploadType">\r
+        <ca-upload-url *ngSwitchCase="'url'" mode="prototype" [showSampleDataButton]="false" />\r
+        <ca-upload-paste *ngSwitchCase="'paste'" mode="prototype" [showSampleDataButton]="false" />\r
+        <ca-upload-word *ngSwitchCase="'word'" mode="prototype" [showSampleDataButton]="false" />\r
+      </ng-container>\r
+    }\r
+  </div>\r
+</p-drawer>\r
+` }]
+  }], null, { promptChange: [{
+    type: Output
+  }], customPrompt: [{
+    type: Output
+  }], editPrompt: [{
+    type: Output
+  }], aiChange: [{
+    type: Output
+  }], aiSubmit: [{
+    type: Output
+  }] });
+})();
+(() => {
+  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(AiOptionsComponent, { className: "AiOptionsComponent", filePath: "app/views/page-assistant/components/ai-options.component.ts", lineNumber: 32 });
+})();
+
+// src/app/views/page-assistant/components/problems/heading-structure.component.ts
+var _c05 = () => ({ "min-width": "50rem" });
+function HeadingStructureComponent_ng_template_1_th_2_Template(rf, ctx) {
+  if (rf & 1) {
+    \u0275\u0275elementStart(0, "th");
+    \u0275\u0275text(1);
+    \u0275\u0275elementEnd();
+  }
+  if (rf & 2) {
+    const col_r2 = ctx.$implicit;
+    \u0275\u0275advance();
+    \u0275\u0275textInterpolate1(" ", col_r2.header, " ");
+  }
+}
+function HeadingStructureComponent_ng_template_1_Template(rf, ctx) {
+  if (rf & 1) {
+    \u0275\u0275elementStart(0, "tr");
+    \u0275\u0275element(1, "th", 3);
+    \u0275\u0275template(2, HeadingStructureComponent_ng_template_1_th_2_Template, 2, 1, "th", 4);
+    \u0275\u0275elementStart(3, "th");
+    \u0275\u0275text(4, "Action");
+    \u0275\u0275elementEnd()();
+  }
+  if (rf & 2) {
+    const columns_r3 = ctx.$implicit;
+    \u0275\u0275advance(2);
+    \u0275\u0275property("ngForOf", columns_r3);
+  }
+}
+function HeadingStructureComponent_ng_template_3_Template(rf, ctx) {
+  if (rf & 1) {
+    \u0275\u0275elementStart(0, "tr", 5)(1, "td");
+    \u0275\u0275element(2, "span", 6);
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(3, "td");
+    \u0275\u0275text(4);
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(5, "td");
+    \u0275\u0275text(6);
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(7, "td", 7);
+    \u0275\u0275text(8);
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(9, "td");
+    \u0275\u0275text(10, "Add buttons!");
+    \u0275\u0275elementEnd()();
+  }
+  if (rf & 2) {
+    const rowData_r4 = ctx.$implicit;
+    const index_r5 = ctx.rowIndex;
+    const ctx_r5 = \u0275\u0275nextContext();
+    \u0275\u0275property("pReorderableRow", index_r5)("pSelectableRow", rowData_r4);
+    \u0275\u0275advance(4);
+    \u0275\u0275textInterpolate(rowData_r4.order);
+    \u0275\u0275advance(2);
+    \u0275\u0275textInterpolate(rowData_r4.type);
+    \u0275\u0275advance();
+    \u0275\u0275property("ngClass", ctx_r5.getTextClass(rowData_r4))("ngStyle", ctx_r5.getTextStyle(rowData_r4));
+    \u0275\u0275advance();
+    \u0275\u0275textInterpolate1(" ", rowData_r4.text, " ");
+  }
+}
+var HeadingStructureComponent = class _HeadingStructureComponent {
+  uploadState = inject(UploadStateService);
+  translate = inject(TranslateService);
+  ngOnInit() {
+    this.fetchHeadings();
+    this.cols = [
+      { field: "order", header: "Original order" },
+      { field: "type", header: "Heading type" },
+      { field: "text", header: "Text" }
+    ];
+  }
+  headings = [];
+  selectedHeading;
+  cols;
+  headingTypes = ["h1", "h2", "h3", "h4", "h5", "h6", "summary"];
+  fetchHeadings() {
+    try {
+      const data = this.uploadState.getUploadData();
+      if (!data || !data.originalHtml)
+        return;
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(data.originalHtml, "text/html");
+      const selector = this.headingTypes.join(", ");
+      const elements = doc.querySelectorAll(selector);
+      this.headings = Array.from(elements).map((el, index) => ({
+        order: index + 1,
+        //this is so we can track the original order
+        type: el.tagName.toLowerCase(),
+        text: el.textContent?.trim() || ""
+      }));
+    } catch (err) {
+      console.error("Failed to get heading from HTML data", err);
+    }
+  }
+  //In-line styles
+  getTextStyle(row) {
+    switch (row.type) {
+      case "h1":
+        return { fontWeight: "bold" };
+      case "h2":
+        return { fontWeight: "bold" };
+      case "h6":
+        return { color: "gray" };
+      case "summary":
+        return { color: "blue" };
+      default:
+        return {};
+    }
+  }
+  //Classes
+  getTextClass(heading) {
+    switch (heading.type) {
+      case "h1":
+        return { "": heading.type === "h1" };
+      case "h2":
+        return { "pl-4": heading.type === "h2" };
+      case "h3":
+        return { "pl-6": heading.type === "h3" };
+      case "h4":
+        return { "pl-7": heading.type === "h4" };
+      case "h5":
+        return { "pl-8": heading.type === "h5" };
+      case "h6":
+        return { "pl-8": heading.type === "h6" };
+      case "summary":
+        return { "pl-8": heading.type === "summary" };
+      default:
+        return {};
+    }
+  }
+  static \u0275fac = function HeadingStructureComponent_Factory(__ngFactoryType__) {
+    return new (__ngFactoryType__ || _HeadingStructureComponent)();
+  };
+  static \u0275cmp = /* @__PURE__ */ \u0275\u0275defineComponent({ type: _HeadingStructureComponent, selectors: [["ca-heading-structure"]], decls: 5, vars: 6, consts: [["header", ""], ["body", ""], ["size", "small", "stripedRows", "", "selectionMode", "single", "dataKey", "order", "metaKeySelection", "false", 3, "selectionChange", "columns", "value", "tableStyle", "reorderableColumns", "selection"], [2, "width", "3rem"], [4, "ngFor", "ngForOf"], [3, "pReorderableRow", "pSelectableRow"], ["pReorderableRowHandle", "", 1, "pi", "pi-bars"], [3, "ngClass", "ngStyle"]], template: function HeadingStructureComponent_Template(rf, ctx) {
+    if (rf & 1) {
+      const _r1 = \u0275\u0275getCurrentView();
+      \u0275\u0275elementStart(0, "p-table", 2);
+      \u0275\u0275twoWayListener("selectionChange", function HeadingStructureComponent_Template_p_table_selectionChange_0_listener($event) {
+        \u0275\u0275restoreView(_r1);
+        \u0275\u0275twoWayBindingSet(ctx.selectedHeading, $event) || (ctx.selectedHeading = $event);
+        return \u0275\u0275resetView($event);
+      });
+      \u0275\u0275template(1, HeadingStructureComponent_ng_template_1_Template, 5, 1, "ng-template", null, 0, \u0275\u0275templateRefExtractor)(3, HeadingStructureComponent_ng_template_3_Template, 11, 7, "ng-template", null, 1, \u0275\u0275templateRefExtractor);
+      \u0275\u0275elementEnd();
+    }
+    if (rf & 2) {
+      \u0275\u0275property("columns", ctx.cols)("value", ctx.headings)("tableStyle", \u0275\u0275pureFunction0(5, _c05))("reorderableColumns", true);
+      \u0275\u0275twoWayProperty("selection", ctx.selectedHeading);
+    }
+  }, dependencies: [
+    CommonModule,
+    NgClass,
+    NgForOf,
+    NgStyle,
+    FormsModule,
+    TranslateModule,
+    TableModule,
+    Table,
+    SelectableRow,
+    ReorderableRowHandle,
+    ReorderableRow,
+    ButtonModule
+  ], encapsulation: 2 });
+};
+(() => {
+  (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(HeadingStructureComponent, [{
+    type: Component,
+    args: [{ selector: "ca-heading-structure", imports: [
+      CommonModule,
+      FormsModule,
+      TranslateModule,
+      TableModule,
+      ButtonModule
+    ], template: `<p-table\r
+  [columns]="cols"\r
+  [value]="headings"\r
+  size="small"\r
+  stripedRows\r
+  [tableStyle]="{ 'min-width': '50rem' }"\r
+  [reorderableColumns]="true"\r
+  selectionMode="single"\r
+  [(selection)]="selectedHeading"\r
+  dataKey="order"\r
+  metaKeySelection="false"\r
+>\r
+  <ng-template #header let-columns>\r
+    <tr>\r
+      <th style="width: 3rem"></th>\r
+      <th *ngFor="let col of columns">\r
+        {{ col.header }}\r
+      </th>\r
+      <th>Action</th>\r
+    </tr>\r
+  </ng-template>\r
+  <ng-template #body let-rowData let-columns="columns" let-index="rowIndex">\r
+    <tr [pReorderableRow]="index" [pSelectableRow]="rowData">\r
+      <td>\r
+        <span class="pi pi-bars" pReorderableRowHandle></span>\r
+      </td>\r
+      <td>{{ rowData.order }}</td>\r
+      <td>{{ rowData.type }}</td>\r
+      <td [ngClass]="getTextClass(rowData)" [ngStyle]="getTextStyle(rowData)">\r
+        {{ rowData.text }}\r
+      </td>\r
+      <td>Add buttons!</td>\r
+    </tr>\r
+  </ng-template>\r
+</p-table>\r
+` }]
+  }], null, null);
+})();
+(() => {
+  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(HeadingStructureComponent, { className: "HeadingStructureComponent", filePath: "app/views/page-assistant/components/problems/heading-structure.component.ts", lineNumber: 37 });
+})();
+
+// src/app/views/page-assistant/components/problems/component-guidance/alerts-guidance/alerts-guidance.component.ts
+function AlertsGuidanceComponent_ng_template_1_Template(rf, ctx) {
+  if (rf & 1) {
+    \u0275\u0275elementStart(0, "tr")(1, "th", 5);
+    \u0275\u0275text(2, "Include in fix");
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(3, "th", 6);
+    \u0275\u0275text(4, "Severity");
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(5, "th");
+    \u0275\u0275text(6, "Pain point category");
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(7, "th", 7);
+    \u0275\u0275text(8, "Description");
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(9, "th", 7);
+    \u0275\u0275text(10, "Recommendation");
+    \u0275\u0275elementEnd()();
+  }
+}
+function AlertsGuidanceComponent_ng_template_2_Template(rf, ctx) {
+  if (rf & 1) {
+    const _r1 = \u0275\u0275getCurrentView();
+    \u0275\u0275elementStart(0, "tr")(1, "td", 5)(2, "p-checkbox", 8);
+    \u0275\u0275twoWayListener("ngModelChange", function AlertsGuidanceComponent_ng_template_2_Template_p_checkbox_ngModelChange_2_listener($event) {
+      const issue_r2 = \u0275\u0275restoreView(_r1).$implicit;
+      \u0275\u0275twoWayBindingSet(issue_r2.include, $event) || (issue_r2.include = $event);
+      return \u0275\u0275resetView($event);
+    });
+    \u0275\u0275listener("onChange", function AlertsGuidanceComponent_ng_template_2_Template_p_checkbox_onChange_2_listener() {
+      \u0275\u0275restoreView(_r1);
+      const ctx_r2 = \u0275\u0275nextContext();
+      return \u0275\u0275resetView(ctx_r2.onIncludeToggle());
+    });
+    \u0275\u0275elementEnd()();
+    \u0275\u0275elementStart(3, "td", 6)(4, "span", 9);
+    \u0275\u0275text(5);
+    \u0275\u0275elementEnd()();
+    \u0275\u0275elementStart(6, "td");
+    \u0275\u0275text(7);
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(8, "td", 7);
+    \u0275\u0275text(9);
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(10, "td", 7);
+    \u0275\u0275text(11);
+    \u0275\u0275elementEnd()();
+  }
+  if (rf & 2) {
+    const issue_r2 = ctx.$implicit;
+    const ctx_r2 = \u0275\u0275nextContext();
+    \u0275\u0275advance(2);
+    \u0275\u0275property("binary", true);
+    \u0275\u0275twoWayProperty("ngModel", issue_r2.include);
+    \u0275\u0275property("disabled", ctx_r2.isNoIssueRow(issue_r2));
+    \u0275\u0275advance(2);
+    \u0275\u0275property("ngClass", ctx_r2.severityClass(issue_r2.severity));
+    \u0275\u0275advance();
+    \u0275\u0275textInterpolate1(" ", issue_r2.severity, " ");
+    \u0275\u0275advance(2);
+    \u0275\u0275textInterpolate(issue_r2.category);
+    \u0275\u0275advance(2);
+    \u0275\u0275textInterpolate(issue_r2.description);
+    \u0275\u0275advance(2);
+    \u0275\u0275textInterpolate(issue_r2.recommendation);
+  }
+}
+var ALERT_SEVERITY_RANK = {
+  high: 3,
+  medium: 2,
+  low: 1
+};
+function isNoAlertIssue(issue) {
+  return (issue.category || "").trim().toLowerCase() === "no issues";
+}
+function computeAlertCategories(issues, rank = ALERT_SEVERITY_RANK) {
+  const bestSeverity = /* @__PURE__ */ new Map();
+  for (const issue of issues) {
+    if (isNoAlertIssue(issue))
+      continue;
+    const cat = issue.category;
+    if (!cat)
+      continue;
+    const current = bestSeverity.get(cat);
+    const next = issue.severity ?? "";
+    const currentRank = current ? rank[current.toLowerCase()] ?? 0 : -1;
+    const nextRank = rank[next.toLowerCase()] ?? 0;
+    if (nextRank >= currentRank) {
+      bestSeverity.set(cat, next);
+    }
+  }
+  return Array.from(bestSeverity.entries()).map(([label, severity]) => ({ label, severity }));
+}
+function computeAlertMaxSeverity(issues, rank = ALERT_SEVERITY_RANK) {
+  let max = null;
+  let maxRank = -1;
+  for (const issue of issues) {
+    if (isNoAlertIssue(issue))
+      continue;
+    const sev = (issue.severity || "").toLowerCase();
+    const r = rank[sev] ?? -1;
+    if (r > maxRank) {
+      maxRank = r;
+      max = issue.severity;
+    }
+  }
+  return max;
+}
+var AlertsGuidanceComponent = class _AlertsGuidanceComponent {
+  uploadState = inject(UploadStateService);
+  alertAi = inject(AlertAiService);
+  issuesUpdatedSub;
+  analysisStateSub;
+  suppressIncludeToggle = false;
+  selectAll = true;
+  maxSeverityChange = new EventEmitter();
+  categoriesChange = new EventEmitter();
+  loadingChange = new EventEmitter();
+  errorChange = new EventEmitter();
+  issues = [];
+  isLoading = false;
+  reanalysisRecommended = true;
+  analyzedHtml = "";
+  analyzedRevision = -1;
+  requestHtml = "";
+  constructor() {
+    effect(() => {
+      const revision = this.uploadState.getWorkingContentRevision();
+      const html = this.uploadState.getWorkingHtml();
+      this.uploadState.getRecommendationReviewPending();
+      if (this.analyzedRevision >= 0 && revision !== this.analyzedRevision) {
+        this.reanalysisRecommended = true;
+      }
+      if (this.requestHtml && html !== this.requestHtml) {
+        this.reanalysisRecommended = true;
+      }
+    });
+  }
+  ngOnInit() {
+    this.sortIssues();
+    this.applySelectAll(this.selectAll);
+    this.emitDerived();
+    this.issuesUpdatedSub = this.alertAi.issuesUpdated$.subscribe((update) => {
+      const html = this.uploadState.getWorkingHtml();
+      if (!html)
+        return;
+      const cached = this.alertAi.getCachedIssues(html);
+      if (cached === null) {
+        if (update.html !== html)
+          return;
+        this.issues = [];
+        this.analyzedHtml = "";
+        this.analyzedRevision = -1;
+        this.reanalysisRecommended = true;
+        this.emitDerived();
+        return;
+      }
+      this.applyAnalysis(cached, html, false);
+    });
+    this.analysisStateSub = this.alertAi.analysisState$.subscribe((state) => {
+      if (state.html !== this.uploadState.getWorkingHtml())
+        return;
+      this.setLoading(state.loading);
+      this.setError(state.error);
+    });
+    this.restoreOrAnalyze();
+  }
+  ngOnChanges(changes) {
+    if (changes["selectAll"] && !changes["selectAll"].firstChange) {
+      this.applySelectAll(this.selectAll);
+      this.emitDerived();
+    }
+  }
+  ngOnDestroy() {
+    this.issuesUpdatedSub?.unsubscribe();
+    this.analysisStateSub?.unsubscribe();
+  }
+  onIncludeToggle() {
+    if (this.suppressIncludeToggle)
+      return;
+    this.sortIssues();
+    this.emitDerived();
+    this.syncCache();
+  }
+  get reanalysisDisabled() {
+    return this.isLoading || this.uploadState.getRecommendationReviewPending();
+  }
+  analyzeCurrentPage() {
+    return __async(this, null, function* () {
+      const html = this.uploadState.getWorkingHtml();
+      if (!html || this.reanalysisDisabled)
+        return;
+      this.alertAi.prepareForReanalysis(html);
+      this.issues = [];
+      this.analyzedHtml = "";
+      this.analyzedRevision = -1;
+      this.reanalysisRecommended = true;
+      this.emitDerived();
+      yield this.loadFromAi(true);
+    });
+  }
+  applySelectAll(flag, sync = true) {
+    if (!sync)
+      return;
+    this.suppressIncludeToggle = true;
+    try {
+      this.issues = this.issues.map((issue) => __spreadProps(__spreadValues({}, issue), {
+        include: isNoAlertIssue(issue) ? false : flag
+      }));
+      this.sortIssues();
+    } finally {
+      this.suppressIncludeToggle = false;
+    }
+    this.syncCache();
+  }
+  sortIssues() {
+    this.issues = [...this.issues].sort((a, b) => {
+      const ra = ALERT_SEVERITY_RANK[a.severity.toLowerCase()] ?? -1;
+      const rb = ALERT_SEVERITY_RANK[b.severity.toLowerCase()] ?? -1;
+      if (ra !== rb)
+        return rb - ra;
+      return a.category.localeCompare(b.category, void 0, { sensitivity: "base" });
+    });
+  }
+  emitDerived() {
+    this.maxSeverityChange.emit(computeAlertMaxSeverity(this.issues));
+    this.categoriesChange.emit(computeAlertCategories(this.issues));
+  }
+  normalizeCategoryLabel(label) {
+    const trimmed = (label || "").trim();
+    if (!trimmed)
+      return trimmed;
+    const lower = trimmed.toLowerCase();
+    return lower.charAt(0).toUpperCase() + lower.slice(1);
+  }
+  severityClass(severity) {
+    const s = (severity || "").toLowerCase();
+    if (s === "low")
+      return "chip-minor";
+    if (s === "medium")
+      return "chip-med";
+    if (s === "high")
+      return "chip-severe";
+    return "chip-unk";
+  }
+  isNoIssueRow(issue) {
+    return isNoAlertIssue(issue);
+  }
+  restoreOrAnalyze() {
+    const html = this.uploadState.getWorkingHtml();
+    if (!html)
+      return;
+    const cached = this.alertAi.getCachedIssues(html);
+    if (cached !== null) {
+      this.applyAnalysis(cached, html, false);
+      return;
+    }
+    const latest = this.alertAi.getLatestCachedAnalysis();
+    if (latest) {
+      this.applyAnalysis(latest.issues, latest.html, true);
+      return;
+    }
+    void this.loadFromAi();
+  }
+  loadFromAi(force = false) {
+    return __async(this, null, function* () {
+      const html = this.uploadState.getWorkingHtml();
+      if (!html || this.isLoading)
+        return;
+      const cached = this.alertAi.getCachedIssues(html);
+      if (!force && cached !== null) {
+        this.applyAnalysis(cached, html, false);
+        return;
+      }
+      const requestHtml = html;
+      this.setLoading(true);
+      this.setError(false);
+      this.requestHtml = requestHtml;
+      try {
+        const selectedModel = this.uploadState.getSelectedAiModel();
+        const aiIssues = yield this.alertAi.analyze(requestHtml, void 0, selectedModel);
+        if (this.uploadState.getWorkingHtml() !== requestHtml) {
+          this.reanalysisRecommended = true;
+          return;
+        }
+        const normalizedIssues = aiIssues.map((issue) => __spreadProps(__spreadValues({}, issue), {
+          category: this.normalizeCategoryLabel(issue.category),
+          severity: issue.severity || "Unknown",
+          include: issue.include ?? true
+        }));
+        this.alertAi.cacheIssues(requestHtml, normalizedIssues);
+        this.applyAnalysis(normalizedIssues, requestHtml, false);
+      } catch (err) {
+        console.error("Alert AI call failed", err);
+        this.reanalysisRecommended = true;
+        this.alertAi.failAnalysis(requestHtml);
+        this.setError(true);
+      } finally {
+        this.requestHtml = "";
+        this.setLoading(false);
+      }
+    });
+  }
+  applyAnalysis(issues, analyzedHtml, reanalysisRecommended) {
+    this.issues = this.alertAi.normalizeAlertIssues(issues).map((issue) => __spreadProps(__spreadValues({}, issue), {
+      category: this.normalizeCategoryLabel(issue.category)
+    }));
+    this.analyzedHtml = analyzedHtml;
+    this.analyzedRevision = this.uploadState.getWorkingContentRevision();
+    this.reanalysisRecommended = reanalysisRecommended;
+    this.sortIssues();
+    this.applySelectAll(this.selectAll, false);
+    this.emitDerived();
+    this.setError(false);
+  }
+  setLoading(flag) {
+    this.isLoading = flag;
+    this.loadingChange.emit(flag);
+  }
+  setError(flag) {
+    this.errorChange.emit(flag);
+  }
+  syncCache() {
+    const html = this.analyzedHtml || this.uploadState.getWorkingHtml();
+    if (!html || !this.issues.length)
+      return;
+    this.alertAi.cacheIssues(html, this.issues);
+  }
+  static \u0275fac = function AlertsGuidanceComponent_Factory(__ngFactoryType__) {
+    return new (__ngFactoryType__ || _AlertsGuidanceComponent)();
+  };
+  static \u0275cmp = /* @__PURE__ */ \u0275\u0275defineComponent({ type: _AlertsGuidanceComponent, selectors: [["ca-alerts-guidance"]], inputs: { selectAll: "selectAll" }, outputs: { maxSeverityChange: "maxSeverityChange", categoriesChange: "categoriesChange", loadingChange: "loadingChange", errorChange: "errorChange" }, features: [\u0275\u0275NgOnChangesFeature], decls: 5, vars: 4, consts: [["styleClass", "p-datatable-sm alert-table", 3, "value"], ["pTemplate", "header"], ["pTemplate", "body"], [1, "alert-table-actions"], ["pButton", "", "type", "button", "label", "Re-analyse current webpage", "icon", "pi pi-refresh", 3, "click", "disabled"], [1, "include-col"], [1, "severity-col"], [1, "wrap-col"], [3, "ngModelChange", "onChange", "binary", "ngModel", "disabled"], [1, "chip", 3, "ngClass"]], template: function AlertsGuidanceComponent_Template(rf, ctx) {
+    if (rf & 1) {
+      \u0275\u0275elementStart(0, "p-table", 0);
+      \u0275\u0275template(1, AlertsGuidanceComponent_ng_template_1_Template, 11, 0, "ng-template", 1)(2, AlertsGuidanceComponent_ng_template_2_Template, 12, 8, "ng-template", 2);
+      \u0275\u0275elementEnd();
+      \u0275\u0275elementStart(3, "div", 3)(4, "button", 4);
+      \u0275\u0275listener("click", function AlertsGuidanceComponent_Template_button_click_4_listener() {
+        return ctx.analyzeCurrentPage();
+      });
+      \u0275\u0275elementEnd()();
+    }
+    if (rf & 2) {
+      \u0275\u0275property("value", ctx.issues);
+      \u0275\u0275advance(4);
+      \u0275\u0275classMap((ctx.reanalysisRecommended ? "p-button-primary" : "p-button-secondary") + " p-button-sm");
+      \u0275\u0275property("disabled", ctx.reanalysisDisabled);
+    }
+  }, dependencies: [CommonModule, NgClass, FormsModule, NgControlStatus, NgModel, TableModule, Table, PrimeTemplate, CheckboxModule, Checkbox, ButtonModule, ButtonDirective], styles: ["\n\n.alert-table[_ngcontent-%COMP%]   .p-datatable-tbody[_ngcontent-%COMP%]    > tr[_ngcontent-%COMP%]    > td[_ngcontent-%COMP%], \n.alert-table[_ngcontent-%COMP%]   .p-datatable-thead[_ngcontent-%COMP%]    > tr[_ngcontent-%COMP%]    > th[_ngcontent-%COMP%] {\n  white-space: normal !important;\n  word-break: normal;\n  overflow-wrap: normal;\n  vertical-align: top;\n}\n.alert-table[_ngcontent-%COMP%]   .wrap-col[_ngcontent-%COMP%] {\n  min-width: 140px;\n}\n.alert-table[_ngcontent-%COMP%]   .severity-col[_ngcontent-%COMP%]   .chip[_ngcontent-%COMP%] {\n  white-space: nowrap !important;\n  display: inline-flex;\n}\n.alert-table[_ngcontent-%COMP%]   .include-col[_ngcontent-%COMP%] {\n  width: 140px;\n  text-align: center;\n}\n.alert-table[_ngcontent-%COMP%]   .include-col[_ngcontent-%COMP%]   .p-checkbox[_ngcontent-%COMP%] {\n  display: inline-flex;\n}\n.alert-table[_ngcontent-%COMP%]   .p-datatable-table[_ngcontent-%COMP%] {\n  width: 100%;\n  border: 1px solid #d1d5db;\n  border-radius: 6px;\n}\n.alert-table[_ngcontent-%COMP%]   .p-datatable-wrapper[_ngcontent-%COMP%] {\n  width: 100%;\n  overflow-x: auto;\n}\n.alert-table[_ngcontent-%COMP%]   .p-datatable-table[_ngcontent-%COMP%] {\n  table-layout: auto !important;\n}\n.alert-table-actions[_ngcontent-%COMP%] {\n  display: flex;\n  justify-content: flex-end;\n  margin-top: 0.75rem;\n}\n.alert-table[_ngcontent-%COMP%]   .toggle-col[_ngcontent-%COMP%], \n.alert-table[_ngcontent-%COMP%]   .checkbox-col[_ngcontent-%COMP%] {\n  width: 1%;\n  white-space: nowrap;\n  text-align: center;\n  padding: 0;\n}\n.alert-table.p-datatable[_ngcontent-%COMP%]   .p-datatable-thead[_ngcontent-%COMP%]    > tr[_ngcontent-%COMP%]    > th.toggle-col[_ngcontent-%COMP%], \n.alert-table.p-datatable[_ngcontent-%COMP%]   .p-datatable-tbody[_ngcontent-%COMP%]    > tr[_ngcontent-%COMP%]    > td.toggle-col[_ngcontent-%COMP%], \n.alert-table.p-datatable[_ngcontent-%COMP%]   .p-datatable-thead[_ngcontent-%COMP%]    > tr[_ngcontent-%COMP%]    > th.checkbox-col[_ngcontent-%COMP%], \n.alert-table.p-datatable[_ngcontent-%COMP%]   .p-datatable-tbody[_ngcontent-%COMP%]    > tr[_ngcontent-%COMP%]    > td.checkbox-col[_ngcontent-%COMP%] {\n  width: 1% !important;\n  white-space: nowrap !important;\n  text-align: center;\n  padding: 0 0.25rem;\n}\n/*# sourceMappingURL=alerts-guidance.component.css.map */", "\n\n[_nghost-%COMP%]     .alert-table .p-datatable-table {\n  table-layout: auto !important;\n}\n[_nghost-%COMP%]     .alert-table.p-datatable .p-datatable-thead > tr > th.toggle-col, \n[_nghost-%COMP%]     .alert-table.p-datatable .p-datatable-tbody > tr > td.toggle-col {\n  width: 70px !important;\n  min-width: 70px;\n  max-width: 70px;\n  white-space: nowrap !important;\n  text-align: center;\n  padding: 0 0.25rem;\n}\n[_nghost-%COMP%]     .alert-table.p-datatable .p-datatable-thead > tr > th.checkbox-col, \n[_nghost-%COMP%]     .alert-table.p-datatable .p-datatable-tbody > tr > td.checkbox-col {\n  width: 70px !important;\n  min-width: 70px;\n  max-width: 70px;\n  white-space: nowrap !important;\n  text-align: center;\n  padding: 0 0.25rem;\n}\n[_nghost-%COMP%]     .topic-doormat-section-row > td {\n  background: #eef2f6;\n}\n.topic-doormat-group[_ngcontent-%COMP%] {\n  margin-top: 1rem;\n  border: 1px solid #d8dee6;\n  border-radius: 6px;\n  background: #fff;\n  overflow: hidden;\n}\n.topic-doormat-group[_ngcontent-%COMP%]    + .topic-doormat-group[_ngcontent-%COMP%] {\n  margin-top: 1.25rem;\n}\n.topic-doormat-group-header[_ngcontent-%COMP%] {\n  display: flex;\n  align-items: flex-start;\n  gap: 0.75rem;\n  padding: 1.1rem 1.25rem;\n  border-bottom: 1px solid #d8dee6;\n  background: #eef2f6;\n}\n.topic-doormat-group[_ngcontent-%COMP%]   h3[_ngcontent-%COMP%] {\n  margin: 0;\n  font-size: 1.25rem;\n  line-height: 1.25;\n}\n.topic-doormat-count[_ngcontent-%COMP%] {\n  flex: 0 0 auto;\n  padding: 0.4rem 0.8rem;\n  border: 1px solid #d8dee6;\n  border-radius: 999px;\n  background: #fff;\n  color: #202833;\n  font-size: 0.9rem;\n  font-weight: 700;\n}\n.topic-doormat-subheading[_ngcontent-%COMP%] {\n  margin: 1rem 1rem 0.4rem;\n  padding-bottom: 0.25rem;\n  border-bottom: 1px solid #eef2f6;\n  color: #202833;\n  font-size: 0.9rem;\n  font-weight: 700;\n}\n.topic-doormat-group[_ngcontent-%COMP%]   .expansion-table[_ngcontent-%COMP%] {\n  margin: 0 1rem 1rem;\n}\n.topic-doormat-empty[_ngcontent-%COMP%] {\n  padding: 0.75rem;\n  border: 1px solid #d8dee6;\n  border-radius: 4px;\n  background: #fff;\n}\n.topic-doormat-recommendation[_ngcontent-%COMP%] {\n  white-space: pre-line;\n}\n/*# sourceMappingURL=component-guidance.component.css.map */"] });
+};
+(() => {
+  (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(AlertsGuidanceComponent, [{
+    type: Component,
+    args: [{ selector: "ca-alerts-guidance", standalone: true, imports: [CommonModule, FormsModule, TableModule, CheckboxModule, ButtonModule], template: `<p-table [value]="issues" styleClass="p-datatable-sm alert-table">
+  <ng-template pTemplate="header">
+    <tr>
+      <th class="include-col">Include in fix</th>
+      <th class="severity-col">Severity</th>
+      <th>Pain point category</th>
+      <th class="wrap-col">Description</th>
+      <th class="wrap-col">Recommendation</th>
+    </tr>
+  </ng-template>
+  <ng-template pTemplate="body" let-issue>
+    <tr>
+      <td class="include-col">
+        <p-checkbox
+          [binary]="true"
+          [(ngModel)]="issue.include"
+          [disabled]="isNoIssueRow(issue)"
+          (onChange)="onIncludeToggle()"
+        ></p-checkbox>
+      </td>
+      <td class="severity-col">
+        <span class="chip" [ngClass]="severityClass(issue.severity)">
+          {{ issue.severity }}
+        </span>
+      </td>
+      <td>{{ issue.category }}</td>
+      <td class="wrap-col">{{ issue.description }}</td>
+      <td class="wrap-col">{{ issue.recommendation }}</td>
+    </tr>
+  </ng-template>
+</p-table>
+
+<div class="alert-table-actions">
+  <button
+    pButton
+    type="button"
+    label="Re-analyse current webpage"
+    icon="pi pi-refresh"
+    [class]="
+      (reanalysisRecommended ? 'p-button-primary' : 'p-button-secondary') +
+      ' p-button-sm'
+    "
+    [disabled]="reanalysisDisabled"
+    (click)="analyzeCurrentPage()"
+  ></button>
+</div>
+`, styles: ["/* src/app/views/page-assistant/components/problems/component-guidance/alerts-guidance/alerts-guidance.component.css */\n.alert-table .p-datatable-tbody > tr > td,\n.alert-table .p-datatable-thead > tr > th {\n  white-space: normal !important;\n  word-break: normal;\n  overflow-wrap: normal;\n  vertical-align: top;\n}\n.alert-table .wrap-col {\n  min-width: 140px;\n}\n.alert-table .severity-col .chip {\n  white-space: nowrap !important;\n  display: inline-flex;\n}\n.alert-table .include-col {\n  width: 140px;\n  text-align: center;\n}\n.alert-table .include-col .p-checkbox {\n  display: inline-flex;\n}\n.alert-table .p-datatable-table {\n  width: 100%;\n  border: 1px solid #d1d5db;\n  border-radius: 6px;\n}\n.alert-table .p-datatable-wrapper {\n  width: 100%;\n  overflow-x: auto;\n}\n.alert-table .p-datatable-table {\n  table-layout: auto !important;\n}\n.alert-table-actions {\n  display: flex;\n  justify-content: flex-end;\n  margin-top: 0.75rem;\n}\n.alert-table .toggle-col,\n.alert-table .checkbox-col {\n  width: 1%;\n  white-space: nowrap;\n  text-align: center;\n  padding: 0;\n}\n.alert-table.p-datatable .p-datatable-thead > tr > th.toggle-col,\n.alert-table.p-datatable .p-datatable-tbody > tr > td.toggle-col,\n.alert-table.p-datatable .p-datatable-thead > tr > th.checkbox-col,\n.alert-table.p-datatable .p-datatable-tbody > tr > td.checkbox-col {\n  width: 1% !important;\n  white-space: nowrap !important;\n  text-align: center;\n  padding: 0 0.25rem;\n}\n/*# sourceMappingURL=alerts-guidance.component.css.map */\n", "/* src/app/views/page-assistant/components/problems/component-guidance/component-guidance.component.css */\n:host ::ng-deep .alert-table .p-datatable-table {\n  table-layout: auto !important;\n}\n:host ::ng-deep .alert-table.p-datatable .p-datatable-thead > tr > th.toggle-col,\n:host ::ng-deep .alert-table.p-datatable .p-datatable-tbody > tr > td.toggle-col {\n  width: 70px !important;\n  min-width: 70px;\n  max-width: 70px;\n  white-space: nowrap !important;\n  text-align: center;\n  padding: 0 0.25rem;\n}\n:host ::ng-deep .alert-table.p-datatable .p-datatable-thead > tr > th.checkbox-col,\n:host ::ng-deep .alert-table.p-datatable .p-datatable-tbody > tr > td.checkbox-col {\n  width: 70px !important;\n  min-width: 70px;\n  max-width: 70px;\n  white-space: nowrap !important;\n  text-align: center;\n  padding: 0 0.25rem;\n}\n:host ::ng-deep .topic-doormat-section-row > td {\n  background: #eef2f6;\n}\n.topic-doormat-group {\n  margin-top: 1rem;\n  border: 1px solid #d8dee6;\n  border-radius: 6px;\n  background: #fff;\n  overflow: hidden;\n}\n.topic-doormat-group + .topic-doormat-group {\n  margin-top: 1.25rem;\n}\n.topic-doormat-group-header {\n  display: flex;\n  align-items: flex-start;\n  gap: 0.75rem;\n  padding: 1.1rem 1.25rem;\n  border-bottom: 1px solid #d8dee6;\n  background: #eef2f6;\n}\n.topic-doormat-group h3 {\n  margin: 0;\n  font-size: 1.25rem;\n  line-height: 1.25;\n}\n.topic-doormat-count {\n  flex: 0 0 auto;\n  padding: 0.4rem 0.8rem;\n  border: 1px solid #d8dee6;\n  border-radius: 999px;\n  background: #fff;\n  color: #202833;\n  font-size: 0.9rem;\n  font-weight: 700;\n}\n.topic-doormat-subheading {\n  margin: 1rem 1rem 0.4rem;\n  padding-bottom: 0.25rem;\n  border-bottom: 1px solid #eef2f6;\n  color: #202833;\n  font-size: 0.9rem;\n  font-weight: 700;\n}\n.topic-doormat-group .expansion-table {\n  margin: 0 1rem 1rem;\n}\n.topic-doormat-empty {\n  padding: 0.75rem;\n  border: 1px solid #d8dee6;\n  border-radius: 4px;\n  background: #fff;\n}\n.topic-doormat-recommendation {\n  white-space: pre-line;\n}\n/*# sourceMappingURL=component-guidance.component.css.map */\n"] }]
+  }], () => [], { selectAll: [{
+    type: Input
+  }], maxSeverityChange: [{
+    type: Output
+  }], categoriesChange: [{
+    type: Output
+  }], loadingChange: [{
+    type: Output
+  }], errorChange: [{
+    type: Output
+  }] });
+})();
+(() => {
+  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(AlertsGuidanceComponent, { className: "AlertsGuidanceComponent", filePath: "app/views/page-assistant/components/problems/component-guidance/alerts-guidance/alerts-guidance.component.ts", lineNumber: 117 });
+})();
+
+// src/app/views/page-assistant/data/css-list.config.ts
+var allowedElements = [
+  "header",
+  "footer",
+  "main",
+  "body",
+  "div",
+  "span",
+  "section",
+  "nav",
+  "time",
+  "abbr",
+  "p",
+  "h1",
+  "h2",
+  "h3",
+  "h4",
+  "h5",
+  "h6",
+  "ul",
+  "ol",
+  "li",
+  "dl",
+  "dt",
+  "dd",
+  "table",
+  "thead",
+  "tbody",
+  "tfoot",
+  "tr",
+  "td",
+  "th",
+  "form",
+  "input",
+  "label",
+  "fieldset",
+  "legend",
+  "button",
+  "strong",
+  "aside",
+  "summary",
+  "details",
+  "a",
+  "img",
+  "figure",
+  "figcaption"
+];
+var allowedClasses = [
+  //AEM
+  /^(mwsgeneric-base-html|mwstitle|mwsbodytext|parbase)$/,
+  // Alerts / Status
+  /^alert(-(danger|dismissable|dismissible|info|link|success|warning))?$/,
+  /^(danger|success|warning|info|secondary|error|errmsg|has-(error|feedback|success|warning))$/,
+  // Alignment / Layout / Display
+  /^align-(bottom|middle|top|items-(center|sm-center)|self-(center|end))$/,
+  /\b(center|full-width|flex(-column|-sm-wrap)?|hide|invisible|left|pre-scrollable|right|row-no-gutters|show|stretched-link|text-hide|small|sm|xxsmallview|xlargeview)\b/,
+  /^d(-(sm-)?flex)?$/,
+  /^pull-(left|right)$/,
+  /^(top(-(left|right))?|bottom(-(left|right))?)$/,
+  /^mrgn-(tp|bttm|lft|rght)-(0|xs|sm|md|lg|xl)$/,
+  /^(m|p)([trblxy]?)-(auto|[0-5])$/,
+  /^(m|p)([trblxy]?)-(lg|md|sm)-?(auto|[0-5])$/,
+  /^pstn-(bttm|lft|rght|tp)-(lg|md|sm|xs)$/,
+  /^margin-(top|bottom)-(none|large|medium)$/,
+  /^(cnt-wdth-lmtd|container(-fluid)?|max-content|allow-wrap|nowrap|position-relative|grow|)$/,
+  /^(hght-inhrt|eqht-trgt)$/,
+  // Backgrounds
+  /^bg-(center|cover|danger|dark(er)?|gctheme|img-hdng|info|light|norepeat|pnkDy|primary|success|warning)$/,
+  /(no-)?backgroundsize/,
+  // Borders
+  /^brdr-(0|bttm|lft|rght|tp|rds-0)$/,
+  // Calendar
+  /^cal-(cnt-fluid|curr-day|days|evt|evt-lnk|nav)$/,
+  // Carousel / Slideshows
+  /^carousel(-(caption|control|indicators|inner|s[12]))?$/,
+  /\b(fd-(slider|wdgt)(-(bar|handle|range))?|slide|slidefade|slidevert)\b/,
+  // Clearfix
+  /^clr-(lft|rght)-(lg|md|sm)$/,
+  // Columns / Grid system
+  /^col-?(xs|sm|md|lg)?-?([0-9]{1,2}|auto)?$/,
+  /^col-(xs|sm|md|lg)-(offset|push|pull)-[0-9]{1,2}$/,
+  /^colcount-(xxs|xs|sm|md|lg|xl)-[2-4]$/,
+  "colcount-no-break",
+  /^row(border)?$/,
+  // Embeds
+  /^embed-responsive(-(16by9|4by3|item))?$/,
+  // Headings
+  /^h(1|2|3|4|5|6)$/,
+  // File extensions
+  /\b(jpg|png|woff2?|ttf|eot|svg)\b/,
+  // Forms / Inputs / UI controls
+  /^btn(-(block|call-to-action|cnt|danger|default|group(-(justified|lg|sm|vertical|xs))?|info|lg|link|primary|sm|success|toolbar|warning|xs|all-services))?$/,
+  /^form-(control(-(feedback|static))?|group(-(lg|sm))?|horizontal|inline)$/,
+  /\b(checkbox(-inline|-standalone)?|radio(-inline)?|control(-label)?|controls|inputs-zone|submit|reset|picker-overlay|datepicker-format)\b/,
+  /^(input-(group(-(addon|btn|lg|sm))?|lg|sm)|form-(control(-(feedback|static))?|group(-(lg|sm))?|horizontal|inline))$/,
+  /\b(active|disabled|selected|hover|required(-no-asterisk)?)\b/,
+  /\b(buttons|basic-link|legend-brdr-bttm|legend-label-only)\b/,
+  /^dropdown-?(backdrop|header|menu-?(left|right)?|toggle)?$|^dropup$/,
+  // Geomap
+  /^geomap-(aoi|clear-format|geoloc(-aoi-btn)?|help-(btn|dialog)|legend-(detail|element|label|symbol(-text)?)|lgnd(-layer)?|progress)$/,
+  "geoloc-progress",
+  // Labels
+  /^label(-(danger|default|info|inline|primary|success|warning))?$/,
+  // Lists
+  /^list-col-(xs|sm|md|lg)-[1-4]$/,
+  /^list-group(?:-item(?:-(?:danger|heading|info|success|text|warning))?)?$/,
+  /^list-(advanced|inline|responsive|unstyled)$/,
+  /^lst-(?:spcd(?:-2)?|lwr-(?:alph|rmn)|upr-(?:alph|rmn)|none|num)$/,
+  /^dl-(horizontal|inline)$/,
+  "disc",
+  // Media & Images
+  /\b(media(-(body|bottom|heading|left|middle|object|right))?|audio|video|feed|feeds-(cont|date)|figcaption|pln|highlighted|fun|quiz|question|mark)\b/,
+  /^(thumbnail|badge(-dept)?|avatar|cmpgn-(img|sctns)|cndwrdmrk)$/,
+  /^img-(circle|responsive|rounded|thumbnail)$/,
+  // Modals
+  /^modal-?(backdrop|body|content|dialog|footer|header|lg|open|scrollbar-measure|sm|title)?$/,
+  /^mfp-[a-z0-9-]+$/,
+  /^overlay(-bg|-close|-def)?$/,
+  // Navbar
+  /^navbar-?(brand|btn|collapse|default|fixed-(bottom|top)|form|header|inverse|left|link|nav|right|static-top|text|toggle)?$/,
+  /^nav-?(tabs|justified|pills|stacked|divider)?$/,
+  /^(nvbar|current)$/,
+  // Opacity
+  /^opct-(10|20|30|40|50|60|70|80|90|100)$/,
+  // Pagination / Sorting
+  /^(paginate-?(next|prev)|pagntn-prv-nxt|pgntn-lbl|pager|page-(header|type-(ilp|nav|search|theme))|_button)$/,
+  /^pagination(-lg)?$/,
+  /^sorting(_(1|2|3|asc(_disabled)?|desc(_disabled)?)|(-cnt|-icons))?$/,
+  /^(next|nxt|previous|prev)$/,
+  // Panels
+  /^panel-?(body|collapse|danger|default|footer|group|heading|info|primary|success|title|warning)?$/,
+  /^well(-(bold|lg|sm))?$/,
+  /\b(sm-pnl|lastpnl|tgl-panel|frstpnl|sec-pnl|info-pnl)\b/,
+  /^tab-?(content|count|pane|panels|acc)$/,
+  "expanded",
+  // Progress bar
+  /^progress(-bar(-(danger|info|striped|success|warning))?|Striped|Bar|Text)?$/,
+  // Tables
+  /^table-?(bordered|columnfloat|condensed|hover|responsive|striped)?$/,
+  /^(data(T|t)ables?_?(empty|filter|info|length|paginate|processing|scroll(Body|Head)?|sizing|wrapper)?)$/,
+  /^nws-tbl-?(date|dept|desc|ttl|type)?$/,
+  // Tooltips / Popovers
+  /^(tooltip-?(arrow|inner|txt)|popover-?(content|title)?)?$/,
+  // Text
+  /^text-(center|left|right|sm-left|sm-right|danger|info|justify|lowercase|muted|nowrap|primary|success|uppercase|warning|white|capitalize)$/,
+  "lead",
+  // Visibility
+  /^visible-(xs|sm|md|lg|print)(-(block|inline|inline-block))?$/,
+  /^hidden(-(xs|sm|md|lg|print|hd))?$/,
+  /^sr-only(-focusable)?$/,
+  // Skeleton
+  /^skeleton-lgnd-(1|2|3)$/,
+  // Multi-step UI
+  /\b(steps-wrapper|stepsquiz|expand-collapse-buttons)\b/,
+  // Social media
+  /\b(facebook|twitter(-timeline(-loading|-rendered)?)?|instagram|linkedin|tumblr|reddit|pinterest|youtube|gmail|yahoomail|googleplus|diigo|foursquare|myspace|periscope|x(-social)?|whatsapp|github|social-lnk)\b/,
+  // Framework / WET / GC
+  /^wb-[a-z0-9-]+$/,
+  /^gc-[a-z0-9-]+$/,
+  /^gcds[a-z0-9-]*$/,
+  /^ol(-[a-z0-9-]+)?$/,
+  // Page elements
+  /\b(pagebrand|pagedetails|section|sect-lnks|sctn-desc|breadcrumb|caption|title|subtitle|datemod|departments|features|followus|gcweb-menu|menu|profile|intro|most-requested-bullets)\b/,
+  // Product elements
+  /\bproduct(-data-(compressed|expanded|hidden)|-department|-icon|-language|-link(-container|-list)?|-listing|-name|-platforms|-record|-shortdescription|-longdescription)?\b/,
+  // Icons
+  /^glyphicon(-[a-z0-9-]+)?$/,
+  /^icon-?(bar|next|prev|warning-light)$/
+];
+var disallowedAttributes = [
+  /^on.*/
+  // inline JS handler like onclick, onmouseover
+  //'style'      // inline styles, these are added by page assistant so needs extra check or change added styles to a class
+];
+var guidanceMap = [
+  {
+    name: "page.tools.guidance.craSpecific.andor.title",
+    url: "page.tools.guidance.craSpecific.andor.url",
+    patterns: [/^cnjnctn-(type-(or|and)|xs|sm|md|lg|col(-[2-9][05])?)$/]
+  },
+  {
+    name: "page.tools.guidance.craVariant.alerts.title",
+    url: "page.tools.guidance.craVariant.alerts.url",
+    patterns: [/^alert(-(danger|dismissable|dismissible|info|link|success|warning))?$/]
+  },
+  {
+    id: "topicDoormats",
+    name: "page.tools.guidance.craVariant.topicDoormats.title",
+    url: "page.tools.guidance.craVariant.doormats.url",
+    patterns: ["gc-srvinfo", "gc-drmt", "mwsdoormat-links-container"]
+  },
+  {
+    id: "subwayDoormats",
+    name: "page.tools.guidance.craVariant.subwayDoormats.title",
+    url: "page.tools.guidance.craVariant.doormats.url",
+    patterns: []
+  },
+  {
+    name: "page.tools.guidance.craVariant.fieldflow.title",
+    url: "page.tools.guidance.craVariant.fieldflow.url",
+    patterns: ["wb-fieldflow"]
+  },
+  {
+    name: "page.tools.guidance.craVariant.lists.title",
+    url: "page.tools.guidance.craVariant.lists.url",
+    patterns: [
+      /^list-col-(xs|sm|md|lg)-[1-4]$/,
+      /^list-group(?:-item(?:-(?:danger|heading|info|success|text|warning))?)?$/,
+      /^list-(advanced|inline|responsive|unstyled)$/,
+      /^lst-(?:spcd(?:-2)?|lwr-(?:alph|rmn)|upr-(?:alph|rmn)|none|num)$/,
+      /^dl-(horizontal|inline)$/,
+      "disc"
+    ]
+  },
+  {
+    name: "page.tools.guidance.craVariant.subway.title",
+    url: "page.tools.guidance.craVariant.subway.url",
+    patterns: [/^gc-subway(-pagination)?$/]
+  },
+  {
+    name: "page.tools.guidance.craVariant.tables.title",
+    url: "page.tools.guidance.craVariant.tables.url",
+    patterns: [
+      /^table-?(bordered|columnfloat|condensed|hover|responsive|striped)?$/,
+      /^(data(T|t)ables?_?(empty|filter|info|length|paginate|processing|scroll(Body|Head)?|sizing|wrapper)?)$/
+    ]
+  },
+  {
+    name: "page.tools.guidance.gcCore.badges.title",
+    url: "page.tools.guidance.gcCore.badges.url",
+    patterns: ["badge"]
+  },
+  {
+    name: "page.tools.guidance.gcCore.borders.title",
+    url: "page.tools.guidance.gcCore.borders.url",
+    patterns: [/^brdr-(0|bttm|lft|rght|tp|rds-0)$/]
+  },
+  {
+    name: "page.tools.guidance.gcCore.buttons.title",
+    url: "page.tools.guidance.gcCore.buttons.url",
+    patterns: [/^btn(-(block|call-to-action|cnt|danger|default|group(-(justified|lg|sm|vertical|xs))?|info|lg|link|primary|sm|success|toolbar|warning|xs|all-services))?$/]
+  },
+  {
+    name: "page.tools.guidance.gcCore.calendar.title",
+    url: "page.tools.guidance.gcCore.calendar.url",
+    patterns: ["wb-calevt"]
+  },
+  {
+    name: "page.tools.guidance.gcCore.carousel.title",
+    url: "page.tools.guidance.gcCore.carousel.url",
+    patterns: [
+      /^carousel(-(caption|control|indicators|inner|s[12]))?$/,
+      /\b(fd-(slider|wdgt)(-(bar|handle|range))?|slide|slidefade|slidevert)\b/
+    ]
+  },
+  {
+    name: "page.tools.guidance.gcCore.charts.title",
+    url: "page.tools.guidance.gcCore.charts.url",
+    patterns: ["wb-charts"]
+  },
+  {
+    name: "page.tools.guidance.gcCore.features.title",
+    url: "page.tools.guidance.gcCore.features.url",
+    patterns: ["gc-features"]
+  },
+  {
+    name: "page.tools.guidance.gcCore.inview.title",
+    url: "page.tools.guidance.gcCore.inview.url",
+    patterns: ["wb-inview"]
+  },
+  {
+    name: "page.tools.guidance.gcCore.dismissable.title",
+    url: "page.tools.guidance.gcCore.dismissable.url",
+    patterns: ["wb-dismissable"]
+  },
+  {
+    name: "page.tools.guidance.gcCore.equalHeight.title",
+    url: "page.tools.guidance.gcCore.equalHeight.url",
+    patterns: ["wb-eqht"]
+  },
+  {
+    name: "page.tools.guidance.gcCore.footnote.title",
+    url: "page.tools.guidance.gcCore.footnote.url",
+    patterns: ["wb-fnote"]
+  },
+  {
+    name: "page.tools.guidance.gcCore.forms.title",
+    url: "page.tools.guidance.gcCore.forms.url",
+    patterns: [
+      /^btn(-(block|call-to-action|cnt|danger|default|group(-(justified|lg|sm|vertical|xs))?|info|lg|link|primary|sm|success|toolbar|warning|xs|all-services))?$/,
+      /^form-(control(-(feedback|static))?|group(-(lg|sm))?|horizontal|inline)$/,
+      /\b(checkbox(-inline|-standalone)?|radio(-inline)?|control(-label)?|controls|inputs-zone|submit|reset|picker-overlay|datepicker-format)\b/,
+      /^(input-(group(-(addon|btn|lg|sm))?|lg|sm)|form-(control(-(feedback|static))?|group(-(lg|sm))?|horizontal|inline))$/,
+      /\b(active|disabled|selected|hover|required(-no-asterisk)?)\b/,
+      /\b(buttons|basic-link|legend-brdr-bttm|legend-label-only)\b/,
+      /^dropdown-?(backdrop|header|menu-?(left|right)?|toggle)?$|^dropup$/
+    ]
+  },
+  {
+    name: "page.tools.guidance.gcCore.forms.title",
+    url: "page.tools.guidance.gcCore.forms.url",
+    patterns: [
+      /^col-?(xs|sm|md|lg)?-?([0-9]{1,2}|auto)?$/,
+      /^col-(xs|sm|md|lg)-(offset|push|pull)-[0-9]{1,2}$/,
+      /^colcount-(xxs|xs|sm|md|lg|xl)-[2-4]$/,
+      "colcount-no-break",
+      /^row(border)?$/
+    ]
+  },
+  {
+    name: "page.tools.guidance.gcCore.hidden.title",
+    url: "page.tools.guidance.gcCore.hidden.url",
+    patterns: [
+      /^visible-(xs|sm|md|lg|print)(-(block|inline|inline-block))?$/,
+      /^hidden(-(xs|sm|md|lg|print|hd))?$/,
+      /^sr-only(-focusable)?$/
+    ]
+  },
+  {
+    name: "page.tools.guidance.gcCore.label.title",
+    url: "page.tools.guidance.gcCore.label.url",
+    patterns: ["label"]
+  },
+  {
+    name: "page.tools.guidance.gcCore.checkboxAndRadio.title",
+    url: "page.tools.guidance.gcCore.checkboxAndRadio.url",
+    patterns: ["gc-chckbxrdio"]
+  },
+  {
+    name: "page.tools.guidance.gcCore.margin.title",
+    url: "page.tools.guidance.gcCore.margin.url",
+    patterns: [
+      /^mrgn-(tp|bttm|lft|rght)-(0|xs|sm|md|lg|xl)$/,
+      /^(m|p)([trblxy]?)-(auto|[0-5])$/,
+      /^(m|p)([trblxy]?)-(lg|md|sm)-?(auto|[0-5])$/,
+      /^margin-(top|bottom)-(none|large|medium)$/
+    ]
+  }
+];
+var guidanceExclusionMap = [
+  {
+    name: "page.tools.guidance.craVariant.basicPage.title",
+    url: "page.tools.guidance.craVariant.basicPage.url",
+    patterns: [/^(gc-srvinfo|list-group)$/, /^gc-subway(-pagination)?$/]
+  }
+];
+var guidanceContentMap = [
+  {
+    name: "page.tools.guidance.craSpecific.contact.title",
+    url: "page.tools.guidance.craSpecific.contact.url",
+    tag: "dt",
+    patterns: [/^Online$/i, /^By phone$/i, /^By mail$/i]
+  },
+  {
+    name: "page.tools.guidance.craSpecific.toc.title",
+    url: "page.tools.guidance.craSpecific.toc.url",
+    tag: "h2",
+    patterns: [/^On this page$/i, /^Table of contents$/i]
+  },
+  {
+    name: "page.tools.guidance.craVariant.links.title",
+    url: "page.tools.guidance.craVariant.links.url",
+    tag: "a",
+    patterns: [/^.*?$/]
+  },
+  {
+    name: "page.tools.guidance.craVariant.headings.title",
+    url: "page.tools.guidance.craVariant.headings.url",
+    tag: /^h[1-6]$/,
+    patterns: [/^.*?$/]
+  },
+  {
+    name: "page.tools.guidance.craVariant.borders.title",
+    url: "page.tools.guidance.craVariant.borders.url",
+    tag: "br",
+    patterns: [/^.*?$/]
+  },
+  {
+    name: "page.tools.guidance.gcCore.code.title",
+    url: "page.tools.guidance.gcCore.code.url",
+    tag: /^(code|pre)$/,
+    patterns: [/^.*?$/]
+  },
+  {
+    name: "page.tools.guidance.gcCore.exHide.title",
+    url: "page.tools.guidance.gcCore.exHide.url",
+    tag: /^(details|summary)$/,
+    patterns: [/^.*?$/]
+  },
+  {
+    name: "page.tools.guidance.gcCore.images.title",
+    url: "page.tools.guidance.gcCore.images.url",
+    tag: "img",
+    patterns: [/^.*?$/]
+  },
+  {
+    name: "page.tools.guidance.gcCore.keyboardKeys.title",
+    url: "page.tools.guidance.gcCore.keyboardKeys.url",
+    tag: "kbd",
+    patterns: [/^.*?$/]
+  }
+];
+
+// src/app/views/page-assistant/services/validator.service.ts
+var SUBWAY_DOORMATS_GUIDANCE = {
+  id: "subwayDoormats",
+  name: "page.tools.guidance.craVariant.subwayDoormats.title",
+  url: "page.tools.guidance.craVariant.doormats.url"
+};
+var TOPIC_DOORMATS_GUIDANCE = {
+  id: "topicDoormats",
+  name: "page.tools.guidance.craVariant.topicDoormats.title",
+  url: "page.tools.guidance.craVariant.doormats.url"
+};
+var ValidatorService = class _ValidatorService {
+  validateHtml(html) {
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(html, "text/html");
+    const violations = [];
+    this.walkNodes(doc.body, violations);
+    return violations;
+  }
+  walkNodes(node, violations) {
+    if (node.nodeType === Node.ELEMENT_NODE) {
+      const tagName = node.tagName.toLowerCase();
+      if (!allowedElements.includes(tagName)) {
+        violations.push({
+          type: "element",
+          detail: `Unexpected element <${tagName}>`,
+          node
+        });
+      }
+      node.classList.forEach((cls) => {
+        if (!this.isClassAllowed(cls)) {
+          violations.push({
+            type: "class",
+            detail: `Unexpected class "${cls}" on <${tagName}>`,
+            node
+          });
+        }
+      });
+      Array.from(node.attributes).forEach((attr) => {
+        if (this.isAttributeDisallowed(attr.name)) {
+          violations.push({
+            type: "attribute",
+            detail: `Disallowed attribute "${attr.name}" on <${tagName}>`,
+            node
+          });
+        }
+      });
+    }
+    node.childNodes.forEach((child) => {
+      if (child.nodeType === Node.ELEMENT_NODE) {
+        this.walkNodes(child, violations);
+      }
+    });
+  }
+  isClassAllowed(cls) {
+    return allowedClasses.some((allowed) => {
+      if (typeof allowed === "string")
+        return allowed === cls;
+      if (allowed instanceof RegExp)
+        return allowed.test(cls);
+      return false;
+    });
+  }
+  isAttributeDisallowed(attr) {
+    return disallowedAttributes.some((bad) => {
+      if (typeof bad === "string")
+        return bad === attr;
+      if (bad instanceof RegExp)
+        return bad.test(attr);
+      return false;
+    });
+  }
+  collectGuidanceUrls(html) {
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(html, "text/html");
+    const found = /* @__PURE__ */ new Map();
+    this.walkForGuidance(doc.body, found);
+    this.walkForContentGuidance(doc.body, found);
+    this.collectStructuralGuidance(doc.body, found);
+    this.walkForGuidanceByExclusion(doc.body, found);
+    return Array.from(found.values());
+  }
+  collectStructuralGuidance(root, found) {
+    if (root.querySelector("nav.gc-subway dl dt a") && root.querySelector("nav.gc-subway dl dd")) {
+      this.addGuidance(found, SUBWAY_DOORMATS_GUIDANCE);
+    }
+    if (this.hasLegacyTopicDoormatStructure(root)) {
+      this.addGuidance(found, TOPIC_DOORMATS_GUIDANCE);
+    }
+  }
+  hasLegacyTopicDoormatStructure(root) {
+    if (root.querySelector(".gc-srvinfo") || root.querySelector(".gc-drmt") || root.querySelector(".mwsdoormat-links-container")) {
+      return true;
+    }
+    const topicsHeading = Array.from(root.querySelectorAll("h2, h3")).find((heading) => (heading.textContent || "").replace(/\s+/g, " ").trim().toLowerCase() === "topics");
+    if (!topicsHeading)
+      return false;
+    let linkedHeadingCount = 0;
+    let current = topicsHeading.nextElementSibling;
+    while (current && linkedHeadingCount < 2) {
+      const text = (current.textContent || "").replace(/\s+/g, " ").trim().toLowerCase();
+      if (current.matches("h2") && text && text !== "topics") {
+        break;
+      }
+      if (current.matches("h2, h3") && current.querySelectorAll("a[href]").length === 1) {
+        linkedHeadingCount += 1;
+      }
+      current = current.nextElementSibling;
+    }
+    return linkedHeadingCount >= 2;
+  }
+  walkForGuidance(node, found) {
+    if (node.nodeType === Node.ELEMENT_NODE) {
+      node.classList.forEach((cls) => {
+        for (const group of guidanceMap) {
+          if (group.patterns.some((pat) => typeof pat === "string" ? pat === cls : pat.test(cls))) {
+            this.addGuidance(found, group);
+          }
+        }
+      });
+    }
+    node.childNodes.forEach((child) => {
+      if (child.nodeType === Node.ELEMENT_NODE) {
+        this.walkForGuidance(child, found);
+      }
+    });
+  }
+  walkForContentGuidance(node, found) {
+    if (node.nodeType === Node.ELEMENT_NODE) {
+      const tagName = node.tagName.toLowerCase();
+      const text = node.textContent?.trim();
+      if (text) {
+        for (const group of guidanceContentMap) {
+          const tagMatches = typeof group.tag === "string" ? group.tag === tagName : group.tag.test(tagName);
+          if (tagMatches && group.patterns.some((pat) => typeof pat === "string" ? pat === text : pat.test(text))) {
+            this.addGuidance(found, group);
+          }
+        }
+      }
+    }
+    node.childNodes.forEach((child) => {
+      if (child.nodeType === Node.ELEMENT_NODE) {
+        this.walkForContentGuidance(child, found);
+      }
+    });
+  }
+  //Adds guidance if specific classes aren't found (example: it's probably a basic page if no doormats or subway pattern detected)
+  walkForGuidanceByExclusion(root, found) {
+    for (const group of guidanceExclusionMap) {
+      const hasExclusion = group.patterns.some((pat) => {
+        if (typeof pat === "string") {
+          return root.querySelector(`.${pat}`) !== null;
+        } else {
+          return Array.from(root.querySelectorAll("[class]")).some((el) => el.className.split(/\s+/).some((cls) => pat.test(cls)));
+        }
+      });
+      if (!hasExclusion) {
+        this.addGuidance(found, group);
+      }
+    }
+  }
+  addGuidance(found, group) {
+    found.set(`${group.id ?? group.name}|${group.name}|${group.url}`, {
+      id: group.id,
+      name: group.name,
+      url: group.url
+    });
+  }
+  static \u0275fac = function ValidatorService_Factory(__ngFactoryType__) {
+    return new (__ngFactoryType__ || _ValidatorService)();
+  };
+  static \u0275prov = /* @__PURE__ */ \u0275\u0275defineInjectable({ token: _ValidatorService, factory: _ValidatorService.\u0275fac, providedIn: "root" });
+};
+(() => {
+  (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(ValidatorService, [{
+    type: Injectable,
+    args: [{
+      providedIn: "root"
+    }]
+  }], null, null);
+})();
+
+// src/app/views/page-assistant/services/component-ai.service.ts
+var ComponentAiService = class _ComponentAiService {
+  openRouter = inject(OpenRouterService);
+  models = this.openRouter.freeModels;
+  /** Batch assess selected components; returns a result per input (same order). */
+  assess(components) {
+    return __async(this, null, function* () {
+      const results = [];
+      for (const c of components) {
+        const one = yield this.assessOne(c);
+        results.push(one);
+      }
+      return results;
+    });
+  }
+  /** Assess a single component with minimal, strictly-JSON output. */
+  assessOne(input) {
+    return __async(this, null, function* () {
+      const system = `You are a senior CRA web UI reviewer.
+Given a component label, its UCDG guidance URL, and a small HTML snippet showing how it's used on a page:
+- Judge if the component choice is appropriate for its apparent purpose (UX/writing perspective).
+- Judge if the code looks up to date with GCWeb/GCDS/UCDG guidance (class names, structure hints).
+- If you\u2019re unsure, return "unknown".
+
+Return ONLY compact JSON (no prose):
+{
+  "health": "ok" | "issue" | "unknown",
+  "confidence": 0..1,
+  "codeUpToDate": true|false,
+  "issues": ["short bullet 1","short bullet 2"],
+  "rationale": "\u226425 words"
+}`;
+      const snippet = (input.htmlSnippet || "").slice(0, 25e3);
+      const user = {
+        componentLabel: input.componentLabel,
+        guidanceUrl: input.guidanceUrl || null,
+        htmlSnippet: snippet || null
+      };
+      const messages = [
+        { role: "system", content: system },
+        { role: "user", content: JSON.stringify(user) }
+      ];
+      for (const model of this.models) {
+        const resp = yield this.openRouter.call(model, messages, {
+          temperature: 0,
+          title: "Content Assistant - Component Guidance"
+        });
+        const text = resp?.choices?.[0]?.message?.content;
+        if (!text)
+          continue;
+        const cleaned = this.stripCodeFences(text);
+        const parsed = this.looseJsonParse(cleaned);
+        const out = this.toResult(parsed, input.componentLabel);
+        if (out)
+          return out;
+      }
+      return {
+        componentLabel: input.componentLabel,
+        health: "unknown",
+        confidence: 0,
+        codeUpToDate: void 0,
+        issues: [],
+        rationale: "No AI response."
+      };
+    });
+  }
+  // ---------- Output hygiene ----------
+  stripCodeFences(s) {
+    return s.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/i, "").trim();
+  }
+  tryParseJSON(s) {
+    try {
+      return JSON.parse(s);
+    } catch {
+      return null;
+    }
+  }
+  looseJsonParse(s) {
+    const direct = this.tryParseJSON(s);
+    if (direct !== null)
+      return direct;
+    const m = s.match(/\{[\s\S]*\}/);
+    return m ? this.tryParseJSON(m[0]) : null;
+  }
+  toResult(j, componentLabel) {
+    if (!j || typeof j !== "object")
+      return null;
+    const o = j;
+    const health = o["health"];
+    if (health !== "ok" && health !== "issue" && health !== "unknown")
+      return null;
+    let confidence = Number(o["confidence"]);
+    if (!Number.isFinite(confidence))
+      confidence = 0;
+    confidence = Math.max(0, Math.min(1, confidence));
+    const res = {
+      componentLabel,
+      health,
+      confidence
+    };
+    if (typeof o["codeUpToDate"] === "boolean")
+      res.codeUpToDate = o["codeUpToDate"];
+    if (typeof o["rationale"] === "string")
+      res.rationale = o["rationale"];
+    if (Array.isArray(o["issues"])) {
+      res.issues = o["issues"].filter((x) => typeof x === "string").slice(0, 6);
+    } else {
+      res.issues = [];
+    }
+    return res;
+  }
+  static \u0275fac = function ComponentAiService_Factory(__ngFactoryType__) {
+    return new (__ngFactoryType__ || _ComponentAiService)();
+  };
+  static \u0275prov = /* @__PURE__ */ \u0275\u0275defineInjectable({ token: _ComponentAiService, factory: _ComponentAiService.\u0275fac, providedIn: "root" });
+};
+(() => {
+  (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(ComponentAiService, [{
+    type: Injectable,
+    args: [{ providedIn: "root" }]
+  }], null, null);
+})();
+
 // src/app/views/page-assistant/services/topic-doormats/topic-doormat-presenter.service.ts
 var SEVERITY_RANK = {
   high: 3,
@@ -34058,6 +34106,7 @@ function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Te
   if (rf & 2) {
     const ctx_r2 = \u0275\u0275nextContext(3);
     \u0275\u0275advance();
+    \u0275\u0275classMap((ctx_r2.topicDoormatReanalysisRecommended ? "p-button-primary" : "p-button-secondary") + " p-button-sm");
     \u0275\u0275property("disabled", ctx_r2.topicDoormatIssuesLoading);
     \u0275\u0275advance();
     \u0275\u0275conditional(ctx_r2.topicDoormatIssuesLoading ? 2 : ctx_r2.topicDoormatIssuesError ? 3 : -1);
@@ -34106,7 +34155,7 @@ function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_1_Te
 }
 function ComponentGuidanceComponent_ng_template_5_Conditional_4_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275template(0, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Template, 6, 3)(1, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_1_Template, 3, 0, "p-table", 40);
+    \u0275\u0275template(0, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Template, 6, 5)(1, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_1_Template, 3, 0, "p-table", 40);
   }
   if (rf & 2) {
     const row_r20 = \u0275\u0275nextContext().$implicit;
@@ -34161,6 +34210,7 @@ var ComponentGuidanceComponent = class _ComponentGuidanceComponent {
   topicDoormatIssueRows = [];
   topicDoormatIssueGroups = [];
   topicDoormatIssueCategories = [];
+  topicDoormatReanalysisRecommended = false;
   prevAlertHasIssues = false;
   topicDoormatAnalyzedHtml = "";
   // multi-select
@@ -34198,6 +34248,12 @@ var ComponentGuidanceComponent = class _ComponentGuidanceComponent {
       this.syncAlertGuidanceRowForWorkingHtml(html);
       this.syncTopicDoormatGuidanceRowForWorkingHtml(html);
     });
+    effect(() => {
+      const analyzedHtml = this.topicDoormatAnalysisState.getAnalyzedHtml();
+      const rows = this.topicDoormatAnalysisState.getIssueRows();
+      const hasAnalysis = this.topicDoormatAnalysisState.hasAnalysis();
+      this.applySharedTopicDoormatAnalysis(hasAnalysis, analyzedHtml, rows);
+    });
   }
   ngOnInit() {
     const data = this.uploadState.getUploadData();
@@ -34215,6 +34271,7 @@ var ComponentGuidanceComponent = class _ComponentGuidanceComponent {
       this.syncAlertRowSelection();
     }
     this.applyCachedAlertIssues();
+    this.applySharedTopicDoormatAnalysis(this.topicDoormatAnalysisState.hasAnalysis(), this.topicDoormatAnalysisState.getAnalyzedHtml(), this.topicDoormatAnalysisState.getIssueRows());
     this.alertIssuesSub = this.alertAi.issuesUpdated$.subscribe(() => {
       this.applyCachedAlertIssues();
     });
@@ -34318,7 +34375,12 @@ var ComponentGuidanceComponent = class _ComponentGuidanceComponent {
         this.reindexRows();
       }
       if (this.topicDoormatAnalyzedHtml && this.topicDoormatAnalyzedHtml !== html) {
-        this.resetTopicDoormatAnalysisState();
+        const uploadData = this.uploadState.getUploadData();
+        if (uploadData?.originalHtml === html) {
+          this.resetTopicDoormatAnalysisState();
+        } else if (this.topicDoormatAnalysisState.getAnalyzedHtml() === this.topicDoormatAnalyzedHtml) {
+          this.topicDoormatAnalysisState.clear();
+        }
       }
       this.cdr.markForCheck();
       return;
@@ -34341,9 +34403,36 @@ var ComponentGuidanceComponent = class _ComponentGuidanceComponent {
     this.topicDoormatIssueRows = [];
     this.topicDoormatIssueGroups = [];
     this.topicDoormatIssueCategories = [];
+    this.topicDoormatReanalysisRecommended = false;
     this.topicDoormatAnalyzedHtml = "";
     this.topicDoormatAnalysisState.clear();
     this.updateTopicDoormatRowHealth("unknown");
+  }
+  applySharedTopicDoormatAnalysis(hasAnalysis, analyzedHtml, rows) {
+    if (!hasAnalysis || !analyzedHtml || !rows.length) {
+      return;
+    }
+    const currentHtml = this.uploadState.getWorkingHtml();
+    const uploadData = this.uploadState.getUploadData();
+    const analysisMatchesCurrentHtml = analyzedHtml === currentHtml;
+    const currentHtmlIsGenerated = !!uploadData?.originalHtml && uploadData.originalHtml !== currentHtml;
+    if (!analysisMatchesCurrentHtml && !currentHtmlIsGenerated) {
+      return;
+    }
+    if (this.topicDoormatIssuesResponseReceived && this.topicDoormatAnalyzedHtml === analyzedHtml && this.topicDoormatIssueRows === rows) {
+      return;
+    }
+    this.topicDoormatIssuesLoading = false;
+    this.topicDoormatIssuesError = false;
+    this.topicDoormatIssuesErrorDetail = "";
+    this.topicDoormatIssuesResponseReceived = true;
+    this.topicDoormatIssueRows = rows;
+    this.topicDoormatAnalyzedHtml = analyzedHtml;
+    this.topicDoormatIssueGroups = this.buildTopicDoormatIssueGroups(rows);
+    this.topicDoormatReanalysisRecommended = !analysisMatchesCurrentHtml;
+    this.expandTopicDoormatRow();
+    this.analysisAvailable.emit();
+    this.cdr.markForCheck();
   }
   getGuidanceSortRank(nameKey, id) {
     if (nameKey === this.alertsNameKey)
@@ -34518,7 +34607,7 @@ var ComponentGuidanceComponent = class _ComponentGuidanceComponent {
     if (!key2)
       return;
     this.expandedRows = __spreadProps(__spreadValues({}, this.expandedRows), { [key2]: true });
-    if (event?.data?.__id === this.topicDoormatsId) {
+    if (event?.data?.__id === this.topicDoormatsId && !this.topicDoormatIssuesResponseReceived && !this.topicDoormatIssueRows.length) {
       void this.analyzeTopicDoormatIssues();
     }
   }
@@ -34532,6 +34621,7 @@ var ComponentGuidanceComponent = class _ComponentGuidanceComponent {
   }
   rerunTopicDoormatIssues() {
     this.topicDoormatIssuesResponseReceived = false;
+    this.topicDoormatReanalysisRecommended = false;
     this.topicDoormatAnalyzedHtml = "";
     void this.analyzeTopicDoormatIssues();
   }
@@ -34593,9 +34683,11 @@ var ComponentGuidanceComponent = class _ComponentGuidanceComponent {
         }
         this.topicDoormatIssueRows = result.rows;
         this.topicDoormatAnalyzedHtml = html;
-        this.topicDoormatAnalysisState.setAnalysis(html, this.topicDoormatIssueRows);
+        this.topicDoormatReanalysisRecommended = false;
+        this.topicDoormatAnalysisState.setAnalysis(html, this.topicDoormatIssueRows, doormatSummaries);
         this.topicDoormatIssueGroups = this.buildTopicDoormatIssueGroups(this.topicDoormatIssueRows);
         this.updateTopicDoormatSummaryState();
+        this.expandTopicDoormatRow();
         this.topicDoormatIssueAnalysis.debug("response parsed", {
           model: result.model,
           responseCharacters: result.text.length,
@@ -34678,6 +34770,12 @@ var ComponentGuidanceComponent = class _ComponentGuidanceComponent {
     if (topicRow) {
       topicRow.health = health;
     }
+  }
+  expandTopicDoormatRow() {
+    const topicRow = this.rows.find((row) => row.__id === this.topicDoormatsId);
+    if (!topicRow)
+      return;
+    this.expandedRows = __spreadProps(__spreadValues({}, this.expandedRows), { [topicRow.url]: true });
   }
   getTopicDoormatIssueCategoriesForDisplay() {
     return this.topicDoormatIssueCategories.length ? this.topicDoormatIssueCategories : this.topicDoormatPresenter.buildIssueCategories(this.topicDoormatIssueRows);
@@ -34805,7 +34903,7 @@ var ComponentGuidanceComponent = class _ComponentGuidanceComponent {
   static \u0275fac = function ComponentGuidanceComponent_Factory(__ngFactoryType__) {
     return new (__ngFactoryType__ || _ComponentGuidanceComponent)();
   };
-  static \u0275cmp = /* @__PURE__ */ \u0275\u0275defineComponent({ type: _ComponentGuidanceComponent, selectors: [["ca-component-guidance"]], outputs: { analysisAvailable: "analysisAvailable" }, decls: 10, vars: 10, consts: [["dt", ""], ["dataKey", "url", "styleClass", "p-datatable-sm", "selectionMode", "multiple", "expandableRows", "", 3, "selectionChange", "sortFunction", "onRowExpand", "onRowCollapse", "value", "selection", "customSort", "resizableColumns", "expandedRowKeys"], ["pTemplate", "caption"], ["pTemplate", "header"], ["pTemplate", "body"], ["pTemplate", "expandedrow"], [1, "mt-3"], ["pButton", "", "type", "button", "aria-label", "Get GenAI recommendations based on user data", "pTooltip", "Select one or more components", 1, "ai-btn", 3, "click", "label", "icon", "disabled", "showDelay", "hideDelay"], [1, "sr-only"], [1, "caption-actions"], ["pButton", "", "type", "button", "label", "Expand All", "icon", "pi pi-plus", 1, "p-button-text", 3, "click"], ["pButton", "", "type", "button", "label", "Collapse All", "icon", "pi pi-minus", 1, "p-button-text", 3, "click"], [2, "width", "3rem", "text-align", "center"], ["pSortableColumn", "order"], ["field", "order"], ["pSortableColumn", "health", 1, "health-col"], ["field", "health"], [3, "pSelectableRow"], [2, "text-align", "center"], ["pButton", "", "type", "button", "aria-label", "Toggle row", 1, "p-button-text", "p-button-rounded", "p-button-plain", 3, "pRowToggler"], ["aria-hidden", "true", 1, "pi", 3, "ngClass"], [3, "value"], ["target", "_blank", "rel", "noopener", 3, "href"], [1, "health-cell", "health-col"], [3, "label", "icon", "styleClass"], [1, "muted"], ["icon", "pi pi-question-circle", "styleClass", "chip chip-unk", 3, "label"], ["label", "OK", "icon", "pi pi-check-circle", "styleClass", "chip chip-ok"], [1, "alert-loading"], [1, "text-danger"], [1, "chip-list"], ["aria-hidden", "true", 1, "pi", "pi-spinner", "pi-spin"], [3, "label", "styleClass", 4, "ngFor", "ngForOf"], [3, "label", "styleClass"], ["styleClass", "chip chip-hghlght", 3, "label", 4, "ngFor", "ngForOf"], ["styleClass", "chip chip-hghlght", 3, "label"], ["colspan", "6"], [1, "p-3"], [1, "expansion-table", 3, "selectAll"], [1, "expansion-table", 3, "maxSeverityChange", "categoriesChange", "loadingChange", "errorChange", "selectAll"], ["styleClass", "p-datatable-sm expansion-table"], [1, "mb-3"], ["pButton", "", "type", "button", "label", "Analyze current page", "icon", "pi pi-refresh", 1, "p-button-text", "p-button-sm", 3, "click", "disabled"], [1, "topic-doormat-empty"], [1, "topic-doormat-group"], [1, "topic-doormat-group-header"], [1, "topic-doormat-count"], [1, "topic-doormat-subheading"], ["styleClass", "p-datatable-sm expansion-table", 3, "value"], ["pTemplate", "emptymessage"], [2, "width", "3rem"], [2, "width", "8rem"], [1, "topic-doormat-section-row"], [3, "ngModelChange", "binary", "ngModel", "disabled"], [1, "chip", 3, "ngClass"], [1, "topic-doormat-recommendation"], [1, "topic-doormat-evidence-list"], [1, "chip", "topic-doormat-evidence-metric", 3, "ngClass"], ["target", "_blank", "rel", "noopener noreferrer", 3, "href"], ["colspan", "5"], [2, "width", "4rem"], ["colspan", "7"]], template: function ComponentGuidanceComponent_Template(rf, ctx) {
+  static \u0275cmp = /* @__PURE__ */ \u0275\u0275defineComponent({ type: _ComponentGuidanceComponent, selectors: [["ca-component-guidance"]], outputs: { analysisAvailable: "analysisAvailable" }, decls: 10, vars: 10, consts: [["dt", ""], ["dataKey", "url", "styleClass", "p-datatable-sm", "selectionMode", "multiple", "expandableRows", "", 3, "selectionChange", "sortFunction", "onRowExpand", "onRowCollapse", "value", "selection", "customSort", "resizableColumns", "expandedRowKeys"], ["pTemplate", "caption"], ["pTemplate", "header"], ["pTemplate", "body"], ["pTemplate", "expandedrow"], [1, "mt-3"], ["pButton", "", "type", "button", "aria-label", "Get GenAI recommendations based on user data", "pTooltip", "Select one or more components", 1, "ai-btn", 3, "click", "label", "icon", "disabled", "showDelay", "hideDelay"], [1, "sr-only"], [1, "caption-actions"], ["pButton", "", "type", "button", "label", "Expand All", "icon", "pi pi-plus", 1, "p-button-text", 3, "click"], ["pButton", "", "type", "button", "label", "Collapse All", "icon", "pi pi-minus", 1, "p-button-text", 3, "click"], [2, "width", "3rem", "text-align", "center"], ["pSortableColumn", "order"], ["field", "order"], ["pSortableColumn", "health", 1, "health-col"], ["field", "health"], [3, "pSelectableRow"], [2, "text-align", "center"], ["pButton", "", "type", "button", "aria-label", "Toggle row", 1, "p-button-text", "p-button-rounded", "p-button-plain", 3, "pRowToggler"], ["aria-hidden", "true", 1, "pi", 3, "ngClass"], [3, "value"], ["target", "_blank", "rel", "noopener", 3, "href"], [1, "health-cell", "health-col"], [3, "label", "icon", "styleClass"], [1, "muted"], ["icon", "pi pi-question-circle", "styleClass", "chip chip-unk", 3, "label"], ["label", "OK", "icon", "pi pi-check-circle", "styleClass", "chip chip-ok"], [1, "alert-loading"], [1, "text-danger"], [1, "chip-list"], ["aria-hidden", "true", 1, "pi", "pi-spinner", "pi-spin"], [3, "label", "styleClass", 4, "ngFor", "ngForOf"], [3, "label", "styleClass"], ["styleClass", "chip chip-hghlght", 3, "label", 4, "ngFor", "ngForOf"], ["styleClass", "chip chip-hghlght", 3, "label"], ["colspan", "6"], [1, "p-3"], [1, "expansion-table", 3, "selectAll"], [1, "expansion-table", 3, "maxSeverityChange", "categoriesChange", "loadingChange", "errorChange", "selectAll"], ["styleClass", "p-datatable-sm expansion-table"], [1, "mb-3"], ["pButton", "", "type", "button", "label", "Re-analyse current webpage", "icon", "pi pi-refresh", 3, "click", "disabled"], [1, "topic-doormat-empty"], [1, "topic-doormat-group"], [1, "topic-doormat-group-header"], [1, "topic-doormat-count"], [1, "topic-doormat-subheading"], ["styleClass", "p-datatable-sm expansion-table", 3, "value"], ["pTemplate", "emptymessage"], [2, "width", "3rem"], [2, "width", "8rem"], [1, "topic-doormat-section-row"], [3, "ngModelChange", "binary", "ngModel", "disabled"], [1, "chip", 3, "ngClass"], [1, "topic-doormat-recommendation"], [1, "topic-doormat-evidence-list"], [1, "chip", "topic-doormat-evidence-metric", 3, "ngClass"], ["target", "_blank", "rel", "noopener noreferrer", 3, "href"], ["colspan", "5"], [2, "width", "4rem"], ["colspan", "7"]], template: function ComponentGuidanceComponent_Template(rf, ctx) {
     if (rf & 1) {
       const _r1 = \u0275\u0275getCurrentView();
       \u0275\u0275elementStart(0, "p-table", 1, 0);
@@ -35136,15 +35234,18 @@ var ComponentGuidanceComponent = class _ComponentGuidanceComponent {
           } @else {
             @if (row.__id === topicDoormatsId) {
               <div class="mb-3">
-                <button
-                  pButton
-                  type="button"
-                  label="Analyze current page"
-                  icon="pi pi-refresh"
-                  class="p-button-text p-button-sm"
-                  [disabled]="topicDoormatIssuesLoading"
-                  (click)="rerunTopicDoormatIssues()">
-                </button>
+	                <button
+	                  pButton
+	                  type="button"
+	                  label="Re-analyse current webpage"
+	                  icon="pi pi-refresh"
+	                  [class]="
+	                    (topicDoormatReanalysisRecommended ? 'p-button-primary' : 'p-button-secondary') +
+	                    ' p-button-sm'
+	                  "
+	                  [disabled]="topicDoormatIssuesLoading"
+	                  (click)="rerunTopicDoormatIssues()">
+	                </button>
                 @if (topicDoormatIssuesLoading) {
                   <span class="muted">
                     <i class="pi pi-spinner pi-spin" aria-hidden="true"></i>
@@ -47131,6 +47232,8 @@ var PageAssistantCompareComponent = class _PageAssistantCompareComponent {
   alertContext = inject(AlertContextService);
   alertRewriteOrchestrator = inject(AlertRewriteOrchestratorService);
   topicDoormatAnalysisState = inject(TopicDoormatAnalysisStateService);
+  topicDoormatExtractor = inject(TopicDoormatExtractorService);
+  topicDoormatIssueAnalysis = inject(TopicDoormatIssueAnalysisService);
   openRouter = inject(OpenRouterService);
   skillManager = inject(SkillManagerService);
   urlDataService = inject(UrlDataService);
@@ -47468,7 +47571,7 @@ var PageAssistantCompareComponent = class _PageAssistantCompareComponent {
     });
   }
   //AI Prompt
-  selectedPromptKey = PromptKey.AlertsRecommendations;
+  selectedPromptKey = PromptKey.Doormats;
   onPromptChange(key2) {
     this.selectedPromptKey = key2;
   }
@@ -47628,16 +47731,55 @@ ${custom}` : promptBody;
   }
   buildDoormatRewriteUserContent(html) {
     const selectedIssues = this.topicDoormatAnalysisState.getSelectedRewriteIssues();
+    const affectedDoormatIndexes = this.getAffectedDoormatIndexesForRewrite(selectedIssues);
+    const summariesByIndex = new Map(this.topicDoormatAnalysisState.getDoormatSummaries().map((summary) => [summary.index, summary]));
     const analyzedHtml = this.topicDoormatAnalysisState.getAnalyzedHtml();
     const issueAnalysisStatus = this.topicDoormatAnalysisState.hasAnalysis() && analyzedHtml === html ? selectedIssues.length ? "selected-issues" : "analysis-available-no-selected-issues" : "not-available-for-current-html";
     return JSON.stringify({
       page_html: html,
       topic_doormat_issue_analysis: {
         status: issueAnalysisStatus,
-        instruction: "Use selected issues as rewrite priorities. Fix them when possible without violating the rewrite rules. If an issue cannot be fixed safely, preserve the safest wording and avoid creating new issues.",
+        instruction: "Use selected issues as rewrite priorities. Fix them when possible without violating the rewrite rules. Preserve doormats that do not have selected issues. If an issue cannot be fixed safely, preserve the safest wording and avoid creating new issues.",
         selected_issues: selectedIssues.map((issue) => this.toDoormatRewriteIssuePayload(issue))
-      }
+      },
+      doormats_with_selected_issues: Array.from(affectedDoormatIndexes).map((index) => summariesByIndex.get(index)).filter((summary) => summary !== void 0).map((summary) => this.toDoormatDestinationRewritePayload(summary))
     });
+  }
+  getAffectedDoormatIndexesForRewrite(issues) {
+    const indexes = /* @__PURE__ */ new Set();
+    issues.forEach((issue) => {
+      if (typeof issue.doormatIndex === "number") {
+        indexes.add(issue.doormatIndex);
+      }
+      (issue.affectedDoormatIndexes ?? []).forEach((index) => {
+        if (typeof index === "number")
+          indexes.add(index);
+      });
+    });
+    return indexes;
+  }
+  toDoormatDestinationRewritePayload(summary) {
+    return {
+      index: summary.index,
+      section_index: summary.sectionIndex,
+      section_title: summary.sectionTitle,
+      section_item_index: summary.sectionItemIndex,
+      href: summary.href,
+      current_link_text: summary.linkText,
+      current_description: summary.description,
+      destination: {
+        url: summary.destinationUrl,
+        http_status: summary.destinationHttpStatus,
+        title: summary.destinationPageTitle,
+        h1: summary.destinationPageHeading,
+        intro_paragraphs: summary.destinationIntroParagraphs ?? [],
+        h2_headings: summary.destinationSectionHeadings ?? [],
+        label_evidence: summary.destinationLabelEvidence ?? [],
+        main_html: summary.destinationMainHtml || "",
+        main_html_truncated: !!summary.destinationMainHtmlTruncated,
+        context_status: summary.destinationContextStatus
+      }
+    };
   }
   toDoormatRewriteIssuePayload(issue) {
     return {
@@ -47655,6 +47797,58 @@ ${custom}` : promptBody;
       affected_doormat_indexes: issue.affectedDoormatIndexes,
       doormat_label: issue.doormatLabel
     };
+  }
+  ensureTopicDoormatIssueAnalysisForRewrite(html, model) {
+    return __async(this, null, function* () {
+      if (this.topicDoormatAnalysisState.hasAnalysis() && this.topicDoormatAnalysisState.getAnalyzedHtml() === html) {
+        return true;
+      }
+      const uploadData = this.uploadState.getUploadData();
+      const doc = this.topicDoormatExtractor.parseHtmlDocument(html);
+      if (!doc)
+        return false;
+      const extractedDoormatSummaries = this.topicDoormatExtractor.extractSummaries(doc);
+      if (!extractedDoormatSummaries.length) {
+        this.messageService.add({
+          severity: "info",
+          summary: this.translate.instant("common.ai.topicDoormatsNotFound"),
+          life: 3e3
+        });
+        return false;
+      }
+      this.statusSeverity = "info";
+      this.statusMessage = this.translate.instant("common.ai.generating");
+      this.messageService.add({
+        severity: "info",
+        summary: this.translate.instant("common.ai.generating"),
+        life: 2e3
+      });
+      const pageLanguage = this.topicDoormatExtractor.detectPageLanguage(doc, uploadData);
+      const bilingualDoormatSummaries = yield this.topicDoormatExtractor.enrichOppositeLanguageLengths(extractedDoormatSummaries, uploadData, pageLanguage);
+      const doormatSummaries = yield this.topicDoormatExtractor.enrichDestinationContext(bilingualDoormatSummaries, uploadData);
+      if (this.uploadState.getWorkingHtml() !== html)
+        return false;
+      const result = yield this.topicDoormatIssueAnalysis.analyze({
+        doormatSummaries,
+        pageLanguage,
+        hasLegacyTopicDoormatTemplate: this.topicDoormatExtractor.hasLegacyTemplate(doc),
+        mostRequestedLinks: this.topicDoormatExtractor.extractMostRequestedLinks(doc),
+        uploadData,
+        selectedModel: model
+      });
+      if (this.uploadState.getWorkingHtml() !== html)
+        return false;
+      this.topicDoormatAnalysisState.setAnalysis(html, result.rows, doormatSummaries);
+      const selectedIssueCount = this.topicDoormatAnalysisState.getSelectedRewriteIssues().length;
+      this.messageService.add({
+        severity: "info",
+        summary: selectedIssueCount ? this.translate.instant("common.ai.topicDoormatIssuesReceived", {
+          model: this.getShortModelName(result.model || model)
+        }) : this.translate.instant("common.ai.topicDoormatIssuesNotIdentified"),
+        life: 3e3
+      });
+      return true;
+    });
   }
   // UI-facing summary of the alert rewrite options currently active.
   buildAlertRewriteStatusMessage() {
@@ -47797,6 +47991,8 @@ ${custom}` : promptBody;
       let usedCachedAlertIssues = false;
       let alertIssuesPromptSent = false;
       let alertRewriteRan = false;
+      let doormatIssueAnalysisRan = false;
+      let doormatRewritePromptSent = false;
       let aiRequestStarted = false;
       let pendingAlertAnalysisHtml = "";
       this.isLoading = true;
@@ -47824,8 +48020,17 @@ ${custom}` : promptBody;
           this.showNoReportableAlertsMessage();
           return;
         }
-        const prompt = yield this.getPromptForKey(promptKeyForRequest);
         const model = this.selectedAiModel;
+        if (isDoormats) {
+          const hadCurrentDoormatAnalysis = this.topicDoormatAnalysisState.hasAnalysis() && this.topicDoormatAnalysisState.getAnalyzedHtml() === html;
+          const doormatAnalysisReady = yield this.ensureTopicDoormatIssueAnalysisForRewrite(html, model);
+          if (!doormatAnalysisReady) {
+            return;
+          }
+          doormatIssueAnalysisRan = !hadCurrentDoormatAnalysis;
+          timingFlow = doormatIssueAnalysisRan ? "doormat-issues-and-rewrite" : "doormat-rewrite-with-cached-issues";
+        }
+        const prompt = yield this.getPromptForKey(promptKeyForRequest);
         const requestedModelShort = this.getShortModelName(model);
         const url = "https://openrouter.ai/api/v1/chat/completions";
         const headers = {
@@ -47893,6 +48098,9 @@ ${custom}` : promptBody;
         let lastValidationError = null;
         if (promptKeyForRequest === PromptKey.AlertsIssues) {
           alertIssuesPromptSent = true;
+        }
+        if (promptKeyForRequest === PromptKey.Doormats) {
+          doormatRewritePromptSent = true;
         }
         for (let i = 0; i < candidates.length; i += 1) {
           const candidate = candidates[i];
@@ -48105,7 +48313,9 @@ ${custom}` : promptBody;
           flow: timingFlow,
           processes: [
             ...alertIssuesPromptSent ? ["alert-issues"] : [],
-            ...alertRewriteRan ? ["alert-rewrite"] : []
+            ...alertRewriteRan ? ["alert-rewrite"] : [],
+            ...doormatIssueAnalysisRan ? ["doormat-issues"] : [],
+            ...doormatRewritePromptSent ? ["doormat-rewrite"] : []
           ],
           usedCachedAlertIssues,
           totalMs: Math.round(endTime - startTime)
@@ -48880,9 +49090,9 @@ ${custom}` : promptBody;
   }] });
 })();
 (() => {
-  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(PageAssistantCompareComponent, { className: "PageAssistantCompareComponent", filePath: "app/views/page-assistant/page-assistant.component.ts", lineNumber: 101 });
+  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(PageAssistantCompareComponent, { className: "PageAssistantCompareComponent", filePath: "app/views/page-assistant/page-assistant.component.ts", lineNumber: 104 });
 })();
 export {
   PageAssistantCompareComponent
 };
-//# sourceMappingURL=chunk-KIPPEZHU.js.map
+//# sourceMappingURL=chunk-ZK6KMBRE.js.map

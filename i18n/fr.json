@@ -59,6 +59,8 @@
 	"common.ai.errorCommunicatingOpenRouter": "Une erreur est survenue lors de la communication avec Open Router ou le modèle d’IA sélectionné.",
 	"common.ai.alertIssuesIdentified": "Problemes d'alertes identifies.",
 	"common.ai.alertIssuesNotIdentified": "Aucun probleme d'alerte identifie.",
+	"common.ai.topicDoormatIssuesNotIdentified": "Aucun probleme de menus d'accueil thematiques identifie.",
+	"common.ai.topicDoormatsNotFound": "Aucun menu d'accueil thematique trouve.",
 	"common.ai.requestFailed.summary": "Échec de la requête IA",
 	"common.ai.requestFailed.detailUnknown": "Une erreur inconnue s'est produite.",
 	"common.language.english": "Anglais",
