@@ -57,6 +57,48 @@ describe('SkillManagerService', () => {
         triggerPhrases: [],
         defaultReferencePaths: ['skills/canada-ca-style/references/writing-rules.json'],
       },
+      {
+        id: 'topic-doormats',
+        name: 'topic-doormats',
+        description: 'Shared GCWeb topic doormat guidance.',
+        skillMdPath: 'skills/topic-doormats/SKILL.md',
+        selectable: false,
+        triggerPhrases: [],
+      },
+      {
+        id: 'topic-doormats-issues',
+        name: 'topic-doormats-issues',
+        description: 'Analyzes GCWeb topic doormats for issues.',
+        skillMdPath: 'skills/topic-doormats/issues/SKILL.md',
+        includedSkillIds: ['topic-doormats'],
+        triggerPhrases: ['doormat', 'doormats', 'topic doormat', 'analyze topic doormats', 'issues'],
+        promptKeys: ['doormats'],
+        outputModes: ['json', 'html'],
+        defaultReferencePaths: ['skills/topic-doormats/issues/references/issue-taxonomy.json'],
+        defaultAssetPaths: ['skills/topic-doormats/issues/assets/issues-output-schema.json'],
+      },
+      {
+        id: 'topic-doormats-rewrite',
+        name: 'topic-doormats-rewrite',
+        description: 'Rewrites GCWeb topic doormats into consistent link text and descriptions.',
+        skillMdPath: 'skills/topic-doormats/rewrite/SKILL.md',
+        includedSkillIds: ['topic-doormats'],
+        triggerPhrases: [
+          'doormat',
+          'doormats',
+          'topic doormat',
+          'rewrite doormat',
+          'rewrite doormats',
+          'rewrite',
+          'replacement',
+          'updated html',
+          'recommendations',
+        ],
+        promptKeys: ['doormats'],
+        outputModes: ['json', 'html'],
+        defaultReferencePaths: ['skills/topic-doormats/rewrite/references/rewrite-rules.json'],
+        defaultAssetPaths: ['skills/topic-doormats/rewrite/assets/rewrite-output-schema.json'],
+      },
     ],
   };
 
@@ -93,6 +135,24 @@ describe('SkillManagerService', () => {
         if (url.includes('skills/canada-ca-style/SKILL.md')) {
           return new Response(
             '---\nname: test-canada-ca-style\ndescription: test\n---\n# Instructions\nApply Canada.ca style rules.',
+            { status: 200 },
+          );
+        }
+        if (url.includes('skills/topic-doormats/rewrite/SKILL.md')) {
+          return new Response(
+            '---\nname: test-topic-doormats-rewrite\ndescription: test\n---\n# Instructions\nRewrite topic doormats.',
+            { status: 200 },
+          );
+        }
+        if (url.includes('skills/topic-doormats/issues/SKILL.md')) {
+          return new Response(
+            '---\nname: test-topic-doormats-issues\ndescription: test\n---\n# Instructions\nAnalyze topic doormat issues.',
+            { status: 200 },
+          );
+        }
+        if (url.includes('skills/topic-doormats/SKILL.md')) {
+          return new Response(
+            '---\nname: test-topic-doormats\ndescription: test\n---\n# Instructions\nApply shared topic doormat rules.',
             { status: 200 },
           );
         }
@@ -141,6 +201,20 @@ describe('SkillManagerService', () => {
         if (url.includes('rewriting-output-schema.json')) {
           return new Response('{"type":"object"}', { status: 200 });
         }
+        if (url.includes('topic-doormats/rewrite/references/rewrite-rules.json')) {
+          return new Response('{"rules":[{"id":"rewrite-complete-set"}]}', {
+            status: 200,
+          });
+        }
+        if (url.includes('topic-doormats/rewrite/assets/rewrite-output-schema.json')) {
+          return new Response('{"type":"object"}', { status: 200 });
+        }
+        if (url.includes('topic-doormats/issues/references/issue-taxonomy.json')) {
+          return new Response('{"issues":[]}', { status: 200 });
+        }
+        if (url.includes('topic-doormats/issues/assets/issues-output-schema.json')) {
+          return new Response('{"type":"object"}', { status: 200 });
+        }
         return new Response('Not found', { status: 404 });
       },
     );
@@ -168,6 +242,7 @@ describe('SkillManagerService', () => {
       promptKey: PromptKey.AlertsIssues,
       outputMode: 'json',
       includeReferences: true,
+      includeOptionalReferences: true,
       includeAssets: true,
     });
 
@@ -201,6 +276,7 @@ describe('SkillManagerService', () => {
       promptKey: PromptKey.AlertsRecommendations,
       outputMode: 'json',
       includeReferences: true,
+      includeOptionalReferences: true,
       includeAssets: true,
     });
 
@@ -236,6 +312,33 @@ describe('SkillManagerService', () => {
       'skills/canada-ca-style/references/writing-rules.json',
     );
     expect(result.prompt).toContain('### Included Skill');
+  });
+
+  it('selects the topic doormat rewrite skill for doormat HTML rewrites', async () => {
+    const result = await service.composePrompt({
+      basePrompt: 'Return full updated HTML.',
+      queryText:
+        'rewrite topic doormats replacement updated html doormat overview list content design',
+      promptKey: PromptKey.Doormats,
+      outputMode: 'html',
+      includeReferences: true,
+      includeAssets: false,
+      requireSkill: true,
+    });
+
+    expect(result.selectedSkill?.id).toBe('topic-doormats-rewrite');
+    expect(result.loadedPaths).toContain(
+      'skills/topic-doormats/rewrite/SKILL.md',
+    );
+    expect(result.loadedPaths).toContain(
+      'skills/topic-doormats/rewrite/references/rewrite-rules.json',
+    );
+    expect(result.loadedPaths).toContain('skills/topic-doormats/SKILL.md');
+    expect(result.loadedPaths).not.toContain(
+      'skills/topic-doormats/rewrite/assets/rewrite-output-schema.json',
+    );
+    expect(result.prompt).toContain('Rewrite topic doormats.');
+    expect(result.prompt).toContain('Return full updated HTML.');
   });
 
   it('loads structured JSON from a skill default reference', async () => {

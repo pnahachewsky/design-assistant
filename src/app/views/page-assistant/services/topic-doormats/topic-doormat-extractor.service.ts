@@ -10,6 +10,7 @@ import {
 @Injectable({ providedIn: 'root' })
 export class TopicDoormatExtractorService {
   private readonly fetchService = inject(FetchService);
+  private readonly destinationMainHtmlCharacterLimit = 12000;
 
   parseHtmlDocument(html: string): Document | null {
     if (!html) return null;
@@ -33,6 +34,8 @@ export class TopicDoormatExtractorService {
         | 'destinationUrl'
         | 'destinationPageTitle'
         | 'destinationPageHeading'
+        | 'destinationMainHtml'
+        | 'destinationMainHtmlTruncated'
         | 'destinationIntroParagraphs'
         | 'destinationSectionHeadings'
         | 'destinationLabelEvidence'
@@ -411,6 +414,8 @@ export class TopicDoormatExtractorService {
       | 'destinationUrl'
       | 'destinationPageTitle'
       | 'destinationPageHeading'
+      | 'destinationMainHtml'
+      | 'destinationMainHtmlTruncated'
       | 'destinationIntroParagraphs'
       | 'destinationSectionHeadings'
       | 'destinationLabelEvidence'
@@ -467,12 +472,15 @@ export class TopicDoormatExtractorService {
         heading,
         destinationIntroParagraphs,
       );
+      const mainHtml = this.extractDestinationMainHtml(main);
       return {
         destinationUrl,
         destinationPageTitle: this.cleanVisibleText(
           destinationDoc.querySelector('title')?.textContent,
         ),
         destinationPageHeading: this.cleanVisibleText(heading?.textContent),
+        destinationMainHtml: mainHtml.html,
+        destinationMainHtmlTruncated: mainHtml.truncated,
         destinationIntroParagraphs,
         destinationSectionHeadings,
         destinationLabelEvidence,
@@ -488,6 +496,8 @@ export class TopicDoormatExtractorService {
         destinationIntroParagraphs: [],
         destinationSectionHeadings: [],
         destinationLabelEvidence: [],
+        destinationMainHtml: '',
+        destinationMainHtmlTruncated: false,
         destinationContextStatus: 'failed',
         destinationHttpStatus: this.getFetchErrorStatus(error),
         destinationFetchError:
@@ -830,5 +840,51 @@ export class TopicDoormatExtractorService {
 
   private cleanVisibleText(value: string | null | undefined): string {
     return (value || '').replace(/\s+/g, ' ').trim();
+  }
+
+  private extractDestinationMainHtml(
+    main: HTMLElement | null,
+  ): { html: string; truncated: boolean } {
+    if (!main) return { html: '', truncated: false };
+    const clone = main.cloneNode(true) as HTMLElement;
+    clone
+      .querySelectorAll(
+        [
+          'script',
+          'style',
+          'noscript',
+          'svg',
+          'canvas',
+          'iframe',
+          'form',
+          'nav',
+          'aside',
+          '[hidden]',
+          '[aria-hidden="true"]',
+          '.pagedetails',
+          '.wb-share',
+          '.wb-disable',
+          '.gc-most-requested',
+          '.gc-srvinfo',
+          '.gc-followus',
+          '.gc-contributors',
+          '.gc-contextual',
+          '.reportaproblem',
+          '[class*="pagedetails"]',
+          '[class*="feedback"]',
+          '[class*="social"]',
+        ].join(', '),
+      )
+      .forEach((element) => element.remove());
+
+    const html = clone.innerHTML.replace(/\s+/g, ' ').trim();
+    if (html.length <= this.destinationMainHtmlCharacterLimit) {
+      return { html, truncated: false };
+    }
+
+    return {
+      html: html.slice(0, this.destinationMainHtmlCharacterLimit),
+      truncated: true,
+    };
   }
 }

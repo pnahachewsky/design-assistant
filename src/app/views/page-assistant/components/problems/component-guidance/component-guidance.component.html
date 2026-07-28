@@ -248,15 +248,18 @@
           } @else {
             @if (row.__id === topicDoormatsId) {
               <div class="mb-3">
-                <button
-                  pButton
-                  type="button"
-                  label="Analyze current page"
-                  icon="pi pi-refresh"
-                  class="p-button-text p-button-sm"
-                  [disabled]="topicDoormatIssuesLoading"
-                  (click)="rerunTopicDoormatIssues()">
-                </button>
+	                <button
+	                  pButton
+	                  type="button"
+	                  label="Re-analyse current webpage"
+	                  icon="pi pi-refresh"
+	                  [class]="
+	                    (topicDoormatReanalysisRecommended ? 'p-button-primary' : 'p-button-secondary') +
+	                    ' p-button-sm'
+	                  "
+	                  [disabled]="topicDoormatIssuesLoading"
+	                  (click)="rerunTopicDoormatIssues()">
+	                </button>
                 @if (topicDoormatIssuesLoading) {
                   <span class="muted">
                     <i class="pi pi-spinner pi-spin" aria-hidden="true"></i>

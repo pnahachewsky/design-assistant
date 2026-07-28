@@ -9,14 +9,16 @@ class FetchServiceStub {
     .and.resolveTo(
       {
         document: new DOMParser().parseFromString(
-          `<html><head><title>Destination</title></head><body><main>
-          <h1>Destination heading</h1>
-          <p>First introductory paragraph.</p>
-          <aside><p>Interface text to exclude.</p></aside>
-          <p>Second introductory paragraph.</p>
-          <p>For more information, see <a href="/reference.html">supporting reference material</a>.</p>
-          <h2>Eligibility</h2>
-          <p>Section body text to exclude.</p>
+	          `<html><head><title>Destination</title></head><body><main>
+	          <h1>Destination heading</h1>
+	          <script>window.noisy = true;</script>
+	          <p>First introductory paragraph.</p>
+	          <aside><p>Interface text to exclude.</p></aside>
+	          <p>Second introductory paragraph.</p>
+	          <div class="pagedetails">Date modified</div>
+	          <p>For more information, see <a href="/reference.html">supporting reference material</a>.</p>
+	          <h2>Eligibility</h2>
+	          <p>Section body text to exclude.</p>
           <h2>How to apply</h2>
         </main></body></html>`,
           'text/html',
@@ -200,9 +202,19 @@ describe('TopicDoormatExtractorService', () => {
       'Eligibility',
       'How to apply',
     ]);
-    expect(enriched[0].destinationContextStatus).toBe('available');
-    expect(enriched[0].destinationHttpStatus).toBe(200);
-  });
+	    expect(enriched[0].destinationContextStatus).toBe('available');
+	    expect(enriched[0].destinationHttpStatus).toBe(200);
+	    expect(enriched[0].destinationMainHtml).toContain(
+	      '<h1>Destination heading</h1>',
+	    );
+	    expect(enriched[0].destinationMainHtml).toContain(
+	      'Section body text to exclude.',
+	    );
+	    expect(enriched[0].destinationMainHtml).not.toContain('window.noisy');
+	    expect(enriched[0].destinationMainHtml).not.toContain('Interface text to exclude');
+	    expect(enriched[0].destinationMainHtml).not.toContain('Date modified');
+	    expect(enriched[0].destinationMainHtmlTruncated).toBeFalse();
+	  });
 
   it('adds opposite-language length counts from the alternate page by section item position', async () => {
     fetchService.fetchContentWithResponse.and.callFake((url: string) => {

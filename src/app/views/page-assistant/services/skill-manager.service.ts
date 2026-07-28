@@ -169,7 +169,10 @@ export class SkillManagerService {
     let score = 0;
     const reasons: string[] = [];
 
-    if (request.promptKey && (skill.promptKeys ?? []).includes(request.promptKey)) {
+    if (request.promptKey && skill.promptKeys?.length) {
+      if (!skill.promptKeys.includes(request.promptKey)) {
+        return { skill, score: -1000, reasons: [`promptKeyMismatch:${request.promptKey}`] };
+      }
       score += 4;
       reasons.push(`promptKey:${request.promptKey}`);
     }
@@ -181,7 +184,7 @@ export class SkillManagerService {
         score += 3;
         reasons.push(`outputMode:${requestedOutputMode}`);
       } else {
-        score -= 2;
+        return { skill, score: -1000, reasons: [`outputModeMismatch:${requestedOutputMode}`] };
       }
     }
 

@@ -427,8 +427,9 @@
           <p class="lede">
             This page summarizes how AIDA detects GCWeb topic doormats, sends structured
             doormat data to the issue prompt, asks the model for bounded classifications
-            and editorial evidence, and makes the final issue decisions in AIDA before
-            any later rewrite work.
+            and editorial evidence, makes the final issue decisions in AIDA, and passes
+            selected issue rows into the rewrite prompt when users ask AI to rewrite the
+            doormat set.
           </p>
         </div>
         <aside class="process-summary" aria-label="Process summary">
@@ -441,7 +442,8 @@
             <li>Send the complete doormat set to the Topic doormats issue skill.</li>
             <li>Ask the model to classify every doormat using constrained values and grounded evidence.</li>
             <li>Let AIDA validate and aggregate the classifications, apply local decision rules, and build the displayed issues.</li>
-            <li>Use selected issue rows as rewrite input when rewrite support is applied.</li>
+            <li>Store selected issue rows for the current working HTML.</li>
+            <li>When Doormats is selected in Send to AI, run the issue analysis if needed, compose the rewrite skill, and send current HTML plus selected issues.</li>
           </ol>
         </aside>
       </div>
@@ -825,7 +827,7 @@
 
         <article class="source-card">
           <h3>Topic doormat rewriting</h3>
-          <p>Used to guide rewritten topic doormat content and output format.</p>
+          <p>Used to guide rewritten topic doormat content, issue-aware rewrite priorities, and output format.</p>
           <ul>
             <li><a href="./skills/topic-doormats/rewrite/SKILL.md">skills/topic-doormats/rewrite/SKILL.md</a></li>
             <li><a href="./skills/topic-doormats/rewrite/references/rewrite-rules.json">skills/topic-doormats/rewrite/references/rewrite-rules.json</a></li>
@@ -843,11 +845,23 @@
 
         <article class="source-card">
           <h3>Runtime code paths</h3>
-          <p>Implementation files that run detection, prompt composition, issue calls, parsing, deterministic rows, and table display.</p>
+          <p>Implementation files that run detection, prompt composition, issue calls, parsing, deterministic rows, table display, issue handoff, and rewrite requests.</p>
           <ul>
             <li>
-              Coordinates the guidance table, expands the Topic doormat row, and displays issue groups and status.
+              Owns the main Send to AI button. When <span class="inline-code">Doormats</span> is selected, it runs topic doormat issue analysis when the current HTML has no stored analysis, then composes the rewrite skill and sends current working HTML plus selected topic doormat issues.
+              <code class="code-path">src/app/views/page-assistant/page-assistant.component.ts</code>
+            </li>
+            <li>
+              Enables the Doormats radio option in the AI options drawer.
+              <code class="code-path">src/app/views/page-assistant/components/ai-options.component.ts</code>
+            </li>
+            <li>
+              Coordinates the guidance table, expands the Topic doormat row, displays issue groups and status, and publishes issue rows for rewrite handoff.
               <code class="code-path">src/app/views/page-assistant/components/problems/component-guidance/component-guidance.component.ts</code>
+            </li>
+            <li>
+              Stores the latest topic doormat issue rows for the current working HTML and exposes selected rows to the rewrite request.
+              <code class="code-path">src/app/views/page-assistant/services/topic-doormats/topic-doormat-analysis-state.service.ts</code>
             </li>
             <li>
               Parses page HTML into doormat summaries, extracted labels, structure flags, section metadata, language signals, destination context, destination HTTP status, destination label evidence, and Most requested link context.
@@ -881,6 +895,10 @@
               Loads the active AIDA skill files, references, and schemas used to build the model prompt.
               <code class="code-path">src/app/views/page-assistant/services/skill-manager.service.ts</code>
             </li>
+            <li>
+              Retains the older static doormat prompt for reference only; the active Doormats radio path now uses the rewrite skill.
+              <code class="code-path">public/ai-prompts/unused-legacy-doormats.txt</code>
+            </li>
           </ul>
         </article>
       </div>
@@ -892,8 +910,9 @@
           section-local limits, style consistency, repeated openings, and IA review
           flags, strips doormat labels from destination-analysis text, validates
           model classifications against supplied destination context, keeps
-          deterministic checks local, and keeps the prompt files linked above as the
-          active source of issue and rewrite guidance.
+          deterministic checks local, and stores selected issue rows so the Doormats
+          rewrite model can fix or account for them. The skill files linked above are
+          the active source of issue and rewrite guidance.
         </p>
       </div>
       <p class="small" style="margin-top: 12px;">

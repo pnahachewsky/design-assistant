@@ -53,6 +53,8 @@
   "common.ai.errorCommunicatingOpenRouter": "An error occurred while communicating with Open Router or the selected AI model.",
   "common.ai.alertIssuesIdentified": "Alert issues identified.",
   "common.ai.alertIssuesNotIdentified": "No alert issues identified.",
+  "common.ai.topicDoormatIssuesNotIdentified": "No topic doormat issues identified.",
+  "common.ai.topicDoormatsNotFound": "No topic doormats found.",
   "common.ai.requestFailed.summary": "AI Request Failed",
   "common.ai.requestFailed.detailUnknown": "Unknown error occurred.",
   "common.language.english": "English",

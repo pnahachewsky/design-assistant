@@ -138,6 +138,45 @@ describe('ComponentGuidanceComponent', () => {
     expect(component.topicDoormatIssuesResponseReceived).toBeFalse();
   });
 
+  it('does not rerun Topic doormat analysis when expanding a row with existing issues', () => {
+    component.rows = [
+      {
+        order: 1,
+        component: 'Topic doormats',
+        url: 'topic-doormats',
+        health: 'moderate',
+        __id: component.topicDoormatsId,
+      } as any,
+    ];
+    component.topicDoormatIssuesResponseReceived = true;
+    component.topicDoormatIssueRows = [
+      {
+        include: true,
+        rowType: 'doormat',
+        severity: 'Medium',
+        doormat: 'Benefits: 1. Benefits',
+        doormatLabel: 'Benefits',
+        issueId: 'content-gap',
+        issue: 'Description is missing destination information',
+        evidence: 'Destination includes eligibility.',
+        recommendation: 'Add eligibility context to the description.',
+        doormatIndex: 1,
+        sectionIndex: 1,
+        sectionTitle: 'Benefits',
+        sectionItemIndex: 1,
+      },
+    ];
+    const analyzeSpy = spyOn<any>(
+      component,
+      'analyzeTopicDoormatIssues',
+    ).and.resolveTo();
+
+    component.onRowExpand({ data: component.rows[0] });
+
+    expect(component.expandedRows['topic-doormats']).toBeTrue();
+    expect(analyzeSpy).not.toHaveBeenCalled();
+  });
+
   it('does not publish Topic doormat results for outdated working HTML', async () => {
     const requestHtml = `
       <main>

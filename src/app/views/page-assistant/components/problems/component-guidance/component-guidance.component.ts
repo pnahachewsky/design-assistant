@@ -45,6 +45,7 @@ import { AiModel } from '../../../data/data.model';
 import { TopicDoormatExtractorService } from '../../../services/topic-doormats/topic-doormat-extractor.service';
 import { TopicDoormatIssueAnalysisService } from '../../../services/topic-doormats/topic-doormat-issue-analysis.service';
 import { TopicDoormatPresenterService } from '../../../services/topic-doormats/topic-doormat-presenter.service';
+import { TopicDoormatAnalysisStateService } from '../../../services/topic-doormats/topic-doormat-analysis-state.service';
 import {
   TopicDoormatEvidenceItem,
   TopicDoormatIssueGroup,
@@ -202,6 +203,7 @@ export class ComponentGuidanceComponent implements OnInit, OnDestroy {
   private topicDoormatExtractor = inject(TopicDoormatExtractorService);
   private topicDoormatIssueAnalysis = inject(TopicDoormatIssueAnalysisService);
   private topicDoormatPresenter = inject(TopicDoormatPresenterService);
+  private topicDoormatAnalysisState = inject(TopicDoormatAnalysisStateService);
   private alertIssuesSub?: Subscription;
   private lastGuidanceRevision = -1;
   private lastExpandedAlertAnalysisHtml = '';
@@ -227,6 +229,7 @@ export class ComponentGuidanceComponent implements OnInit, OnDestroy {
   topicDoormatIssueRows: TopicDoormatIssueRow[] = [];
   topicDoormatIssueGroups: TopicDoormatIssueGroup[] = [];
   topicDoormatIssueCategories: TopicDoormatIssueSummary[] = [];
+  topicDoormatReanalysisRecommended = false;
   private prevAlertHasIssues = false;
   private topicDoormatAnalyzedHtml = '';
 
@@ -269,6 +272,12 @@ export class ComponentGuidanceComponent implements OnInit, OnDestroy {
       this.syncAlertGuidanceRowForWorkingHtml(html);
       this.syncTopicDoormatGuidanceRowForWorkingHtml(html);
     });
+    effect(() => {
+      const analyzedHtml = this.topicDoormatAnalysisState.getAnalyzedHtml();
+      const rows = this.topicDoormatAnalysisState.getIssueRows();
+      const hasAnalysis = this.topicDoormatAnalysisState.hasAnalysis();
+      this.applySharedTopicDoormatAnalysis(hasAnalysis, analyzedHtml, rows);
+    });
   }
 
   ngOnInit() {
@@ -299,6 +308,11 @@ export class ComponentGuidanceComponent implements OnInit, OnDestroy {
       this.syncAlertRowSelection();
     }
     this.applyCachedAlertIssues();
+    this.applySharedTopicDoormatAnalysis(
+      this.topicDoormatAnalysisState.hasAnalysis(),
+      this.topicDoormatAnalysisState.getAnalyzedHtml(),
+      this.topicDoormatAnalysisState.getIssueRows(),
+    );
     this.alertIssuesSub = this.alertAi.issuesUpdated$.subscribe(() => {
       this.applyCachedAlertIssues();
     });
@@ -423,11 +437,16 @@ export class ComponentGuidanceComponent implements OnInit, OnDestroy {
         this.reindexRows();
       }
 
-      if (
-        this.topicDoormatAnalyzedHtml &&
-        this.topicDoormatAnalyzedHtml !== html
-      ) {
-        this.resetTopicDoormatAnalysisState();
+      if (this.topicDoormatAnalyzedHtml && this.topicDoormatAnalyzedHtml !== html) {
+        const uploadData = this.uploadState.getUploadData();
+        if (uploadData?.originalHtml === html) {
+          this.resetTopicDoormatAnalysisState();
+        } else if (
+          this.topicDoormatAnalysisState.getAnalyzedHtml() ===
+          this.topicDoormatAnalyzedHtml
+        ) {
+          this.topicDoormatAnalysisState.clear();
+        }
       }
       this.cdr.markForCheck();
       return;
@@ -456,8 +475,47 @@ export class ComponentGuidanceComponent implements OnInit, OnDestroy {
     this.topicDoormatIssueRows = [];
     this.topicDoormatIssueGroups = [];
     this.topicDoormatIssueCategories = [];
+    this.topicDoormatReanalysisRecommended = false;
     this.topicDoormatAnalyzedHtml = '';
+    this.topicDoormatAnalysisState.clear();
     this.updateTopicDoormatRowHealth('unknown');
+  }
+
+  private applySharedTopicDoormatAnalysis(
+    hasAnalysis: boolean,
+    analyzedHtml: string,
+    rows: TopicDoormatIssueRow[],
+  ): void {
+    if (!hasAnalysis || !analyzedHtml || !rows.length) {
+      return;
+    }
+    const currentHtml = this.uploadState.getWorkingHtml();
+    const uploadData = this.uploadState.getUploadData();
+    const analysisMatchesCurrentHtml = analyzedHtml === currentHtml;
+    const currentHtmlIsGenerated =
+      !!uploadData?.originalHtml && uploadData.originalHtml !== currentHtml;
+    if (!analysisMatchesCurrentHtml && !currentHtmlIsGenerated) {
+      return;
+    }
+    if (
+      this.topicDoormatIssuesResponseReceived &&
+      this.topicDoormatAnalyzedHtml === analyzedHtml &&
+      this.topicDoormatIssueRows === rows
+    ) {
+      return;
+    }
+
+    this.topicDoormatIssuesLoading = false;
+    this.topicDoormatIssuesError = false;
+    this.topicDoormatIssuesErrorDetail = '';
+    this.topicDoormatIssuesResponseReceived = true;
+    this.topicDoormatIssueRows = rows;
+    this.topicDoormatAnalyzedHtml = analyzedHtml;
+    this.topicDoormatIssueGroups = this.buildTopicDoormatIssueGroups(rows);
+    this.topicDoormatReanalysisRecommended = !analysisMatchesCurrentHtml;
+    this.expandTopicDoormatRow();
+    this.analysisAvailable.emit();
+    this.cdr.markForCheck();
   }
 
   private getGuidanceSortRank(nameKey?: string, id?: string): number {
@@ -678,7 +736,11 @@ export class ComponentGuidanceComponent implements OnInit, OnDestroy {
     const key = event?.data?.url;
     if (!key) return;
     this.expandedRows = { ...this.expandedRows, [key]: true };
-    if (event?.data?.__id === this.topicDoormatsId) {
+    if (
+      event?.data?.__id === this.topicDoormatsId &&
+      !this.topicDoormatIssuesResponseReceived &&
+      !this.topicDoormatIssueRows.length
+    ) {
       void this.analyzeTopicDoormatIssues();
     }
   }
@@ -693,6 +755,7 @@ export class ComponentGuidanceComponent implements OnInit, OnDestroy {
 
   rerunTopicDoormatIssues(): void {
     this.topicDoormatIssuesResponseReceived = false;
+    this.topicDoormatReanalysisRecommended = false;
     this.topicDoormatAnalyzedHtml = '';
     void this.analyzeTopicDoormatIssues();
   }
@@ -772,10 +835,17 @@ export class ComponentGuidanceComponent implements OnInit, OnDestroy {
       }
       this.topicDoormatIssueRows = result.rows;
       this.topicDoormatAnalyzedHtml = html;
+      this.topicDoormatReanalysisRecommended = false;
+      this.topicDoormatAnalysisState.setAnalysis(
+        html,
+        this.topicDoormatIssueRows,
+        doormatSummaries,
+      );
       this.topicDoormatIssueGroups = this.buildTopicDoormatIssueGroups(
         this.topicDoormatIssueRows,
       );
       this.updateTopicDoormatSummaryState();
+      this.expandTopicDoormatRow();
       this.topicDoormatIssueAnalysis.debug('response parsed', {
         model: result.model,
         responseCharacters: result.text.length,
@@ -888,6 +958,12 @@ export class ComponentGuidanceComponent implements OnInit, OnDestroy {
     if (topicRow) {
       topicRow.health = health;
     }
+  }
+
+  private expandTopicDoormatRow(): void {
+    const topicRow = this.rows.find((row) => row.__id === this.topicDoormatsId);
+    if (!topicRow) return;
+    this.expandedRows = { ...this.expandedRows, [topicRow.url]: true };
   }
 
   getTopicDoormatIssueCategoriesForDisplay(): TopicDoormatIssueSummary[] {

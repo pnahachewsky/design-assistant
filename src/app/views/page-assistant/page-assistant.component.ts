@@ -49,6 +49,13 @@ import {
   removeNonReportableAlertsFromHtml,
 } from './services/alerts/alert-reportable.utils';
 import { AlertRewriteOrchestratorService } from './services/alerts/alert-rewrite-orchestrator.service';
+import {
+  TopicDoormatAnalysisStateService,
+  TopicDoormatIssueRewriteInput,
+} from './services/topic-doormats/topic-doormat-analysis-state.service';
+import { TopicDoormatExtractorService } from './services/topic-doormats/topic-doormat-extractor.service';
+import { TopicDoormatIssueAnalysisService } from './services/topic-doormats/topic-doormat-issue-analysis.service';
+import { TopicDoormatSummary } from './services/topic-doormats/topic-doormat.types';
 
 //Data
 import {
@@ -111,6 +118,9 @@ export class PageAssistantCompareComponent
   private alertAi = inject(AlertAiService);
   private alertContext = inject(AlertContextService);
   private alertRewriteOrchestrator = inject(AlertRewriteOrchestratorService);
+  private topicDoormatAnalysisState = inject(TopicDoormatAnalysisStateService);
+  private topicDoormatExtractor = inject(TopicDoormatExtractorService);
+  private topicDoormatIssueAnalysis = inject(TopicDoormatIssueAnalysisService);
   private openRouter = inject(OpenRouterService);
   private skillManager = inject(SkillManagerService);
   private urlDataService = inject(UrlDataService);
@@ -534,7 +544,7 @@ export class PageAssistantCompareComponent
   }
 
   //AI Prompt
-  selectedPromptKey: PromptKey = PromptKey.AlertsRecommendations;
+  selectedPromptKey: PromptKey = PromptKey.Doormats;
   onPromptChange(key: PromptKey) {
     this.selectedPromptKey = key;
   }
@@ -552,6 +562,20 @@ export class PageAssistantCompareComponent
 
   private async getPromptForKey(key: PromptKey): Promise<string> {
     const custom = this.customPromptText.trim();
+    if (key === PromptKey.Doormats) {
+      const composed = await this.skillManager.composePrompt({
+        basePrompt:
+          'Return the full HTML input with only the doormat section updated. Do not remove, reorder, or rewrite unrelated sections. Preserve page title, alerts, headings, and all other components exactly as provided. Return only updated HTML code with no other commentary.',
+        queryText: this.buildSkillQueryText(key, custom),
+        promptKey: key,
+        outputMode: 'html',
+        includeReferences: true,
+        includeAssets: false,
+        requireSkill: true,
+      });
+      return custom ? `${composed.prompt}\n\n${custom}` : composed.prompt;
+    }
+
     if (
       key === PromptKey.AlertsIssues ||
       key === PromptKey.AlertsRecommendations
@@ -577,7 +601,8 @@ export class PageAssistantCompareComponent
   private buildSkillQueryText(key: PromptKey, custom: string): string {
     const promptIntents: Record<PromptKey, string> = {
       [PromptKey.Headings]: 'heading hierarchy scanability h1 h2 h3',
-      [PromptKey.Doormats]: 'doormat overview list content design',
+      [PromptKey.Doormats]:
+        'rewrite topic doormats replacement updated html doormat overview list content design',
       [PromptKey.PlainLanguage]: 'plain language simplify readability rewrite',
       [PromptKey.AlertsIssues]: 'analyze alert issues wcag accessibility content design',
       [PromptKey.AlertsRecommendations]:
@@ -735,6 +760,182 @@ export class PageAssistantCompareComponent
     return /"(?:rewrittenAlertHtml|rewritten_alert_html|rewrittenAlert|rewritten_alert|appliedDirectives|applied_directives|replacements|issues)"\s*:/i.test(
       stripped,
     );
+  }
+
+  private buildDoormatRewriteUserContent(html: string): string {
+    const selectedIssues =
+      this.topicDoormatAnalysisState.getSelectedRewriteIssues();
+    const affectedDoormatIndexes =
+      this.getAffectedDoormatIndexesForRewrite(selectedIssues);
+    const summariesByIndex = new Map(
+      this.topicDoormatAnalysisState
+        .getDoormatSummaries()
+        .map((summary) => [summary.index, summary]),
+    );
+    const analyzedHtml = this.topicDoormatAnalysisState.getAnalyzedHtml();
+    const issueAnalysisStatus =
+      this.topicDoormatAnalysisState.hasAnalysis() && analyzedHtml === html
+        ? selectedIssues.length
+          ? 'selected-issues'
+          : 'analysis-available-no-selected-issues'
+        : 'not-available-for-current-html';
+
+    return JSON.stringify({
+      page_html: html,
+      topic_doormat_issue_analysis: {
+        status: issueAnalysisStatus,
+        instruction:
+          'Use selected issues as rewrite priorities. Fix them when possible without violating the rewrite rules. Preserve doormats that do not have selected issues. If an issue cannot be fixed safely, preserve the safest wording and avoid creating new issues.',
+        selected_issues: selectedIssues.map((issue) =>
+          this.toDoormatRewriteIssuePayload(issue),
+        ),
+      },
+      doormats_with_selected_issues: Array.from(affectedDoormatIndexes)
+        .map((index) => summariesByIndex.get(index))
+        .filter(
+          (summary): summary is TopicDoormatSummary => summary !== undefined,
+        )
+        .map((summary) => this.toDoormatDestinationRewritePayload(summary)),
+    });
+  }
+
+  private getAffectedDoormatIndexesForRewrite(
+    issues: TopicDoormatIssueRewriteInput[],
+  ): Set<number> {
+    const indexes = new Set<number>();
+    issues.forEach((issue) => {
+      if (typeof issue.doormatIndex === 'number') {
+        indexes.add(issue.doormatIndex);
+      }
+      (issue.affectedDoormatIndexes ?? []).forEach((index) => {
+        if (typeof index === 'number') indexes.add(index);
+      });
+    });
+    return indexes;
+  }
+
+  private toDoormatDestinationRewritePayload(
+    summary: TopicDoormatSummary,
+  ): Record<string, unknown> {
+    return {
+      index: summary.index,
+      section_index: summary.sectionIndex,
+      section_title: summary.sectionTitle,
+      section_item_index: summary.sectionItemIndex,
+      href: summary.href,
+      current_link_text: summary.linkText,
+      current_description: summary.description,
+      destination: {
+        url: summary.destinationUrl,
+        http_status: summary.destinationHttpStatus,
+        title: summary.destinationPageTitle,
+        h1: summary.destinationPageHeading,
+        intro_paragraphs: summary.destinationIntroParagraphs ?? [],
+        h2_headings: summary.destinationSectionHeadings ?? [],
+        label_evidence: summary.destinationLabelEvidence ?? [],
+        main_html: summary.destinationMainHtml || '',
+        main_html_truncated: !!summary.destinationMainHtmlTruncated,
+        context_status: summary.destinationContextStatus,
+      },
+    };
+  }
+
+  private toDoormatRewriteIssuePayload(
+    issue: TopicDoormatIssueRewriteInput,
+  ): Record<string, unknown> {
+    return {
+      row_type: issue.rowType,
+      severity: issue.severity,
+      issue_id: issue.issueId,
+      issue: issue.issue,
+      recommendation: issue.recommendation,
+      evidence: issue.evidence,
+      evidence_metric: issue.evidenceMetric,
+      section_index: issue.sectionIndex,
+      section_title: issue.sectionTitle,
+      section_item_index: issue.sectionItemIndex,
+      doormat_index: issue.doormatIndex,
+      affected_doormat_indexes: issue.affectedDoormatIndexes,
+      doormat_label: issue.doormatLabel,
+    };
+  }
+
+  private async ensureTopicDoormatIssueAnalysisForRewrite(
+    html: string,
+    model: AiModel,
+  ): Promise<boolean> {
+    if (
+      this.topicDoormatAnalysisState.hasAnalysis() &&
+      this.topicDoormatAnalysisState.getAnalyzedHtml() === html
+    ) {
+      return true;
+    }
+
+    const uploadData = this.uploadState.getUploadData();
+    const doc = this.topicDoormatExtractor.parseHtmlDocument(html);
+    if (!doc) return false;
+
+    const extractedDoormatSummaries =
+      this.topicDoormatExtractor.extractSummaries(doc);
+    if (!extractedDoormatSummaries.length) {
+      this.messageService.add({
+        severity: 'info',
+        summary: this.translate.instant('common.ai.topicDoormatsNotFound'),
+        life: 3000,
+      });
+      return false;
+    }
+
+    this.statusSeverity = 'info';
+    this.statusMessage = this.translate.instant('common.ai.generating');
+    this.messageService.add({
+      severity: 'info',
+      summary: this.translate.instant('common.ai.generating'),
+      life: 2000,
+    });
+
+    const pageLanguage = this.topicDoormatExtractor.detectPageLanguage(
+      doc,
+      uploadData,
+    );
+    const bilingualDoormatSummaries =
+      await this.topicDoormatExtractor.enrichOppositeLanguageLengths(
+        extractedDoormatSummaries,
+        uploadData,
+        pageLanguage,
+      );
+    const doormatSummaries =
+      await this.topicDoormatExtractor.enrichDestinationContext(
+        bilingualDoormatSummaries,
+        uploadData,
+      );
+    if (this.uploadState.getWorkingHtml() !== html) return false;
+
+    const result = await this.topicDoormatIssueAnalysis.analyze({
+      doormatSummaries,
+      pageLanguage,
+      hasLegacyTopicDoormatTemplate:
+        this.topicDoormatExtractor.hasLegacyTemplate(doc),
+      mostRequestedLinks:
+        this.topicDoormatExtractor.extractMostRequestedLinks(doc),
+      uploadData,
+      selectedModel: model,
+    });
+    if (this.uploadState.getWorkingHtml() !== html) return false;
+
+    this.topicDoormatAnalysisState.setAnalysis(html, result.rows, doormatSummaries);
+    const selectedIssueCount =
+      this.topicDoormatAnalysisState.getSelectedRewriteIssues().length;
+    this.messageService.add({
+      severity: 'info',
+      summary: selectedIssueCount
+        ? this.translate.instant('common.ai.topicDoormatIssuesReceived', {
+            model: this.getShortModelName(result.model || model),
+          })
+        : this.translate.instant('common.ai.topicDoormatIssuesNotIdentified'),
+      life: 3000,
+    });
+    return true;
   }
 
   // UI-facing summary of the alert rewrite options currently active.
@@ -921,6 +1122,8 @@ export class PageAssistantCompareComponent
     let usedCachedAlertIssues = false;
     let alertIssuesPromptSent = false;
     let alertRewriteRan = false;
+    let doormatIssueAnalysisRan = false;
+    let doormatRewritePromptSent = false;
     let aiRequestStarted = false;
     let pendingAlertAnalysisHtml = '';
     this.isLoading = true;
@@ -936,8 +1139,9 @@ export class PageAssistantCompareComponent
       const isAlertsRecommendations =
         this.selectedPromptKey === PromptKey.AlertsRecommendations;
       const isAlertsIssues = this.selectedPromptKey === PromptKey.AlertsIssues;
+      const isDoormats = this.selectedPromptKey === PromptKey.Doormats;
       const isAlertFlow = isAlertsRecommendations || isAlertsIssues;
-      const html = isAlertFlow
+      const html = isAlertFlow || isDoormats
         ? this.uploadState.getWorkingHtml()
         : uploadData?.originalHtml;
       if (!html) throw new Error('No HTML to send');
@@ -955,8 +1159,23 @@ export class PageAssistantCompareComponent
         return;
       }
 
-      const prompt = await this.getPromptForKey(promptKeyForRequest);
       const model = this.selectedAiModel;
+      if (isDoormats) {
+        const hadCurrentDoormatAnalysis =
+          this.topicDoormatAnalysisState.hasAnalysis() &&
+          this.topicDoormatAnalysisState.getAnalyzedHtml() === html;
+        const doormatAnalysisReady =
+          await this.ensureTopicDoormatIssueAnalysisForRewrite(html, model);
+        if (!doormatAnalysisReady) {
+          return;
+        }
+        doormatIssueAnalysisRan = !hadCurrentDoormatAnalysis;
+        timingFlow = doormatIssueAnalysisRan
+          ? 'doormat-issues-and-rewrite'
+          : 'doormat-rewrite-with-cached-issues';
+      }
+
+      const prompt = await this.getPromptForKey(promptKeyForRequest);
       const requestedModelShort = this.getShortModelName(model);
       const url = 'https://openrouter.ai/api/v1/chat/completions';
 
@@ -978,12 +1197,16 @@ export class PageAssistantCompareComponent
             this.alertContext.buildCompactAlertsIssuesPayload(html),
           )
         : sanitizedAlertsIssuesHtml;
+      const userContent =
+        promptKeyForRequest === PromptKey.Doormats
+          ? this.buildDoormatRewriteUserContent(html)
+          : alertsIssuesUserContent;
 
       const payload = {
         models: this.buildModelRotation(model),
         messages: [
           { role: 'system', content: prompt },
-          { role: 'user', content: alertsIssuesUserContent },
+          { role: 'user', content: userContent },
         ],
         temperature: 0,
         provider: {
@@ -1042,6 +1265,9 @@ export class PageAssistantCompareComponent
       let lastValidationError: Error | null = null;
       if (promptKeyForRequest === PromptKey.AlertsIssues) {
         alertIssuesPromptSent = true;
+      }
+      if (promptKeyForRequest === PromptKey.Doormats) {
+        doormatRewritePromptSent = true;
       }
 
       for (let i = 0; i < candidates.length; i += 1) {
@@ -1337,6 +1563,8 @@ export class PageAssistantCompareComponent
         processes: [
           ...(alertIssuesPromptSent ? ['alert-issues'] : []),
           ...(alertRewriteRan ? ['alert-rewrite'] : []),
+          ...(doormatIssueAnalysisRan ? ['doormat-issues'] : []),
+          ...(doormatRewritePromptSent ? ['doormat-rewrite'] : []),
         ],
         usedCachedAlertIssues,
         totalMs: Math.round(endTime - startTime),

@@ -8,7 +8,7 @@ type StaticPromptKey = Exclude<
 
 const promptFiles: Record<StaticPromptKey, string> = {
   [PromptKey.Headings]: new URL('headings.txt', PROMPT_BASE_URL).toString(),
-  [PromptKey.Doormats]: new URL('doormats.txt', PROMPT_BASE_URL).toString(),
+  [PromptKey.Doormats]: new URL('unused-legacy-doormats.txt', PROMPT_BASE_URL).toString(),
   [PromptKey.PlainLanguage]: new URL('plain-language.txt', PROMPT_BASE_URL).toString(),
 };
 
