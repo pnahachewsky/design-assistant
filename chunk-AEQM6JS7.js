@@ -38505,7 +38505,6 @@ var PromptKey;
 var AiModel;
 (function(AiModel2) {
   AiModel2["NemotronUltra"] = "nvidia/nemotron-3-ultra-550b-a55b:free";
-  AiModel2["GptOSSFree"] = "openai/gpt-oss-120b:free";
   AiModel2["GptOSS20BFree"] = "openai/gpt-oss-20b:free";
   AiModel2["NemotronSuper"] = "nvidia/nemotron-3-super-120b-a12b:free";
   AiModel2["GptOSS20B"] = "openai/gpt-oss-20b";
@@ -100438,4 +100437,4 @@ export {
    * License: MIT
    *)
 */
-//# sourceMappingURL=chunk-FBMWQ3SO.js.map
+//# sourceMappingURL=chunk-AEQM6JS7.js.map
