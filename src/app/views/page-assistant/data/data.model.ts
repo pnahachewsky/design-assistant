@@ -97,7 +97,6 @@ export enum PromptKey {
 export enum AiModel {
   // Free models
   NemotronUltra = 'nvidia/nemotron-3-ultra-550b-a55b:free',
-  GptOSSFree = 'openai/gpt-oss-120b:free', //131k context free
   GptOSS20BFree = 'openai/gpt-oss-20b:free', //131k context free
   NemotronSuper = 'nvidia/nemotron-3-super-120b-a12b:free', //262k context, 263B weekly, 120B parameters
   // Paid models

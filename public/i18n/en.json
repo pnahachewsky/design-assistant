@@ -142,8 +142,6 @@
   "page.ai-options.model.short.NemotronUltra": "Nemotron Ultra",
   "page.ai-options.model.NemotronSuper": "NVIDIA: Nemotron 3 Super 120B (free)",
   "page.ai-options.model.short.NemotronSuper": "Nemotron 120B",
-  "page.ai-options.model.GptOSSFree": "OpenAI: gpt-oss-120b (free)",
-  "page.ai-options.model.short.GptOSSFree": "GPT-oss free",
   "page.ai-options.model.GptOSS20BFree": "OpenAI: gpt-oss-20b (free)",
   "page.ai-options.model.short.GptOSS20BFree": "gpt-oss-20b free",
   "page.ai-options.model.DeepSeekV4Flash": "DeepSeek: DeepSeek V4 Flash ($)",

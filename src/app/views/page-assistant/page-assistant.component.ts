@@ -1095,7 +1095,6 @@ export class PageAssistantCompareComponent
     const fallbackOrder: AiModel[] = [
       AiModel.NemotronUltra,
       AiModel.GptOSS20BFree,
-      AiModel.GptOSSFree,
       AiModel.NemotronSuper,
     ];
     const available = new Set(this.openRouter.freeModels);

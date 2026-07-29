@@ -105,7 +105,6 @@ export class AiOptionsComponent implements OnInit {
   freeAiOptions = [
     { id: AiModel.NemotronUltra, label: 'page.ai-options.model.NemotronUltra', disabled: false },
     { id: AiModel.GptOSS20BFree, label: 'page.ai-options.model.GptOSS20BFree', disabled: false },
-    { id: AiModel.GptOSSFree, label: 'page.ai-options.model.GptOSSFree', disabled: false },
     { id: AiModel.NemotronSuper, label: 'page.ai-options.model.NemotronSuper', disabled: false },
   ];
   paidAiOptions = [

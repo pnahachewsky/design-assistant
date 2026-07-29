@@ -31,7 +31,6 @@ export class OpenRouterService {
   private readonly freeModelOrder: string[] = [
     AiModel.NemotronUltra,
     AiModel.GptOSS20BFree,
-    AiModel.GptOSSFree,
     AiModel.NemotronSuper,
   ];
   // Canonical model lists used by the assistant UI and fallback helpers.
