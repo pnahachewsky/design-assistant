@@ -296,6 +296,85 @@ describe('TopicDoormatIssueAnalysisService', () => {
     );
   });
 
+  it('sends multi-section doormat analysis as separate section calls', async () => {
+    openRouter.call.and.callFake(
+      (_model: string, messages: { role: string; content: string }[]) => {
+        const payload = JSON.parse(messages[1].content) as {
+          doormats: { index: number; linkText: string; href: string }[];
+        };
+        expect(payload.doormats.length).toBe(1);
+        const doormat = payload.doormats[0];
+        return Promise.resolve({
+          choices: [
+            {
+              message: {
+                content: JSON.stringify({
+                  doormats: [
+                    {
+                      doormat_index: doormat.index,
+                      link_text: doormat.linkText,
+                      href: doormat.href,
+                      description: 'Benefit programs and services',
+                      detected_description_style: 'phrase',
+                      ...defaultLinkClassifications(),
+                      destination_content_assessment:
+                        emptyDestinationContentAssessment(),
+                      issues: [],
+                    },
+                  ],
+                }),
+              },
+            },
+          ],
+        } as any);
+      },
+    );
+
+    const result = await service.analyze({
+      doormatSummaries: [
+        summary({
+          index: 1,
+          sectionIndex: 1,
+          sectionTitle: 'Benefits',
+          sectionItemIndex: 1,
+          sectionDoormatCount: 1,
+        }),
+        summary({
+          index: 2,
+          linkText: 'Credits',
+          href: '/en/benefits/credits.html',
+          sectionIndex: 2,
+          sectionTitle: 'Credits',
+          sectionItemIndex: 1,
+          sectionDoormatCount: 1,
+        }),
+      ],
+      pageLanguage: 'en',
+      hasLegacyTopicDoormatTemplate: false,
+      mostRequestedLinks: [],
+      selectedModel: 'selected-model',
+    });
+
+    expect(openRouter.call.calls.count()).toBe(2);
+    const sectionPayloads = openRouter.call.calls.allArgs().map((args) => {
+      const messages = args[1] as { role: string; content: string }[];
+      return JSON.parse(messages[1].content) as {
+        doormats: { index: number; sectionIndex: number }[];
+      };
+    });
+    expect(sectionPayloads.map((payload) => payload.doormats[0].index)).toEqual([
+      1,
+      2,
+    ]);
+    expect(
+      sectionPayloads.map((payload) => payload.doormats[0].sectionIndex),
+    ).toEqual([1, 2]);
+    expect(result.usedLocalFallback).toBeFalse();
+    expect(result.rows.filter((row) => row.issueId === 'no-issues').length).toBe(
+      2,
+    );
+  });
+
   it('reports broken links from local destination HTTP status instead of model issues', async () => {
     openRouter.call.and.resolveTo({
       choices: [

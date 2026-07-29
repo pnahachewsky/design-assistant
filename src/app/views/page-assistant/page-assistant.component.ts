@@ -799,6 +799,198 @@ export class PageAssistantCompareComponent
     });
   }
 
+  private applyDoormatRewriteToPageHtml(
+    originalHtml: string,
+    rewriteHtml: string,
+  ): string {
+    const parser = new DOMParser();
+    const originalDoc = parser.parseFromString(originalHtml, 'text/html');
+    const rewriteDoc = parser.parseFromString(rewriteHtml, 'text/html');
+    const originalDoormatSections = Array.from(
+      originalDoc.body.querySelectorAll('.gc-srvinfo'),
+    );
+    const rewrittenDoormatSections = Array.from(
+      rewriteDoc.body.querySelectorAll('.gc-srvinfo'),
+    );
+
+    if (!originalDoormatSections.length) {
+      throw new Error(
+        'The current page does not contain a topic doormat section to update.',
+      );
+    }
+    if (!rewrittenDoormatSections.length) {
+      throw new Error(
+        'The AI response did not include a topic doormat section. No comparison update was applied.',
+      );
+    }
+    rewrittenDoormatSections.forEach((section) => {
+      const originalSection = this.findOriginalDoormatSectionForRewrite(
+        originalDoormatSections,
+        section,
+      );
+      if (!originalSection) return;
+      this.applyDoormatItemRewritesByHref(originalDoc, originalSection, section);
+    });
+
+    return this.serializeParsedHtmlLikeInput(originalHtml, originalDoc);
+  }
+
+  private findOriginalDoormatSectionForRewrite(
+    originalSections: Element[],
+    rewrittenSection: Element,
+  ): Element | null {
+    const rewrittenHrefs = this.getDoormatSectionHrefs(rewrittenSection);
+    if (!rewrittenHrefs.size) return null;
+
+    const candidates = originalSections
+      .map((section) => ({
+        section,
+        matchCount: Array.from(rewrittenHrefs).filter((href) =>
+          this.getDoormatSectionHrefs(section).has(href),
+        ).length,
+      }))
+      .filter((candidate) => candidate.matchCount > 0)
+      .sort((a, b) => b.matchCount - a.matchCount);
+
+    return candidates[0]?.section ?? null;
+  }
+
+  private applyDoormatItemRewritesByHref(
+    originalDoc: Document,
+    originalSection: Element,
+    rewrittenSection: Element,
+  ): void {
+    const originalItemsByHref = this.getDoormatItemsByHref(originalSection);
+    this.getDoormatItemsByHref(rewrittenSection).forEach(
+      (rewrittenItem, href) => {
+        const originalItem = originalItemsByHref.get(href);
+        if (!originalItem) return;
+        this.patchOriginalDoormatItemFromRewrite(
+          originalDoc,
+          originalItem,
+          rewrittenItem,
+          href,
+        );
+      },
+    );
+  }
+
+  private patchOriginalDoormatItemFromRewrite(
+    originalDoc: Document,
+    originalItem: Element,
+    rewrittenItem: Element,
+    href: string,
+  ): void {
+    const originalLink = this.findDoormatLinkByHref(originalItem, href);
+    const rewrittenLink = this.findDoormatLinkByHref(rewrittenItem, href);
+    if (originalLink && rewrittenLink) {
+      originalLink.textContent = this.cleanDoormatRewriteText(
+        rewrittenLink.textContent,
+      );
+    }
+
+    const originalDescription = originalItem.querySelector('p');
+    const rewrittenDescription = rewrittenItem.querySelector('p');
+    if (originalDescription && rewrittenDescription) {
+      originalDescription.innerHTML = rewrittenDescription.innerHTML;
+    }
+
+    this.patchOriginalDoormatLabelsFromRewrite(
+      originalDoc,
+      originalItem,
+      rewrittenItem,
+      originalLink,
+    );
+  }
+
+  private patchOriginalDoormatLabelsFromRewrite(
+    originalDoc: Document,
+    originalItem: Element,
+    rewrittenItem: Element,
+    originalLink: HTMLAnchorElement | null,
+  ): void {
+    const originalLabels = Array.from(
+      originalItem.querySelectorAll(this.getDoormatLabelSelector()),
+    );
+    const rewrittenLabels = Array.from(
+      rewrittenItem.querySelectorAll(this.getDoormatLabelSelector()),
+    );
+
+    originalLabels.forEach((label) => label.remove());
+    if (!rewrittenLabels.length || !originalLink) return;
+
+    const parent = originalLink.parentElement;
+    if (!parent) return;
+    let insertionPoint: ChildNode = originalLink;
+    rewrittenLabels.forEach((label) => {
+      const spacer = originalDoc.createTextNode(' ');
+      const importedLabel = originalDoc.importNode(label, true);
+      parent.insertBefore(spacer, insertionPoint.nextSibling);
+      parent.insertBefore(importedLabel, spacer.nextSibling);
+      insertionPoint = importedLabel;
+    });
+  }
+
+  private findDoormatLinkByHref(
+    item: Element,
+    href: string,
+  ): HTMLAnchorElement | null {
+    return (
+      Array.from(
+        item.querySelectorAll<HTMLAnchorElement>('h2 a[href], h3 a[href]'),
+      ).find((link) => link.getAttribute('href')?.trim() === href) ?? null
+    );
+  }
+
+  private getDoormatSectionHrefs(section: Element): Set<string> {
+    return new Set(this.getDoormatItemsByHref(section).keys());
+  }
+
+  private getDoormatItemsByHref(section: Element): Map<string, Element> {
+    const itemsByHref = new Map<string, Element>();
+    Array.from(section.querySelectorAll<HTMLAnchorElement>('h2 a[href], h3 a[href]'))
+      .forEach((link) => {
+        const href = link.getAttribute('href')?.trim();
+        if (!href || itemsByHref.has(href)) return;
+        const item = this.findDoormatItemForRewrite(link, section);
+        if (item) itemsByHref.set(href, item);
+      });
+    return itemsByHref;
+  }
+
+  private findDoormatItemForRewrite(
+    link: HTMLAnchorElement,
+    section: Element,
+  ): Element | null {
+    let current: Element | null = link;
+    while (current && current !== section) {
+      if (current !== link && current.querySelector('p')) return current;
+      current = current.parentElement;
+    }
+    return section.querySelector('p') ? section : null;
+  }
+
+  private getDoormatLabelSelector(): string {
+    return '.label, .badge, [class*="label-"], [class*="badge-"]';
+  }
+
+  private cleanDoormatRewriteText(value: string | null | undefined): string {
+    return (value || '').replace(/\s+/g, ' ').trim();
+  }
+
+  private serializeParsedHtmlLikeInput(originalHtml: string, doc: Document): string {
+    if (/<html[\s>]/i.test(originalHtml)) {
+      const doctype = originalHtml.trimStart().toLowerCase().startsWith('<!doctype')
+        ? '<!doctype html>\n'
+        : '';
+      return `${doctype}${doc.documentElement.outerHTML}`;
+    }
+    if (/<body[\s>]/i.test(originalHtml)) {
+      return doc.body.outerHTML;
+    }
+    return doc.body.innerHTML;
+  }
+
   private getAffectedDoormatIndexesForRewrite(
     issues: TopicDoormatIssueRewriteInput[],
   ): Set<number> {
@@ -1512,7 +1704,14 @@ export class PageAssistantCompareComponent
             'The AI returned structured JSON where HTML was expected. No comparison update was applied.',
           );
         }
-        const formattedHtml = await this.urlDataService.formatHtml(aiHtml, 'ai');
+        const htmlForFormatting =
+          promptKeyForRequest === PromptKey.Doormats
+            ? this.applyDoormatRewriteToPageHtml(html, aiHtml)
+            : aiHtml;
+        const formattedHtml = await this.urlDataService.formatHtml(
+          htmlForFormatting,
+          'ai',
+        );
 
         this.uploadState.mergeModifiedData({
           modifiedUrl: 'AI generated',

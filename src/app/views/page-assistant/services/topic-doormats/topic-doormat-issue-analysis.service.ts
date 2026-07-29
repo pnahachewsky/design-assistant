@@ -9,7 +9,10 @@ import {
   TopicDoormatIaCheckResult,
   TopicDoormatIaCheckService,
 } from './topic-doormat-ia-check.service';
-import { TopicDoormatModelClientService } from './topic-doormat-model-client.service';
+import {
+  TopicDoormatModelClientResult,
+  TopicDoormatModelClientService,
+} from './topic-doormat-model-client.service';
 import { TopicDoormatUrlComparisonService } from './topic-doormat-url-comparison.service';
 import {
   MostRequestedLinkSummary,
@@ -233,46 +236,10 @@ export class TopicDoormatIssueAnalysisService {
     ]
       .filter(Boolean)
       .join('\n\n');
-    const messages: ChatMessage[] = [
-      {
-        role: 'system',
-        content: systemPrompt,
-      },
-      {
-        role: 'user',
-        content: JSON.stringify({
-          doormats: input.doormatSummaries.map((summary) => ({
-            index: summary.index,
-            linkText: summary.linkText,
-            labels: summary.labels ?? [],
-            analysisLinkText:
-              this.removeTopicDoormatLabels(summary.linkText, summary.labels),
-            href: summary.href,
-            description: summary.description,
-            analysisDescription:
-              this.removeTopicDoormatLabels(summary.description, summary.labels),
-            destinationUrl: summary.destinationUrl,
-            destinationHttpStatus: summary.destinationHttpStatus,
-            destinationPageTitle: summary.destinationPageTitle,
-            destinationPageHeading: summary.destinationPageHeading,
-            destinationContext: {
-              status: summary.destinationContextStatus ?? 'insufficient',
-              httpStatus: summary.destinationHttpStatus,
-              pageTitle: summary.destinationPageTitle ?? '',
-              h1: summary.destinationPageHeading ?? '',
-              labelEvidence: summary.labels?.length
-                ? summary.destinationLabelEvidence ?? []
-                : [],
-              elements:
-                this.buildTopicDoormatDestinationContextElements(summary),
-            },
-            sectionIndex: summary.sectionIndex,
-            sectionTitle: summary.sectionTitle,
-            sectionItemIndex: summary.sectionItemIndex,
-          })),
-        }),
-      },
-    ];
+    const messages = this.buildTopicDoormatIssueMessages(
+      systemPrompt,
+      input.doormatSummaries,
+    );
     const modelRotation = this.modelClient.buildModelRotation(
       input.selectedModel,
     );
@@ -329,13 +296,10 @@ export class TopicDoormatIssueAnalysisService {
     });
 
     const [issueJson, localIaResult] = await Promise.all([
-      this.modelClient.requestIssueJson({
-        messages,
-        requestedModel: input.selectedModel,
+      this.requestTopicDoormatIssueJsonBySection({
+        systemPrompt,
+        selectedModel: input.selectedModel,
         doormatSummaries: input.doormatSummaries,
-        isParseableResponseText: (value) =>
-          this.isParseableTopicDoormatIssueResponseText(value),
-        debug: (event, details) => this.debugTopicDoormatIssues(event, details),
       }),
       this.iaCheck.analyze(input.doormatSummaries, input.uploadData).catch(
         (err: unknown) => {
@@ -382,6 +346,182 @@ export class TopicDoormatIssueAnalysisService {
       modelRotation: issueJson.modelRotation,
       elapsedMs: Math.round(performance.now() - analysisStart),
     };
+  }
+
+  private async requestTopicDoormatIssueJsonBySection(params: {
+    systemPrompt: string;
+    selectedModel?: string;
+    doormatSummaries: TopicDoormatSummary[];
+  }): Promise<TopicDoormatModelClientResult> {
+    const sectionBatches = this.buildTopicDoormatSectionBatches(
+      params.doormatSummaries,
+    );
+    const modelRotation = this.modelClient.buildModelRotation(
+      params.selectedModel,
+    );
+
+    if (sectionBatches.length <= 1) {
+      return this.modelClient.requestIssueJson({
+        messages: this.buildTopicDoormatIssueMessages(
+          params.systemPrompt,
+          params.doormatSummaries,
+        ),
+        requestedModel: params.selectedModel,
+        doormatSummaries: params.doormatSummaries,
+        isParseableResponseText: (value) =>
+          this.isParseableTopicDoormatIssueResponseText(value),
+        debug: (event, details) => this.debugTopicDoormatIssues(event, details),
+      });
+    }
+
+    const sectionResults: TopicDoormatModelClientResult[] = [];
+    for (const batch of sectionBatches) {
+      this.debugTopicDoormatIssues('section batch request prepared', {
+        sectionIndex: batch.sectionIndex,
+        sectionTitle: batch.sectionTitle,
+        doormatCount: batch.doormatSummaries.length,
+        doormatIndexes: batch.doormatSummaries.map((summary) => summary.index),
+      });
+      const result = await this.modelClient.requestIssueJson({
+        messages: this.buildTopicDoormatIssueMessages(
+          params.systemPrompt,
+          batch.doormatSummaries,
+        ),
+        requestedModel: params.selectedModel,
+        doormatSummaries: batch.doormatSummaries,
+        isParseableResponseText: (value) =>
+          this.isParseableTopicDoormatIssueResponseText(value),
+        debug: (event, details) =>
+          this.debugTopicDoormatIssues(event, {
+            ...details,
+            sectionIndex: batch.sectionIndex,
+            sectionTitle: batch.sectionTitle,
+          }),
+      });
+      sectionResults.push(result);
+    }
+
+    const successfulResults = sectionResults.filter((result) => !!result.text);
+    this.debugTopicDoormatIssues('section batch requests resolved', {
+      sectionCount: sectionBatches.length,
+      successfulSectionCount: successfulResults.length,
+      failedSectionIndexes: sectionBatches
+        .filter((_, index) => !sectionResults[index]?.text)
+        .map((batch) => batch.sectionIndex),
+      modelsUsed: Array.from(
+        new Set(successfulResults.map((result) => result.model).filter(Boolean)),
+      ),
+    });
+
+    return {
+      text: this.mergeTopicDoormatIssueJsonResponses(
+        successfulResults.map((result) => result.text),
+      ),
+      model: this.summarizeTopicDoormatBatchModel(successfulResults),
+      modelRotation,
+    };
+  }
+
+  private buildTopicDoormatIssueMessages(
+    systemPrompt: string,
+    doormatSummaries: TopicDoormatSummary[],
+  ): ChatMessage[] {
+    return [
+      {
+        role: 'system',
+        content: systemPrompt,
+      },
+      {
+        role: 'user',
+        content: JSON.stringify({
+          doormats: doormatSummaries.map((summary) => ({
+            index: summary.index,
+            linkText: summary.linkText,
+            labels: summary.labels ?? [],
+            analysisLinkText:
+              this.removeTopicDoormatLabels(summary.linkText, summary.labels),
+            href: summary.href,
+            description: summary.description,
+            analysisDescription:
+              this.removeTopicDoormatLabels(summary.description, summary.labels),
+            destinationUrl: summary.destinationUrl,
+            destinationHttpStatus: summary.destinationHttpStatus,
+            destinationPageTitle: summary.destinationPageTitle,
+            destinationPageHeading: summary.destinationPageHeading,
+            destinationContext: {
+              status: summary.destinationContextStatus ?? 'insufficient',
+              httpStatus: summary.destinationHttpStatus,
+              pageTitle: summary.destinationPageTitle ?? '',
+              h1: summary.destinationPageHeading ?? '',
+              labelEvidence: summary.labels?.length
+                ? summary.destinationLabelEvidence ?? []
+                : [],
+              elements:
+                this.buildTopicDoormatDestinationContextElements(summary),
+            },
+            sectionIndex: summary.sectionIndex,
+            sectionTitle: summary.sectionTitle,
+            sectionItemIndex: summary.sectionItemIndex,
+          })),
+        }),
+      },
+    ];
+  }
+
+  private buildTopicDoormatSectionBatches(
+    doormatSummaries: TopicDoormatSummary[],
+  ): {
+    sectionIndex: number;
+    sectionTitle: string;
+    doormatSummaries: TopicDoormatSummary[];
+  }[] {
+    const bySection = new Map<number, TopicDoormatSummary[]>();
+    doormatSummaries.forEach((summary) => {
+      const sectionIndex = summary.sectionIndex || 1;
+      const sectionSummaries = bySection.get(sectionIndex) ?? [];
+      sectionSummaries.push(summary);
+      bySection.set(sectionIndex, sectionSummaries);
+    });
+
+    return Array.from(bySection.entries())
+      .sort(([a], [b]) => a - b)
+      .map(([sectionIndex, summaries]) => ({
+        sectionIndex,
+        sectionTitle: summaries[0]?.sectionTitle ?? '',
+        doormatSummaries: summaries.sort((a, b) => a.index - b.index),
+      }));
+  }
+
+  private mergeTopicDoormatIssueJsonResponses(texts: string[]): string {
+    const sectionIssues: unknown[] = [];
+    const doormats: unknown[] = [];
+
+    texts.forEach((text) => {
+      const parsed = this.looseJsonParse(this.stripCodeFences(text));
+      if (!parsed || typeof parsed !== 'object') return;
+      const root = parsed as Record<string, unknown>;
+      if (Array.isArray(root['section_issues'])) {
+        sectionIssues.push(...root['section_issues']);
+      }
+      if (Array.isArray(root['doormats'])) {
+        doormats.push(...root['doormats']);
+      }
+    });
+
+    return doormats.length || sectionIssues.length
+      ? JSON.stringify({ section_issues: sectionIssues, doormats })
+      : '';
+  }
+
+  private summarizeTopicDoormatBatchModel(
+    results: TopicDoormatModelClientResult[],
+  ): string {
+    const models = Array.from(
+      new Set(results.map((result) => result.model).filter(Boolean)),
+    );
+    if (!models.length) return '';
+    if (models.length === 1) return models[0];
+    return 'multiple models';
   }
 
   debug(event: string, details: Record<string, unknown>): void {

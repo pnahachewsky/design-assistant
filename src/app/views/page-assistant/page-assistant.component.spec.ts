@@ -173,4 +173,106 @@ describe('PageAssistantCompareComponent', () => {
       'Preserve doormats that do not have selected issues',
     );
   });
+
+  it('applies a doormat fragment rewrite without removing the rest of the page', () => {
+    const originalHtml = `
+      <main>
+        <h1>Benefits</h1>
+        <p>Intro text remains.</p>
+        <div class="gc-srvinfo">
+          <div class="col-lg-4 col-md-6"><h3 class="h5"><a href="/old.html">Old doormat</a></h3><p>Old text</p></div>
+          <div class="col-lg-4 col-md-6"><h3 class="h5"><a href="/keep.html">Kept doormat</a></h3><p>Kept text</p></div>
+        </div>
+        <section><h2>After doormats</h2><p>More page content.</p></section>
+      </main>
+    `;
+    const rewriteHtml = `
+      <div class="gc-srvinfo">
+        <div><h3><a href="/old.html">Updated doormat</a></h3><p>Updated text</p></div>
+      </div>
+    `;
+
+    const result = (component as any).applyDoormatRewriteToPageHtml(
+      originalHtml,
+      rewriteHtml,
+    );
+
+    expect(result).toContain('<h1>Benefits</h1>');
+    expect(result).toContain('Intro text remains.');
+    expect(result).toContain('<div class="col-lg-4 col-md-6"><h3 class="h5"><a href="/old.html">Updated doormat</a></h3><p>Updated text</p></div>');
+    expect(result).toContain('Updated doormat');
+    expect(result).toContain('Updated text');
+    expect(result).toContain('Kept doormat');
+    expect(result).toContain('Kept text');
+    expect(result).toContain('After doormats');
+    expect(result).toContain('More page content.');
+    expect(result).not.toContain('Old doormat');
+  });
+
+  it('patches doormat labels while preserving original item formatting', () => {
+    const originalHtml = `
+      <main>
+        <div class="gc-srvinfo">
+          <div class="col-lg-4 col-md-6">
+            <h3 class="h5">
+              <a href="/credit.html">Credit</a>
+              <span class="label label-danger">Closed</span>
+            </h3>
+            <p>Original description</p>
+          </div>
+        </div>
+      </main>
+    `;
+    const rewriteHtml = `
+      <div class="gc-srvinfo">
+        <section>
+          <h3>
+            <a href="/credit.html">Updated credit</a>
+            <span class="label label-info">No longer available</span>
+          </h3>
+          <p>Updated description</p>
+        </section>
+      </div>
+    `;
+
+    const result = (component as any).applyDoormatRewriteToPageHtml(
+      originalHtml,
+      rewriteHtml,
+    );
+
+    expect(result).toContain('class="col-lg-4 col-md-6"');
+    expect(result).toContain('<h3 class="h5">');
+    expect(result).toContain('<a href="/credit.html">Updated credit</a>');
+    expect(result).toContain(
+      '<span class="label label-info">No longer available</span>',
+    );
+    expect(result).toContain('<p>Updated description</p>');
+    expect(result).not.toContain('label-danger');
+    expect(result).not.toContain('<section><h3>');
+  });
+
+  it('ignores returned doormat items that do not match an original href', () => {
+    const originalHtml = `
+      <main>
+        <div class="gc-srvinfo">
+          <div><h3><a href="/one.html">One</a></h3><p>Original one</p></div>
+        </div>
+      </main>
+    `;
+    const rewriteHtml = `
+      <div class="gc-srvinfo">
+        <div><h3><a href="/missing.html">Missing updated</a></h3><p>Unexpected new item</p></div>
+      </div>
+    `;
+
+    const result = (component as any).applyDoormatRewriteToPageHtml(
+      originalHtml,
+      rewriteHtml,
+    );
+
+    expect(result).toContain('One');
+    expect(result).toContain('Original one');
+    expect(result).not.toContain('Missing updated');
+    expect(result).not.toContain('Unexpected new item');
+  });
 });
