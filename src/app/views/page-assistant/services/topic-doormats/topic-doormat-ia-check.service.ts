@@ -136,6 +136,11 @@ export class TopicDoormatIaCheckService {
         recommendation: this.getTopicDoormatIaText(
           'missingNeededDoormat.recommendation',
         ),
+        provenance: {
+          issue: ['aida', 'model'],
+          evidence: ['aida'],
+          recommendation: ['aida'],
+        },
       }));
   }
 
@@ -177,6 +182,11 @@ export class TopicDoormatIaCheckService {
           recommendation: this.getTopicDoormatIaText(
             'unnecessaryDoormat.recommendation',
           ),
+          provenance: {
+            issue: ['aida', 'model'],
+            evidence: ['aida'],
+            recommendation: ['aida'],
+          },
           sectionIndex: sectionIndex || undefined,
           sectionTitle: firstSummary.sectionTitle || undefined,
         } satisfies TopicDoormatIssueRow);

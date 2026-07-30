@@ -316,8 +316,32 @@
                               {{ issue.severity }}
                             </span>
                           </td>
-                          <td>{{ issue.issue }}</td>
                           <td>
+                            <span class="topic-doormat-provenance-icons">
+                              @for (source of topicDoormatCellProvenance(issue, 'issue'); track source) {
+                                <span
+                                  class="material-icons topic-doormat-provenance-icon"
+                                  [pTooltip]="topicDoormatProvenanceLabel(source)"
+                                  tooltipPosition="top"
+                                  [attr.aria-label]="topicDoormatProvenanceLabel(source)">
+                                  {{ topicDoormatProvenanceIcon(source) }}
+                                </span>
+                              }
+                            </span>
+                            {{ issue.issue }}
+                          </td>
+                          <td>
+                            <span class="topic-doormat-provenance-icons">
+                              @for (source of topicDoormatCellProvenance(issue, 'evidence'); track source) {
+                                <span
+                                  class="material-icons topic-doormat-provenance-icon"
+                                  [pTooltip]="topicDoormatProvenanceLabel(source)"
+                                  tooltipPosition="top"
+                                  [attr.aria-label]="topicDoormatProvenanceLabel(source)">
+                                  {{ topicDoormatProvenanceIcon(source) }}
+                                </span>
+                              }
+                            </span>
                             @if (issue.evidenceItems?.length) {
                               <ul class="topic-doormat-evidence-list">
                                 @for (item of issue.evidenceItems; track item.label + item.metric) {
@@ -355,7 +379,20 @@
                               }
                             }
                           </td>
-                          <td class="topic-doormat-recommendation">{{ issue.recommendation || '-' }}</td>
+                          <td class="topic-doormat-recommendation">
+                            <span class="topic-doormat-provenance-icons">
+                              @for (source of topicDoormatCellProvenance(issue, 'recommendation'); track source) {
+                                <span
+                                  class="material-icons topic-doormat-provenance-icon"
+                                  [pTooltip]="topicDoormatProvenanceLabel(source)"
+                                  tooltipPosition="top"
+                                  [attr.aria-label]="topicDoormatProvenanceLabel(source)">
+                                  {{ topicDoormatProvenanceIcon(source) }}
+                                </span>
+                              }
+                            </span>
+                            {{ issue.recommendation || '-' }}
+                          </td>
                         </tr>
                       </ng-template>
                       <ng-template pTemplate="emptymessage">
@@ -403,8 +440,32 @@
                               {{ issue.severity }}
                             </span>
                           </td>
-                          <td>{{ issue.issue }}</td>
                           <td>
+                            <span class="topic-doormat-provenance-icons">
+                              @for (source of topicDoormatCellProvenance(issue, 'issue'); track source) {
+                                <span
+                                  class="material-icons topic-doormat-provenance-icon"
+                                  [pTooltip]="topicDoormatProvenanceLabel(source)"
+                                  tooltipPosition="top"
+                                  [attr.aria-label]="topicDoormatProvenanceLabel(source)">
+                                  {{ topicDoormatProvenanceIcon(source) }}
+                                </span>
+                              }
+                            </span>
+                            {{ issue.issue }}
+                          </td>
+                          <td>
+                            <span class="topic-doormat-provenance-icons">
+                              @for (source of topicDoormatCellProvenance(issue, 'evidence'); track source) {
+                                <span
+                                  class="material-icons topic-doormat-provenance-icon"
+                                  [pTooltip]="topicDoormatProvenanceLabel(source)"
+                                  tooltipPosition="top"
+                                  [attr.aria-label]="topicDoormatProvenanceLabel(source)">
+                                  {{ topicDoormatProvenanceIcon(source) }}
+                                </span>
+                              }
+                            </span>
                             @if (issue.evidenceItems?.length) {
                               <ul class="topic-doormat-evidence-list">
                                 @for (item of issue.evidenceItems; track item.label + item.metric) {
@@ -442,7 +503,20 @@
                               }
                             }
                           </td>
-                          <td class="topic-doormat-recommendation">{{ issue.recommendation || '-' }}</td>
+                          <td class="topic-doormat-recommendation">
+                            <span class="topic-doormat-provenance-icons">
+                              @for (source of topicDoormatCellProvenance(issue, 'recommendation'); track source) {
+                                <span
+                                  class="material-icons topic-doormat-provenance-icon"
+                                  [pTooltip]="topicDoormatProvenanceLabel(source)"
+                                  tooltipPosition="top"
+                                  [attr.aria-label]="topicDoormatProvenanceLabel(source)">
+                                  {{ topicDoormatProvenanceIcon(source) }}
+                                </span>
+                              }
+                            </span>
+                            {{ issue.recommendation || '-' }}
+                          </td>
                         </tr>
                       </ng-template>
                       <ng-template pTemplate="emptymessage">

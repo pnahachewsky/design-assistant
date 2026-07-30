@@ -719,6 +719,11 @@ export class TopicDoormatIssueAnalysisService {
             issue: this.getTopicDoormatIssueLabel(issueId),
             evidence,
             recommendation: this.cleanString(issue['recommendation']),
+            provenance: {
+              issue: ['model'],
+              evidence: ['model'],
+              recommendation: ['model'],
+            },
             doormatIndex: index ?? undefined,
             sectionIndex: summary?.sectionIndex,
             sectionTitle: summary?.sectionTitle,
@@ -1047,6 +1052,11 @@ export class TopicDoormatIssueAnalysisService {
       issue: this.getTopicDoormatIssueLabel(issueId),
       evidence: this.buildTopicDoormatEvidence(issue),
       recommendation: this.cleanString(issue['recommendation']),
+      provenance: {
+        issue: ['model'],
+        evidence: ['model'],
+        recommendation: ['model'],
+      },
       sectionIndex,
       sectionTitle:
         doormatSummaries.find((summary) => summary.sectionIndex === sectionIndex)

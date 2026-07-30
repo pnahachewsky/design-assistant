@@ -87,3 +87,17 @@
 .topic-doormat-recommendation {
   white-space: pre-line;
 }
+
+.topic-doormat-provenance-icons {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.15rem;
+  margin-right: 0.25rem;
+  vertical-align: text-bottom;
+}
+
+.topic-doormat-provenance-icon {
+  color: #596579;
+  font-size: 1rem;
+  line-height: 1;
+}

@@ -5,6 +5,13 @@ export type TopicDoormatDestinationContextStatus =
   | 'available'
   | 'insufficient'
   | 'failed';
+export type TopicDoormatCellProvenance = 'model' | 'aida';
+
+export interface TopicDoormatIssueRowProvenance {
+  issue?: TopicDoormatCellProvenance[];
+  evidence?: TopicDoormatCellProvenance[];
+  recommendation?: TopicDoormatCellProvenance[];
+}
 
 export interface TopicDoormatIssueRow {
   include: boolean;
@@ -20,6 +27,7 @@ export interface TopicDoormatIssueRow {
   evidenceLinkText?: string;
   evidenceLinkHref?: string;
   recommendation: string;
+  provenance?: TopicDoormatIssueRowProvenance;
   doormatIndex?: number;
   affectedDoormatIndexes?: number[];
   sectionIndex?: number;

@@ -47,6 +47,7 @@ import { TopicDoormatIssueAnalysisService } from '../../../services/topic-doorma
 import { TopicDoormatPresenterService } from '../../../services/topic-doormats/topic-doormat-presenter.service';
 import { TopicDoormatAnalysisStateService } from '../../../services/topic-doormats/topic-doormat-analysis-state.service';
 import {
+  TopicDoormatCellProvenance,
   TopicDoormatEvidenceItem,
   TopicDoormatIssueGroup,
   TopicDoormatIssueRow,
@@ -245,6 +246,15 @@ export class ComponentGuidanceComponent implements OnInit, OnDestroy {
   readonly topicDoormatsUrlKey =
     'page.tools.guidance.craVariant.doormats.url';
   readonly subwayDoormatsId = 'subwayDoormats';
+  private readonly aiAssistedAidaTopicDoormatIssueIds = new Set([
+    'description-missing-needed-information',
+    'inconsistent-link-name-style',
+    'link-name-too-different-from-destination-title',
+    'missing-needed-doormat',
+    'mixed-description-style-in-section',
+    'mixed-link-name-styles-in-section',
+    'unnecessary-doormat',
+  ]);
 
   cols = [
     { field: 'order', header: 'Index' },
@@ -1072,6 +1082,34 @@ export class ComponentGuidanceComponent implements OnInit, OnDestroy {
 
   isNoIssueRow(issue: TopicDoormatIssueRow): boolean {
     return issue.issueId === 'no-issues';
+  }
+
+  topicDoormatCellProvenance(
+    issue: TopicDoormatIssueRow,
+    cell: 'issue' | 'evidence' | 'recommendation',
+  ): TopicDoormatCellProvenance[] {
+    const explicit = issue.provenance?.[cell]?.filter(
+      (source): source is TopicDoormatCellProvenance =>
+        source === 'model' || source === 'aida',
+    );
+    if (explicit?.length) return Array.from(new Set(explicit));
+    if (
+      cell === 'issue' &&
+      this.aiAssistedAidaTopicDoormatIssueIds.has(issue.issueId)
+    ) {
+      return ['aida', 'model'];
+    }
+    return ['aida'];
+  }
+
+  topicDoormatProvenanceIcon(source: TopicDoormatCellProvenance): string {
+    return source === 'model' ? 'smart_toy' : 'rule';
+  }
+
+  topicDoormatProvenanceLabel(source: TopicDoormatCellProvenance): string {
+    return source === 'model'
+      ? this.translate.instant('page.tools.guidance.topicDoormats.provenance.model')
+      : this.translate.instant('page.tools.guidance.topicDoormats.provenance.aida');
   }
 
   evidenceMetricParts(
