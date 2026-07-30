@@ -254,10 +254,26 @@ export class ComponentGuidanceComponent implements OnInit, OnDestroy {
     'description-missing-needed-information',
     'inconsistent-link-name-style',
     'link-name-too-different-from-destination-title',
-    'missing-needed-doormat',
     'mixed-description-style-in-section',
     'mixed-link-name-styles-in-section',
-    'unnecessary-doormat',
+  ]);
+  private readonly modelOwnedTopicDoormatIssueIds = new Set([
+    'description-capitalization',
+    'description-incorrect-style',
+    'description-lacks-clarity',
+    'description-list-separators',
+    'description-repeats-link-text',
+    'description-special-formatting',
+    'description-uses-and-before-final-item',
+    'description-uses-icons-or-images',
+    'duplicate-or-near-duplicate-description',
+    'enhancement-label-not-needed',
+    'enhancement-label-wrong-type',
+    'inconsistent-description-style',
+    'link-name-lacks-clarity',
+    'link-name-not-unique',
+    'misdirected-link',
+    'missing-description',
   ]);
 
   cols = [
@@ -1105,6 +1121,12 @@ export class ComponentGuidanceComponent implements OnInit, OnDestroy {
       this.aiAssistedAidaTopicDoormatIssueIds.has(issue.issueId)
     ) {
       return ['aida', 'model'];
+    }
+    if (
+      cell === 'issue' &&
+      this.modelOwnedTopicDoormatIssueIds.has(issue.issueId)
+    ) {
+      return ['model'];
     }
     return ['aida'];
   }

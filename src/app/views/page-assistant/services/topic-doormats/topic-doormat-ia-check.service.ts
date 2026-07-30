@@ -137,7 +137,7 @@ export class TopicDoormatIaCheckService {
           'missingNeededDoormat.recommendation',
         ),
         provenance: {
-          issue: ['aida', 'model'],
+          issue: ['aida'],
           evidence: ['aida'],
           recommendation: ['aida'],
         },
@@ -183,7 +183,7 @@ export class TopicDoormatIaCheckService {
             'unnecessaryDoormat.recommendation',
           ),
           provenance: {
-            issue: ['aida', 'model'],
+            issue: ['aida'],
             evidence: ['aida'],
             recommendation: ['aida'],
           },
