@@ -46,6 +46,7 @@ import { TopicDoormatExtractorService } from '../../../services/topic-doormats/t
 import { TopicDoormatIssueAnalysisService } from '../../../services/topic-doormats/topic-doormat-issue-analysis.service';
 import { TopicDoormatPresenterService } from '../../../services/topic-doormats/topic-doormat-presenter.service';
 import { TopicDoormatAnalysisStateService } from '../../../services/topic-doormats/topic-doormat-analysis-state.service';
+import { TopicDoormatTemplateNormalizerService } from '../../../services/topic-doormats/topic-doormat-template-normalizer.service';
 import {
   TopicDoormatCellProvenance,
   TopicDoormatEvidenceItem,
@@ -205,6 +206,9 @@ export class ComponentGuidanceComponent implements OnInit, OnDestroy {
   private topicDoormatIssueAnalysis = inject(TopicDoormatIssueAnalysisService);
   private topicDoormatPresenter = inject(TopicDoormatPresenterService);
   private topicDoormatAnalysisState = inject(TopicDoormatAnalysisStateService);
+  private topicDoormatTemplateNormalizer = inject(
+    TopicDoormatTemplateNormalizerService,
+  );
   private alertIssuesSub?: Subscription;
   private lastGuidanceRevision = -1;
   private lastExpandedAlertAnalysisHtml = '';
@@ -784,7 +788,10 @@ export class ComponentGuidanceComponent implements OnInit, OnDestroy {
     }
 
     const uploadData = this.uploadState.getUploadData();
-    const html = this.uploadState.getWorkingHtml();
+    const sourceHtml = this.uploadState.getWorkingHtml();
+    const normalization =
+      this.topicDoormatTemplateNormalizer.normalizeLegacyDoormats(sourceHtml);
+    const html = normalization.html;
     if (
       this.topicDoormatIssuesResponseReceived &&
       this.topicDoormatAnalyzedHtml === html
@@ -820,7 +827,7 @@ export class ComponentGuidanceComponent implements OnInit, OnDestroy {
         bilingualDoormatSummaries,
         uploadData,
       );
-      if (this.uploadState.getWorkingHtml() !== html) return;
+      if (this.uploadState.getWorkingHtml() !== sourceHtml) return;
       const hasLegacyTopicDoormatTemplate =
         this.topicDoormatExtractor.hasLegacyTemplate(doc);
       const mostRequestedLinks =
@@ -833,7 +840,7 @@ export class ComponentGuidanceComponent implements OnInit, OnDestroy {
         uploadData,
         selectedModel: this.uploadState.getSelectedAiModel(),
       });
-      if (this.uploadState.getWorkingHtml() !== html) return;
+      if (this.uploadState.getWorkingHtml() !== sourceHtml) return;
 
       this.topicDoormatIssuesResponseReceived = true;
       if (result.text) {

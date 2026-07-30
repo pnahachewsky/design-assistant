@@ -55,6 +55,7 @@ import {
 } from './services/topic-doormats/topic-doormat-analysis-state.service';
 import { TopicDoormatExtractorService } from './services/topic-doormats/topic-doormat-extractor.service';
 import { TopicDoormatIssueAnalysisService } from './services/topic-doormats/topic-doormat-issue-analysis.service';
+import { TopicDoormatTemplateNormalizerService } from './services/topic-doormats/topic-doormat-template-normalizer.service';
 import { TopicDoormatSummary } from './services/topic-doormats/topic-doormat.types';
 
 //Data
@@ -121,6 +122,9 @@ export class PageAssistantCompareComponent
   private topicDoormatAnalysisState = inject(TopicDoormatAnalysisStateService);
   private topicDoormatExtractor = inject(TopicDoormatExtractorService);
   private topicDoormatIssueAnalysis = inject(TopicDoormatIssueAnalysisService);
+  private topicDoormatTemplateNormalizer = inject(
+    TopicDoormatTemplateNormalizerService,
+  );
   private openRouter = inject(OpenRouterService);
   private skillManager = inject(SkillManagerService);
   private urlDataService = inject(UrlDataService);
@@ -803,8 +807,11 @@ export class PageAssistantCompareComponent
     originalHtml: string,
     rewriteHtml: string,
   ): string {
+    const normalizedOriginal =
+      this.topicDoormatTemplateNormalizer.normalizeLegacyDoormats(originalHtml);
+    const htmlToPatch = normalizedOriginal.html;
     const parser = new DOMParser();
-    const originalDoc = parser.parseFromString(originalHtml, 'text/html');
+    const originalDoc = parser.parseFromString(htmlToPatch, 'text/html');
     const rewriteDoc = parser.parseFromString(rewriteHtml, 'text/html');
     const originalDoormatSections = Array.from(
       originalDoc.body.querySelectorAll('.gc-srvinfo'),
@@ -832,7 +839,7 @@ export class PageAssistantCompareComponent
       this.applyDoormatItemRewritesByHref(originalDoc, originalSection, section);
     });
 
-    return this.serializeParsedHtmlLikeInput(originalHtml, originalDoc);
+    return this.serializeParsedHtmlLikeInput(htmlToPatch, originalDoc);
   }
 
   private findOriginalDoormatSectionForRewrite(
@@ -1055,6 +1062,7 @@ export class PageAssistantCompareComponent
   private async ensureTopicDoormatIssueAnalysisForRewrite(
     html: string,
     model: AiModel,
+    expectedWorkingHtml = html,
   ): Promise<boolean> {
     if (
       this.topicDoormatAnalysisState.hasAnalysis() &&
@@ -1101,7 +1109,7 @@ export class PageAssistantCompareComponent
         bilingualDoormatSummaries,
         uploadData,
       );
-    if (this.uploadState.getWorkingHtml() !== html) return false;
+    if (this.uploadState.getWorkingHtml() !== expectedWorkingHtml) return false;
 
     const result = await this.topicDoormatIssueAnalysis.analyze({
       doormatSummaries,
@@ -1113,7 +1121,7 @@ export class PageAssistantCompareComponent
       uploadData,
       selectedModel: model,
     });
-    if (this.uploadState.getWorkingHtml() !== html) return false;
+    if (this.uploadState.getWorkingHtml() !== expectedWorkingHtml) return false;
 
     this.topicDoormatAnalysisState.setAnalysis(html, result.rows, doormatSummaries);
     const selectedIssueCount =
@@ -1332,10 +1340,16 @@ export class PageAssistantCompareComponent
       const isAlertsIssues = this.selectedPromptKey === PromptKey.AlertsIssues;
       const isDoormats = this.selectedPromptKey === PromptKey.Doormats;
       const isAlertFlow = isAlertsRecommendations || isAlertsIssues;
-      const html = isAlertFlow || isDoormats
+      let html = isAlertFlow || isDoormats
         ? this.uploadState.getWorkingHtml()
         : uploadData?.originalHtml;
       if (!html) throw new Error('No HTML to send');
+      const workingHtmlBeforeRequest = html;
+      if (isDoormats) {
+        const normalization =
+          this.topicDoormatTemplateNormalizer.normalizeLegacyDoormats(html);
+        html = normalization.html;
+      }
 
       const promptKeyForRequest = isAlertsRecommendations
         ? PromptKey.AlertsIssues
@@ -1356,7 +1370,11 @@ export class PageAssistantCompareComponent
           this.topicDoormatAnalysisState.hasAnalysis() &&
           this.topicDoormatAnalysisState.getAnalyzedHtml() === html;
         const doormatAnalysisReady =
-          await this.ensureTopicDoormatIssueAnalysisForRewrite(html, model);
+          await this.ensureTopicDoormatIssueAnalysisForRewrite(
+            html,
+            model,
+            workingHtmlBeforeRequest,
+          );
         if (!doormatAnalysisReady) {
           return;
         }

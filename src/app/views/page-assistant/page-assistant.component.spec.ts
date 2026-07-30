@@ -275,4 +275,43 @@ describe('PageAssistantCompareComponent', () => {
     expect(result).not.toContain('Missing updated');
     expect(result).not.toContain('Unexpected new item');
   });
+
+  it('normalizes legacy doormat markup before applying doormat rewrites', () => {
+    const originalHtml = `
+      <main>
+        <h1>Giving</h1>
+        <div class="mwsdoormat-links-container section">
+          <h2>Topics</h2>
+          <div class="wb-eqht row">
+            <div class="col-md-4">
+              <section class="gc-drmt">
+                <h3 class="h5"><a href="/before-you-give.html">Before you give</a></h3>
+                <p>Original description</p>
+              </section>
+            </div>
+          </div>
+        </div>
+      </main>
+    `;
+    const rewriteHtml = `
+      <section class="gc-srvinfo">
+        <div>
+          <h3><a href="/before-you-give.html">What to know before you give</a></h3>
+          <p>Updated description</p>
+        </div>
+      </section>
+    `;
+
+    const result = (component as any).applyDoormatRewriteToPageHtml(
+      originalHtml,
+      rewriteHtml,
+    );
+
+    expect(result).toContain('<section class="gc-srvinfo">');
+    expect(result).toContain('What to know before you give');
+    expect(result).toContain('Updated description');
+    expect(result).not.toContain('mwsdoormat-links-container');
+    expect(result).not.toContain('gc-drmt');
+    expect(result).not.toContain('Original description');
+  });
 });
