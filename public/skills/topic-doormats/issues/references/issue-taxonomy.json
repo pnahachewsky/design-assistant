@@ -562,7 +562,7 @@
     {
       "id": "missing-needed-doormat",
       "group": "Choice of doormats",
-      "label": "Missing a needed doormat",
+      "label": "Potentially missing a doormat",
       "severity": "Medium",
       "condition": "A direct child page is not represented in the doormat set. Treat this as a review flag, not proof that a doormat is required.",
       "recommendation": "Review and consider adding a doormat for the missing child page."
@@ -582,7 +582,7 @@
       "label": "Too many doormats",
       "severity": "Low",
       "condition": "A single topic doormat section contains more than 9 doormats.",
-      "recommendation": "Either remove doormats or break down the section into sections that have 9 or fewer doormats.",
+      "recommendation": "Review. Should any doormats be removed? Should the section be divided?",
       "reporting": "Report this issue once in section_issues for the affected H2 section. Do not report it on individual doormats.",
       "evidence_required": [
         "section_doormat_count",
