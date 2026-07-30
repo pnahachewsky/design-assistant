@@ -125,7 +125,6 @@
         "doormats"
       ],
       "outputModes": [
-        "html",
         "json"
       ],
       "defaultReferencePaths": [

@@ -212,6 +212,7 @@ import {
   ɵɵreference,
   ɵɵrepeater,
   ɵɵrepeaterCreate,
+  ɵɵrepeaterTrackByIdentity,
   ɵɵresetView,
   ɵɵrestoreView,
   ɵɵsanitizeHtml,
@@ -25707,9 +25708,10 @@ var TopicDoormatIaCheckService = class _TopicDoormatIaCheckService {
           doormatByKey.set(key2, summary);
         }
       });
+      const bodyLinkKeys = this.getBodyContentLinkKeys(uploadData, topicUrl);
       return {
         rows: [
-          ...iaResult.length ? this.buildMissingRows(iaResult, doormatByKey) : [],
+          ...iaResult.length ? this.buildMissingRows(iaResult, doormatByKey, bodyLinkKeys) : [],
           ...iaResult.length ? this.buildExtraRows(doormatSummaries, childByKey, topicUrl) : []
         ],
         metaByDoormatIndex: this.buildDoormatMetaMap(doormatSummaries, childByKey, visits, topicUrl)
@@ -25736,8 +25738,8 @@ var TopicDoormatIaCheckService = class _TopicDoormatIaCheckService {
       key: key2
     };
   }
-  buildMissingRows(childPages, doormatByKey) {
-    return childPages.filter((child) => !doormatByKey.has(child.key)).map((child) => ({
+  buildMissingRows(childPages, doormatByKey, bodyLinkKeys) {
+    return childPages.filter((child) => !doormatByKey.has(child.key) && !bodyLinkKeys.has(child.key)).map((child) => ({
       include: true,
       rowType: "section",
       severity: "Medium",
@@ -25748,8 +25750,73 @@ var TopicDoormatIaCheckService = class _TopicDoormatIaCheckService {
       evidence: this.getTopicDoormatIaText("missingNeededDoormat.evidence"),
       evidenceLinkText: child.label,
       evidenceLinkHref: child.url,
-      recommendation: this.getTopicDoormatIaText("missingNeededDoormat.recommendation")
+      recommendation: this.getTopicDoormatIaText("missingNeededDoormat.recommendation"),
+      provenance: {
+        issue: ["aida"],
+        evidence: ["aida"],
+        recommendation: ["aida"]
+      }
     }));
+  }
+  getBodyContentLinkKeys(uploadData, topicUrl) {
+    const html = this.cleanString(uploadData?.originalHtml) || this.cleanString(uploadData?.modifiedHtml);
+    const keys = /* @__PURE__ */ new Set();
+    if (!html)
+      return keys;
+    let doc;
+    try {
+      doc = new DOMParser().parseFromString(html, "text/html");
+    } catch {
+      return keys;
+    }
+    const root = doc.querySelector("main") ?? doc.body;
+    if (!root)
+      return keys;
+    root.querySelectorAll([
+      ".gc-srvinfo",
+      ".gc-drmt",
+      ".mwsdoormat-links-container",
+      ".breadcrumb",
+      ".pagedetails",
+      "#wb-info",
+      "#wb-bc",
+      "#wb-lng",
+      "#wb-srch",
+      "#wb-sm",
+      "#wb-sec",
+      ".gc-followus",
+      ".followus",
+      ".social-media",
+      ".social-links"
+    ].join(",")).forEach((element) => element.remove());
+    Array.from(root.querySelectorAll("a[href]")).forEach((anchor) => {
+      if (this.isSocialMediaLink(anchor))
+        return;
+      const key2 = this.getComparableUrlKey(anchor.getAttribute("href") || "", topicUrl);
+      if (key2)
+        keys.add(key2);
+    });
+    return keys;
+  }
+  isSocialMediaLink(anchor) {
+    const href = this.cleanString(anchor.getAttribute("href"));
+    if (!href)
+      return false;
+    let host = "";
+    try {
+      host = new URL(href, window.location.origin).hostname.toLowerCase();
+    } catch {
+      return false;
+    }
+    return [
+      "facebook.com",
+      "instagram.com",
+      "linkedin.com",
+      "threads.net",
+      "twitter.com",
+      "x.com",
+      "youtube.com"
+    ].some((domain) => host === domain || host.endsWith(`.${domain}`));
   }
   buildExtraRows(doormatSummaries, childByKey, topicUrl) {
     const extraSummariesBySection = /* @__PURE__ */ new Map();
@@ -25777,6 +25844,11 @@ var TopicDoormatIaCheckService = class _TopicDoormatIaCheckService {
           indexes: affectedIndexes.join(", ")
         }),
         recommendation: this.getTopicDoormatIaText("unnecessaryDoormat.recommendation"),
+        provenance: {
+          issue: ["aida"],
+          evidence: ["aida"],
+          recommendation: ["aida"]
+        },
         sectionIndex: sectionIndex || void 0,
         sectionTitle: firstSummary.sectionTitle || void 0
       };
@@ -26414,17 +26486,21 @@ var TopicDoormatIssueAnalysisService = class _TopicDoormatIssueAnalysisService {
         "You must still return exactly one allowed detected_link_text_style, destination_link_relationship, and destination_link_relationship_basis for every doormat.",
         "Classify the grammatical construction, not the subject matter. A sentence-like description remains sentence even when final punctuation is intentionally omitted."
       ].join("\n");
+      const outputLanguage = this.getAidaOutputLanguage();
+      const outputLanguageInstruction = this.buildTopicDoormatOutputLanguageInstruction(outputLanguage);
       const systemPrompt = [
         composed.prompt,
         this.topicDoormatModelIssueContract,
-        localOwnershipInstruction
+        localOwnershipInstruction,
+        outputLanguageInstruction
       ].filter(Boolean).join("\n\n");
-      const messages = this.buildTopicDoormatIssueMessages(systemPrompt, input.doormatSummaries);
+      const messages = this.buildTopicDoormatIssueMessages(systemPrompt, input.doormatSummaries, input.pageLanguage, outputLanguage);
       const modelRotation = this.modelClient.buildModelRotation(input.selectedModel);
       this.debugTopicDoormatIssues("request prepared", {
         selectedModel: input.selectedModel,
         modelRotation,
         pageLanguage: input.pageLanguage,
+        outputLanguage,
         doormatSummaryCount: input.doormatSummaries.length,
         sectionCounts: this.buildTopicDoormatSectionCounts(input.doormatSummaries),
         overLimitSummaryIndexes: this.getTopicDoormatOverLimitSectionIndexes(input.doormatSummaries),
@@ -26470,7 +26546,9 @@ var TopicDoormatIssueAnalysisService = class _TopicDoormatIssueAnalysisService {
         this.requestTopicDoormatIssueJsonBySection({
           systemPrompt,
           selectedModel: input.selectedModel,
-          doormatSummaries: input.doormatSummaries
+          doormatSummaries: input.doormatSummaries,
+          pageLanguage: input.pageLanguage,
+          outputLanguage
         }),
         this.iaCheck.analyze(input.doormatSummaries, input.uploadData).catch((err) => {
           this.debugTopicDoormatIssues("local IA checks failed", {
@@ -26502,7 +26580,7 @@ var TopicDoormatIssueAnalysisService = class _TopicDoormatIssueAnalysisService {
       const modelRotation = this.modelClient.buildModelRotation(params.selectedModel);
       if (sectionBatches.length <= 1) {
         return this.modelClient.requestIssueJson({
-          messages: this.buildTopicDoormatIssueMessages(params.systemPrompt, params.doormatSummaries),
+          messages: this.buildTopicDoormatIssueMessages(params.systemPrompt, params.doormatSummaries, params.pageLanguage, params.outputLanguage),
           requestedModel: params.selectedModel,
           doormatSummaries: params.doormatSummaries,
           isParseableResponseText: (value) => this.isParseableTopicDoormatIssueResponseText(value),
@@ -26518,7 +26596,7 @@ var TopicDoormatIssueAnalysisService = class _TopicDoormatIssueAnalysisService {
           doormatIndexes: batch.doormatSummaries.map((summary) => summary.index)
         });
         const result = yield this.modelClient.requestIssueJson({
-          messages: this.buildTopicDoormatIssueMessages(params.systemPrompt, batch.doormatSummaries),
+          messages: this.buildTopicDoormatIssueMessages(params.systemPrompt, batch.doormatSummaries, params.pageLanguage, params.outputLanguage),
           requestedModel: params.selectedModel,
           doormatSummaries: batch.doormatSummaries,
           isParseableResponseText: (value) => this.isParseableTopicDoormatIssueResponseText(value),
@@ -26543,7 +26621,7 @@ var TopicDoormatIssueAnalysisService = class _TopicDoormatIssueAnalysisService {
       };
     });
   }
-  buildTopicDoormatIssueMessages(systemPrompt, doormatSummaries) {
+  buildTopicDoormatIssueMessages(systemPrompt, doormatSummaries, pageLanguage, outputLanguage) {
     return [
       {
         role: "system",
@@ -26552,6 +26630,8 @@ var TopicDoormatIssueAnalysisService = class _TopicDoormatIssueAnalysisService {
       {
         role: "user",
         content: JSON.stringify({
+          outputLanguage,
+          pageLanguage,
           doormats: doormatSummaries.map((summary) => ({
             index: summary.index,
             linkText: summary.linkText,
@@ -26579,6 +26659,22 @@ var TopicDoormatIssueAnalysisService = class _TopicDoormatIssueAnalysisService {
         })
       }
     ];
+  }
+  getAidaOutputLanguage() {
+    const currentLang = this.cleanString(this.translate.currentLang).toLowerCase();
+    return currentLang.startsWith("fr") ? "fr" : "en";
+  }
+  buildTopicDoormatOutputLanguageInstruction(outputLanguage) {
+    const languageName = outputLanguage === "fr" ? "French" : "English";
+    return [
+      "Output language contract:",
+      `The selected AIDA interface language is ${languageName} (${outputLanguage}).`,
+      "The supplied page content may be in a different language.",
+      "Analyze page content in its source language, but write all model-generated issue descriptions, evidence, recommendations, and explanatory reasons in the selected AIDA interface language.",
+      `Do not switch away from ${languageName} because the page content, destination title, heading, or description is in another language.`,
+      "Keep exact quoted page text in its original language only when that exact wording is needed as evidence.",
+      "Return JSON only."
+    ].join("\n");
   }
   buildTopicDoormatSectionBatches(doormatSummaries) {
     const bySection = /* @__PURE__ */ new Map();
@@ -26735,6 +26831,11 @@ var TopicDoormatIssueAnalysisService = class _TopicDoormatIssueAnalysisService {
           issue: this.getTopicDoormatIssueLabel(issueId),
           evidence,
           recommendation: this.cleanString(issue["recommendation"]),
+          provenance: {
+            issue: ["model"],
+            evidence: ["model"],
+            recommendation: ["model"]
+          },
           doormatIndex: index ?? void 0,
           sectionIndex: summary?.sectionIndex,
           sectionTitle: summary?.sectionTitle,
@@ -26940,6 +27041,11 @@ var TopicDoormatIssueAnalysisService = class _TopicDoormatIssueAnalysisService {
       issue: this.getTopicDoormatIssueLabel(issueId),
       evidence: this.buildTopicDoormatEvidence(issue),
       recommendation: this.cleanString(issue["recommendation"]),
+      provenance: {
+        issue: ["model"],
+        evidence: ["model"],
+        recommendation: ["model"]
+      },
       sectionIndex,
       sectionTitle: doormatSummaries.find((summary) => summary.sectionIndex === sectionIndex)?.sectionTitle || ""
     };
@@ -28504,6 +28610,355 @@ ${JSON.stringify(contract)}`;
 };
 (() => {
   (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(TopicDoormatIssueAnalysisService, [{
+    type: Injectable,
+    args: [{ providedIn: "root" }]
+  }], null, null);
+})();
+
+// src/app/views/page-assistant/data/canada-ca-snippets.constants.ts
+var TOPIC_PAGE_SNIPPETS = {
+  mostRequestedSection: [
+    '<section class="gc-most-requested">',
+    '  <div class="container">',
+    '    <h2 class="h3">Most requested</h2>',
+    "    <ul>",
+    "      {{items}}",
+    "    </ul>",
+    "  </div>",
+    "</section>"
+  ].join("\n"),
+  listItem: '<li><a href="{{url}}">{{label}}</a></li>',
+  noServicesItem: '<div class="col-lg-4 col-md-6"><h3><a href="#">[No services available]</a></h3><p>Use action verbs, or list keywords to describe this item.</p></div>',
+  serviceItem: [
+    '<div class="col-lg-4 col-md-6">',
+    '  <h3><a href="{{url}}">{{label}}</a></h3>',
+    "  <p>{{description}}</p>",
+    "</div>"
+  ].join("\n"),
+  featureItem: '<div class="col-sm-6">{{imageTag}}</div><div class="col-sm-6"><h3><a class="stretched-link" href="{{url}}">{{label}}</a></h3><p>{{description}}</p></div>',
+  featuresSectionTwoNoSocial: [
+    '<section class="gc-features mrgn-tp-xl">',
+    '  <h2 class="wb-inv">Features</h2>',
+    '  <div class="row wb-eqht wb-eqht-grd">',
+    "    {{items}}",
+    "  </div>",
+    "</section>"
+  ].join("\n"),
+  featuresSectionTwoWithSocial: [
+    '<section class="gc-features mrgn-tp-xl">',
+    '  <h2 class="wb-inv">Features</h2>',
+    '  <div class="row wb-eqht wb-eqht-grd">',
+    "    {{items}}",
+    "  </div>",
+    "</section>"
+  ].join("\n"),
+  socialFeatureColumn: [
+    '<div class="col-lg-4 col-sm-6">',
+    "  {{socialBlock}}",
+    "</div>"
+  ].join("\n"),
+  featuresSectionFullWidth: [
+    '<div class="col-md-12">',
+    '  <section class="gc-features">',
+    '    <h2 class="wb-inv">Featured</h2>',
+    '    <div class="row">',
+    "      {{featureItem}}",
+    "    </div>",
+    "  </section>",
+    "</div>"
+  ].join("\n"),
+  featuresSectionThree: [
+    '<section class="gc-features">',
+    "  <h2>Features</h2>",
+    '  <div class="row wb-eqht wb-eqht-grd">',
+    "    {{items}}",
+    "  </div>",
+    "</section>"
+  ].join("\n"),
+  featureCardItem: [
+    '<div class="{{columnClass}}">',
+    '  <div class="well well-sm eqht-trgt">',
+    "    {{imageTag}}",
+    '    <h3><a href="{{url}}" class="stretched-link">{{label}}</a></h3>',
+    "    <p>{{description}}</p>",
+    "  </div>",
+    "</div>"
+  ].join("\n"),
+  emptyFeatureColumn: '<div class="col-lg-4 col-sm-6"></div>',
+  socialMediaBlock: [
+    '<div id="social-media-en" class="gc-followus gc-followus-horizontal">',
+    "  <h2>On social media</h2>",
+    '  <ul class="list-inline">',
+    "    <li>",
+    '      <a href="https://www.facebook.com/canrevagency/" rel="external" class="social-lnk facebook"><span class="" style="border: 2px solid rgb(111, 159, 255);">Facebook</span></a>',
+    "    </li>",
+    "    <li>",
+    '      <a href="https://twitter.com/CanRevAgency" rel="external" class="x-social"><span class="" style="border: 2px solid rgb(111, 159, 255);">X</span></a>',
+    "    </li>",
+    "    <li>",
+    '      <a href="https://www.youtube.com/user/CanRevAgency" rel="external" class="social-lnk youtube"><span class="" style="border: 2px solid rgb(111, 159, 255);">YouTube</span></a>',
+    "    </li>",
+    "    <li>",
+    '      <a href="http://www.instagram.com/canrevagency" rel="external" class="social-lnk instagram"><span class="" style="border: 2px solid rgb(111, 159, 255);">Instagram</span></a>',
+    "    </li>",
+    "    <li>",
+    '      <a href="https://www.linkedin.com/company/cra-arc" rel="external" class="social-lnk linkedin"><span class="" style="border: 2px solid rgb(111, 159, 255);">LinkedIn</span></a>',
+    "    </li>",
+    "  </ul>",
+    "</div>"
+  ].join("\n"),
+  contributorBlock: [
+    '<h2 class="wb-inv">Contributors</h2>',
+    '<section class="gc-contributors">',
+    "  <h3>From:</h3>",
+    "  <ul>",
+    '    <li><a href="https://www.canada.ca/en/revenue-agency.html">Canada Revenue Agency</a></li>',
+    "  </ul>",
+    "</section>"
+  ].join("\n"),
+  contributorsWithSocialRow: [
+    '<div class="container mrgn-tp-md">',
+    '  <div class="row">',
+    '    <section class="col-md-8">',
+    "      {{contributorBlock}}",
+    "    </section>",
+    '    <section class="col-md-4 mrgn-bttm-sm">',
+    "      {{socialMediaBlock}}",
+    "    </section>",
+    "  </div>",
+    "</div>"
+  ].join("\n"),
+  contributorsOnlyRow: [
+    '<div class="container mrgn-tp-md">',
+    '  <div class="row">',
+    '    <section class="col-md-12">',
+    "      {{contributorBlock}}",
+    "    </section>",
+    "  </div>",
+    "</div>"
+  ].join("\n"),
+  socialOnlyRow: [
+    '<div class="container mrgn-tp-md">',
+    '  <div class="row">',
+    '    <section class="col-md-4 mrgn-bttm-sm">',
+    "      {{socialMediaBlock}}",
+    "    </section>",
+    "  </div>",
+    "</div>"
+  ].join("\n"),
+  featuresSection: [
+    '<div class="col-md-8">',
+    '  <section class="gc-features">',
+    '    <h2 class="wb-inv">Featured</h2>',
+    '    <div class="row">',
+    "      {{featureItem}}",
+    "    </div>",
+    "  </section>",
+    "</div>"
+  ].join("\n"),
+  focusSectionStartComment: "<!--",
+  focusSectionEndComment: "-->",
+  featureRowStart: '<div class="row mrgn-tp-xl">',
+  featureRowEnd: "</div>",
+  socialColStart: '<div class="col-md-4">',
+  socialColEnd: "</div>",
+  socialBlockBelow: [
+    '<div class="row mrgn-tp-md">',
+    '  <div class="col-md-12">',
+    "    {{socialMediaBlock}}",
+    "  </div>",
+    "</div>"
+  ].join("\n"),
+  sectionTitleBlock: "<p>{{sectionTitle}}</p>",
+  heroImageBlock: [
+    '<div class="col-md-6 hidden-sm hidden-xs">',
+    "  <img",
+    '    src="https://dummyimage.com/520x200/000000/FFFFFF.png"',
+    '    alt=""',
+    '    class="img-responsive pull-right mrgn-tp-lg"',
+    "  />",
+    "</div>"
+  ].join("\n")
+};
+
+// src/app/views/page-assistant/services/snippet.service.ts
+var SnippetService = class _SnippetService {
+  applySnippet(template, replacements) {
+    let output = template;
+    for (const [key2, value] of Object.entries(replacements)) {
+      output = output.split(`{{${key2}}}`).join(value);
+    }
+    return output;
+  }
+  static \u0275fac = function SnippetService_Factory(__ngFactoryType__) {
+    return new (__ngFactoryType__ || _SnippetService)();
+  };
+  static \u0275prov = /* @__PURE__ */ \u0275\u0275defineInjectable({ token: _SnippetService, factory: _SnippetService.\u0275fac, providedIn: "root" });
+};
+(() => {
+  (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(SnippetService, [{
+    type: Injectable,
+    args: [{ providedIn: "root" }]
+  }], null, null);
+})();
+
+// src/app/views/page-assistant/services/topic-doormats/topic-doormat-template-normalizer.service.ts
+var TopicDoormatTemplateNormalizerService = class _TopicDoormatTemplateNormalizerService {
+  snippetService = inject(SnippetService);
+  normalizeLegacyDoormats(html) {
+    if (!html || !this.hasLegacyDoormatMarkup(html)) {
+      return { html, changed: false };
+    }
+    const doc = new DOMParser().parseFromString(html, "text/html");
+    let changed = false;
+    Array.from(doc.body.querySelectorAll(".mwsdoormat-links-container.section, .mwsdoormat-links-container")).forEach((container) => {
+      const modernSection = this.buildModernSection(container);
+      if (!modernSection)
+        return;
+      container.replaceWith(modernSection);
+      changed = true;
+    });
+    if (!doc.body.querySelector(".gc-srvinfo")) {
+      const standaloneSection = this.buildStandaloneModernSection(doc);
+      if (standaloneSection) {
+        standaloneSection.source.replaceWith(standaloneSection.section);
+        changed = true;
+      }
+    }
+    if (!changed)
+      return { html, changed: false };
+    return {
+      html: this.serializeParsedHtmlLikeInput(html, doc),
+      changed: true
+    };
+  }
+  hasLegacyDoormatMarkup(html) {
+    return /\b(?:mwsdoormat-links-container|gc-drmt)\b/.test(html);
+  }
+  buildModernSection(container) {
+    const items = this.extractLegacyItems(container);
+    if (!items.length)
+      return null;
+    const doc = container.ownerDocument;
+    const section = doc.createElement("section");
+    section.className = "gc-srvinfo";
+    const isGenericHeading = this.hasGenericLegacyHeading(container);
+    const heading = doc.createElement("h2");
+    heading.textContent = this.getModernSectionHeading(container);
+    if (isGenericHeading) {
+      heading.className = "wb-inv";
+    }
+    section.appendChild(heading);
+    const row = doc.createElement("div");
+    row.className = "row wb-eqht-grd";
+    row.innerHTML = items.map((item) => this.snippetService.applySnippet(TOPIC_PAGE_SNIPPETS.serviceItem, {
+      url: this.escapeHtml(item.href),
+      label: this.escapeHtml(item.label),
+      description: this.escapeHtml(item.description)
+    })).join("\n");
+    section.appendChild(row);
+    return section;
+  }
+  extractLegacyItems(container) {
+    return Array.from(container.querySelectorAll(".gc-drmt")).map((item) => {
+      const link = item.querySelector("h2 a[href], h3 a[href]") ?? item.querySelector("a[href]");
+      const href = link?.getAttribute("href")?.trim() ?? "";
+      const label = this.cleanVisibleText(link?.textContent);
+      const description = this.cleanVisibleText(item.querySelector("p")?.textContent);
+      return { href, label, description };
+    }).filter((item) => item.href && item.label);
+  }
+  buildStandaloneModernSection(doc) {
+    const legacyItems = Array.from(doc.body.querySelectorAll(".gc-drmt"));
+    if (!legacyItems.length)
+      return null;
+    const source = legacyItems[0].closest(".row") ?? legacyItems[0].parentElement;
+    if (!source)
+      return null;
+    const section = this.buildModernSectionFromItems(doc, legacyItems, this.findStandaloneSectionHeading(legacyItems[0]));
+    return section ? { source, section } : null;
+  }
+  buildModernSectionFromItems(doc, legacyItems, sectionHeading) {
+    const items = legacyItems.map((item) => {
+      const link = item.querySelector("h2 a[href], h3 a[href]") ?? item.querySelector("a[href]");
+      const href = link?.getAttribute("href")?.trim() ?? "";
+      const label = this.cleanVisibleText(link?.textContent);
+      const description = this.cleanVisibleText(item.querySelector("p")?.textContent);
+      return { href, label, description };
+    }).filter((item) => item.href && item.label);
+    if (!items.length)
+      return null;
+    const section = doc.createElement("section");
+    section.className = "gc-srvinfo";
+    const heading = doc.createElement("h2");
+    heading.textContent = sectionHeading || "Services and information";
+    if (!sectionHeading || this.isGenericLegacyHeading(sectionHeading)) {
+      heading.className = "wb-inv";
+      heading.textContent = "Services and information";
+    }
+    section.appendChild(heading);
+    const row = doc.createElement("div");
+    row.className = "row wb-eqht-grd";
+    row.innerHTML = items.map((item) => this.snippetService.applySnippet(TOPIC_PAGE_SNIPPETS.serviceItem, {
+      url: this.escapeHtml(item.href),
+      label: this.escapeHtml(item.label),
+      description: this.escapeHtml(item.description)
+    })).join("\n");
+    section.appendChild(row);
+    return section;
+  }
+  findStandaloneSectionHeading(firstItem) {
+    let current = firstItem.parentElement;
+    while (current) {
+      let previous = current.previousElementSibling;
+      while (previous) {
+        if (previous.matches("h2, h3")) {
+          return this.cleanVisibleText(previous.textContent);
+        }
+        previous = previous.previousElementSibling;
+      }
+      current = current.parentElement;
+    }
+    return "";
+  }
+  getModernSectionHeading(container) {
+    const legacyHeading = Array.from(container.children).find((child) => child.matches("h2, h3"));
+    const headingText = this.cleanVisibleText(legacyHeading?.textContent);
+    if (!headingText || this.isGenericLegacyHeading(headingText)) {
+      return "Services and information";
+    }
+    return headingText;
+  }
+  hasGenericLegacyHeading(container) {
+    const legacyHeading = Array.from(container.children).find((child) => child.matches("h2, h3"));
+    return this.isGenericLegacyHeading(legacyHeading?.textContent);
+  }
+  isGenericLegacyHeading(value) {
+    return this.cleanVisibleText(value).toLowerCase() === "topics";
+  }
+  serializeParsedHtmlLikeInput(originalHtml, doc) {
+    if (/<html[\s>]/i.test(originalHtml)) {
+      const doctype = originalHtml.trimStart().toLowerCase().startsWith("<!doctype") ? "<!doctype html>\n" : "";
+      return `${doctype}${doc.documentElement.outerHTML}`;
+    }
+    if (/<body[\s>]/i.test(originalHtml)) {
+      return doc.body.outerHTML;
+    }
+    return doc.body.innerHTML;
+  }
+  cleanVisibleText(value) {
+    return (value || "").replace(/\s+/g, " ").trim();
+  }
+  escapeHtml(value) {
+    return value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+  }
+  static \u0275fac = function TopicDoormatTemplateNormalizerService_Factory(__ngFactoryType__) {
+    return new (__ngFactoryType__ || _TopicDoormatTemplateNormalizerService)();
+  };
+  static \u0275prov = /* @__PURE__ */ \u0275\u0275defineInjectable({ token: _TopicDoormatTemplateNormalizerService, factory: _TopicDoormatTemplateNormalizerService.\u0275fac, providedIn: "root" });
+};
+(() => {
+  (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(TopicDoormatTemplateNormalizerService, [{
     type: Injectable,
     args: [{ providedIn: "root" }]
   }], null, null);
@@ -32338,7 +32793,7 @@ var AlertsGuidanceComponent = class _AlertsGuidanceComponent {
       \u0275\u0275classMap((ctx.reanalysisRecommended ? "p-button-primary" : "p-button-secondary") + " p-button-sm");
       \u0275\u0275property("disabled", ctx.reanalysisDisabled);
     }
-  }, dependencies: [CommonModule, NgClass, FormsModule, NgControlStatus, NgModel, TableModule, Table, PrimeTemplate, CheckboxModule, Checkbox, ButtonModule, ButtonDirective], styles: ["\n\n.alert-table[_ngcontent-%COMP%]   .p-datatable-tbody[_ngcontent-%COMP%]    > tr[_ngcontent-%COMP%]    > td[_ngcontent-%COMP%], \n.alert-table[_ngcontent-%COMP%]   .p-datatable-thead[_ngcontent-%COMP%]    > tr[_ngcontent-%COMP%]    > th[_ngcontent-%COMP%] {\n  white-space: normal !important;\n  word-break: normal;\n  overflow-wrap: normal;\n  vertical-align: top;\n}\n.alert-table[_ngcontent-%COMP%]   .wrap-col[_ngcontent-%COMP%] {\n  min-width: 140px;\n}\n.alert-table[_ngcontent-%COMP%]   .severity-col[_ngcontent-%COMP%]   .chip[_ngcontent-%COMP%] {\n  white-space: nowrap !important;\n  display: inline-flex;\n}\n.alert-table[_ngcontent-%COMP%]   .include-col[_ngcontent-%COMP%] {\n  width: 140px;\n  text-align: center;\n}\n.alert-table[_ngcontent-%COMP%]   .include-col[_ngcontent-%COMP%]   .p-checkbox[_ngcontent-%COMP%] {\n  display: inline-flex;\n}\n.alert-table[_ngcontent-%COMP%]   .p-datatable-table[_ngcontent-%COMP%] {\n  width: 100%;\n  border: 1px solid #d1d5db;\n  border-radius: 6px;\n}\n.alert-table[_ngcontent-%COMP%]   .p-datatable-wrapper[_ngcontent-%COMP%] {\n  width: 100%;\n  overflow-x: auto;\n}\n.alert-table[_ngcontent-%COMP%]   .p-datatable-table[_ngcontent-%COMP%] {\n  table-layout: auto !important;\n}\n.alert-table-actions[_ngcontent-%COMP%] {\n  display: flex;\n  justify-content: flex-end;\n  margin-top: 0.75rem;\n}\n.alert-table[_ngcontent-%COMP%]   .toggle-col[_ngcontent-%COMP%], \n.alert-table[_ngcontent-%COMP%]   .checkbox-col[_ngcontent-%COMP%] {\n  width: 1%;\n  white-space: nowrap;\n  text-align: center;\n  padding: 0;\n}\n.alert-table.p-datatable[_ngcontent-%COMP%]   .p-datatable-thead[_ngcontent-%COMP%]    > tr[_ngcontent-%COMP%]    > th.toggle-col[_ngcontent-%COMP%], \n.alert-table.p-datatable[_ngcontent-%COMP%]   .p-datatable-tbody[_ngcontent-%COMP%]    > tr[_ngcontent-%COMP%]    > td.toggle-col[_ngcontent-%COMP%], \n.alert-table.p-datatable[_ngcontent-%COMP%]   .p-datatable-thead[_ngcontent-%COMP%]    > tr[_ngcontent-%COMP%]    > th.checkbox-col[_ngcontent-%COMP%], \n.alert-table.p-datatable[_ngcontent-%COMP%]   .p-datatable-tbody[_ngcontent-%COMP%]    > tr[_ngcontent-%COMP%]    > td.checkbox-col[_ngcontent-%COMP%] {\n  width: 1% !important;\n  white-space: nowrap !important;\n  text-align: center;\n  padding: 0 0.25rem;\n}\n/*# sourceMappingURL=alerts-guidance.component.css.map */", "\n\n[_nghost-%COMP%]     .alert-table .p-datatable-table {\n  table-layout: auto !important;\n}\n[_nghost-%COMP%]     .alert-table.p-datatable .p-datatable-thead > tr > th.toggle-col, \n[_nghost-%COMP%]     .alert-table.p-datatable .p-datatable-tbody > tr > td.toggle-col {\n  width: 70px !important;\n  min-width: 70px;\n  max-width: 70px;\n  white-space: nowrap !important;\n  text-align: center;\n  padding: 0 0.25rem;\n}\n[_nghost-%COMP%]     .alert-table.p-datatable .p-datatable-thead > tr > th.checkbox-col, \n[_nghost-%COMP%]     .alert-table.p-datatable .p-datatable-tbody > tr > td.checkbox-col {\n  width: 70px !important;\n  min-width: 70px;\n  max-width: 70px;\n  white-space: nowrap !important;\n  text-align: center;\n  padding: 0 0.25rem;\n}\n[_nghost-%COMP%]     .topic-doormat-section-row > td {\n  background: #eef2f6;\n}\n.topic-doormat-group[_ngcontent-%COMP%] {\n  margin-top: 1rem;\n  border: 1px solid #d8dee6;\n  border-radius: 6px;\n  background: #fff;\n  overflow: hidden;\n}\n.topic-doormat-group[_ngcontent-%COMP%]    + .topic-doormat-group[_ngcontent-%COMP%] {\n  margin-top: 1.25rem;\n}\n.topic-doormat-group-header[_ngcontent-%COMP%] {\n  display: flex;\n  align-items: flex-start;\n  gap: 0.75rem;\n  padding: 1.1rem 1.25rem;\n  border-bottom: 1px solid #d8dee6;\n  background: #eef2f6;\n}\n.topic-doormat-group[_ngcontent-%COMP%]   h3[_ngcontent-%COMP%] {\n  margin: 0;\n  font-size: 1.25rem;\n  line-height: 1.25;\n}\n.topic-doormat-count[_ngcontent-%COMP%] {\n  flex: 0 0 auto;\n  padding: 0.4rem 0.8rem;\n  border: 1px solid #d8dee6;\n  border-radius: 999px;\n  background: #fff;\n  color: #202833;\n  font-size: 0.9rem;\n  font-weight: 700;\n}\n.topic-doormat-subheading[_ngcontent-%COMP%] {\n  margin: 1rem 1rem 0.4rem;\n  padding-bottom: 0.25rem;\n  border-bottom: 1px solid #eef2f6;\n  color: #202833;\n  font-size: 0.9rem;\n  font-weight: 700;\n}\n.topic-doormat-group[_ngcontent-%COMP%]   .expansion-table[_ngcontent-%COMP%] {\n  margin: 0 1rem 1rem;\n}\n.topic-doormat-empty[_ngcontent-%COMP%] {\n  padding: 0.75rem;\n  border: 1px solid #d8dee6;\n  border-radius: 4px;\n  background: #fff;\n}\n.topic-doormat-recommendation[_ngcontent-%COMP%] {\n  white-space: pre-line;\n}\n/*# sourceMappingURL=component-guidance.component.css.map */"] });
+  }, dependencies: [CommonModule, NgClass, FormsModule, NgControlStatus, NgModel, TableModule, Table, PrimeTemplate, CheckboxModule, Checkbox, ButtonModule, ButtonDirective], styles: ["\n\n.alert-table[_ngcontent-%COMP%]   .p-datatable-tbody[_ngcontent-%COMP%]    > tr[_ngcontent-%COMP%]    > td[_ngcontent-%COMP%], \n.alert-table[_ngcontent-%COMP%]   .p-datatable-thead[_ngcontent-%COMP%]    > tr[_ngcontent-%COMP%]    > th[_ngcontent-%COMP%] {\n  white-space: normal !important;\n  word-break: normal;\n  overflow-wrap: normal;\n  vertical-align: top;\n}\n.alert-table[_ngcontent-%COMP%]   .wrap-col[_ngcontent-%COMP%] {\n  min-width: 140px;\n}\n.alert-table[_ngcontent-%COMP%]   .severity-col[_ngcontent-%COMP%]   .chip[_ngcontent-%COMP%] {\n  white-space: nowrap !important;\n  display: inline-flex;\n}\n.alert-table[_ngcontent-%COMP%]   .include-col[_ngcontent-%COMP%] {\n  width: 140px;\n  text-align: center;\n}\n.alert-table[_ngcontent-%COMP%]   .include-col[_ngcontent-%COMP%]   .p-checkbox[_ngcontent-%COMP%] {\n  display: inline-flex;\n}\n.alert-table[_ngcontent-%COMP%]   .p-datatable-table[_ngcontent-%COMP%] {\n  width: 100%;\n  border: 1px solid #d1d5db;\n  border-radius: 6px;\n}\n.alert-table[_ngcontent-%COMP%]   .p-datatable-wrapper[_ngcontent-%COMP%] {\n  width: 100%;\n  overflow-x: auto;\n}\n.alert-table[_ngcontent-%COMP%]   .p-datatable-table[_ngcontent-%COMP%] {\n  table-layout: auto !important;\n}\n.alert-table-actions[_ngcontent-%COMP%] {\n  display: flex;\n  justify-content: flex-end;\n  margin-top: 0.75rem;\n}\n.alert-table[_ngcontent-%COMP%]   .toggle-col[_ngcontent-%COMP%], \n.alert-table[_ngcontent-%COMP%]   .checkbox-col[_ngcontent-%COMP%] {\n  width: 1%;\n  white-space: nowrap;\n  text-align: center;\n  padding: 0;\n}\n.alert-table.p-datatable[_ngcontent-%COMP%]   .p-datatable-thead[_ngcontent-%COMP%]    > tr[_ngcontent-%COMP%]    > th.toggle-col[_ngcontent-%COMP%], \n.alert-table.p-datatable[_ngcontent-%COMP%]   .p-datatable-tbody[_ngcontent-%COMP%]    > tr[_ngcontent-%COMP%]    > td.toggle-col[_ngcontent-%COMP%], \n.alert-table.p-datatable[_ngcontent-%COMP%]   .p-datatable-thead[_ngcontent-%COMP%]    > tr[_ngcontent-%COMP%]    > th.checkbox-col[_ngcontent-%COMP%], \n.alert-table.p-datatable[_ngcontent-%COMP%]   .p-datatable-tbody[_ngcontent-%COMP%]    > tr[_ngcontent-%COMP%]    > td.checkbox-col[_ngcontent-%COMP%] {\n  width: 1% !important;\n  white-space: nowrap !important;\n  text-align: center;\n  padding: 0 0.25rem;\n}\n/*# sourceMappingURL=alerts-guidance.component.css.map */", "\n\n[_nghost-%COMP%]     .alert-table .p-datatable-table {\n  table-layout: auto !important;\n}\n[_nghost-%COMP%]     .alert-table.p-datatable .p-datatable-thead > tr > th.toggle-col, \n[_nghost-%COMP%]     .alert-table.p-datatable .p-datatable-tbody > tr > td.toggle-col {\n  width: 70px !important;\n  min-width: 70px;\n  max-width: 70px;\n  white-space: nowrap !important;\n  text-align: center;\n  padding: 0 0.25rem;\n}\n[_nghost-%COMP%]     .alert-table.p-datatable .p-datatable-thead > tr > th.checkbox-col, \n[_nghost-%COMP%]     .alert-table.p-datatable .p-datatable-tbody > tr > td.checkbox-col {\n  width: 70px !important;\n  min-width: 70px;\n  max-width: 70px;\n  white-space: nowrap !important;\n  text-align: center;\n  padding: 0 0.25rem;\n}\n[_nghost-%COMP%]     .topic-doormat-section-row > td {\n  background: #eef2f6;\n}\n.topic-doormat-group[_ngcontent-%COMP%] {\n  margin-top: 1rem;\n  border: 1px solid #d8dee6;\n  border-radius: 6px;\n  background: #fff;\n  overflow: hidden;\n}\n.topic-doormat-group[_ngcontent-%COMP%]    + .topic-doormat-group[_ngcontent-%COMP%] {\n  margin-top: 1.25rem;\n}\n.topic-doormat-group-header[_ngcontent-%COMP%] {\n  display: flex;\n  align-items: flex-start;\n  gap: 0.75rem;\n  padding: 1.1rem 1.25rem;\n  border-bottom: 1px solid #d8dee6;\n  background: #eef2f6;\n}\n.topic-doormat-group[_ngcontent-%COMP%]   h3[_ngcontent-%COMP%] {\n  margin: 0;\n  font-size: 1.25rem;\n  line-height: 1.25;\n}\n.topic-doormat-count[_ngcontent-%COMP%] {\n  flex: 0 0 auto;\n  padding: 0.4rem 0.8rem;\n  border: 1px solid #d8dee6;\n  border-radius: 999px;\n  background: #fff;\n  color: #202833;\n  font-size: 0.9rem;\n  font-weight: 700;\n}\n.topic-doormat-subheading[_ngcontent-%COMP%] {\n  margin: 1rem 1rem 0.4rem;\n  padding-bottom: 0.25rem;\n  border-bottom: 1px solid #eef2f6;\n  color: #202833;\n  font-size: 0.9rem;\n  font-weight: 700;\n}\n.topic-doormat-group[_ngcontent-%COMP%]   .expansion-table[_ngcontent-%COMP%] {\n  margin: 0 1rem 1rem;\n}\n.topic-doormat-empty[_ngcontent-%COMP%] {\n  padding: 0.75rem;\n  border: 1px solid #d8dee6;\n  border-radius: 4px;\n  background: #fff;\n}\n.topic-doormat-recommendation[_ngcontent-%COMP%] {\n  white-space: pre-line;\n}\n.topic-doormat-provenance-icons[_ngcontent-%COMP%] {\n  display: inline-flex;\n  align-items: center;\n  gap: 0.15rem;\n  margin-right: 0.25rem;\n  vertical-align: text-bottom;\n}\n.topic-doormat-provenance-icon[_ngcontent-%COMP%] {\n  color: #596579;\n  font-size: 1rem;\n  line-height: 1;\n}\n/*# sourceMappingURL=component-guidance.component.css.map */"] });
 };
 (() => {
   (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(AlertsGuidanceComponent, [{
@@ -32389,7 +32844,7 @@ var AlertsGuidanceComponent = class _AlertsGuidanceComponent {
     (click)="analyzeCurrentPage()"
   ></button>
 </div>
-`, styles: ["/* src/app/views/page-assistant/components/problems/component-guidance/alerts-guidance/alerts-guidance.component.css */\n.alert-table .p-datatable-tbody > tr > td,\n.alert-table .p-datatable-thead > tr > th {\n  white-space: normal !important;\n  word-break: normal;\n  overflow-wrap: normal;\n  vertical-align: top;\n}\n.alert-table .wrap-col {\n  min-width: 140px;\n}\n.alert-table .severity-col .chip {\n  white-space: nowrap !important;\n  display: inline-flex;\n}\n.alert-table .include-col {\n  width: 140px;\n  text-align: center;\n}\n.alert-table .include-col .p-checkbox {\n  display: inline-flex;\n}\n.alert-table .p-datatable-table {\n  width: 100%;\n  border: 1px solid #d1d5db;\n  border-radius: 6px;\n}\n.alert-table .p-datatable-wrapper {\n  width: 100%;\n  overflow-x: auto;\n}\n.alert-table .p-datatable-table {\n  table-layout: auto !important;\n}\n.alert-table-actions {\n  display: flex;\n  justify-content: flex-end;\n  margin-top: 0.75rem;\n}\n.alert-table .toggle-col,\n.alert-table .checkbox-col {\n  width: 1%;\n  white-space: nowrap;\n  text-align: center;\n  padding: 0;\n}\n.alert-table.p-datatable .p-datatable-thead > tr > th.toggle-col,\n.alert-table.p-datatable .p-datatable-tbody > tr > td.toggle-col,\n.alert-table.p-datatable .p-datatable-thead > tr > th.checkbox-col,\n.alert-table.p-datatable .p-datatable-tbody > tr > td.checkbox-col {\n  width: 1% !important;\n  white-space: nowrap !important;\n  text-align: center;\n  padding: 0 0.25rem;\n}\n/*# sourceMappingURL=alerts-guidance.component.css.map */\n", "/* src/app/views/page-assistant/components/problems/component-guidance/component-guidance.component.css */\n:host ::ng-deep .alert-table .p-datatable-table {\n  table-layout: auto !important;\n}\n:host ::ng-deep .alert-table.p-datatable .p-datatable-thead > tr > th.toggle-col,\n:host ::ng-deep .alert-table.p-datatable .p-datatable-tbody > tr > td.toggle-col {\n  width: 70px !important;\n  min-width: 70px;\n  max-width: 70px;\n  white-space: nowrap !important;\n  text-align: center;\n  padding: 0 0.25rem;\n}\n:host ::ng-deep .alert-table.p-datatable .p-datatable-thead > tr > th.checkbox-col,\n:host ::ng-deep .alert-table.p-datatable .p-datatable-tbody > tr > td.checkbox-col {\n  width: 70px !important;\n  min-width: 70px;\n  max-width: 70px;\n  white-space: nowrap !important;\n  text-align: center;\n  padding: 0 0.25rem;\n}\n:host ::ng-deep .topic-doormat-section-row > td {\n  background: #eef2f6;\n}\n.topic-doormat-group {\n  margin-top: 1rem;\n  border: 1px solid #d8dee6;\n  border-radius: 6px;\n  background: #fff;\n  overflow: hidden;\n}\n.topic-doormat-group + .topic-doormat-group {\n  margin-top: 1.25rem;\n}\n.topic-doormat-group-header {\n  display: flex;\n  align-items: flex-start;\n  gap: 0.75rem;\n  padding: 1.1rem 1.25rem;\n  border-bottom: 1px solid #d8dee6;\n  background: #eef2f6;\n}\n.topic-doormat-group h3 {\n  margin: 0;\n  font-size: 1.25rem;\n  line-height: 1.25;\n}\n.topic-doormat-count {\n  flex: 0 0 auto;\n  padding: 0.4rem 0.8rem;\n  border: 1px solid #d8dee6;\n  border-radius: 999px;\n  background: #fff;\n  color: #202833;\n  font-size: 0.9rem;\n  font-weight: 700;\n}\n.topic-doormat-subheading {\n  margin: 1rem 1rem 0.4rem;\n  padding-bottom: 0.25rem;\n  border-bottom: 1px solid #eef2f6;\n  color: #202833;\n  font-size: 0.9rem;\n  font-weight: 700;\n}\n.topic-doormat-group .expansion-table {\n  margin: 0 1rem 1rem;\n}\n.topic-doormat-empty {\n  padding: 0.75rem;\n  border: 1px solid #d8dee6;\n  border-radius: 4px;\n  background: #fff;\n}\n.topic-doormat-recommendation {\n  white-space: pre-line;\n}\n/*# sourceMappingURL=component-guidance.component.css.map */\n"] }]
+`, styles: ["/* src/app/views/page-assistant/components/problems/component-guidance/alerts-guidance/alerts-guidance.component.css */\n.alert-table .p-datatable-tbody > tr > td,\n.alert-table .p-datatable-thead > tr > th {\n  white-space: normal !important;\n  word-break: normal;\n  overflow-wrap: normal;\n  vertical-align: top;\n}\n.alert-table .wrap-col {\n  min-width: 140px;\n}\n.alert-table .severity-col .chip {\n  white-space: nowrap !important;\n  display: inline-flex;\n}\n.alert-table .include-col {\n  width: 140px;\n  text-align: center;\n}\n.alert-table .include-col .p-checkbox {\n  display: inline-flex;\n}\n.alert-table .p-datatable-table {\n  width: 100%;\n  border: 1px solid #d1d5db;\n  border-radius: 6px;\n}\n.alert-table .p-datatable-wrapper {\n  width: 100%;\n  overflow-x: auto;\n}\n.alert-table .p-datatable-table {\n  table-layout: auto !important;\n}\n.alert-table-actions {\n  display: flex;\n  justify-content: flex-end;\n  margin-top: 0.75rem;\n}\n.alert-table .toggle-col,\n.alert-table .checkbox-col {\n  width: 1%;\n  white-space: nowrap;\n  text-align: center;\n  padding: 0;\n}\n.alert-table.p-datatable .p-datatable-thead > tr > th.toggle-col,\n.alert-table.p-datatable .p-datatable-tbody > tr > td.toggle-col,\n.alert-table.p-datatable .p-datatable-thead > tr > th.checkbox-col,\n.alert-table.p-datatable .p-datatable-tbody > tr > td.checkbox-col {\n  width: 1% !important;\n  white-space: nowrap !important;\n  text-align: center;\n  padding: 0 0.25rem;\n}\n/*# sourceMappingURL=alerts-guidance.component.css.map */\n", "/* src/app/views/page-assistant/components/problems/component-guidance/component-guidance.component.css */\n:host ::ng-deep .alert-table .p-datatable-table {\n  table-layout: auto !important;\n}\n:host ::ng-deep .alert-table.p-datatable .p-datatable-thead > tr > th.toggle-col,\n:host ::ng-deep .alert-table.p-datatable .p-datatable-tbody > tr > td.toggle-col {\n  width: 70px !important;\n  min-width: 70px;\n  max-width: 70px;\n  white-space: nowrap !important;\n  text-align: center;\n  padding: 0 0.25rem;\n}\n:host ::ng-deep .alert-table.p-datatable .p-datatable-thead > tr > th.checkbox-col,\n:host ::ng-deep .alert-table.p-datatable .p-datatable-tbody > tr > td.checkbox-col {\n  width: 70px !important;\n  min-width: 70px;\n  max-width: 70px;\n  white-space: nowrap !important;\n  text-align: center;\n  padding: 0 0.25rem;\n}\n:host ::ng-deep .topic-doormat-section-row > td {\n  background: #eef2f6;\n}\n.topic-doormat-group {\n  margin-top: 1rem;\n  border: 1px solid #d8dee6;\n  border-radius: 6px;\n  background: #fff;\n  overflow: hidden;\n}\n.topic-doormat-group + .topic-doormat-group {\n  margin-top: 1.25rem;\n}\n.topic-doormat-group-header {\n  display: flex;\n  align-items: flex-start;\n  gap: 0.75rem;\n  padding: 1.1rem 1.25rem;\n  border-bottom: 1px solid #d8dee6;\n  background: #eef2f6;\n}\n.topic-doormat-group h3 {\n  margin: 0;\n  font-size: 1.25rem;\n  line-height: 1.25;\n}\n.topic-doormat-count {\n  flex: 0 0 auto;\n  padding: 0.4rem 0.8rem;\n  border: 1px solid #d8dee6;\n  border-radius: 999px;\n  background: #fff;\n  color: #202833;\n  font-size: 0.9rem;\n  font-weight: 700;\n}\n.topic-doormat-subheading {\n  margin: 1rem 1rem 0.4rem;\n  padding-bottom: 0.25rem;\n  border-bottom: 1px solid #eef2f6;\n  color: #202833;\n  font-size: 0.9rem;\n  font-weight: 700;\n}\n.topic-doormat-group .expansion-table {\n  margin: 0 1rem 1rem;\n}\n.topic-doormat-empty {\n  padding: 0.75rem;\n  border: 1px solid #d8dee6;\n  border-radius: 4px;\n  background: #fff;\n}\n.topic-doormat-recommendation {\n  white-space: pre-line;\n}\n.topic-doormat-provenance-icons {\n  display: inline-flex;\n  align-items: center;\n  gap: 0.15rem;\n  margin-right: 0.25rem;\n  vertical-align: text-bottom;\n}\n.topic-doormat-provenance-icon {\n  color: #596579;\n  font-size: 1rem;\n  line-height: 1;\n}\n/*# sourceMappingURL=component-guidance.component.css.map */\n"] }]
   }], () => [], { selectAll: [{
     type: Input
   }], maxSeverityChange: [{
@@ -33691,40 +34146,70 @@ function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Co
     \u0275\u0275elementEnd()();
   }
 }
-function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_11_Conditional_9_For_2_For_4_Template(rf, ctx) {
+function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_11_For_9_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275elementStart(0, "span", 57);
+    \u0275\u0275elementStart(0, "span", 56);
     \u0275\u0275text(1);
     \u0275\u0275elementEnd();
   }
   if (rf & 2) {
-    const metric_r13 = ctx.$implicit;
-    const item_r14 = \u0275\u0275nextContext().$implicit;
-    const issue_r12 = \u0275\u0275nextContext(2).$implicit;
-    const ctx_r2 = \u0275\u0275nextContext(6);
-    \u0275\u0275property("ngClass", ctx_r2.severityChip(metric_r13.severity || item_r14.severity || issue_r12.severity));
+    const source_r13 = ctx.$implicit;
+    const ctx_r2 = \u0275\u0275nextContext(7);
+    \u0275\u0275property("pTooltip", ctx_r2.topicDoormatProvenanceLabel(source_r13));
+    \u0275\u0275attribute("aria-label", ctx_r2.topicDoormatProvenanceLabel(source_r13));
     \u0275\u0275advance();
-    \u0275\u0275textInterpolate1(" ", metric_r13.metric, " ");
+    \u0275\u0275textInterpolate1(" ", ctx_r2.topicDoormatProvenanceIcon(source_r13), " ");
   }
 }
-function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_11_Conditional_9_For_2_Template(rf, ctx) {
+function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_11_For_14_Template(rf, ctx) {
+  if (rf & 1) {
+    \u0275\u0275elementStart(0, "span", 56);
+    \u0275\u0275text(1);
+    \u0275\u0275elementEnd();
+  }
+  if (rf & 2) {
+    const source_r14 = ctx.$implicit;
+    const ctx_r2 = \u0275\u0275nextContext(7);
+    \u0275\u0275property("pTooltip", ctx_r2.topicDoormatProvenanceLabel(source_r14));
+    \u0275\u0275attribute("aria-label", ctx_r2.topicDoormatProvenanceLabel(source_r14));
+    \u0275\u0275advance();
+    \u0275\u0275textInterpolate1(" ", ctx_r2.topicDoormatProvenanceIcon(source_r14), " ");
+  }
+}
+function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_11_Conditional_15_For_2_For_4_Template(rf, ctx) {
+  if (rf & 1) {
+    \u0275\u0275elementStart(0, "span", 59);
+    \u0275\u0275text(1);
+    \u0275\u0275elementEnd();
+  }
+  if (rf & 2) {
+    const metric_r15 = ctx.$implicit;
+    const item_r16 = \u0275\u0275nextContext().$implicit;
+    const issue_r12 = \u0275\u0275nextContext(2).$implicit;
+    const ctx_r2 = \u0275\u0275nextContext(6);
+    \u0275\u0275property("ngClass", ctx_r2.severityChip(metric_r15.severity || item_r16.severity || issue_r12.severity));
+    \u0275\u0275advance();
+    \u0275\u0275textInterpolate1(" ", metric_r15.metric, " ");
+  }
+}
+function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_11_Conditional_15_For_2_Template(rf, ctx) {
   if (rf & 1) {
     \u0275\u0275elementStart(0, "li")(1, "span");
     \u0275\u0275text(2);
     \u0275\u0275elementEnd();
-    \u0275\u0275repeaterCreate(3, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_11_Conditional_9_For_2_For_4_Template, 2, 2, "span", 57, _forTrack2);
+    \u0275\u0275repeaterCreate(3, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_11_Conditional_15_For_2_For_4_Template, 2, 2, "span", 59, _forTrack2);
     \u0275\u0275elementEnd();
   }
   if (rf & 2) {
-    const item_r14 = ctx.$implicit;
+    const item_r16 = ctx.$implicit;
     const ctx_r2 = \u0275\u0275nextContext(8);
     \u0275\u0275advance(2);
-    \u0275\u0275textInterpolate1("", item_r14.label, ":");
+    \u0275\u0275textInterpolate1("", item_r16.label, ":");
     \u0275\u0275advance();
-    \u0275\u0275repeater(ctx_r2.evidenceMetricParts(item_r14));
+    \u0275\u0275repeater(ctx_r2.evidenceMetricParts(item_r16));
   }
 }
-function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_11_Conditional_9_Conditional_3_Template(rf, ctx) {
+function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_11_Conditional_15_Conditional_3_Template(rf, ctx) {
   if (rf & 1) {
     \u0275\u0275elementStart(0, "span");
     \u0275\u0275text(1);
@@ -33736,12 +34221,12 @@ function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Co
     \u0275\u0275textInterpolate(issue_r12.evidence);
   }
 }
-function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_11_Conditional_9_Template(rf, ctx) {
+function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_11_Conditional_15_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275elementStart(0, "ul", 56);
-    \u0275\u0275repeaterCreate(1, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_11_Conditional_9_For_2_Template, 5, 1, "li", null, _forTrack1);
+    \u0275\u0275elementStart(0, "ul", 58);
+    \u0275\u0275repeaterCreate(1, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_11_Conditional_15_For_2_Template, 5, 1, "li", null, _forTrack1);
     \u0275\u0275elementEnd();
-    \u0275\u0275template(3, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_11_Conditional_9_Conditional_3_Template, 2, 1, "span");
+    \u0275\u0275template(3, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_11_Conditional_15_Conditional_3_Template, 2, 1, "span");
   }
   if (rf & 2) {
     const issue_r12 = \u0275\u0275nextContext().$implicit;
@@ -33751,9 +34236,9 @@ function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Co
     \u0275\u0275conditional(issue_r12.evidence ? 3 : -1);
   }
 }
-function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_11_Conditional_10_Conditional_2_Conditional_2_Template(rf, ctx) {
+function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_11_Conditional_16_Conditional_2_Conditional_2_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275elementStart(0, "a", 58);
+    \u0275\u0275elementStart(0, "a", 60);
     \u0275\u0275text(1);
     \u0275\u0275elementEnd();
   }
@@ -33764,12 +34249,12 @@ function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Co
     \u0275\u0275textInterpolate(issue_r12.evidenceLinkText);
   }
 }
-function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_11_Conditional_10_Conditional_2_Template(rf, ctx) {
+function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_11_Conditional_16_Conditional_2_Template(rf, ctx) {
   if (rf & 1) {
     \u0275\u0275elementStart(0, "span");
     \u0275\u0275text(1);
     \u0275\u0275elementEnd();
-    \u0275\u0275template(2, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_11_Conditional_10_Conditional_2_Conditional_2_Template, 2, 2, "a", 58);
+    \u0275\u0275template(2, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_11_Conditional_16_Conditional_2_Conditional_2_Template, 2, 2, "a", 60);
   }
   if (rf & 2) {
     const issue_r12 = \u0275\u0275nextContext(2).$implicit;
@@ -33779,12 +34264,12 @@ function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Co
     \u0275\u0275conditional(issue_r12.evidenceLinkText && issue_r12.evidenceLinkHref ? 2 : -1);
   }
 }
-function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_11_Conditional_10_Template(rf, ctx) {
+function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_11_Conditional_16_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275elementStart(0, "span", 57);
+    \u0275\u0275elementStart(0, "span", 59);
     \u0275\u0275text(1);
     \u0275\u0275elementEnd();
-    \u0275\u0275template(2, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_11_Conditional_10_Conditional_2_Template, 3, 2);
+    \u0275\u0275template(2, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_11_Conditional_16_Conditional_2_Template, 3, 2);
   }
   if (rf & 2) {
     const issue_r12 = \u0275\u0275nextContext().$implicit;
@@ -33796,9 +34281,9 @@ function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Co
     \u0275\u0275conditional(issue_r12.evidence ? 2 : -1);
   }
 }
-function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_11_Conditional_11_Conditional_1_Template(rf, ctx) {
+function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_11_Conditional_17_Conditional_1_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275elementStart(0, "a", 58);
+    \u0275\u0275elementStart(0, "a", 60);
     \u0275\u0275text(1);
     \u0275\u0275elementEnd();
   }
@@ -33809,16 +34294,31 @@ function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Co
     \u0275\u0275textInterpolate(issue_r12.evidenceLinkText);
   }
 }
-function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_11_Conditional_11_Template(rf, ctx) {
+function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_11_Conditional_17_Template(rf, ctx) {
   if (rf & 1) {
     \u0275\u0275text(0);
-    \u0275\u0275template(1, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_11_Conditional_11_Conditional_1_Template, 2, 2, "a", 58);
+    \u0275\u0275template(1, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_11_Conditional_17_Conditional_1_Template, 2, 2, "a", 60);
   }
   if (rf & 2) {
     const issue_r12 = \u0275\u0275nextContext().$implicit;
     \u0275\u0275textInterpolate1(" ", issue_r12.evidence || "-", " ");
     \u0275\u0275advance();
     \u0275\u0275conditional(issue_r12.evidenceLinkText && issue_r12.evidenceLinkHref ? 1 : -1);
+  }
+}
+function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_11_For_21_Template(rf, ctx) {
+  if (rf & 1) {
+    \u0275\u0275elementStart(0, "span", 56);
+    \u0275\u0275text(1);
+    \u0275\u0275elementEnd();
+  }
+  if (rf & 2) {
+    const source_r17 = ctx.$implicit;
+    const ctx_r2 = \u0275\u0275nextContext(7);
+    \u0275\u0275property("pTooltip", ctx_r2.topicDoormatProvenanceLabel(source_r17));
+    \u0275\u0275attribute("aria-label", ctx_r2.topicDoormatProvenanceLabel(source_r17));
+    \u0275\u0275advance();
+    \u0275\u0275textInterpolate1(" ", ctx_r2.topicDoormatProvenanceIcon(source_r17), " ");
   }
 }
 function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_11_Template(rf, ctx) {
@@ -33834,14 +34334,20 @@ function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Co
     \u0275\u0275elementStart(3, "td")(4, "span", 54);
     \u0275\u0275text(5);
     \u0275\u0275elementEnd()();
-    \u0275\u0275elementStart(6, "td");
-    \u0275\u0275text(7);
+    \u0275\u0275elementStart(6, "td")(7, "span", 55);
+    \u0275\u0275repeaterCreate(8, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_11_For_9_Template, 2, 3, "span", 56, \u0275\u0275repeaterTrackByIdentity);
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(8, "td");
-    \u0275\u0275template(9, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_11_Conditional_9_Template, 4, 1)(10, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_11_Conditional_10_Template, 3, 3)(11, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_11_Conditional_11_Template, 2, 2);
+    \u0275\u0275text(10);
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(12, "td", 55);
-    \u0275\u0275text(13);
+    \u0275\u0275elementStart(11, "td")(12, "span", 55);
+    \u0275\u0275repeaterCreate(13, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_11_For_14_Template, 2, 3, "span", 56, \u0275\u0275repeaterTrackByIdentity);
+    \u0275\u0275elementEnd();
+    \u0275\u0275template(15, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_11_Conditional_15_Template, 4, 1)(16, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_11_Conditional_16_Template, 3, 3)(17, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_11_Conditional_17_Template, 2, 2);
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(18, "td", 57)(19, "span", 55);
+    \u0275\u0275repeaterCreate(20, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_11_For_21_Template, 2, 3, "span", 56, \u0275\u0275repeaterTrackByIdentity);
+    \u0275\u0275elementEnd();
+    \u0275\u0275text(22);
     \u0275\u0275elementEnd()();
   }
   if (rf & 2) {
@@ -33855,17 +34361,23 @@ function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Co
     \u0275\u0275property("ngClass", ctx_r2.severityChip(issue_r12.severity));
     \u0275\u0275advance();
     \u0275\u0275textInterpolate1(" ", issue_r12.severity, " ");
+    \u0275\u0275advance(3);
+    \u0275\u0275repeater(ctx_r2.topicDoormatCellProvenance(issue_r12, "issue"));
     \u0275\u0275advance(2);
-    \u0275\u0275textInterpolate(issue_r12.issue);
+    \u0275\u0275textInterpolate1(" ", issue_r12.issue, " ");
+    \u0275\u0275advance(3);
+    \u0275\u0275repeater(ctx_r2.topicDoormatCellProvenance(issue_r12, "evidence"));
     \u0275\u0275advance(2);
-    \u0275\u0275conditional((issue_r12.evidenceItems == null ? null : issue_r12.evidenceItems.length) ? 9 : issue_r12.evidenceMetric ? 10 : 11);
-    \u0275\u0275advance(4);
-    \u0275\u0275textInterpolate(issue_r12.recommendation || "-");
+    \u0275\u0275conditional((issue_r12.evidenceItems == null ? null : issue_r12.evidenceItems.length) ? 15 : issue_r12.evidenceMetric ? 16 : 17);
+    \u0275\u0275advance(5);
+    \u0275\u0275repeater(ctx_r2.topicDoormatCellProvenance(issue_r12, "recommendation"));
+    \u0275\u0275advance(2);
+    \u0275\u0275textInterpolate1(" ", issue_r12.recommendation || "-", " ");
   }
 }
 function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_12_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275elementStart(0, "tr")(1, "td", 59)(2, "span", 25);
+    \u0275\u0275elementStart(0, "tr")(1, "td", 61)(2, "span", 25);
     \u0275\u0275text(3, "No section-level issues");
     \u0275\u0275elementEnd()()();
   }
@@ -33875,7 +34387,7 @@ function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Co
     \u0275\u0275elementStart(0, "tr")(1, "th", 50);
     \u0275\u0275text(2, "Include");
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(3, "th", 60);
+    \u0275\u0275elementStart(3, "th", 62);
     \u0275\u0275text(4, "#");
     \u0275\u0275elementEnd();
     \u0275\u0275elementStart(5, "th");
@@ -33902,148 +34414,193 @@ function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Co
     \u0275\u0275elementEnd();
   }
   if (rf & 2) {
-    const issue_r16 = \u0275\u0275nextContext().$implicit;
+    const issue_r19 = \u0275\u0275nextContext().$implicit;
     \u0275\u0275advance();
-    \u0275\u0275textInterpolate1("(", issue_r16.sectionItemMeta, ")");
+    \u0275\u0275textInterpolate1("(", issue_r19.sectionItemMeta, ")");
   }
 }
-function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_17_Conditional_14_For_2_For_4_Template(rf, ctx) {
+function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_17_For_14_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275elementStart(0, "span", 57);
+    \u0275\u0275elementStart(0, "span", 56);
     \u0275\u0275text(1);
     \u0275\u0275elementEnd();
   }
   if (rf & 2) {
-    const metric_r17 = ctx.$implicit;
-    const item_r18 = \u0275\u0275nextContext().$implicit;
-    const issue_r16 = \u0275\u0275nextContext(2).$implicit;
-    const ctx_r2 = \u0275\u0275nextContext(6);
-    \u0275\u0275property("ngClass", ctx_r2.severityChip(metric_r17.severity || item_r18.severity || issue_r16.severity));
+    const source_r20 = ctx.$implicit;
+    const ctx_r2 = \u0275\u0275nextContext(7);
+    \u0275\u0275property("pTooltip", ctx_r2.topicDoormatProvenanceLabel(source_r20));
+    \u0275\u0275attribute("aria-label", ctx_r2.topicDoormatProvenanceLabel(source_r20));
     \u0275\u0275advance();
-    \u0275\u0275textInterpolate1(" ", metric_r17.metric, " ");
+    \u0275\u0275textInterpolate1(" ", ctx_r2.topicDoormatProvenanceIcon(source_r20), " ");
   }
 }
-function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_17_Conditional_14_For_2_Template(rf, ctx) {
+function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_17_For_19_Template(rf, ctx) {
+  if (rf & 1) {
+    \u0275\u0275elementStart(0, "span", 56);
+    \u0275\u0275text(1);
+    \u0275\u0275elementEnd();
+  }
+  if (rf & 2) {
+    const source_r21 = ctx.$implicit;
+    const ctx_r2 = \u0275\u0275nextContext(7);
+    \u0275\u0275property("pTooltip", ctx_r2.topicDoormatProvenanceLabel(source_r21));
+    \u0275\u0275attribute("aria-label", ctx_r2.topicDoormatProvenanceLabel(source_r21));
+    \u0275\u0275advance();
+    \u0275\u0275textInterpolate1(" ", ctx_r2.topicDoormatProvenanceIcon(source_r21), " ");
+  }
+}
+function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_17_Conditional_20_For_2_For_4_Template(rf, ctx) {
+  if (rf & 1) {
+    \u0275\u0275elementStart(0, "span", 59);
+    \u0275\u0275text(1);
+    \u0275\u0275elementEnd();
+  }
+  if (rf & 2) {
+    const metric_r22 = ctx.$implicit;
+    const item_r23 = \u0275\u0275nextContext().$implicit;
+    const issue_r19 = \u0275\u0275nextContext(2).$implicit;
+    const ctx_r2 = \u0275\u0275nextContext(6);
+    \u0275\u0275property("ngClass", ctx_r2.severityChip(metric_r22.severity || item_r23.severity || issue_r19.severity));
+    \u0275\u0275advance();
+    \u0275\u0275textInterpolate1(" ", metric_r22.metric, " ");
+  }
+}
+function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_17_Conditional_20_For_2_Template(rf, ctx) {
   if (rf & 1) {
     \u0275\u0275elementStart(0, "li")(1, "span");
     \u0275\u0275text(2);
     \u0275\u0275elementEnd();
-    \u0275\u0275repeaterCreate(3, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_17_Conditional_14_For_2_For_4_Template, 2, 2, "span", 57, _forTrack2);
+    \u0275\u0275repeaterCreate(3, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_17_Conditional_20_For_2_For_4_Template, 2, 2, "span", 59, _forTrack2);
     \u0275\u0275elementEnd();
   }
   if (rf & 2) {
-    const item_r18 = ctx.$implicit;
+    const item_r23 = ctx.$implicit;
     const ctx_r2 = \u0275\u0275nextContext(8);
     \u0275\u0275advance(2);
-    \u0275\u0275textInterpolate1("", item_r18.label, ":");
+    \u0275\u0275textInterpolate1("", item_r23.label, ":");
     \u0275\u0275advance();
-    \u0275\u0275repeater(ctx_r2.evidenceMetricParts(item_r18));
+    \u0275\u0275repeater(ctx_r2.evidenceMetricParts(item_r23));
   }
 }
-function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_17_Conditional_14_Conditional_3_Template(rf, ctx) {
+function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_17_Conditional_20_Conditional_3_Template(rf, ctx) {
   if (rf & 1) {
     \u0275\u0275elementStart(0, "span");
     \u0275\u0275text(1);
     \u0275\u0275elementEnd();
   }
   if (rf & 2) {
-    const issue_r16 = \u0275\u0275nextContext(2).$implicit;
+    const issue_r19 = \u0275\u0275nextContext(2).$implicit;
     \u0275\u0275advance();
-    \u0275\u0275textInterpolate(issue_r16.evidence);
+    \u0275\u0275textInterpolate(issue_r19.evidence);
   }
 }
-function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_17_Conditional_14_Template(rf, ctx) {
+function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_17_Conditional_20_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275elementStart(0, "ul", 56);
-    \u0275\u0275repeaterCreate(1, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_17_Conditional_14_For_2_Template, 5, 1, "li", null, _forTrack1);
+    \u0275\u0275elementStart(0, "ul", 58);
+    \u0275\u0275repeaterCreate(1, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_17_Conditional_20_For_2_Template, 5, 1, "li", null, _forTrack1);
     \u0275\u0275elementEnd();
-    \u0275\u0275template(3, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_17_Conditional_14_Conditional_3_Template, 2, 1, "span");
+    \u0275\u0275template(3, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_17_Conditional_20_Conditional_3_Template, 2, 1, "span");
   }
   if (rf & 2) {
-    const issue_r16 = \u0275\u0275nextContext().$implicit;
+    const issue_r19 = \u0275\u0275nextContext().$implicit;
     \u0275\u0275advance();
-    \u0275\u0275repeater(issue_r16.evidenceItems);
+    \u0275\u0275repeater(issue_r19.evidenceItems);
     \u0275\u0275advance(2);
-    \u0275\u0275conditional(issue_r16.evidence ? 3 : -1);
+    \u0275\u0275conditional(issue_r19.evidence ? 3 : -1);
   }
 }
-function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_17_Conditional_15_Conditional_2_Conditional_2_Template(rf, ctx) {
+function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_17_Conditional_21_Conditional_2_Conditional_2_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275elementStart(0, "a", 58);
+    \u0275\u0275elementStart(0, "a", 60);
     \u0275\u0275text(1);
     \u0275\u0275elementEnd();
   }
   if (rf & 2) {
-    const issue_r16 = \u0275\u0275nextContext(3).$implicit;
-    \u0275\u0275property("href", issue_r16.evidenceLinkHref, \u0275\u0275sanitizeUrl);
+    const issue_r19 = \u0275\u0275nextContext(3).$implicit;
+    \u0275\u0275property("href", issue_r19.evidenceLinkHref, \u0275\u0275sanitizeUrl);
     \u0275\u0275advance();
-    \u0275\u0275textInterpolate(issue_r16.evidenceLinkText);
+    \u0275\u0275textInterpolate(issue_r19.evidenceLinkText);
   }
 }
-function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_17_Conditional_15_Conditional_2_Template(rf, ctx) {
+function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_17_Conditional_21_Conditional_2_Template(rf, ctx) {
   if (rf & 1) {
     \u0275\u0275elementStart(0, "span");
     \u0275\u0275text(1);
     \u0275\u0275elementEnd();
-    \u0275\u0275template(2, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_17_Conditional_15_Conditional_2_Conditional_2_Template, 2, 2, "a", 58);
+    \u0275\u0275template(2, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_17_Conditional_21_Conditional_2_Conditional_2_Template, 2, 2, "a", 60);
   }
   if (rf & 2) {
-    const issue_r16 = \u0275\u0275nextContext(2).$implicit;
+    const issue_r19 = \u0275\u0275nextContext(2).$implicit;
     \u0275\u0275advance();
-    \u0275\u0275textInterpolate1(". ", issue_r16.evidence, "");
+    \u0275\u0275textInterpolate1(". ", issue_r19.evidence, "");
     \u0275\u0275advance();
-    \u0275\u0275conditional(issue_r16.evidenceLinkText && issue_r16.evidenceLinkHref ? 2 : -1);
+    \u0275\u0275conditional(issue_r19.evidenceLinkText && issue_r19.evidenceLinkHref ? 2 : -1);
   }
 }
-function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_17_Conditional_15_Template(rf, ctx) {
+function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_17_Conditional_21_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275elementStart(0, "span", 57);
+    \u0275\u0275elementStart(0, "span", 59);
     \u0275\u0275text(1);
     \u0275\u0275elementEnd();
-    \u0275\u0275template(2, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_17_Conditional_15_Conditional_2_Template, 3, 2);
+    \u0275\u0275template(2, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_17_Conditional_21_Conditional_2_Template, 3, 2);
   }
   if (rf & 2) {
-    const issue_r16 = \u0275\u0275nextContext().$implicit;
+    const issue_r19 = \u0275\u0275nextContext().$implicit;
     const ctx_r2 = \u0275\u0275nextContext(6);
-    \u0275\u0275property("ngClass", ctx_r2.severityChip(issue_r16.severity));
+    \u0275\u0275property("ngClass", ctx_r2.severityChip(issue_r19.severity));
     \u0275\u0275advance();
-    \u0275\u0275textInterpolate1(" ", issue_r16.evidenceMetric, " ");
+    \u0275\u0275textInterpolate1(" ", issue_r19.evidenceMetric, " ");
     \u0275\u0275advance();
-    \u0275\u0275conditional(issue_r16.evidence ? 2 : -1);
+    \u0275\u0275conditional(issue_r19.evidence ? 2 : -1);
   }
 }
-function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_17_Conditional_16_Conditional_1_Template(rf, ctx) {
+function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_17_Conditional_22_Conditional_1_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275elementStart(0, "a", 58);
+    \u0275\u0275elementStart(0, "a", 60);
     \u0275\u0275text(1);
     \u0275\u0275elementEnd();
   }
   if (rf & 2) {
-    const issue_r16 = \u0275\u0275nextContext(2).$implicit;
-    \u0275\u0275property("href", issue_r16.evidenceLinkHref, \u0275\u0275sanitizeUrl);
+    const issue_r19 = \u0275\u0275nextContext(2).$implicit;
+    \u0275\u0275property("href", issue_r19.evidenceLinkHref, \u0275\u0275sanitizeUrl);
     \u0275\u0275advance();
-    \u0275\u0275textInterpolate(issue_r16.evidenceLinkText);
+    \u0275\u0275textInterpolate(issue_r19.evidenceLinkText);
   }
 }
-function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_17_Conditional_16_Template(rf, ctx) {
+function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_17_Conditional_22_Template(rf, ctx) {
   if (rf & 1) {
     \u0275\u0275text(0);
-    \u0275\u0275template(1, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_17_Conditional_16_Conditional_1_Template, 2, 2, "a", 58);
+    \u0275\u0275template(1, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_17_Conditional_22_Conditional_1_Template, 2, 2, "a", 60);
   }
   if (rf & 2) {
-    const issue_r16 = \u0275\u0275nextContext().$implicit;
-    \u0275\u0275textInterpolate1(" ", issue_r16.evidence || "-", " ");
+    const issue_r19 = \u0275\u0275nextContext().$implicit;
+    \u0275\u0275textInterpolate1(" ", issue_r19.evidence || "-", " ");
     \u0275\u0275advance();
-    \u0275\u0275conditional(issue_r16.evidenceLinkText && issue_r16.evidenceLinkHref ? 1 : -1);
+    \u0275\u0275conditional(issue_r19.evidenceLinkText && issue_r19.evidenceLinkHref ? 1 : -1);
+  }
+}
+function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_17_For_26_Template(rf, ctx) {
+  if (rf & 1) {
+    \u0275\u0275elementStart(0, "span", 56);
+    \u0275\u0275text(1);
+    \u0275\u0275elementEnd();
+  }
+  if (rf & 2) {
+    const source_r24 = ctx.$implicit;
+    const ctx_r2 = \u0275\u0275nextContext(7);
+    \u0275\u0275property("pTooltip", ctx_r2.topicDoormatProvenanceLabel(source_r24));
+    \u0275\u0275attribute("aria-label", ctx_r2.topicDoormatProvenanceLabel(source_r24));
+    \u0275\u0275advance();
+    \u0275\u0275textInterpolate1(" ", ctx_r2.topicDoormatProvenanceIcon(source_r24), " ");
   }
 }
 function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_17_Template(rf, ctx) {
   if (rf & 1) {
-    const _r15 = \u0275\u0275getCurrentView();
+    const _r18 = \u0275\u0275getCurrentView();
     \u0275\u0275elementStart(0, "tr")(1, "td")(2, "p-checkbox", 53);
     \u0275\u0275twoWayListener("ngModelChange", function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_17_Template_p_checkbox_ngModelChange_2_listener($event) {
-      const issue_r16 = \u0275\u0275restoreView(_r15).$implicit;
-      \u0275\u0275twoWayBindingSet(issue_r16.include, $event) || (issue_r16.include = $event);
+      const issue_r19 = \u0275\u0275restoreView(_r18).$implicit;
+      \u0275\u0275twoWayBindingSet(issue_r19.include, $event) || (issue_r19.include = $event);
       return \u0275\u0275resetView($event);
     });
     \u0275\u0275elementEnd()();
@@ -34057,44 +34614,56 @@ function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Co
     \u0275\u0275elementStart(8, "td")(9, "span", 54);
     \u0275\u0275text(10);
     \u0275\u0275elementEnd()();
-    \u0275\u0275elementStart(11, "td");
-    \u0275\u0275text(12);
+    \u0275\u0275elementStart(11, "td")(12, "span", 55);
+    \u0275\u0275repeaterCreate(13, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_17_For_14_Template, 2, 3, "span", 56, \u0275\u0275repeaterTrackByIdentity);
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(13, "td");
-    \u0275\u0275template(14, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_17_Conditional_14_Template, 4, 1)(15, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_17_Conditional_15_Template, 3, 3)(16, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_17_Conditional_16_Template, 2, 2);
+    \u0275\u0275text(15);
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(17, "td", 55);
-    \u0275\u0275text(18);
+    \u0275\u0275elementStart(16, "td")(17, "span", 55);
+    \u0275\u0275repeaterCreate(18, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_17_For_19_Template, 2, 3, "span", 56, \u0275\u0275repeaterTrackByIdentity);
+    \u0275\u0275elementEnd();
+    \u0275\u0275template(20, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_17_Conditional_20_Template, 4, 1)(21, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_17_Conditional_21_Template, 3, 3)(22, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_17_Conditional_22_Template, 2, 2);
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(23, "td", 57)(24, "span", 55);
+    \u0275\u0275repeaterCreate(25, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_17_For_26_Template, 2, 3, "span", 56, \u0275\u0275repeaterTrackByIdentity);
+    \u0275\u0275elementEnd();
+    \u0275\u0275text(27);
     \u0275\u0275elementEnd()();
   }
   if (rf & 2) {
-    const issue_r16 = ctx.$implicit;
+    const issue_r19 = ctx.$implicit;
     const ctx_r2 = \u0275\u0275nextContext(6);
     \u0275\u0275advance(2);
     \u0275\u0275property("binary", true);
-    \u0275\u0275twoWayProperty("ngModel", issue_r16.include);
-    \u0275\u0275property("disabled", ctx_r2.isNoIssueRow(issue_r16));
+    \u0275\u0275twoWayProperty("ngModel", issue_r19.include);
+    \u0275\u0275property("disabled", ctx_r2.isNoIssueRow(issue_r19));
     \u0275\u0275advance(2);
-    \u0275\u0275textInterpolate1(" ", issue_r16.sectionItemIndex || "-", " ");
+    \u0275\u0275textInterpolate1(" ", issue_r19.sectionItemIndex || "-", " ");
     \u0275\u0275advance();
-    \u0275\u0275conditional(issue_r16.sectionItemMeta ? 5 : -1);
+    \u0275\u0275conditional(issue_r19.sectionItemMeta ? 5 : -1);
     \u0275\u0275advance(2);
-    \u0275\u0275textInterpolate(issue_r16.doormatLabel || "-");
+    \u0275\u0275textInterpolate(issue_r19.doormatLabel || "-");
     \u0275\u0275advance(2);
-    \u0275\u0275property("ngClass", ctx_r2.severityChip(issue_r16.severity));
+    \u0275\u0275property("ngClass", ctx_r2.severityChip(issue_r19.severity));
     \u0275\u0275advance();
-    \u0275\u0275textInterpolate1(" ", issue_r16.severity, " ");
+    \u0275\u0275textInterpolate1(" ", issue_r19.severity, " ");
+    \u0275\u0275advance(3);
+    \u0275\u0275repeater(ctx_r2.topicDoormatCellProvenance(issue_r19, "issue"));
     \u0275\u0275advance(2);
-    \u0275\u0275textInterpolate(issue_r16.issue);
+    \u0275\u0275textInterpolate1(" ", issue_r19.issue, " ");
+    \u0275\u0275advance(3);
+    \u0275\u0275repeater(ctx_r2.topicDoormatCellProvenance(issue_r19, "evidence"));
     \u0275\u0275advance(2);
-    \u0275\u0275conditional((issue_r16.evidenceItems == null ? null : issue_r16.evidenceItems.length) ? 14 : issue_r16.evidenceMetric ? 15 : 16);
-    \u0275\u0275advance(4);
-    \u0275\u0275textInterpolate(issue_r16.recommendation || "-");
+    \u0275\u0275conditional((issue_r19.evidenceItems == null ? null : issue_r19.evidenceItems.length) ? 20 : issue_r19.evidenceMetric ? 21 : 22);
+    \u0275\u0275advance(5);
+    \u0275\u0275repeater(ctx_r2.topicDoormatCellProvenance(issue_r19, "recommendation"));
+    \u0275\u0275advance(2);
+    \u0275\u0275textInterpolate1(" ", issue_r19.recommendation || "-", " ");
   }
 }
 function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_18_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275elementStart(0, "tr")(1, "td", 61)(2, "span", 25);
+    \u0275\u0275elementStart(0, "tr")(1, "td", 63)(2, "span", 25);
     \u0275\u0275text(3, "No doormat-level issues");
     \u0275\u0275elementEnd()()();
   }
@@ -34111,25 +34680,25 @@ function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Co
     \u0275\u0275text(8, "Section-level issues");
     \u0275\u0275elementEnd();
     \u0275\u0275elementStart(9, "p-table", 48);
-    \u0275\u0275template(10, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_10_Template, 11, 0, "ng-template", 3)(11, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_11_Template, 14, 8, "ng-template", 4)(12, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_12_Template, 4, 0, "ng-template", 49);
+    \u0275\u0275template(10, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_10_Template, 11, 0, "ng-template", 3)(11, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_11_Template, 23, 8, "ng-template", 4)(12, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_12_Template, 4, 0, "ng-template", 49);
     \u0275\u0275elementEnd();
     \u0275\u0275elementStart(13, "h4", 47);
     \u0275\u0275text(14, "Doormat-level issues");
     \u0275\u0275elementEnd();
     \u0275\u0275elementStart(15, "p-table", 48);
-    \u0275\u0275template(16, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_16_Template, 15, 0, "ng-template", 3)(17, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_17_Template, 19, 11, "ng-template", 4)(18, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_18_Template, 4, 0, "ng-template", 49);
+    \u0275\u0275template(16, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_16_Template, 15, 0, "ng-template", 3)(17, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_17_Template, 28, 11, "ng-template", 4)(18, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_18_Template, 4, 0, "ng-template", 49);
     \u0275\u0275elementEnd()();
   }
   if (rf & 2) {
-    const group_r19 = ctx.$implicit;
+    const group_r25 = ctx.$implicit;
     \u0275\u0275advance(4);
-    \u0275\u0275textInterpolate2(" Section ", group_r19.sectionIndex, ": ", group_r19.sectionTitle, " ");
+    \u0275\u0275textInterpolate2(" Section ", group_r25.sectionIndex, ": ", group_r25.sectionTitle, " ");
     \u0275\u0275advance(2);
-    \u0275\u0275textInterpolate1(" ", group_r19.doormatCount, " doormats ");
+    \u0275\u0275textInterpolate1(" ", group_r25.doormatCount, " doormats ");
     \u0275\u0275advance(3);
-    \u0275\u0275property("value", group_r19.sectionRows);
+    \u0275\u0275property("value", group_r25.sectionRows);
     \u0275\u0275advance(6);
-    \u0275\u0275property("value", group_r19.doormatRows);
+    \u0275\u0275property("value", group_r25.doormatRows);
   }
 }
 function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_Template(rf, ctx) {
@@ -34243,9 +34812,9 @@ function ComponentGuidanceComponent_ng_template_5_Conditional_4_Template(rf, ctx
     \u0275\u0275template(0, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Template, 6, 5)(1, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_1_Template, 3, 0, "p-table", 40);
   }
   if (rf & 2) {
-    const row_r20 = \u0275\u0275nextContext().$implicit;
+    const row_r26 = \u0275\u0275nextContext().$implicit;
     const ctx_r2 = \u0275\u0275nextContext();
-    \u0275\u0275conditional(row_r20.__id === ctx_r2.topicDoormatsId ? 0 : 1);
+    \u0275\u0275conditional(row_r26.__id === ctx_r2.topicDoormatsId ? 0 : 1);
   }
 }
 function ComponentGuidanceComponent_ng_template_5_Template(rf, ctx) {
@@ -34255,9 +34824,9 @@ function ComponentGuidanceComponent_ng_template_5_Template(rf, ctx) {
     \u0275\u0275elementEnd()()();
   }
   if (rf & 2) {
-    const row_r20 = ctx.$implicit;
+    const row_r26 = ctx.$implicit;
     \u0275\u0275advance(3);
-    \u0275\u0275conditional(row_r20.__nameKey === "page.tools.guidance.craVariant.alerts.title" ? 3 : 4);
+    \u0275\u0275conditional(row_r26.__nameKey === "page.tools.guidance.craVariant.alerts.title" ? 3 : 4);
   }
 }
 var ComponentGuidanceComponent = class _ComponentGuidanceComponent {
@@ -34273,6 +34842,7 @@ var ComponentGuidanceComponent = class _ComponentGuidanceComponent {
   topicDoormatIssueAnalysis = inject(TopicDoormatIssueAnalysisService);
   topicDoormatPresenter = inject(TopicDoormatPresenterService);
   topicDoormatAnalysisState = inject(TopicDoormatAnalysisStateService);
+  topicDoormatTemplateNormalizer = inject(TopicDoormatTemplateNormalizerService);
   alertIssuesSub;
   lastGuidanceRevision = -1;
   lastExpandedAlertAnalysisHtml = "";
@@ -34308,6 +34878,31 @@ var ComponentGuidanceComponent = class _ComponentGuidanceComponent {
   topicDoormatsNameKey = "page.tools.guidance.craVariant.topicDoormats.title";
   topicDoormatsUrlKey = "page.tools.guidance.craVariant.doormats.url";
   subwayDoormatsId = "subwayDoormats";
+  aiAssistedAidaTopicDoormatIssueIds = /* @__PURE__ */ new Set([
+    "description-missing-needed-information",
+    "inconsistent-link-name-style",
+    "link-name-too-different-from-destination-title",
+    "mixed-description-style-in-section",
+    "mixed-link-name-styles-in-section"
+  ]);
+  modelOwnedTopicDoormatIssueIds = /* @__PURE__ */ new Set([
+    "description-capitalization",
+    "description-incorrect-style",
+    "description-lacks-clarity",
+    "description-list-separators",
+    "description-repeats-link-text",
+    "description-special-formatting",
+    "description-uses-and-before-final-item",
+    "description-uses-icons-or-images",
+    "duplicate-or-near-duplicate-description",
+    "enhancement-label-not-needed",
+    "enhancement-label-wrong-type",
+    "inconsistent-description-style",
+    "link-name-lacks-clarity",
+    "link-name-not-unique",
+    "misdirected-link",
+    "missing-description"
+  ]);
   cols = [
     { field: "order", header: "Index" },
     { field: "component", header: "Component" },
@@ -34722,7 +35317,9 @@ var ComponentGuidanceComponent = class _ComponentGuidanceComponent {
         return;
       }
       const uploadData = this.uploadState.getUploadData();
-      const html = this.uploadState.getWorkingHtml();
+      const sourceHtml = this.uploadState.getWorkingHtml();
+      const normalization = this.topicDoormatTemplateNormalizer.normalizeLegacyDoormats(sourceHtml);
+      const html = normalization.html;
       if (this.topicDoormatIssuesResponseReceived && this.topicDoormatAnalyzedHtml === html) {
         return;
       }
@@ -34744,7 +35341,7 @@ var ComponentGuidanceComponent = class _ComponentGuidanceComponent {
         const pageLanguage = this.topicDoormatExtractor.detectPageLanguage(doc, uploadData);
         const bilingualDoormatSummaries = yield this.topicDoormatExtractor.enrichOppositeLanguageLengths(extractedDoormatSummaries, uploadData, pageLanguage);
         const doormatSummaries = yield this.topicDoormatExtractor.enrichDestinationContext(bilingualDoormatSummaries, uploadData);
-        if (this.uploadState.getWorkingHtml() !== html)
+        if (this.uploadState.getWorkingHtml() !== sourceHtml)
           return;
         const hasLegacyTopicDoormatTemplate = this.topicDoormatExtractor.hasLegacyTemplate(doc);
         const mostRequestedLinks = this.topicDoormatExtractor.extractMostRequestedLinks(doc);
@@ -34756,7 +35353,7 @@ var ComponentGuidanceComponent = class _ComponentGuidanceComponent {
           uploadData,
           selectedModel: this.uploadState.getSelectedAiModel()
         });
-        if (this.uploadState.getWorkingHtml() !== html)
+        if (this.uploadState.getWorkingHtml() !== sourceHtml)
           return;
         this.topicDoormatIssuesResponseReceived = true;
         if (result.text) {
@@ -34954,6 +35551,24 @@ var ComponentGuidanceComponent = class _ComponentGuidanceComponent {
   isNoIssueRow(issue) {
     return issue.issueId === "no-issues";
   }
+  topicDoormatCellProvenance(issue, cell) {
+    const explicit = issue.provenance?.[cell]?.filter((source) => source === "model" || source === "aida");
+    if (explicit?.length)
+      return Array.from(new Set(explicit));
+    if (cell === "issue" && this.aiAssistedAidaTopicDoormatIssueIds.has(issue.issueId)) {
+      return ["aida", "model"];
+    }
+    if (cell === "issue" && this.modelOwnedTopicDoormatIssueIds.has(issue.issueId)) {
+      return ["model"];
+    }
+    return ["aida"];
+  }
+  topicDoormatProvenanceIcon(source) {
+    return source === "model" ? "smart_toy" : "rule";
+  }
+  topicDoormatProvenanceLabel(source) {
+    return source === "model" ? this.translate.instant("page.tools.guidance.topicDoormats.provenance.model") : this.translate.instant("page.tools.guidance.topicDoormats.provenance.aida");
+  }
   evidenceMetricParts(item) {
     if (typeof item === "string" || !item) {
       return (item || "").split(";").map((part) => part.trim()).filter(Boolean).map((metric) => ({ metric }));
@@ -34988,7 +35603,7 @@ var ComponentGuidanceComponent = class _ComponentGuidanceComponent {
   static \u0275fac = function ComponentGuidanceComponent_Factory(__ngFactoryType__) {
     return new (__ngFactoryType__ || _ComponentGuidanceComponent)();
   };
-  static \u0275cmp = /* @__PURE__ */ \u0275\u0275defineComponent({ type: _ComponentGuidanceComponent, selectors: [["ca-component-guidance"]], outputs: { analysisAvailable: "analysisAvailable" }, decls: 10, vars: 10, consts: [["dt", ""], ["dataKey", "url", "styleClass", "p-datatable-sm", "selectionMode", "multiple", "expandableRows", "", 3, "selectionChange", "sortFunction", "onRowExpand", "onRowCollapse", "value", "selection", "customSort", "resizableColumns", "expandedRowKeys"], ["pTemplate", "caption"], ["pTemplate", "header"], ["pTemplate", "body"], ["pTemplate", "expandedrow"], [1, "mt-3"], ["pButton", "", "type", "button", "aria-label", "Get GenAI recommendations based on user data", "pTooltip", "Select one or more components", 1, "ai-btn", 3, "click", "label", "icon", "disabled", "showDelay", "hideDelay"], [1, "sr-only"], [1, "caption-actions"], ["pButton", "", "type", "button", "label", "Expand All", "icon", "pi pi-plus", 1, "p-button-text", 3, "click"], ["pButton", "", "type", "button", "label", "Collapse All", "icon", "pi pi-minus", 1, "p-button-text", 3, "click"], [2, "width", "3rem", "text-align", "center"], ["pSortableColumn", "order"], ["field", "order"], ["pSortableColumn", "health", 1, "health-col"], ["field", "health"], [3, "pSelectableRow"], [2, "text-align", "center"], ["pButton", "", "type", "button", "aria-label", "Toggle row", 1, "p-button-text", "p-button-rounded", "p-button-plain", 3, "pRowToggler"], ["aria-hidden", "true", 1, "pi", 3, "ngClass"], [3, "value"], ["target", "_blank", "rel", "noopener", 3, "href"], [1, "health-cell", "health-col"], [3, "label", "icon", "styleClass"], [1, "muted"], ["icon", "pi pi-question-circle", "styleClass", "chip chip-unk", 3, "label"], ["label", "OK", "icon", "pi pi-check-circle", "styleClass", "chip chip-ok"], [1, "alert-loading"], [1, "text-danger"], [1, "chip-list"], ["aria-hidden", "true", 1, "pi", "pi-spinner", "pi-spin"], [3, "label", "styleClass", 4, "ngFor", "ngForOf"], [3, "label", "styleClass"], ["styleClass", "chip chip-hghlght", 3, "label", 4, "ngFor", "ngForOf"], ["styleClass", "chip chip-hghlght", 3, "label"], ["colspan", "6"], [1, "p-3"], [1, "expansion-table", 3, "selectAll"], [1, "expansion-table", 3, "maxSeverityChange", "categoriesChange", "loadingChange", "errorChange", "selectAll"], ["styleClass", "p-datatable-sm expansion-table"], [1, "mb-3"], ["pButton", "", "type", "button", "label", "Re-analyse current webpage", "icon", "pi pi-refresh", 3, "click", "disabled"], [1, "topic-doormat-empty"], [1, "topic-doormat-group"], [1, "topic-doormat-group-header"], [1, "topic-doormat-count"], [1, "topic-doormat-subheading"], ["styleClass", "p-datatable-sm expansion-table", 3, "value"], ["pTemplate", "emptymessage"], [2, "width", "3rem"], [2, "width", "8rem"], [1, "topic-doormat-section-row"], [3, "ngModelChange", "binary", "ngModel", "disabled"], [1, "chip", 3, "ngClass"], [1, "topic-doormat-recommendation"], [1, "topic-doormat-evidence-list"], [1, "chip", "topic-doormat-evidence-metric", 3, "ngClass"], ["target", "_blank", "rel", "noopener noreferrer", 3, "href"], ["colspan", "5"], [2, "width", "4rem"], ["colspan", "7"]], template: function ComponentGuidanceComponent_Template(rf, ctx) {
+  static \u0275cmp = /* @__PURE__ */ \u0275\u0275defineComponent({ type: _ComponentGuidanceComponent, selectors: [["ca-component-guidance"]], outputs: { analysisAvailable: "analysisAvailable" }, decls: 10, vars: 10, consts: [["dt", ""], ["dataKey", "url", "styleClass", "p-datatable-sm", "selectionMode", "multiple", "expandableRows", "", 3, "selectionChange", "sortFunction", "onRowExpand", "onRowCollapse", "value", "selection", "customSort", "resizableColumns", "expandedRowKeys"], ["pTemplate", "caption"], ["pTemplate", "header"], ["pTemplate", "body"], ["pTemplate", "expandedrow"], [1, "mt-3"], ["pButton", "", "type", "button", "aria-label", "Get GenAI recommendations based on user data", "pTooltip", "Select one or more components", 1, "ai-btn", 3, "click", "label", "icon", "disabled", "showDelay", "hideDelay"], [1, "sr-only"], [1, "caption-actions"], ["pButton", "", "type", "button", "label", "Expand All", "icon", "pi pi-plus", 1, "p-button-text", 3, "click"], ["pButton", "", "type", "button", "label", "Collapse All", "icon", "pi pi-minus", 1, "p-button-text", 3, "click"], [2, "width", "3rem", "text-align", "center"], ["pSortableColumn", "order"], ["field", "order"], ["pSortableColumn", "health", 1, "health-col"], ["field", "health"], [3, "pSelectableRow"], [2, "text-align", "center"], ["pButton", "", "type", "button", "aria-label", "Toggle row", 1, "p-button-text", "p-button-rounded", "p-button-plain", 3, "pRowToggler"], ["aria-hidden", "true", 1, "pi", 3, "ngClass"], [3, "value"], ["target", "_blank", "rel", "noopener", 3, "href"], [1, "health-cell", "health-col"], [3, "label", "icon", "styleClass"], [1, "muted"], ["icon", "pi pi-question-circle", "styleClass", "chip chip-unk", 3, "label"], ["label", "OK", "icon", "pi pi-check-circle", "styleClass", "chip chip-ok"], [1, "alert-loading"], [1, "text-danger"], [1, "chip-list"], ["aria-hidden", "true", 1, "pi", "pi-spinner", "pi-spin"], [3, "label", "styleClass", 4, "ngFor", "ngForOf"], [3, "label", "styleClass"], ["styleClass", "chip chip-hghlght", 3, "label", 4, "ngFor", "ngForOf"], ["styleClass", "chip chip-hghlght", 3, "label"], ["colspan", "6"], [1, "p-3"], [1, "expansion-table", 3, "selectAll"], [1, "expansion-table", 3, "maxSeverityChange", "categoriesChange", "loadingChange", "errorChange", "selectAll"], ["styleClass", "p-datatable-sm expansion-table"], [1, "mb-3"], ["pButton", "", "type", "button", "label", "Re-analyse current webpage", "icon", "pi pi-refresh", 3, "click", "disabled"], [1, "topic-doormat-empty"], [1, "topic-doormat-group"], [1, "topic-doormat-group-header"], [1, "topic-doormat-count"], [1, "topic-doormat-subheading"], ["styleClass", "p-datatable-sm expansion-table", 3, "value"], ["pTemplate", "emptymessage"], [2, "width", "3rem"], [2, "width", "8rem"], [1, "topic-doormat-section-row"], [3, "ngModelChange", "binary", "ngModel", "disabled"], [1, "chip", 3, "ngClass"], [1, "topic-doormat-provenance-icons"], ["tooltipPosition", "top", 1, "material-icons", "topic-doormat-provenance-icon", 3, "pTooltip"], [1, "topic-doormat-recommendation"], [1, "topic-doormat-evidence-list"], [1, "chip", "topic-doormat-evidence-metric", 3, "ngClass"], ["target", "_blank", "rel", "noopener noreferrer", 3, "href"], ["colspan", "5"], [2, "width", "4rem"], ["colspan", "7"]], template: function ComponentGuidanceComponent_Template(rf, ctx) {
     if (rf & 1) {
       const _r1 = \u0275\u0275getCurrentView();
       \u0275\u0275elementStart(0, "p-table", 1, 0);
@@ -35054,7 +35669,7 @@ var ComponentGuidanceComponent = class _ComponentGuidanceComponent {
     Tooltip,
     TranslateModule,
     AlertsGuidanceComponent
-  ], styles: ["\n\n[_nghost-%COMP%]     .alert-table .p-datatable-table {\n  table-layout: auto !important;\n}\n[_nghost-%COMP%]     .alert-table.p-datatable .p-datatable-thead > tr > th.toggle-col, \n[_nghost-%COMP%]     .alert-table.p-datatable .p-datatable-tbody > tr > td.toggle-col {\n  width: 70px !important;\n  min-width: 70px;\n  max-width: 70px;\n  white-space: nowrap !important;\n  text-align: center;\n  padding: 0 0.25rem;\n}\n[_nghost-%COMP%]     .alert-table.p-datatable .p-datatable-thead > tr > th.checkbox-col, \n[_nghost-%COMP%]     .alert-table.p-datatable .p-datatable-tbody > tr > td.checkbox-col {\n  width: 70px !important;\n  min-width: 70px;\n  max-width: 70px;\n  white-space: nowrap !important;\n  text-align: center;\n  padding: 0 0.25rem;\n}\n[_nghost-%COMP%]     .topic-doormat-section-row > td {\n  background: #eef2f6;\n}\n.topic-doormat-group[_ngcontent-%COMP%] {\n  margin-top: 1rem;\n  border: 1px solid #d8dee6;\n  border-radius: 6px;\n  background: #fff;\n  overflow: hidden;\n}\n.topic-doormat-group[_ngcontent-%COMP%]    + .topic-doormat-group[_ngcontent-%COMP%] {\n  margin-top: 1.25rem;\n}\n.topic-doormat-group-header[_ngcontent-%COMP%] {\n  display: flex;\n  align-items: flex-start;\n  gap: 0.75rem;\n  padding: 1.1rem 1.25rem;\n  border-bottom: 1px solid #d8dee6;\n  background: #eef2f6;\n}\n.topic-doormat-group[_ngcontent-%COMP%]   h3[_ngcontent-%COMP%] {\n  margin: 0;\n  font-size: 1.25rem;\n  line-height: 1.25;\n}\n.topic-doormat-count[_ngcontent-%COMP%] {\n  flex: 0 0 auto;\n  padding: 0.4rem 0.8rem;\n  border: 1px solid #d8dee6;\n  border-radius: 999px;\n  background: #fff;\n  color: #202833;\n  font-size: 0.9rem;\n  font-weight: 700;\n}\n.topic-doormat-subheading[_ngcontent-%COMP%] {\n  margin: 1rem 1rem 0.4rem;\n  padding-bottom: 0.25rem;\n  border-bottom: 1px solid #eef2f6;\n  color: #202833;\n  font-size: 0.9rem;\n  font-weight: 700;\n}\n.topic-doormat-group[_ngcontent-%COMP%]   .expansion-table[_ngcontent-%COMP%] {\n  margin: 0 1rem 1rem;\n}\n.topic-doormat-empty[_ngcontent-%COMP%] {\n  padding: 0.75rem;\n  border: 1px solid #d8dee6;\n  border-radius: 4px;\n  background: #fff;\n}\n.topic-doormat-recommendation[_ngcontent-%COMP%] {\n  white-space: pre-line;\n}\n/*# sourceMappingURL=component-guidance.component.css.map */", "\n\n.muted[_ngcontent-%COMP%] {\n  color: #6b7280;\n  font-size: 12px;\n}\n.issues[_ngcontent-%COMP%] {\n  margin: 0;\n  padding-left: 1rem;\n}\n.health-cell[_ngcontent-%COMP%] {\n  gap: 0.4rem;\n  align-items: center;\n  flex-wrap: wrap;\n}\n.chip-list[_ngcontent-%COMP%] {\n  display: flex;\n  flex-wrap: wrap;\n  gap: 0.25rem;\n  padding: 0;\n  margin: 0;\n}\n.chip-list[_ngcontent-%COMP%]   .chip[_ngcontent-%COMP%], \n.chip-list[_ngcontent-%COMP%]   .p-chip[_ngcontent-%COMP%] {\n  white-space: normal;\n  word-break: break-word;\n  max-width: 100%;\n}\n.expansion-table[_ngcontent-%COMP%] {\n  width: 100%;\n  max-width: 100%;\n  overflow: hidden;\n}\n[_nghost-%COMP%]     .expansion-table .p-datatable-table {\n  width: 100%;\n  border: 1px solid #d1d5db;\n  border-radius: 6px;\n}\n[_nghost-%COMP%]     .expansion-table .p-datatable-wrapper {\n  width: 100%;\n  overflow-x: auto;\n}\n[_nghost-%COMP%]     .expansion-table .p-datatable-tbody > tr > td, \n[_nghost-%COMP%]     .expansion-table .p-datatable-thead > tr > th {\n  white-space: normal;\n  word-break: normal;\n  overflow-wrap: normal;\n}\n.tag[_ngcontent-%COMP%] {\n  font-size: 11px;\n  padding: 0.05rem 0.4rem;\n  border-radius: 6px;\n  border: 1px solid transparent;\n}\n.topic-doormat-evidence-metric[_ngcontent-%COMP%] {\n  display: inline-flex;\n  margin-right: 0.2rem;\n  vertical-align: baseline;\n}\n.topic-doormat-evidence-list[_ngcontent-%COMP%] {\n  list-style: none;\n  display: grid;\n  gap: 0.25rem;\n  margin: 0;\n  padding: 0;\n}\n.topic-doormat-evidence-list[_ngcontent-%COMP%]   li[_ngcontent-%COMP%] {\n  display: flex;\n  align-items: center;\n  gap: 0.35rem;\n  flex-wrap: wrap;\n}\n.ai-btn[_ngcontent-%COMP%] {\n  font-weight: 600;\n}\n.sr-only[_ngcontent-%COMP%] {\n  position: absolute;\n  width: 1px;\n  height: 1px;\n  padding: 0;\n  margin: -1px;\n  overflow: hidden;\n  clip: rect(0, 0, 0, 0);\n  white-space: nowrap;\n  border: 0;\n}\n/*# sourceMappingURL=component-guidance.component.css.map */", "\n\n.caption-actions[_ngcontent-%COMP%] {\n  display: flex;\n  align-items: center;\n  justify-content: flex-end;\n  gap: 0.5rem;\n}\n/*# sourceMappingURL=component-guidance.component.css.map */"] });
+  ], styles: ["\n\n[_nghost-%COMP%]     .alert-table .p-datatable-table {\n  table-layout: auto !important;\n}\n[_nghost-%COMP%]     .alert-table.p-datatable .p-datatable-thead > tr > th.toggle-col, \n[_nghost-%COMP%]     .alert-table.p-datatable .p-datatable-tbody > tr > td.toggle-col {\n  width: 70px !important;\n  min-width: 70px;\n  max-width: 70px;\n  white-space: nowrap !important;\n  text-align: center;\n  padding: 0 0.25rem;\n}\n[_nghost-%COMP%]     .alert-table.p-datatable .p-datatable-thead > tr > th.checkbox-col, \n[_nghost-%COMP%]     .alert-table.p-datatable .p-datatable-tbody > tr > td.checkbox-col {\n  width: 70px !important;\n  min-width: 70px;\n  max-width: 70px;\n  white-space: nowrap !important;\n  text-align: center;\n  padding: 0 0.25rem;\n}\n[_nghost-%COMP%]     .topic-doormat-section-row > td {\n  background: #eef2f6;\n}\n.topic-doormat-group[_ngcontent-%COMP%] {\n  margin-top: 1rem;\n  border: 1px solid #d8dee6;\n  border-radius: 6px;\n  background: #fff;\n  overflow: hidden;\n}\n.topic-doormat-group[_ngcontent-%COMP%]    + .topic-doormat-group[_ngcontent-%COMP%] {\n  margin-top: 1.25rem;\n}\n.topic-doormat-group-header[_ngcontent-%COMP%] {\n  display: flex;\n  align-items: flex-start;\n  gap: 0.75rem;\n  padding: 1.1rem 1.25rem;\n  border-bottom: 1px solid #d8dee6;\n  background: #eef2f6;\n}\n.topic-doormat-group[_ngcontent-%COMP%]   h3[_ngcontent-%COMP%] {\n  margin: 0;\n  font-size: 1.25rem;\n  line-height: 1.25;\n}\n.topic-doormat-count[_ngcontent-%COMP%] {\n  flex: 0 0 auto;\n  padding: 0.4rem 0.8rem;\n  border: 1px solid #d8dee6;\n  border-radius: 999px;\n  background: #fff;\n  color: #202833;\n  font-size: 0.9rem;\n  font-weight: 700;\n}\n.topic-doormat-subheading[_ngcontent-%COMP%] {\n  margin: 1rem 1rem 0.4rem;\n  padding-bottom: 0.25rem;\n  border-bottom: 1px solid #eef2f6;\n  color: #202833;\n  font-size: 0.9rem;\n  font-weight: 700;\n}\n.topic-doormat-group[_ngcontent-%COMP%]   .expansion-table[_ngcontent-%COMP%] {\n  margin: 0 1rem 1rem;\n}\n.topic-doormat-empty[_ngcontent-%COMP%] {\n  padding: 0.75rem;\n  border: 1px solid #d8dee6;\n  border-radius: 4px;\n  background: #fff;\n}\n.topic-doormat-recommendation[_ngcontent-%COMP%] {\n  white-space: pre-line;\n}\n.topic-doormat-provenance-icons[_ngcontent-%COMP%] {\n  display: inline-flex;\n  align-items: center;\n  gap: 0.15rem;\n  margin-right: 0.25rem;\n  vertical-align: text-bottom;\n}\n.topic-doormat-provenance-icon[_ngcontent-%COMP%] {\n  color: #596579;\n  font-size: 1rem;\n  line-height: 1;\n}\n/*# sourceMappingURL=component-guidance.component.css.map */", "\n\n.muted[_ngcontent-%COMP%] {\n  color: #6b7280;\n  font-size: 12px;\n}\n.issues[_ngcontent-%COMP%] {\n  margin: 0;\n  padding-left: 1rem;\n}\n.health-cell[_ngcontent-%COMP%] {\n  gap: 0.4rem;\n  align-items: center;\n  flex-wrap: wrap;\n}\n.chip-list[_ngcontent-%COMP%] {\n  display: flex;\n  flex-wrap: wrap;\n  gap: 0.25rem;\n  padding: 0;\n  margin: 0;\n}\n.chip-list[_ngcontent-%COMP%]   .chip[_ngcontent-%COMP%], \n.chip-list[_ngcontent-%COMP%]   .p-chip[_ngcontent-%COMP%] {\n  white-space: normal;\n  word-break: break-word;\n  max-width: 100%;\n}\n.expansion-table[_ngcontent-%COMP%] {\n  width: 100%;\n  max-width: 100%;\n  overflow: hidden;\n}\n[_nghost-%COMP%]     .expansion-table .p-datatable-table {\n  width: 100%;\n  border: 1px solid #d1d5db;\n  border-radius: 6px;\n}\n[_nghost-%COMP%]     .expansion-table .p-datatable-wrapper {\n  width: 100%;\n  overflow-x: auto;\n}\n[_nghost-%COMP%]     .expansion-table .p-datatable-tbody > tr > td, \n[_nghost-%COMP%]     .expansion-table .p-datatable-thead > tr > th {\n  white-space: normal;\n  word-break: normal;\n  overflow-wrap: normal;\n}\n.tag[_ngcontent-%COMP%] {\n  font-size: 11px;\n  padding: 0.05rem 0.4rem;\n  border-radius: 6px;\n  border: 1px solid transparent;\n}\n.topic-doormat-evidence-metric[_ngcontent-%COMP%] {\n  display: inline-flex;\n  margin-right: 0.2rem;\n  vertical-align: baseline;\n}\n.topic-doormat-evidence-list[_ngcontent-%COMP%] {\n  list-style: none;\n  display: grid;\n  gap: 0.25rem;\n  margin: 0;\n  padding: 0;\n}\n.topic-doormat-evidence-list[_ngcontent-%COMP%]   li[_ngcontent-%COMP%] {\n  display: flex;\n  align-items: center;\n  gap: 0.35rem;\n  flex-wrap: wrap;\n}\n.ai-btn[_ngcontent-%COMP%] {\n  font-weight: 600;\n}\n.sr-only[_ngcontent-%COMP%] {\n  position: absolute;\n  width: 1px;\n  height: 1px;\n  padding: 0;\n  margin: -1px;\n  overflow: hidden;\n  clip: rect(0, 0, 0, 0);\n  white-space: nowrap;\n  border: 0;\n}\n/*# sourceMappingURL=component-guidance.component.css.map */", "\n\n.caption-actions[_ngcontent-%COMP%] {\n  display: flex;\n  align-items: center;\n  justify-content: flex-end;\n  gap: 0.5rem;\n}\n/*# sourceMappingURL=component-guidance.component.css.map */"] });
 };
 (() => {
   (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(ComponentGuidanceComponent, [{
@@ -35387,8 +36002,32 @@ var ComponentGuidanceComponent = class _ComponentGuidanceComponent {
                               {{ issue.severity }}
                             </span>
                           </td>
-                          <td>{{ issue.issue }}</td>
                           <td>
+                            <span class="topic-doormat-provenance-icons">
+                              @for (source of topicDoormatCellProvenance(issue, 'issue'); track source) {
+                                <span
+                                  class="material-icons topic-doormat-provenance-icon"
+                                  [pTooltip]="topicDoormatProvenanceLabel(source)"
+                                  tooltipPosition="top"
+                                  [attr.aria-label]="topicDoormatProvenanceLabel(source)">
+                                  {{ topicDoormatProvenanceIcon(source) }}
+                                </span>
+                              }
+                            </span>
+                            {{ issue.issue }}
+                          </td>
+                          <td>
+                            <span class="topic-doormat-provenance-icons">
+                              @for (source of topicDoormatCellProvenance(issue, 'evidence'); track source) {
+                                <span
+                                  class="material-icons topic-doormat-provenance-icon"
+                                  [pTooltip]="topicDoormatProvenanceLabel(source)"
+                                  tooltipPosition="top"
+                                  [attr.aria-label]="topicDoormatProvenanceLabel(source)">
+                                  {{ topicDoormatProvenanceIcon(source) }}
+                                </span>
+                              }
+                            </span>
                             @if (issue.evidenceItems?.length) {
                               <ul class="topic-doormat-evidence-list">
                                 @for (item of issue.evidenceItems; track item.label + item.metric) {
@@ -35426,7 +36065,20 @@ var ComponentGuidanceComponent = class _ComponentGuidanceComponent {
                               }
                             }
                           </td>
-                          <td class="topic-doormat-recommendation">{{ issue.recommendation || '-' }}</td>
+                          <td class="topic-doormat-recommendation">
+                            <span class="topic-doormat-provenance-icons">
+                              @for (source of topicDoormatCellProvenance(issue, 'recommendation'); track source) {
+                                <span
+                                  class="material-icons topic-doormat-provenance-icon"
+                                  [pTooltip]="topicDoormatProvenanceLabel(source)"
+                                  tooltipPosition="top"
+                                  [attr.aria-label]="topicDoormatProvenanceLabel(source)">
+                                  {{ topicDoormatProvenanceIcon(source) }}
+                                </span>
+                              }
+                            </span>
+                            {{ issue.recommendation || '-' }}
+                          </td>
                         </tr>
                       </ng-template>
                       <ng-template pTemplate="emptymessage">
@@ -35474,8 +36126,32 @@ var ComponentGuidanceComponent = class _ComponentGuidanceComponent {
                               {{ issue.severity }}
                             </span>
                           </td>
-                          <td>{{ issue.issue }}</td>
                           <td>
+                            <span class="topic-doormat-provenance-icons">
+                              @for (source of topicDoormatCellProvenance(issue, 'issue'); track source) {
+                                <span
+                                  class="material-icons topic-doormat-provenance-icon"
+                                  [pTooltip]="topicDoormatProvenanceLabel(source)"
+                                  tooltipPosition="top"
+                                  [attr.aria-label]="topicDoormatProvenanceLabel(source)">
+                                  {{ topicDoormatProvenanceIcon(source) }}
+                                </span>
+                              }
+                            </span>
+                            {{ issue.issue }}
+                          </td>
+                          <td>
+                            <span class="topic-doormat-provenance-icons">
+                              @for (source of topicDoormatCellProvenance(issue, 'evidence'); track source) {
+                                <span
+                                  class="material-icons topic-doormat-provenance-icon"
+                                  [pTooltip]="topicDoormatProvenanceLabel(source)"
+                                  tooltipPosition="top"
+                                  [attr.aria-label]="topicDoormatProvenanceLabel(source)">
+                                  {{ topicDoormatProvenanceIcon(source) }}
+                                </span>
+                              }
+                            </span>
                             @if (issue.evidenceItems?.length) {
                               <ul class="topic-doormat-evidence-list">
                                 @for (item of issue.evidenceItems; track item.label + item.metric) {
@@ -35513,7 +36189,20 @@ var ComponentGuidanceComponent = class _ComponentGuidanceComponent {
                               }
                             }
                           </td>
-                          <td class="topic-doormat-recommendation">{{ issue.recommendation || '-' }}</td>
+                          <td class="topic-doormat-recommendation">
+                            <span class="topic-doormat-provenance-icons">
+                              @for (source of topicDoormatCellProvenance(issue, 'recommendation'); track source) {
+                                <span
+                                  class="material-icons topic-doormat-provenance-icon"
+                                  [pTooltip]="topicDoormatProvenanceLabel(source)"
+                                  tooltipPosition="top"
+                                  [attr.aria-label]="topicDoormatProvenanceLabel(source)">
+                                  {{ topicDoormatProvenanceIcon(source) }}
+                                </span>
+                              }
+                            </span>
+                            {{ issue.recommendation || '-' }}
+                          </td>
                         </tr>
                       </ng-template>
                       <ng-template pTemplate="emptymessage">
@@ -35582,13 +36271,13 @@ var ComponentGuidanceComponent = class _ComponentGuidanceComponent {
     <span class="sr-only">Get GenAI recommendations based on user data</span>
   </button>
 </div>
-`, styles: ["/* src/app/views/page-assistant/components/problems/component-guidance/component-guidance.component.css */\n:host ::ng-deep .alert-table .p-datatable-table {\n  table-layout: auto !important;\n}\n:host ::ng-deep .alert-table.p-datatable .p-datatable-thead > tr > th.toggle-col,\n:host ::ng-deep .alert-table.p-datatable .p-datatable-tbody > tr > td.toggle-col {\n  width: 70px !important;\n  min-width: 70px;\n  max-width: 70px;\n  white-space: nowrap !important;\n  text-align: center;\n  padding: 0 0.25rem;\n}\n:host ::ng-deep .alert-table.p-datatable .p-datatable-thead > tr > th.checkbox-col,\n:host ::ng-deep .alert-table.p-datatable .p-datatable-tbody > tr > td.checkbox-col {\n  width: 70px !important;\n  min-width: 70px;\n  max-width: 70px;\n  white-space: nowrap !important;\n  text-align: center;\n  padding: 0 0.25rem;\n}\n:host ::ng-deep .topic-doormat-section-row > td {\n  background: #eef2f6;\n}\n.topic-doormat-group {\n  margin-top: 1rem;\n  border: 1px solid #d8dee6;\n  border-radius: 6px;\n  background: #fff;\n  overflow: hidden;\n}\n.topic-doormat-group + .topic-doormat-group {\n  margin-top: 1.25rem;\n}\n.topic-doormat-group-header {\n  display: flex;\n  align-items: flex-start;\n  gap: 0.75rem;\n  padding: 1.1rem 1.25rem;\n  border-bottom: 1px solid #d8dee6;\n  background: #eef2f6;\n}\n.topic-doormat-group h3 {\n  margin: 0;\n  font-size: 1.25rem;\n  line-height: 1.25;\n}\n.topic-doormat-count {\n  flex: 0 0 auto;\n  padding: 0.4rem 0.8rem;\n  border: 1px solid #d8dee6;\n  border-radius: 999px;\n  background: #fff;\n  color: #202833;\n  font-size: 0.9rem;\n  font-weight: 700;\n}\n.topic-doormat-subheading {\n  margin: 1rem 1rem 0.4rem;\n  padding-bottom: 0.25rem;\n  border-bottom: 1px solid #eef2f6;\n  color: #202833;\n  font-size: 0.9rem;\n  font-weight: 700;\n}\n.topic-doormat-group .expansion-table {\n  margin: 0 1rem 1rem;\n}\n.topic-doormat-empty {\n  padding: 0.75rem;\n  border: 1px solid #d8dee6;\n  border-radius: 4px;\n  background: #fff;\n}\n.topic-doormat-recommendation {\n  white-space: pre-line;\n}\n/*# sourceMappingURL=component-guidance.component.css.map */\n", "/* angular:styles/component:css;bca26e30255f97050c97d01916e393232d7590812a5be7a916612a3f35cdb4f6;C:/my-working-files/GitHub/design-assistant/src/app/views/page-assistant/components/problems/component-guidance/component-guidance.component.ts */\n.muted {\n  color: #6b7280;\n  font-size: 12px;\n}\n.issues {\n  margin: 0;\n  padding-left: 1rem;\n}\n.health-cell {\n  gap: 0.4rem;\n  align-items: center;\n  flex-wrap: wrap;\n}\n.chip-list {\n  display: flex;\n  flex-wrap: wrap;\n  gap: 0.25rem;\n  padding: 0;\n  margin: 0;\n}\n.chip-list .chip,\n.chip-list .p-chip {\n  white-space: normal;\n  word-break: break-word;\n  max-width: 100%;\n}\n.expansion-table {\n  width: 100%;\n  max-width: 100%;\n  overflow: hidden;\n}\n:host ::ng-deep .expansion-table .p-datatable-table {\n  width: 100%;\n  border: 1px solid #d1d5db;\n  border-radius: 6px;\n}\n:host ::ng-deep .expansion-table .p-datatable-wrapper {\n  width: 100%;\n  overflow-x: auto;\n}\n:host ::ng-deep .expansion-table .p-datatable-tbody > tr > td,\n:host ::ng-deep .expansion-table .p-datatable-thead > tr > th {\n  white-space: normal;\n  word-break: normal;\n  overflow-wrap: normal;\n}\n.tag {\n  font-size: 11px;\n  padding: 0.05rem 0.4rem;\n  border-radius: 6px;\n  border: 1px solid transparent;\n}\n.topic-doormat-evidence-metric {\n  display: inline-flex;\n  margin-right: 0.2rem;\n  vertical-align: baseline;\n}\n.topic-doormat-evidence-list {\n  list-style: none;\n  display: grid;\n  gap: 0.25rem;\n  margin: 0;\n  padding: 0;\n}\n.topic-doormat-evidence-list li {\n  display: flex;\n  align-items: center;\n  gap: 0.35rem;\n  flex-wrap: wrap;\n}\n.ai-btn {\n  font-weight: 600;\n}\n.sr-only {\n  position: absolute;\n  width: 1px;\n  height: 1px;\n  padding: 0;\n  margin: -1px;\n  overflow: hidden;\n  clip: rect(0, 0, 0, 0);\n  white-space: nowrap;\n  border: 0;\n}\n/*# sourceMappingURL=component-guidance.component.css.map */\n", "/* angular:styles/component:css;c0806e59c14ba3c53784f6243c5c92cc29bf483de8f80121dc534aca8504d932;C:/my-working-files/GitHub/design-assistant/src/app/views/page-assistant/components/problems/component-guidance/component-guidance.component.ts */\n.caption-actions {\n  display: flex;\n  align-items: center;\n  justify-content: flex-end;\n  gap: 0.5rem;\n}\n/*# sourceMappingURL=component-guidance.component.css.map */\n"] }]
+`, styles: ["/* src/app/views/page-assistant/components/problems/component-guidance/component-guidance.component.css */\n:host ::ng-deep .alert-table .p-datatable-table {\n  table-layout: auto !important;\n}\n:host ::ng-deep .alert-table.p-datatable .p-datatable-thead > tr > th.toggle-col,\n:host ::ng-deep .alert-table.p-datatable .p-datatable-tbody > tr > td.toggle-col {\n  width: 70px !important;\n  min-width: 70px;\n  max-width: 70px;\n  white-space: nowrap !important;\n  text-align: center;\n  padding: 0 0.25rem;\n}\n:host ::ng-deep .alert-table.p-datatable .p-datatable-thead > tr > th.checkbox-col,\n:host ::ng-deep .alert-table.p-datatable .p-datatable-tbody > tr > td.checkbox-col {\n  width: 70px !important;\n  min-width: 70px;\n  max-width: 70px;\n  white-space: nowrap !important;\n  text-align: center;\n  padding: 0 0.25rem;\n}\n:host ::ng-deep .topic-doormat-section-row > td {\n  background: #eef2f6;\n}\n.topic-doormat-group {\n  margin-top: 1rem;\n  border: 1px solid #d8dee6;\n  border-radius: 6px;\n  background: #fff;\n  overflow: hidden;\n}\n.topic-doormat-group + .topic-doormat-group {\n  margin-top: 1.25rem;\n}\n.topic-doormat-group-header {\n  display: flex;\n  align-items: flex-start;\n  gap: 0.75rem;\n  padding: 1.1rem 1.25rem;\n  border-bottom: 1px solid #d8dee6;\n  background: #eef2f6;\n}\n.topic-doormat-group h3 {\n  margin: 0;\n  font-size: 1.25rem;\n  line-height: 1.25;\n}\n.topic-doormat-count {\n  flex: 0 0 auto;\n  padding: 0.4rem 0.8rem;\n  border: 1px solid #d8dee6;\n  border-radius: 999px;\n  background: #fff;\n  color: #202833;\n  font-size: 0.9rem;\n  font-weight: 700;\n}\n.topic-doormat-subheading {\n  margin: 1rem 1rem 0.4rem;\n  padding-bottom: 0.25rem;\n  border-bottom: 1px solid #eef2f6;\n  color: #202833;\n  font-size: 0.9rem;\n  font-weight: 700;\n}\n.topic-doormat-group .expansion-table {\n  margin: 0 1rem 1rem;\n}\n.topic-doormat-empty {\n  padding: 0.75rem;\n  border: 1px solid #d8dee6;\n  border-radius: 4px;\n  background: #fff;\n}\n.topic-doormat-recommendation {\n  white-space: pre-line;\n}\n.topic-doormat-provenance-icons {\n  display: inline-flex;\n  align-items: center;\n  gap: 0.15rem;\n  margin-right: 0.25rem;\n  vertical-align: text-bottom;\n}\n.topic-doormat-provenance-icon {\n  color: #596579;\n  font-size: 1rem;\n  line-height: 1;\n}\n/*# sourceMappingURL=component-guidance.component.css.map */\n", "/* angular:styles/component:css;bca26e30255f97050c97d01916e393232d7590812a5be7a916612a3f35cdb4f6;C:/my-working-files/GitHub/design-assistant/src/app/views/page-assistant/components/problems/component-guidance/component-guidance.component.ts */\n.muted {\n  color: #6b7280;\n  font-size: 12px;\n}\n.issues {\n  margin: 0;\n  padding-left: 1rem;\n}\n.health-cell {\n  gap: 0.4rem;\n  align-items: center;\n  flex-wrap: wrap;\n}\n.chip-list {\n  display: flex;\n  flex-wrap: wrap;\n  gap: 0.25rem;\n  padding: 0;\n  margin: 0;\n}\n.chip-list .chip,\n.chip-list .p-chip {\n  white-space: normal;\n  word-break: break-word;\n  max-width: 100%;\n}\n.expansion-table {\n  width: 100%;\n  max-width: 100%;\n  overflow: hidden;\n}\n:host ::ng-deep .expansion-table .p-datatable-table {\n  width: 100%;\n  border: 1px solid #d1d5db;\n  border-radius: 6px;\n}\n:host ::ng-deep .expansion-table .p-datatable-wrapper {\n  width: 100%;\n  overflow-x: auto;\n}\n:host ::ng-deep .expansion-table .p-datatable-tbody > tr > td,\n:host ::ng-deep .expansion-table .p-datatable-thead > tr > th {\n  white-space: normal;\n  word-break: normal;\n  overflow-wrap: normal;\n}\n.tag {\n  font-size: 11px;\n  padding: 0.05rem 0.4rem;\n  border-radius: 6px;\n  border: 1px solid transparent;\n}\n.topic-doormat-evidence-metric {\n  display: inline-flex;\n  margin-right: 0.2rem;\n  vertical-align: baseline;\n}\n.topic-doormat-evidence-list {\n  list-style: none;\n  display: grid;\n  gap: 0.25rem;\n  margin: 0;\n  padding: 0;\n}\n.topic-doormat-evidence-list li {\n  display: flex;\n  align-items: center;\n  gap: 0.35rem;\n  flex-wrap: wrap;\n}\n.ai-btn {\n  font-weight: 600;\n}\n.sr-only {\n  position: absolute;\n  width: 1px;\n  height: 1px;\n  padding: 0;\n  margin: -1px;\n  overflow: hidden;\n  clip: rect(0, 0, 0, 0);\n  white-space: nowrap;\n  border: 0;\n}\n/*# sourceMappingURL=component-guidance.component.css.map */\n", "/* angular:styles/component:css;c0806e59c14ba3c53784f6243c5c92cc29bf483de8f80121dc534aca8504d932;C:/my-working-files/GitHub/design-assistant/src/app/views/page-assistant/components/problems/component-guidance/component-guidance.component.ts */\n.caption-actions {\n  display: flex;\n  align-items: center;\n  justify-content: flex-end;\n  gap: 0.5rem;\n}\n/*# sourceMappingURL=component-guidance.component.css.map */\n"] }]
   }], () => [], { analysisAvailable: [{
     type: Output
   }] });
 })();
 (() => {
-  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(ComponentGuidanceComponent, { className: "ComponentGuidanceComponent", filePath: "app/views/page-assistant/components/problems/component-guidance/component-guidance.component.ts", lineNumber: 194 });
+  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(ComponentGuidanceComponent, { className: "ComponentGuidanceComponent", filePath: "app/views/page-assistant/components/problems/component-guidance/component-guidance.component.ts", lineNumber: 196 });
 })();
 
 // src/app/views/page-assistant/components/problems/seo.component.ts
@@ -42846,193 +43535,6 @@ var TopicPageIaComponent = class _TopicPageIaComponent {
   (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(TopicPageIaComponent, { className: "TopicPageIaComponent", filePath: "app/views/page-assistant/components/problems/component-guidance/topic-page/topic-page-ia.component.ts", lineNumber: 196 });
 })();
 
-// src/app/views/page-assistant/data/canada-ca-snippets.constants.ts
-var TOPIC_PAGE_SNIPPETS = {
-  mostRequestedSection: [
-    '<section class="gc-most-requested">',
-    '  <div class="container">',
-    '    <h2 class="h3">Most requested</h2>',
-    "    <ul>",
-    "      {{items}}",
-    "    </ul>",
-    "  </div>",
-    "</section>"
-  ].join("\n"),
-  listItem: '<li><a href="{{url}}">{{label}}</a></li>',
-  noServicesItem: '<div class="col-lg-4 col-md-6"><h3><a href="#">[No services available]</a></h3><p>Use action verbs, or list keywords to describe this item.</p></div>',
-  serviceItem: [
-    '<div class="col-lg-4 col-md-6">',
-    '  <h3><a href="{{url}}">{{label}}</a></h3>',
-    "  <p>{{description}}</p>",
-    "</div>"
-  ].join("\n"),
-  featureItem: '<div class="col-sm-6">{{imageTag}}</div><div class="col-sm-6"><h3><a class="stretched-link" href="{{url}}">{{label}}</a></h3><p>{{description}}</p></div>',
-  featuresSectionTwoNoSocial: [
-    '<section class="gc-features mrgn-tp-xl">',
-    '  <h2 class="wb-inv">Features</h2>',
-    '  <div class="row wb-eqht wb-eqht-grd">',
-    "    {{items}}",
-    "  </div>",
-    "</section>"
-  ].join("\n"),
-  featuresSectionTwoWithSocial: [
-    '<section class="gc-features mrgn-tp-xl">',
-    '  <h2 class="wb-inv">Features</h2>',
-    '  <div class="row wb-eqht wb-eqht-grd">',
-    "    {{items}}",
-    "  </div>",
-    "</section>"
-  ].join("\n"),
-  socialFeatureColumn: [
-    '<div class="col-lg-4 col-sm-6">',
-    "  {{socialBlock}}",
-    "</div>"
-  ].join("\n"),
-  featuresSectionFullWidth: [
-    '<div class="col-md-12">',
-    '  <section class="gc-features">',
-    '    <h2 class="wb-inv">Featured</h2>',
-    '    <div class="row">',
-    "      {{featureItem}}",
-    "    </div>",
-    "  </section>",
-    "</div>"
-  ].join("\n"),
-  featuresSectionThree: [
-    '<section class="gc-features">',
-    "  <h2>Features</h2>",
-    '  <div class="row wb-eqht wb-eqht-grd">',
-    "    {{items}}",
-    "  </div>",
-    "</section>"
-  ].join("\n"),
-  featureCardItem: [
-    '<div class="{{columnClass}}">',
-    '  <div class="well well-sm eqht-trgt">',
-    "    {{imageTag}}",
-    '    <h3><a href="{{url}}" class="stretched-link">{{label}}</a></h3>',
-    "    <p>{{description}}</p>",
-    "  </div>",
-    "</div>"
-  ].join("\n"),
-  emptyFeatureColumn: '<div class="col-lg-4 col-sm-6"></div>',
-  socialMediaBlock: [
-    '<div id="social-media-en" class="gc-followus gc-followus-horizontal">',
-    "  <h2>On social media</h2>",
-    '  <ul class="list-inline">',
-    "    <li>",
-    '      <a href="https://www.facebook.com/canrevagency/" rel="external" class="social-lnk facebook"><span class="" style="border: 2px solid rgb(111, 159, 255);">Facebook</span></a>',
-    "    </li>",
-    "    <li>",
-    '      <a href="https://twitter.com/CanRevAgency" rel="external" class="x-social"><span class="" style="border: 2px solid rgb(111, 159, 255);">X</span></a>',
-    "    </li>",
-    "    <li>",
-    '      <a href="https://www.youtube.com/user/CanRevAgency" rel="external" class="social-lnk youtube"><span class="" style="border: 2px solid rgb(111, 159, 255);">YouTube</span></a>',
-    "    </li>",
-    "    <li>",
-    '      <a href="http://www.instagram.com/canrevagency" rel="external" class="social-lnk instagram"><span class="" style="border: 2px solid rgb(111, 159, 255);">Instagram</span></a>',
-    "    </li>",
-    "    <li>",
-    '      <a href="https://www.linkedin.com/company/cra-arc" rel="external" class="social-lnk linkedin"><span class="" style="border: 2px solid rgb(111, 159, 255);">LinkedIn</span></a>',
-    "    </li>",
-    "  </ul>",
-    "</div>"
-  ].join("\n"),
-  contributorBlock: [
-    '<h2 class="wb-inv">Contributors</h2>',
-    '<section class="gc-contributors">',
-    "  <h3>From:</h3>",
-    "  <ul>",
-    '    <li><a href="https://www.canada.ca/en/revenue-agency.html">Canada Revenue Agency</a></li>',
-    "  </ul>",
-    "</section>"
-  ].join("\n"),
-  contributorsWithSocialRow: [
-    '<div class="container mrgn-tp-md">',
-    '  <div class="row">',
-    '    <section class="col-md-8">',
-    "      {{contributorBlock}}",
-    "    </section>",
-    '    <section class="col-md-4 mrgn-bttm-sm">',
-    "      {{socialMediaBlock}}",
-    "    </section>",
-    "  </div>",
-    "</div>"
-  ].join("\n"),
-  contributorsOnlyRow: [
-    '<div class="container mrgn-tp-md">',
-    '  <div class="row">',
-    '    <section class="col-md-12">',
-    "      {{contributorBlock}}",
-    "    </section>",
-    "  </div>",
-    "</div>"
-  ].join("\n"),
-  socialOnlyRow: [
-    '<div class="container mrgn-tp-md">',
-    '  <div class="row">',
-    '    <section class="col-md-4 mrgn-bttm-sm">',
-    "      {{socialMediaBlock}}",
-    "    </section>",
-    "  </div>",
-    "</div>"
-  ].join("\n"),
-  featuresSection: [
-    '<div class="col-md-8">',
-    '  <section class="gc-features">',
-    '    <h2 class="wb-inv">Featured</h2>',
-    '    <div class="row">',
-    "      {{featureItem}}",
-    "    </div>",
-    "  </section>",
-    "</div>"
-  ].join("\n"),
-  focusSectionStartComment: "<!--",
-  focusSectionEndComment: "-->",
-  featureRowStart: '<div class="row mrgn-tp-xl">',
-  featureRowEnd: "</div>",
-  socialColStart: '<div class="col-md-4">',
-  socialColEnd: "</div>",
-  socialBlockBelow: [
-    '<div class="row mrgn-tp-md">',
-    '  <div class="col-md-12">',
-    "    {{socialMediaBlock}}",
-    "  </div>",
-    "</div>"
-  ].join("\n"),
-  sectionTitleBlock: "<p>{{sectionTitle}}</p>",
-  heroImageBlock: [
-    '<div class="col-md-6 hidden-sm hidden-xs">',
-    "  <img",
-    '    src="https://dummyimage.com/520x200/000000/FFFFFF.png"',
-    '    alt=""',
-    '    class="img-responsive pull-right mrgn-tp-lg"',
-    "  />",
-    "</div>"
-  ].join("\n")
-};
-
-// src/app/views/page-assistant/services/snippet.service.ts
-var SnippetService = class _SnippetService {
-  applySnippet(template, replacements) {
-    let output = template;
-    for (const [key2, value] of Object.entries(replacements)) {
-      output = output.split(`{{${key2}}}`).join(value);
-    }
-    return output;
-  }
-  static \u0275fac = function SnippetService_Factory(__ngFactoryType__) {
-    return new (__ngFactoryType__ || _SnippetService)();
-  };
-  static \u0275prov = /* @__PURE__ */ \u0275\u0275defineInjectable({ token: _SnippetService, factory: _SnippetService.\u0275fac, providedIn: "root" });
-};
-(() => {
-  (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(SnippetService, [{
-    type: Injectable,
-    args: [{ providedIn: "root" }]
-  }], null, null);
-})();
-
 // src/app/views/page-assistant/components/problems/component-guidance/topic-page/topic-ia-json.component.ts
 var _c011 = ["chartContainer"];
 var _c19 = ["cm"];
@@ -47319,6 +47821,7 @@ var PageAssistantCompareComponent = class _PageAssistantCompareComponent {
   topicDoormatAnalysisState = inject(TopicDoormatAnalysisStateService);
   topicDoormatExtractor = inject(TopicDoormatExtractorService);
   topicDoormatIssueAnalysis = inject(TopicDoormatIssueAnalysisService);
+  topicDoormatTemplateNormalizer = inject(TopicDoormatTemplateNormalizerService);
   openRouter = inject(OpenRouterService);
   skillManager = inject(SkillManagerService);
   urlDataService = inject(UrlDataService);
@@ -47831,9 +48334,13 @@ ${custom}` : promptBody;
     });
   }
   applyDoormatRewriteToPageHtml(originalHtml, rewriteHtml) {
+    const normalizedOriginal = this.topicDoormatTemplateNormalizer.normalizeLegacyDoormats(originalHtml);
+    const htmlToPatch = normalizedOriginal.html;
+    const normalizedRewrite = this.topicDoormatTemplateNormalizer.normalizeLegacyDoormats(rewriteHtml);
+    const htmlToRead = normalizedRewrite.html;
     const parser = new DOMParser();
-    const originalDoc = parser.parseFromString(originalHtml, "text/html");
-    const rewriteDoc = parser.parseFromString(rewriteHtml, "text/html");
+    const originalDoc = parser.parseFromString(htmlToPatch, "text/html");
+    const rewriteDoc = parser.parseFromString(htmlToRead, "text/html");
     const originalDoormatSections = Array.from(originalDoc.body.querySelectorAll(".gc-srvinfo"));
     const rewrittenDoormatSections = Array.from(rewriteDoc.body.querySelectorAll(".gc-srvinfo"));
     if (!originalDoormatSections.length) {
@@ -47848,7 +48355,7 @@ ${custom}` : promptBody;
         return;
       this.applyDoormatItemRewritesByHref(originalDoc, originalSection, section);
     });
-    return this.serializeParsedHtmlLikeInput(originalHtml, originalDoc);
+    return this.serializeParsedHtmlLikeInput(htmlToPatch, originalDoc);
   }
   findOriginalDoormatSectionForRewrite(originalSections, rewrittenSection) {
     const rewrittenHrefs = this.getDoormatSectionHrefs(rewrittenSection);
@@ -47996,8 +48503,8 @@ ${custom}` : promptBody;
       doormat_label: issue.doormatLabel
     };
   }
-  ensureTopicDoormatIssueAnalysisForRewrite(html, model) {
-    return __async(this, null, function* () {
+  ensureTopicDoormatIssueAnalysisForRewrite(_0, _1) {
+    return __async(this, arguments, function* (html, model, expectedWorkingHtml = html) {
       if (this.topicDoormatAnalysisState.hasAnalysis() && this.topicDoormatAnalysisState.getAnalyzedHtml() === html) {
         return true;
       }
@@ -48024,7 +48531,7 @@ ${custom}` : promptBody;
       const pageLanguage = this.topicDoormatExtractor.detectPageLanguage(doc, uploadData);
       const bilingualDoormatSummaries = yield this.topicDoormatExtractor.enrichOppositeLanguageLengths(extractedDoormatSummaries, uploadData, pageLanguage);
       const doormatSummaries = yield this.topicDoormatExtractor.enrichDestinationContext(bilingualDoormatSummaries, uploadData);
-      if (this.uploadState.getWorkingHtml() !== html)
+      if (this.uploadState.getWorkingHtml() !== expectedWorkingHtml)
         return false;
       const result = yield this.topicDoormatIssueAnalysis.analyze({
         doormatSummaries,
@@ -48034,7 +48541,7 @@ ${custom}` : promptBody;
         uploadData,
         selectedModel: model
       });
-      if (this.uploadState.getWorkingHtml() !== html)
+      if (this.uploadState.getWorkingHtml() !== expectedWorkingHtml)
         return false;
       this.topicDoormatAnalysisState.setAnalysis(html, result.rows, doormatSummaries);
       const selectedIssueCount = this.topicDoormatAnalysisState.getSelectedRewriteIssues().length;
@@ -48205,9 +48712,14 @@ ${custom}` : promptBody;
         const isAlertsIssues = this.selectedPromptKey === PromptKey.AlertsIssues;
         const isDoormats = this.selectedPromptKey === PromptKey.Doormats;
         const isAlertFlow = isAlertsRecommendations || isAlertsIssues;
-        const html = isAlertFlow || isDoormats ? this.uploadState.getWorkingHtml() : uploadData?.originalHtml;
+        let html = isAlertFlow || isDoormats ? this.uploadState.getWorkingHtml() : uploadData?.originalHtml;
         if (!html)
           throw new Error("No HTML to send");
+        const workingHtmlBeforeRequest = html;
+        if (isDoormats) {
+          const normalization = this.topicDoormatTemplateNormalizer.normalizeLegacyDoormats(html);
+          html = normalization.html;
+        }
         const promptKeyForRequest = isAlertsRecommendations ? PromptKey.AlertsIssues : this.selectedPromptKey;
         selectedPromptForTiming = this.selectedPromptKey;
         requestPromptForTiming = promptKeyForRequest;
@@ -48220,7 +48732,7 @@ ${custom}` : promptBody;
         const model = this.selectedAiModel;
         if (isDoormats) {
           const hadCurrentDoormatAnalysis = this.topicDoormatAnalysisState.hasAnalysis() && this.topicDoormatAnalysisState.getAnalyzedHtml() === html;
-          const doormatAnalysisReady = yield this.ensureTopicDoormatIssueAnalysisForRewrite(html, model);
+          const doormatAnalysisReady = yield this.ensureTopicDoormatIssueAnalysisForRewrite(html, model, workingHtmlBeforeRequest);
           if (!doormatAnalysisReady) {
             return;
           }
@@ -49288,9 +49800,9 @@ ${custom}` : promptBody;
   }] });
 })();
 (() => {
-  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(PageAssistantCompareComponent, { className: "PageAssistantCompareComponent", filePath: "app/views/page-assistant/page-assistant.component.ts", lineNumber: 104 });
+  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(PageAssistantCompareComponent, { className: "PageAssistantCompareComponent", filePath: "app/views/page-assistant/page-assistant.component.ts", lineNumber: 105 });
 })();
 export {
   PageAssistantCompareComponent
 };
-//# sourceMappingURL=chunk-EKRL2E4Y.js.map
+//# sourceMappingURL=chunk-WOUBCPK2.js.map
