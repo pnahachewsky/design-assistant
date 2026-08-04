@@ -2818,16 +2818,28 @@ export class TopicDoormatIssueAnalysisService {
       );
       if (!missingElements.length) return [];
 
-      const evidenceParts = missingElements.slice(0, 3).map((element) => {
-        const text =
-          element.text.length > 140
-            ? `${element.text.slice(0, 137).trimEnd()}...`
-            : element.text;
-        return `${element.type === 'h2' ? 'H2' : 'Intro'}: "${text}"`;
-      });
-      if (missingElements.length > evidenceParts.length) {
+      const uniqueEvidenceParts = Array.from(
+        new Set(
+          missingElements.map((element) => {
+            if (element.type === 'intro') {
+              return this.getTopicDoormatDeterministicText(
+                'contentGap.introMissing',
+              );
+            }
+            const text =
+              element.text.length > 140
+                ? `${element.text.slice(0, 137).trimEnd()}...`
+                : element.text;
+            return this.getTopicDoormatDeterministicText('contentGap.h2', {
+              text,
+            });
+          }),
+        ),
+      );
+      const evidenceParts = uniqueEvidenceParts.slice(0, 3);
+      if (uniqueEvidenceParts.length > evidenceParts.length) {
         evidenceParts.push(
-          `and ${missingElements.length - evidenceParts.length} more`,
+          `and ${uniqueEvidenceParts.length - evidenceParts.length} more`,
         );
       }
 

@@ -122,6 +122,12 @@ class TranslateServiceStub {
     if (key.includes('contentGap.evidence')) {
       return `Important destination elements not covered by the link text or description: ${params?.['elements']}.`;
     }
+    if (key.includes('contentGap.h2')) {
+      return `H2: "${params?.['text']}"`;
+    }
+    if (key.includes('contentGap.introMissing')) {
+      return 'Intro content not represented by the link or description';
+    }
     if (key.includes('contentGap.recommendation')) {
       return 'Add the missing decision-making information to the description without repeating the link text.';
     }
@@ -1105,9 +1111,9 @@ describe('TopicDoormatIssueAnalysisService', () => {
                   detected_description_style: 'sentence',
                   ...defaultLinkClassifications(),
                   destination_content_assessment: {
-                    important_element_ids: ['intro-1', 'h2-1'],
+                    important_element_ids: ['intro-1', 'intro-2', 'h2-1'],
                     covered_element_ids: ['h2-1'],
-                    missing_important_element_ids: ['intro-1'],
+                    missing_important_element_ids: ['intro-1', 'intro-2'],
                   },
                   issues: [
                     {
@@ -1139,6 +1145,7 @@ describe('TopicDoormatIssueAnalysisService', () => {
           destinationContextStatus: 'available',
           destinationIntroParagraphs: [
             'Use this page if you administer a resident or non-resident trust.',
+            'Find information for trustees, beneficiaries, and contributors.',
           ],
           destinationSectionHeadings: ['How to file'],
         }),
@@ -1160,8 +1167,19 @@ describe('TopicDoormatIssueAnalysisService', () => {
       }),
     );
     expect(contentGapRow?.evidence).toContain(
-      'Intro: "Use this page if you administer a resident or non-resident trust."',
+      'Intro content not represented by the link or description',
     );
+    expect(contentGapRow?.evidence).not.toContain(
+      'Use this page if you administer',
+    );
+    expect(contentGapRow?.evidence).not.toContain(
+      'Find information for trustees',
+    );
+    expect(
+      contentGapRow?.evidence.match(
+        /Intro content not represented by the link or description/g,
+      )?.length,
+    ).toBe(1);
     expect(
       result.rows.some((row) => row.issueId === 'description-lacks-clarity'),
     ).toBeFalse();
