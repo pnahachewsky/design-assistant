@@ -10,6 +10,13 @@ export interface TopicDoormatModelClientRequest {
   debug: (event: string, details: Record<string, unknown>) => void;
 }
 
+export interface TopicDoormatIssueFieldRepairRequest {
+  model: string;
+  messages: ChatMessage[];
+  doormatSummaries: TopicDoormatSummary[];
+  debug: (event: string, details: Record<string, unknown>) => void;
+}
+
 export interface TopicDoormatModelClientResult {
   text: string;
   model: string;
@@ -38,6 +45,34 @@ export class TopicDoormatModelClientService {
     );
 
     return { text, model, modelRotation };
+  }
+
+  async requestIssueFieldRepair(
+    request: TopicDoormatIssueFieldRepairRequest,
+  ): Promise<string> {
+    if (!request.model) return '';
+    try {
+      request.debug('model issue field repair request prepared', {
+        model: request.model,
+        request: this.buildRequestMetrics(
+          request.messages,
+          request.doormatSummaries,
+        ),
+      });
+      const resp = await this.openRouter.call(request.model, request.messages, {
+        temperature: 0,
+        title: 'Content Assistant - Topic Doormat Issue Field Repair',
+        throwOnError: true,
+        timeoutMs: this.topicDoormatModelAttemptTimeoutMs,
+      });
+      return resp?.choices?.[0]?.message?.content?.trim() || '';
+    } catch (err) {
+      request.debug('model issue field repair request failed', {
+        model: request.model,
+        error: err instanceof Error ? err.message : String(err),
+      });
+      return '';
+    }
   }
 
   buildModelRotation(requested?: string): string[] {

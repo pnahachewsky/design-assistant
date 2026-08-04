@@ -147,4 +147,31 @@ describe('TopicDoormatModelClientService', () => {
       jasmine.objectContaining({ model: 'selected-model' }),
     );
   });
+
+  it('requests issue field repair with the supplied model', async () => {
+    openRouter.call.and.resolveTo({
+      choices: [{ message: { content: '{"repairs":[]}' } }],
+    } as any);
+    const debug = jasmine.createSpy('debug');
+
+    const result = await service.requestIssueFieldRepair({
+      model: 'selected-model',
+      messages: [{ role: 'user', content: '{"incompleteIssues":[]}' }],
+      doormatSummaries,
+      debug,
+    });
+
+    expect(result).toBe('{"repairs":[]}');
+    expect(openRouter.call.calls.first().args[0]).toBe('selected-model');
+    expect(openRouter.call.calls.first().args[2]).toEqual(
+      jasmine.objectContaining({
+        title: 'Content Assistant - Topic Doormat Issue Field Repair',
+        timeoutMs: 120000,
+      }),
+    );
+    expect(debug).toHaveBeenCalledWith(
+      'model issue field repair request prepared',
+      jasmine.objectContaining({ model: 'selected-model' }),
+    );
+  });
 });

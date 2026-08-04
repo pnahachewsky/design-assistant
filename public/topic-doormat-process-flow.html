@@ -674,6 +674,7 @@
           <summary>Fallback behaviour</summary>
           <div class="ex-hide-content">
             <p>AIDA preserves the configured fallback order, logs request and response metrics for topic doormat issue calls, repairs invalid JSON when possible, and builds local <em>No issues</em> rows if no usable model output is available.</p>
+            <p>For model-owned issue rows, AIDA also checks the displayed evidence and recommendation after parsing. Empty strings and dash-only placeholders are treated as missing. AIDA sends only those incomplete issue fields back to the model for repair. If the repair still does not provide usable text, AIDA keeps the issue row visible and displays <span class="inline-code">No AI evidence was received.</span> or <span class="inline-code">No AI recommendation was received.</span> for the missing field.</p>
           </div>
         </details>
       </div>

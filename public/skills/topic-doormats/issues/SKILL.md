@@ -136,6 +136,12 @@ Use this skill for issue analysis of topic doormat sets.
 - Keep evidence concise. For section-level issues, summarize the pattern and
   include only representative doormat numbers instead of quoting full
   descriptions
+- AIDA checks model-owned issues for missing evidence or recommendation after
+  the response is parsed. Empty strings and dash-only placeholders are treated
+  as missing. AIDA sends only those incomplete issue fields back to the model
+  for repair; if repair still does not provide usable text, AIDA keeps the
+  issue visible and displays "No AI evidence was received." or "No AI
+  recommendation was received." for the missing field.
 - Do not include destination URLs or "Most requested: n/a" in evidence unless
   the issue depends on links, destination matching, duplicate links, or
   destination context

@@ -42,6 +42,10 @@ class HttpClientStub {
           label: 'Inconsistent description style',
         },
         {
+          id: 'description-repeats-link-text',
+          label: 'Description repeats link text',
+        },
+        {
           id: 'description-missing-needed-information',
           label: 'Description has content gap',
         },
@@ -74,7 +78,7 @@ class TranslateServiceStub {
       return 'Link is too long in at least one language';
     }
     if (key.includes('length.description.recommendation')) {
-      return 'Ensure the French and English are both within 120 characters.';
+      return 'Ensure the French and English are both within 120 characters (with spaces).';
     }
     if (key.includes('length.description.issue')) {
       return 'Description is too long in at least one language';
@@ -129,6 +133,12 @@ class TranslateServiceStub {
     }
     if (key.includes('noIssues.issue')) return 'No issues';
     if (key.includes('noIssues.evidence')) return 'No issues reported by AI.';
+    if (key.includes('missingAiEvidence')) {
+      return 'No AI evidence was received.';
+    }
+    if (key.includes('missingAiRecommendation')) {
+      return 'No AI recommendation was received.';
+    }
     return key;
   }
 }
@@ -292,6 +302,161 @@ describe('TopicDoormatIssueAnalysisService', () => {
       jasmine.objectContaining({
         analysisLinkText: 'Benefit one',
         analysisDescription: 'Find benefit one information',
+      }),
+    );
+  });
+
+  it('repairs model-owned issues that have empty or dash-only evidence and recommendation', async () => {
+    openRouter.call.and.returnValues(
+      Promise.resolve({
+        choices: [
+          {
+            message: {
+              content: JSON.stringify({
+                doormats: [
+                  {
+                    doormat_index: 1,
+                    link_text: 'Benefit one',
+                    href: '/en/benefits/one.html',
+                    description: 'Benefit one information',
+                    detected_description_style: 'phrase',
+                    ...defaultLinkClassifications(),
+                    destination_content_assessment:
+                      emptyDestinationContentAssessment(),
+                    issues: [
+                      {
+                        include: true,
+                        severity: 'Medium',
+                        issue_category: 'description-repeats-link-text',
+                        description: '-',
+                        recommendation: ' - ',
+                      },
+                    ],
+                  },
+                ],
+              }),
+            },
+          },
+        ],
+      }),
+      Promise.resolve({
+        choices: [
+          {
+            message: {
+              content: JSON.stringify({
+                repairs: [
+                  {
+                    target_type: 'doormat',
+                    doormat_index: 1,
+                    issue_category: 'description-repeats-link-text',
+                    evidence:
+                      'The description repeats the link text instead of adding decision-making detail.',
+                    recommendation:
+                      'Use the description to add distinct information about the destination.',
+                  },
+                ],
+              }),
+            },
+          },
+        ],
+      }),
+    );
+
+    const result = await service.analyze({
+      doormatSummaries: [summary()],
+      pageLanguage: 'en',
+      hasLegacyTopicDoormatTemplate: false,
+      mostRequestedLinks: [],
+      selectedModel: 'selected-model',
+    });
+
+    const issueRow = result.rows.find(
+      (row) => row.issueId === 'description-repeats-link-text',
+    );
+    expect(openRouter.call).toHaveBeenCalledTimes(2);
+    expect(openRouter.call.calls.allArgs()[1][2]).toEqual(
+      jasmine.objectContaining({
+        title: 'Content Assistant - Topic Doormat Issue Field Repair',
+      }),
+    );
+    expect(issueRow).toEqual(
+      jasmine.objectContaining({
+        evidence:
+          'The description repeats the link text instead of adding decision-making detail.',
+        recommendation:
+          'Use the description to add distinct information about the destination.',
+      }),
+    );
+  });
+
+  it('keeps model-owned issues visible when repair returns dash-only placeholders', async () => {
+    openRouter.call.and.returnValues(
+      Promise.resolve({
+        choices: [
+          {
+            message: {
+              content: JSON.stringify({
+                doormats: [
+                  {
+                    doormat_index: 1,
+                    link_text: 'Benefit one',
+                    href: '/en/benefits/one.html',
+                    description: 'Benefit one information',
+                    detected_description_style: 'phrase',
+                    ...defaultLinkClassifications(),
+                    destination_content_assessment:
+                      emptyDestinationContentAssessment(),
+                    issues: [
+                      {
+                        include: true,
+                        severity: 'Medium',
+                        issue_category: 'description-repeats-link-text',
+                        description: '-',
+                        recommendation: '--',
+                      },
+                    ],
+                  },
+                ],
+              }),
+            },
+          },
+        ],
+      }),
+      Promise.resolve({
+        choices: [
+          {
+            message: {
+              content: JSON.stringify({
+                repairs: [
+                  {
+                    target_type: 'doormat',
+                    doormat_index: 1,
+                    issue_category: 'description-repeats-link-text',
+                    evidence: '-',
+                    recommendation: '--',
+                  },
+                ],
+              }),
+            },
+          },
+        ],
+      }),
+    );
+
+    const result = await service.analyze({
+      doormatSummaries: [summary()],
+      pageLanguage: 'en',
+      hasLegacyTopicDoormatTemplate: false,
+      mostRequestedLinks: [],
+      selectedModel: 'selected-model',
+    });
+
+    expect(openRouter.call).toHaveBeenCalledTimes(2);
+    expect(result.rows).toContain(
+      jasmine.objectContaining({
+        issueId: 'description-repeats-link-text',
+        evidence: 'No AI evidence was received.',
+        recommendation: 'No AI recommendation was received.',
       }),
     );
   });

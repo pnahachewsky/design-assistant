@@ -56,7 +56,8 @@
     "section_level_issues": "Aim for under 180 characters. Summarize the pattern and include only representative doormat numbers. Do not list every doormat.",
     "doormat_level_issues": "Keep evidence concise. State the concrete fact and avoid repeating full link text or description text unless needed.",
     "url_evidence": "Do not include doormat_href, most_requested_href, destination URLs, or 'Most requested: n/a' in evidence unless the issue depends on broken links, misdirected links, duplicate links, destination-title comparison, or destination context.",
-    "mixed_description_style": "For mixed-description-style-in-section, name the style groups and include 2 to 4 representative doormat indexes per style group. Do not list every doormat. Do not quote full descriptions. Example: Mixes keyword-list and sentence descriptions. Keyword-list examples: 1, 3, 5. Sentence examples: 2, 6, 10."
+    "mixed_description_style": "For mixed-description-style-in-section, name the style groups and include 2 to 4 representative doormat indexes per style group. Do not list every doormat. Do not quote full descriptions. Example: Mixes keyword-list and sentence descriptions. Keyword-list examples: 1, 3, 5. Sentence examples: 2, 6, 10.",
+    "runtime_missing_field_guardrail": "AIDA treats empty strings and dash-only placeholders as missing evidence or recommendation for model-owned issues. It sends only the incomplete issue fields back to the model for repair. If repair still returns unusable text, AIDA keeps the issue visible and displays 'No AI evidence was received.' or 'No AI recommendation was received.' for the missing field."
   },
   "mandatory_description_style_audit": {
     "instruction": "Classify every doormat description using exactly one allowed detected_description_style value. Classify the grammatical construction of the complete description, not the subject matter mentioned within it. A sentence-like description remains sentence even when final punctuation is intentionally omitted. Do not return mixed-description-style-in-section; AIDA aggregates the classifications and reports that issue. If a section is otherwise consistent and only one or two descriptions are clear outliers, inconsistent-description-style may still be reported on those doormats.",
@@ -290,7 +291,7 @@
       "label": "Link too long",
       "severity": "Low",
       "condition": "The link text exceeds 35 characters, including spaces.",
-      "recommendation": "Shorten the link text. Keep link text under 35 characters.",
+      "recommendation": "Shorten the link text. Keep link text under 35 characters, including spaces.",
       "local_deterministic": true,
       "reporting": "AIDA reports this issue locally from linkTextCharacterCount. The model should not return this issue. AIDA reports one section-level row per affected H2 section, with a list of affected doormat numbers and character-count metrics.",
       "severity_override": {
@@ -376,7 +377,7 @@
       "label": "Description too long",
       "severity": "Low",
       "condition": "The English description exceeds 95 characters, including spaces. The official limit for link descriptions is 120 characters in both official languages, and the English version should aim to stay under 95 characters to allow for French expansion.",
-      "recommendation": "Shorten the description. Aim for the English version to be under 95 characters so the French version can stay under 120 characters.",
+      "recommendation": "Shorten the description. Aim for the English version to be under 95 characters, including spaces, so the French version can stay under 120 characters.",
       "local_deterministic": true,
       "reporting": "AIDA reports this issue locally from descriptionCharacterCount. The model should not return this issue. AIDA reports one section-level row per affected H2 section, with a list of affected doormat numbers and character-count metrics.",
       "severity_override": {

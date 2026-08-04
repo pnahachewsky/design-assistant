@@ -65,6 +65,17 @@ interface TopicDoormatDestinationLinkAssessment {
   reason: string;
 }
 
+interface TopicDoormatIncompleteIssueFieldTarget {
+  targetType: 'doormat' | 'section';
+  issueId: string;
+  issue: Record<string, unknown>;
+  missingEvidence: boolean;
+  missingRecommendation: boolean;
+  doormatIndex?: number;
+  sectionIndex?: number;
+  summary?: TopicDoormatSummary;
+}
+
 @Injectable({ providedIn: 'root' })
 export class TopicDoormatIssueAnalysisService {
   private readonly http = inject(HttpClient);
@@ -314,10 +325,13 @@ export class TopicDoormatIssueAnalysisService {
       ),
     ]);
     const { text, model } = issueJson;
+    const resolvedText = text
+      ? await this.repairTopicDoormatIncompleteIssueFields(text, model, input)
+      : text;
     const localIaRows = localIaResult.rows;
-    const rows = text
+    const rows = resolvedText
       ? this.parseTopicDoormatIssueRows(
-          text,
+          resolvedText,
           input.doormatSummaries,
           input.hasLegacyTopicDoormatTemplate,
           input.pageLanguage,
@@ -340,8 +354,8 @@ export class TopicDoormatIssueAnalysisService {
 
     return {
       rows: rowsWithIaMeta,
-      text,
-      usedLocalFallback: !text,
+      text: resolvedText,
+      usedLocalFallback: !resolvedText,
       model,
       modelRotation: issueJson.modelRotation,
       elapsedMs: Math.round(performance.now() - analysisStart),
@@ -511,6 +525,275 @@ export class TopicDoormatIssueAnalysisService {
     return doormats.length || sectionIssues.length
       ? JSON.stringify({ section_issues: sectionIssues, doormats })
       : '';
+  }
+
+  private async repairTopicDoormatIncompleteIssueFields(
+    text: string,
+    model: string,
+    input: TopicDoormatIssueAnalysisInput,
+  ): Promise<string> {
+    const parsed = this.looseJsonParse(this.stripCodeFences(text));
+    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+      return text;
+    }
+    const root = parsed as Record<string, unknown>;
+    const targets = this.getIncompleteTopicDoormatModelIssueFieldTargets(
+      root,
+      input.doormatSummaries,
+    );
+    if (!targets.length) return text;
+
+    const repairModel =
+      model && model !== 'multiple models' ? model : input.selectedModel || '';
+    const repairText = await this.modelClient.requestIssueFieldRepair({
+      model: repairModel,
+      messages: this.buildTopicDoormatIssueFieldRepairMessages(targets),
+      doormatSummaries: input.doormatSummaries,
+      debug: (event, details) => this.debugTopicDoormatIssues(event, details),
+    });
+    const repairedCount = this.mergeTopicDoormatIssueFieldRepairs(
+      targets,
+      repairText,
+    );
+    this.debugTopicDoormatIssues('model issue field repair resolved', {
+      requestedIssueCount: targets.length,
+      repairedIssueCount: repairedCount,
+    });
+    return JSON.stringify(root);
+  }
+
+  private getIncompleteTopicDoormatModelIssueFieldTargets(
+    root: Record<string, unknown>,
+    doormatSummaries: TopicDoormatSummary[],
+  ): TopicDoormatIncompleteIssueFieldTarget[] {
+    const targets: TopicDoormatIncompleteIssueFieldTarget[] = [];
+    const summariesByIndex = new Map(
+      doormatSummaries.map((summary) => [summary.index, summary]),
+    );
+    const doormats = Array.isArray(root['doormats']) ? root['doormats'] : [];
+    doormats.forEach((rawDoormat) => {
+      if (!rawDoormat || typeof rawDoormat !== 'object') return;
+      const doormat = rawDoormat as Record<string, unknown>;
+      const doormatIndex = this.toNumber(doormat['doormat_index']);
+      const issues = Array.isArray(doormat['issues']) ? doormat['issues'] : [];
+      const summary = doormatIndex ? summariesByIndex.get(doormatIndex) : undefined;
+      issues.forEach((rawIssue) => {
+        if (!rawIssue || typeof rawIssue !== 'object') return;
+        const issue = rawIssue as Record<string, unknown>;
+        const issueId = this.getTopicDoormatIssueId(issue);
+        if (!this.isRepairableTopicDoormatModelIssue(issueId, issue)) return;
+        const target = this.buildIncompleteTopicDoormatIssueFieldTarget({
+          targetType: 'doormat',
+          issueId,
+          issue,
+          summary,
+          doormatIndex: doormatIndex ?? undefined,
+          sectionIndex: summary?.sectionIndex,
+        });
+        if (target) targets.push(target);
+      });
+    });
+
+    const sectionIssues = Array.isArray(root['section_issues'])
+      ? root['section_issues']
+      : [];
+    sectionIssues.forEach((rawIssue) => {
+      if (!rawIssue || typeof rawIssue !== 'object') return;
+      const issue = rawIssue as Record<string, unknown>;
+      const issueId = this.getTopicDoormatIssueId(issue);
+      if (!this.isRepairableTopicDoormatModelIssue(issueId, issue)) return;
+      const details =
+        issue['evidence_details'] && typeof issue['evidence_details'] === 'object'
+          ? (issue['evidence_details'] as Record<string, unknown>)
+          : null;
+      const sectionIndex =
+        this.toNumber(issue['section_index']) ??
+        this.toNumber(details?.['section_index']);
+      const target = this.buildIncompleteTopicDoormatIssueFieldTarget({
+        targetType: 'section',
+        issueId,
+        issue,
+        sectionIndex: sectionIndex ?? undefined,
+      });
+      if (target) targets.push(target);
+    });
+
+    return targets;
+  }
+
+  private isRepairableTopicDoormatModelIssue(
+    issueId: string,
+    issue: Record<string, unknown>,
+  ): boolean {
+    return (
+      this.topicDoormatIssueIdToLabel.has(issueId) &&
+      !this.locallyOwnedTopicDoormatIssueIds.has(issueId) &&
+      !!this.normalizeTopicDoormatModelSeverity(issue['severity'])
+    );
+  }
+
+  private buildIncompleteTopicDoormatIssueFieldTarget(params: {
+    targetType: 'doormat' | 'section';
+    issueId: string;
+    issue: Record<string, unknown>;
+    summary?: TopicDoormatSummary;
+    doormatIndex?: number;
+    sectionIndex?: number;
+  }): TopicDoormatIncompleteIssueFieldTarget | null {
+    const missingEvidence = !this.hasUsableTopicDoormatIssueText(
+      this.buildTopicDoormatEvidence(params.issue, params.summary),
+    );
+    const missingRecommendation = !this.hasUsableTopicDoormatIssueText(
+      this.cleanString(params.issue['recommendation']),
+    );
+    if (!missingEvidence && !missingRecommendation) return null;
+    return {
+      ...params,
+      missingEvidence,
+      missingRecommendation,
+    };
+  }
+
+  private buildTopicDoormatIssueFieldRepairMessages(
+    targets: TopicDoormatIncompleteIssueFieldTarget[],
+  ): ChatMessage[] {
+    return [
+      {
+        role: 'system',
+        content: [
+          'You repair incomplete Topic doormat issue fields.',
+          'Return JSON only.',
+          'Fill only the missing evidence and/or recommendation fields for each supplied issue.',
+          'Do not add, remove, reclassify, reinterpret, or reorder issues.',
+          'Do not use empty strings, dash-only placeholders, "n/a", or generic filler.',
+          'Evidence must be concise and grounded only in the supplied issue and doormat/section context.',
+        ].join('\n'),
+      },
+      {
+        role: 'user',
+        content: JSON.stringify({
+          requiredShape:
+            '{ "repairs": [{ "target_type": "doormat" | "section", "doormat_index": number, "section_index": number, "issue_category": string, "evidence": string, "recommendation": string }] }',
+          incompleteIssues: targets.map((target) => ({
+            target_type: target.targetType,
+            doormat_index: target.doormatIndex,
+            section_index: target.sectionIndex,
+            issue_category: target.issueId,
+            missing_evidence: target.missingEvidence,
+            missing_recommendation: target.missingRecommendation,
+            current_issue: {
+              issue_category: target.issue['issue_category'],
+              description: target.issue['description'],
+              evidence: target.issue['evidence'],
+              evidence_details: target.issue['evidence_details'],
+              recommendation: target.issue['recommendation'],
+              severity: target.issue['severity'],
+            },
+            doormat_context: target.summary
+              ? {
+                  index: target.summary.index,
+                  linkText: target.summary.linkText,
+                  href: target.summary.href,
+                  description: target.summary.description,
+                  sectionIndex: target.summary.sectionIndex,
+                  sectionTitle: target.summary.sectionTitle,
+                  sectionItemIndex: target.summary.sectionItemIndex,
+                  destinationPageTitle: target.summary.destinationPageTitle,
+                  destinationPageHeading: target.summary.destinationPageHeading,
+                  destinationContext: {
+                    status:
+                      target.summary.destinationContextStatus ?? 'insufficient',
+                    elements:
+                      this.buildTopicDoormatDestinationContextElements(
+                        target.summary,
+                      ),
+                  },
+                }
+              : null,
+          })),
+        }),
+      },
+    ];
+  }
+
+  private mergeTopicDoormatIssueFieldRepairs(
+    targets: TopicDoormatIncompleteIssueFieldTarget[],
+    repairText: string,
+  ): number {
+    if (!repairText) return 0;
+    const parsed = this.looseJsonParse(this.stripCodeFences(repairText));
+    if (!parsed || typeof parsed !== 'object') return 0;
+    const repairs = Array.isArray(parsed)
+      ? parsed
+      : Array.isArray((parsed as Record<string, unknown>)['repairs'])
+        ? ((parsed as Record<string, unknown>)['repairs'] as unknown[])
+        : [];
+    const targetsByKey = new Map(
+      targets.map((target) => [this.getTopicDoormatIssueRepairKey(target), target]),
+    );
+    let repairedCount = 0;
+
+    repairs.forEach((rawRepair) => {
+      if (!rawRepair || typeof rawRepair !== 'object') return;
+      const repair = rawRepair as Record<string, unknown>;
+      const targetType = this.cleanString(repair['target_type']);
+      const issueId = this.getTopicDoormatIssueIdFromText(
+        this.cleanString(repair['issue_category']),
+      );
+      const key = this.getTopicDoormatIssueRepairKey({
+        targetType: targetType === 'section' ? 'section' : 'doormat',
+        issueId,
+        doormatIndex: this.toNumber(repair['doormat_index']) ?? undefined,
+        sectionIndex: this.toNumber(repair['section_index']) ?? undefined,
+      });
+      const target = targetsByKey.get(key);
+      if (!target) return;
+
+      let repaired = false;
+      const evidence = this.cleanString(repair['evidence']);
+      if (
+        target.missingEvidence &&
+        this.hasUsableTopicDoormatIssueText(evidence)
+      ) {
+        target.issue['evidence'] = evidence;
+        if (
+          !this.hasUsableTopicDoormatIssueText(
+            this.cleanString(target.issue['description']),
+          )
+        ) {
+          target.issue['description'] = evidence;
+        }
+        repaired = true;
+      }
+
+      const recommendation = this.cleanString(repair['recommendation']);
+      if (
+        target.missingRecommendation &&
+        this.hasUsableTopicDoormatIssueText(recommendation)
+      ) {
+        target.issue['recommendation'] = recommendation;
+        repaired = true;
+      }
+
+      if (repaired) repairedCount += 1;
+    });
+
+    return repairedCount;
+  }
+
+  private getTopicDoormatIssueRepairKey(
+    target: Pick<
+      TopicDoormatIncompleteIssueFieldTarget,
+      'targetType' | 'issueId' | 'doormatIndex' | 'sectionIndex'
+    >,
+  ): string {
+    return [
+      target.targetType,
+      target.targetType === 'section'
+        ? target.sectionIndex ?? 0
+        : target.doormatIndex ?? 0,
+      target.issueId,
+    ].join('|');
   }
 
   private summarizeTopicDoormatBatchModel(
@@ -705,7 +988,12 @@ export class TopicDoormatIssueAnalysisService {
           if (!this.hasValidTopicDoormatObjectiveEvidence(issueId, summary)) {
             return null;
           }
-          const evidence = this.buildTopicDoormatEvidence(issue, summary);
+          const evidence = this.getTopicDoormatDisplayedModelEvidence(
+            issue,
+            summary,
+          );
+          const recommendation =
+            this.getTopicDoormatDisplayedModelRecommendation(issue);
           return {
             include:
               typeof issue['include'] === 'boolean'
@@ -718,7 +1006,7 @@ export class TopicDoormatIssueAnalysisService {
             issueId,
             issue: this.getTopicDoormatIssueLabel(issueId),
             evidence,
-            recommendation: this.cleanString(issue['recommendation']),
+            recommendation,
             provenance: {
               issue: ['model'],
               evidence: ['model'],
@@ -1037,6 +1325,9 @@ export class TopicDoormatIssueAnalysisService {
       fallbackSectionIndex ??
       this.buildTopicDoormatSectionCounts(doormatSummaries)[0]?.sectionIndex ??
       1;
+    const evidence = this.getTopicDoormatDisplayedModelEvidence(issue);
+    const recommendation =
+      this.getTopicDoormatDisplayedModelRecommendation(issue);
 
     return {
       include:
@@ -1050,8 +1341,8 @@ export class TopicDoormatIssueAnalysisService {
       doormatLabel: 'All doormats in section',
       issueId,
       issue: this.getTopicDoormatIssueLabel(issueId),
-      evidence: this.buildTopicDoormatEvidence(issue),
-      recommendation: this.cleanString(issue['recommendation']),
+      evidence,
+      recommendation,
       provenance: {
         issue: ['model'],
         evidence: ['model'],
@@ -3533,11 +3824,33 @@ export class TopicDoormatIssueAnalysisService {
     const builtEvidence = [evidence, ...detailParts].filter(Boolean).join(' ');
     if (builtEvidence) return builtEvidence;
 
+    const description = this.cleanString(issue['description']);
+    if (this.hasUsableTopicDoormatIssueText(description)) return description;
+
     if (issueCategory === 'duplicate-link-in-most-requested') {
       return 'Link also appears in Most requested';
     }
 
     return '';
+  }
+
+  private getTopicDoormatDisplayedModelEvidence(
+    issue: Record<string, unknown>,
+    doormat?: TopicDoormatSummary,
+  ): string {
+    const evidence = this.buildTopicDoormatEvidence(issue, doormat);
+    return this.hasUsableTopicDoormatIssueText(evidence)
+      ? evidence
+      : this.getTopicDoormatDeterministicText('missingAiEvidence');
+  }
+
+  private getTopicDoormatDisplayedModelRecommendation(
+    issue: Record<string, unknown>,
+  ): string {
+    const recommendation = this.cleanString(issue['recommendation']);
+    return this.hasUsableTopicDoormatIssueText(recommendation)
+      ? recommendation
+      : this.getTopicDoormatDeterministicText('missingAiRecommendation');
   }
 
   private buildTooManyTopicDoormatsEvidence(
@@ -3823,6 +4136,12 @@ export class TopicDoormatIssueAnalysisService {
 
   private cleanString(value: unknown): string {
     return typeof value === 'string' ? value.trim() : '';
+  }
+
+  private hasUsableTopicDoormatIssueText(value: string): boolean {
+    const text = this.cleanString(value);
+    if (!text) return false;
+    return /[^\s\-–—]/.test(text);
   }
 
   private cleanVisibleText(value: string | null | undefined): string {
