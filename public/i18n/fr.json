@@ -198,7 +198,7 @@
     "page.tools.guidance.topicDoormats.destinationMismatch.recommendation": "Reecrivez le nom du lien afin qu'il decrive correctement le sujet, la tache, l'auditoire et la portee de la destination.",
     "page.tools.guidance.topicDoormats.contentGap.evidence": "Elements de la destination non couverts par le texte du lien ou la description: {{elements}}.",
     "page.tools.guidance.topicDoormats.contentGap.h2": "H2: \"{{text}}\"",
-    "page.tools.guidance.topicDoormats.contentGap.introMissing": "Contenu de l'introduction non represente par le lien ou la description",
+    "page.tools.guidance.topicDoormats.contentGap.introMissing": "Concepts dans l'introduction",
     "page.tools.guidance.topicDoormats.contentGap.recommendation": "Examinez le menu d'accueil pour verifier qu'il represente les elements necessaires de la page.",
     "page.tools.guidance.topicDoormats.mixedDescriptionStyle.evidence.default": "La section melange des styles de description.",
     "page.tools.guidance.topicDoormats.mixedDescriptionStyle.evidence.twoGroups": "Melange {{firstStyle}} et {{secondStyle}}. Exemples {{firstExampleLabel}}: {{firstExamples}}. Exemples {{secondExampleLabel}}: {{secondExamples}}.",
