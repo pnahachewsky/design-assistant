@@ -1,6 +1,7 @@
 import { UploadData } from '../../data/data.model';
 
 export type TopicDoormatPageLanguage = 'en' | 'fr';
+export type TopicDoormatReportLanguage = 'en' | 'fr';
 export type TopicDoormatDestinationContextStatus =
   | 'available'
   | 'insufficient'

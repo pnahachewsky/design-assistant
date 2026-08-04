@@ -1114,6 +1114,7 @@ export class PageAssistantCompareComponent
     const result = await this.topicDoormatIssueAnalysis.analyze({
       doormatSummaries,
       pageLanguage,
+      reportLanguage: this.translate.currentLang === 'fr' ? 'fr' : 'en',
       hasLegacyTopicDoormatTemplate:
         this.topicDoormatExtractor.hasLegacyTemplate(doc),
       mostRequestedLinks:

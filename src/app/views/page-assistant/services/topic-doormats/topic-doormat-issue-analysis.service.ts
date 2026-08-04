@@ -25,6 +25,7 @@ import {
   TopicDoormatIssueTaxonomy,
   TopicDoormatLinkTextStyle,
   TopicDoormatPageLanguage,
+  TopicDoormatReportLanguage,
   TopicDoormatSectionStyleAnalysis,
   TopicDoormatSummary,
 } from './topic-doormat.types';
@@ -32,6 +33,7 @@ import {
 export interface TopicDoormatIssueAnalysisInput {
   doormatSummaries: TopicDoormatSummary[];
   pageLanguage: TopicDoormatPageLanguage;
+  reportLanguage?: TopicDoormatReportLanguage;
   hasLegacyTopicDoormatTemplate: boolean;
   mostRequestedLinks: MostRequestedLinkSummary[];
   uploadData?: Partial<UploadData> | null;
@@ -240,10 +242,13 @@ export class TopicDoormatIssueAnalysisService {
       'You must still return exactly one allowed detected_link_text_style, destination_link_relationship, and destination_link_relationship_basis for every doormat.',
       'Classify the grammatical construction, not the subject matter. A sentence-like description remains sentence even when final punctuation is intentionally omitted.',
     ].join('\n');
+    const reportLanguageInstruction =
+      this.buildTopicDoormatReportLanguageInstruction(input.reportLanguage);
     const systemPrompt = [
       composed.prompt,
       this.topicDoormatModelIssueContract,
       localOwnershipInstruction,
+      reportLanguageInstruction,
     ]
       .filter(Boolean)
       .join('\n\n');
@@ -547,7 +552,10 @@ export class TopicDoormatIssueAnalysisService {
       model && model !== 'multiple models' ? model : input.selectedModel || '';
     const repairText = await this.modelClient.requestIssueFieldRepair({
       model: repairModel,
-      messages: this.buildTopicDoormatIssueFieldRepairMessages(targets),
+      messages: this.buildTopicDoormatIssueFieldRepairMessages(
+        targets,
+        input.reportLanguage,
+      ),
       doormatSummaries: input.doormatSummaries,
       debug: (event, details) => this.debugTopicDoormatIssues(event, details),
     });
@@ -656,6 +664,7 @@ export class TopicDoormatIssueAnalysisService {
 
   private buildTopicDoormatIssueFieldRepairMessages(
     targets: TopicDoormatIncompleteIssueFieldTarget[],
+    reportLanguage?: TopicDoormatReportLanguage,
   ): ChatMessage[] {
     return [
       {
@@ -663,6 +672,7 @@ export class TopicDoormatIssueAnalysisService {
         content: [
           'You repair incomplete Topic doormat issue fields.',
           'Return JSON only.',
+          this.buildTopicDoormatReportLanguageInstruction(reportLanguage),
           'Fill only the missing evidence and/or recommendation fields for each supplied issue.',
           'Do not add, remove, reclassify, reinterpret, or reorder issues.',
           'Do not use empty strings, dash-only placeholders, "n/a", or generic filler.',
@@ -714,6 +724,17 @@ export class TopicDoormatIssueAnalysisService {
         }),
       },
     ];
+  }
+
+  private buildTopicDoormatReportLanguageInstruction(
+    reportLanguage?: TopicDoormatReportLanguage,
+  ): string {
+    const language = reportLanguage === 'fr' ? 'French' : 'English';
+    return [
+      `Write all issue evidence and recommendation fields in ${language}, matching the AIDA interface language.`,
+      'Do not switch the issue evidence or recommendation language to match the page content language.',
+      'Short quoted source text, page titles, program names, URLs, and proper nouns may remain in the original page language when needed as evidence.',
+    ].join(' ');
   }
 
   private mergeTopicDoormatIssueFieldRepairs(

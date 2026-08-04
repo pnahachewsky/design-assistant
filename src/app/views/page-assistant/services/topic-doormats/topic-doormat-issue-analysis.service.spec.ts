@@ -364,7 +364,8 @@ describe('TopicDoormatIssueAnalysisService', () => {
 
     const result = await service.analyze({
       doormatSummaries: [summary()],
-      pageLanguage: 'en',
+      pageLanguage: 'fr',
+      reportLanguage: 'en',
       hasLegacyTopicDoormatTemplate: false,
       mostRequestedLinks: [],
       selectedModel: 'selected-model',
@@ -378,6 +379,15 @@ describe('TopicDoormatIssueAnalysisService', () => {
       jasmine.objectContaining({
         title: 'Content Assistant - Topic Doormat Issue Field Repair',
       }),
+    );
+    expect(openRouter.call.calls.allArgs()[0][1][0].content).toContain(
+      'Write all issue evidence and recommendation fields in English',
+    );
+    expect(openRouter.call.calls.allArgs()[0][1][0].content).toContain(
+      'Do not switch the issue evidence or recommendation language to match the page content language',
+    );
+    expect(openRouter.call.calls.allArgs()[1][1][0].content).toContain(
+      'Write all issue evidence and recommendation fields in English',
     );
     expect(issueRow).toEqual(
       jasmine.objectContaining({
