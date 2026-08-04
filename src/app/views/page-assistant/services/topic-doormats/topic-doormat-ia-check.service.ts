@@ -64,10 +64,13 @@ export class TopicDoormatIaCheckService {
         doormatByKey.set(key, summary);
       }
     });
+    const bodyLinkKeys = this.getBodyContentLinkKeys(uploadData, topicUrl);
 
     return {
       rows: [
-        ...(iaResult.length ? this.buildMissingRows(iaResult, doormatByKey) : []),
+        ...(iaResult.length
+          ? this.buildMissingRows(iaResult, doormatByKey, bodyLinkKeys)
+          : []),
         ...(iaResult.length
           ? this.buildExtraRows(doormatSummaries, childByKey, topicUrl)
           : []),
@@ -119,9 +122,12 @@ export class TopicDoormatIaCheckService {
   private buildMissingRows(
     childPages: ChildPageCandidate[],
     doormatByKey: Map<string, TopicDoormatSummary>,
+    bodyLinkKeys: Set<string>,
   ): TopicDoormatIssueRow[] {
     return childPages
-      .filter((child) => !doormatByKey.has(child.key))
+      .filter(
+        (child) => !doormatByKey.has(child.key) && !bodyLinkKeys.has(child.key),
+      )
       .map((child) => ({
         include: true,
         rowType: 'section',
@@ -142,6 +148,82 @@ export class TopicDoormatIaCheckService {
           recommendation: ['aida'],
         },
       }));
+  }
+
+  private getBodyContentLinkKeys(
+    uploadData: Partial<UploadData> | null | undefined,
+    topicUrl: string,
+  ): Set<string> {
+    const html =
+      this.cleanString(uploadData?.originalHtml) ||
+      this.cleanString(uploadData?.modifiedHtml);
+    const keys = new Set<string>();
+    if (!html) return keys;
+
+    let doc: Document;
+    try {
+      doc = new DOMParser().parseFromString(html, 'text/html');
+    } catch {
+      return keys;
+    }
+
+    const root = doc.querySelector('main') ?? doc.body;
+    if (!root) return keys;
+
+    root
+      .querySelectorAll(
+        [
+          '.gc-srvinfo',
+          '.gc-drmt',
+          '.mwsdoormat-links-container',
+          '.breadcrumb',
+          '.pagedetails',
+          '#wb-info',
+          '#wb-bc',
+          '#wb-lng',
+          '#wb-srch',
+          '#wb-sm',
+          '#wb-sec',
+          '.gc-followus',
+          '.followus',
+          '.social-media',
+          '.social-links',
+        ].join(','),
+      )
+      .forEach((element) => element.remove());
+
+    Array.from(root.querySelectorAll<HTMLAnchorElement>('a[href]')).forEach(
+      (anchor) => {
+        if (this.isSocialMediaLink(anchor)) return;
+        const key = this.getComparableUrlKey(
+          anchor.getAttribute('href') || '',
+          topicUrl,
+        );
+        if (key) keys.add(key);
+      },
+    );
+
+    return keys;
+  }
+
+  private isSocialMediaLink(anchor: HTMLAnchorElement): boolean {
+    const href = this.cleanString(anchor.getAttribute('href'));
+    if (!href) return false;
+    let host = '';
+    try {
+      host = new URL(href, window.location.origin).hostname.toLowerCase();
+    } catch {
+      return false;
+    }
+    return [
+      'facebook.com',
+      'instagram.com',
+      'linkedin.com',
+      'threads.net',
+      'twitter.com',
+      'x.com',
+      'youtube.com',
+    ].some((domain) => host === domain || host.endsWith(`.${domain}`));
   }
 
   private buildExtraRows(

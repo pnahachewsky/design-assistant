@@ -8,26 +8,28 @@ import { TopicDoormatIaCheckService } from './topic-doormat-ia-check.service';
 import { TopicDoormatSummary } from './topic-doormat.types';
 
 class IaStructureServiceStub {
+  children = [
+    {
+      label: 'Child one',
+      data: {
+        url: 'https://www.canada.ca/en/benefits/one.html',
+        h1: 'Child one',
+      },
+    },
+    {
+      label: 'Missing child',
+      data: {
+        url: 'https://www.canada.ca/en/benefits/missing.html',
+        h1: 'Missing child',
+      },
+    },
+  ];
+
   getCachedResultFor() {
     return {
       tree: [
         {
-          children: [
-            {
-              label: 'Child one',
-              data: {
-                url: 'https://www.canada.ca/en/benefits/one.html',
-                h1: 'Child one',
-              },
-            },
-            {
-              label: 'Missing child',
-              data: {
-                url: 'https://www.canada.ca/en/benefits/missing.html',
-                h1: 'Missing child',
-              },
-            },
-          ],
+          children: this.children,
         },
       ],
     };
@@ -45,6 +47,7 @@ class TranslateServiceStub {
 
 describe('TopicDoormatIaCheckService', () => {
   let service: TopicDoormatIaCheckService;
+  let iaStructure: IaStructureServiceStub;
 
   const summary = (
     index: number,
@@ -97,6 +100,9 @@ describe('TopicDoormatIaCheckService', () => {
       ],
     });
     service = TestBed.inject(TopicDoormatIaCheckService);
+    iaStructure = TestBed.inject(
+      IaStructureService,
+    ) as unknown as IaStructureServiceStub;
   });
 
   it('reports missing child pages and non-child doormats', async () => {
@@ -126,5 +132,91 @@ describe('TopicDoormatIaCheckService', () => {
     expect(result.metaByDoormatIndex.get(1)).toBe('child, 1,200');
     expect(result.metaByDoormatIndex.get(2)).toBe('no views');
     expect(result.metaByDoormatIndex.get(3)).toBe('no views');
+  });
+
+  it('does not report a missing child page when it is linked elsewhere in page body content', async () => {
+    const result = await service.analyze(
+      [summary(1, '/en/benefits/one.html', 'Child one')],
+      {
+        originalUrl: 'https://www.canada.ca/en/benefits/index.html',
+        originalHtml: `
+          <body>
+            <main>
+              <section class="gc-most-requested">
+                <h2>Most requested</h2>
+                <ul>
+                  <li><a href="/en/benefits/missing.html">Missing child</a></li>
+                </ul>
+              </section>
+              <section class="provisional gc-prtts">
+                <h2>Features</h2>
+                <a href="/en/benefits/feature.html">Feature link</a>
+              </section>
+            </main>
+          </body>
+        `,
+      },
+    );
+
+    expect(result.rows.map((row) => row.issueId)).toEqual([]);
+  });
+
+  it('still reports a missing child page when the only matching page link is in a doormat section', async () => {
+    const result = await service.analyze(
+      [summary(1, '/en/benefits/one.html', 'Child one')],
+      {
+        originalUrl: 'https://www.canada.ca/en/benefits/index.html',
+        originalHtml: `
+          <body>
+            <main>
+              <section class="gc-srvinfo">
+                <h2>Services and information</h2>
+                <div>
+                  <h3><a href="/en/benefits/missing.html">Missing child</a></h3>
+                  <p>Description</p>
+                </div>
+              </section>
+            </main>
+          </body>
+        `,
+      },
+    );
+
+    expect(result.rows.map((row) => row.issueId)).toContain(
+      'missing-needed-doormat',
+    );
+  });
+
+  it('does not suppress missing child pages from social media links', async () => {
+    iaStructure.children = [
+      {
+        label: 'Social child',
+        data: {
+          url: 'https://www.facebook.com/canrevagency/',
+          h1: 'Social child',
+        },
+      },
+    ];
+
+    const result = await service.analyze(
+      [summary(1, '/en/benefits/one.html', 'Child one')],
+      {
+        originalUrl: 'https://www.canada.ca/en/benefits/index.html',
+        originalHtml: `
+          <body>
+            <main>
+              <section class="gc-followus">
+                <h2>On social media</h2>
+                <a href="https://www.facebook.com/canrevagency/">Facebook</a>
+              </section>
+            </main>
+          </body>
+        `,
+      },
+    );
+
+    expect(result.rows.map((row) => row.issueId)).toContain(
+      'missing-needed-doormat',
+    );
   });
 });
