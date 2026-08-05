@@ -7,6 +7,14 @@ export type TopicDoormatDestinationContextStatus =
   | 'insufficient'
   | 'failed';
 export type TopicDoormatCellProvenance = 'model' | 'aida';
+export type TopicDoormatDestinationPageType = 'content' | 'topic' | 'subway';
+
+export interface TopicDoormatDestinationNavigationItem {
+  linkText: string;
+  description: string;
+  sectionTitle?: string;
+  source: 'topic-doormat' | 'subway-doormat';
+}
 
 export interface TopicDoormatIssueRowProvenance {
   issue?: TopicDoormatCellProvenance[];
@@ -75,6 +83,8 @@ export interface TopicDoormatSummary {
   destinationMainHtmlTruncated?: boolean;
   destinationIntroParagraphs?: string[];
   destinationSectionHeadings?: string[];
+  destinationPageType?: TopicDoormatDestinationPageType;
+  destinationNavigationItems?: TopicDoormatDestinationNavigationItem[];
   destinationLabelEvidence?: string[];
   destinationContextStatus?: TopicDoormatDestinationContextStatus;
   destinationHttpStatus?: number;
@@ -119,6 +129,7 @@ export interface TopicDoormatIssueCategory {
 
 export interface TopicDoormatIssueTaxonomy {
   issue_categories?: unknown;
+  language_thresholds?: unknown;
 }
 
 export type TopicDoormatDescriptionStyle =
@@ -154,7 +165,10 @@ export interface TopicDoormatSectionStyleAnalysis {
   sectionIndex: number;
   sectionTitle: string;
   summaries: TopicDoormatSummary[];
-  dominantStyle: Exclude<TopicDoormatDescriptionStyle, 'mixed-or-unclear'> | null;
+  dominantStyle: Exclude<
+    TopicDoormatDescriptionStyle,
+    'mixed-or-unclear'
+  > | null;
   styleCounts: Map<TopicDoormatDescriptionStyle, number>;
   examplesByStyle: Map<TopicDoormatDescriptionStyle, number[]>;
   isMixed: boolean;

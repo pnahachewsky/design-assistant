@@ -4,11 +4,13 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { TranslateModule } from '@ngx-translate/core';
 import { MessageService } from 'primeng/api';
 
+import { TopicDoormatAnalysisStateService } from '../../../services/topic-doormats/topic-doormat-analysis-state.service';
 import { ComponentGuidanceComponent } from './component-guidance.component';
 
 describe('ComponentGuidanceComponent', () => {
   let component: ComponentGuidanceComponent;
   let fixture: ComponentFixture<ComponentGuidanceComponent>;
+  let topicDoormatAnalysisState: TopicDoormatAnalysisStateService;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
@@ -23,6 +25,7 @@ describe('ComponentGuidanceComponent', () => {
 
     fixture = TestBed.createComponent(ComponentGuidanceComponent);
     component = fixture.componentInstance;
+    topicDoormatAnalysisState = TestBed.inject(TopicDoormatAnalysisStateService);
     fixture.detectChanges();
   });
 
@@ -44,8 +47,57 @@ describe('ComponentGuidanceComponent', () => {
       { metric: 'FR 61/45', severity: 'Medium' },
     ]);
     expect(
-      component.evidenceMetricParts({ metric: '96/95', severity: 'Low' }),
-    ).toEqual([{ metric: '96/95', severity: 'Low' }]);
+      component.evidenceMetricParts({ metric: '121/120', severity: 'Low' }),
+    ).toEqual([{ metric: '121/120', severity: 'Low' }]);
+  });
+
+  it('clears the topic doormat issues report', () => {
+    const rows = [
+      {
+        include: true,
+        rowType: 'doormat',
+        severity: 'Medium',
+        doormat: 'Benefits: 1. Benefit one',
+        doormatLabel: 'Benefit one',
+        issueId: 'description-lacks-clarity',
+        issue: 'Description lacks clarity',
+        evidence: 'Evidence',
+        recommendation: 'Recommendation',
+        doormatIndex: 1,
+        sectionIndex: 1,
+        sectionTitle: 'Benefits',
+        sectionItemIndex: 1,
+      },
+    ] as any;
+    component.topicDoormatIssuesResponseReceived = true;
+    component.topicDoormatIssueRows = rows;
+    component.topicDoormatIssueGroups = [
+      {
+        sectionIndex: 1,
+        sectionTitle: 'Benefits',
+        doormatCount: 1,
+        sectionRows: [],
+        doormatRows: rows,
+      },
+    ];
+    component.topicDoormatIssueCategories = [
+      {
+        label: 'Description lacks clarity',
+        severity: 'Medium',
+        rowType: 'doormat',
+      },
+    ];
+    (component as any).topicDoormatAnalyzedHtml = '<main></main>';
+    topicDoormatAnalysisState.setAnalysis('<main></main>', rows, []);
+
+    component.clearTopicDoormatIssuesReport();
+
+    expect(component.topicDoormatIssuesResponseReceived).toBeFalse();
+    expect(component.topicDoormatIssueRows).toEqual([]);
+    expect(component.topicDoormatIssueGroups).toEqual([]);
+    expect(component.topicDoormatIssueCategories).toEqual([]);
+    expect((component as any).topicDoormatAnalyzedHtml).toBe('');
+    expect(topicDoormatAnalysisState.hasAnalysis()).toBeFalse();
   });
 
   it('renders evidence metric pills from bilingual metric parts', () => {
@@ -198,6 +250,9 @@ describe('ComponentGuidanceComponent', () => {
     });
     spyOn(uploadState, 'getWorkingHtml').and.callFake(() => workingHtml);
     spyOn(uploadState, 'getSelectedAiModel').and.returnValue('selected-model');
+    spyOn(extractor, 'enrichOppositeLanguageLengths').and.callFake(
+      async (summaries: unknown[]) => summaries,
+    );
     spyOn(extractor, 'enrichDestinationContext').and.callFake(
       async (summaries: unknown[]) => summaries,
     );
@@ -257,6 +312,9 @@ describe('ComponentGuidanceComponent', () => {
     });
     spyOn(uploadState, 'getWorkingHtml').and.returnValue(requestHtml);
     spyOn(uploadState, 'getSelectedAiModel').and.returnValue('selected-model');
+    spyOn(extractor, 'enrichOppositeLanguageLengths').and.callFake(
+      async (summaries: unknown[]) => summaries,
+    );
     spyOn(extractor, 'enrichDestinationContext').and.callFake(
       async (summaries: unknown[]) => summaries,
     );

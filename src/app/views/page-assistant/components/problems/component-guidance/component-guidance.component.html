@@ -540,6 +540,19 @@
                   }
                 </div>
               }
+              @if (topicDoormatIssuesResponseReceived) {
+                <div class="topic-doormat-actions">
+                  <button
+                    pButton
+                    type="button"
+                    label="Clear issues report"
+                    icon="pi pi-times"
+                    class="p-button-secondary p-button-sm"
+                    [disabled]="topicDoormatIssuesLoading"
+                    (click)="clearTopicDoormatIssuesReport()">
+                  </button>
+                </div>
+              }
             } @else {
               <p-table styleClass="p-datatable-sm expansion-table">
                 <ng-template pTemplate="header">

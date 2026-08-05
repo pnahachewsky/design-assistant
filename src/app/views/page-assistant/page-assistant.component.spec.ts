@@ -6,6 +6,8 @@ import { provideNoopAnimations } from '@angular/platform-browser/animations';
 import { ConfirmationService, MessageService } from 'primeng/api';
 
 import { PageAssistantCompareComponent } from './page-assistant.component';
+import { TopicDoormatAnalysisStateService } from './services/topic-doormats/topic-doormat-analysis-state.service';
+import { UploadStateService } from './services/upload-state.service';
 
 describe('PageAssistantCompareComponent', () => {
   let component: PageAssistantCompareComponent;
@@ -172,6 +174,38 @@ describe('PageAssistantCompareComponent', () => {
     expect(payload.topic_doormat_issue_analysis.instruction).toContain(
       'Preserve doormats that do not have selected issues',
     );
+  });
+
+  it('clears shared doormat analysis when accepting all changes', () => {
+    const uploadState = TestBed.inject(UploadStateService);
+    const analysisState = TestBed.inject(TopicDoormatAnalysisStateService);
+    uploadState.setUploadData({
+      originalHtml: '<main><h1>Original</h1></main>',
+      originalUrl: 'https://www.canada.ca/en/original.html',
+      modifiedHtml: '<main><h1>Modified</h1></main>',
+      modifiedUrl: 'https://www.canada.ca/en/modified.html',
+    } as any);
+    analysisState.setAnalysis(
+      '<main><h1>Original</h1></main>',
+      [
+        {
+          include: true,
+          rowType: 'section',
+          severity: 'Low',
+          issueId: 'link-name-too-long',
+          issue: 'Link is too long in at least one language',
+          evidence: 'Doormat 1: 38/35',
+          recommendation: 'Shorten the link.',
+          sectionIndex: 1,
+          sectionTitle: 'Make a donation',
+        },
+      ] as any,
+      [],
+    );
+
+    component.toolbarAcceptAll();
+
+    expect(analysisState.hasAnalysis()).toBeFalse();
   });
 
   it('applies a doormat fragment rewrite without removing the rest of the page', () => {

@@ -2006,6 +2006,7 @@ export class PageAssistantCompareComponent
     console.log('Accept all changes');
     if (!data?.modifiedHtml || !data?.modifiedUrl) return;
     this.uploadState.savePreviousUploadData(); //save previous data for undo button
+    this.topicDoormatAnalysisState.clear();
     this.uploadState.mergeOriginalData({
       originalHtml: data.modifiedHtml,
       originalUrl: data.modifiedUrl,
@@ -2020,6 +2021,7 @@ export class PageAssistantCompareComponent
     console.log('Reject all changes');
     if (!data?.originalHtml || !data?.originalUrl) return;
     this.uploadState.savePreviousUploadData(); //save previous data for undo button
+    this.topicDoormatAnalysisState.clear();
     this.uploadState.mergeModifiedData({
       modifiedHtml: data.originalHtml,
       modifiedUrl: data.originalUrl,
@@ -2150,6 +2152,7 @@ export class PageAssistantCompareComponent
     const data = this.uploadState.getUploadData();
     if (!data) return;
     this.uploadState.savePreviousUploadData(); //save previous data for undo button
+    this.topicDoormatAnalysisState.clear();
     if (mode === 'accept') {
       this.uploadState.mergeOriginalData({
         originalUrl: 'Change accepted',

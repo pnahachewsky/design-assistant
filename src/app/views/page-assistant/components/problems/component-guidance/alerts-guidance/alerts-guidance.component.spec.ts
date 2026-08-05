@@ -59,7 +59,16 @@ class AlertAiServiceStub {
   analyze = jasmine.createSpy('analyze').and.resolveTo(DEFAULT_ALERT_ISSUES);
   getCachedIssues = jasmine.createSpy('getCachedIssues').and.returnValue(null);
   cacheIssues = jasmine.createSpy('cacheIssues');
-  prepareForReanalysis = jasmine.createSpy('prepareForReanalysis');
+  prepareForReanalysis = jasmine
+    .createSpy('prepareForReanalysis')
+    .and.callFake((html: string) => {
+      this.analysisStateSubject.next({
+        html,
+        loading: true,
+        error: false,
+      });
+      this.issuesUpdatedSubject.next({ html, issues: [] });
+    });
   failAnalysis = jasmine.createSpy('failAnalysis');
   getLatestCachedAnalysis = jasmine
     .createSpy('getLatestCachedAnalysis')

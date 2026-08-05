@@ -16,9 +16,20 @@ class HttpClientStub {
         link_text_style_definitions: {
           task:
             'A link name framed as an action, process, outcome, or user goal. Treat a gerund opening as task when it can be paraphrased as "how to [verb/action]". For example, "Getting the right CRA benefits and credits for your family" is task, not topic.',
-          topic: 'A noun phrase, program name, subject label, or information category.',
+          topic:
+            'A noun phrase, program name, subject label, or information category.',
           situation:
             'A conditional, life-event, audience, or circumstance-framed link name. Later situation wording does not override a frontloaded task frame.',
+        },
+      },
+      language_thresholds: {
+        en: {
+          link_text_max_characters: 45,
+          description_max_characters: 120,
+        },
+        fr: {
+          link_text_max_characters: 45,
+          description_max_characters: 120,
         },
       },
       issue_categories: [
@@ -124,6 +135,9 @@ class TranslateServiceStub {
     }
     if (key.includes('contentGap.h2')) {
       return `H2: "${params?.['text']}"`;
+    }
+    if (key.includes('contentGap.doormat')) {
+      return `Destination doormat: "${params?.['text']}"`;
     }
     if (key.includes('contentGap.introMissing')) {
       return 'Intro content not represented by the link or description';
@@ -543,17 +557,16 @@ describe('TopicDoormatIssueAnalysisService', () => {
         doormats: { index: number; sectionIndex: number }[];
       };
     });
-    expect(sectionPayloads.map((payload) => payload.doormats[0].index)).toEqual([
-      1,
-      2,
-    ]);
+    expect(sectionPayloads.map((payload) => payload.doormats[0].index)).toEqual(
+      [1, 2],
+    );
     expect(
       sectionPayloads.map((payload) => payload.doormats[0].sectionIndex),
     ).toEqual([1, 2]);
     expect(result.usedLocalFallback).toBeFalse();
-    expect(result.rows.filter((row) => row.issueId === 'no-issues').length).toBe(
-      2,
-    );
+    expect(
+      result.rows.filter((row) => row.issueId === 'no-issues').length,
+    ).toBe(2);
   });
 
   it('reports broken links from local destination HTTP status instead of model issues', async () => {
@@ -616,6 +629,32 @@ describe('TopicDoormatIssueAnalysisService', () => {
     expect(brokenLinkRows[0].evidence).not.toContain('appears closed');
   });
 
+  it('does not report valid absolute https hrefs as broken when destination context is unavailable', async () => {
+    openRouter.call.and.resolveTo({
+      choices: [{ message: { content: '' } }],
+    });
+
+    const result = await service.analyze({
+      doormatSummaries: [
+        summary({
+          href: 'https://www.canada.ca/en/revenue-agency/services/charities-giving/about-registered-charities.html',
+          destinationUrl: undefined,
+          destinationContextStatus: 'failed',
+          destinationHttpStatus: undefined,
+          destinationFetchError: 'Failed to fetch',
+        }),
+      ],
+      pageLanguage: 'en',
+      hasLegacyTopicDoormatTemplate: false,
+      mostRequestedLinks: [],
+      selectedModel: 'selected-model',
+    });
+
+    expect(
+      result.rows.some((row) => row.issueId === 'broken-link'),
+    ).toBeFalse();
+  });
+
   it('suppresses a model mixed-style issue when all model classifications match', async () => {
     const descriptions = [
       'Find out who should file and when to file a trust return.',
@@ -668,17 +707,17 @@ describe('TopicDoormatIssueAnalysisService', () => {
                             severity: 'Medium',
                           },
                         ]
-                    : index === 4
-                    ? [
-                        {
-                          issue_category: 'inconsistent-description-style',
-                          description:
-                            'This description uses a different style.',
-                          recommendation: 'Use the dominant style.',
-                          severity: 'Low',
-                        },
-                      ]
-                    : [],
+                      : index === 4
+                        ? [
+                            {
+                              issue_category: 'inconsistent-description-style',
+                              description:
+                                'This description uses a different style.',
+                              recommendation: 'Use the dominant style.',
+                              severity: 'Low',
+                            },
+                          ]
+                        : [],
               })),
             }),
           },
@@ -743,7 +782,8 @@ describe('TopicDoormatIssueAnalysisService', () => {
                     {
                       issue_category: 'description-lacks-clarity',
                       description: 'The pronouns have unclear referents.',
-                      evidence: 'It is unclear who or what the pronouns refer to.',
+                      evidence:
+                        'It is unclear who or what the pronouns refer to.',
                       evidence_details: {
                         unclear_phrase: 'it to manage their account',
                         ambiguity_explanation:
@@ -850,12 +890,8 @@ describe('TopicDoormatIssueAnalysisService', () => {
         sectionIndex: 1,
       }),
     );
-    expect(mixedStyleRow?.evidence).toContain(
-      'Sentence examples: 1, 2.',
-    );
-    expect(mixedStyleRow?.evidence).toContain(
-      'Phrase examples: 3, 4.',
-    );
+    expect(mixedStyleRow?.evidence).toContain('Sentence examples: 1, 2.');
+    expect(mixedStyleRow?.evidence).toContain('Phrase examples: 3, 4.');
   });
 
   it('derives link-style and destination rows from classifications for the trust-page regression case', async () => {
@@ -876,7 +912,8 @@ describe('TopicDoormatIssueAnalysisService', () => {
         relationship: 'broader-but-accurate',
         destinationPageTitle:
           'Submitting and filing electronic documents to the T3 Estate and Trust Return programs - Canada.ca',
-        destinationPageHeading: 'Submit and file documents online related to T3',
+        destinationPageHeading:
+          'Submit and file documents online related to T3',
       },
       {
         linkText: 'When to pay a balance you owe on your trust return',
@@ -887,7 +924,8 @@ describe('TopicDoormatIssueAnalysisService', () => {
         linkText: 'Residency and how to contact us',
         style: 'topic',
         relationship: 'equivalent',
-        destinationPageTitle: 'Residency and contact us information - Canada.ca',
+        destinationPageTitle:
+          'Residency and contact us information - Canada.ca',
         destinationPageHeading: 'Trust residency and how to contact us',
       },
       {
@@ -1237,6 +1275,113 @@ describe('TopicDoormatIssueAnalysisService', () => {
     ).toBeFalse();
   });
 
+  it('sends destination doormats as compact context for navigation destination pages', async () => {
+    openRouter.call.and.resolveTo({
+      choices: [
+        {
+          message: {
+            content: JSON.stringify({
+              doormats: [
+                {
+                  doormat_index: 1,
+                  link_text: 'Benefits',
+                  href: '/benefits.html',
+                  description: 'Benefit program information',
+                  detected_description_style: 'phrase',
+                  ...defaultLinkClassifications(),
+                  destination_content_assessment: {
+                    important_element_ids: ['doormat-1', 'doormat-2'],
+                    covered_element_ids: ['doormat-1'],
+                    missing_important_element_ids: ['doormat-2'],
+                  },
+                  issues: [],
+                },
+              ],
+            }),
+          },
+        },
+      ],
+    });
+
+    const result = await service.analyze({
+      doormatSummaries: [
+        summary({
+          linkText: 'Benefits',
+          href: '/benefits.html',
+          description: 'Benefit program information',
+          destinationContextStatus: 'available',
+          destinationPageType: 'topic',
+          destinationIntroParagraphs: [
+            'Intro text that should not be compacted',
+          ],
+          destinationSectionHeadings: ['H2 that should not be compacted'],
+          destinationNavigationItems: [
+            {
+              linkText: 'Eligibility',
+              description: 'Who can get benefits',
+              sectionTitle: 'Benefit topics',
+              source: 'topic-doormat',
+            },
+            {
+              linkText: 'Apply for benefits',
+              description: 'Applications, documents, deadlines',
+              sectionTitle: 'Benefit topics',
+              source: 'topic-doormat',
+            },
+          ],
+        }),
+      ],
+      pageLanguage: 'en',
+      hasLegacyTopicDoormatTemplate: false,
+      mostRequestedLinks: [],
+      selectedModel: 'selected-model',
+    });
+
+    const requestPayload = JSON.parse(
+      openRouter.call.calls.mostRecent().args[1][1].content,
+    );
+    expect(requestPayload.doormats[0].destinationContext).toEqual(
+      jasmine.objectContaining({
+        pageType: 'topic',
+        elements: [
+          {
+            id: 'doormat-1',
+            type: 'doormat',
+            text: 'Eligibility: Who can get benefits',
+            source: 'topic-doormat',
+          },
+          {
+            id: 'doormat-2',
+            type: 'doormat',
+            text: 'Apply for benefits: Applications, documents, deadlines',
+            source: 'topic-doormat',
+          },
+        ],
+      }),
+    );
+    expect(requestPayload.doormats[0].destinationContext.elements).not.toEqual(
+      jasmine.arrayContaining([
+        jasmine.objectContaining({ id: 'intro-1' }),
+        jasmine.objectContaining({ id: 'h2-1' }),
+      ]),
+    );
+    expect(
+      result.rows.find(
+        (row) => row.issueId === 'description-missing-needed-information',
+      ),
+    ).toEqual(
+      jasmine.objectContaining({
+        evidence:
+          'Important destination elements not covered by the link text or description: Destination doormat: "Apply for benefits".',
+      }),
+    );
+    expect(
+      result.rows.find(
+        (row) => row.issueId === 'description-missing-needed-information',
+      )?.evidence,
+    ).not.toContain('Applications, documents, deadlines');
+  });
+
   it('rejects unknown model issue categories and uses local fallback rows', async () => {
     openRouter.call.and.resolveTo({
       choices: [
@@ -1278,7 +1423,9 @@ describe('TopicDoormatIssueAnalysisService', () => {
     });
 
     expect(result.usedLocalFallback).toBeTrue();
-    expect(result.rows.some((row) => row.issueId === 'invented-issue')).toBeFalse();
+    expect(
+      result.rows.some((row) => row.issueId === 'invented-issue'),
+    ).toBeFalse();
     expect(result.rows.some((row) => row.issueId === 'no-issues')).toBeTrue();
   });
 
@@ -1291,7 +1438,7 @@ describe('TopicDoormatIssueAnalysisService', () => {
       doormatSummaries: [
         summary({
           linkText: 'This link name is definitely too long',
-          linkTextCharacterCount: 37,
+          linkTextCharacterCount: 46,
         }),
       ],
       pageLanguage: 'en',
@@ -1313,6 +1460,29 @@ describe('TopicDoormatIssueAnalysisService', () => {
     expect(result.rows.some((row) => row.issueId === 'no-issues')).toBeFalse();
   });
 
+  it('does not flag English link names that are below the current 45 character ideal', async () => {
+    openRouter.call.and.resolveTo({
+      choices: [{ message: { content: '' } }],
+    });
+
+    const result = await service.analyze({
+      doormatSummaries: [
+        summary({
+          linkText: 'Confirm registration as a qualified',
+          linkTextCharacterCount: 38,
+        }),
+      ],
+      pageLanguage: 'en',
+      hasLegacyTopicDoormatTemplate: false,
+      mostRequestedLinks: [],
+      selectedModel: 'selected-model',
+    });
+
+    expect(
+      result.rows.some((row) => row.issueId === 'link-name-too-long'),
+    ).toBeFalse();
+  });
+
   it('combines description length findings into one section row', async () => {
     openRouter.call.and.resolveTo({
       choices: [{ message: { content: '' } }],
@@ -1324,25 +1494,25 @@ describe('TopicDoormatIssueAnalysisService', () => {
           index: 1,
           sectionItemIndex: 1,
           linkText: 'Allowed description',
-          descriptionCharacterCount: 95,
+          descriptionCharacterCount: 120,
         }),
         summary({
           index: 2,
           sectionItemIndex: 2,
           linkText: 'Too long description',
-          descriptionCharacterCount: 96,
+          descriptionCharacterCount: 121,
         }),
         summary({
           index: 3,
           sectionItemIndex: 3,
           linkText: 'Opposite language description',
-          descriptionCharacterCount: 111,
+          descriptionCharacterCount: 120,
         }),
         summary({
           index: 4,
           sectionItemIndex: 4,
           linkText: 'Very long description',
-          descriptionCharacterCount: 121,
+          descriptionCharacterCount: 141,
         }),
       ],
       pageLanguage: 'en',
@@ -1363,20 +1533,14 @@ describe('TopicDoormatIssueAnalysisService', () => {
         evidenceItems: [
           {
             label: 'Doormat 2',
-            metric: '96',
-            metricParts: [{ metric: '96', severity: 'Low' }],
+            metric: '121',
+            metricParts: [{ metric: '121', severity: 'Low' }],
             severity: 'Low',
           },
           {
-            label: 'Doormat 3',
-            metric: '111',
-            metricParts: [{ metric: '111', severity: 'Medium' }],
-            severity: 'Medium',
-          },
-          {
             label: 'Doormat 4',
-            metric: '121',
-            metricParts: [{ metric: '121', severity: 'High' }],
+            metric: '141',
+            metricParts: [{ metric: '141', severity: 'High' }],
             severity: 'High',
           },
         ],
@@ -1514,7 +1678,8 @@ describe('TopicDoormatIssueAnalysisService', () => {
         severity: 'Medium',
         doormatIndex: 1,
         evidence: "Description starts with first or second person: 'You'.",
-        recommendation: 'Rewrite the description without first or second person.',
+        recommendation:
+          'Rewrite the description without first or second person.',
       }),
     );
   });
@@ -1557,12 +1722,36 @@ describe('TopicDoormatIssueAnalysisService', () => {
 
     const result = await service.analyze({
       doormatSummaries: [
-        summary({ index: 1, sectionItemIndex: 1, description: 'Find benefit payment dates' }),
-        summary({ index: 2, sectionItemIndex: 2, description: 'Apply for a benefit' }),
-        summary({ index: 3, sectionItemIndex: 3, description: 'find benefit eligibility details' }),
-        summary({ index: 4, sectionItemIndex: 4, description: 'Manage your benefit account' }),
-        summary({ index: 5, sectionItemIndex: 5, description: 'Claim a tax credit' }),
-        summary({ index: 6, sectionItemIndex: 6, description: 'Review your payment dates' }),
+        summary({
+          index: 1,
+          sectionItemIndex: 1,
+          description: 'Find benefit payment dates',
+        }),
+        summary({
+          index: 2,
+          sectionItemIndex: 2,
+          description: 'Apply for a benefit',
+        }),
+        summary({
+          index: 3,
+          sectionItemIndex: 3,
+          description: 'find benefit eligibility details',
+        }),
+        summary({
+          index: 4,
+          sectionItemIndex: 4,
+          description: 'Manage your benefit account',
+        }),
+        summary({
+          index: 5,
+          sectionItemIndex: 5,
+          description: 'Claim a tax credit',
+        }),
+        summary({
+          index: 6,
+          sectionItemIndex: 6,
+          description: 'Review your payment dates',
+        }),
       ],
       pageLanguage: 'en',
       hasLegacyTopicDoormatTemplate: false,
@@ -1571,9 +1760,7 @@ describe('TopicDoormatIssueAnalysisService', () => {
     });
 
     expect(
-      result.rows.some(
-        (row) => row.issueId === 'repeated-description-opening',
-      ),
+      result.rows.some((row) => row.issueId === 'repeated-description-opening'),
     ).toBeFalse();
   });
 
@@ -1584,11 +1771,31 @@ describe('TopicDoormatIssueAnalysisService', () => {
 
     const result = await service.analyze({
       doormatSummaries: [
-        summary({ index: 1, sectionItemIndex: 1, description: 'Find, benefit payment dates' }),
-        summary({ index: 2, sectionItemIndex: 2, description: 'Apply for a benefit' }),
-        summary({ index: 3, sectionItemIndex: 3, description: 'find benefit eligibility details' }),
-        summary({ index: 4, sectionItemIndex: 4, description: 'Manage your benefit account' }),
-        summary({ index: 5, sectionItemIndex: 5, description: 'Claim a tax credit' }),
+        summary({
+          index: 1,
+          sectionItemIndex: 1,
+          description: 'Find, benefit payment dates',
+        }),
+        summary({
+          index: 2,
+          sectionItemIndex: 2,
+          description: 'Apply for a benefit',
+        }),
+        summary({
+          index: 3,
+          sectionItemIndex: 3,
+          description: 'find benefit eligibility details',
+        }),
+        summary({
+          index: 4,
+          sectionItemIndex: 4,
+          description: 'Manage your benefit account',
+        }),
+        summary({
+          index: 5,
+          sectionItemIndex: 5,
+          description: 'Claim a tax credit',
+        }),
       ],
       pageLanguage: 'en',
       hasLegacyTopicDoormatTemplate: false,
@@ -1618,11 +1825,31 @@ describe('TopicDoormatIssueAnalysisService', () => {
 
     const result = await service.analyze({
       doormatSummaries: [
-        summary({ index: 1, sectionItemIndex: 1, description: 'Find benefit payment dates' }),
-        summary({ index: 2, sectionItemIndex: 2, description: 'Apply for a benefit' }),
-        summary({ index: 3, sectionItemIndex: 3, description: 'find benefit eligibility details' }),
-        summary({ index: 4, sectionItemIndex: 4, description: 'Apply for tax credits' }),
-        summary({ index: 5, sectionItemIndex: 5, description: 'Claim a tax credit' }),
+        summary({
+          index: 1,
+          sectionItemIndex: 1,
+          description: 'Find benefit payment dates',
+        }),
+        summary({
+          index: 2,
+          sectionItemIndex: 2,
+          description: 'Apply for a benefit',
+        }),
+        summary({
+          index: 3,
+          sectionItemIndex: 3,
+          description: 'find benefit eligibility details',
+        }),
+        summary({
+          index: 4,
+          sectionItemIndex: 4,
+          description: 'Apply for tax credits',
+        }),
+        summary({
+          index: 5,
+          sectionItemIndex: 5,
+          description: 'Claim a tax credit',
+        }),
       ],
       pageLanguage: 'en',
       hasLegacyTopicDoormatTemplate: false,
@@ -1656,11 +1883,31 @@ describe('TopicDoormatIssueAnalysisService', () => {
 
     const result = await service.analyze({
       doormatSummaries: [
-        summary({ index: 1, sectionItemIndex: 1, description: 'Find benefit payment dates' }),
-        summary({ index: 2, sectionItemIndex: 2, description: 'Find benefit eligibility details' }),
-        summary({ index: 3, sectionItemIndex: 3, description: 'Manage your benefit account' }),
-        summary({ index: 4, sectionItemIndex: 4, description: 'Claim a tax credit' }),
-        summary({ index: 5, sectionItemIndex: 5, description: 'Review your payment dates' }),
+        summary({
+          index: 1,
+          sectionItemIndex: 1,
+          description: 'Find benefit payment dates',
+        }),
+        summary({
+          index: 2,
+          sectionItemIndex: 2,
+          description: 'Find benefit eligibility details',
+        }),
+        summary({
+          index: 3,
+          sectionItemIndex: 3,
+          description: 'Manage your benefit account',
+        }),
+        summary({
+          index: 4,
+          sectionItemIndex: 4,
+          description: 'Claim a tax credit',
+        }),
+        summary({
+          index: 5,
+          sectionItemIndex: 5,
+          description: 'Review your payment dates',
+        }),
       ],
       pageLanguage: 'en',
       hasLegacyTopicDoormatTemplate: false,
@@ -1669,9 +1916,7 @@ describe('TopicDoormatIssueAnalysisService', () => {
     });
 
     expect(
-      result.rows.find(
-        (row) => row.issueId === 'repeated-description-opening',
-      ),
+      result.rows.find((row) => row.issueId === 'repeated-description-opening'),
     ).toEqual(
       jasmine.objectContaining({ severity: 'Medium', sectionIndex: 1 }),
     );
@@ -1684,10 +1929,26 @@ describe('TopicDoormatIssueAnalysisService', () => {
 
     const result = await service.analyze({
       doormatSummaries: [
-        summary({ index: 1, sectionItemIndex: 1, description: 'Find benefit payment dates' }),
-        summary({ index: 2, sectionItemIndex: 2, description: 'Find benefit eligibility details' }),
-        summary({ index: 3, sectionItemIndex: 3, description: 'Find benefit account information' }),
-        summary({ index: 4, sectionItemIndex: 4, description: 'Manage your benefit account' }),
+        summary({
+          index: 1,
+          sectionItemIndex: 1,
+          description: 'Find benefit payment dates',
+        }),
+        summary({
+          index: 2,
+          sectionItemIndex: 2,
+          description: 'Find benefit eligibility details',
+        }),
+        summary({
+          index: 3,
+          sectionItemIndex: 3,
+          description: 'Find benefit account information',
+        }),
+        summary({
+          index: 4,
+          sectionItemIndex: 4,
+          description: 'Manage your benefit account',
+        }),
       ],
       pageLanguage: 'en',
       hasLegacyTopicDoormatTemplate: false,
@@ -1696,9 +1957,7 @@ describe('TopicDoormatIssueAnalysisService', () => {
     });
 
     expect(
-      result.rows.find(
-        (row) => row.issueId === 'repeated-description-opening',
-      ),
+      result.rows.find((row) => row.issueId === 'repeated-description-opening'),
     ).toEqual(
       jasmine.objectContaining({ severity: 'Medium', sectionIndex: 1 }),
     );
@@ -1733,9 +1992,7 @@ describe('TopicDoormatIssueAnalysisService', () => {
     });
 
     expect(
-      result.rows.some(
-        (row) => row.issueId === 'repeated-description-opening',
-      ),
+      result.rows.some((row) => row.issueId === 'repeated-description-opening'),
     ).toBeFalse();
   });
 
@@ -1800,7 +2057,8 @@ describe('TopicDoormatIssueAnalysisService', () => {
               doormats: [
                 {
                   doormat_index: 1,
-                  link_text: 'Credits impot et prestations pour les particuliers',
+                  link_text:
+                    'Credits impot et prestations pour les particuliers',
                   href: '/fr/services/impots/prestations.html',
                   description: 'Credits et prestations disponibles',
                   detected_description_style: 'phrase',
@@ -1815,8 +2073,7 @@ describe('TopicDoormatIssueAnalysisService', () => {
                         'link-name-too-different-from-destination-title',
                       description:
                         'The link name differs from the destination title.',
-                      evidence:
-                        'Destination title closely matches link text.',
+                      evidence: 'Destination title closely matches link text.',
                       evidence_details: {
                         destination_page_title:
                           "Credits d'impot et prestations pour les particuliers - Canada.ca",
@@ -1827,8 +2084,7 @@ describe('TopicDoormatIssueAnalysisService', () => {
                       include: true,
                       severity: 'High',
                       issue_category: 'misdirected-link',
-                      description:
-                        'The URL path suggests a different section.',
+                      description: 'The URL path suggests a different section.',
                       evidence:
                         'The destination title matches, but the URL path differs.',
                       recommendation: 'Use a destination in this section.',
@@ -1877,7 +2133,8 @@ describe('TopicDoormatIssueAnalysisService', () => {
                   doormat_index: 1,
                   link_text: 'Canada Carbon Rebate (CCR)',
                   href: '/en/revenue-agency/services/child-family-benefits/cai-payment.html',
-                  description: 'Quarterly payments for people in eligible provinces',
+                  description:
+                    'Quarterly payments for people in eligible provinces',
                   detected_description_style: 'phrase',
                   ...defaultLinkClassifications(),
                   destination_content_assessment:
@@ -1995,7 +2252,8 @@ describe('TopicDoormatIssueAnalysisService', () => {
                   doormat_index: 1,
                   link_text: 'Remise canadienne sur le carbone (RCC)',
                   href: '/fr/services/impots/prestations/remise-carbone.html',
-                  description: 'Voyez les paiements pour les provinces admissibles',
+                  description:
+                    'Voyez les paiements pour les provinces admissibles',
                   detected_description_style: 'phrase',
                   ...defaultLinkClassifications(),
                   destination_content_assessment: {
@@ -2094,9 +2352,9 @@ describe('TopicDoormatIssueAnalysisService', () => {
               doormats: [
                 {
                   doormat_index: 1,
-	                  link_text: 'Prestation pour enfants handicapes',
-	                  href: '/fr/services/impots/prestations/enfants-handicapes.html',
-	                  description: 'Paiements pour les familles admissibles',
+                  link_text: 'Prestation pour enfants handicapes',
+                  href: '/fr/services/impots/prestations/enfants-handicapes.html',
+                  description: 'Paiements pour les familles admissibles',
                   detected_description_style: 'phrase',
                   ...defaultLinkClassifications(),
                   destination_content_assessment: {
@@ -2116,9 +2374,9 @@ describe('TopicDoormatIssueAnalysisService', () => {
     const result = await service.analyze({
       doormatSummaries: [
         summary({
-	          linkText: 'Prestation pour enfants handicapes',
-	          href: '/fr/services/impots/prestations/enfants-handicapes.html',
-	          description: 'Paiements pour les familles admissibles',
+          linkText: 'Prestation pour enfants handicapes',
+          href: '/fr/services/impots/prestations/enfants-handicapes.html',
+          description: 'Paiements pour les familles admissibles',
           destinationContextStatus: 'available',
           destinationSectionHeadings: ['Admissibilite'],
         }),

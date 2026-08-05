@@ -6,10 +6,9 @@ import { TopicDoormatExtractorService } from './topic-doormat-extractor.service'
 class FetchServiceStub {
   fetchContentWithResponse = jasmine
     .createSpy('fetchContentWithResponse')
-    .and.resolveTo(
-      {
-        document: new DOMParser().parseFromString(
-	          `<html><head><title>Destination</title></head><body><main>
+    .and.resolveTo({
+      document: new DOMParser().parseFromString(
+        `<html><head><title>Destination</title></head><body><main>
 	          <h1>Destination heading</h1>
 	          <script>window.noisy = true;</script>
 	          <p>First introductory paragraph.</p>
@@ -21,13 +20,12 @@ class FetchServiceStub {
 	          <p>Section body text to exclude.</p>
           <h2>How to apply</h2>
         </main></body></html>`,
-          'text/html',
-        ),
-        status: 200,
-        statusText: 'OK',
-        url: 'https://www.canada.ca/en/benefits/one.html',
-      },
-    );
+        'text/html',
+      ),
+      status: 200,
+      statusText: 'OK',
+      url: 'https://www.canada.ca/en/benefits/one.html',
+    });
 }
 
 describe('TopicDoormatExtractorService', () => {
@@ -202,19 +200,156 @@ describe('TopicDoormatExtractorService', () => {
       'Eligibility',
       'How to apply',
     ]);
-	    expect(enriched[0].destinationContextStatus).toBe('available');
-	    expect(enriched[0].destinationHttpStatus).toBe(200);
-	    expect(enriched[0].destinationMainHtml).toContain(
-	      '<h1>Destination heading</h1>',
-	    );
-	    expect(enriched[0].destinationMainHtml).toContain(
-	      'Section body text to exclude.',
-	    );
-	    expect(enriched[0].destinationMainHtml).not.toContain('window.noisy');
-	    expect(enriched[0].destinationMainHtml).not.toContain('Interface text to exclude');
-	    expect(enriched[0].destinationMainHtml).not.toContain('Date modified');
-	    expect(enriched[0].destinationMainHtmlTruncated).toBeFalse();
-	  });
+    expect(enriched[0].destinationPageType).toBe('content');
+    expect(enriched[0].destinationNavigationItems).toEqual([]);
+    expect(enriched[0].destinationContextStatus).toBe('available');
+    expect(enriched[0].destinationHttpStatus).toBe(200);
+    expect(enriched[0].destinationMainHtml).toContain(
+      '<h1>Destination heading</h1>',
+    );
+    expect(enriched[0].destinationMainHtml).toContain(
+      'Section body text to exclude.',
+    );
+    expect(enriched[0].destinationMainHtml).not.toContain('window.noisy');
+    expect(enriched[0].destinationMainHtml).not.toContain(
+      'Interface text to exclude',
+    );
+    expect(enriched[0].destinationMainHtml).not.toContain('Date modified');
+    expect(enriched[0].destinationMainHtmlTruncated).toBeFalse();
+  });
+
+  it('uses destination topic doormats as compact context for topic pages', async () => {
+    fetchService.fetchContentWithResponse.and.resolveTo({
+      document: new DOMParser().parseFromString(
+        `<html><head><title>Benefits</title></head><body><main>
+          <h1>Benefits</h1>
+          <p>Introductory topic text.</p>
+          <h2>Benefit topics</h2>
+          <div class="gc-srvinfo">
+            <div>
+              <h3><a href="/en/benefits/eligibility.html">Eligibility</a></h3>
+              <p>Who can get benefits, family situations, income rules</p>
+            </div>
+            <div>
+              <h3><a href="/en/benefits/apply.html">Apply for benefits</a></h3>
+              <p>Applications, documents, deadlines</p>
+            </div>
+          </div>
+        </main></body></html>`,
+        'text/html',
+      ),
+      status: 200,
+      statusText: 'OK',
+      url: 'https://www.canada.ca/en/benefits.html',
+    });
+
+    const enriched = await service.enrichDestinationContext(
+      [
+        {
+          index: 1,
+          linkText: 'Benefits',
+          href: '/en/benefits.html',
+          description: '',
+          headingLevel: 3,
+          itemLinkCount: 1,
+          headingLinkCount: 1,
+          descriptionLinkCount: 0,
+          hasSplitHeadingLink: false,
+          hasDescriptionLink: false,
+          hasDescriptionIconOrImage: false,
+          hasDescriptionSpecialFormatting: false,
+          rawItemText: '',
+          linkTextCharacterCount: 8,
+          descriptionCharacterCount: 0,
+          sectionIndex: 1,
+          sectionTitle: 'Benefits',
+          sectionItemIndex: 1,
+          sectionDoormatCount: 1,
+        },
+      ],
+      { originalUrl: 'https://www.canada.ca/en/services/index.html' },
+    );
+
+    expect(enriched[0].destinationPageType).toBe('topic');
+    expect(enriched[0].destinationNavigationItems).toEqual([
+      {
+        linkText: 'Eligibility',
+        description: 'Who can get benefits, family situations, income rules',
+        sectionTitle: 'Benefit topics',
+        source: 'topic-doormat',
+      },
+      {
+        linkText: 'Apply for benefits',
+        description: 'Applications, documents, deadlines',
+        sectionTitle: 'Benefit topics',
+        source: 'topic-doormat',
+      },
+    ]);
+  });
+
+  it('uses destination subway doormats as compact context for subway pages', async () => {
+    fetchService.fetchContentWithResponse.and.resolveTo({
+      document: new DOMParser().parseFromString(
+        `<html><head><title>Apply for benefits</title></head><body><main>
+          <h1>Apply for benefits</h1>
+          <nav class="provisional gc-subway">
+            <h1>Apply for benefits</h1>
+            <dl>
+              <dt><a href="/en/benefits/step-1.html">Confirm eligibility</a></dt>
+              <dd>Who can apply, family income, residency</dd>
+              <dt><a href="/en/benefits/step-2.html">Send documents</a></dt>
+              <dd>Proof, forms, submission options</dd>
+            </dl>
+          </nav>
+        </main></body></html>`,
+        'text/html',
+      ),
+      status: 200,
+      statusText: 'OK',
+      url: 'https://www.canada.ca/en/benefits/apply.html',
+    });
+
+    const enriched = await service.enrichDestinationContext(
+      [
+        {
+          index: 1,
+          linkText: 'Apply for benefits',
+          href: '/en/benefits/apply.html',
+          description: '',
+          headingLevel: 3,
+          itemLinkCount: 1,
+          headingLinkCount: 1,
+          descriptionLinkCount: 0,
+          hasSplitHeadingLink: false,
+          hasDescriptionLink: false,
+          hasDescriptionIconOrImage: false,
+          hasDescriptionSpecialFormatting: false,
+          rawItemText: '',
+          linkTextCharacterCount: 18,
+          descriptionCharacterCount: 0,
+          sectionIndex: 1,
+          sectionTitle: 'Benefits',
+          sectionItemIndex: 1,
+          sectionDoormatCount: 1,
+        },
+      ],
+      { originalUrl: 'https://www.canada.ca/en/services/index.html' },
+    );
+
+    expect(enriched[0].destinationPageType).toBe('subway');
+    expect(enriched[0].destinationNavigationItems).toEqual([
+      {
+        linkText: 'Confirm eligibility',
+        description: 'Who can apply, family income, residency',
+        source: 'subway-doormat',
+      },
+      {
+        linkText: 'Send documents',
+        description: 'Proof, forms, submission options',
+        source: 'subway-doormat',
+      },
+    ]);
+  });
 
   it('adds opposite-language length counts from the alternate page by section item position', async () => {
     fetchService.fetchContentWithResponse.and.callFake((url: string) => {
@@ -420,12 +555,14 @@ describe('TopicDoormatExtractorService', () => {
   });
 
   it('keeps the destination HTTP status when destination context fetch fails', async () => {
-    fetchService.fetchContentWithResponse.and.returnValue(Promise.reject(
-      Object.assign(new Error('Fetch failed. Status: 410'), {
-        status: 410,
-        statusText: 'Gone',
-      }),
-    ));
+    fetchService.fetchContentWithResponse.and.returnValue(
+      Promise.reject(
+        Object.assign(new Error('Fetch failed. Status: 410'), {
+          status: 410,
+          statusText: 'Gone',
+        }),
+      ),
+    );
 
     const enriched = await service.enrichDestinationContext(
       [

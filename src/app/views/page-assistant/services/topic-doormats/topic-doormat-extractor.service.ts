@@ -2,6 +2,8 @@ import { Injectable, inject } from '@angular/core';
 import { FetchService } from '../../../../services/fetch.service';
 import {
   MostRequestedLinkSummary,
+  TopicDoormatDestinationNavigationItem,
+  TopicDoormatDestinationPageType,
   TopicDoormatPageLanguage,
   TopicDoormatSummary,
   TopicDoormatUploadData,
@@ -29,20 +31,24 @@ export class TopicDoormatExtractorService {
 
     const contextByUrl = new Map<
       string,
-      Promise<Pick<
-        TopicDoormatSummary,
-        | 'destinationUrl'
-        | 'destinationPageTitle'
-        | 'destinationPageHeading'
-        | 'destinationMainHtml'
-        | 'destinationMainHtmlTruncated'
-        | 'destinationIntroParagraphs'
-        | 'destinationSectionHeadings'
-        | 'destinationLabelEvidence'
-        | 'destinationContextStatus'
-        | 'destinationHttpStatus'
-        | 'destinationFetchError'
-      >>
+      Promise<
+        Pick<
+          TopicDoormatSummary,
+          | 'destinationUrl'
+          | 'destinationPageTitle'
+          | 'destinationPageHeading'
+          | 'destinationMainHtml'
+          | 'destinationMainHtmlTruncated'
+          | 'destinationIntroParagraphs'
+          | 'destinationSectionHeadings'
+          | 'destinationPageType'
+          | 'destinationNavigationItems'
+          | 'destinationLabelEvidence'
+          | 'destinationContextStatus'
+          | 'destinationHttpStatus'
+          | 'destinationFetchError'
+        >
+      >
     >();
 
     return Promise.all(
@@ -90,7 +96,10 @@ export class TopicDoormatExtractorService {
       const oppositeByPosition = new Map<string, TopicDoormatSummary>();
       oppositeSummaries.forEach((summary) => {
         oppositeByPosition.set(
-          this.getSectionItemKey(summary.sectionIndex, summary.sectionItemIndex),
+          this.getSectionItemKey(
+            summary.sectionIndex,
+            summary.sectionItemIndex,
+          ),
           summary,
         );
       });
@@ -163,8 +172,10 @@ export class TopicDoormatExtractorService {
     )
       .trim()
       .toLowerCase();
-    if (uploadLanguage === 'fra' || uploadLanguage?.startsWith('fr')) return 'fr';
-    if (uploadLanguage === 'eng' || uploadLanguage?.startsWith('en')) return 'en';
+    if (uploadLanguage === 'fra' || uploadLanguage?.startsWith('fr'))
+      return 'fr';
+    if (uploadLanguage === 'eng' || uploadLanguage?.startsWith('en'))
+      return 'en';
 
     const urlLanguage = this.detectLanguageFromUrl(
       uploadData?.originalUrl,
@@ -229,7 +240,9 @@ export class TopicDoormatExtractorService {
           href,
           labels: this.extractDoormatLabels(item),
           description,
-          headingLevel: heading ? this.toNumber(heading.tagName.slice(1)) : null,
+          headingLevel: heading
+            ? this.toNumber(heading.tagName.slice(1))
+            : null,
           itemLinkCount: item ? item.querySelectorAll('a[href]').length : 0,
           headingLinkCount,
           descriptionLinkCount: descriptionElement
@@ -240,10 +253,9 @@ export class TopicDoormatExtractorService {
           hasDescriptionIconOrImage: !!descriptionElement?.querySelector(
             'img, svg, i[class*="glyphicon"], i[class*="fa"], span[class*="glyphicon"], span[class*="fa"]',
           ),
-          hasDescriptionSpecialFormatting:
-            !!descriptionElement?.querySelector(
-              'strong, b, em, i, ul, ol, li, mark, code',
-            ),
+          hasDescriptionSpecialFormatting: !!descriptionElement?.querySelector(
+            'strong, b, em, i, ul, ol, li, mark, code',
+          ),
           rawItemText: this.cleanVisibleElementText(item).slice(0, 500),
           linkTextCharacterCount: linkText.length,
           descriptionCharacterCount: description.length,
@@ -257,9 +269,7 @@ export class TopicDoormatExtractorService {
       };
 
       const modernLinks = Array.from(
-        doc.querySelectorAll<HTMLElement>(
-          '.gc-srvinfo h2, .gc-srvinfo h3',
-        ),
+        doc.querySelectorAll<HTMLElement>('.gc-srvinfo h2, .gc-srvinfo h3'),
       );
       modernLinks.forEach((heading) => {
         const link = heading.querySelector<HTMLAnchorElement>('a[href]');
@@ -293,9 +303,7 @@ export class TopicDoormatExtractorService {
   private extractDoormatLabels(item: HTMLElement | null): string[] {
     if (!item) return [];
     const labels = Array.from(
-      item.querySelectorAll<HTMLElement>(
-        this.getDoormatLabelSelector(),
-      ),
+      item.querySelectorAll<HTMLElement>(this.getDoormatLabelSelector()),
     )
       .map((element) => this.cleanVisibleText(element.textContent))
       .filter(Boolean);
@@ -402,7 +410,10 @@ export class TopicDoormatExtractorService {
     }
   }
 
-  private getSectionItemKey(sectionIndex: number, sectionItemIndex: number): string {
+  private getSectionItemKey(
+    sectionIndex: number,
+    sectionItemIndex: number,
+  ): string {
     return `${sectionIndex}|${sectionItemIndex}`;
   }
 
@@ -418,6 +429,8 @@ export class TopicDoormatExtractorService {
       | 'destinationMainHtmlTruncated'
       | 'destinationIntroParagraphs'
       | 'destinationSectionHeadings'
+      | 'destinationPageType'
+      | 'destinationNavigationItems'
       | 'destinationLabelEvidence'
       | 'destinationContextStatus'
       | 'destinationHttpStatus'
@@ -440,25 +453,27 @@ export class TopicDoormatExtractorService {
         ? Array.from(main.querySelectorAll<HTMLElement>('h2'))
         : [];
       const firstSectionHeading = heading
-        ? sectionHeadingElements.find((sectionHeading) =>
-            !!(
-              heading.compareDocumentPosition(sectionHeading) &
-              Node.DOCUMENT_POSITION_FOLLOWING
-            ),
-          ) ?? null
-        : null;
-      const destinationIntroParagraphs = main && heading
-        ? Array.from(main.querySelectorAll<HTMLElement>('p'))
-            .filter((paragraph) =>
-              this.isDestinationIntroParagraph(
-                paragraph,
-                heading,
-                firstSectionHeading,
+        ? (sectionHeadingElements.find(
+            (sectionHeading) =>
+              !!(
+                heading.compareDocumentPosition(sectionHeading) &
+                Node.DOCUMENT_POSITION_FOLLOWING
               ),
-            )
-            .map((paragraph) => this.cleanVisibleText(paragraph.textContent))
-            .filter(Boolean)
-        : [];
+          ) ?? null)
+        : null;
+      const destinationIntroParagraphs =
+        main && heading
+          ? Array.from(main.querySelectorAll<HTMLElement>('p'))
+              .filter((paragraph) =>
+                this.isDestinationIntroParagraph(
+                  paragraph,
+                  heading,
+                  firstSectionHeading,
+                ),
+              )
+              .map((paragraph) => this.cleanVisibleText(paragraph.textContent))
+              .filter(Boolean)
+          : [];
       const destinationSectionHeadings = main
         ? sectionHeadingElements
             .map((sectionHeading) =>
@@ -466,6 +481,12 @@ export class TopicDoormatExtractorService {
             )
             .filter(Boolean)
         : [];
+      const destinationNavigationItems =
+        this.extractDestinationNavigationItems(destinationDoc);
+      const destinationPageType = this.detectDestinationPageType(
+        destinationDoc,
+        destinationNavigationItems,
+      );
       const destinationLabelEvidence = this.extractDestinationLabelEvidence(
         destinationDoc,
         main,
@@ -483,10 +504,14 @@ export class TopicDoormatExtractorService {
         destinationMainHtmlTruncated: mainHtml.truncated,
         destinationIntroParagraphs,
         destinationSectionHeadings,
+        destinationPageType,
+        destinationNavigationItems,
         destinationLabelEvidence,
         destinationHttpStatus: response.status,
         destinationContextStatus:
-          destinationIntroParagraphs.length || destinationSectionHeadings.length
+          destinationNavigationItems.length ||
+          destinationIntroParagraphs.length ||
+          destinationSectionHeadings.length
             ? 'available'
             : 'insufficient',
       };
@@ -495,6 +520,8 @@ export class TopicDoormatExtractorService {
         destinationUrl,
         destinationIntroParagraphs: [],
         destinationSectionHeadings: [],
+        destinationPageType: 'content',
+        destinationNavigationItems: [],
         destinationLabelEvidence: [],
         destinationMainHtml: '',
         destinationMainHtmlTruncated: false,
@@ -504,6 +531,75 @@ export class TopicDoormatExtractorService {
           error instanceof Error ? error.message : String(error),
       };
     }
+  }
+
+  private detectDestinationPageType(
+    doc: Document,
+    navigationItems: TopicDoormatDestinationNavigationItem[],
+  ): TopicDoormatDestinationPageType {
+    if (this.hasSubwayDoormatStructure(doc)) return 'subway';
+    if (
+      this.hasCandidates(doc) ||
+      navigationItems.some((item) => item.source === 'topic-doormat')
+    ) {
+      return 'topic';
+    }
+    return 'content';
+  }
+
+  private extractDestinationNavigationItems(
+    doc: Document,
+  ): TopicDoormatDestinationNavigationItem[] {
+    const subwayItems = this.extractSubwayDoormatItems(doc);
+    if (subwayItems.length) return subwayItems;
+    if (!this.hasCandidates(doc)) return [];
+
+    return this.extractSummaries(doc).map((summary) => ({
+      linkText: summary.linkText,
+      description: summary.description,
+      sectionTitle: summary.sectionTitle,
+      source: 'topic-doormat',
+    }));
+  }
+
+  private hasSubwayDoormatStructure(root: ParentNode): boolean {
+    return !!(
+      root.querySelector('nav.gc-subway dl dt a[href]') &&
+      root.querySelector('nav.gc-subway dl dd')
+    );
+  }
+
+  private extractSubwayDoormatItems(
+    doc: Document,
+  ): TopicDoormatDestinationNavigationItem[] {
+    const items: TopicDoormatDestinationNavigationItem[] = [];
+    const navs = Array.from(doc.querySelectorAll<HTMLElement>('nav.gc-subway'));
+    navs.forEach((nav) => {
+      const terms = Array.from(nav.querySelectorAll<HTMLElement>('dl dt'));
+      terms.forEach((term) => {
+        const link = term.querySelector<HTMLAnchorElement>('a[href]');
+        if (!link) return;
+        const descriptionElement = this.getSubwayDescriptionElement(term);
+        const description = this.cleanVisibleElementText(descriptionElement);
+        if (!description) return;
+        items.push({
+          linkText: this.cleanVisibleElementText(link),
+          description,
+          source: 'subway-doormat',
+        });
+      });
+    });
+    return items;
+  }
+
+  private getSubwayDescriptionElement(term: HTMLElement): HTMLElement | null {
+    let current = term.nextElementSibling as HTMLElement | null;
+    while (current) {
+      if (current.matches('dd')) return current;
+      if (current.matches('dt')) return null;
+      current = current.nextElementSibling as HTMLElement | null;
+    }
+    return null;
   }
 
   private getFetchErrorStatus(error: unknown): number | undefined {
@@ -680,17 +776,19 @@ export class TopicDoormatExtractorService {
       });
     });
 
-    Array.from(doc.querySelectorAll<HTMLElement>('.gc-drmt')).forEach((item) => {
-      const wrapper =
-        item.closest<HTMLElement>(
-          '.mwsdoormat-links-container.section, .mwsdoormat-links-container',
-        ) ?? item.parentElement;
-      const link =
-        item.querySelector<HTMLAnchorElement>('h2 a[href], h3 a[href]') ??
-        item.querySelector<HTMLAnchorElement>('a[href]');
-      if (!link) return;
-      candidates.push({ link, wrapper, item });
-    });
+    Array.from(doc.querySelectorAll<HTMLElement>('.gc-drmt')).forEach(
+      (item) => {
+        const wrapper =
+          item.closest<HTMLElement>(
+            '.mwsdoormat-links-container.section, .mwsdoormat-links-container',
+          ) ?? item.parentElement;
+        const link =
+          item.querySelector<HTMLAnchorElement>('h2 a[href], h3 a[href]') ??
+          item.querySelector<HTMLAnchorElement>('a[href]');
+        if (!link) return;
+        candidates.push({ link, wrapper, item });
+      },
+    );
 
     const topicHeading = this.getTopicHeadingElement(doc);
     if (topicHeading) {
@@ -699,11 +797,7 @@ export class TopicDoormatExtractorService {
         const headingText = this.cleanVisibleText(
           current.textContent,
         ).toLowerCase();
-        if (
-          current.matches('h2') &&
-          headingText &&
-          headingText !== 'topics'
-        ) {
+        if (current.matches('h2') && headingText && headingText !== 'topics') {
           break;
         }
         if (current.matches('h2, h3')) {
@@ -725,7 +819,9 @@ export class TopicDoormatExtractorService {
 
   private getTopicHeadingElement(doc: Document): HTMLElement | null {
     return (
-      Array.from(doc.querySelectorAll<HTMLElement>('main h2, main h3, h2, h3')).find(
+      Array.from(
+        doc.querySelectorAll<HTMLElement>('main h2, main h3, h2, h3'),
+      ).find(
         (heading) =>
           this.cleanVisibleText(heading.textContent).toLowerCase() === 'topics',
       ) ?? null
@@ -823,9 +919,7 @@ export class TopicDoormatExtractorService {
     return typeof value === 'string' ? value.trim() : '';
   }
 
-  private cleanVisibleElementText(
-    element: Element | null | undefined,
-  ): string {
+  private cleanVisibleElementText(element: Element | null | undefined): string {
     if (!element) return '';
     const clone = element.cloneNode(true) as Element;
     clone
@@ -842,9 +936,10 @@ export class TopicDoormatExtractorService {
     return (value || '').replace(/\s+/g, ' ').trim();
   }
 
-  private extractDestinationMainHtml(
-    main: HTMLElement | null,
-  ): { html: string; truncated: boolean } {
+  private extractDestinationMainHtml(main: HTMLElement | null): {
+    html: string;
+    truncated: boolean;
+  } {
     if (!main) return { html: '', truncated: false };
     const clone = main.cloneNode(true) as HTMLElement;
     clone

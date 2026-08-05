@@ -82,8 +82,8 @@
   },
   "language_thresholds": {
     "en": {
-      "link_text_max_characters": 35,
-      "description_max_characters": 95
+      "link_text_max_characters": 45,
+      "description_max_characters": 120
     },
     "fr": {
       "link_text_max_characters": 45,
@@ -152,7 +152,7 @@
   },
   "destination_content_assessment": {
     "required": true,
-    "instruction": "For every doormat, assess the supplied destinationContext before reporting issues. Select important_element_ids only from supplied intro and H2 element IDs. Mark an element important only when users need it to decide whether this destination is relevant; do not select every H2 automatically. Compare analysisLinkText and analysisDescription when present, otherwise compare link text and description, when determining coverage. Doormat labels may carry lifecycle or status information such as Closed, No longer available, Formerly, Replaced, New, or Updated. Do not require the doormat description to repeat lifecycle/status information when it is already exposed in the doormat label or visible doormat text. Evaluate the description for whether it explains the destination page's broad subject, purpose, or task, not whether it repeats the label. When the link text is a program, benefit, credit, rebate, payment, allowance, or relief name, do not treat the name alone as covering a destination intro that explains what the program or benefit was or is. If the doormat description only gives status, timing, eligibility, or residual filing context, mark the intro explanation as missing. missing_important_element_ids must be a subset of important_element_ids and must contain only supplied IDs that are not represented by covered_element_ids. When destinationContext.status is not available, return empty arrays.",
+    "instruction": "For every doormat, assess the supplied destinationContext before reporting issues. Select important_element_ids only from supplied destinationContext.elements IDs. When destinationContext.pageType is topic or subway, AIDA supplies the destination page's own doormat choices as doormat-* elements; treat those as the primary compact destination information because the important content on a topic or subway page is the set of doormats. For ordinary content pages, AIDA supplies intro and H2 element IDs instead; do not select every H2 automatically. Mark an element important only when users need it to decide whether this destination is relevant. Compare analysisLinkText and analysisDescription when present, otherwise compare link text and description, when determining coverage. Doormat labels may carry lifecycle or status information such as Closed, No longer available, Formerly, Replaced, New, or Updated. Do not require the doormat description to repeat lifecycle/status information when it is already exposed in the doormat label or visible doormat text. Evaluate the description for whether it explains the destination page's broad subject, purpose, or task, not whether it repeats the label. When the link text is a program, benefit, credit, rebate, payment, allowance, or relief name, do not treat the name alone as covering a destination intro that explains what the program or benefit was or is. If the doormat description only gives status, timing, eligibility, or residual filing context, mark the intro explanation as missing. missing_important_element_ids must be a subset of important_element_ids and must contain only supplied IDs that are not represented by covered_element_ids. When destinationContext.status is not available, return empty arrays.",
     "model_must_not_report": "Do not return description-missing-needed-information as an issue. AIDA validates the assessment IDs against the extracted destination context and creates the issue locally.",
     "important_element_examples": [
       "A primary audience or eligibility condition needed to know whether the destination applies.",
@@ -290,14 +290,14 @@
       "group": "Link name",
       "label": "Link too long",
       "severity": "Low",
-      "condition": "The link text exceeds 35 characters, including spaces.",
-      "recommendation": "Shorten the link text. Keep link text under 35 characters, including spaces.",
+      "condition": "The link text exceeds 45 characters, including spaces.",
+      "recommendation": "Shorten the link text. Keep link text close to the ideal 45-character limit and below the 75-character maximum, including spaces.",
       "local_deterministic": true,
       "reporting": "AIDA reports this issue locally from linkTextCharacterCount. The model should not return this issue. AIDA reports one section-level row per affected H2 section, with a list of affected doormat numbers and character-count metrics.",
       "severity_override": {
-        "Low": "Use Low when the link text is 36 to 45 characters and label it as 'Opposite language link text may be too long'.",
-        "Medium": "Use Medium when the link text is 46 to 60 characters.",
-        "High": "Use High when the link text is 61 to 75 characters or longer."
+        "Low": "Use Low when the link text is 46 to 60 characters.",
+        "Medium": "Use Medium when the link text is 61 to 75 characters.",
+        "High": "Use High when the link text is 76 characters or longer."
       }
     },
     {
@@ -376,13 +376,13 @@
       "group": "Description clarity",
       "label": "Description too long",
       "severity": "Low",
-      "condition": "The English description exceeds 95 characters, including spaces. The official limit for link descriptions is 120 characters in both official languages, and the English version should aim to stay under 95 characters to allow for French expansion.",
-      "recommendation": "Shorten the description. Aim for the English version to be under 95 characters, including spaces, so the French version can stay under 120 characters.",
+      "condition": "The description exceeds 120 characters in at least one official language, including spaces.",
+      "recommendation": "Shorten the description. Keep both the English and French versions within 120 characters, including spaces.",
       "local_deterministic": true,
       "reporting": "AIDA reports this issue locally from descriptionCharacterCount. The model should not return this issue. AIDA reports one section-level row per affected H2 section, with a list of affected doormat numbers and character-count metrics.",
       "severity_override": {
-        "Low": "Use Low when the description is 96 to 110 characters and label it as 'Opposite language description may be too long'.",
-        "Medium": "Use Medium when the description is 111 to 120 characters and label it as 'Opposite language description may be too long'.",
+        "Low": "Use Low when the description is 121 to 130 characters.",
+        "Medium": "Use Medium when the description is 131 to 140 characters.",
         "High": "Use High when the description is 121 characters or longer."
       }
     },

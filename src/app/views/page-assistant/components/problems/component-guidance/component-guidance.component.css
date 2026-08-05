@@ -84,6 +84,12 @@
   background: #fff;
 }
 
+.topic-doormat-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 1rem;
+}
+
 .topic-doormat-recommendation {
   white-space: pre-line;
 }

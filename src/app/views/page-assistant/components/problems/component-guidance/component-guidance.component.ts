@@ -790,6 +790,11 @@ export class ComponentGuidanceComponent implements OnInit, OnDestroy {
     void this.analyzeTopicDoormatIssues();
   }
 
+  clearTopicDoormatIssuesReport(): void {
+    this.resetTopicDoormatAnalysisState();
+    this.cdr.markForCheck();
+  }
+
   expandAll(): void {
     this.expandedRows = Object.fromEntries(this.tableRows.map((r) => [r.url, true]));
   }

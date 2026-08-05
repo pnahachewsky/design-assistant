@@ -214,7 +214,7 @@ export class AlertsGuidanceComponent implements OnInit, OnChanges, OnDestroy {
     this.analyzedRevision = -1;
     this.reanalysisRecommended = true;
     this.emitDerived();
-    await this.loadFromAi(true);
+    await this.loadFromAi(true, true);
   }
 
   private applySelectAll(flag: boolean, sync = true): void {
@@ -284,9 +284,9 @@ export class AlertsGuidanceComponent implements OnInit, OnChanges, OnDestroy {
     void this.loadFromAi();
   }
 
-  private async loadFromAi(force = false): Promise<void> {
+  private async loadFromAi(force = false, allowWhileLoading = false): Promise<void> {
     const html = this.uploadState.getWorkingHtml();
-    if (!html || this.isLoading) return;
+    if (!html || (this.isLoading && !allowWhileLoading)) return;
 
     const cached = this.alertAi.getCachedIssues(html);
     if (!force && cached !== null) {
