@@ -48750,7 +48750,7 @@ var PageAssistantCompareComponent = class _PageAssistantCompareComponent {
       const custom = this.customPromptText.trim();
       if (key2 === PromptKey.Doormats) {
         const composed = yield this.skillManager.composePrompt({
-          basePrompt: "Return the full HTML input with only the doormat section updated. Do not remove, reorder, or rewrite unrelated sections. Preserve page title, alerts, headings, and all other components exactly as provided. Return only updated HTML code with no other commentary.",
+          basePrompt: "Return raw HTML only. Return the full HTML input with only the doormat section updated. Do not return JSON, Markdown, schema-shaped output, or fields such as rewritten_doormat_set_html or full_updated_html. Do not remove, reorder, or rewrite unrelated sections. Preserve page title, alerts, headings, and all other components exactly as provided. Return only updated HTML code with no other commentary.",
           queryText: this.buildSkillQueryText(key2, custom),
           promptKey: key2,
           outputMode: "html",
@@ -48888,7 +48888,52 @@ ${custom}` : promptBody;
     const parsed = this.alertAi.looseJsonParse(stripped);
     if (parsed && typeof parsed === "object")
       return true;
-    return /"(?:rewrittenAlertHtml|rewritten_alert_html|rewrittenAlert|rewritten_alert|appliedDirectives|applied_directives|replacements|issues)"\s*:/i.test(stripped);
+    return /"(?:rewrittenAlertHtml|rewritten_alert_html|rewrittenAlert|rewritten_alert|rewrittenDoormatSetHtml|rewritten_doormat_set_html|fullUpdatedHtml|full_updated_html|updatedHtml|updated_html|doormats|appliedDirectives|applied_directives|replacements|issues)"\s*:/i.test(stripped);
+  }
+  extractDoormatRewriteHtmlFromStructuredResponse(text) {
+    const cleaned = (text || "").trim();
+    if (!cleaned)
+      return null;
+    const stripped = this.alertAi.stripCodeFences(cleaned);
+    const parsed = this.alertAi.looseJsonParse(stripped);
+    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+      return null;
+    }
+    const payload = parsed;
+    const candidates = [
+      payload["fullUpdatedHtml"],
+      payload["full_updated_html"],
+      payload["rewrittenDoormatSetHtml"],
+      payload["rewritten_doormat_set_html"],
+      payload["updatedHtml"],
+      payload["updated_html"]
+    ];
+    for (const candidate of candidates) {
+      if (typeof candidate !== "string")
+        continue;
+      const html = candidate.trim();
+      if (this.containsRenderableHtml(html))
+        return html;
+    }
+    const doormatFragments = this.extractDoormatUpdatedHtmlFragments(payload["doormats"]);
+    if (doormatFragments)
+      return doormatFragments;
+    return null;
+  }
+  extractDoormatUpdatedHtmlFragments(value) {
+    if (!Array.isArray(value))
+      return null;
+    const fragments = value.map((entry) => {
+      if (!entry || typeof entry !== "object")
+        return "";
+      const item = entry;
+      const html = item["updatedHtml"] ?? item["updated_html"];
+      return typeof html === "string" && this.containsRenderableHtml(html) ? html.trim() : "";
+    }).filter(Boolean);
+    return fragments.length ? fragments.join("\n") : null;
+  }
+  containsRenderableHtml(value) {
+    return /<[a-z][\s\S]*>/i.test(value);
   }
   buildDoormatRewriteUserContent(html) {
     const selectedIssues = this.topicDoormatAnalysisState.getSelectedRewriteIssues();
@@ -49559,10 +49604,16 @@ ${custom}` : promptBody;
             return;
           }
         } else {
-          if (this.looksLikeStructuredAiJsonResponse(aiHtml)) {
+          const htmlFromResponse = promptKeyForRequest === PromptKey.Doormats ? this.extractDoormatRewriteHtmlFromStructuredResponse(aiHtml) ?? aiHtml : aiHtml;
+          if (this.looksLikeStructuredAiJsonResponse(htmlFromResponse)) {
+            if (promptKeyForRequest === PromptKey.Doormats) {
+              console.warn("Doormat rewrite returned structured JSON without extractable HTML.", {
+                responsePreview: aiHtml.slice(0, 500)
+              });
+            }
             throw new Error("The AI returned structured JSON where HTML was expected. No comparison update was applied.");
           }
-          const htmlForFormatting = promptKeyForRequest === PromptKey.Doormats ? this.applyDoormatRewriteToPageHtml(html, aiHtml) : aiHtml;
+          const htmlForFormatting = promptKeyForRequest === PromptKey.Doormats ? this.applyDoormatRewriteToPageHtml(html, htmlFromResponse) : htmlFromResponse;
           const formattedHtml = yield this.urlDataService.formatHtml(htmlForFormatting, "ai");
           this.uploadState.mergeModifiedData({
             modifiedUrl: "AI generated",
@@ -50386,4 +50437,4 @@ ${custom}` : promptBody;
 export {
   PageAssistantCompareComponent
 };
-//# sourceMappingURL=chunk-SAKGFGMV.js.map
+//# sourceMappingURL=chunk-JHDSYX5H.js.map
