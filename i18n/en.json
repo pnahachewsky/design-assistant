@@ -204,6 +204,7 @@
   "page.tools.guidance.topicDoormats.destinationMismatch.recommendation": "Rewrite the link name so it accurately describes the destination topic, task, audience, and scope.",
   "page.tools.guidance.topicDoormats.contentGap.evidence": "Destination elements not covered by the link or description: {{elements}}.",
   "page.tools.guidance.topicDoormats.contentGap.h2": "H2: \"{{text}}\"",
+  "page.tools.guidance.topicDoormats.contentGap.doormat": "Destination doormat: \"{{text}}\"",
   "page.tools.guidance.topicDoormats.contentGap.introMissing": "Concepts in intro",
   "page.tools.guidance.topicDoormats.contentGap.recommendation": "Review doormat to ensure it represents necessary elements of the page.",
   "page.tools.guidance.topicDoormats.mixedDescriptionStyle.evidence.default": "Mixes description styles in this section.",

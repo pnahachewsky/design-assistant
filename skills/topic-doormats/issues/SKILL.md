@@ -71,11 +71,16 @@ Use this skill for issue analysis of topic doormat sets.
   `link-name-too-different-from-destination-title`. Do not invent destination
   titles or headings when these values are absent.
 - For every doormat, return `destination_content_assessment` before reporting
-  issues. Use only the supplied `destinationContext.elements` IDs. First select
-  the intro paragraphs and H2 headings that contain information users need to
-  decide whether to follow the doormat. Then identify which important elements
-  are covered by `analysisLinkText` and `analysisDescription` when present,
-  otherwise the link text and description, and which are missing.
+  issues. Use only the supplied `destinationContext.elements` IDs. When
+  `destinationContext.pageType` is `topic` or `subway`, AIDA supplies the
+  destination page's own doormat choices as `doormat-*` elements; treat those
+  as the primary compact destination information because the important content
+  on a topic or subway page is the set of doormats. For ordinary content pages,
+  AIDA supplies intro paragraphs and H2 headings instead. First select the
+  supplied elements that contain information users need to decide whether to
+  follow the doormat. Then identify which important elements are covered by
+  `analysisLinkText` and `analysisDescription` when present, otherwise the link
+  text and description, and which are missing.
 - Do not treat every destination H2 as important. Secondary navigation,
   supporting details, and information users can reasonably discover after
   choosing the destination are not content gaps.

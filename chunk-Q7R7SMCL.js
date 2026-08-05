@@ -25228,6 +25228,8 @@ var TopicDoormatExtractorService = class _TopicDoormatExtractorService {
         const firstSectionHeading = heading ? sectionHeadingElements.find((sectionHeading) => !!(heading.compareDocumentPosition(sectionHeading) & Node.DOCUMENT_POSITION_FOLLOWING)) ?? null : null;
         const destinationIntroParagraphs = main && heading ? Array.from(main.querySelectorAll("p")).filter((paragraph) => this.isDestinationIntroParagraph(paragraph, heading, firstSectionHeading)).map((paragraph) => this.cleanVisibleText(paragraph.textContent)).filter(Boolean) : [];
         const destinationSectionHeadings = main ? sectionHeadingElements.map((sectionHeading) => this.cleanVisibleText(sectionHeading.textContent)).filter(Boolean) : [];
+        const destinationNavigationItems = this.extractDestinationNavigationItems(destinationDoc);
+        const destinationPageType = this.detectDestinationPageType(destinationDoc, destinationNavigationItems);
         const destinationLabelEvidence = this.extractDestinationLabelEvidence(destinationDoc, main, heading, destinationIntroParagraphs);
         const mainHtml = this.extractDestinationMainHtml(main);
         return {
@@ -25238,15 +25240,19 @@ var TopicDoormatExtractorService = class _TopicDoormatExtractorService {
           destinationMainHtmlTruncated: mainHtml.truncated,
           destinationIntroParagraphs,
           destinationSectionHeadings,
+          destinationPageType,
+          destinationNavigationItems,
           destinationLabelEvidence,
           destinationHttpStatus: response.status,
-          destinationContextStatus: destinationIntroParagraphs.length || destinationSectionHeadings.length ? "available" : "insufficient"
+          destinationContextStatus: destinationNavigationItems.length || destinationIntroParagraphs.length || destinationSectionHeadings.length ? "available" : "insufficient"
         };
       } catch (error) {
         return {
           destinationUrl,
           destinationIntroParagraphs: [],
           destinationSectionHeadings: [],
+          destinationPageType: "content",
+          destinationNavigationItems: [],
           destinationLabelEvidence: [],
           destinationMainHtml: "",
           destinationMainHtmlTruncated: false,
@@ -25256,6 +25262,63 @@ var TopicDoormatExtractorService = class _TopicDoormatExtractorService {
         };
       }
     });
+  }
+  detectDestinationPageType(doc, navigationItems) {
+    if (this.hasSubwayDoormatStructure(doc))
+      return "subway";
+    if (this.hasCandidates(doc) || navigationItems.some((item) => item.source === "topic-doormat")) {
+      return "topic";
+    }
+    return "content";
+  }
+  extractDestinationNavigationItems(doc) {
+    const subwayItems = this.extractSubwayDoormatItems(doc);
+    if (subwayItems.length)
+      return subwayItems;
+    if (!this.hasCandidates(doc))
+      return [];
+    return this.extractSummaries(doc).map((summary) => ({
+      linkText: summary.linkText,
+      description: summary.description,
+      sectionTitle: summary.sectionTitle,
+      source: "topic-doormat"
+    }));
+  }
+  hasSubwayDoormatStructure(root) {
+    return !!(root.querySelector("nav.gc-subway dl dt a[href]") && root.querySelector("nav.gc-subway dl dd"));
+  }
+  extractSubwayDoormatItems(doc) {
+    const items = [];
+    const navs = Array.from(doc.querySelectorAll("nav.gc-subway"));
+    navs.forEach((nav) => {
+      const terms = Array.from(nav.querySelectorAll("dl dt"));
+      terms.forEach((term) => {
+        const link = term.querySelector("a[href]");
+        if (!link)
+          return;
+        const descriptionElement = this.getSubwayDescriptionElement(term);
+        const description = this.cleanVisibleElementText(descriptionElement);
+        if (!description)
+          return;
+        items.push({
+          linkText: this.cleanVisibleElementText(link),
+          description,
+          source: "subway-doormat"
+        });
+      });
+    });
+    return items;
+  }
+  getSubwayDescriptionElement(term) {
+    let current = term.nextElementSibling;
+    while (current) {
+      if (current.matches("dd"))
+        return current;
+      if (current.matches("dt"))
+        return null;
+      current = current.nextElementSibling;
+    }
+    return null;
   }
   getFetchErrorStatus(error) {
     if (!error || typeof error !== "object")
@@ -26537,9 +26600,11 @@ var TopicDoormatIssueAnalysisService = class _TopicDoormatIssueAnalysisService {
           destinationFetchError: summary.destinationFetchError,
           destinationPageTitle: summary.destinationPageTitle,
           destinationPageHeading: summary.destinationPageHeading,
+          destinationPageType: summary.destinationPageType,
           destinationContextStatus: summary.destinationContextStatus,
           destinationIntroParagraphs: summary.destinationIntroParagraphs,
           destinationSectionHeadings: summary.destinationSectionHeadings,
+          destinationNavigationItems: summary.destinationNavigationItems,
           destinationLabelEvidence: summary.destinationLabelEvidence,
           linkTextCharacterCount: summary.linkTextCharacterCount,
           descriptionCharacterCount: summary.descriptionCharacterCount,
@@ -26667,6 +26732,7 @@ var TopicDoormatIssueAnalysisService = class _TopicDoormatIssueAnalysisService {
             destinationContext: {
               status: summary.destinationContextStatus ?? "insufficient",
               httpStatus: summary.destinationHttpStatus,
+              pageType: summary.destinationPageType ?? "content",
               pageTitle: summary.destinationPageTitle ?? "",
               h1: summary.destinationPageHeading ?? "",
               labelEvidence: summary.labels?.length ? summary.destinationLabelEvidence ?? [] : [],
@@ -26845,6 +26911,7 @@ var TopicDoormatIssueAnalysisService = class _TopicDoormatIssueAnalysisService {
               destinationPageHeading: target.summary.destinationPageHeading,
               destinationContext: {
                 status: target.summary.destinationContextStatus ?? "insufficient",
+                pageType: target.summary.destinationPageType ?? "content",
                 elements: this.buildTopicDoormatDestinationContextElements(target.summary)
               }
             } : null
@@ -26868,7 +26935,10 @@ var TopicDoormatIssueAnalysisService = class _TopicDoormatIssueAnalysisService {
     if (!parsed || typeof parsed !== "object")
       return 0;
     const repairs = Array.isArray(parsed) ? parsed : Array.isArray(parsed["repairs"]) ? parsed["repairs"] : [];
-    const targetsByKey = new Map(targets.map((target) => [this.getTopicDoormatIssueRepairKey(target), target]));
+    const targetsByKey = new Map(targets.map((target) => [
+      this.getTopicDoormatIssueRepairKey(target),
+      target
+    ]));
     let repairedCount = 0;
     repairs.forEach((rawRepair) => {
       if (!rawRepair || typeof rawRepair !== "object")
@@ -27278,11 +27348,7 @@ var TopicDoormatIssueAnalysisService = class _TopicDoormatIssueAnalysisService {
       ...row.affectedDoormatIndexes ?? []
     ]).filter((index) => typeof index === "number" && index > 0));
     const noIssueRows = doormatSummaries.filter((summary) => !representedIndexes.has(summary.index)).map((summary) => this.buildTopicDoormatNoIssueRow(summary));
-    return this.removeConflictingTopicDoormatNoIssueRows([
-      ...deterministicRows,
-      ...localIaRows,
-      ...noIssueRows
-    ].sort((a, b) => {
+    return this.removeConflictingTopicDoormatNoIssueRows([...deterministicRows, ...localIaRows, ...noIssueRows].sort((a, b) => {
       const aIndex = this.getTopicDoormatRowSortIndex(a, doormatSummaries);
       const bIndex = this.getTopicDoormatRowSortIndex(b, doormatSummaries);
       return aIndex - bIndex;
@@ -27811,8 +27877,16 @@ var TopicDoormatIssueAnalysisService = class _TopicDoormatIssueAnalysisService {
     }
     if (doormat.destinationUrl || href.startsWith("#"))
       return "";
-    const hasUnsupportedScheme = /^[a-z][a-z0-9+.-]*:/i.test(href);
-    if (hasUnsupportedScheme || /[\s<>"]/.test(href)) {
+    const isAbsoluteUrl = /^[a-z][a-z0-9+.-]*:/i.test(href);
+    if (isAbsoluteUrl) {
+      try {
+        const url = new URL(href);
+        if (url.protocol === "https:")
+          return "";
+      } catch {
+      }
+    }
+    if (isAbsoluteUrl || /[\s<>"]/.test(href)) {
       return this.getTopicDoormatDeterministicText("brokenLink.invalidHrefEvidence", { href });
     }
     return "";
@@ -27821,7 +27895,10 @@ var TopicDoormatIssueAnalysisService = class _TopicDoormatIssueAnalysisService {
     const linkLabel = doormat.headingLinkCount === 1 ? this.getTopicDoormatDeterministicText("labels.oneLink") : this.getTopicDoormatDeterministicText("labels.linkCount", {
       count: doormat.headingLinkCount
     });
-    return this.getTopicDoormatDeterministicText("splitHeadingLink.evidence", { linkLabel, linkText: doormat.linkText });
+    return this.getTopicDoormatDeterministicText("splitHeadingLink.evidence", {
+      linkLabel,
+      linkText: doormat.linkText
+    });
   }
   buildTopicDoormatDescriptionLinkEvidence(doormat) {
     const linkLabel = doormat.descriptionLinkCount === 1 ? this.getTopicDoormatDeterministicText("labels.oneLink") : this.getTopicDoormatDeterministicText("labels.linkCount", {
@@ -27834,7 +27911,10 @@ var TopicDoormatIssueAnalysisService = class _TopicDoormatIssueAnalysisService {
     const additionalLabel = additionalLinkCount === 1 ? this.getTopicDoormatDeterministicText("labels.oneAdditionalLink") : this.getTopicDoormatDeterministicText("labels.additionalLinkCount", {
       count: additionalLinkCount
     });
-    return this.getTopicDoormatDeterministicText("multipleLinks.evidence", { linkCount: doormat.itemLinkCount, additionalLabel });
+    return this.getTopicDoormatDeterministicText("multipleLinks.evidence", {
+      linkCount: doormat.itemLinkCount,
+      additionalLabel
+    });
   }
   buildLocalTopicDoormatRepeatedDescriptionOpeningRows(doormatSummaries) {
     const summariesBySection = doormatSummaries.reduce((sections, summary) => {
@@ -27909,6 +27989,18 @@ var TopicDoormatIssueAnalysisService = class _TopicDoormatIssueAnalysisService {
     return { key: key2, label };
   }
   buildTopicDoormatDestinationContextElements(summary) {
+    const navigationItems = summary.destinationNavigationItems ?? [];
+    if (navigationItems.length) {
+      return navigationItems.map((item) => ({
+        text: this.cleanVisibleText([item.linkText, item.description].filter(Boolean).join(": ")),
+        source: item.source
+      })).filter((item) => item.text).map((item, index) => ({
+        id: `doormat-${index + 1}`,
+        type: "doormat",
+        text: item.text,
+        source: item.source
+      }));
+    }
     const introElements = (summary.destinationIntroParagraphs ?? []).map((text) => this.cleanVisibleText(text)).filter(Boolean).map((text, index) => ({
       id: `intro-${index + 1}`,
       type: "intro",
@@ -28042,6 +28134,10 @@ var TopicDoormatIssueAnalysisService = class _TopicDoormatIssueAnalysisService {
         if (element.type === "intro") {
           return this.getTopicDoormatDeterministicText("contentGap.introMissing");
         }
+        if (element.type === "doormat") {
+          const text2 = element.text.length > 140 ? `${element.text.slice(0, 137).trimEnd()}...` : element.text;
+          return this.getTopicDoormatDeterministicText("contentGap.doormat", { text: text2 });
+        }
         const text = element.text.length > 140 ? `${element.text.slice(0, 137).trimEnd()}...` : element.text;
         return this.getTopicDoormatDeterministicText("contentGap.h2", {
           text
@@ -28074,10 +28170,7 @@ var TopicDoormatIssueAnalysisService = class _TopicDoormatIssueAnalysisService {
     if (summary.destinationContextStatus !== "available" || !assessment) {
       return [];
     }
-    const elementsById = new Map(this.buildTopicDoormatDestinationContextElements(summary).map((element) => [
-      element.id,
-      element
-    ]));
+    const elementsById = new Map(this.buildTopicDoormatDestinationContextElements(summary).map((element) => [element.id, element]));
     const importantIds = new Set(assessment.importantElementIds.filter((id) => elementsById.has(id)));
     const coveredIds = new Set(assessment.coveredElementIds.filter((id) => elementsById.has(id)));
     const seen = /* @__PURE__ */ new Set();
@@ -28107,6 +28200,9 @@ var TopicDoormatIssueAnalysisService = class _TopicDoormatIssueAnalysisService {
     }
     if (element.type === "h2") {
       return this.isTopicDoormatLifecycleStatusElement(element.text) || !this.hasTopicDoormatDecisionCriticalText(element.text);
+    }
+    if (element.type === "doormat") {
+      return !this.hasTopicDoormatDecisionCriticalText(element.text);
     }
     return false;
   }
@@ -28497,6 +28593,9 @@ ${JSON.stringify(contract)}`;
     if (element.type === "h2") {
       return this.isTopicDoormatConceptCovered(elementText, doormatText) || this.isTopicDoormatGenericEligibilityCovered(elementText, doormatText);
     }
+    if (element.type === "doormat") {
+      return this.hasTopicDoormatMeaningfulTokenCoverage(elementText, doormatText);
+    }
     return this.isTopicDoormatIntroConceptCovered(elementText, doormatText) || this.hasTopicDoormatMeaningfulTokenCoverage(elementText, doormatText);
   }
   isTopicDoormatIntroConceptCovered(elementText, doormatText) {
@@ -28758,10 +28857,7 @@ ${JSON.stringify(contract)}`;
     return (fencedJson?.[1] ?? trimmed).replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/i, "").trim();
   }
   looseJsonParse(value) {
-    const candidates = [
-      value,
-      this.extractJsonObjectText(value)
-    ].filter((candidate) => !!candidate);
+    const candidates = [value, this.extractJsonObjectText(value)].filter((candidate) => !!candidate);
     for (const candidate of candidates) {
       const normalizedCandidates = [
         candidate,
@@ -50034,4 +50130,4 @@ ${custom}` : promptBody;
 export {
   PageAssistantCompareComponent
 };
-//# sourceMappingURL=chunk-DX3DLY5Y.js.map
+//# sourceMappingURL=chunk-Q7R7SMCL.js.map
