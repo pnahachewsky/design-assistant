@@ -757,6 +757,9 @@ export class PageAssistantCompareComponent
     // of AIDA's structured JSON contracts, fail before that JSON reaches the page.
     const cleaned = (text || '').trim();
     if (!cleaned) return false;
+    if (cleaned.startsWith('<') && this.containsRenderableHtml(cleaned)) {
+      return false;
+    }
     const stripped = this.alertAi.stripCodeFences(cleaned);
     const parsed = this.alertAi.looseJsonParse(stripped);
     if (parsed && typeof parsed === 'object') return true;

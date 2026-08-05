@@ -66,6 +66,20 @@ describe('PageAssistantCompareComponent', () => {
       ).toBeFalse();
   });
 
+  it('does not reject raw doormat HTML with JSON-valued WET attributes', () => {
+    const doormatHtml = `
+      <section class="gc-srvinfo col-md-12">
+        <div class="wb-fieldflow" data-wb-fieldflow='{"inline": true, "defaultselectedlabel":"Choose a region"}'>
+          <p>Choose your location:</p>
+        </div>
+      </section>
+    `;
+
+    expect(
+      (component as any).looksLikeStructuredAiJsonResponse(doormatHtml),
+    ).toBeFalse();
+  });
+
   it('extracts full HTML from a structured doormat rewrite response', () => {
     const response = JSON.stringify({
       full_updated_html:
