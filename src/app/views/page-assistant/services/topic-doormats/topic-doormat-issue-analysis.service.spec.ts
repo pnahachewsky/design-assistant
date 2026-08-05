@@ -58,7 +58,7 @@ class HttpClientStub {
         },
         {
           id: 'description-missing-needed-information',
-          label: 'Description has content gap',
+          label: 'Description has at least one content gap',
         },
         {
           id: 'description-uses-first-or-second-person',
