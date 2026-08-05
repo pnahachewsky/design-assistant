@@ -41,6 +41,10 @@ export class TopicDoormatTemplateNormalizerService {
       }
     }
 
+    if (this.normalizeGcSrvinfoLayouts(doc)) {
+      changed = true;
+    }
+
     if (!changed) return { html, changed: false };
 
     return {
@@ -50,7 +54,46 @@ export class TopicDoormatTemplateNormalizerService {
   }
 
   private hasLegacyDoormatMarkup(html: string): boolean {
-    return /\b(?:mwsdoormat-links-container|gc-drmt)\b/.test(html);
+    return (
+      /\b(?:mwsdoormat-links-container|gc-drmt)\b/.test(html) ||
+      /\bgc-srvinfo\b/.test(html)
+    );
+  }
+
+  private normalizeGcSrvinfoLayouts(doc: Document): boolean {
+    let changed = false;
+
+    Array.from(doc.body.querySelectorAll<HTMLElement>('.gc-srvinfo')).forEach(
+      (section) => {
+        if (this.removeGridClasses(section)) {
+          changed = true;
+        }
+
+        Array.from(section.children)
+          .filter(
+            (child): child is HTMLElement =>
+              child instanceof HTMLElement &&
+              child.classList.contains('row') &&
+              child.classList.contains('wb-eqht'),
+          )
+          .forEach((row) => {
+            row.classList.remove('wb-eqht');
+            row.classList.add('wb-eqht-grd');
+            changed = true;
+          });
+      },
+    );
+
+    return changed;
+  }
+
+  private removeGridClasses(element: HTMLElement): boolean {
+    const gridClassPattern = /^col-(?:xs|sm|md|lg|xl)-\d+$/;
+    const classesToRemove = Array.from(element.classList).filter((className) =>
+      gridClassPattern.test(className),
+    );
+    classesToRemove.forEach((className) => element.classList.remove(className));
+    return classesToRemove.length > 0;
   }
 
   private buildModernSection(container: HTMLElement): HTMLElement | null {

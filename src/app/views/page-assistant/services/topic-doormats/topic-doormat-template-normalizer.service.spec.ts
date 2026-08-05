@@ -79,6 +79,43 @@ describe('TopicDoormatTemplateNormalizerService', () => {
     expect(result).toEqual({ html, changed: false });
   });
 
+  it('normalizes older gc-srvinfo topic layout classes and preserves fieldflow dropdowns', () => {
+    const html = `
+      <main>
+        <section class="gc-srvinfo col-md-12">
+          <h2 class="wb-inv">Types of tax credits and benefits</h2>
+          <div class="wb-eqht row">
+            <div class="col-lg-4 col-md-6">
+              <h3 class="h5">
+                <a href="/provincial-territorial-programs.html">Provincial and territorial benefits</a>
+              </h3>
+              <p>Benefits that the CRA administers for the provinces and territories</p>
+              <div class="wb-fieldflow" data-wb-fieldflow='{"inline": true, "defaultselectedlabel":"Choose a region"}'>
+                <p>Choose your location:</p>
+                <ul>
+                  <li><a href="/province-alberta.html">Alberta</a></li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </section>
+      </main>
+    `;
+
+    const result = service.normalizeLegacyDoormats(html);
+
+    expect(result.changed).toBeTrue();
+    expect(result.html).toContain('<section class="gc-srvinfo">');
+    expect(result.html).toContain('<div class="row wb-eqht-grd">');
+    expect(result.html).toContain('<div class="col-lg-4 col-md-6">');
+    expect(result.html).toContain('wb-fieldflow');
+    expect(result.html).toContain('data-wb-fieldflow');
+    expect(result.html).toContain('Choose your location:');
+    expect(result.html).toContain('Alberta');
+    expect(result.html).not.toContain('class="gc-srvinfo col-md-12"');
+    expect(result.html).not.toContain('class="wb-eqht row"');
+  });
+
   it('converts standalone legacy gc-drmt rows when no mws container is present', () => {
     const html = `
       <main>
