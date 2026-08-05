@@ -14,12 +14,14 @@ class HttpClientStub {
     of({
       style_detection: {
         link_text_style_definitions: {
-          task:
-            'A link name framed as an action, process, outcome, or user goal. Treat a gerund opening as task when it can be paraphrased as "how to [verb/action]". For example, "Getting the right CRA benefits and credits for your family" is task, not topic.',
           topic:
-            'A noun phrase, program name, subject label, or information category.',
-          situation:
-            'A conditional, life-event, audience, or circumstance-framed link name. Later situation wording does not override a frontloaded task frame.',
+            'A broad subject area or information category.',
+          'product-or-service':
+            'A named product, program, plan, benefit, credit, form, tool, service, or account.',
+          action:
+            'A link name framed as an action the user can take or a task they can complete.',
+          'audience-group':
+            'A link name framed as an audience or user group.',
         },
       },
       language_thresholds: {
@@ -150,6 +152,13 @@ class TranslateServiceStub {
     if (key.includes('descriptionStyleEvidenceLabels.dropdown-enhancement')) {
       return 'Dropdown enhancement';
     }
+    if (key.includes('linkStyles.topic')) return 'topic';
+    if (key.includes('linkStyles.product-or-service')) {
+      return 'product or service';
+    }
+    if (key.includes('linkStyles.action')) return 'action';
+    if (key.includes('linkStyles.audience-group')) return 'audience group';
+    if (key.includes('linkStyles.mixed-or-unclear')) return 'mixed or unclear';
     if (key.includes('repeatedDescriptionOpening.evidence')) {
       return `${params?.['count']} of ${params?.['total']} descriptions begin with "${params?.['opening']}": doormats ${params?.['indexes']}.`;
     }
@@ -331,13 +340,9 @@ describe('TopicDoormatIssueAnalysisService', () => {
     expect(systemPrompt).toContain('Compact model-owned issue contract');
     expect(systemPrompt).toContain('"style_detection"');
     expect(systemPrompt).toContain('"link_text_style_definitions"');
-    expect(systemPrompt).toContain(
-      'Getting the right CRA benefits and credits for your family',
-    );
-    expect(systemPrompt).toContain('how to [verb/action]');
-    expect(systemPrompt).toContain(
-      'Later situation wording does not override a frontloaded task frame',
-    );
+    expect(systemPrompt).toContain('"product-or-service"');
+    expect(systemPrompt).toContain('"action"');
+    expect(systemPrompt).toContain('"audience-group"');
     expect(systemPrompt).toContain('"description-lacks-clarity"');
     expect(systemPrompt).not.toContain('"description-too-long"');
     expect(systemPrompt).not.toContain('"broken-link"');
@@ -1313,7 +1318,7 @@ describe('TopicDoormatIssueAnalysisService', () => {
     const linkCases = [
       {
         linkText: 'Filing a trust return',
-        style: 'task',
+        style: 'action',
         relationship: 'unavailable',
       },
       {
@@ -1323,7 +1328,7 @@ describe('TopicDoormatIssueAnalysisService', () => {
       },
       {
         linkText: 'Submitting and filing documents online related to trusts',
-        style: 'task',
+        style: 'action',
         relationship: 'broader-but-accurate',
         destinationPageTitle:
           'Submitting and filing electronic documents to the T3 Estate and Trust Return programs - Canada.ca',
@@ -1332,7 +1337,7 @@ describe('TopicDoormatIssueAnalysisService', () => {
       },
       {
         linkText: 'When to pay a balance you owe on your trust return',
-        style: 'task',
+        style: 'action',
         relationship: 'unavailable',
       },
       {

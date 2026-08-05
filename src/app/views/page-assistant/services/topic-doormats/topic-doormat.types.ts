@@ -147,9 +147,10 @@ export type TopicDoormatDescriptionStyle =
   | 'mixed-or-unclear';
 
 export type TopicDoormatLinkTextStyle =
-  | 'task'
   | 'topic'
-  | 'situation'
+  | 'product-or-service'
+  | 'action'
+  | 'audience-group'
   | 'mixed-or-unclear';
 
 export type TopicDoormatDestinationLinkRelationship =

@@ -205,7 +205,7 @@ export class TopicDoormatIssueAnalysisService {
   private readonly topicDoormatLinkTextStyleOrder: Exclude<
     TopicDoormatLinkTextStyle,
     'mixed-or-unclear'
-  >[] = ['task', 'topic', 'situation'];
+  >[] = ['topic', 'product-or-service', 'action', 'audience-group'];
   private topicDoormatIssueTaxonomyLoad?: Promise<void>;
   private topicDoormatModelIssueContract = '';
   private topicDoormatIssueIdToLabel = new Map<string, string>();
@@ -4287,6 +4287,8 @@ export class TopicDoormatIssueAnalysisService {
   private normalizeTopicDoormatLinkTextStyle(
     value: unknown,
   ): TopicDoormatLinkTextStyle | null {
+    if (value === 'task') return 'action';
+    if (value === 'situation') return 'audience-group';
     if (value === 'mixed-or-unclear') return value;
     if (
       typeof value === 'string' &&

@@ -19,9 +19,10 @@
         "detected_link_text_style": {
           "type": "string",
           "enum": [
-            "task",
             "topic",
-            "situation",
+            "product-or-service",
+            "action",
+            "audience-group",
             "mixed-or-unclear"
           ]
         },
@@ -103,9 +104,10 @@
           "detected_link_text_style": {
             "type": "string",
             "enum": [
-              "task",
               "topic",
-              "situation",
+              "product-or-service",
+              "action",
+              "audience-group",
               "mixed-or-unclear"
             ]
           },
