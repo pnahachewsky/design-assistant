@@ -356,7 +356,7 @@
     {
       "id": "description-missing-needed-information",
       "group": "Description clarity",
-      "label": "Description has content gap",
+      "label": "Description has at least one content gap",
       "severity": "Medium",
       "condition": "One or more important intro paragraphs or H2 headings from the supplied destination context are not represented by the doormat link text or description, and the omission prevents users from deciding whether the destination is relevant.",
       "recommendation": "Add the missing decision-making detail while keeping the description concise.",
