@@ -66,6 +66,67 @@ describe('PageAssistantCompareComponent', () => {
       ).toBeFalse();
   });
 
+  it('extracts full HTML from a structured doormat rewrite response', () => {
+    const response = JSON.stringify({
+      full_updated_html:
+        '<main><h1>Benefits</h1><section class="gc-srvinfo"><div><h3><a href="/one.html">One</a></h3><p>Updated.</p></div></section></main>',
+      rewritten_doormat_set_html:
+        '<section class="gc-srvinfo"><div><h3><a href="/one.html">Fallback</a></h3><p>Fallback.</p></div></section>',
+      doormats: [],
+    });
+
+    const result = (component as any).extractDoormatRewriteHtmlFromStructuredResponse(
+      response,
+    );
+
+    expect(result).toContain('<main>');
+    expect(result).toContain('Updated.');
+    expect(result).not.toContain('Fallback.');
+  });
+
+  it('extracts doormat section HTML from a structured doormat rewrite response', () => {
+    const response = JSON.stringify({
+      rewritten_doormat_set_html:
+        '<section class="gc-srvinfo"><div><h3><a href="/one.html">One</a></h3><p>Updated.</p></div></section>',
+      doormats: [],
+    });
+
+    const result = (component as any).extractDoormatRewriteHtmlFromStructuredResponse(
+      response,
+    );
+
+    expect(result).toContain('class="gc-srvinfo"');
+    expect(result).toContain('Updated.');
+  });
+
+  it('extracts item fragments from a structured doormat rewrite response', () => {
+    const response = JSON.stringify({
+      doormats: [
+        {
+          doormat_index: 1,
+          href: '/one.html',
+          updated_html:
+            '<div class="col-lg-4 col-md-6"><h3><a href="/one.html">One</a></h3><p>Updated one.</p></div>',
+        },
+        {
+          doormat_index: 2,
+          href: '/two.html',
+          updatedHtml:
+            '<div class="col-lg-4 col-md-6"><h3><a href="/two.html">Two</a></h3><p>Updated two.</p></div>',
+        },
+      ],
+    });
+
+    const result = (component as any).extractDoormatRewriteHtmlFromStructuredResponse(
+      response,
+    );
+
+    expect(result).toContain('/one.html');
+    expect(result).toContain('Updated one.');
+    expect(result).toContain('/two.html');
+    expect(result).toContain('Updated two.');
+  });
+
   it('sends destination main HTML only for doormats with selected issues', () => {
     const analysisState = (component as any).topicDoormatAnalysisState;
     analysisState.setAnalysis(

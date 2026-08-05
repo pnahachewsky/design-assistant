@@ -569,7 +569,7 @@ export class PageAssistantCompareComponent
     if (key === PromptKey.Doormats) {
       const composed = await this.skillManager.composePrompt({
         basePrompt:
-          'Return the full HTML input with only the doormat section updated. Do not remove, reorder, or rewrite unrelated sections. Preserve page title, alerts, headings, and all other components exactly as provided. Return only updated HTML code with no other commentary.',
+          'Return raw HTML only. Return the full HTML input with only the doormat section updated. Do not return JSON, Markdown, schema-shaped output, or fields such as rewritten_doormat_set_html or full_updated_html. Do not remove, reorder, or rewrite unrelated sections. Preserve page title, alerts, headings, and all other components exactly as provided. Return only updated HTML code with no other commentary.',
         queryText: this.buildSkillQueryText(key, custom),
         promptKey: key,
         outputMode: 'html',
@@ -761,9 +761,66 @@ export class PageAssistantCompareComponent
     const parsed = this.alertAi.looseJsonParse(stripped);
     if (parsed && typeof parsed === 'object') return true;
 
-    return /"(?:rewrittenAlertHtml|rewritten_alert_html|rewrittenAlert|rewritten_alert|appliedDirectives|applied_directives|replacements|issues)"\s*:/i.test(
+    return /"(?:rewrittenAlertHtml|rewritten_alert_html|rewrittenAlert|rewritten_alert|rewrittenDoormatSetHtml|rewritten_doormat_set_html|fullUpdatedHtml|full_updated_html|updatedHtml|updated_html|doormats|appliedDirectives|applied_directives|replacements|issues)"\s*:/i.test(
       stripped,
     );
+  }
+
+  private extractDoormatRewriteHtmlFromStructuredResponse(
+    text: string,
+  ): string | null {
+    const cleaned = (text || '').trim();
+    if (!cleaned) return null;
+
+    const stripped = this.alertAi.stripCodeFences(cleaned);
+    const parsed = this.alertAi.looseJsonParse(stripped);
+    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+      return null;
+    }
+
+    const payload = parsed as Record<string, unknown>;
+    const candidates = [
+      payload['fullUpdatedHtml'],
+      payload['full_updated_html'],
+      payload['rewrittenDoormatSetHtml'],
+      payload['rewritten_doormat_set_html'],
+      payload['updatedHtml'],
+      payload['updated_html'],
+    ];
+
+    for (const candidate of candidates) {
+      if (typeof candidate !== 'string') continue;
+      const html = candidate.trim();
+      if (this.containsRenderableHtml(html)) return html;
+    }
+
+    const doormatFragments = this.extractDoormatUpdatedHtmlFragments(
+      payload['doormats'],
+    );
+    if (doormatFragments) return doormatFragments;
+
+    return null;
+  }
+
+  private extractDoormatUpdatedHtmlFragments(value: unknown): string | null {
+    if (!Array.isArray(value)) return null;
+
+    const fragments = value
+      .map((entry) => {
+        if (!entry || typeof entry !== 'object') return '';
+        const item = entry as Record<string, unknown>;
+        const html = item['updatedHtml'] ?? item['updated_html'];
+        return typeof html === 'string' && this.containsRenderableHtml(html)
+          ? html.trim()
+          : '';
+      })
+      .filter(Boolean);
+
+    return fragments.length ? fragments.join('\n') : null;
+  }
+
+  private containsRenderableHtml(value: string): boolean {
+    return /<[a-z][\s\S]*>/i.test(value);
   }
 
   private buildDoormatRewriteUserContent(html: string): string {
@@ -1724,16 +1781,29 @@ export class PageAssistantCompareComponent
           return;
         }
       } else {
+        const htmlFromResponse =
+          promptKeyForRequest === PromptKey.Doormats
+            ? (this.extractDoormatRewriteHtmlFromStructuredResponse(aiHtml) ??
+              aiHtml)
+            : aiHtml;
         // Last guard for non-alert prompts: never render JSON contracts as HTML.
-        if (this.looksLikeStructuredAiJsonResponse(aiHtml)) {
+        if (this.looksLikeStructuredAiJsonResponse(htmlFromResponse)) {
+          if (promptKeyForRequest === PromptKey.Doormats) {
+            console.warn(
+              'Doormat rewrite returned structured JSON without extractable HTML.',
+              {
+                responsePreview: aiHtml.slice(0, 500),
+              },
+            );
+          }
           throw new Error(
             'The AI returned structured JSON where HTML was expected. No comparison update was applied.',
           );
         }
         const htmlForFormatting =
           promptKeyForRequest === PromptKey.Doormats
-            ? this.applyDoormatRewriteToPageHtml(html, aiHtml)
-            : aiHtml;
+            ? this.applyDoormatRewriteToPageHtml(html, htmlFromResponse)
+            : htmlFromResponse;
         const formattedHtml = await this.urlDataService.formatHtml(
           htmlForFormatting,
           'ai',
