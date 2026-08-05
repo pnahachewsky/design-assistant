@@ -24911,6 +24911,12 @@ var AlertRewriteOrchestratorService = class _AlertRewriteOrchestratorService {
   }], null, null);
 })();
 
+// src/app/views/page-assistant/services/topic-doormats/topic-doormat.types.ts
+var TOPIC_DOORMAT_DIAGNOSTIC_ISSUE_IDS = /* @__PURE__ */ new Set([
+  "consistent-description-style-in-section",
+  "valid-dropdown-enhancement"
+]);
+
 // src/app/views/page-assistant/services/topic-doormats/topic-doormat-analysis-state.service.ts
 var TopicDoormatAnalysisStateService = class _TopicDoormatAnalysisStateService {
   analyzedHtml = signal("");
@@ -24934,7 +24940,7 @@ var TopicDoormatAnalysisStateService = class _TopicDoormatAnalysisStateService {
     this.responseReceived.set(false);
   }
   getSelectedRewriteIssues() {
-    return this.issueRows().filter((row) => row.include && row.issueId !== "no-issues" && row.issueId !== "consistent-description-style-in-section" && row.issueId !== "valid-dropdown-enhancement").map((row) => ({
+    return this.issueRows().filter((row) => row.include && row.issueId !== "no-issues" && !TOPIC_DOORMAT_DIAGNOSTIC_ISSUE_IDS.has(row.issueId)).map((row) => ({
       rowType: row.rowType,
       severity: row.severity,
       issueId: row.issueId,
@@ -28329,8 +28335,8 @@ var TopicDoormatIssueAnalysisService = class _TopicDoormatIssueAnalysisService {
     const analyses = this.analyzeTopicDoormatDescriptionStyles(doormatSummaries, descriptionStylesByDoormatIndex);
     const rows = [];
     analyses.forEach((analysis) => {
-      if (analysis.dropdownEnhancementSummaries.length) {
-        analysis.dropdownEnhancementSummaries.forEach((summary) => {
+      if (analysis.fieldflowSummaries.length) {
+        analysis.fieldflowSummaries.forEach((summary) => {
           rows.push({
             include: false,
             rowType: "doormat",
@@ -28418,7 +28424,7 @@ var TopicDoormatIssueAnalysisService = class _TopicDoormatIssueAnalysisService {
     return Array.from(sections.entries()).map(([sectionIndex, summaries]) => {
       const styleCounts = /* @__PURE__ */ new Map();
       const examplesByStyle = /* @__PURE__ */ new Map();
-      const dropdownEnhancementSummaries = summaries.filter((summary) => summary.hasFieldflow);
+      const fieldflowSummaries = summaries.filter((summary) => summary.hasFieldflow);
       summaries.forEach((summary) => {
         const style2 = descriptionStylesByDoormatIndex.get(summary.index) ?? "mixed-or-unclear";
         styleCounts.set(style2, (styleCounts.get(style2) ?? 0) + 1);
@@ -28435,7 +28441,7 @@ var TopicDoormatIssueAnalysisService = class _TopicDoormatIssueAnalysisService {
         sectionIndex,
         sectionTitle: summaries[0]?.sectionTitle || `Section ${sectionIndex}`,
         summaries,
-        dropdownEnhancementSummaries,
+        fieldflowSummaries,
         dominantStyle,
         styleCounts,
         examplesByStyle,
@@ -34211,7 +34217,7 @@ var TopicDoormatPresenterService = class _TopicDoormatPresenterService {
     return "unknown";
   }
   isNonCategoryRow(issue) {
-    return issue.issueId === "no-issues" || issue.issueId === "consistent-description-style-in-section" || issue.issueId === "valid-dropdown-enhancement";
+    return issue.issueId === "no-issues" || TOPIC_DOORMAT_DIAGNOSTIC_ISSUE_IDS.has(issue.issueId);
   }
   static \u0275fac = function TopicDoormatPresenterService_Factory(__ngFactoryType__) {
     return new (__ngFactoryType__ || _TopicDoormatPresenterService)();
@@ -36099,7 +36105,7 @@ var ComponentGuidanceComponent = class _ComponentGuidanceComponent {
     return "chip-unk";
   }
   isNoIssueRow(issue) {
-    return issue.issueId === "no-issues" || issue.issueId === "consistent-description-style-in-section" || issue.issueId === "valid-dropdown-enhancement";
+    return issue.issueId === "no-issues" || TOPIC_DOORMAT_DIAGNOSTIC_ISSUE_IDS.has(issue.issueId);
   }
   topicDoormatCellProvenance(issue, cell) {
     const explicit = issue.provenance?.[cell]?.filter((source) => source === "model" || source === "aida");
@@ -36840,7 +36846,7 @@ var ComponentGuidanceComponent = class _ComponentGuidanceComponent {
   }] });
 })();
 (() => {
-  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(ComponentGuidanceComponent, { className: "ComponentGuidanceComponent", filePath: "app/views/page-assistant/components/problems/component-guidance/component-guidance.component.ts", lineNumber: 196 });
+  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(ComponentGuidanceComponent, { className: "ComponentGuidanceComponent", filePath: "app/views/page-assistant/components/problems/component-guidance/component-guidance.component.ts", lineNumber: 197 });
 })();
 
 // src/app/views/page-assistant/components/problems/seo.component.ts
@@ -50376,4 +50382,4 @@ ${custom}` : promptBody;
 export {
   PageAssistantCompareComponent
 };
-//# sourceMappingURL=chunk-M7NC25PG.js.map
+//# sourceMappingURL=chunk-7ORX6TL5.js.map
