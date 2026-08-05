@@ -48884,6 +48884,9 @@ ${custom}` : promptBody;
     const cleaned = (text || "").trim();
     if (!cleaned)
       return false;
+    if (cleaned.startsWith("<") && this.containsRenderableHtml(cleaned)) {
+      return false;
+    }
     const stripped = this.alertAi.stripCodeFences(cleaned);
     const parsed = this.alertAi.looseJsonParse(stripped);
     if (parsed && typeof parsed === "object")
@@ -50437,4 +50440,4 @@ ${custom}` : promptBody;
 export {
   PageAssistantCompareComponent
 };
-//# sourceMappingURL=chunk-JHDSYX5H.js.map
+//# sourceMappingURL=chunk-KIC4E4DJ.js.map
