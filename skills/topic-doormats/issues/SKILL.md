@@ -14,12 +14,6 @@ Use this skill for issue analysis of topic doormat sets.
 - Use the issue taxonomy resource as the authoritative ruleset
 - Use the issues output schema as the required response shape
 - Run deterministic structural checks first, then judgment/editorial checks
-- Write model-generated issue descriptions, evidence, recommendations, and
-  explanatory reasons in the caller-requested output language, not necessarily
-  the page content language. Analyze source content in its original language,
-  but do not switch output language because the page is in another language.
-  Keep exact quoted page text in its original language only when the exact
-  wording is needed as evidence.
 - Treat caller-provided H2 section metadata as authoritative for section-local
   doormat numbering and the 9-doormat limit
 - Apply the 9-doormat limit per H2 section only; reset the count at each H2
@@ -142,6 +136,12 @@ Use this skill for issue analysis of topic doormat sets.
 - Keep evidence concise. For section-level issues, summarize the pattern and
   include only representative doormat numbers instead of quoting full
   descriptions
+- AIDA checks model-owned issues for missing evidence or recommendation after
+  the response is parsed. Empty strings and dash-only placeholders are treated
+  as missing. AIDA sends only those incomplete issue fields back to the model
+  for repair; if repair still does not provide usable text, AIDA keeps the
+  issue visible and displays "No AI evidence was received." or "No AI
+  recommendation was received." for the missing field.
 - Do not include destination URLs or "Most requested: n/a" in evidence unless
   the issue depends on links, destination matching, duplicate links, or
   destination context

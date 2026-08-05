@@ -15,9 +15,6 @@ Use this skill for rewriting topic doormat sets.
 - Use the rewrite output schema only when the caller requests structured JSON
 - Preserve all unrelated page HTML
 - Rewrite the doormat set consistently
-- Preserve the existing topic doormat section wrapper and return the updated
-  HTML with the `.gc-srvinfo` topic doormat section present when the input uses
-  that wrapper
 - Keep link text concise while preserving the destination meaning
 - Keep descriptions concise, specific, and parallel across the set
 - If the user payload includes `topic_doormat_issue_analysis.selected_issues`,

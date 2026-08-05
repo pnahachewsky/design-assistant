@@ -20,7 +20,7 @@
     },
     {
       "id": "link-text",
-      "text": "Use unique, descriptive link text that preserves destination meaning. Prefer action verbs or concise topic keywords; avoid vague terms, duplicate wording, unnecessary words, and trailing punctuation. Keep under 75 characters and aim for 35 or fewer."
+      "text": "Use unique, descriptive link text that preserves destination meaning. Prefer action verbs or concise topic keywords; avoid vague terms, duplicate wording, unnecessary words, and trailing punctuation. Keep under 75 characters, including spaces, and aim for 35 or fewer."
     },
     {
       "id": "description-evidence",
@@ -32,7 +32,7 @@
     },
     {
       "id": "description-length",
-      "text": "Keep descriptions under 120 characters. Aim for fewer than 100 characters when possible."
+      "text": "Keep descriptions under 120 characters, including spaces. Aim for fewer than 100 characters when possible."
     },
     {
       "id": "description-style",
