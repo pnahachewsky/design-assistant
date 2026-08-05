@@ -28,9 +28,10 @@
         "detected_description_style": {
           "type": "string",
           "enum": [
-            "sentence",
-            "phrase",
             "keyword-list",
+            "task-list",
+            "benefit-eligibility",
+            "dropdown-enhancement",
             "mixed-or-unclear"
           ]
         },
@@ -111,9 +112,10 @@
           "detected_description_style": {
             "type": "string",
             "enum": [
-              "sentence",
-              "phrase",
               "keyword-list",
+              "task-list",
+              "benefit-eligibility",
+              "dropdown-enhancement",
               "mixed-or-unclear"
             ]
           },
