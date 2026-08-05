@@ -98,15 +98,17 @@
   "style_detection": {
     "required": true,
     "link_text_styles": [
-      "task",
       "topic",
-      "situation",
+      "product-or-service",
+      "action",
+      "audience-group",
       "mixed-or-unclear"
     ],
     "link_text_style_definitions": {
-      "task": "A link name framed as an action, process, outcome, or user goal. This includes imperative verbs such as Find, Apply, Get, Determine, and gerund/action-noun openings such as Getting when the link name describes achieving, finding, receiving, claiming, updating, or managing something. Treat a gerund opening as task when it can be paraphrased as 'how to [verb/action]'. Because Canada.ca writing frontloads important information, the opening frame is the main style signal; later situation wording does not override a frontloaded task frame.",
-      "topic": "A noun phrase, program name, subject label, or information category that names what the destination is about without framing it as an action or situation.",
-      "situation": "A conditional, life-event, audience, or circumstance-framed link name where the situation is the frontloaded frame, often introduced by when, if, for, in, or similar situation wording. Do not classify as situation only because a task-framed link includes a later situation qualifier.",
+      "topic": "A broad subject area or information category that names what the destination is about, such as Arts and media, History and heritage, Cultural trade and investment, or Sport.",
+      "product-or-service": "A named product, program, plan, benefit, credit, form, tool, service, or account, such as Registered retirement savings plan, Tax-free savings accounts, Registered education savings plan, Registered disability savings plan, or First home savings account.",
+      "action": "A link name framed as an action the user can take or a task they can complete, such as Notify the CRA of the date of death, Apply for the CPP/QPP death benefit, Represent someone who died, or Apply for a clearance certificate.",
+      "audience-group": "A link name framed as an audience or user group, such as Individuals, Businesses, Charitable organizations, Non-Canadians, or Tax professionals.",
       "mixed-or-unclear": "Use only when the link name genuinely cannot be assigned one of the other styles."
     },
     "description_styles": [
@@ -152,7 +154,7 @@
       "conflicting-core-concept",
       "unavailable"
     ],
-    "instruction": "Compare link meaning and information scent with the supplied destination title and H1. Use analysisLinkText and analysisDescription for this comparison when present; those fields remove doormat labels from the doormat text. Added action wording, shortened wording, grammatical inflection, synonyms, paraphrases, acronyms, and program terminology remain accurate when they preserve meaning. Return the relationship basis separately. Use materially-different with conflicting-core-concept only for a different topic, task, audience, service, or scope and explain the conflict in destination_link_relationship_reason. AIDA creates link-name-too-different-from-destination-title only from that grounded pair."
+    "instruction": "Compare link meaning and information scent with the supplied destination title and H1. Use analysisLinkText and analysisDescription for this comparison when present; those fields remove doormat labels from the doormat text. Added action wording, shortened wording, grammatical inflection, synonyms, paraphrases, acronyms, and program terminology remain accurate when they preserve meaning. Return the relationship basis separately. Use materially-different with conflicting-core-concept only for a different topic, product/service, action, audience, or scope and explain the conflict in destination_link_relationship_reason. AIDA creates link-name-too-different-from-destination-title only from that grounded pair."
   },
   "destination_content_assessment": {
     "required": true,
@@ -170,7 +172,7 @@
     ]
   },
   "link_name_style_reporting": {
-    "minimum_standard": "Return detected_link_text_style for every doormat. AIDA uses mixed-link-name-styles-in-section when an H2 section has multiple represented styles and inconsistent-link-name-style only for one or two outliers from a dominant style.",
+    "minimum_standard": "Return detected_link_text_style for every doormat using the CRA link name style options: topic, product-or-service, action, audience-group, or mixed-or-unclear. AIDA uses mixed-link-name-styles-in-section when an H2 section has multiple represented styles and inconsistent-link-name-style only for one or two outliers from a dominant style.",
     "reporting": "Do not return mixed-link-name-styles-in-section or inconsistent-link-name-style directly. AIDA derives them from the classifications and does not report individual outliers when the section is mixed.",
     "do_not_report_when": [
       "Most or all doormats in the section would receive the same link-name style issue.",
@@ -255,7 +257,7 @@
       "severity": "High",
       "condition": "The doormat link points to the wrong page or wrong anchored location for the substantive, non-label meaning of the link text and description.",
       "recommendation": "Update the href so the doormat points to the intended destination page or anchor.",
-      "reporting": "Report only when the non-label portion of the doormat points to a different destination topic, task, audience, service, or scope than the destination title or H1. Do not report because a destination is closed, archived, replaced, inactive, no longer available, or carries a visible label. Do not require exact title/H1 wording when the meaning and information scent match."
+      "reporting": "Report only when the non-label portion of the doormat points to a different destination topic, product/service, action, audience, or scope than the destination title or H1. Do not report because a destination is closed, archived, replaced, inactive, no longer available, or carries a visible label. Do not require exact title/H1 wording when the meaning and information scent match."
     },
     {
       "id": "split-heading-link",
@@ -309,7 +311,7 @@
       "group": "Link name",
       "label": "Link name too different from destination",
       "severity": "Low",
-      "condition": "The link text does not need to exactly match the destination page title or heading. It should be reported only when the link name gives users a different or misleading information scent, such as a different topic, task, audience, service, or destination purpose. Ignore boilerplate title suffixes such as '- Canada.ca' and allow wording changes that make the link fit the doormat style on the page.",
+      "condition": "The link text does not need to exactly match the destination page title or heading. It should be reported only when the link name gives users a different or misleading information scent, such as a different topic, product/service, action, audience, or destination purpose. Ignore boilerplate title suffixes such as '- Canada.ca' and allow wording changes that make the link fit the doormat style on the page.",
       "recommendation": "Align the link text with the destination page meaning and information scent while keeping it concise and consistent with the page's doormat style.",
       "reporting": "Do not return this issue directly. Return destination_link_relationship, destination_link_relationship_basis, and destination_link_relationship_reason. AIDA reports this issue only for a grounded materially-different plus conflicting-core-concept classification."
     },
@@ -332,7 +334,7 @@
       "group": "Link name",
       "label": "Link has trailing punctuation",
       "severity": "Low",
-      "condition": "The link text ends with a period, colon, question mark, exclamation mark, semicolon, or comma. Link text should not end with punctuation regardless of whether it is classified as task, topic, or situation.",
+      "condition": "The link text ends with a period, colon, question mark, exclamation mark, semicolon, or comma. Link text should not end with punctuation regardless of whether it is classified as topic, product-or-service, action, or audience-group.",
       "recommendation": "Remove trailing punctuation from the link text."
     },
     {
@@ -340,7 +342,7 @@
       "group": "Link name",
       "label": "Inconsistent link name style",
       "severity": "Low",
-      "condition": "One or more doormat link texts are clear outliers from a dominant link text style used by the rest of the set, such as a lone task link among topic links.",
+      "condition": "One or more doormat link texts are clear outliers from a dominant link text style used by the rest of the set, such as a lone action link among topic links.",
       "recommendation": "Use the dominant link text style for this outlier unless the page context clearly justifies the exception.",
       "reporting": "Do not return this issue directly. AIDA derives it from detected_link_text_style only when a section has one dominant style and no reportable section-level mix.",
       "evidence_required": [
@@ -447,7 +449,7 @@
       "group": "Link name",
       "label": "Mixed link styles in section",
       "severity": "Low",
-      "condition": "The doormat section mixes link name styles, such as task, topic, and situation link names, in a way that reduces scannability or comparability.",
+      "condition": "The doormat section mixes link name styles, such as topics, products or services, actions, and audience groups, in a way that reduces scannability or comparability.",
       "recommendation": "Rewrite the link names so they use one consistent link name style across the section.",
       "reporting": "Do not return this issue directly. AIDA derives one section-level issue from detected_link_text_style and does not also report inconsistent-link-name-style for that section.",
       "evidence_required": [

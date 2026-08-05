@@ -32,23 +32,23 @@ Use this skill for issue analysis of topic doormat sets.
   issue by aggregating the per-doormat description style classifications.
 - Audit link name style within each H2 section. Report a section-level mixed
   link name style by returning exactly one `detected_link_text_style` for every
-  doormat. Classify grammatical construction, not destination subject matter.
-- Classify link names as `task` when they are framed as an action, process,
-  outcome, or user goal. This includes imperative openings such as "Find",
-  "Apply", "Get", and "Determine", and gerund/action-noun openings such as
-  "Getting" when the link name means getting, finding, receiving, claiming,
-  updating, or managing something. Treat a gerund opening as `task` when it can
-  be paraphrased as "how to [verb/action]". For example, "Getting the right CRA
-  benefits and credits for your family" means "how to get the right CRA benefits
-  and credits for your family", so it is `task`, not `topic`.
-- For link name style disambiguation, use the frontloaded wording as the main
-  style signal because Canada.ca writing frontloads important information. Later
-  situation wording does not override a frontloaded task frame. For example,
-  "Getting your tax benefits and credits when in an abusive situation" is
-  `task`, not `situation`.
-- Classify link names as `topic` only when they are noun phrases, program names,
-  subject labels, or information categories that name what the destination is
-  about without framing it as an action or situation.
+  doormat. Classify using the CRA link name style options: `topic`,
+  `product-or-service`, `action`, `audience-group`, or `mixed-or-unclear`.
+- Classify link names as `topic` when they name a broad subject area or
+  information category, such as "Arts and media", "History and heritage",
+  "Cultural trade and investment", or "Sport".
+- Classify link names as `product-or-service` when they name a product, program,
+  plan, benefit, credit, form, tool, service, or account, such as "Registered
+  retirement savings plan", "Tax-free savings accounts", "Registered education
+  savings plan", "Registered disability savings plan", or "First home savings
+  account".
+- Classify link names as `action` when they are framed as an action the user can
+  take or a task they can complete, such as "Notify the CRA of the date of
+  death", "Apply for the CPP/QPP death benefit", "Represent someone who died",
+  or "Apply for a clearance certificate".
+- Classify link names as `audience-group` when they are framed as an audience or
+  user group, such as "Individuals", "Businesses", "Charitable organizations",
+  "Non-Canadians", or "Tax professionals".
 - Return one `destination_link_relationship` and one
   `destination_link_relationship_basis` for every doormat by comparing meaning
   and information scent with the supplied destination title and H1. Use
@@ -56,7 +56,8 @@ Use this skill for issue analysis of topic doormat sets.
   are present; those fields remove doormat labels from the doormat text.
   Added action wording, shortened wording, grammatical inflection, acronyms,
   and program terminology are accurate when they preserve meaning. Use
-  `materially-different` only for a different topic, task, audience, or scope.
+  `materially-different` only for a different topic, product/service, action,
+  audience, or scope.
   Pair it with `conflicting-core-concept` only when a core concept actually
   conflicts, and explain the conflict in `destination_link_relationship_reason`.
 - Do not return `inconsistent-link-name-style`,
@@ -122,9 +123,9 @@ Use this skill for issue analysis of topic doormat sets.
   information scent, not exact wording. Ignore boilerplate suffixes such as
   `- Canada.ca`. It is acceptable for the link name wording to be shortened or
   adjusted to match the doormat style on the page. Report this issue only when
-  the link name is misleading, points to a different topic/task/audience, or
-  no longer gives users the same destination scent as the destination title or
-  heading.
+  the link name is misleading, points to a different topic, product/service,
+  action, audience, or no longer gives users the same destination scent as the
+  destination title or heading.
 - Do not report `broken-link`, `link-name-too-long`, `description-too-long`,
   `link-name-trailing-punctuation`, `description-trailing-punctuation`,
   `description-uses-first-or-second-person`, `duplicate-link-in-most-requested`,

@@ -26634,7 +26634,7 @@ var TopicDoormatIssueAnalysisService = class _TopicDoormatIssueAnalysisService {
     "benefit-eligibility",
     "dropdown-enhancement"
   ];
-  topicDoormatLinkTextStyleOrder = ["task", "topic", "situation"];
+  topicDoormatLinkTextStyleOrder = ["topic", "product-or-service", "action", "audience-group"];
   topicDoormatIssueTaxonomyLoad;
   topicDoormatModelIssueContract = "";
   topicDoormatIssueIdToLabel = /* @__PURE__ */ new Map();
@@ -29020,6 +29020,10 @@ ${JSON.stringify(contract)}`;
     return null;
   }
   normalizeTopicDoormatLinkTextStyle(value) {
+    if (value === "task")
+      return "action";
+    if (value === "situation")
+      return "audience-group";
     if (value === "mixed-or-unclear")
       return value;
     if (typeof value === "string" && this.topicDoormatLinkTextStyleOrder.includes(value)) {
@@ -50382,4 +50386,4 @@ ${custom}` : promptBody;
 export {
   PageAssistantCompareComponent
 };
-//# sourceMappingURL=chunk-7ORX6TL5.js.map
+//# sourceMappingURL=chunk-SAKGFGMV.js.map
