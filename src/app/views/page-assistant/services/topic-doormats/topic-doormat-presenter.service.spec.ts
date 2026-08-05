@@ -154,4 +154,21 @@ describe('TopicDoormatPresenterService', () => {
     expect(categories[1].severity).toBe('High');
     expect(service.getHealthFromCategories(categories)).toBe('severe');
   });
+
+  it('shows doormat-level diagnostic rows without adding them to categories', () => {
+    const diagnosticRow = row({
+      issueId: 'valid-dropdown-enhancement',
+      issue: 'Valid dropdown enhancement',
+      severity: 'OK',
+      include: false,
+    });
+
+    const groups = service.buildIssueGroups([diagnosticRow]);
+    const categories = service.buildIssueCategories([diagnosticRow]);
+
+    expect(groups[0].doormatRows.map((item) => item.issueId)).toEqual([
+      'valid-dropdown-enhancement',
+    ]);
+    expect(categories).toEqual([]);
+  });
 });

@@ -1109,7 +1109,11 @@ export class ComponentGuidanceComponent implements OnInit, OnDestroy {
   }
 
   isNoIssueRow(issue: TopicDoormatIssueRow): boolean {
-    return issue.issueId === 'no-issues';
+    return (
+      issue.issueId === 'no-issues' ||
+      issue.issueId === 'consistent-description-style-in-section' ||
+      issue.issueId === 'valid-dropdown-enhancement'
+    );
   }
 
   topicDoormatCellProvenance(

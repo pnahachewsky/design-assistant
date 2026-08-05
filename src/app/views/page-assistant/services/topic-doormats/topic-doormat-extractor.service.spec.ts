@@ -81,6 +81,37 @@ describe('TopicDoormatExtractorService', () => {
     expect(summaries[1].sectionItemIndex).toBe(2);
   });
 
+  it('tracks fieldflow dropdown links separately from doormat item links', () => {
+    const doc = service.parseHtmlDocument(`
+      <main>
+        <h2>Benefits</h2>
+        <div class="gc-srvinfo">
+          <div>
+            <h3><a href="/en/benefits/provincial.html">Provincial and territorial benefits</a></h3>
+            <p>Benefits that the CRA administers for the provinces and territories</p>
+            <div class="wb-fieldflow">
+              <p>Choose your location:</p>
+              <ul>
+                <li><a href="/en/benefits/alberta.html">Alberta</a></li>
+                <li><a href="/en/benefits/ontario.html">Ontario</a></li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </main>
+    `);
+
+    const summaries = service.extractSummaries(doc as Document);
+
+    expect(summaries[0]).toEqual(
+      jasmine.objectContaining({
+        itemLinkCount: 3,
+        fieldflowLinkCount: 2,
+        hasFieldflow: true,
+      }),
+    );
+  });
+
   it('excludes status labels after modern topic doormat links from link text counts', () => {
     const doc = service.parseHtmlDocument(`
       <main>

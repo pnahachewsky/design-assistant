@@ -50,7 +50,13 @@ export class TopicDoormatAnalysisStateService {
 
   getSelectedRewriteIssues(): TopicDoormatIssueRewriteInput[] {
     return this.issueRows()
-      .filter((row) => row.include && row.issueId !== 'no-issues')
+      .filter(
+        (row) =>
+          row.include &&
+          row.issueId !== 'no-issues' &&
+          row.issueId !== 'consistent-description-style-in-section' &&
+          row.issueId !== 'valid-dropdown-enhancement',
+      )
       .map((row) => ({
         rowType: row.rowType,
         severity: row.severity,

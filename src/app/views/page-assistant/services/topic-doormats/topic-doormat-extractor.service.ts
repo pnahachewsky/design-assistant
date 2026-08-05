@@ -234,6 +234,9 @@ export class TopicDoormatExtractorService {
         sectionSummaries.set(sectionIndex, sectionRows);
         const descriptionElement = item?.querySelector('p') ?? null;
         const description = this.cleanVisibleElementText(descriptionElement);
+        const fieldflowLinkCount = item
+          ? item.querySelectorAll('.wb-fieldflow a[href]').length
+          : 0;
         const summary: TopicDoormatSummary = {
           index: summaries.length + 1,
           linkText,
@@ -244,11 +247,13 @@ export class TopicDoormatExtractorService {
             ? this.toNumber(heading.tagName.slice(1))
             : null,
           itemLinkCount: item ? item.querySelectorAll('a[href]').length : 0,
+          fieldflowLinkCount,
           headingLinkCount,
           descriptionLinkCount: descriptionElement
             ? descriptionElement.querySelectorAll('a[href]').length
             : 0,
           hasSplitHeadingLink: headingLinkCount > 1,
+          hasFieldflow: fieldflowLinkCount > 0,
           hasDescriptionLink: !!descriptionElement?.querySelector('a[href]'),
           hasDescriptionIconOrImage: !!descriptionElement?.querySelector(
             'img, svg, i[class*="glyphicon"], i[class*="fa"], span[class*="glyphicon"], span[class*="fa"]',

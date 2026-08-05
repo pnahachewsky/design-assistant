@@ -71,7 +71,7 @@ describe('TopicDoormatModelClientService', () => {
     expect(result.model).toBe('selected-model');
     expect(openRouter.call.calls.first().args[0]).toBe('selected-model');
     expect(openRouter.call.calls.first().args[2]).toEqual(
-      jasmine.objectContaining({ timeoutMs: 120000 }),
+      jasmine.objectContaining({ timeoutMs: 60000 }),
     );
     expect(debug).toHaveBeenCalledWith(
       'model attempt started',
@@ -140,7 +140,7 @@ describe('TopicDoormatModelClientService', () => {
     expect(result.text).toBe('{"doormats":[]}');
     expect(openRouter.call.calls.allArgs()[1][0]).toBe('selected-model');
     expect(openRouter.call.calls.allArgs()[1][2]).toEqual(
-      jasmine.objectContaining({ timeoutMs: 120000 }),
+      jasmine.objectContaining({ timeoutMs: 60000 }),
     );
     expect(debug).toHaveBeenCalledWith(
       'model json repair succeeded',
@@ -166,7 +166,7 @@ describe('TopicDoormatModelClientService', () => {
     expect(openRouter.call.calls.first().args[2]).toEqual(
       jasmine.objectContaining({
         title: 'Content Assistant - Topic Doormat Issue Field Repair',
-        timeoutMs: 120000,
+        timeoutMs: 60000,
       }),
     );
     expect(debug).toHaveBeenCalledWith(

@@ -52,7 +52,7 @@ export class TopicDoormatPresenterService {
       }
       if (row.rowType === 'section') {
         group.sectionRows.push(row);
-      } else if (!this.isNoIssueRow(row)) {
+      } else if (row.issueId !== 'no-issues') {
         group.doormatRows.push(row);
       }
       if (row.rowType === 'doormat' && row.sectionItemIndex) {
@@ -76,7 +76,7 @@ export class TopicDoormatPresenterService {
     const byIssue = new Map<string, TopicDoormatIssueSummary>();
 
     rows.forEach((row) => {
-      if (this.isNoIssueRow(row)) return;
+      if (this.isNonCategoryRow(row)) return;
       const issueId = row.issueId || row.issue;
       if (!issueId) return;
       const existing = byIssue.get(issueId);
@@ -147,7 +147,11 @@ export class TopicDoormatPresenterService {
     return 'unknown';
   }
 
-  private isNoIssueRow(issue: TopicDoormatIssueRow): boolean {
-    return issue.issueId === 'no-issues';
+  private isNonCategoryRow(issue: TopicDoormatIssueRow): boolean {
+    return (
+      issue.issueId === 'no-issues' ||
+      issue.issueId === 'consistent-description-style-in-section' ||
+      issue.issueId === 'valid-dropdown-enhancement'
+    );
   }
 }

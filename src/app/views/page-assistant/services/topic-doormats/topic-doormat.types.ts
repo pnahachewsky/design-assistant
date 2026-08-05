@@ -92,9 +92,11 @@ export interface TopicDoormatSummary {
   description: string;
   headingLevel: number | null;
   itemLinkCount: number;
+  fieldflowLinkCount?: number;
   headingLinkCount: number;
   descriptionLinkCount: number;
   hasSplitHeadingLink: boolean;
+  hasFieldflow?: boolean;
   hasDescriptionLink: boolean;
   hasDescriptionIconOrImage: boolean;
   hasDescriptionSpecialFormatting: boolean;
@@ -133,9 +135,10 @@ export interface TopicDoormatIssueTaxonomy {
 }
 
 export type TopicDoormatDescriptionStyle =
-  | 'sentence'
-  | 'phrase'
   | 'keyword-list'
+  | 'task-list'
+  | 'benefit-eligibility'
+  | 'dropdown-enhancement'
   | 'mixed-or-unclear';
 
 export type TopicDoormatLinkTextStyle =
@@ -165,6 +168,7 @@ export interface TopicDoormatSectionStyleAnalysis {
   sectionIndex: number;
   sectionTitle: string;
   summaries: TopicDoormatSummary[];
+  dropdownEnhancementSummaries: TopicDoormatSummary[];
   dominantStyle: Exclude<
     TopicDoormatDescriptionStyle,
     'mixed-or-unclear'

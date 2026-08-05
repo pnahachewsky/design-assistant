@@ -23,11 +23,11 @@ Use this skill for issue analysis of topic doormat sets.
 - Apply consistency checks within the caller-provided H2 section unless the
   taxonomy explicitly scopes a check more broadly
 - Classify every doormat description using exactly one
-  `detected_description_style` value from the output schema. Classify its
-  grammatical construction, not the subject it discusses. A sentence-like
-  description remains `sentence` even when the final period is intentionally
-  omitted. For example, "Find out whether you are eligible" is `sentence`, not
-  `phrase`.
+  `detected_description_style` value from the output schema. Classify the CRA
+  doormat description style option being used: comma-separated keyword list,
+  task list, benefit and eligibility description, or valid drop-down
+  enhancement. If text appears before a drop-down, classify that text rather
+  than the drop-down enhancement. Do not classify by grammar alone.
 - Do not return `mixed-description-style-in-section`. AIDA derives that section
   issue by aggregating the per-doormat description style classifications.
 - Audit link name style within each H2 section. Report a section-level mixed

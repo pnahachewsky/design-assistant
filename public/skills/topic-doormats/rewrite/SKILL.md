@@ -26,6 +26,9 @@ Use this skill for rewriting topic doormat sets.
   required to maintain valid HTML after editing the affected doormats
 - If the user payload includes `page_html`, rewrite that HTML and return only the
   requested output format
+- For HTML output, return HTML that includes the complete topic doormat wrapper
+  (`.gc-srvinfo`) with the updated doormat items. Do not return only individual
+  doormat item fragments unless structured output is explicitly requested.
 
 If this file conflicts with loaded rewrite rules or a loaded output schema,
 follow the loaded resource.

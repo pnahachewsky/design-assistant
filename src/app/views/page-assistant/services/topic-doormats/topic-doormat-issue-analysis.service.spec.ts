@@ -112,17 +112,43 @@ class TranslateServiceStub {
     if (key.includes('mixedDescriptionStyle.recommendation')) {
       return 'Rewrite the descriptions so they use one consistent description style across the section.';
     }
-    if (key.includes('descriptionStyles.sentence')) return 'sentences';
-    if (key.includes('descriptionStyles.phrase')) return 'phrases';
-    if (key.includes('descriptionStyles.keyword-list')) return 'keyword lists';
-    if (key.includes('descriptionStyleEvidenceLabels.sentence')) {
-      return 'Sentence';
+    if (key.includes('consistentDescriptionStyle.issue')) {
+      return 'Consistent description style';
     }
-    if (key.includes('descriptionStyleEvidenceLabels.phrase')) {
-      return 'Phrase';
+    if (key.includes('consistentDescriptionStyle.evidence')) {
+      return `All ${params?.['count']} descriptions classified as ${params?.['style']}.`;
+    }
+    if (key.includes('consistentDescriptionStyle.recommendation')) {
+      return 'Temporary diagnostic row for reviewing AI classification.';
+    }
+    if (key.includes('dropdownEnhancementNote.issue')) {
+      return 'Valid dropdown enhancement';
+    }
+    if (key.includes('dropdownEnhancementNote.evidence')) {
+      return 'This doormat uses a valid fieldflow dropdown enhancement.';
+    }
+    if (key.includes('dropdownEnhancementNote.recommendation')) {
+      return 'Temporary diagnostic row for reviewing fieldflow dropdown handling.';
+    }
+    if (key.includes('descriptionStyles.keyword-list')) return 'keyword lists';
+    if (key.includes('descriptionStyles.task-list')) return 'task lists';
+    if (key.includes('descriptionStyles.benefit-eligibility')) {
+      return 'benefit and eligibility descriptions';
+    }
+    if (key.includes('descriptionStyles.dropdown-enhancement')) {
+      return 'dropdown enhancements';
     }
     if (key.includes('descriptionStyleEvidenceLabels.keyword-list')) {
       return 'Keyword list';
+    }
+    if (key.includes('descriptionStyleEvidenceLabels.task-list')) {
+      return 'Task list';
+    }
+    if (key.includes('descriptionStyleEvidenceLabels.benefit-eligibility')) {
+      return 'Benefit and eligibility';
+    }
+    if (key.includes('descriptionStyleEvidenceLabels.dropdown-enhancement')) {
+      return 'Dropdown enhancement';
     }
     if (key.includes('repeatedDescriptionOpening.evidence')) {
       return `${params?.['count']} of ${params?.['total']} descriptions begin with "${params?.['opening']}": doormats ${params?.['indexes']}.`;
@@ -826,19 +852,19 @@ describe('TopicDoormatIssueAnalysisService', () => {
     const classifiedDescriptions = [
       {
         description: 'Learn how to submit a trust return.',
-        style: 'sentence',
+        style: 'task-list',
       },
       {
         description: 'Apply for a trust account number.',
-        style: 'sentence',
+        style: 'task-list',
       },
       {
         description: 'Available to qualifying resident trusts.',
-        style: 'phrase',
+        style: 'benefit-eligibility',
       },
       {
         description: 'Monthly support for eligible beneficiaries.',
-        style: 'phrase',
+        style: 'benefit-eligibility',
       },
     ];
     openRouter.call.and.resolveTo({
@@ -890,8 +916,397 @@ describe('TopicDoormatIssueAnalysisService', () => {
         sectionIndex: 1,
       }),
     );
-    expect(mixedStyleRow?.evidence).toContain('Sentence examples: 1, 2.');
-    expect(mixedStyleRow?.evidence).toContain('Phrase examples: 3, 4.');
+    expect(mixedStyleRow?.evidence).toContain('Task list examples: 1, 2.');
+    expect(mixedStyleRow?.evidence).toContain(
+      'Benefit and eligibility examples: 3, 4.',
+    );
+  });
+
+  it('adds a non-actionable section row for a consistent description style', async () => {
+    const descriptions = [
+      'File income tax, get the benefit package',
+      'Apply for benefits, check payment status',
+      'Update direct deposit, view tax slips',
+    ];
+    openRouter.call.and.resolveTo({
+      choices: [
+        {
+          message: {
+            content: JSON.stringify({
+              doormats: descriptions.map((description, index) => ({
+                doormat_index: index + 1,
+                link_text: `Benefit task ${index + 1}`,
+                href: `/benefits/task-${index + 1}.html`,
+                description,
+                detected_description_style: 'task-list',
+                ...defaultLinkClassifications(),
+                destination_content_assessment:
+                  emptyDestinationContentAssessment(),
+                issues: [],
+              })),
+            }),
+          },
+        },
+      ],
+    });
+
+    const result = await service.analyze({
+      doormatSummaries: descriptions.map((description, index) =>
+        summary({
+          index: index + 1,
+          linkText: `Benefit task ${index + 1}`,
+          href: `/benefits/task-${index + 1}.html`,
+          description,
+          sectionItemIndex: index + 1,
+          sectionDoormatCount: descriptions.length,
+        }),
+      ),
+      pageLanguage: 'en',
+      hasLegacyTopicDoormatTemplate: false,
+      mostRequestedLinks: [],
+      selectedModel: 'selected-model',
+    });
+
+    const styleRow = result.rows.find(
+      (row) => row.issueId === 'consistent-description-style-in-section',
+    );
+    expect(styleRow).toEqual(
+      jasmine.objectContaining({
+        include: false,
+        rowType: 'section',
+        severity: 'OK',
+        sectionIndex: 1,
+        issue: 'Consistent description style',
+        evidence: 'All 3 descriptions classified as task lists.',
+        recommendation: 'Temporary diagnostic row for reviewing AI classification.',
+      }),
+    );
+    expect(
+      result.rows.some(
+        (row) => row.issueId === 'mixed-description-style-in-section',
+      ),
+    ).toBeFalse();
+  });
+
+  it('notes fieldflow dropdown enhancements while checking their description text style', async () => {
+    openRouter.call.and.resolveTo({
+      choices: [
+        {
+          message: {
+            content: JSON.stringify({
+              doormats: [
+                {
+                  doormat_index: 1,
+                  link_text: 'Provincial and territorial benefits',
+                  href: '/benefits/provincial.html',
+                  description:
+                    'Benefits that the CRA administers for the provinces and territories',
+                  detected_description_style: 'benefit-eligibility',
+                  ...defaultLinkClassifications(),
+                  destination_content_assessment:
+                    emptyDestinationContentAssessment(),
+                  issues: [],
+                },
+                {
+                  doormat_index: 2,
+                  link_text: 'Benefit payment dates',
+                  href: '/benefits/dates.html',
+                  description: 'Monthly payment dates for eligible families',
+                  detected_description_style: 'benefit-eligibility',
+                  ...defaultLinkClassifications(),
+                  destination_content_assessment:
+                    emptyDestinationContentAssessment(),
+                  issues: [],
+                },
+                {
+                  doormat_index: 3,
+                  link_text: 'Child benefit',
+                  href: '/benefits/child.html',
+                  description: 'Monthly payment for eligible families',
+                  detected_description_style: 'benefit-eligibility',
+                  ...defaultLinkClassifications(),
+                  destination_content_assessment:
+                    emptyDestinationContentAssessment(),
+                  issues: [],
+                },
+              ],
+            }),
+          },
+        },
+      ],
+    });
+
+    const result = await service.analyze({
+      doormatSummaries: [
+        summary({
+          index: 1,
+          linkText: 'Provincial and territorial benefits',
+          href: '/benefits/provincial.html',
+          description:
+            'Benefits that the CRA administers for the provinces and territories',
+          itemLinkCount: 14,
+          fieldflowLinkCount: 13,
+          hasFieldflow: true,
+          sectionItemIndex: 1,
+          sectionDoormatCount: 3,
+        }),
+        summary({
+          index: 2,
+          linkText: 'Benefit payment dates',
+          href: '/benefits/dates.html',
+          description: 'Monthly payment dates for eligible families',
+          sectionItemIndex: 2,
+          sectionDoormatCount: 3,
+        }),
+        summary({
+          index: 3,
+          linkText: 'Child benefit',
+          href: '/benefits/child.html',
+          description: 'Monthly payment for eligible families',
+          sectionItemIndex: 3,
+          sectionDoormatCount: 3,
+        }),
+      ],
+      pageLanguage: 'en',
+      hasLegacyTopicDoormatTemplate: false,
+      mostRequestedLinks: [],
+      selectedModel: 'selected-model',
+    });
+
+    expect(result.rows.some((row) => row.issueId === 'multiple-links')).toBeFalse();
+    const dropdownNoteRow = result.rows.find(
+      (row) => row.issueId === 'valid-dropdown-enhancement',
+    );
+    expect(dropdownNoteRow).toEqual(
+      jasmine.objectContaining({
+        rowType: 'doormat',
+        severity: 'OK',
+        include: false,
+        doormatIndex: 1,
+        sectionItemIndex: 1,
+        evidence:
+          'This doormat uses a valid fieldflow dropdown enhancement.',
+      }),
+    );
+
+    const consistentStyleRow = result.rows.find(
+      (row) => row.issueId === 'consistent-description-style-in-section',
+    );
+	    expect(consistentStyleRow).toEqual(
+	      jasmine.objectContaining({
+	        include: false,
+	        rowType: 'section',
+	        severity: 'OK',
+	        evidence:
+	          'All 3 descriptions classified as benefit and eligibility descriptions.',
+	      }),
+	    );
+    expect(
+      result.rows.some(
+        (row) => row.issueId === 'mixed-description-style-in-section',
+      ),
+    ).toBeFalse();
+  });
+
+  it('checks mixed description styles across all doormats including fieldflow doormats', async () => {
+    openRouter.call.and.resolveTo({
+      choices: [
+        {
+          message: {
+            content: JSON.stringify({
+              doormats: [
+                {
+                  doormat_index: 1,
+                  link_text: 'Provincial and territorial benefits',
+                  href: '/benefits/provincial.html',
+                  description:
+                    'Benefits that the CRA administers for the provinces and territories',
+                  detected_description_style: 'benefit-eligibility',
+                  ...defaultLinkClassifications(),
+                  destination_content_assessment:
+                    emptyDestinationContentAssessment(),
+                  issues: [],
+                },
+                {
+                  doormat_index: 2,
+                  link_text: 'Benefit topics',
+                  href: '/benefits/topics.html',
+                  description: 'Payment dates, eligibility, application status',
+                  detected_description_style: 'keyword-list',
+                  ...defaultLinkClassifications(),
+                  destination_content_assessment:
+                    emptyDestinationContentAssessment(),
+                  issues: [],
+                },
+                {
+                  doormat_index: 3,
+                  link_text: 'Credit topics',
+                  href: '/benefits/credits.html',
+                  description: 'Amounts, payment dates, eligibility',
+                  detected_description_style: 'keyword-list',
+                  ...defaultLinkClassifications(),
+                  destination_content_assessment:
+                    emptyDestinationContentAssessment(),
+                  issues: [],
+                },
+                {
+                  doormat_index: 4,
+                  link_text: 'Apply for a benefit',
+                  href: '/benefits/apply.html',
+                  description: 'Apply for benefits, check application status',
+                  detected_description_style: 'task-list',
+                  ...defaultLinkClassifications(),
+                  destination_content_assessment:
+                    emptyDestinationContentAssessment(),
+                  issues: [],
+                },
+              ],
+            }),
+          },
+        },
+      ],
+    });
+
+    const result = await service.analyze({
+      doormatSummaries: [
+        summary({
+          index: 1,
+          linkText: 'Provincial and territorial benefits',
+          href: '/benefits/provincial.html',
+          description:
+            'Benefits that the CRA administers for the provinces and territories',
+          itemLinkCount: 14,
+          fieldflowLinkCount: 13,
+          hasFieldflow: true,
+          sectionItemIndex: 1,
+          sectionDoormatCount: 4,
+        }),
+        summary({
+          index: 2,
+          linkText: 'Benefit topics',
+          href: '/benefits/topics.html',
+          description: 'Payment dates, eligibility, application status',
+          sectionItemIndex: 2,
+          sectionDoormatCount: 4,
+        }),
+        summary({
+          index: 3,
+          linkText: 'Credit topics',
+          href: '/benefits/credits.html',
+          description: 'Amounts, payment dates, eligibility',
+          sectionItemIndex: 3,
+          sectionDoormatCount: 4,
+        }),
+        summary({
+          index: 4,
+          linkText: 'Apply for a benefit',
+          href: '/benefits/apply.html',
+          description: 'Apply for benefits, check application status',
+          sectionItemIndex: 4,
+          sectionDoormatCount: 4,
+        }),
+      ],
+      pageLanguage: 'en',
+      hasLegacyTopicDoormatTemplate: false,
+      mostRequestedLinks: [],
+      selectedModel: 'selected-model',
+    });
+
+    const dropdownNoteRow = result.rows.find(
+      (row) => row.issueId === 'valid-dropdown-enhancement',
+    );
+    expect(dropdownNoteRow?.evidence).toBe(
+      'This doormat uses a valid fieldflow dropdown enhancement.',
+    );
+    expect(dropdownNoteRow?.rowType).toBe('doormat');
+    expect(dropdownNoteRow?.doormatIndex).toBe(1);
+    const mixedStyleRow = result.rows.find(
+      (row) => row.issueId === 'mixed-description-style-in-section',
+    );
+	    expect(mixedStyleRow).toEqual(
+	      jasmine.objectContaining({
+	        rowType: 'section',
+	        severity: 'Low',
+	      }),
+	    );
+	    expect(mixedStyleRow?.evidence).toContain('Keyword list examples: 2, 3.');
+	    expect(mixedStyleRow?.evidence).toContain('Task list examples: 4.');
+	    expect(mixedStyleRow?.evidence).toContain(
+	      'Benefit and eligibility examples: 1.',
+	    );
+  });
+
+  it('rejects dropdown enhancement classifications on doormats without fieldflow', async () => {
+    const descriptions = [
+      'Benefits that the CRA administers for the provinces and territories',
+      'Quarterly payment for people with low and modest incomes',
+      'Monthly payment for eligible families',
+    ];
+    openRouter.call.and.resolveTo({
+      choices: [
+        {
+          message: {
+            content: JSON.stringify({
+              doormats: descriptions.map((description, index) => ({
+                doormat_index: index + 1,
+                link_text: `Benefit ${index + 1}`,
+                href: `/benefits/${index + 1}.html`,
+                description,
+                detected_description_style: 'dropdown-enhancement',
+                ...defaultLinkClassifications(),
+                destination_content_assessment:
+                  emptyDestinationContentAssessment(),
+                issues: [],
+              })),
+            }),
+          },
+        },
+      ],
+    });
+
+    const result = await service.analyze({
+      doormatSummaries: descriptions.map((description, index) =>
+        summary({
+          index: index + 1,
+          linkText: `Benefit ${index + 1}`,
+          href: `/benefits/${index + 1}.html`,
+          description,
+          itemLinkCount: index === 0 ? 14 : 1,
+          fieldflowLinkCount: index === 0 ? 13 : 0,
+          hasFieldflow: index === 0,
+          sectionItemIndex: index + 1,
+          sectionDoormatCount: descriptions.length,
+        }),
+      ),
+      pageLanguage: 'en',
+      hasLegacyTopicDoormatTemplate: false,
+      mostRequestedLinks: [],
+      selectedModel: 'selected-model',
+    });
+
+    const consistentStyleRow = result.rows.find(
+      (row) => row.issueId === 'consistent-description-style-in-section',
+    );
+    expect(consistentStyleRow).toBeUndefined();
+    const dropdownNoteRow = result.rows.find(
+      (row) => row.issueId === 'valid-dropdown-enhancement',
+    );
+    expect(dropdownNoteRow).toEqual(
+      jasmine.objectContaining({
+        rowType: 'doormat',
+        include: false,
+        severity: 'OK',
+        doormatIndex: 1,
+        evidence:
+          'This doormat uses a valid fieldflow dropdown enhancement.',
+      }),
+    );
+    expect(
+      result.rows.some(
+        (row) => row.issueId === 'mixed-description-style-in-section',
+      ),
+    ).toBeFalse();
+    expect(result.rows.some((row) => row.issueId === 'multiple-links')).toBeFalse();
   });
 
   it('derives link-style and destination rows from classifications for the trust-page regression case', async () => {

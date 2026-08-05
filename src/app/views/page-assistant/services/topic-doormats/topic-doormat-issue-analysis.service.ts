@@ -196,7 +196,12 @@ export class TopicDoormatIssueAnalysisService {
   private readonly topicDoormatDescriptionStyleOrder: Exclude<
     TopicDoormatDescriptionStyle,
     'mixed-or-unclear'
-  >[] = ['sentence', 'phrase', 'keyword-list'];
+  >[] = [
+    'keyword-list',
+    'task-list',
+    'benefit-eligibility',
+    'dropdown-enhancement',
+  ];
   private readonly topicDoormatLinkTextStyleOrder: Exclude<
     TopicDoormatLinkTextStyle,
     'mixed-or-unclear'
@@ -228,7 +233,7 @@ export class TopicDoormatIssueAnalysisService {
       Array.from(this.locallyOwnedTopicDoormatIssueIds).join(', '),
       'You must still return exactly one allowed detected_description_style for every doormat.',
       'You must still return exactly one allowed detected_link_text_style, destination_link_relationship, and destination_link_relationship_basis for every doormat.',
-      'Classify the grammatical construction, not the subject matter. A sentence-like description remains sentence even when final punctuation is intentionally omitted.',
+      'Classify the description using the CRA doormat description style options, not grammatical construction alone.',
     ].join('\n');
     const reportLanguageInstruction =
       this.buildTopicDoormatReportLanguageInstruction(input.reportLanguage);
@@ -1038,9 +1043,14 @@ export class TopicDoormatIssueAnalysisService {
     const reportableSectionIssueRows = sectionIssueRows.filter(
       (row) => !this.locallyOwnedTopicDoormatIssueIds.has(row.issueId),
     );
+    const effectiveDescriptionStylesByDoormatIndex =
+      this.applyTopicDoormatDescriptionStyleOverrides(
+        doormatSummaries,
+        descriptionStylesByDoormatIndex,
+      );
     const descriptionStyleAnalyses = this.analyzeTopicDoormatDescriptionStyles(
       doormatSummaries,
-      descriptionStylesByDoormatIndex,
+      effectiveDescriptionStylesByDoormatIndex,
     );
     const descriptionStyleAnalysisBySection = new Map(
       descriptionStyleAnalyses.map((analysis) => [
@@ -1088,7 +1098,7 @@ export class TopicDoormatIssueAnalysisService {
           row.sectionIndex,
         );
         const rowStyle = row.doormatIndex
-          ? descriptionStylesByDoormatIndex.get(row.doormatIndex)
+            ? effectiveDescriptionStylesByDoormatIndex.get(row.doormatIndex)
           : undefined;
         return (
           !analysis?.dominantStyle ||
@@ -1124,7 +1134,7 @@ export class TopicDoormatIssueAnalysisService {
       pageLanguage,
       mostRequestedLinks,
       uploadData,
-      descriptionStylesByDoormatIndex,
+      effectiveDescriptionStylesByDoormatIndex,
       destinationContentAssessmentsByDoormatIndex,
       linkStylesByDoormatIndex,
       destinationLinkAssessmentsByDoormatIndex,
@@ -1181,7 +1191,7 @@ export class TopicDoormatIssueAnalysisService {
         sectionIndex: summary.sectionIndex,
         sectionItemIndex: summary.sectionItemIndex,
         style:
-          descriptionStylesByDoormatIndex.get(summary.index) ??
+          effectiveDescriptionStylesByDoormatIndex.get(summary.index) ??
           'missing-or-invalid',
       })),
       linkStylesByDoormatIndex: doormatSummaries.map((summary) => ({
@@ -2470,7 +2480,7 @@ export class TopicDoormatIssueAnalysisService {
       }
 
       if (
-        summary.itemLinkCount > 1 &&
+        this.getTopicDoormatRogueItemLinkCount(summary) > 1 &&
         !summary.hasSplitHeadingLink &&
         !summary.hasDescriptionLink
       ) {
@@ -2562,7 +2572,8 @@ export class TopicDoormatIssueAnalysisService {
   private buildTopicDoormatMultipleLinksEvidence(
     doormat: TopicDoormatSummary,
   ): string {
-    const additionalLinkCount = Math.max(doormat.itemLinkCount - 1, 0);
+    const linkCount = this.getTopicDoormatRogueItemLinkCount(doormat);
+    const additionalLinkCount = Math.max(linkCount - 1, 0);
     const additionalLabel =
       additionalLinkCount === 1
         ? this.getTopicDoormatDeterministicText('labels.oneAdditionalLink')
@@ -2570,9 +2581,16 @@ export class TopicDoormatIssueAnalysisService {
             count: additionalLinkCount,
           });
     return this.getTopicDoormatDeterministicText('multipleLinks.evidence', {
-      linkCount: doormat.itemLinkCount,
+      linkCount,
       additionalLabel,
     });
+  }
+
+  private getTopicDoormatRogueItemLinkCount(doormat: TopicDoormatSummary): number {
+    return Math.max(
+      doormat.itemLinkCount - (doormat.fieldflowLinkCount ?? 0),
+      0,
+    );
   }
 
   private buildLocalTopicDoormatRepeatedDescriptionOpeningRows(
@@ -3062,24 +3080,88 @@ export class TopicDoormatIssueAnalysisService {
     const rows: TopicDoormatIssueRow[] = [];
 
     analyses.forEach((analysis) => {
+      if (analysis.dropdownEnhancementSummaries.length) {
+        analysis.dropdownEnhancementSummaries.forEach((summary) => {
+          rows.push({
+            include: false,
+            rowType: 'doormat',
+            severity: 'OK',
+            doormat: summary.linkText,
+            doormatLabel: summary.linkText,
+            issueId: 'valid-dropdown-enhancement',
+            issue: this.getTopicDoormatDeterministicText(
+              'dropdownEnhancementNote.issue',
+            ),
+            evidence: this.getTopicDoormatDeterministicText(
+              'dropdownEnhancementNote.evidence',
+            ),
+            recommendation: this.getTopicDoormatDeterministicText(
+              'dropdownEnhancementNote.recommendation',
+            ),
+            doormatIndex: summary.index,
+            sectionIndex: summary.sectionIndex,
+            sectionTitle: summary.sectionTitle,
+            sectionItemIndex: summary.sectionItemIndex,
+          });
+        });
+      }
+
       const key = `${analysis.sectionIndex}|mixed-description-style-in-section`;
-      if (!analysis.isMixed || existingIssueKeys.has(key)) return;
+      if (analysis.isMixed) {
+        if (existingIssueKeys.has(key)) return;
+        rows.push({
+          include: true,
+          rowType: 'section',
+          severity: 'Low',
+          doormat: this.buildTopicDoormatSectionLabel(
+            analysis.sectionIndex,
+            doormatSummaries,
+          ),
+          doormatLabel: 'All doormats in section',
+          issueId: 'mixed-description-style-in-section',
+          issue: this.getTopicDoormatIssueLabel(
+            'mixed-description-style-in-section',
+          ),
+          evidence: this.buildTopicDoormatMixedStyleEvidence(analysis),
+          recommendation: this.getTopicDoormatDeterministicText(
+            'mixedDescriptionStyle.recommendation',
+          ),
+          sectionIndex: analysis.sectionIndex,
+          sectionTitle: analysis.sectionTitle,
+        });
+        return;
+      }
+
+      if (
+        !analysis.dominantStyle ||
+        analysis.summaries.length < 2 ||
+        (analysis.styleCounts.get(analysis.dominantStyle) ?? 0) !==
+          analysis.summaries.length
+      ) {
+        return;
+      }
       rows.push({
-        include: true,
+        include: false,
         rowType: 'section',
-        severity: 'Low',
+        severity: 'OK',
         doormat: this.buildTopicDoormatSectionLabel(
           analysis.sectionIndex,
           doormatSummaries,
         ),
         doormatLabel: 'All doormats in section',
-        issueId: 'mixed-description-style-in-section',
-        issue: this.getTopicDoormatIssueLabel(
-          'mixed-description-style-in-section',
+        issueId: 'consistent-description-style-in-section',
+        issue: this.getTopicDoormatDeterministicText(
+          'consistentDescriptionStyle.issue',
         ),
-        evidence: this.buildTopicDoormatMixedStyleEvidence(analysis),
+        evidence: this.getTopicDoormatDeterministicText(
+          'consistentDescriptionStyle.evidence',
+          {
+            count: analysis.summaries.length,
+            style: this.getTopicDoormatStyleLabel(analysis.dominantStyle),
+          },
+        ),
         recommendation: this.getTopicDoormatDeterministicText(
-          'mixedDescriptionStyle.recommendation',
+          'consistentDescriptionStyle.recommendation',
         ),
         sectionIndex: analysis.sectionIndex,
         sectionTitle: analysis.sectionTitle,
@@ -3087,6 +3169,27 @@ export class TopicDoormatIssueAnalysisService {
     });
 
     return rows;
+  }
+
+  private applyTopicDoormatDescriptionStyleOverrides(
+    doormatSummaries: TopicDoormatSummary[],
+    descriptionStylesByDoormatIndex: Map<number, TopicDoormatDescriptionStyle>,
+  ): Map<number, TopicDoormatDescriptionStyle> {
+    const effectiveStyles = new Map(descriptionStylesByDoormatIndex);
+    const rejectedDropdownIndexes: number[] = [];
+    doormatSummaries.forEach((summary) => {
+      if (effectiveStyles.get(summary.index) === 'dropdown-enhancement') {
+        effectiveStyles.set(summary.index, 'mixed-or-unclear');
+        rejectedDropdownIndexes.push(summary.index);
+      }
+    });
+    if (rejectedDropdownIndexes.length) {
+      this.debugTopicDoormatIssues('description style overrides applied', {
+        reason: 'dropdown enhancement is noted from fieldflow, not used as text style',
+        doormatIndexes: rejectedDropdownIndexes,
+      });
+    }
+    return effectiveStyles;
   }
 
   private analyzeTopicDoormatDescriptionStyles(
@@ -3108,6 +3211,9 @@ export class TopicDoormatIssueAnalysisService {
           TopicDoormatDescriptionStyle,
           number[]
         >();
+        const dropdownEnhancementSummaries = summaries.filter(
+          (summary) => summary.hasFieldflow,
+        );
 
         summaries.forEach((summary) => {
           const style =
@@ -3137,6 +3243,7 @@ export class TopicDoormatIssueAnalysisService {
           sectionIndex,
           sectionTitle: summaries[0]?.sectionTitle || `Section ${sectionIndex}`,
           summaries,
+          dropdownEnhancementSummaries,
           dominantStyle,
           styleCounts,
           examplesByStyle,
@@ -4164,6 +4271,7 @@ export class TopicDoormatIssueAnalysisService {
   private normalizeTopicDoormatDescriptionStyle(
     value: unknown,
   ): TopicDoormatDescriptionStyle | null {
+    if (value === 'sentence' || value === 'phrase') return 'task-list';
     if (value === 'mixed-or-unclear') return value;
     if (
       typeof value === 'string' &&

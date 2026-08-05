@@ -243,6 +243,38 @@ describe('PageAssistantCompareComponent', () => {
     expect(result).not.toContain('Old doormat');
   });
 
+  it('applies a doormat item fragment rewrite without a gc-srvinfo wrapper', () => {
+    const originalHtml = `
+      <main>
+        <h1>Benefits</h1>
+        <div class="gc-srvinfo">
+          <div class="col-lg-4 col-md-6"><h3 class="h5"><a href="/old.html">Old doormat</a></h3><p>Old text</p></div>
+          <div class="col-lg-4 col-md-6"><h3 class="h5"><a href="/keep.html">Kept doormat</a></h3><p>Kept text</p></div>
+        </div>
+      </main>
+    `;
+    const rewriteHtml = `
+      <div class="col-lg-4 col-md-6">
+        <section>
+          <h3><a href="/old.html">Updated doormat</a></h3>
+          <p>Updated text</p>
+        </section>
+      </div>
+    `;
+
+    const result = (component as any).applyDoormatRewriteToPageHtml(
+      originalHtml,
+      rewriteHtml,
+    );
+
+    expect(result).toContain('<h1>Benefits</h1>');
+    expect(result).toContain('<a href="/old.html">Updated doormat</a>');
+    expect(result).toContain('<p>Updated text</p>');
+    expect(result).toContain('Kept doormat');
+    expect(result).toContain('Kept text');
+    expect(result).not.toContain('Old doormat');
+  });
+
   it('patches doormat labels while preserving original item formatting', () => {
     const originalHtml = `
       <main>

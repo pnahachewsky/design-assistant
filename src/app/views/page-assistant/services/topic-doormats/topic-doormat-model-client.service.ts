@@ -28,7 +28,7 @@ export class TopicDoormatModelClientService {
   private readonly openRouter = inject(OpenRouterService);
   private readonly topicDoormatForceParseFailureStorageKey =
     'pageAssistant.topicDoormatForceParseFailure';
-  private readonly topicDoormatModelAttemptTimeoutMs = 120000;
+  private readonly topicDoormatModelAttemptTimeoutMs = 60000;
 
   async requestIssueJson(
     request: TopicDoormatModelClientRequest,
@@ -36,9 +36,33 @@ export class TopicDoormatModelClientService {
     const modelRotation = this.buildModelRotation(
       request.requestedModel,
     );
+    const recognizedRequestedModel =
+      !!request.requestedModel &&
+      this.openRouter.models.includes(request.requestedModel);
+    this.logTopicDoormatModelEvent('model rotation resolved', {
+      phase: 'issue-analysis',
+      requestedModel: request.requestedModel || '',
+      recognizedRequestedModel,
+      firstModel: modelRotation[0] || '',
+      selectedModelWillRunFirst:
+        recognizedRequestedModel && modelRotation[0] === request.requestedModel,
+      modelRotation,
+      timeoutMs: this.topicDoormatModelAttemptTimeoutMs,
+    });
+    request.debug('model rotation resolved', {
+      phase: 'issue-analysis',
+      requestedModel: request.requestedModel || '',
+      recognizedRequestedModel,
+      firstModel: modelRotation[0] || '',
+      selectedModelWillRunFirst:
+        recognizedRequestedModel && modelRotation[0] === request.requestedModel,
+      modelRotation,
+      timeoutMs: this.topicDoormatModelAttemptTimeoutMs,
+    });
     const { text, model } = await this.callTopicDoormatIssuesWithFallback(
       request.messages,
       modelRotation,
+      request.requestedModel,
       request.doormatSummaries,
       request.isParseableResponseText,
       request.debug,
@@ -53,7 +77,9 @@ export class TopicDoormatModelClientService {
     if (!request.model) return '';
     try {
       request.debug('model issue field repair request prepared', {
+        phase: 'issue-field-repair',
         model: request.model,
+        timeoutMs: this.topicDoormatModelAttemptTimeoutMs,
         request: this.buildRequestMetrics(
           request.messages,
           request.doormatSummaries,
@@ -87,11 +113,12 @@ export class TopicDoormatModelClientService {
   }
 
   private async callTopicDoormatIssuesWithFallback(
-    messages: ChatMessage[],
-    models: string[],
-    doormatSummaries: TopicDoormatSummary[],
-    isParseableResponseText: (text: string) => boolean,
-    debug: (event: string, details: Record<string, unknown>) => void,
+      messages: ChatMessage[],
+      models: string[],
+      requestedModel: string | undefined,
+      doormatSummaries: TopicDoormatSummary[],
+      isParseableResponseText: (text: string) => boolean,
+      debug: (event: string, details: Record<string, unknown>) => void,
   ): Promise<{ text: string; model: string }> {
     let lastError: unknown;
     let lastModel = models[0] ?? '';
@@ -100,12 +127,26 @@ export class TopicDoormatModelClientService {
       const model = models[index];
       lastModel = model;
       const modelStart = performance.now();
+      const attemptMetadata = this.buildTopicDoormatAttemptMetadata(
+        index,
+        models,
+        model,
+        requestedModel,
+      );
       try {
         debug('model attempt started', {
-          attempt: index + 1,
-          totalAttempts: models.length,
-          model,
+          ...attemptMetadata,
+          timeoutMs: this.topicDoormatModelAttemptTimeoutMs,
           request: this.buildRequestMetrics(messages, doormatSummaries),
+        });
+        this.logTopicDoormatModelEvent('model attempt started', {
+          ...attemptMetadata,
+          timeoutMs: this.topicDoormatModelAttemptTimeoutMs,
+          doormatCount: doormatSummaries.length,
+          messageCharacters: messages.reduce(
+            (total, message) => total + message.content.length,
+            0,
+          ),
         });
         const resp = await this.openRouter.call(model, messages, {
           temperature: 0,
@@ -138,8 +179,12 @@ export class TopicDoormatModelClientService {
           }
           if (isParseableResponseText(textToValidate)) {
             debug('model attempt succeeded', {
-              attempt: index + 1,
-              model,
+              ...attemptMetadata,
+              elapsedMs: Math.round(performance.now() - modelStart),
+              responseCharacters: text.length,
+            });
+            this.logTopicDoormatModelEvent('model attempt succeeded', {
+              ...attemptMetadata,
               elapsedMs: Math.round(performance.now() - modelStart),
               responseCharacters: text.length,
             });
@@ -147,8 +192,12 @@ export class TopicDoormatModelClientService {
           }
 
           debug('model attempt returned invalid json', {
-            attempt: index + 1,
-            model,
+            ...attemptMetadata,
+            elapsedMs: Math.round(performance.now() - modelStart),
+            responseCharacters: text.length,
+          });
+          this.logTopicDoormatModelEvent('model attempt returned invalid json', {
+            ...attemptMetadata,
             elapsedMs: Math.round(performance.now() - modelStart),
             responseCharacters: text.length,
           });
@@ -158,36 +207,50 @@ export class TopicDoormatModelClientService {
             text,
             doormatSummaries,
             debug,
+            requestedModel,
           );
           if (repairedText && isParseableResponseText(repairedText)) {
             debug('model json repair succeeded', {
-              attempt: index + 1,
-              model,
+              ...attemptMetadata,
+              phase: 'json-repair',
               elapsedMs: Math.round(performance.now() - modelStart),
               originalResponseCharacters: text.length,
+              repairedResponseCharacters: repairedText.length,
+            });
+            this.logTopicDoormatModelEvent('model json repair succeeded', {
+              ...attemptMetadata,
+              phase: 'json-repair',
+              elapsedMs: Math.round(performance.now() - modelStart),
               repairedResponseCharacters: repairedText.length,
             });
             return { text: repairedText, model };
           }
 
           debug('model json repair failed', {
-            attempt: index + 1,
-            model,
+            ...attemptMetadata,
+            phase: 'json-repair',
             elapsedMs: Math.round(performance.now() - modelStart),
           });
           lastError = new Error(`Invalid Topic doormat JSON from ${model}`);
           continue;
         }
         debug('model attempt returned empty content', {
-          attempt: index + 1,
-          model,
+          ...attemptMetadata,
+          elapsedMs: Math.round(performance.now() - modelStart),
+        });
+        this.logTopicDoormatModelEvent('model attempt returned empty content', {
+          ...attemptMetadata,
           elapsedMs: Math.round(performance.now() - modelStart),
         });
       } catch (err) {
         lastError = err;
         debug('model attempt failed', {
-          attempt: index + 1,
-          model,
+          ...attemptMetadata,
+          elapsedMs: Math.round(performance.now() - modelStart),
+          error: err instanceof Error ? err.message : String(err),
+        });
+        this.logTopicDoormatModelEvent('model attempt failed', {
+          ...attemptMetadata,
           elapsedMs: Math.round(performance.now() - modelStart),
           error: err instanceof Error ? err.message : String(err),
         });
@@ -195,7 +258,16 @@ export class TopicDoormatModelClientService {
     }
 
     debug('model attempts exhausted', {
+      phase: 'issue-analysis',
       models,
+      requestedModel: requestedModel || '',
+      lastModel,
+      error: lastError instanceof Error ? lastError.message : String(lastError),
+    });
+    this.logTopicDoormatModelEvent('model attempts exhausted', {
+      phase: 'issue-analysis',
+      models,
+      requestedModel: requestedModel || '',
       lastModel,
       error: lastError instanceof Error ? lastError.message : String(lastError),
     });
@@ -207,6 +279,7 @@ export class TopicDoormatModelClientService {
     invalidText: string,
     doormatSummaries: TopicDoormatSummary[],
     debug: (event: string, details: Record<string, unknown>) => void,
+    requestedModel?: string,
   ): Promise<string> {
     try {
       const repairMessages: ChatMessage[] = [
@@ -226,8 +299,26 @@ export class TopicDoormatModelClientService {
         },
       ];
       debug('model json repair request prepared', {
+        phase: 'json-repair',
         model,
+        requestedModel: requestedModel || '',
+        repairModelRole:
+          requestedModel && model === requestedModel
+            ? 'selected-model'
+            : 'fallback-model',
+        timeoutMs: this.topicDoormatModelAttemptTimeoutMs,
         request: this.buildRequestMetrics(repairMessages, doormatSummaries),
+        invalidResponseCharacters: invalidText.length,
+      });
+      this.logTopicDoormatModelEvent('model json repair request prepared', {
+        phase: 'json-repair',
+        model,
+        requestedModel: requestedModel || '',
+        repairModelRole:
+          requestedModel && model === requestedModel
+            ? 'selected-model'
+            : 'fallback-model',
+        timeoutMs: this.topicDoormatModelAttemptTimeoutMs,
         invalidResponseCharacters: invalidText.length,
       });
       const resp = await this.openRouter.call(model, repairMessages, {
@@ -239,11 +330,53 @@ export class TopicDoormatModelClientService {
       return resp?.choices?.[0]?.message?.content?.trim() || '';
     } catch (err) {
       debug('model json repair request failed', {
+        phase: 'json-repair',
         model,
+        requestedModel: requestedModel || '',
+        repairModelRole:
+          requestedModel && model === requestedModel
+            ? 'selected-model'
+            : 'fallback-model',
+        error: err instanceof Error ? err.message : String(err),
+      });
+      this.logTopicDoormatModelEvent('model json repair request failed', {
+        phase: 'json-repair',
+        model,
+        requestedModel: requestedModel || '',
+        repairModelRole:
+          requestedModel && model === requestedModel
+            ? 'selected-model'
+            : 'fallback-model',
         error: err instanceof Error ? err.message : String(err),
       });
       return '';
     }
+  }
+
+  private logTopicDoormatModelEvent(
+    event: string,
+    details: Record<string, unknown>,
+  ): void {
+    console.info(`[TopicDoormatIssues] ${event}`, details);
+  }
+
+  private buildTopicDoormatAttemptMetadata(
+    index: number,
+    models: string[],
+    model: string,
+    requestedModel?: string,
+  ): Record<string, unknown> {
+    const isSelectedModel = !!requestedModel && model === requestedModel;
+    return {
+      phase: 'issue-analysis',
+      attempt: index + 1,
+      totalAttempts: models.length,
+      model,
+      requestedModel: requestedModel || '',
+      attemptRole: isSelectedModel ? 'selected-model' : 'fallback-model',
+      isFallbackAttempt: !isSelectedModel,
+      firstModel: models[0] || '',
+    };
   }
 
   private getTopicDoormatForceParseFailureMode():

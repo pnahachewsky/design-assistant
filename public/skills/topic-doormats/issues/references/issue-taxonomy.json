@@ -56,21 +56,22 @@
     "section_level_issues": "Aim for under 180 characters. Summarize the pattern and include only representative doormat numbers. Do not list every doormat.",
     "doormat_level_issues": "Keep evidence concise. State the concrete fact and avoid repeating full link text or description text unless needed.",
     "url_evidence": "Do not include doormat_href, most_requested_href, destination URLs, or 'Most requested: n/a' in evidence unless the issue depends on broken links, misdirected links, duplicate links, destination-title comparison, or destination context.",
-    "mixed_description_style": "For mixed-description-style-in-section, name the style groups and include 2 to 4 representative doormat indexes per style group. Do not list every doormat. Do not quote full descriptions. Example: Mixes keyword-list and sentence descriptions. Keyword-list examples: 1, 3, 5. Sentence examples: 2, 6, 10.",
+    "mixed_description_style": "For mixed-description-style-in-section, name the style groups and include 2 to 4 representative doormat indexes per style group. Do not list every doormat. Do not quote full descriptions. Example: Mixes keyword-list and task-list descriptions. Keyword-list examples: 1, 3, 5. Task-list examples: 2, 6, 10.",
     "runtime_missing_field_guardrail": "AIDA treats empty strings and dash-only placeholders as missing evidence or recommendation for model-owned issues. It sends only the incomplete issue fields back to the model for repair. If repair still returns unusable text, AIDA keeps the issue visible and displays 'No AI evidence was received.' or 'No AI recommendation was received.' for the missing field."
   },
   "mandatory_description_style_audit": {
-    "instruction": "Classify every doormat description using exactly one allowed detected_description_style value. Classify the grammatical construction of the complete description, not the subject matter mentioned within it. A sentence-like description remains sentence even when final punctuation is intentionally omitted. Do not return mixed-description-style-in-section; AIDA aggregates the classifications and reports that issue. If a section is otherwise consistent and only one or two descriptions are clear outliers, inconsistent-description-style may still be reported on those doormats.",
+    "instruction": "Classify every doormat description using exactly one allowed detected_description_style value from the CRA doormat description style options. Classify the description by what kind of information it provides, not only by grammatical construction. Do not return mixed-description-style-in-section; AIDA aggregates the classifications and reports that issue. If a section is otherwise consistent and only one or two descriptions are clear outliers, inconsistent-description-style may still be reported on those doormats.",
     "style_groups_to_compare": [
-      "sentence-like descriptions",
-      "short phrases",
-      "keyword lists"
+      "comma-separated keyword lists",
+      "task lists",
+      "benefit and eligibility descriptions",
+      "dropdown enhancements"
     ],
     "must_classify_as_distinct_styles_when": [
-      "The section mixes sentence-like descriptions with short phrase descriptions.",
-      "The section mixes keyword-list descriptions with sentence or phrase descriptions.",
-      "A small section, including a section with 4 or fewer doormats, has a visible split between sentence-like descriptions and fragment-style descriptions.",
-      "The section starts some descriptions as complete actions or clauses and others as noun phrases or topic labels in a way that makes the set feel inconsistent."
+      "The section mixes comma-separated keyword lists with task-list descriptions.",
+      "The section mixes task-list descriptions with benefit and eligibility descriptions.",
+      "The section mixes ordinary descriptions with dropdown enhancements.",
+      "A small section, including a section with 4 or fewer doormats, has a visible split between accepted description styles."
     ],
     "reporting": "Return the classification on every doormat as detected_description_style. AIDA determines whether the classifications form a reportable section-level mix and constructs the evidence from representative doormat indexes.",
     "do_not_dismiss_because": [
@@ -109,22 +110,25 @@
       "mixed-or-unclear": "Use only when the link name genuinely cannot be assigned one of the other styles."
     },
     "description_styles": [
-      "sentence",
-      "phrase",
       "keyword-list",
+      "task-list",
+      "benefit-eligibility",
+      "dropdown-enhancement",
       "mixed-or-unclear"
     ],
     "description_style_definitions": {
-      "sentence": "A complete sentence, sentence-like clause, imperative, question-answer construction, or action-framed description. The final period should be omitted for topic doormats, but the missing period must not prevent classification as sentence.",
-      "phrase": "A short descriptive phrase or fragment that is not a complete sentence and is not a visibly list-like sequence.",
-      "keyword-list": "A compact sequence of keywords, tasks, topics, or noun fragments, usually comma-separated or visibly list-like rather than a complete sentence.",
-      "mixed-or-unclear": "Use only when the complete description genuinely cannot be assigned one of the other styles. Do not use merely because the description mentions several topics."
+      "keyword-list": "A comma-separated list of links, headings, keywords, topics, or keyword phrases from the destination page. This is the recommended style. Do not include 'and' before the last item unless it is part of a fixed phrase, program name, service name, or common combined concept.",
+      "task-list": "A description of tasks the user can complete on the destination page, usually using action verbs or action phrases such as file, apply, get, check, register, make, find, or contact.",
+      "benefit-eligibility": "A description of what users can get and who is eligible, such as a payment, benefit, credit, service, document, or outcome plus audience or eligibility information.",
+      "dropdown-enhancement": "A drop-down menu used in place of a link description to provide access to a large number of same-level items or to replace a destination page that consists primarily of a list of links. If text appears before the drop-down, classify that text instead of the drop-down.",
+      "mixed-or-unclear": "Use only when the complete description genuinely cannot be assigned one of the accepted CRA doormat description styles."
     },
     "classification_priority": [
-      "Classify grammatical construction before subject matter.",
-      "A sentence-like description remains sentence even when the final period is omitted. For example, 'Find out whether you are eligible' is sentence, not phrase.",
-      "Use phrase only when the description is a fragment rather than a sentence-like construction.",
-      "Use keyword-list when the description is a compact list of keywords, tasks, topics, or fragments.",
+      "Classify by the CRA doormat description style option used.",
+      "Use keyword-list for comma-separated lists of destination links, headings, topics, or keyword phrases.",
+      "Use task-list for descriptions of tasks the user can complete, even when the tasks are comma-separated.",
+      "Use benefit-eligibility for descriptions of what users can get and who is eligible.",
+      "Use dropdown-enhancement only when there is no text description before the drop-down. If a paragraph appears before the drop-down, classify the paragraph text as keyword-list, task-list, benefit-eligibility, or mixed-or-unclear.",
       "Return one detected_description_style for every doormat before evaluating issues."
     ],
     "instruction": "Return exactly one allowed detected_link_text_style and detected_description_style for every doormat. AIDA aggregates the classifications into section mixes and individual outliers. Do not return mixed-description-style-in-section, mixed-link-name-styles-in-section, or inconsistent-link-name-style directly."
@@ -391,7 +395,7 @@
       "group": "Description clarity",
       "label": "Description has incorrect style",
       "severity": "Medium",
-      "condition": "The description style does not fit one of the accepted styles: sentence, phrase, or keyword list.",
+      "condition": "The description style does not fit one of the accepted CRA doormat description styles: keyword list, task list, benefit and eligibility description, or valid drop-down enhancement.",
       "recommendation": "Rewrite using one accepted style and keep that style consistent across the set."
     },
     {
@@ -429,7 +433,7 @@
       "group": "Description clarity",
       "label": "Mixed description styles in section",
       "severity": "Low",
-      "condition": "The doormat section mixes two or more description styles: sentence, phrase, or keyword list. This includes small sections when the section has a visible split between sentence-like descriptions and fragment-style descriptions.",
+      "condition": "The doormat section mixes two or more accepted description styles: keyword list, task list, benefit and eligibility description, or drop-down enhancement.",
       "recommendation": "Rewrite the descriptions so they use one consistent description style across the section.",
       "reporting": "Do not return this issue. AIDA reports it once for an affected section by aggregating detected_description_style values and constructs concise evidence with representative doormat indexes.",
       "evidence_required": [
@@ -456,7 +460,7 @@
       "group": "Description clarity",
       "label": "Inconsistent description style",
       "severity": "Low",
-      "condition": "One or more descriptions are clear outliers from a dominant description style used by the rest of the set, such as a lone sentence among keyword-list descriptions.",
+      "condition": "One or more descriptions are clear outliers from a dominant description style used by the rest of the set, such as a task-list description among keyword-list descriptions.",
       "recommendation": "Use the dominant description style for this outlier unless the page context clearly justifies the exception.",
       "evidence_required": [
         "dominant_style",
@@ -522,7 +526,7 @@
       "group": "Description formatting",
       "label": "Description has trailing punctuation",
       "severity": "Low",
-      "condition": "The description ends with punctuation. Topic doormat descriptions should not end with punctuation, even when the description is classified as sentence.",
+      "condition": "The description ends with punctuation. Topic doormat descriptions should not end with punctuation, even when the description is a complete sentence or sentence-like clause.",
       "recommendation": "Remove final punctuation from the description."
     },
     {

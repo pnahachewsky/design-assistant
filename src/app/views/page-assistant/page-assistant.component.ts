@@ -826,6 +826,13 @@ export class PageAssistantCompareComponent
       );
     }
     if (!rewrittenDoormatSections.length) {
+      if (this.getDoormatItemsByHref(rewriteDoc.body).size) {
+        originalDoormatSections.forEach((section) => {
+          this.applyDoormatItemRewritesByHref(originalDoc, section, rewriteDoc.body);
+        });
+        return this.serializeParsedHtmlLikeInput(htmlToPatch, originalDoc);
+      }
+
       throw new Error(
         'The AI response did not include a topic doormat section. No comparison update was applied.',
       );

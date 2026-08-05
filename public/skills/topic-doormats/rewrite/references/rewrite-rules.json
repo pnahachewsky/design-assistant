@@ -8,7 +8,7 @@
     },
     {
       "id": "return-full-updated-set",
-      "text": "Return updated HTML for the complete doormat set. When the input is a full HTML page, return the full page HTML with only the doormat section changed and preserve unrelated content exactly as provided."
+      "text": "Return updated HTML for the complete doormat set, including the topic doormat wrapper with class gc-srvinfo. Do not return only individual doormat item fragments. When the input is a full HTML page, return the full page HTML with only the doormat section changed and preserve unrelated content exactly as provided."
     },
     {
       "id": "preserve-scope-and-structure",
@@ -55,5 +55,5 @@
       "text": "If evidence is insufficient, keep the safest existing wording. If structured output is requested, explain missing topic, purpose, audience, keyword, or tone context in unresolved_notes."
     }
   ],
-  "preferred_html_shape": "<div class=\"wb-eqht row\"><div class=\"col-lg-4 col-md-6\"><section><h3><a href=\"[url]\">[Link text]</a></h3><p>[Description]</p></section></div></div>"
+  "preferred_html_shape": "<section class=\"gc-srvinfo\"><div class=\"wb-eqht row\"><div class=\"col-lg-4 col-md-6\"><section><h3><a href=\"[url]\">[Link text]</a></h3><p>[Description]</p></section></div></div></section>"
 }
