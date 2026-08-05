@@ -26446,16 +26446,6 @@ var TopicDoormatIssueAnalysisService = class _TopicDoormatIssueAnalysisService {
   urlComparison = inject(TopicDoormatUrlComparisonService);
   topicDoormatDebugStorageKey = "pageAssistant.topicDoormatDebug";
   topicDoormatIssueTaxonomyPath = "skills/topic-doormats/issues/references/issue-taxonomy.json";
-  topicDoormatIssueLengthLimits = {
-    en: {
-      "link-name-too-long": 35,
-      "description-too-long": 95
-    },
-    fr: {
-      "link-name-too-long": 45,
-      "description-too-long": 120
-    }
-  };
   topicDoormatTrailingPunctuationPattern = /[.:;?!,]$/;
   topicDoormatDestinationStopWords = /* @__PURE__ */ new Set([
     "and",
@@ -26553,6 +26543,7 @@ var TopicDoormatIssueAnalysisService = class _TopicDoormatIssueAnalysisService {
   topicDoormatModelIssueContract = "";
   topicDoormatIssueIdToLabel = /* @__PURE__ */ new Map();
   topicDoormatIssueAliasToId = /* @__PURE__ */ new Map();
+  topicDoormatLengthLimits = /* @__PURE__ */ new Map();
   analyze(input) {
     return __async(this, null, function* () {
       const analysisStart = performance.now();
@@ -27409,38 +27400,45 @@ var TopicDoormatIssueAnalysisService = class _TopicDoormatIssueAnalysisService {
   }
   buildLocalTopicDoormatLinkNameLengthRows(doormatSummaries, pageLanguage) {
     const fallbackLimit = this.getTopicDoormatLengthLimit("link-name-too-long", pageLanguage);
+    if (fallbackLimit == null)
+      return [];
     const overLimitSummaries = doormatSummaries.filter((summary) => {
-      const limit = this.hasTopicDoormatBilingualLinkLength(summary) ? 45 : fallbackLimit;
+      const limit = this.getTopicDoormatLinkNameLengthLimit(summary, pageLanguage) ?? fallbackLimit;
       return this.getTopicDoormatLinkNameLengthCount(summary) > limit;
     });
     return this.buildLocalTopicDoormatLengthSectionRows(overLimitSummaries, "link-name-too-long", (summary) => this.getTopicDoormatLinkNameLengthSeverity(summary, pageLanguage), (summary) => this.buildTopicDoormatLengthMetric(summary, "link-name-too-long", pageLanguage), (summary) => this.buildTopicDoormatLengthMetricParts(summary, "link-name-too-long", pageLanguage), this.getTopicDoormatLinkNameLengthRecommendation());
   }
   getTopicDoormatLinkNameLengthSeverity(summary, pageLanguage = "en") {
     const count = this.getTopicDoormatLinkNameLengthCount(summary);
+    const limit = this.getTopicDoormatLinkNameLengthLimit(summary, pageLanguage);
+    if (limit == null)
+      return "Low";
     if (this.hasTopicDoormatBilingualLinkLength(summary)) {
-      if (count <= 60)
+      if (count <= limit + 15)
         return "Low";
-      if (count <= 75)
+      if (count <= limit + 30)
         return "Medium";
       return "High";
     }
     if (pageLanguage === "fr") {
-      if (count <= 60)
+      if (count <= limit + 15)
         return "Low";
-      if (count <= 75)
+      if (count <= limit + 30)
         return "Medium";
       return "High";
     }
-    if (count <= 45)
+    if (count <= limit + 15)
       return "Low";
-    if (count <= 60)
+    if (count <= limit + 30)
       return "Medium";
     return "High";
   }
   buildLocalTopicDoormatDescriptionLengthRows(doormatSummaries, pageLanguage) {
     const fallbackLimit = this.getTopicDoormatLengthLimit("description-too-long", pageLanguage);
+    if (fallbackLimit == null)
+      return [];
     const overLimitSummaries = doormatSummaries.filter((summary) => {
-      const limit = this.hasTopicDoormatBilingualDescriptionLength(summary) ? 120 : fallbackLimit;
+      const limit = this.getTopicDoormatDescriptionLengthLimit(summary, pageLanguage) ?? fallbackLimit;
       return this.getTopicDoormatDescriptionLengthCount(summary) > limit;
     });
     return this.buildLocalTopicDoormatLengthSectionRows(overLimitSummaries, "description-too-long", (summary) => this.getTopicDoormatDescriptionLengthSeverity(summary, pageLanguage), (summary) => this.buildTopicDoormatLengthMetric(summary, "description-too-long", pageLanguage), (summary) => this.buildTopicDoormatLengthMetricParts(summary, "description-too-long", pageLanguage), this.getTopicDoormatDescriptionLengthRecommendation());
@@ -27497,23 +27495,26 @@ var TopicDoormatIssueAnalysisService = class _TopicDoormatIssueAnalysisService {
   }
   getTopicDoormatDescriptionLengthSeverity(summary, pageLanguage = "en") {
     const count = this.getTopicDoormatDescriptionLengthCount(summary);
+    const limit = this.getTopicDoormatDescriptionLengthLimit(summary, pageLanguage);
+    if (limit == null)
+      return "Low";
     if (this.hasTopicDoormatBilingualDescriptionLength(summary)) {
-      if (count <= 130)
+      if (count <= limit + 10)
         return "Low";
-      if (count <= 140)
+      if (count <= limit + 20)
         return "Medium";
       return "High";
     }
     if (pageLanguage === "fr") {
-      if (count <= 135)
+      if (count <= limit + 10)
         return "Low";
-      if (count <= 150)
+      if (count <= limit + 20)
         return "Medium";
       return "High";
     }
-    if (count <= 110)
+    if (count <= limit + 10)
       return "Low";
-    if (count <= 120)
+    if (count <= limit + 20)
       return "Medium";
     return "High";
   }
@@ -27526,10 +27527,22 @@ var TopicDoormatIssueAnalysisService = class _TopicDoormatIssueAnalysisService {
     return typeof oppositeCount === "number" ? Math.max(summary.descriptionCharacterCount, oppositeCount) : summary.descriptionCharacterCount;
   }
   getTopicDoormatLinkNameLengthLimit(summary, pageLanguage) {
-    return this.hasTopicDoormatBilingualLinkLength(summary) ? 45 : this.getTopicDoormatLengthLimit("link-name-too-long", pageLanguage);
+    return this.getTopicDoormatBilingualLengthLimit(summary, "link-name-too-long", pageLanguage);
   }
   getTopicDoormatDescriptionLengthLimit(summary, pageLanguage) {
-    return this.hasTopicDoormatBilingualDescriptionLength(summary) ? 120 : this.getTopicDoormatLengthLimit("description-too-long", pageLanguage);
+    return this.getTopicDoormatBilingualLengthLimit(summary, "description-too-long", pageLanguage);
+  }
+  getTopicDoormatBilingualLengthLimit(summary, issueId, pageLanguage) {
+    const currentLimit = this.getTopicDoormatLengthLimit(issueId, pageLanguage);
+    const oppositeLanguage = summary.oppositeLanguage;
+    if (!oppositeLanguage)
+      return currentLimit;
+    const oppositeLimit = this.getTopicDoormatLengthLimit(issueId, oppositeLanguage);
+    if (currentLimit == null)
+      return oppositeLimit;
+    if (oppositeLimit == null)
+      return currentLimit;
+    return Math.max(currentLimit, oppositeLimit);
   }
   hasTopicDoormatBilingualLinkLength(summary) {
     return typeof summary.oppositeLanguageLinkTextCharacterCount === "number";
@@ -27557,11 +27570,11 @@ var TopicDoormatIssueAnalysisService = class _TopicDoormatIssueAnalysisService {
     return [
       {
         metric: `${metrics.currentLabel} ${metrics.currentMetric}`,
-        severity: this.getTopicDoormatBilingualLengthSeverity(metrics.currentCount, issueId)
+        severity: this.getTopicDoormatBilingualLengthSeverity(metrics.currentCount, issueId, metrics.currentLimit)
       },
       {
         metric: `${metrics.oppositeLabel} ${metrics.oppositeMetric}`,
-        severity: this.getTopicDoormatBilingualLengthSeverity(metrics.oppositeCount, issueId)
+        severity: this.getTopicDoormatBilingualLengthSeverity(metrics.oppositeCount, issueId, metrics.oppositeLimit ?? metrics.currentLimit)
       }
     ];
   }
@@ -27569,32 +27582,38 @@ var TopicDoormatIssueAnalysisService = class _TopicDoormatIssueAnalysisService {
     const isLinkLengthIssue = issueId === "link-name-too-long";
     const currentCount = isLinkLengthIssue ? summary.linkTextCharacterCount : summary.descriptionCharacterCount;
     const oppositeCount = isLinkLengthIssue ? summary.oppositeLanguageLinkTextCharacterCount : summary.oppositeLanguageDescriptionCharacterCount;
-    const limit = isLinkLengthIssue ? this.getTopicDoormatLinkNameLengthLimit(summary, pageLanguage) : this.getTopicDoormatDescriptionLengthLimit(summary, pageLanguage);
-    const formatMetric = (count) => isLinkLengthIssue ? `${count}/${limit}` : `${count}`;
+    const currentLimit = this.getTopicDoormatLengthLimit(issueId, pageLanguage);
+    const oppositeLanguage = summary.oppositeLanguage ?? (pageLanguage === "fr" ? "en" : "fr");
+    const oppositeLimit = this.getTopicDoormatLengthLimit(issueId, oppositeLanguage);
+    const formatMetric = (count, limit) => isLinkLengthIssue && limit != null ? `${count}/${limit}` : `${count}`;
     return {
       currentLabel: pageLanguage.toUpperCase(),
-      oppositeLabel: (summary.oppositeLanguage ?? (pageLanguage === "fr" ? "en" : "fr")).toUpperCase(),
+      oppositeLabel: oppositeLanguage.toUpperCase(),
       currentCount,
       oppositeCount,
-      currentMetric: formatMetric(currentCount),
-      oppositeMetric: typeof oppositeCount === "number" ? formatMetric(oppositeCount) : void 0
+      currentMetric: formatMetric(currentCount, currentLimit),
+      oppositeMetric: typeof oppositeCount === "number" ? formatMetric(oppositeCount, oppositeLimit) : void 0,
+      currentLimit,
+      oppositeLimit
     };
   }
-  getTopicDoormatBilingualLengthSeverity(count, issueId) {
+  getTopicDoormatBilingualLengthSeverity(count, issueId, limit) {
+    if (limit == null)
+      return "OK";
     if (issueId === "link-name-too-long") {
-      if (count <= 45)
+      if (count <= limit)
         return "OK";
-      if (count <= 60)
+      if (count <= limit + 15)
         return "Low";
-      if (count <= 75)
+      if (count <= limit + 30)
         return "Medium";
       return "High";
     }
-    if (count <= 120)
+    if (count <= limit)
       return "OK";
-    if (count <= 130)
+    if (count <= limit + 10)
       return "Low";
-    if (count <= 140)
+    if (count <= limit + 20)
       return "Medium";
     return "High";
   }
@@ -27804,7 +27823,7 @@ var TopicDoormatIssueAnalysisService = class _TopicDoormatIssueAnalysisService {
     return this.getTopicDoormatDeterministicText("duplicateMostRequested.evidence");
   }
   getTopicDoormatLengthLimit(issueId, pageLanguage) {
-    return this.topicDoormatIssueLengthLimits[pageLanguage][issueId];
+    return this.topicDoormatLengthLimits.get(`${pageLanguage}|${issueId}`) ?? null;
   }
   getTopicDoormatDeterministicText(key2, params) {
     return this.translate.instant(`page.tools.guidance.topicDoormats.${key2}`, params);
@@ -28135,7 +28154,7 @@ var TopicDoormatIssueAnalysisService = class _TopicDoormatIssueAnalysisService {
           return this.getTopicDoormatDeterministicText("contentGap.introMissing");
         }
         if (element.type === "doormat") {
-          const text2 = element.text.length > 140 ? `${element.text.slice(0, 137).trimEnd()}...` : element.text;
+          const text2 = this.formatTopicDoormatContentGapDoormatEvidence(element.text);
           return this.getTopicDoormatDeterministicText("contentGap.doormat", { text: text2 });
         }
         const text = element.text.length > 140 ? `${element.text.slice(0, 137).trimEnd()}...` : element.text;
@@ -28165,6 +28184,11 @@ var TopicDoormatIssueAnalysisService = class _TopicDoormatIssueAnalysisService {
         }
       ];
     });
+  }
+  formatTopicDoormatContentGapDoormatEvidence(text) {
+    const linkText = this.cleanString(text.split(":")[0] ?? text);
+    const displayText = linkText || text;
+    return displayText.length > 140 ? `${displayText.slice(0, 137).trimEnd()}...` : displayText;
   }
   getValidatedTopicDoormatMissingElements(summary, assessment) {
     if (summary.destinationContextStatus !== "available" || !assessment) {
@@ -28361,6 +28385,7 @@ var TopicDoormatIssueAnalysisService = class _TopicDoormatIssueAnalysisService {
     return __async(this, null, function* () {
       if (!this.topicDoormatIssueTaxonomyLoad) {
         this.topicDoormatIssueTaxonomyLoad = firstValueFrom(this.http.get(this.topicDoormatIssueTaxonomyPath)).then((taxonomy) => {
+          this.loadTopicDoormatLanguageThresholds(taxonomy);
           const categories = Array.isArray(taxonomy.issue_categories) ? taxonomy.issue_categories : [];
           const modelIssueCategories = [];
           categories.forEach((rawCategory) => {
@@ -28391,6 +28416,25 @@ var TopicDoormatIssueAnalysisService = class _TopicDoormatIssueAnalysisService {
         });
       }
       yield this.topicDoormatIssueTaxonomyLoad;
+    });
+  }
+  loadTopicDoormatLanguageThresholds(taxonomy) {
+    this.topicDoormatLengthLimits.clear();
+    const thresholds = taxonomy.language_thresholds && typeof taxonomy.language_thresholds === "object" ? taxonomy.language_thresholds : {};
+    ["en", "fr"].forEach((language) => {
+      const rawLanguageThresholds = thresholds[language];
+      if (!rawLanguageThresholds || typeof rawLanguageThresholds !== "object") {
+        return;
+      }
+      const languageThresholds = rawLanguageThresholds;
+      const linkTextLimit = this.toNumber(languageThresholds["link_text_max_characters"]);
+      const descriptionLimit = this.toNumber(languageThresholds["description_max_characters"]);
+      if (linkTextLimit != null) {
+        this.topicDoormatLengthLimits.set(`${language}|link-name-too-long`, linkTextLimit);
+      }
+      if (descriptionLimit != null) {
+        this.topicDoormatLengthLimits.set(`${language}|description-too-long`, descriptionLimit);
+      }
     });
   }
   compactTopicDoormatIssueCategory(category) {
@@ -32969,7 +33013,7 @@ var AlertsGuidanceComponent = class _AlertsGuidanceComponent {
       this.analyzedRevision = -1;
       this.reanalysisRecommended = true;
       this.emitDerived();
-      yield this.loadFromAi(true);
+      yield this.loadFromAi(true, true);
     });
   }
   applySelectAll(flag, sync = true) {
@@ -33035,10 +33079,10 @@ var AlertsGuidanceComponent = class _AlertsGuidanceComponent {
     }
     void this.loadFromAi();
   }
-  loadFromAi(force = false) {
+  loadFromAi(force = false, allowWhileLoading = false) {
     return __async(this, null, function* () {
       const html = this.uploadState.getWorkingHtml();
-      if (!html || this.isLoading)
+      if (!html || this.isLoading && !allowWhileLoading)
         return;
       const cached = this.alertAi.getCachedIssues(html);
       if (!force && cached !== null) {
@@ -33119,7 +33163,7 @@ var AlertsGuidanceComponent = class _AlertsGuidanceComponent {
       \u0275\u0275classMap((ctx.reanalysisRecommended ? "p-button-primary" : "p-button-secondary") + " p-button-sm");
       \u0275\u0275property("disabled", ctx.reanalysisDisabled);
     }
-  }, dependencies: [CommonModule, NgClass, FormsModule, NgControlStatus, NgModel, TableModule, Table, PrimeTemplate, CheckboxModule, Checkbox, ButtonModule, ButtonDirective], styles: ["\n\n.alert-table[_ngcontent-%COMP%]   .p-datatable-tbody[_ngcontent-%COMP%]    > tr[_ngcontent-%COMP%]    > td[_ngcontent-%COMP%], \n.alert-table[_ngcontent-%COMP%]   .p-datatable-thead[_ngcontent-%COMP%]    > tr[_ngcontent-%COMP%]    > th[_ngcontent-%COMP%] {\n  white-space: normal !important;\n  word-break: normal;\n  overflow-wrap: normal;\n  vertical-align: top;\n}\n.alert-table[_ngcontent-%COMP%]   .wrap-col[_ngcontent-%COMP%] {\n  min-width: 140px;\n}\n.alert-table[_ngcontent-%COMP%]   .severity-col[_ngcontent-%COMP%]   .chip[_ngcontent-%COMP%] {\n  white-space: nowrap !important;\n  display: inline-flex;\n}\n.alert-table[_ngcontent-%COMP%]   .include-col[_ngcontent-%COMP%] {\n  width: 140px;\n  text-align: center;\n}\n.alert-table[_ngcontent-%COMP%]   .include-col[_ngcontent-%COMP%]   .p-checkbox[_ngcontent-%COMP%] {\n  display: inline-flex;\n}\n.alert-table[_ngcontent-%COMP%]   .p-datatable-table[_ngcontent-%COMP%] {\n  width: 100%;\n  border: 1px solid #d1d5db;\n  border-radius: 6px;\n}\n.alert-table[_ngcontent-%COMP%]   .p-datatable-wrapper[_ngcontent-%COMP%] {\n  width: 100%;\n  overflow-x: auto;\n}\n.alert-table[_ngcontent-%COMP%]   .p-datatable-table[_ngcontent-%COMP%] {\n  table-layout: auto !important;\n}\n.alert-table-actions[_ngcontent-%COMP%] {\n  display: flex;\n  justify-content: flex-end;\n  margin-top: 0.75rem;\n}\n.alert-table[_ngcontent-%COMP%]   .toggle-col[_ngcontent-%COMP%], \n.alert-table[_ngcontent-%COMP%]   .checkbox-col[_ngcontent-%COMP%] {\n  width: 1%;\n  white-space: nowrap;\n  text-align: center;\n  padding: 0;\n}\n.alert-table.p-datatable[_ngcontent-%COMP%]   .p-datatable-thead[_ngcontent-%COMP%]    > tr[_ngcontent-%COMP%]    > th.toggle-col[_ngcontent-%COMP%], \n.alert-table.p-datatable[_ngcontent-%COMP%]   .p-datatable-tbody[_ngcontent-%COMP%]    > tr[_ngcontent-%COMP%]    > td.toggle-col[_ngcontent-%COMP%], \n.alert-table.p-datatable[_ngcontent-%COMP%]   .p-datatable-thead[_ngcontent-%COMP%]    > tr[_ngcontent-%COMP%]    > th.checkbox-col[_ngcontent-%COMP%], \n.alert-table.p-datatable[_ngcontent-%COMP%]   .p-datatable-tbody[_ngcontent-%COMP%]    > tr[_ngcontent-%COMP%]    > td.checkbox-col[_ngcontent-%COMP%] {\n  width: 1% !important;\n  white-space: nowrap !important;\n  text-align: center;\n  padding: 0 0.25rem;\n}\n/*# sourceMappingURL=alerts-guidance.component.css.map */", "\n\n[_nghost-%COMP%]     .alert-table .p-datatable-table {\n  table-layout: auto !important;\n}\n[_nghost-%COMP%]     .alert-table.p-datatable .p-datatable-thead > tr > th.toggle-col, \n[_nghost-%COMP%]     .alert-table.p-datatable .p-datatable-tbody > tr > td.toggle-col {\n  width: 70px !important;\n  min-width: 70px;\n  max-width: 70px;\n  white-space: nowrap !important;\n  text-align: center;\n  padding: 0 0.25rem;\n}\n[_nghost-%COMP%]     .alert-table.p-datatable .p-datatable-thead > tr > th.checkbox-col, \n[_nghost-%COMP%]     .alert-table.p-datatable .p-datatable-tbody > tr > td.checkbox-col {\n  width: 70px !important;\n  min-width: 70px;\n  max-width: 70px;\n  white-space: nowrap !important;\n  text-align: center;\n  padding: 0 0.25rem;\n}\n[_nghost-%COMP%]     .topic-doormat-section-row > td {\n  background: #eef2f6;\n}\n.topic-doormat-group[_ngcontent-%COMP%] {\n  margin-top: 1rem;\n  border: 1px solid #d8dee6;\n  border-radius: 6px;\n  background: #fff;\n  overflow: hidden;\n}\n.topic-doormat-group[_ngcontent-%COMP%]    + .topic-doormat-group[_ngcontent-%COMP%] {\n  margin-top: 1.25rem;\n}\n.topic-doormat-group-header[_ngcontent-%COMP%] {\n  display: flex;\n  align-items: flex-start;\n  gap: 0.75rem;\n  padding: 1.1rem 1.25rem;\n  border-bottom: 1px solid #d8dee6;\n  background: #eef2f6;\n}\n.topic-doormat-group[_ngcontent-%COMP%]   h3[_ngcontent-%COMP%] {\n  margin: 0;\n  font-size: 1.25rem;\n  line-height: 1.25;\n}\n.topic-doormat-count[_ngcontent-%COMP%] {\n  flex: 0 0 auto;\n  padding: 0.4rem 0.8rem;\n  border: 1px solid #d8dee6;\n  border-radius: 999px;\n  background: #fff;\n  color: #202833;\n  font-size: 0.9rem;\n  font-weight: 700;\n}\n.topic-doormat-subheading[_ngcontent-%COMP%] {\n  margin: 1rem 1rem 0.4rem;\n  padding-bottom: 0.25rem;\n  border-bottom: 1px solid #eef2f6;\n  color: #202833;\n  font-size: 0.9rem;\n  font-weight: 700;\n}\n.topic-doormat-group[_ngcontent-%COMP%]   .expansion-table[_ngcontent-%COMP%] {\n  margin: 0 1rem 1rem;\n}\n.topic-doormat-empty[_ngcontent-%COMP%] {\n  padding: 0.75rem;\n  border: 1px solid #d8dee6;\n  border-radius: 4px;\n  background: #fff;\n}\n.topic-doormat-recommendation[_ngcontent-%COMP%] {\n  white-space: pre-line;\n}\n.topic-doormat-provenance-icons[_ngcontent-%COMP%] {\n  display: inline-flex;\n  align-items: center;\n  gap: 0.15rem;\n  margin-right: 0.25rem;\n  vertical-align: text-bottom;\n}\n.topic-doormat-provenance-icon[_ngcontent-%COMP%] {\n  color: #596579;\n  font-size: 1rem;\n  line-height: 1;\n}\n/*# sourceMappingURL=component-guidance.component.css.map */"] });
+  }, dependencies: [CommonModule, NgClass, FormsModule, NgControlStatus, NgModel, TableModule, Table, PrimeTemplate, CheckboxModule, Checkbox, ButtonModule, ButtonDirective], styles: ["\n\n.alert-table[_ngcontent-%COMP%]   .p-datatable-tbody[_ngcontent-%COMP%]    > tr[_ngcontent-%COMP%]    > td[_ngcontent-%COMP%], \n.alert-table[_ngcontent-%COMP%]   .p-datatable-thead[_ngcontent-%COMP%]    > tr[_ngcontent-%COMP%]    > th[_ngcontent-%COMP%] {\n  white-space: normal !important;\n  word-break: normal;\n  overflow-wrap: normal;\n  vertical-align: top;\n}\n.alert-table[_ngcontent-%COMP%]   .wrap-col[_ngcontent-%COMP%] {\n  min-width: 140px;\n}\n.alert-table[_ngcontent-%COMP%]   .severity-col[_ngcontent-%COMP%]   .chip[_ngcontent-%COMP%] {\n  white-space: nowrap !important;\n  display: inline-flex;\n}\n.alert-table[_ngcontent-%COMP%]   .include-col[_ngcontent-%COMP%] {\n  width: 140px;\n  text-align: center;\n}\n.alert-table[_ngcontent-%COMP%]   .include-col[_ngcontent-%COMP%]   .p-checkbox[_ngcontent-%COMP%] {\n  display: inline-flex;\n}\n.alert-table[_ngcontent-%COMP%]   .p-datatable-table[_ngcontent-%COMP%] {\n  width: 100%;\n  border: 1px solid #d1d5db;\n  border-radius: 6px;\n}\n.alert-table[_ngcontent-%COMP%]   .p-datatable-wrapper[_ngcontent-%COMP%] {\n  width: 100%;\n  overflow-x: auto;\n}\n.alert-table[_ngcontent-%COMP%]   .p-datatable-table[_ngcontent-%COMP%] {\n  table-layout: auto !important;\n}\n.alert-table-actions[_ngcontent-%COMP%] {\n  display: flex;\n  justify-content: flex-end;\n  margin-top: 0.75rem;\n}\n.alert-table[_ngcontent-%COMP%]   .toggle-col[_ngcontent-%COMP%], \n.alert-table[_ngcontent-%COMP%]   .checkbox-col[_ngcontent-%COMP%] {\n  width: 1%;\n  white-space: nowrap;\n  text-align: center;\n  padding: 0;\n}\n.alert-table.p-datatable[_ngcontent-%COMP%]   .p-datatable-thead[_ngcontent-%COMP%]    > tr[_ngcontent-%COMP%]    > th.toggle-col[_ngcontent-%COMP%], \n.alert-table.p-datatable[_ngcontent-%COMP%]   .p-datatable-tbody[_ngcontent-%COMP%]    > tr[_ngcontent-%COMP%]    > td.toggle-col[_ngcontent-%COMP%], \n.alert-table.p-datatable[_ngcontent-%COMP%]   .p-datatable-thead[_ngcontent-%COMP%]    > tr[_ngcontent-%COMP%]    > th.checkbox-col[_ngcontent-%COMP%], \n.alert-table.p-datatable[_ngcontent-%COMP%]   .p-datatable-tbody[_ngcontent-%COMP%]    > tr[_ngcontent-%COMP%]    > td.checkbox-col[_ngcontent-%COMP%] {\n  width: 1% !important;\n  white-space: nowrap !important;\n  text-align: center;\n  padding: 0 0.25rem;\n}\n/*# sourceMappingURL=alerts-guidance.component.css.map */", "\n\n[_nghost-%COMP%]     .alert-table .p-datatable-table {\n  table-layout: auto !important;\n}\n[_nghost-%COMP%]     .alert-table.p-datatable .p-datatable-thead > tr > th.toggle-col, \n[_nghost-%COMP%]     .alert-table.p-datatable .p-datatable-tbody > tr > td.toggle-col {\n  width: 70px !important;\n  min-width: 70px;\n  max-width: 70px;\n  white-space: nowrap !important;\n  text-align: center;\n  padding: 0 0.25rem;\n}\n[_nghost-%COMP%]     .alert-table.p-datatable .p-datatable-thead > tr > th.checkbox-col, \n[_nghost-%COMP%]     .alert-table.p-datatable .p-datatable-tbody > tr > td.checkbox-col {\n  width: 70px !important;\n  min-width: 70px;\n  max-width: 70px;\n  white-space: nowrap !important;\n  text-align: center;\n  padding: 0 0.25rem;\n}\n[_nghost-%COMP%]     .topic-doormat-section-row > td {\n  background: #eef2f6;\n}\n.topic-doormat-group[_ngcontent-%COMP%] {\n  margin-top: 1rem;\n  border: 1px solid #d8dee6;\n  border-radius: 6px;\n  background: #fff;\n  overflow: hidden;\n}\n.topic-doormat-group[_ngcontent-%COMP%]    + .topic-doormat-group[_ngcontent-%COMP%] {\n  margin-top: 1.25rem;\n}\n.topic-doormat-group-header[_ngcontent-%COMP%] {\n  display: flex;\n  align-items: flex-start;\n  gap: 0.75rem;\n  padding: 1.1rem 1.25rem;\n  border-bottom: 1px solid #d8dee6;\n  background: #eef2f6;\n}\n.topic-doormat-group[_ngcontent-%COMP%]   h3[_ngcontent-%COMP%] {\n  margin: 0;\n  font-size: 1.25rem;\n  line-height: 1.25;\n}\n.topic-doormat-count[_ngcontent-%COMP%] {\n  flex: 0 0 auto;\n  padding: 0.4rem 0.8rem;\n  border: 1px solid #d8dee6;\n  border-radius: 999px;\n  background: #fff;\n  color: #202833;\n  font-size: 0.9rem;\n  font-weight: 700;\n}\n.topic-doormat-subheading[_ngcontent-%COMP%] {\n  margin: 1rem 1rem 0.4rem;\n  padding-bottom: 0.25rem;\n  border-bottom: 1px solid #eef2f6;\n  color: #202833;\n  font-size: 0.9rem;\n  font-weight: 700;\n}\n.topic-doormat-group[_ngcontent-%COMP%]   .expansion-table[_ngcontent-%COMP%] {\n  margin: 0 1rem 1rem;\n}\n.topic-doormat-empty[_ngcontent-%COMP%] {\n  padding: 0.75rem;\n  border: 1px solid #d8dee6;\n  border-radius: 4px;\n  background: #fff;\n}\n.topic-doormat-actions[_ngcontent-%COMP%] {\n  display: flex;\n  justify-content: flex-end;\n  margin-top: 1rem;\n}\n.topic-doormat-recommendation[_ngcontent-%COMP%] {\n  white-space: pre-line;\n}\n.topic-doormat-provenance-icons[_ngcontent-%COMP%] {\n  display: inline-flex;\n  align-items: center;\n  gap: 0.15rem;\n  margin-right: 0.25rem;\n  vertical-align: text-bottom;\n}\n.topic-doormat-provenance-icon[_ngcontent-%COMP%] {\n  color: #596579;\n  font-size: 1rem;\n  line-height: 1;\n}\n/*# sourceMappingURL=component-guidance.component.css.map */"] });
 };
 (() => {
   (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(AlertsGuidanceComponent, [{
@@ -33170,7 +33214,7 @@ var AlertsGuidanceComponent = class _AlertsGuidanceComponent {
     (click)="analyzeCurrentPage()"
   ></button>
 </div>
-`, styles: ["/* src/app/views/page-assistant/components/problems/component-guidance/alerts-guidance/alerts-guidance.component.css */\n.alert-table .p-datatable-tbody > tr > td,\n.alert-table .p-datatable-thead > tr > th {\n  white-space: normal !important;\n  word-break: normal;\n  overflow-wrap: normal;\n  vertical-align: top;\n}\n.alert-table .wrap-col {\n  min-width: 140px;\n}\n.alert-table .severity-col .chip {\n  white-space: nowrap !important;\n  display: inline-flex;\n}\n.alert-table .include-col {\n  width: 140px;\n  text-align: center;\n}\n.alert-table .include-col .p-checkbox {\n  display: inline-flex;\n}\n.alert-table .p-datatable-table {\n  width: 100%;\n  border: 1px solid #d1d5db;\n  border-radius: 6px;\n}\n.alert-table .p-datatable-wrapper {\n  width: 100%;\n  overflow-x: auto;\n}\n.alert-table .p-datatable-table {\n  table-layout: auto !important;\n}\n.alert-table-actions {\n  display: flex;\n  justify-content: flex-end;\n  margin-top: 0.75rem;\n}\n.alert-table .toggle-col,\n.alert-table .checkbox-col {\n  width: 1%;\n  white-space: nowrap;\n  text-align: center;\n  padding: 0;\n}\n.alert-table.p-datatable .p-datatable-thead > tr > th.toggle-col,\n.alert-table.p-datatable .p-datatable-tbody > tr > td.toggle-col,\n.alert-table.p-datatable .p-datatable-thead > tr > th.checkbox-col,\n.alert-table.p-datatable .p-datatable-tbody > tr > td.checkbox-col {\n  width: 1% !important;\n  white-space: nowrap !important;\n  text-align: center;\n  padding: 0 0.25rem;\n}\n/*# sourceMappingURL=alerts-guidance.component.css.map */\n", "/* src/app/views/page-assistant/components/problems/component-guidance/component-guidance.component.css */\n:host ::ng-deep .alert-table .p-datatable-table {\n  table-layout: auto !important;\n}\n:host ::ng-deep .alert-table.p-datatable .p-datatable-thead > tr > th.toggle-col,\n:host ::ng-deep .alert-table.p-datatable .p-datatable-tbody > tr > td.toggle-col {\n  width: 70px !important;\n  min-width: 70px;\n  max-width: 70px;\n  white-space: nowrap !important;\n  text-align: center;\n  padding: 0 0.25rem;\n}\n:host ::ng-deep .alert-table.p-datatable .p-datatable-thead > tr > th.checkbox-col,\n:host ::ng-deep .alert-table.p-datatable .p-datatable-tbody > tr > td.checkbox-col {\n  width: 70px !important;\n  min-width: 70px;\n  max-width: 70px;\n  white-space: nowrap !important;\n  text-align: center;\n  padding: 0 0.25rem;\n}\n:host ::ng-deep .topic-doormat-section-row > td {\n  background: #eef2f6;\n}\n.topic-doormat-group {\n  margin-top: 1rem;\n  border: 1px solid #d8dee6;\n  border-radius: 6px;\n  background: #fff;\n  overflow: hidden;\n}\n.topic-doormat-group + .topic-doormat-group {\n  margin-top: 1.25rem;\n}\n.topic-doormat-group-header {\n  display: flex;\n  align-items: flex-start;\n  gap: 0.75rem;\n  padding: 1.1rem 1.25rem;\n  border-bottom: 1px solid #d8dee6;\n  background: #eef2f6;\n}\n.topic-doormat-group h3 {\n  margin: 0;\n  font-size: 1.25rem;\n  line-height: 1.25;\n}\n.topic-doormat-count {\n  flex: 0 0 auto;\n  padding: 0.4rem 0.8rem;\n  border: 1px solid #d8dee6;\n  border-radius: 999px;\n  background: #fff;\n  color: #202833;\n  font-size: 0.9rem;\n  font-weight: 700;\n}\n.topic-doormat-subheading {\n  margin: 1rem 1rem 0.4rem;\n  padding-bottom: 0.25rem;\n  border-bottom: 1px solid #eef2f6;\n  color: #202833;\n  font-size: 0.9rem;\n  font-weight: 700;\n}\n.topic-doormat-group .expansion-table {\n  margin: 0 1rem 1rem;\n}\n.topic-doormat-empty {\n  padding: 0.75rem;\n  border: 1px solid #d8dee6;\n  border-radius: 4px;\n  background: #fff;\n}\n.topic-doormat-recommendation {\n  white-space: pre-line;\n}\n.topic-doormat-provenance-icons {\n  display: inline-flex;\n  align-items: center;\n  gap: 0.15rem;\n  margin-right: 0.25rem;\n  vertical-align: text-bottom;\n}\n.topic-doormat-provenance-icon {\n  color: #596579;\n  font-size: 1rem;\n  line-height: 1;\n}\n/*# sourceMappingURL=component-guidance.component.css.map */\n"] }]
+`, styles: ["/* src/app/views/page-assistant/components/problems/component-guidance/alerts-guidance/alerts-guidance.component.css */\n.alert-table .p-datatable-tbody > tr > td,\n.alert-table .p-datatable-thead > tr > th {\n  white-space: normal !important;\n  word-break: normal;\n  overflow-wrap: normal;\n  vertical-align: top;\n}\n.alert-table .wrap-col {\n  min-width: 140px;\n}\n.alert-table .severity-col .chip {\n  white-space: nowrap !important;\n  display: inline-flex;\n}\n.alert-table .include-col {\n  width: 140px;\n  text-align: center;\n}\n.alert-table .include-col .p-checkbox {\n  display: inline-flex;\n}\n.alert-table .p-datatable-table {\n  width: 100%;\n  border: 1px solid #d1d5db;\n  border-radius: 6px;\n}\n.alert-table .p-datatable-wrapper {\n  width: 100%;\n  overflow-x: auto;\n}\n.alert-table .p-datatable-table {\n  table-layout: auto !important;\n}\n.alert-table-actions {\n  display: flex;\n  justify-content: flex-end;\n  margin-top: 0.75rem;\n}\n.alert-table .toggle-col,\n.alert-table .checkbox-col {\n  width: 1%;\n  white-space: nowrap;\n  text-align: center;\n  padding: 0;\n}\n.alert-table.p-datatable .p-datatable-thead > tr > th.toggle-col,\n.alert-table.p-datatable .p-datatable-tbody > tr > td.toggle-col,\n.alert-table.p-datatable .p-datatable-thead > tr > th.checkbox-col,\n.alert-table.p-datatable .p-datatable-tbody > tr > td.checkbox-col {\n  width: 1% !important;\n  white-space: nowrap !important;\n  text-align: center;\n  padding: 0 0.25rem;\n}\n/*# sourceMappingURL=alerts-guidance.component.css.map */\n", "/* src/app/views/page-assistant/components/problems/component-guidance/component-guidance.component.css */\n:host ::ng-deep .alert-table .p-datatable-table {\n  table-layout: auto !important;\n}\n:host ::ng-deep .alert-table.p-datatable .p-datatable-thead > tr > th.toggle-col,\n:host ::ng-deep .alert-table.p-datatable .p-datatable-tbody > tr > td.toggle-col {\n  width: 70px !important;\n  min-width: 70px;\n  max-width: 70px;\n  white-space: nowrap !important;\n  text-align: center;\n  padding: 0 0.25rem;\n}\n:host ::ng-deep .alert-table.p-datatable .p-datatable-thead > tr > th.checkbox-col,\n:host ::ng-deep .alert-table.p-datatable .p-datatable-tbody > tr > td.checkbox-col {\n  width: 70px !important;\n  min-width: 70px;\n  max-width: 70px;\n  white-space: nowrap !important;\n  text-align: center;\n  padding: 0 0.25rem;\n}\n:host ::ng-deep .topic-doormat-section-row > td {\n  background: #eef2f6;\n}\n.topic-doormat-group {\n  margin-top: 1rem;\n  border: 1px solid #d8dee6;\n  border-radius: 6px;\n  background: #fff;\n  overflow: hidden;\n}\n.topic-doormat-group + .topic-doormat-group {\n  margin-top: 1.25rem;\n}\n.topic-doormat-group-header {\n  display: flex;\n  align-items: flex-start;\n  gap: 0.75rem;\n  padding: 1.1rem 1.25rem;\n  border-bottom: 1px solid #d8dee6;\n  background: #eef2f6;\n}\n.topic-doormat-group h3 {\n  margin: 0;\n  font-size: 1.25rem;\n  line-height: 1.25;\n}\n.topic-doormat-count {\n  flex: 0 0 auto;\n  padding: 0.4rem 0.8rem;\n  border: 1px solid #d8dee6;\n  border-radius: 999px;\n  background: #fff;\n  color: #202833;\n  font-size: 0.9rem;\n  font-weight: 700;\n}\n.topic-doormat-subheading {\n  margin: 1rem 1rem 0.4rem;\n  padding-bottom: 0.25rem;\n  border-bottom: 1px solid #eef2f6;\n  color: #202833;\n  font-size: 0.9rem;\n  font-weight: 700;\n}\n.topic-doormat-group .expansion-table {\n  margin: 0 1rem 1rem;\n}\n.topic-doormat-empty {\n  padding: 0.75rem;\n  border: 1px solid #d8dee6;\n  border-radius: 4px;\n  background: #fff;\n}\n.topic-doormat-actions {\n  display: flex;\n  justify-content: flex-end;\n  margin-top: 1rem;\n}\n.topic-doormat-recommendation {\n  white-space: pre-line;\n}\n.topic-doormat-provenance-icons {\n  display: inline-flex;\n  align-items: center;\n  gap: 0.15rem;\n  margin-right: 0.25rem;\n  vertical-align: text-bottom;\n}\n.topic-doormat-provenance-icon {\n  color: #596579;\n  font-size: 1rem;\n  line-height: 1;\n}\n/*# sourceMappingURL=component-guidance.component.css.map */\n"] }]
   }], () => [], { selectAll: [{
     type: Input
   }], maxSeverityChange: [{
@@ -34455,10 +34499,10 @@ function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Co
 }
 function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_10_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275elementStart(0, "tr")(1, "th", 50);
+    \u0275\u0275elementStart(0, "tr")(1, "th", 51);
     \u0275\u0275text(2, "Include");
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(3, "th", 51);
+    \u0275\u0275elementStart(3, "th", 52);
     \u0275\u0275text(4, "Severity");
     \u0275\u0275elementEnd();
     \u0275\u0275elementStart(5, "th");
@@ -34474,7 +34518,7 @@ function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Co
 }
 function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_11_For_9_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275elementStart(0, "span", 56);
+    \u0275\u0275elementStart(0, "span", 57);
     \u0275\u0275text(1);
     \u0275\u0275elementEnd();
   }
@@ -34489,7 +34533,7 @@ function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Co
 }
 function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_11_For_14_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275elementStart(0, "span", 56);
+    \u0275\u0275elementStart(0, "span", 57);
     \u0275\u0275text(1);
     \u0275\u0275elementEnd();
   }
@@ -34504,7 +34548,7 @@ function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Co
 }
 function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_11_Conditional_15_For_2_For_4_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275elementStart(0, "span", 59);
+    \u0275\u0275elementStart(0, "span", 60);
     \u0275\u0275text(1);
     \u0275\u0275elementEnd();
   }
@@ -34523,7 +34567,7 @@ function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Co
     \u0275\u0275elementStart(0, "li")(1, "span");
     \u0275\u0275text(2);
     \u0275\u0275elementEnd();
-    \u0275\u0275repeaterCreate(3, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_11_Conditional_15_For_2_For_4_Template, 2, 2, "span", 59, _forTrack2);
+    \u0275\u0275repeaterCreate(3, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_11_Conditional_15_For_2_For_4_Template, 2, 2, "span", 60, _forTrack2);
     \u0275\u0275elementEnd();
   }
   if (rf & 2) {
@@ -34549,7 +34593,7 @@ function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Co
 }
 function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_11_Conditional_15_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275elementStart(0, "ul", 58);
+    \u0275\u0275elementStart(0, "ul", 59);
     \u0275\u0275repeaterCreate(1, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_11_Conditional_15_For_2_Template, 5, 1, "li", null, _forTrack1);
     \u0275\u0275elementEnd();
     \u0275\u0275template(3, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_11_Conditional_15_Conditional_3_Template, 2, 1, "span");
@@ -34564,7 +34608,7 @@ function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Co
 }
 function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_11_Conditional_16_Conditional_2_Conditional_2_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275elementStart(0, "a", 60);
+    \u0275\u0275elementStart(0, "a", 61);
     \u0275\u0275text(1);
     \u0275\u0275elementEnd();
   }
@@ -34580,7 +34624,7 @@ function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Co
     \u0275\u0275elementStart(0, "span");
     \u0275\u0275text(1);
     \u0275\u0275elementEnd();
-    \u0275\u0275template(2, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_11_Conditional_16_Conditional_2_Conditional_2_Template, 2, 2, "a", 60);
+    \u0275\u0275template(2, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_11_Conditional_16_Conditional_2_Conditional_2_Template, 2, 2, "a", 61);
   }
   if (rf & 2) {
     const issue_r12 = \u0275\u0275nextContext(2).$implicit;
@@ -34592,7 +34636,7 @@ function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Co
 }
 function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_11_Conditional_16_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275elementStart(0, "span", 59);
+    \u0275\u0275elementStart(0, "span", 60);
     \u0275\u0275text(1);
     \u0275\u0275elementEnd();
     \u0275\u0275template(2, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_11_Conditional_16_Conditional_2_Template, 3, 2);
@@ -34609,7 +34653,7 @@ function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Co
 }
 function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_11_Conditional_17_Conditional_1_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275elementStart(0, "a", 60);
+    \u0275\u0275elementStart(0, "a", 61);
     \u0275\u0275text(1);
     \u0275\u0275elementEnd();
   }
@@ -34623,7 +34667,7 @@ function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Co
 function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_11_Conditional_17_Template(rf, ctx) {
   if (rf & 1) {
     \u0275\u0275text(0);
-    \u0275\u0275template(1, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_11_Conditional_17_Conditional_1_Template, 2, 2, "a", 60);
+    \u0275\u0275template(1, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_11_Conditional_17_Conditional_1_Template, 2, 2, "a", 61);
   }
   if (rf & 2) {
     const issue_r12 = \u0275\u0275nextContext().$implicit;
@@ -34634,7 +34678,7 @@ function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Co
 }
 function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_11_For_21_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275elementStart(0, "span", 56);
+    \u0275\u0275elementStart(0, "span", 57);
     \u0275\u0275text(1);
     \u0275\u0275elementEnd();
   }
@@ -34650,28 +34694,28 @@ function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Co
 function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_11_Template(rf, ctx) {
   if (rf & 1) {
     const _r11 = \u0275\u0275getCurrentView();
-    \u0275\u0275elementStart(0, "tr", 52)(1, "td")(2, "p-checkbox", 53);
+    \u0275\u0275elementStart(0, "tr", 53)(1, "td")(2, "p-checkbox", 54);
     \u0275\u0275twoWayListener("ngModelChange", function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_11_Template_p_checkbox_ngModelChange_2_listener($event) {
       const issue_r12 = \u0275\u0275restoreView(_r11).$implicit;
       \u0275\u0275twoWayBindingSet(issue_r12.include, $event) || (issue_r12.include = $event);
       return \u0275\u0275resetView($event);
     });
     \u0275\u0275elementEnd()();
-    \u0275\u0275elementStart(3, "td")(4, "span", 54);
+    \u0275\u0275elementStart(3, "td")(4, "span", 55);
     \u0275\u0275text(5);
     \u0275\u0275elementEnd()();
-    \u0275\u0275elementStart(6, "td")(7, "span", 55);
-    \u0275\u0275repeaterCreate(8, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_11_For_9_Template, 2, 3, "span", 56, \u0275\u0275repeaterTrackByIdentity);
+    \u0275\u0275elementStart(6, "td")(7, "span", 56);
+    \u0275\u0275repeaterCreate(8, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_11_For_9_Template, 2, 3, "span", 57, \u0275\u0275repeaterTrackByIdentity);
     \u0275\u0275elementEnd();
     \u0275\u0275text(10);
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(11, "td")(12, "span", 55);
-    \u0275\u0275repeaterCreate(13, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_11_For_14_Template, 2, 3, "span", 56, \u0275\u0275repeaterTrackByIdentity);
+    \u0275\u0275elementStart(11, "td")(12, "span", 56);
+    \u0275\u0275repeaterCreate(13, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_11_For_14_Template, 2, 3, "span", 57, \u0275\u0275repeaterTrackByIdentity);
     \u0275\u0275elementEnd();
     \u0275\u0275template(15, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_11_Conditional_15_Template, 4, 1)(16, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_11_Conditional_16_Template, 3, 3)(17, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_11_Conditional_17_Template, 2, 2);
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(18, "td", 57)(19, "span", 55);
-    \u0275\u0275repeaterCreate(20, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_11_For_21_Template, 2, 3, "span", 56, \u0275\u0275repeaterTrackByIdentity);
+    \u0275\u0275elementStart(18, "td", 58)(19, "span", 56);
+    \u0275\u0275repeaterCreate(20, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_11_For_21_Template, 2, 3, "span", 57, \u0275\u0275repeaterTrackByIdentity);
     \u0275\u0275elementEnd();
     \u0275\u0275text(22);
     \u0275\u0275elementEnd()();
@@ -34703,23 +34747,23 @@ function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Co
 }
 function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_12_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275elementStart(0, "tr")(1, "td", 61)(2, "span", 25);
+    \u0275\u0275elementStart(0, "tr")(1, "td", 62)(2, "span", 25);
     \u0275\u0275text(3, "No section-level issues");
     \u0275\u0275elementEnd()()();
   }
 }
 function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_16_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275elementStart(0, "tr")(1, "th", 50);
+    \u0275\u0275elementStart(0, "tr")(1, "th", 51);
     \u0275\u0275text(2, "Include");
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(3, "th", 62);
+    \u0275\u0275elementStart(3, "th", 63);
     \u0275\u0275text(4, "#");
     \u0275\u0275elementEnd();
     \u0275\u0275elementStart(5, "th");
     \u0275\u0275text(6, "Doormat");
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(7, "th", 51);
+    \u0275\u0275elementStart(7, "th", 52);
     \u0275\u0275text(8, "Severity");
     \u0275\u0275elementEnd();
     \u0275\u0275elementStart(9, "th");
@@ -34747,7 +34791,7 @@ function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Co
 }
 function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_17_For_14_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275elementStart(0, "span", 56);
+    \u0275\u0275elementStart(0, "span", 57);
     \u0275\u0275text(1);
     \u0275\u0275elementEnd();
   }
@@ -34762,7 +34806,7 @@ function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Co
 }
 function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_17_For_19_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275elementStart(0, "span", 56);
+    \u0275\u0275elementStart(0, "span", 57);
     \u0275\u0275text(1);
     \u0275\u0275elementEnd();
   }
@@ -34777,7 +34821,7 @@ function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Co
 }
 function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_17_Conditional_20_For_2_For_4_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275elementStart(0, "span", 59);
+    \u0275\u0275elementStart(0, "span", 60);
     \u0275\u0275text(1);
     \u0275\u0275elementEnd();
   }
@@ -34796,7 +34840,7 @@ function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Co
     \u0275\u0275elementStart(0, "li")(1, "span");
     \u0275\u0275text(2);
     \u0275\u0275elementEnd();
-    \u0275\u0275repeaterCreate(3, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_17_Conditional_20_For_2_For_4_Template, 2, 2, "span", 59, _forTrack2);
+    \u0275\u0275repeaterCreate(3, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_17_Conditional_20_For_2_For_4_Template, 2, 2, "span", 60, _forTrack2);
     \u0275\u0275elementEnd();
   }
   if (rf & 2) {
@@ -34822,7 +34866,7 @@ function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Co
 }
 function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_17_Conditional_20_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275elementStart(0, "ul", 58);
+    \u0275\u0275elementStart(0, "ul", 59);
     \u0275\u0275repeaterCreate(1, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_17_Conditional_20_For_2_Template, 5, 1, "li", null, _forTrack1);
     \u0275\u0275elementEnd();
     \u0275\u0275template(3, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_17_Conditional_20_Conditional_3_Template, 2, 1, "span");
@@ -34837,7 +34881,7 @@ function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Co
 }
 function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_17_Conditional_21_Conditional_2_Conditional_2_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275elementStart(0, "a", 60);
+    \u0275\u0275elementStart(0, "a", 61);
     \u0275\u0275text(1);
     \u0275\u0275elementEnd();
   }
@@ -34853,7 +34897,7 @@ function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Co
     \u0275\u0275elementStart(0, "span");
     \u0275\u0275text(1);
     \u0275\u0275elementEnd();
-    \u0275\u0275template(2, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_17_Conditional_21_Conditional_2_Conditional_2_Template, 2, 2, "a", 60);
+    \u0275\u0275template(2, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_17_Conditional_21_Conditional_2_Conditional_2_Template, 2, 2, "a", 61);
   }
   if (rf & 2) {
     const issue_r19 = \u0275\u0275nextContext(2).$implicit;
@@ -34865,7 +34909,7 @@ function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Co
 }
 function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_17_Conditional_21_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275elementStart(0, "span", 59);
+    \u0275\u0275elementStart(0, "span", 60);
     \u0275\u0275text(1);
     \u0275\u0275elementEnd();
     \u0275\u0275template(2, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_17_Conditional_21_Conditional_2_Template, 3, 2);
@@ -34882,7 +34926,7 @@ function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Co
 }
 function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_17_Conditional_22_Conditional_1_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275elementStart(0, "a", 60);
+    \u0275\u0275elementStart(0, "a", 61);
     \u0275\u0275text(1);
     \u0275\u0275elementEnd();
   }
@@ -34896,7 +34940,7 @@ function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Co
 function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_17_Conditional_22_Template(rf, ctx) {
   if (rf & 1) {
     \u0275\u0275text(0);
-    \u0275\u0275template(1, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_17_Conditional_22_Conditional_1_Template, 2, 2, "a", 60);
+    \u0275\u0275template(1, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_17_Conditional_22_Conditional_1_Template, 2, 2, "a", 61);
   }
   if (rf & 2) {
     const issue_r19 = \u0275\u0275nextContext().$implicit;
@@ -34907,7 +34951,7 @@ function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Co
 }
 function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_17_For_26_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275elementStart(0, "span", 56);
+    \u0275\u0275elementStart(0, "span", 57);
     \u0275\u0275text(1);
     \u0275\u0275elementEnd();
   }
@@ -34923,7 +34967,7 @@ function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Co
 function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_17_Template(rf, ctx) {
   if (rf & 1) {
     const _r18 = \u0275\u0275getCurrentView();
-    \u0275\u0275elementStart(0, "tr")(1, "td")(2, "p-checkbox", 53);
+    \u0275\u0275elementStart(0, "tr")(1, "td")(2, "p-checkbox", 54);
     \u0275\u0275twoWayListener("ngModelChange", function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_17_Template_p_checkbox_ngModelChange_2_listener($event) {
       const issue_r19 = \u0275\u0275restoreView(_r18).$implicit;
       \u0275\u0275twoWayBindingSet(issue_r19.include, $event) || (issue_r19.include = $event);
@@ -34937,21 +34981,21 @@ function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Co
     \u0275\u0275elementStart(6, "td");
     \u0275\u0275text(7);
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(8, "td")(9, "span", 54);
+    \u0275\u0275elementStart(8, "td")(9, "span", 55);
     \u0275\u0275text(10);
     \u0275\u0275elementEnd()();
-    \u0275\u0275elementStart(11, "td")(12, "span", 55);
-    \u0275\u0275repeaterCreate(13, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_17_For_14_Template, 2, 3, "span", 56, \u0275\u0275repeaterTrackByIdentity);
+    \u0275\u0275elementStart(11, "td")(12, "span", 56);
+    \u0275\u0275repeaterCreate(13, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_17_For_14_Template, 2, 3, "span", 57, \u0275\u0275repeaterTrackByIdentity);
     \u0275\u0275elementEnd();
     \u0275\u0275text(15);
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(16, "td")(17, "span", 55);
-    \u0275\u0275repeaterCreate(18, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_17_For_19_Template, 2, 3, "span", 56, \u0275\u0275repeaterTrackByIdentity);
+    \u0275\u0275elementStart(16, "td")(17, "span", 56);
+    \u0275\u0275repeaterCreate(18, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_17_For_19_Template, 2, 3, "span", 57, \u0275\u0275repeaterTrackByIdentity);
     \u0275\u0275elementEnd();
     \u0275\u0275template(20, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_17_Conditional_20_Template, 4, 1)(21, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_17_Conditional_21_Template, 3, 3)(22, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_17_Conditional_22_Template, 2, 2);
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(23, "td", 57)(24, "span", 55);
-    \u0275\u0275repeaterCreate(25, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_17_For_26_Template, 2, 3, "span", 56, \u0275\u0275repeaterTrackByIdentity);
+    \u0275\u0275elementStart(23, "td", 58)(24, "span", 56);
+    \u0275\u0275repeaterCreate(25, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_17_For_26_Template, 2, 3, "span", 57, \u0275\u0275repeaterTrackByIdentity);
     \u0275\u0275elementEnd();
     \u0275\u0275text(27);
     \u0275\u0275elementEnd()();
@@ -34989,30 +35033,30 @@ function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Co
 }
 function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_18_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275elementStart(0, "tr")(1, "td", 63)(2, "span", 25);
+    \u0275\u0275elementStart(0, "tr")(1, "td", 64)(2, "span", 25);
     \u0275\u0275text(3, "No doormat-level issues");
     \u0275\u0275elementEnd()()();
   }
 }
 function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275elementStart(0, "section", 44)(1, "header", 45)(2, "div")(3, "h3");
+    \u0275\u0275elementStart(0, "section", 45)(1, "header", 46)(2, "div")(3, "h3");
     \u0275\u0275text(4);
     \u0275\u0275elementEnd()();
-    \u0275\u0275elementStart(5, "span", 46);
+    \u0275\u0275elementStart(5, "span", 47);
     \u0275\u0275text(6);
     \u0275\u0275elementEnd()();
-    \u0275\u0275elementStart(7, "h4", 47);
+    \u0275\u0275elementStart(7, "h4", 48);
     \u0275\u0275text(8, "Section-level issues");
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(9, "p-table", 48);
-    \u0275\u0275template(10, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_10_Template, 11, 0, "ng-template", 3)(11, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_11_Template, 23, 8, "ng-template", 4)(12, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_12_Template, 4, 0, "ng-template", 49);
+    \u0275\u0275elementStart(9, "p-table", 49);
+    \u0275\u0275template(10, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_10_Template, 11, 0, "ng-template", 3)(11, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_11_Template, 23, 8, "ng-template", 4)(12, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_12_Template, 4, 0, "ng-template", 50);
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(13, "h4", 47);
+    \u0275\u0275elementStart(13, "h4", 48);
     \u0275\u0275text(14, "Doormat-level issues");
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(15, "p-table", 48);
-    \u0275\u0275template(16, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_16_Template, 15, 0, "ng-template", 3)(17, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_17_Template, 28, 11, "ng-template", 4)(18, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_18_Template, 4, 0, "ng-template", 49);
+    \u0275\u0275elementStart(15, "p-table", 49);
+    \u0275\u0275template(16, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_16_Template, 15, 0, "ng-template", 3)(17, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_17_Template, 28, 11, "ng-template", 4)(18, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_ng_template_18_Template, 4, 0, "ng-template", 50);
     \u0275\u0275elementEnd()();
   }
   if (rf & 2) {
@@ -35029,7 +35073,7 @@ function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Co
 }
 function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275repeaterCreate(0, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_Template, 19, 5, "section", 44, _forTrack0);
+    \u0275\u0275repeaterCreate(0, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_For_1_Template, 19, 5, "section", 45, _forTrack0);
   }
   if (rf & 2) {
     const ctx_r2 = \u0275\u0275nextContext(4);
@@ -35069,6 +35113,23 @@ function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Co
     \u0275\u0275conditional(ctx_r2.topicDoormatIssuesLoading ? 1 : ctx_r2.topicDoormatIssuesResponseReceived ? 2 : 3);
   }
 }
+function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_6_Template(rf, ctx) {
+  if (rf & 1) {
+    const _r26 = \u0275\u0275getCurrentView();
+    \u0275\u0275elementStart(0, "div", 44)(1, "button", 65);
+    \u0275\u0275listener("click", function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_6_Template_button_click_1_listener() {
+      \u0275\u0275restoreView(_r26);
+      const ctx_r2 = \u0275\u0275nextContext(4);
+      return \u0275\u0275resetView(ctx_r2.clearTopicDoormatIssuesReport());
+    });
+    \u0275\u0275elementEnd()();
+  }
+  if (rf & 2) {
+    const ctx_r2 = \u0275\u0275nextContext(4);
+    \u0275\u0275advance();
+    \u0275\u0275property("disabled", ctx_r2.topicDoormatIssuesLoading);
+  }
+}
 function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Template(rf, ctx) {
   if (rf & 1) {
     const _r10 = \u0275\u0275getCurrentView();
@@ -35081,7 +35142,7 @@ function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Te
     \u0275\u0275elementEnd();
     \u0275\u0275template(2, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_2_Template, 3, 0, "span", 25)(3, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_3_Template, 4, 1, "div");
     \u0275\u0275elementEnd();
-    \u0275\u0275template(4, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_Template, 2, 0)(5, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_5_Template, 4, 1, "div", 43);
+    \u0275\u0275template(4, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_4_Template, 2, 0)(5, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_5_Template, 4, 1, "div", 43)(6, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Conditional_6_Template, 2, 1, "div", 44);
   }
   if (rf & 2) {
     const ctx_r2 = \u0275\u0275nextContext(3);
@@ -35092,6 +35153,8 @@ function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Te
     \u0275\u0275conditional(ctx_r2.topicDoormatIssuesLoading ? 2 : ctx_r2.topicDoormatIssuesError ? 3 : -1);
     \u0275\u0275advance(2);
     \u0275\u0275conditional(ctx_r2.topicDoormatIssueGroups.length ? 4 : 5);
+    \u0275\u0275advance(2);
+    \u0275\u0275conditional(ctx_r2.topicDoormatIssuesResponseReceived ? 6 : -1);
   }
 }
 function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_1_ng_template_1_Template(rf, ctx) {
@@ -35135,12 +35198,12 @@ function ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_1_Te
 }
 function ComponentGuidanceComponent_ng_template_5_Conditional_4_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275template(0, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Template, 6, 5)(1, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_1_Template, 3, 0, "p-table", 40);
+    \u0275\u0275template(0, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_0_Template, 7, 6)(1, ComponentGuidanceComponent_ng_template_5_Conditional_4_Conditional_1_Template, 3, 0, "p-table", 40);
   }
   if (rf & 2) {
-    const row_r26 = \u0275\u0275nextContext().$implicit;
+    const row_r27 = \u0275\u0275nextContext().$implicit;
     const ctx_r2 = \u0275\u0275nextContext();
-    \u0275\u0275conditional(row_r26.__id === ctx_r2.topicDoormatsId ? 0 : 1);
+    \u0275\u0275conditional(row_r27.__id === ctx_r2.topicDoormatsId ? 0 : 1);
   }
 }
 function ComponentGuidanceComponent_ng_template_5_Template(rf, ctx) {
@@ -35150,9 +35213,9 @@ function ComponentGuidanceComponent_ng_template_5_Template(rf, ctx) {
     \u0275\u0275elementEnd()()();
   }
   if (rf & 2) {
-    const row_r26 = ctx.$implicit;
+    const row_r27 = ctx.$implicit;
     \u0275\u0275advance(3);
-    \u0275\u0275conditional(row_r26.__nameKey === "page.tools.guidance.craVariant.alerts.title" ? 3 : 4);
+    \u0275\u0275conditional(row_r27.__nameKey === "page.tools.guidance.craVariant.alerts.title" ? 3 : 4);
   }
 }
 var ComponentGuidanceComponent = class _ComponentGuidanceComponent {
@@ -35631,6 +35694,10 @@ var ComponentGuidanceComponent = class _ComponentGuidanceComponent {
     this.topicDoormatAnalyzedHtml = "";
     void this.analyzeTopicDoormatIssues();
   }
+  clearTopicDoormatIssuesReport() {
+    this.resetTopicDoormatAnalysisState();
+    this.cdr.markForCheck();
+  }
   expandAll() {
     this.expandedRows = Object.fromEntries(this.tableRows.map((r) => [r.url, true]));
   }
@@ -35929,7 +35996,7 @@ var ComponentGuidanceComponent = class _ComponentGuidanceComponent {
   static \u0275fac = function ComponentGuidanceComponent_Factory(__ngFactoryType__) {
     return new (__ngFactoryType__ || _ComponentGuidanceComponent)();
   };
-  static \u0275cmp = /* @__PURE__ */ \u0275\u0275defineComponent({ type: _ComponentGuidanceComponent, selectors: [["ca-component-guidance"]], outputs: { analysisAvailable: "analysisAvailable" }, decls: 10, vars: 10, consts: [["dt", ""], ["dataKey", "url", "styleClass", "p-datatable-sm", "selectionMode", "multiple", "expandableRows", "", 3, "selectionChange", "sortFunction", "onRowExpand", "onRowCollapse", "value", "selection", "customSort", "resizableColumns", "expandedRowKeys"], ["pTemplate", "caption"], ["pTemplate", "header"], ["pTemplate", "body"], ["pTemplate", "expandedrow"], [1, "mt-3"], ["pButton", "", "type", "button", "aria-label", "Get GenAI recommendations based on user data", "pTooltip", "Select one or more components", 1, "ai-btn", 3, "click", "label", "icon", "disabled", "showDelay", "hideDelay"], [1, "sr-only"], [1, "caption-actions"], ["pButton", "", "type", "button", "label", "Expand All", "icon", "pi pi-plus", 1, "p-button-text", 3, "click"], ["pButton", "", "type", "button", "label", "Collapse All", "icon", "pi pi-minus", 1, "p-button-text", 3, "click"], [2, "width", "3rem", "text-align", "center"], ["pSortableColumn", "order"], ["field", "order"], ["pSortableColumn", "health", 1, "health-col"], ["field", "health"], [3, "pSelectableRow"], [2, "text-align", "center"], ["pButton", "", "type", "button", "aria-label", "Toggle row", 1, "p-button-text", "p-button-rounded", "p-button-plain", 3, "pRowToggler"], ["aria-hidden", "true", 1, "pi", 3, "ngClass"], [3, "value"], ["target", "_blank", "rel", "noopener", 3, "href"], [1, "health-cell", "health-col"], [3, "label", "icon", "styleClass"], [1, "muted"], ["icon", "pi pi-question-circle", "styleClass", "chip chip-unk", 3, "label"], ["label", "OK", "icon", "pi pi-check-circle", "styleClass", "chip chip-ok"], [1, "alert-loading"], [1, "text-danger"], [1, "chip-list"], ["aria-hidden", "true", 1, "pi", "pi-spinner", "pi-spin"], [3, "label", "styleClass", 4, "ngFor", "ngForOf"], [3, "label", "styleClass"], ["styleClass", "chip chip-hghlght", 3, "label", 4, "ngFor", "ngForOf"], ["styleClass", "chip chip-hghlght", 3, "label"], ["colspan", "6"], [1, "p-3"], [1, "expansion-table", 3, "selectAll"], [1, "expansion-table", 3, "maxSeverityChange", "categoriesChange", "loadingChange", "errorChange", "selectAll"], ["styleClass", "p-datatable-sm expansion-table"], [1, "mb-3"], ["pButton", "", "type", "button", "label", "Re-analyse current webpage", "icon", "pi pi-refresh", 3, "click", "disabled"], [1, "topic-doormat-empty"], [1, "topic-doormat-group"], [1, "topic-doormat-group-header"], [1, "topic-doormat-count"], [1, "topic-doormat-subheading"], ["styleClass", "p-datatable-sm expansion-table", 3, "value"], ["pTemplate", "emptymessage"], [2, "width", "3rem"], [2, "width", "8rem"], [1, "topic-doormat-section-row"], [3, "ngModelChange", "binary", "ngModel", "disabled"], [1, "chip", 3, "ngClass"], [1, "topic-doormat-provenance-icons"], ["tooltipPosition", "top", 1, "material-icons", "topic-doormat-provenance-icon", 3, "pTooltip"], [1, "topic-doormat-recommendation"], [1, "topic-doormat-evidence-list"], [1, "chip", "topic-doormat-evidence-metric", 3, "ngClass"], ["target", "_blank", "rel", "noopener noreferrer", 3, "href"], ["colspan", "5"], [2, "width", "4rem"], ["colspan", "7"]], template: function ComponentGuidanceComponent_Template(rf, ctx) {
+  static \u0275cmp = /* @__PURE__ */ \u0275\u0275defineComponent({ type: _ComponentGuidanceComponent, selectors: [["ca-component-guidance"]], outputs: { analysisAvailable: "analysisAvailable" }, decls: 10, vars: 10, consts: [["dt", ""], ["dataKey", "url", "styleClass", "p-datatable-sm", "selectionMode", "multiple", "expandableRows", "", 3, "selectionChange", "sortFunction", "onRowExpand", "onRowCollapse", "value", "selection", "customSort", "resizableColumns", "expandedRowKeys"], ["pTemplate", "caption"], ["pTemplate", "header"], ["pTemplate", "body"], ["pTemplate", "expandedrow"], [1, "mt-3"], ["pButton", "", "type", "button", "aria-label", "Get GenAI recommendations based on user data", "pTooltip", "Select one or more components", 1, "ai-btn", 3, "click", "label", "icon", "disabled", "showDelay", "hideDelay"], [1, "sr-only"], [1, "caption-actions"], ["pButton", "", "type", "button", "label", "Expand All", "icon", "pi pi-plus", 1, "p-button-text", 3, "click"], ["pButton", "", "type", "button", "label", "Collapse All", "icon", "pi pi-minus", 1, "p-button-text", 3, "click"], [2, "width", "3rem", "text-align", "center"], ["pSortableColumn", "order"], ["field", "order"], ["pSortableColumn", "health", 1, "health-col"], ["field", "health"], [3, "pSelectableRow"], [2, "text-align", "center"], ["pButton", "", "type", "button", "aria-label", "Toggle row", 1, "p-button-text", "p-button-rounded", "p-button-plain", 3, "pRowToggler"], ["aria-hidden", "true", 1, "pi", 3, "ngClass"], [3, "value"], ["target", "_blank", "rel", "noopener", 3, "href"], [1, "health-cell", "health-col"], [3, "label", "icon", "styleClass"], [1, "muted"], ["icon", "pi pi-question-circle", "styleClass", "chip chip-unk", 3, "label"], ["label", "OK", "icon", "pi pi-check-circle", "styleClass", "chip chip-ok"], [1, "alert-loading"], [1, "text-danger"], [1, "chip-list"], ["aria-hidden", "true", 1, "pi", "pi-spinner", "pi-spin"], [3, "label", "styleClass", 4, "ngFor", "ngForOf"], [3, "label", "styleClass"], ["styleClass", "chip chip-hghlght", 3, "label", 4, "ngFor", "ngForOf"], ["styleClass", "chip chip-hghlght", 3, "label"], ["colspan", "6"], [1, "p-3"], [1, "expansion-table", 3, "selectAll"], [1, "expansion-table", 3, "maxSeverityChange", "categoriesChange", "loadingChange", "errorChange", "selectAll"], ["styleClass", "p-datatable-sm expansion-table"], [1, "mb-3"], ["pButton", "", "type", "button", "label", "Re-analyse current webpage", "icon", "pi pi-refresh", 3, "click", "disabled"], [1, "topic-doormat-empty"], [1, "topic-doormat-actions"], [1, "topic-doormat-group"], [1, "topic-doormat-group-header"], [1, "topic-doormat-count"], [1, "topic-doormat-subheading"], ["styleClass", "p-datatable-sm expansion-table", 3, "value"], ["pTemplate", "emptymessage"], [2, "width", "3rem"], [2, "width", "8rem"], [1, "topic-doormat-section-row"], [3, "ngModelChange", "binary", "ngModel", "disabled"], [1, "chip", 3, "ngClass"], [1, "topic-doormat-provenance-icons"], ["tooltipPosition", "top", 1, "material-icons", "topic-doormat-provenance-icon", 3, "pTooltip"], [1, "topic-doormat-recommendation"], [1, "topic-doormat-evidence-list"], [1, "chip", "topic-doormat-evidence-metric", 3, "ngClass"], ["target", "_blank", "rel", "noopener noreferrer", 3, "href"], ["colspan", "5"], [2, "width", "4rem"], ["colspan", "7"], ["pButton", "", "type", "button", "label", "Clear issues report", "icon", "pi pi-times", 1, "p-button-secondary", "p-button-sm", 3, "click", "disabled"]], template: function ComponentGuidanceComponent_Template(rf, ctx) {
     if (rf & 1) {
       const _r1 = \u0275\u0275getCurrentView();
       \u0275\u0275elementStart(0, "p-table", 1, 0);
@@ -35995,7 +36062,7 @@ var ComponentGuidanceComponent = class _ComponentGuidanceComponent {
     Tooltip,
     TranslateModule,
     AlertsGuidanceComponent
-  ], styles: ["\n\n[_nghost-%COMP%]     .alert-table .p-datatable-table {\n  table-layout: auto !important;\n}\n[_nghost-%COMP%]     .alert-table.p-datatable .p-datatable-thead > tr > th.toggle-col, \n[_nghost-%COMP%]     .alert-table.p-datatable .p-datatable-tbody > tr > td.toggle-col {\n  width: 70px !important;\n  min-width: 70px;\n  max-width: 70px;\n  white-space: nowrap !important;\n  text-align: center;\n  padding: 0 0.25rem;\n}\n[_nghost-%COMP%]     .alert-table.p-datatable .p-datatable-thead > tr > th.checkbox-col, \n[_nghost-%COMP%]     .alert-table.p-datatable .p-datatable-tbody > tr > td.checkbox-col {\n  width: 70px !important;\n  min-width: 70px;\n  max-width: 70px;\n  white-space: nowrap !important;\n  text-align: center;\n  padding: 0 0.25rem;\n}\n[_nghost-%COMP%]     .topic-doormat-section-row > td {\n  background: #eef2f6;\n}\n.topic-doormat-group[_ngcontent-%COMP%] {\n  margin-top: 1rem;\n  border: 1px solid #d8dee6;\n  border-radius: 6px;\n  background: #fff;\n  overflow: hidden;\n}\n.topic-doormat-group[_ngcontent-%COMP%]    + .topic-doormat-group[_ngcontent-%COMP%] {\n  margin-top: 1.25rem;\n}\n.topic-doormat-group-header[_ngcontent-%COMP%] {\n  display: flex;\n  align-items: flex-start;\n  gap: 0.75rem;\n  padding: 1.1rem 1.25rem;\n  border-bottom: 1px solid #d8dee6;\n  background: #eef2f6;\n}\n.topic-doormat-group[_ngcontent-%COMP%]   h3[_ngcontent-%COMP%] {\n  margin: 0;\n  font-size: 1.25rem;\n  line-height: 1.25;\n}\n.topic-doormat-count[_ngcontent-%COMP%] {\n  flex: 0 0 auto;\n  padding: 0.4rem 0.8rem;\n  border: 1px solid #d8dee6;\n  border-radius: 999px;\n  background: #fff;\n  color: #202833;\n  font-size: 0.9rem;\n  font-weight: 700;\n}\n.topic-doormat-subheading[_ngcontent-%COMP%] {\n  margin: 1rem 1rem 0.4rem;\n  padding-bottom: 0.25rem;\n  border-bottom: 1px solid #eef2f6;\n  color: #202833;\n  font-size: 0.9rem;\n  font-weight: 700;\n}\n.topic-doormat-group[_ngcontent-%COMP%]   .expansion-table[_ngcontent-%COMP%] {\n  margin: 0 1rem 1rem;\n}\n.topic-doormat-empty[_ngcontent-%COMP%] {\n  padding: 0.75rem;\n  border: 1px solid #d8dee6;\n  border-radius: 4px;\n  background: #fff;\n}\n.topic-doormat-recommendation[_ngcontent-%COMP%] {\n  white-space: pre-line;\n}\n.topic-doormat-provenance-icons[_ngcontent-%COMP%] {\n  display: inline-flex;\n  align-items: center;\n  gap: 0.15rem;\n  margin-right: 0.25rem;\n  vertical-align: text-bottom;\n}\n.topic-doormat-provenance-icon[_ngcontent-%COMP%] {\n  color: #596579;\n  font-size: 1rem;\n  line-height: 1;\n}\n/*# sourceMappingURL=component-guidance.component.css.map */", "\n\n.muted[_ngcontent-%COMP%] {\n  color: #6b7280;\n  font-size: 12px;\n}\n.issues[_ngcontent-%COMP%] {\n  margin: 0;\n  padding-left: 1rem;\n}\n.health-cell[_ngcontent-%COMP%] {\n  gap: 0.4rem;\n  align-items: center;\n  flex-wrap: wrap;\n}\n.chip-list[_ngcontent-%COMP%] {\n  display: flex;\n  flex-wrap: wrap;\n  gap: 0.25rem;\n  padding: 0;\n  margin: 0;\n}\n.chip-list[_ngcontent-%COMP%]   .chip[_ngcontent-%COMP%], \n.chip-list[_ngcontent-%COMP%]   .p-chip[_ngcontent-%COMP%] {\n  white-space: normal;\n  word-break: break-word;\n  max-width: 100%;\n}\n.expansion-table[_ngcontent-%COMP%] {\n  width: 100%;\n  max-width: 100%;\n  overflow: hidden;\n}\n[_nghost-%COMP%]     .expansion-table .p-datatable-table {\n  width: 100%;\n  border: 1px solid #d1d5db;\n  border-radius: 6px;\n}\n[_nghost-%COMP%]     .expansion-table .p-datatable-wrapper {\n  width: 100%;\n  overflow-x: auto;\n}\n[_nghost-%COMP%]     .expansion-table .p-datatable-tbody > tr > td, \n[_nghost-%COMP%]     .expansion-table .p-datatable-thead > tr > th {\n  white-space: normal;\n  word-break: normal;\n  overflow-wrap: normal;\n}\n.tag[_ngcontent-%COMP%] {\n  font-size: 11px;\n  padding: 0.05rem 0.4rem;\n  border-radius: 6px;\n  border: 1px solid transparent;\n}\n.topic-doormat-evidence-metric[_ngcontent-%COMP%] {\n  display: inline-flex;\n  margin-right: 0.2rem;\n  vertical-align: baseline;\n}\n.topic-doormat-evidence-list[_ngcontent-%COMP%] {\n  list-style: none;\n  display: grid;\n  gap: 0.25rem;\n  margin: 0;\n  padding: 0;\n}\n.topic-doormat-evidence-list[_ngcontent-%COMP%]   li[_ngcontent-%COMP%] {\n  display: flex;\n  align-items: center;\n  gap: 0.35rem;\n  flex-wrap: wrap;\n}\n.ai-btn[_ngcontent-%COMP%] {\n  font-weight: 600;\n}\n.sr-only[_ngcontent-%COMP%] {\n  position: absolute;\n  width: 1px;\n  height: 1px;\n  padding: 0;\n  margin: -1px;\n  overflow: hidden;\n  clip: rect(0, 0, 0, 0);\n  white-space: nowrap;\n  border: 0;\n}\n/*# sourceMappingURL=component-guidance.component.css.map */", "\n\n.caption-actions[_ngcontent-%COMP%] {\n  display: flex;\n  align-items: center;\n  justify-content: flex-end;\n  gap: 0.5rem;\n}\n/*# sourceMappingURL=component-guidance.component.css.map */"] });
+  ], styles: ["\n\n[_nghost-%COMP%]     .alert-table .p-datatable-table {\n  table-layout: auto !important;\n}\n[_nghost-%COMP%]     .alert-table.p-datatable .p-datatable-thead > tr > th.toggle-col, \n[_nghost-%COMP%]     .alert-table.p-datatable .p-datatable-tbody > tr > td.toggle-col {\n  width: 70px !important;\n  min-width: 70px;\n  max-width: 70px;\n  white-space: nowrap !important;\n  text-align: center;\n  padding: 0 0.25rem;\n}\n[_nghost-%COMP%]     .alert-table.p-datatable .p-datatable-thead > tr > th.checkbox-col, \n[_nghost-%COMP%]     .alert-table.p-datatable .p-datatable-tbody > tr > td.checkbox-col {\n  width: 70px !important;\n  min-width: 70px;\n  max-width: 70px;\n  white-space: nowrap !important;\n  text-align: center;\n  padding: 0 0.25rem;\n}\n[_nghost-%COMP%]     .topic-doormat-section-row > td {\n  background: #eef2f6;\n}\n.topic-doormat-group[_ngcontent-%COMP%] {\n  margin-top: 1rem;\n  border: 1px solid #d8dee6;\n  border-radius: 6px;\n  background: #fff;\n  overflow: hidden;\n}\n.topic-doormat-group[_ngcontent-%COMP%]    + .topic-doormat-group[_ngcontent-%COMP%] {\n  margin-top: 1.25rem;\n}\n.topic-doormat-group-header[_ngcontent-%COMP%] {\n  display: flex;\n  align-items: flex-start;\n  gap: 0.75rem;\n  padding: 1.1rem 1.25rem;\n  border-bottom: 1px solid #d8dee6;\n  background: #eef2f6;\n}\n.topic-doormat-group[_ngcontent-%COMP%]   h3[_ngcontent-%COMP%] {\n  margin: 0;\n  font-size: 1.25rem;\n  line-height: 1.25;\n}\n.topic-doormat-count[_ngcontent-%COMP%] {\n  flex: 0 0 auto;\n  padding: 0.4rem 0.8rem;\n  border: 1px solid #d8dee6;\n  border-radius: 999px;\n  background: #fff;\n  color: #202833;\n  font-size: 0.9rem;\n  font-weight: 700;\n}\n.topic-doormat-subheading[_ngcontent-%COMP%] {\n  margin: 1rem 1rem 0.4rem;\n  padding-bottom: 0.25rem;\n  border-bottom: 1px solid #eef2f6;\n  color: #202833;\n  font-size: 0.9rem;\n  font-weight: 700;\n}\n.topic-doormat-group[_ngcontent-%COMP%]   .expansion-table[_ngcontent-%COMP%] {\n  margin: 0 1rem 1rem;\n}\n.topic-doormat-empty[_ngcontent-%COMP%] {\n  padding: 0.75rem;\n  border: 1px solid #d8dee6;\n  border-radius: 4px;\n  background: #fff;\n}\n.topic-doormat-actions[_ngcontent-%COMP%] {\n  display: flex;\n  justify-content: flex-end;\n  margin-top: 1rem;\n}\n.topic-doormat-recommendation[_ngcontent-%COMP%] {\n  white-space: pre-line;\n}\n.topic-doormat-provenance-icons[_ngcontent-%COMP%] {\n  display: inline-flex;\n  align-items: center;\n  gap: 0.15rem;\n  margin-right: 0.25rem;\n  vertical-align: text-bottom;\n}\n.topic-doormat-provenance-icon[_ngcontent-%COMP%] {\n  color: #596579;\n  font-size: 1rem;\n  line-height: 1;\n}\n/*# sourceMappingURL=component-guidance.component.css.map */", "\n\n.muted[_ngcontent-%COMP%] {\n  color: #6b7280;\n  font-size: 12px;\n}\n.issues[_ngcontent-%COMP%] {\n  margin: 0;\n  padding-left: 1rem;\n}\n.health-cell[_ngcontent-%COMP%] {\n  gap: 0.4rem;\n  align-items: center;\n  flex-wrap: wrap;\n}\n.chip-list[_ngcontent-%COMP%] {\n  display: flex;\n  flex-wrap: wrap;\n  gap: 0.25rem;\n  padding: 0;\n  margin: 0;\n}\n.chip-list[_ngcontent-%COMP%]   .chip[_ngcontent-%COMP%], \n.chip-list[_ngcontent-%COMP%]   .p-chip[_ngcontent-%COMP%] {\n  white-space: normal;\n  word-break: break-word;\n  max-width: 100%;\n}\n.expansion-table[_ngcontent-%COMP%] {\n  width: 100%;\n  max-width: 100%;\n  overflow: hidden;\n}\n[_nghost-%COMP%]     .expansion-table .p-datatable-table {\n  width: 100%;\n  border: 1px solid #d1d5db;\n  border-radius: 6px;\n}\n[_nghost-%COMP%]     .expansion-table .p-datatable-wrapper {\n  width: 100%;\n  overflow-x: auto;\n}\n[_nghost-%COMP%]     .expansion-table .p-datatable-tbody > tr > td, \n[_nghost-%COMP%]     .expansion-table .p-datatable-thead > tr > th {\n  white-space: normal;\n  word-break: normal;\n  overflow-wrap: normal;\n}\n.tag[_ngcontent-%COMP%] {\n  font-size: 11px;\n  padding: 0.05rem 0.4rem;\n  border-radius: 6px;\n  border: 1px solid transparent;\n}\n.topic-doormat-evidence-metric[_ngcontent-%COMP%] {\n  display: inline-flex;\n  margin-right: 0.2rem;\n  vertical-align: baseline;\n}\n.topic-doormat-evidence-list[_ngcontent-%COMP%] {\n  list-style: none;\n  display: grid;\n  gap: 0.25rem;\n  margin: 0;\n  padding: 0;\n}\n.topic-doormat-evidence-list[_ngcontent-%COMP%]   li[_ngcontent-%COMP%] {\n  display: flex;\n  align-items: center;\n  gap: 0.35rem;\n  flex-wrap: wrap;\n}\n.ai-btn[_ngcontent-%COMP%] {\n  font-weight: 600;\n}\n.sr-only[_ngcontent-%COMP%] {\n  position: absolute;\n  width: 1px;\n  height: 1px;\n  padding: 0;\n  margin: -1px;\n  overflow: hidden;\n  clip: rect(0, 0, 0, 0);\n  white-space: nowrap;\n  border: 0;\n}\n/*# sourceMappingURL=component-guidance.component.css.map */", "\n\n.caption-actions[_ngcontent-%COMP%] {\n  display: flex;\n  align-items: center;\n  justify-content: flex-end;\n  gap: 0.5rem;\n}\n/*# sourceMappingURL=component-guidance.component.css.map */"] });
 };
 (() => {
   (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(ComponentGuidanceComponent, [{
@@ -36010,537 +36077,537 @@ var ComponentGuidanceComponent = class _ComponentGuidanceComponent {
       TooltipModule,
       TranslateModule,
       AlertsGuidanceComponent
-    ], template: `<p-table
-  #dt
-  [value]="tableRows"
-  dataKey="url"
-  styleClass="p-datatable-sm"
-  [(selection)]="selectedRows"
-  selectionMode="multiple"
-  (selectionChange)="onSelectionChange($event)"
-  [customSort]="true"
-  (sortFunction)="onCustomSort($event)"
-  [resizableColumns]="true"
-  expandableRows
-  [expandedRowKeys]="expandedRows"
-  (onRowExpand)="onRowExpand($event)"
-  (onRowCollapse)="onRowCollapse($event)"
->
-  <ng-template pTemplate="caption">
-    <div class="caption-actions">
-      <button pButton type="button" label="Expand All" icon="pi pi-plus" class="p-button-text" (click)="expandAll()"></button>
-      <button pButton type="button" label="Collapse All" icon="pi pi-minus" class="p-button-text" (click)="collapseAll()"></button>
-    </div>
-  </ng-template>
-
-  <ng-template pTemplate="header">
-    <tr>
-      <!-- row toggle column -->
-      <th style="width: 3rem; text-align: center"></th>
-
-      <!-- checkbox column -->
-      <th style="width: 3rem; text-align: center">
-        <p-tableHeaderCheckbox></p-tableHeaderCheckbox>
-      </th>
-
-      <!-- Index -->
-      <th pSortableColumn="order">
-        <span>Index</span>
-        <p-sortIcon field="order"></p-sortIcon>
-      </th>
-
-      <!-- Component -->
-      <!--<th>
-        <span>Component</span>
-      </th>-->
-      <!-- UCDG guidance URL -->
-      <th>
-        <span>UCDG guidance</span>
-      </th>
-
-      <!-- Health (custom sort) -->
-      <th pSortableColumn="health" class="health-col">
-        <span>Health issues</span>
-        <p-sortIcon field="health"></p-sortIcon>
-      </th>
-
-      <!-- Pain points (not sortable) -->
-      <th>Pain point categories</th>
-    </tr>
-  </ng-template>
-
-  <ng-template pTemplate="body" let-row let-rowIndex="rowIndex" let-expanded="expanded">
-    <tr [pSelectableRow]="row">
-      <!-- row toggler -->
-      <td style="text-align: center">
-        <button
-          pButton
-          type="button"
-          [pRowToggler]="row"
-          class="p-button-text p-button-rounded p-button-plain"
-          aria-label="Toggle row"
-        >
-          <i class="pi" [ngClass]="{ 'pi-chevron-down': expanded, 'pi-chevron-right': !expanded }" aria-hidden="true"></i>
-        </button>
-      </td>
-
-      <!-- checkbox cell -->
-      <td style="text-align: center">
-        <p-tableCheckbox [value]="row"></p-tableCheckbox>
-      </td>
-
-      <!-- Index -->
-      <td>{{ row.order }}</td>
-
-      <!-- Component -->
-      <!--<td>{{ row.component }}</td>-->
-
-      <!-- URL -->
-      <td>
-        <a [href]="row.url" target="_blank" rel="noopener">{{ row.component }}</a>
-      </td>
-
-      <!-- Health -->
-      <td class="health-cell health-col">
-        @if (row.__nameKey === alertsNameKey) {
-          @if (!alertLoadAttempted) {
-            <p-chip
-              [label]="alertHealthLabel(null)"
-              icon="pi pi-question-circle"
-              styleClass="chip chip-unk">
-            </p-chip>
-          } @else if (!alertDataLoaded) {
-            <p-chip
-              [label]="alertHealthLabel(null)"
-              icon="pi pi-question-circle"
-              styleClass="chip chip-unk">
-            </p-chip>
-          } @else {
-            @if (alertMaxSeverity && !alertError) {
-              <p-chip
-                [label]="alertHealthLabel(alertMaxSeverity)"
-                [icon]="alertHealthIcon(alertMaxSeverity)"
-                [styleClass]="'chip ' + severityChip(alertMaxSeverity)">
-              </p-chip>
-            } @else if (alertError) {
-              <p-chip
-                [label]="alertHealthLabel(null)"
-                icon="pi pi-question-circle"
-                styleClass="chip chip-unk">
-              </p-chip>
-            } @else if (alertHasIssues && !alertError) {
-              <p-chip
-                [label]="alertHealthLabel(null)"
-                icon="pi pi-question-circle"
-                styleClass="chip chip-unk">
-              </p-chip>
-            } @else if (!alertError && alertDataLoaded && alertLoadAttempted && !alertLoading) {
-              <p-chip
-                label="OK"
-                icon="pi pi-check-circle"
-                styleClass="chip chip-ok">
-              </p-chip>
-            } @else {
-              <p-chip
-                [label]="alertHealthLabel(null)"
-                icon="pi pi-question-circle"
-                styleClass="chip chip-unk">
-              </p-chip>
-            }
-          }
-        } @else {
-          <p-chip
-            [label]="healthLabel(row.health)"
-            [icon]="
-              row.health === 'severe'
-                ? 'pi pi-exclamation-triangle'
-                : row.health === 'moderate'
-                  ? 'pi pi-exclamation-circle'
-                  : row.health === 'minor'
-                    ? 'pi pi-times-circle'
-                    : row.health === 'ok'
-                      ? 'pi pi-check-circle'
-                      : 'pi pi-question-circle'
-            "
-            [styleClass]="
-              'chip ' +
-              (row.health === 'severe'
-                ? 'chip-severe'
-                : row.health === 'moderate'
-                  ? 'chip-med'
-                  : row.health === 'minor'
-                    ? 'chip-minor'
-                    : row.health === 'ok'
-                      ? 'chip-ok'
-                      : 'chip-unk')
-            ">
-          </p-chip>
-        }
-      </td>
-
-      <!-- Pain points -->
-      <td>
-        @if (row.__nameKey === alertsNameKey) {
-          @if (expanded && alertLoading) {
-            <div class="alert-loading">
-              <i class="pi pi-spinner pi-spin" aria-hidden="true"></i>
-              <span class="sr-only">Loading alerts</span>
-            </div>
-          } @else if (alertError) {
-            <span class="text-danger">AI error</span>
-          } @else if (alertDataLoaded && alertCategories.length) {
-            <div class="chip-list">
-              <p-chip
-                *ngFor="let chip of alertCategories"
-                [label]="chip.label"
-                [styleClass]="'chip ' + severityChip(chip.severity)">
-              </p-chip>
-            </div>
-          } @else if (alertDataLoaded) {
-            <span class="muted">No pain points found</span>
-          } @else {
-            <span class="muted">Expand this row to explore alert pain points</span>
-          }
-        } @else if (row.__id === topicDoormatsId) {
-          @if (topicDoormatIssuesLoading) {
-            <div class="alert-loading">
-              <i class="pi pi-spinner pi-spin" aria-hidden="true"></i>
-              <span class="sr-only">Loading topic doormat issues</span>
-            </div>
-          } @else if (topicDoormatIssuesError) {
-            <span class="text-danger">AI error</span>
-          } @else if (getTopicDoormatIssueCategoriesForDisplay().length) {
-            <div class="chip-list">
-              <p-chip
-                *ngFor="let chip of getTopicDoormatIssueCategoriesForDisplay()"
-                [label]="chip.label"
-                [styleClass]="'chip ' + severityChip(chip.severity)">
-              </p-chip>
-            </div>
-          } @else if (topicDoormatIssuesResponseReceived) {
-            <span class="muted">No pain points found</span>
-          } @else {
-            <span class="muted">Expand this row to explore doormat pain points</span>
-          }
-        } @else if (isDoormatRow(row)) {
-          <span class="muted">Expand this row to explore doormat pain points</span>
-        } @else {
-          @if ((row.issues?.length || 0) > 0) {
-            <div class="chip-list">
-              <p-chip
-                *ngFor="let it of row.issues"
-                [label]="it"
-                styleClass="chip chip-hghlght">
-              </p-chip>
-            </div>
-            @if (row.rationale) {
-              <div class="muted">{{ row.rationale }}</div>
-            }
-          } @else {
-            <span>{{ row.rationale || '?' }}</span>
-          }
-        }
-      </td>
-    </tr>
-  </ng-template>
-
-  <ng-template pTemplate="expandedrow" let-row>
-    <tr>
-      <td colspan="6">
-        <div class="p-3">
-          @if (row.__nameKey === 'page.tools.guidance.craVariant.alerts.title') {
-            <ca-alerts-guidance
-              class="expansion-table"
-              [selectAll]="alertSelectAll"
-              (maxSeverityChange)="onAlertMaxSeverityChange($event)"
-              (categoriesChange)="onAlertCategoriesChange($event)"
-              (loadingChange)="onAlertLoadingChange($event)"
-              (errorChange)="onAlertErrorChange($event)"
-            ></ca-alerts-guidance>
-          } @else {
-            @if (row.__id === topicDoormatsId) {
-              <div class="mb-3">
-	                <button
-	                  pButton
-	                  type="button"
-	                  label="Re-analyse current webpage"
-	                  icon="pi pi-refresh"
-	                  [class]="
-	                    (topicDoormatReanalysisRecommended ? 'p-button-primary' : 'p-button-secondary') +
-	                    ' p-button-sm'
-	                  "
-	                  [disabled]="topicDoormatIssuesLoading"
-	                  (click)="rerunTopicDoormatIssues()">
-	                </button>
-                @if (topicDoormatIssuesLoading) {
-                  <span class="muted">
-                    <i class="pi pi-spinner pi-spin" aria-hidden="true"></i>
-                    Analyzing topic doormats
-                  </span>
-                } @else if (topicDoormatIssuesError) {
-                  <div>
-                    <span class="text-danger">AI error</span>
-                    @if (topicDoormatIssuesErrorDetail) {
-                      <div class="muted">{{ topicDoormatIssuesErrorDetail }}</div>
-                    }
-                  </div>
-                }
-              </div>
-              @if (topicDoormatIssueGroups.length) {
-                @for (group of topicDoormatIssueGroups; track group.sectionIndex) {
-                  <section class="topic-doormat-group">
-                    <header class="topic-doormat-group-header">
-                      <div>
-                        <h3>
-                          Section {{ group.sectionIndex }}:
-                          {{ group.sectionTitle }}
-                        </h3>
-                      </div>
-                      <span class="topic-doormat-count">
-                        {{ group.doormatCount }} doormats
-                      </span>
-                    </header>
-
-                    <h4 class="topic-doormat-subheading">Section-level issues</h4>
-                    <p-table
-                      [value]="group.sectionRows"
-                      styleClass="p-datatable-sm expansion-table">
-                      <ng-template pTemplate="header">
-                        <tr>
-                          <th style="width: 3rem">Include</th>
-                          <th style="width: 8rem">Severity</th>
-                          <th>Issue</th>
-                          <th>Evidence</th>
-                          <th>Recommendation</th>
-                        </tr>
-                      </ng-template>
-                      <ng-template pTemplate="body" let-issue>
-                        <tr class="topic-doormat-section-row">
-                          <td>
-                            <p-checkbox
-                              [binary]="true"
-                              [(ngModel)]="issue.include"
-                              [disabled]="isNoIssueRow(issue)">
-                            </p-checkbox>
-                          </td>
-                          <td>
-                            <span class="chip" [ngClass]="severityChip(issue.severity)">
-                              {{ issue.severity }}
-                            </span>
-                          </td>
-                          <td>
-                            <span class="topic-doormat-provenance-icons">
-                              @for (source of topicDoormatCellProvenance(issue, 'issue'); track source) {
-                                <span
-                                  class="material-icons topic-doormat-provenance-icon"
-                                  [pTooltip]="topicDoormatProvenanceLabel(source)"
-                                  tooltipPosition="top"
-                                  [attr.aria-label]="topicDoormatProvenanceLabel(source)">
-                                  {{ topicDoormatProvenanceIcon(source) }}
-                                </span>
-                              }
-                            </span>
-                            {{ issue.issue }}
-                          </td>
-                          <td>
-                            <span class="topic-doormat-provenance-icons">
-                              @for (source of topicDoormatCellProvenance(issue, 'evidence'); track source) {
-                                <span
-                                  class="material-icons topic-doormat-provenance-icon"
-                                  [pTooltip]="topicDoormatProvenanceLabel(source)"
-                                  tooltipPosition="top"
-                                  [attr.aria-label]="topicDoormatProvenanceLabel(source)">
-                                  {{ topicDoormatProvenanceIcon(source) }}
-                                </span>
-                              }
-                            </span>
-                            @if (issue.evidenceItems?.length) {
-                              <ul class="topic-doormat-evidence-list">
-                                @for (item of issue.evidenceItems; track item.label + item.metric) {
-                                  <li>
-                                    <span>{{ item.label }}:</span>
-                                    @for (metric of evidenceMetricParts(item); track metric.metric) {
-                                      <span
-                                        class="chip topic-doormat-evidence-metric"
-                                        [ngClass]="severityChip(metric.severity || item.severity || issue.severity)">
-                                        {{ metric.metric }}
-                                      </span>
-                                    }
-                                  </li>
-                                }
-                              </ul>
-                              @if (issue.evidence) {
-                                <span>{{ issue.evidence }}</span>
-                              }
-                            } @else if (issue.evidenceMetric) {
-                              <span
-                                class="chip topic-doormat-evidence-metric"
-                                [ngClass]="severityChip(issue.severity)">
-                                {{ issue.evidenceMetric }}
-                              </span>
-                              @if (issue.evidence) {
-                                <span>. {{ issue.evidence }}</span>
-                                @if (issue.evidenceLinkText && issue.evidenceLinkHref) {
-                                  <a [href]="issue.evidenceLinkHref" target="_blank" rel="noopener noreferrer">{{ issue.evidenceLinkText }}</a>
-                                }
-                              }
-                            } @else {
-                              {{ issue.evidence || '-' }}
-                              @if (issue.evidenceLinkText && issue.evidenceLinkHref) {
-                                <a [href]="issue.evidenceLinkHref" target="_blank" rel="noopener noreferrer">{{ issue.evidenceLinkText }}</a>
-                              }
-                            }
-                          </td>
-                          <td class="topic-doormat-recommendation">
-                            <span class="topic-doormat-provenance-icons">
-                              @for (source of topicDoormatCellProvenance(issue, 'recommendation'); track source) {
-                                <span
-                                  class="material-icons topic-doormat-provenance-icon"
-                                  [pTooltip]="topicDoormatProvenanceLabel(source)"
-                                  tooltipPosition="top"
-                                  [attr.aria-label]="topicDoormatProvenanceLabel(source)">
-                                  {{ topicDoormatProvenanceIcon(source) }}
-                                </span>
-                              }
-                            </span>
-                            {{ issue.recommendation || '-' }}
-                          </td>
-                        </tr>
-                      </ng-template>
-                      <ng-template pTemplate="emptymessage">
-                        <tr>
-                          <td colspan="5">
-                            <span class="muted">No section-level issues</span>
-                          </td>
-                        </tr>
-                      </ng-template>
-                    </p-table>
-
-                    <h4 class="topic-doormat-subheading">Doormat-level issues</h4>
-                    <p-table
-                      [value]="group.doormatRows"
-                      styleClass="p-datatable-sm expansion-table">
-                      <ng-template pTemplate="header">
-                        <tr>
-                          <th style="width: 3rem">Include</th>
-                          <th style="width: 4rem">#</th>
-                          <th>Doormat</th>
-                          <th style="width: 8rem">Severity</th>
-                          <th>Issue</th>
-                          <th>Evidence</th>
-                          <th>Recommendation</th>
-                        </tr>
-                      </ng-template>
-                      <ng-template pTemplate="body" let-issue>
-                        <tr>
-                          <td>
-                            <p-checkbox
-                              [binary]="true"
-                              [(ngModel)]="issue.include"
-                              [disabled]="isNoIssueRow(issue)">
-                            </p-checkbox>
-                          </td>
-                          <td>
-                            {{ issue.sectionItemIndex || '-' }}
-                            @if (issue.sectionItemMeta) {
-                              <span class="muted">({{ issue.sectionItemMeta }})</span>
-                            }
-                          </td>
-                          <td>{{ issue.doormatLabel || '-' }}</td>
-                          <td>
-                            <span class="chip" [ngClass]="severityChip(issue.severity)">
-                              {{ issue.severity }}
-                            </span>
-                          </td>
-                          <td>
-                            <span class="topic-doormat-provenance-icons">
-                              @for (source of topicDoormatCellProvenance(issue, 'issue'); track source) {
-                                <span
-                                  class="material-icons topic-doormat-provenance-icon"
-                                  [pTooltip]="topicDoormatProvenanceLabel(source)"
-                                  tooltipPosition="top"
-                                  [attr.aria-label]="topicDoormatProvenanceLabel(source)">
-                                  {{ topicDoormatProvenanceIcon(source) }}
-                                </span>
-                              }
-                            </span>
-                            {{ issue.issue }}
-                          </td>
-                          <td>
-                            <span class="topic-doormat-provenance-icons">
-                              @for (source of topicDoormatCellProvenance(issue, 'evidence'); track source) {
-                                <span
-                                  class="material-icons topic-doormat-provenance-icon"
-                                  [pTooltip]="topicDoormatProvenanceLabel(source)"
-                                  tooltipPosition="top"
-                                  [attr.aria-label]="topicDoormatProvenanceLabel(source)">
-                                  {{ topicDoormatProvenanceIcon(source) }}
-                                </span>
-                              }
-                            </span>
-                            @if (issue.evidenceItems?.length) {
-                              <ul class="topic-doormat-evidence-list">
-                                @for (item of issue.evidenceItems; track item.label + item.metric) {
-                                  <li>
-                                    <span>{{ item.label }}:</span>
-                                    @for (metric of evidenceMetricParts(item); track metric.metric) {
-                                      <span
-                                        class="chip topic-doormat-evidence-metric"
-                                        [ngClass]="severityChip(metric.severity || item.severity || issue.severity)">
-                                        {{ metric.metric }}
-                                      </span>
-                                    }
-                                  </li>
-                                }
-                              </ul>
-                              @if (issue.evidence) {
-                                <span>{{ issue.evidence }}</span>
-                              }
-                            } @else if (issue.evidenceMetric) {
-                              <span
-                                class="chip topic-doormat-evidence-metric"
-                                [ngClass]="severityChip(issue.severity)">
-                                {{ issue.evidenceMetric }}
-                              </span>
-                              @if (issue.evidence) {
-                                <span>. {{ issue.evidence }}</span>
-                                @if (issue.evidenceLinkText && issue.evidenceLinkHref) {
-                                  <a [href]="issue.evidenceLinkHref" target="_blank" rel="noopener noreferrer">{{ issue.evidenceLinkText }}</a>
-                                }
-                              }
-                            } @else {
-                              {{ issue.evidence || '-' }}
-                              @if (issue.evidenceLinkText && issue.evidenceLinkHref) {
-                                <a [href]="issue.evidenceLinkHref" target="_blank" rel="noopener noreferrer">{{ issue.evidenceLinkText }}</a>
-                              }
-                            }
-                          </td>
-                          <td class="topic-doormat-recommendation">
-                            <span class="topic-doormat-provenance-icons">
-                              @for (source of topicDoormatCellProvenance(issue, 'recommendation'); track source) {
-                                <span
-                                  class="material-icons topic-doormat-provenance-icon"
-                                  [pTooltip]="topicDoormatProvenanceLabel(source)"
-                                  tooltipPosition="top"
-                                  [attr.aria-label]="topicDoormatProvenanceLabel(source)">
-                                  {{ topicDoormatProvenanceIcon(source) }}
-                                </span>
-                              }
-                            </span>
-                            {{ issue.recommendation || '-' }}
-                          </td>
-                        </tr>
-                      </ng-template>
-                      <ng-template pTemplate="emptymessage">
-                        <tr>
-                          <td colspan="7">
-                            <span class="muted">No doormat-level issues</span>
-                          </td>
-                        </tr>
-                      </ng-template>
-                    </p-table>
-                  </section>
-                }
+    ], template: `<p-table\r
+  #dt\r
+  [value]="tableRows"\r
+  dataKey="url"\r
+  styleClass="p-datatable-sm"\r
+  [(selection)]="selectedRows"\r
+  selectionMode="multiple"\r
+  (selectionChange)="onSelectionChange($event)"\r
+  [customSort]="true"\r
+  (sortFunction)="onCustomSort($event)"\r
+  [resizableColumns]="true"\r
+  expandableRows\r
+  [expandedRowKeys]="expandedRows"\r
+  (onRowExpand)="onRowExpand($event)"\r
+  (onRowCollapse)="onRowCollapse($event)"\r
+>\r
+  <ng-template pTemplate="caption">\r
+    <div class="caption-actions">\r
+      <button pButton type="button" label="Expand All" icon="pi pi-plus" class="p-button-text" (click)="expandAll()"></button>\r
+      <button pButton type="button" label="Collapse All" icon="pi pi-minus" class="p-button-text" (click)="collapseAll()"></button>\r
+    </div>\r
+  </ng-template>\r
+\r
+  <ng-template pTemplate="header">\r
+    <tr>\r
+      <!-- row toggle column -->\r
+      <th style="width: 3rem; text-align: center"></th>\r
+\r
+      <!-- checkbox column -->\r
+      <th style="width: 3rem; text-align: center">\r
+        <p-tableHeaderCheckbox></p-tableHeaderCheckbox>\r
+      </th>\r
+\r
+      <!-- Index -->\r
+      <th pSortableColumn="order">\r
+        <span>Index</span>\r
+        <p-sortIcon field="order"></p-sortIcon>\r
+      </th>\r
+\r
+      <!-- Component -->\r
+      <!--<th>\r
+        <span>Component</span>\r
+      </th>-->\r
+      <!-- UCDG guidance URL -->\r
+      <th>\r
+        <span>UCDG guidance</span>\r
+      </th>\r
+\r
+      <!-- Health (custom sort) -->\r
+      <th pSortableColumn="health" class="health-col">\r
+        <span>Health issues</span>\r
+        <p-sortIcon field="health"></p-sortIcon>\r
+      </th>\r
+\r
+      <!-- Pain points (not sortable) -->\r
+      <th>Pain point categories</th>\r
+    </tr>\r
+  </ng-template>\r
+\r
+  <ng-template pTemplate="body" let-row let-rowIndex="rowIndex" let-expanded="expanded">\r
+    <tr [pSelectableRow]="row">\r
+      <!-- row toggler -->\r
+      <td style="text-align: center">\r
+        <button\r
+          pButton\r
+          type="button"\r
+          [pRowToggler]="row"\r
+          class="p-button-text p-button-rounded p-button-plain"\r
+          aria-label="Toggle row"\r
+        >\r
+          <i class="pi" [ngClass]="{ 'pi-chevron-down': expanded, 'pi-chevron-right': !expanded }" aria-hidden="true"></i>\r
+        </button>\r
+      </td>\r
+\r
+      <!-- checkbox cell -->\r
+      <td style="text-align: center">\r
+        <p-tableCheckbox [value]="row"></p-tableCheckbox>\r
+      </td>\r
+\r
+      <!-- Index -->\r
+      <td>{{ row.order }}</td>\r
+\r
+      <!-- Component -->\r
+      <!--<td>{{ row.component }}</td>-->\r
+\r
+      <!-- URL -->\r
+      <td>\r
+        <a [href]="row.url" target="_blank" rel="noopener">{{ row.component }}</a>\r
+      </td>\r
+\r
+      <!-- Health -->\r
+      <td class="health-cell health-col">\r
+        @if (row.__nameKey === alertsNameKey) {\r
+          @if (!alertLoadAttempted) {\r
+            <p-chip\r
+              [label]="alertHealthLabel(null)"\r
+              icon="pi pi-question-circle"\r
+              styleClass="chip chip-unk">\r
+            </p-chip>\r
+          } @else if (!alertDataLoaded) {\r
+            <p-chip\r
+              [label]="alertHealthLabel(null)"\r
+              icon="pi pi-question-circle"\r
+              styleClass="chip chip-unk">\r
+            </p-chip>\r
+          } @else {\r
+            @if (alertMaxSeverity && !alertError) {\r
+              <p-chip\r
+                [label]="alertHealthLabel(alertMaxSeverity)"\r
+                [icon]="alertHealthIcon(alertMaxSeverity)"\r
+                [styleClass]="'chip ' + severityChip(alertMaxSeverity)">\r
+              </p-chip>\r
+            } @else if (alertError) {\r
+              <p-chip\r
+                [label]="alertHealthLabel(null)"\r
+                icon="pi pi-question-circle"\r
+                styleClass="chip chip-unk">\r
+              </p-chip>\r
+            } @else if (alertHasIssues && !alertError) {\r
+              <p-chip\r
+                [label]="alertHealthLabel(null)"\r
+                icon="pi pi-question-circle"\r
+                styleClass="chip chip-unk">\r
+              </p-chip>\r
+            } @else if (!alertError && alertDataLoaded && alertLoadAttempted && !alertLoading) {\r
+              <p-chip\r
+                label="OK"\r
+                icon="pi pi-check-circle"\r
+                styleClass="chip chip-ok">\r
+              </p-chip>\r
+            } @else {\r
+              <p-chip\r
+                [label]="alertHealthLabel(null)"\r
+                icon="pi pi-question-circle"\r
+                styleClass="chip chip-unk">\r
+              </p-chip>\r
+            }\r
+          }\r
+        } @else {\r
+          <p-chip\r
+            [label]="healthLabel(row.health)"\r
+            [icon]="\r
+              row.health === 'severe'\r
+                ? 'pi pi-exclamation-triangle'\r
+                : row.health === 'moderate'\r
+                  ? 'pi pi-exclamation-circle'\r
+                  : row.health === 'minor'\r
+                    ? 'pi pi-times-circle'\r
+                    : row.health === 'ok'\r
+                      ? 'pi pi-check-circle'\r
+                      : 'pi pi-question-circle'\r
+            "\r
+            [styleClass]="\r
+              'chip ' +\r
+              (row.health === 'severe'\r
+                ? 'chip-severe'\r
+                : row.health === 'moderate'\r
+                  ? 'chip-med'\r
+                  : row.health === 'minor'\r
+                    ? 'chip-minor'\r
+                    : row.health === 'ok'\r
+                      ? 'chip-ok'\r
+                      : 'chip-unk')\r
+            ">\r
+          </p-chip>\r
+        }\r
+      </td>\r
+\r
+      <!-- Pain points -->\r
+      <td>\r
+        @if (row.__nameKey === alertsNameKey) {\r
+          @if (expanded && alertLoading) {\r
+            <div class="alert-loading">\r
+              <i class="pi pi-spinner pi-spin" aria-hidden="true"></i>\r
+              <span class="sr-only">Loading alerts</span>\r
+            </div>\r
+          } @else if (alertError) {\r
+            <span class="text-danger">AI error</span>\r
+          } @else if (alertDataLoaded && alertCategories.length) {\r
+            <div class="chip-list">\r
+              <p-chip\r
+                *ngFor="let chip of alertCategories"\r
+                [label]="chip.label"\r
+                [styleClass]="'chip ' + severityChip(chip.severity)">\r
+              </p-chip>\r
+            </div>\r
+          } @else if (alertDataLoaded) {\r
+            <span class="muted">No pain points found</span>\r
+          } @else {\r
+            <span class="muted">Expand this row to explore alert pain points</span>\r
+          }\r
+        } @else if (row.__id === topicDoormatsId) {\r
+          @if (topicDoormatIssuesLoading) {\r
+            <div class="alert-loading">\r
+              <i class="pi pi-spinner pi-spin" aria-hidden="true"></i>\r
+              <span class="sr-only">Loading topic doormat issues</span>\r
+            </div>\r
+          } @else if (topicDoormatIssuesError) {\r
+            <span class="text-danger">AI error</span>\r
+          } @else if (getTopicDoormatIssueCategoriesForDisplay().length) {\r
+            <div class="chip-list">\r
+              <p-chip\r
+                *ngFor="let chip of getTopicDoormatIssueCategoriesForDisplay()"\r
+                [label]="chip.label"\r
+                [styleClass]="'chip ' + severityChip(chip.severity)">\r
+              </p-chip>\r
+            </div>\r
+          } @else if (topicDoormatIssuesResponseReceived) {\r
+            <span class="muted">No pain points found</span>\r
+          } @else {\r
+            <span class="muted">Expand this row to explore doormat pain points</span>\r
+          }\r
+        } @else if (isDoormatRow(row)) {\r
+          <span class="muted">Expand this row to explore doormat pain points</span>\r
+        } @else {\r
+          @if ((row.issues?.length || 0) > 0) {\r
+            <div class="chip-list">\r
+              <p-chip\r
+                *ngFor="let it of row.issues"\r
+                [label]="it"\r
+                styleClass="chip chip-hghlght">\r
+              </p-chip>\r
+            </div>\r
+            @if (row.rationale) {\r
+              <div class="muted">{{ row.rationale }}</div>\r
+            }\r
+          } @else {\r
+            <span>{{ row.rationale || '?' }}</span>\r
+          }\r
+        }\r
+      </td>\r
+    </tr>\r
+  </ng-template>\r
+\r
+  <ng-template pTemplate="expandedrow" let-row>\r
+    <tr>\r
+      <td colspan="6">\r
+        <div class="p-3">\r
+          @if (row.__nameKey === 'page.tools.guidance.craVariant.alerts.title') {\r
+            <ca-alerts-guidance\r
+              class="expansion-table"\r
+              [selectAll]="alertSelectAll"\r
+              (maxSeverityChange)="onAlertMaxSeverityChange($event)"\r
+              (categoriesChange)="onAlertCategoriesChange($event)"\r
+              (loadingChange)="onAlertLoadingChange($event)"\r
+              (errorChange)="onAlertErrorChange($event)"\r
+            ></ca-alerts-guidance>\r
+          } @else {\r
+            @if (row.__id === topicDoormatsId) {\r
+              <div class="mb-3">\r
+	                <button\r
+	                  pButton\r
+	                  type="button"\r
+	                  label="Re-analyse current webpage"\r
+	                  icon="pi pi-refresh"\r
+	                  [class]="\r
+	                    (topicDoormatReanalysisRecommended ? 'p-button-primary' : 'p-button-secondary') +\r
+	                    ' p-button-sm'\r
+	                  "\r
+	                  [disabled]="topicDoormatIssuesLoading"\r
+	                  (click)="rerunTopicDoormatIssues()">\r
+	                </button>\r
+                @if (topicDoormatIssuesLoading) {\r
+                  <span class="muted">\r
+                    <i class="pi pi-spinner pi-spin" aria-hidden="true"></i>\r
+                    Analyzing topic doormats\r
+                  </span>\r
+                } @else if (topicDoormatIssuesError) {\r
+                  <div>\r
+                    <span class="text-danger">AI error</span>\r
+                    @if (topicDoormatIssuesErrorDetail) {\r
+                      <div class="muted">{{ topicDoormatIssuesErrorDetail }}</div>\r
+                    }\r
+                  </div>\r
+                }\r
+              </div>\r
+              @if (topicDoormatIssueGroups.length) {\r
+                @for (group of topicDoormatIssueGroups; track group.sectionIndex) {\r
+                  <section class="topic-doormat-group">\r
+                    <header class="topic-doormat-group-header">\r
+                      <div>\r
+                        <h3>\r
+                          Section {{ group.sectionIndex }}:\r
+                          {{ group.sectionTitle }}\r
+                        </h3>\r
+                      </div>\r
+                      <span class="topic-doormat-count">\r
+                        {{ group.doormatCount }} doormats\r
+                      </span>\r
+                    </header>\r
+\r
+                    <h4 class="topic-doormat-subheading">Section-level issues</h4>\r
+                    <p-table\r
+                      [value]="group.sectionRows"\r
+                      styleClass="p-datatable-sm expansion-table">\r
+                      <ng-template pTemplate="header">\r
+                        <tr>\r
+                          <th style="width: 3rem">Include</th>\r
+                          <th style="width: 8rem">Severity</th>\r
+                          <th>Issue</th>\r
+                          <th>Evidence</th>\r
+                          <th>Recommendation</th>\r
+                        </tr>\r
+                      </ng-template>\r
+                      <ng-template pTemplate="body" let-issue>\r
+                        <tr class="topic-doormat-section-row">\r
+                          <td>\r
+                            <p-checkbox\r
+                              [binary]="true"\r
+                              [(ngModel)]="issue.include"\r
+                              [disabled]="isNoIssueRow(issue)">\r
+                            </p-checkbox>\r
+                          </td>\r
+                          <td>\r
+                            <span class="chip" [ngClass]="severityChip(issue.severity)">\r
+                              {{ issue.severity }}\r
+                            </span>\r
+                          </td>\r
+                          <td>\r
+                            <span class="topic-doormat-provenance-icons">\r
+                              @for (source of topicDoormatCellProvenance(issue, 'issue'); track source) {\r
+                                <span\r
+                                  class="material-icons topic-doormat-provenance-icon"\r
+                                  [pTooltip]="topicDoormatProvenanceLabel(source)"\r
+                                  tooltipPosition="top"\r
+                                  [attr.aria-label]="topicDoormatProvenanceLabel(source)">\r
+                                  {{ topicDoormatProvenanceIcon(source) }}\r
+                                </span>\r
+                              }\r
+                            </span>\r
+                            {{ issue.issue }}\r
+                          </td>\r
+                          <td>\r
+                            <span class="topic-doormat-provenance-icons">\r
+                              @for (source of topicDoormatCellProvenance(issue, 'evidence'); track source) {\r
+                                <span\r
+                                  class="material-icons topic-doormat-provenance-icon"\r
+                                  [pTooltip]="topicDoormatProvenanceLabel(source)"\r
+                                  tooltipPosition="top"\r
+                                  [attr.aria-label]="topicDoormatProvenanceLabel(source)">\r
+                                  {{ topicDoormatProvenanceIcon(source) }}\r
+                                </span>\r
+                              }\r
+                            </span>\r
+                            @if (issue.evidenceItems?.length) {\r
+                              <ul class="topic-doormat-evidence-list">\r
+                                @for (item of issue.evidenceItems; track item.label + item.metric) {\r
+                                  <li>\r
+                                    <span>{{ item.label }}:</span>\r
+                                    @for (metric of evidenceMetricParts(item); track metric.metric) {\r
+                                      <span\r
+                                        class="chip topic-doormat-evidence-metric"\r
+                                        [ngClass]="severityChip(metric.severity || item.severity || issue.severity)">\r
+                                        {{ metric.metric }}\r
+                                      </span>\r
+                                    }\r
+                                  </li>\r
+                                }\r
+                              </ul>\r
+                              @if (issue.evidence) {\r
+                                <span>{{ issue.evidence }}</span>\r
+                              }\r
+                            } @else if (issue.evidenceMetric) {\r
+                              <span\r
+                                class="chip topic-doormat-evidence-metric"\r
+                                [ngClass]="severityChip(issue.severity)">\r
+                                {{ issue.evidenceMetric }}\r
+                              </span>\r
+                              @if (issue.evidence) {\r
+                                <span>. {{ issue.evidence }}</span>\r
+                                @if (issue.evidenceLinkText && issue.evidenceLinkHref) {\r
+                                  <a [href]="issue.evidenceLinkHref" target="_blank" rel="noopener noreferrer">{{ issue.evidenceLinkText }}</a>\r
+                                }\r
+                              }\r
+                            } @else {\r
+                              {{ issue.evidence || '-' }}\r
+                              @if (issue.evidenceLinkText && issue.evidenceLinkHref) {\r
+                                <a [href]="issue.evidenceLinkHref" target="_blank" rel="noopener noreferrer">{{ issue.evidenceLinkText }}</a>\r
+                              }\r
+                            }\r
+                          </td>\r
+                          <td class="topic-doormat-recommendation">\r
+                            <span class="topic-doormat-provenance-icons">\r
+                              @for (source of topicDoormatCellProvenance(issue, 'recommendation'); track source) {\r
+                                <span\r
+                                  class="material-icons topic-doormat-provenance-icon"\r
+                                  [pTooltip]="topicDoormatProvenanceLabel(source)"\r
+                                  tooltipPosition="top"\r
+                                  [attr.aria-label]="topicDoormatProvenanceLabel(source)">\r
+                                  {{ topicDoormatProvenanceIcon(source) }}\r
+                                </span>\r
+                              }\r
+                            </span>\r
+                            {{ issue.recommendation || '-' }}\r
+                          </td>\r
+                        </tr>\r
+                      </ng-template>\r
+                      <ng-template pTemplate="emptymessage">\r
+                        <tr>\r
+                          <td colspan="5">\r
+                            <span class="muted">No section-level issues</span>\r
+                          </td>\r
+                        </tr>\r
+                      </ng-template>\r
+                    </p-table>\r
+\r
+                    <h4 class="topic-doormat-subheading">Doormat-level issues</h4>\r
+                    <p-table\r
+                      [value]="group.doormatRows"\r
+                      styleClass="p-datatable-sm expansion-table">\r
+                      <ng-template pTemplate="header">\r
+                        <tr>\r
+                          <th style="width: 3rem">Include</th>\r
+                          <th style="width: 4rem">#</th>\r
+                          <th>Doormat</th>\r
+                          <th style="width: 8rem">Severity</th>\r
+                          <th>Issue</th>\r
+                          <th>Evidence</th>\r
+                          <th>Recommendation</th>\r
+                        </tr>\r
+                      </ng-template>\r
+                      <ng-template pTemplate="body" let-issue>\r
+                        <tr>\r
+                          <td>\r
+                            <p-checkbox\r
+                              [binary]="true"\r
+                              [(ngModel)]="issue.include"\r
+                              [disabled]="isNoIssueRow(issue)">\r
+                            </p-checkbox>\r
+                          </td>\r
+                          <td>\r
+                            {{ issue.sectionItemIndex || '-' }}\r
+                            @if (issue.sectionItemMeta) {\r
+                              <span class="muted">({{ issue.sectionItemMeta }})</span>\r
+                            }\r
+                          </td>\r
+                          <td>{{ issue.doormatLabel || '-' }}</td>\r
+                          <td>\r
+                            <span class="chip" [ngClass]="severityChip(issue.severity)">\r
+                              {{ issue.severity }}\r
+                            </span>\r
+                          </td>\r
+                          <td>\r
+                            <span class="topic-doormat-provenance-icons">\r
+                              @for (source of topicDoormatCellProvenance(issue, 'issue'); track source) {\r
+                                <span\r
+                                  class="material-icons topic-doormat-provenance-icon"\r
+                                  [pTooltip]="topicDoormatProvenanceLabel(source)"\r
+                                  tooltipPosition="top"\r
+                                  [attr.aria-label]="topicDoormatProvenanceLabel(source)">\r
+                                  {{ topicDoormatProvenanceIcon(source) }}\r
+                                </span>\r
+                              }\r
+                            </span>\r
+                            {{ issue.issue }}\r
+                          </td>\r
+                          <td>\r
+                            <span class="topic-doormat-provenance-icons">\r
+                              @for (source of topicDoormatCellProvenance(issue, 'evidence'); track source) {\r
+                                <span\r
+                                  class="material-icons topic-doormat-provenance-icon"\r
+                                  [pTooltip]="topicDoormatProvenanceLabel(source)"\r
+                                  tooltipPosition="top"\r
+                                  [attr.aria-label]="topicDoormatProvenanceLabel(source)">\r
+                                  {{ topicDoormatProvenanceIcon(source) }}\r
+                                </span>\r
+                              }\r
+                            </span>\r
+                            @if (issue.evidenceItems?.length) {\r
+                              <ul class="topic-doormat-evidence-list">\r
+                                @for (item of issue.evidenceItems; track item.label + item.metric) {\r
+                                  <li>\r
+                                    <span>{{ item.label }}:</span>\r
+                                    @for (metric of evidenceMetricParts(item); track metric.metric) {\r
+                                      <span\r
+                                        class="chip topic-doormat-evidence-metric"\r
+                                        [ngClass]="severityChip(metric.severity || item.severity || issue.severity)">\r
+                                        {{ metric.metric }}\r
+                                      </span>\r
+                                    }\r
+                                  </li>\r
+                                }\r
+                              </ul>\r
+                              @if (issue.evidence) {\r
+                                <span>{{ issue.evidence }}</span>\r
+                              }\r
+                            } @else if (issue.evidenceMetric) {\r
+                              <span\r
+                                class="chip topic-doormat-evidence-metric"\r
+                                [ngClass]="severityChip(issue.severity)">\r
+                                {{ issue.evidenceMetric }}\r
+                              </span>\r
+                              @if (issue.evidence) {\r
+                                <span>. {{ issue.evidence }}</span>\r
+                                @if (issue.evidenceLinkText && issue.evidenceLinkHref) {\r
+                                  <a [href]="issue.evidenceLinkHref" target="_blank" rel="noopener noreferrer">{{ issue.evidenceLinkText }}</a>\r
+                                }\r
+                              }\r
+                            } @else {\r
+                              {{ issue.evidence || '-' }}\r
+                              @if (issue.evidenceLinkText && issue.evidenceLinkHref) {\r
+                                <a [href]="issue.evidenceLinkHref" target="_blank" rel="noopener noreferrer">{{ issue.evidenceLinkText }}</a>\r
+                              }\r
+                            }\r
+                          </td>\r
+                          <td class="topic-doormat-recommendation">\r
+                            <span class="topic-doormat-provenance-icons">\r
+                              @for (source of topicDoormatCellProvenance(issue, 'recommendation'); track source) {\r
+                                <span\r
+                                  class="material-icons topic-doormat-provenance-icon"\r
+                                  [pTooltip]="topicDoormatProvenanceLabel(source)"\r
+                                  tooltipPosition="top"\r
+                                  [attr.aria-label]="topicDoormatProvenanceLabel(source)">\r
+                                  {{ topicDoormatProvenanceIcon(source) }}\r
+                                </span>\r
+                              }\r
+                            </span>\r
+                            {{ issue.recommendation || '-' }}\r
+                          </td>\r
+                        </tr>\r
+                      </ng-template>\r
+                      <ng-template pTemplate="emptymessage">\r
+                        <tr>\r
+                          <td colspan="7">\r
+                            <span class="muted">No doormat-level issues</span>\r
+                          </td>\r
+                        </tr>\r
+                      </ng-template>\r
+                    </p-table>\r
+                  </section>\r
+                }\r
               } @else {
                 <div class="topic-doormat-empty">
                   @if (topicDoormatIssuesLoading) {
@@ -36552,52 +36619,65 @@ var ComponentGuidanceComponent = class _ComponentGuidanceComponent {
                   }
                 </div>
               }
+              @if (topicDoormatIssuesResponseReceived) {
+                <div class="topic-doormat-actions">
+                  <button
+                    pButton
+                    type="button"
+                    label="Clear issues report"
+                    icon="pi pi-times"
+                    class="p-button-secondary p-button-sm"
+                    [disabled]="topicDoormatIssuesLoading"
+                    (click)="clearTopicDoormatIssuesReport()">
+                  </button>
+                </div>
+              }
             } @else {
               <p-table styleClass="p-datatable-sm expansion-table">
-                <ng-template pTemplate="header">
-                  <tr>
-                    <th>Column 1</th>
-                    <th>Column 2</th>
-                    <th>Column 3</th>
-                    <th>Column 4</th>
-                  </tr>
-                </ng-template>
-                <ng-template pTemplate="body">
-                  <tr>
-                    <td>Data 1</td>
-                    <td>Data 2</td>
-                    <td>Data 3</td>
-                    <td>Data 4</td>
-                  </tr>
-                </ng-template>
-              </p-table>
-            }
-          }
-        </div>
-      </td>
-    </tr>
-  </ng-template>
-</p-table>
-
-<!-- GenAI action button -->
-<div class="mt-3">
-  <button
-    pButton
-    type="button"
-    class="ai-btn"
-    [label]="'Get GenAI recommendations based on user data'"
-    [icon]="'pi pi-sparkles'"
-    aria-label="Get GenAI recommendations based on user data"
-    (click)="sendToAI()"
-    [disabled]="!selectedRows.length || isLoading"
-    pTooltip="Select one or more components"
-    [showDelay]="1000"
-    [hideDelay]="300"
-  >
-    <span class="sr-only">Get GenAI recommendations based on user data</span>
-  </button>
-</div>
-`, styles: ["/* src/app/views/page-assistant/components/problems/component-guidance/component-guidance.component.css */\n:host ::ng-deep .alert-table .p-datatable-table {\n  table-layout: auto !important;\n}\n:host ::ng-deep .alert-table.p-datatable .p-datatable-thead > tr > th.toggle-col,\n:host ::ng-deep .alert-table.p-datatable .p-datatable-tbody > tr > td.toggle-col {\n  width: 70px !important;\n  min-width: 70px;\n  max-width: 70px;\n  white-space: nowrap !important;\n  text-align: center;\n  padding: 0 0.25rem;\n}\n:host ::ng-deep .alert-table.p-datatable .p-datatable-thead > tr > th.checkbox-col,\n:host ::ng-deep .alert-table.p-datatable .p-datatable-tbody > tr > td.checkbox-col {\n  width: 70px !important;\n  min-width: 70px;\n  max-width: 70px;\n  white-space: nowrap !important;\n  text-align: center;\n  padding: 0 0.25rem;\n}\n:host ::ng-deep .topic-doormat-section-row > td {\n  background: #eef2f6;\n}\n.topic-doormat-group {\n  margin-top: 1rem;\n  border: 1px solid #d8dee6;\n  border-radius: 6px;\n  background: #fff;\n  overflow: hidden;\n}\n.topic-doormat-group + .topic-doormat-group {\n  margin-top: 1.25rem;\n}\n.topic-doormat-group-header {\n  display: flex;\n  align-items: flex-start;\n  gap: 0.75rem;\n  padding: 1.1rem 1.25rem;\n  border-bottom: 1px solid #d8dee6;\n  background: #eef2f6;\n}\n.topic-doormat-group h3 {\n  margin: 0;\n  font-size: 1.25rem;\n  line-height: 1.25;\n}\n.topic-doormat-count {\n  flex: 0 0 auto;\n  padding: 0.4rem 0.8rem;\n  border: 1px solid #d8dee6;\n  border-radius: 999px;\n  background: #fff;\n  color: #202833;\n  font-size: 0.9rem;\n  font-weight: 700;\n}\n.topic-doormat-subheading {\n  margin: 1rem 1rem 0.4rem;\n  padding-bottom: 0.25rem;\n  border-bottom: 1px solid #eef2f6;\n  color: #202833;\n  font-size: 0.9rem;\n  font-weight: 700;\n}\n.topic-doormat-group .expansion-table {\n  margin: 0 1rem 1rem;\n}\n.topic-doormat-empty {\n  padding: 0.75rem;\n  border: 1px solid #d8dee6;\n  border-radius: 4px;\n  background: #fff;\n}\n.topic-doormat-recommendation {\n  white-space: pre-line;\n}\n.topic-doormat-provenance-icons {\n  display: inline-flex;\n  align-items: center;\n  gap: 0.15rem;\n  margin-right: 0.25rem;\n  vertical-align: text-bottom;\n}\n.topic-doormat-provenance-icon {\n  color: #596579;\n  font-size: 1rem;\n  line-height: 1;\n}\n/*# sourceMappingURL=component-guidance.component.css.map */\n", "/* angular:styles/component:css;bca26e30255f97050c97d01916e393232d7590812a5be7a916612a3f35cdb4f6;C:/my-working-files/GitHub/design-assistant/src/app/views/page-assistant/components/problems/component-guidance/component-guidance.component.ts */\n.muted {\n  color: #6b7280;\n  font-size: 12px;\n}\n.issues {\n  margin: 0;\n  padding-left: 1rem;\n}\n.health-cell {\n  gap: 0.4rem;\n  align-items: center;\n  flex-wrap: wrap;\n}\n.chip-list {\n  display: flex;\n  flex-wrap: wrap;\n  gap: 0.25rem;\n  padding: 0;\n  margin: 0;\n}\n.chip-list .chip,\n.chip-list .p-chip {\n  white-space: normal;\n  word-break: break-word;\n  max-width: 100%;\n}\n.expansion-table {\n  width: 100%;\n  max-width: 100%;\n  overflow: hidden;\n}\n:host ::ng-deep .expansion-table .p-datatable-table {\n  width: 100%;\n  border: 1px solid #d1d5db;\n  border-radius: 6px;\n}\n:host ::ng-deep .expansion-table .p-datatable-wrapper {\n  width: 100%;\n  overflow-x: auto;\n}\n:host ::ng-deep .expansion-table .p-datatable-tbody > tr > td,\n:host ::ng-deep .expansion-table .p-datatable-thead > tr > th {\n  white-space: normal;\n  word-break: normal;\n  overflow-wrap: normal;\n}\n.tag {\n  font-size: 11px;\n  padding: 0.05rem 0.4rem;\n  border-radius: 6px;\n  border: 1px solid transparent;\n}\n.topic-doormat-evidence-metric {\n  display: inline-flex;\n  margin-right: 0.2rem;\n  vertical-align: baseline;\n}\n.topic-doormat-evidence-list {\n  list-style: none;\n  display: grid;\n  gap: 0.25rem;\n  margin: 0;\n  padding: 0;\n}\n.topic-doormat-evidence-list li {\n  display: flex;\n  align-items: center;\n  gap: 0.35rem;\n  flex-wrap: wrap;\n}\n.ai-btn {\n  font-weight: 600;\n}\n.sr-only {\n  position: absolute;\n  width: 1px;\n  height: 1px;\n  padding: 0;\n  margin: -1px;\n  overflow: hidden;\n  clip: rect(0, 0, 0, 0);\n  white-space: nowrap;\n  border: 0;\n}\n/*# sourceMappingURL=component-guidance.component.css.map */\n", "/* angular:styles/component:css;c0806e59c14ba3c53784f6243c5c92cc29bf483de8f80121dc534aca8504d932;C:/my-working-files/GitHub/design-assistant/src/app/views/page-assistant/components/problems/component-guidance/component-guidance.component.ts */\n.caption-actions {\n  display: flex;\n  align-items: center;\n  justify-content: flex-end;\n  gap: 0.5rem;\n}\n/*# sourceMappingURL=component-guidance.component.css.map */\n"] }]
+                <ng-template pTemplate="header">\r
+                  <tr>\r
+                    <th>Column 1</th>\r
+                    <th>Column 2</th>\r
+                    <th>Column 3</th>\r
+                    <th>Column 4</th>\r
+                  </tr>\r
+                </ng-template>\r
+                <ng-template pTemplate="body">\r
+                  <tr>\r
+                    <td>Data 1</td>\r
+                    <td>Data 2</td>\r
+                    <td>Data 3</td>\r
+                    <td>Data 4</td>\r
+                  </tr>\r
+                </ng-template>\r
+              </p-table>\r
+            }\r
+          }\r
+        </div>\r
+      </td>\r
+    </tr>\r
+  </ng-template>\r
+</p-table>\r
+\r
+<!-- GenAI action button -->\r
+<div class="mt-3">\r
+  <button\r
+    pButton\r
+    type="button"\r
+    class="ai-btn"\r
+    [label]="'Get GenAI recommendations based on user data'"\r
+    [icon]="'pi pi-sparkles'"\r
+    aria-label="Get GenAI recommendations based on user data"\r
+    (click)="sendToAI()"\r
+    [disabled]="!selectedRows.length || isLoading"\r
+    pTooltip="Select one or more components"\r
+    [showDelay]="1000"\r
+    [hideDelay]="300"\r
+  >\r
+    <span class="sr-only">Get GenAI recommendations based on user data</span>\r
+  </button>\r
+</div>\r
+`, styles: ["/* src/app/views/page-assistant/components/problems/component-guidance/component-guidance.component.css */\n:host ::ng-deep .alert-table .p-datatable-table {\n  table-layout: auto !important;\n}\n:host ::ng-deep .alert-table.p-datatable .p-datatable-thead > tr > th.toggle-col,\n:host ::ng-deep .alert-table.p-datatable .p-datatable-tbody > tr > td.toggle-col {\n  width: 70px !important;\n  min-width: 70px;\n  max-width: 70px;\n  white-space: nowrap !important;\n  text-align: center;\n  padding: 0 0.25rem;\n}\n:host ::ng-deep .alert-table.p-datatable .p-datatable-thead > tr > th.checkbox-col,\n:host ::ng-deep .alert-table.p-datatable .p-datatable-tbody > tr > td.checkbox-col {\n  width: 70px !important;\n  min-width: 70px;\n  max-width: 70px;\n  white-space: nowrap !important;\n  text-align: center;\n  padding: 0 0.25rem;\n}\n:host ::ng-deep .topic-doormat-section-row > td {\n  background: #eef2f6;\n}\n.topic-doormat-group {\n  margin-top: 1rem;\n  border: 1px solid #d8dee6;\n  border-radius: 6px;\n  background: #fff;\n  overflow: hidden;\n}\n.topic-doormat-group + .topic-doormat-group {\n  margin-top: 1.25rem;\n}\n.topic-doormat-group-header {\n  display: flex;\n  align-items: flex-start;\n  gap: 0.75rem;\n  padding: 1.1rem 1.25rem;\n  border-bottom: 1px solid #d8dee6;\n  background: #eef2f6;\n}\n.topic-doormat-group h3 {\n  margin: 0;\n  font-size: 1.25rem;\n  line-height: 1.25;\n}\n.topic-doormat-count {\n  flex: 0 0 auto;\n  padding: 0.4rem 0.8rem;\n  border: 1px solid #d8dee6;\n  border-radius: 999px;\n  background: #fff;\n  color: #202833;\n  font-size: 0.9rem;\n  font-weight: 700;\n}\n.topic-doormat-subheading {\n  margin: 1rem 1rem 0.4rem;\n  padding-bottom: 0.25rem;\n  border-bottom: 1px solid #eef2f6;\n  color: #202833;\n  font-size: 0.9rem;\n  font-weight: 700;\n}\n.topic-doormat-group .expansion-table {\n  margin: 0 1rem 1rem;\n}\n.topic-doormat-empty {\n  padding: 0.75rem;\n  border: 1px solid #d8dee6;\n  border-radius: 4px;\n  background: #fff;\n}\n.topic-doormat-actions {\n  display: flex;\n  justify-content: flex-end;\n  margin-top: 1rem;\n}\n.topic-doormat-recommendation {\n  white-space: pre-line;\n}\n.topic-doormat-provenance-icons {\n  display: inline-flex;\n  align-items: center;\n  gap: 0.15rem;\n  margin-right: 0.25rem;\n  vertical-align: text-bottom;\n}\n.topic-doormat-provenance-icon {\n  color: #596579;\n  font-size: 1rem;\n  line-height: 1;\n}\n/*# sourceMappingURL=component-guidance.component.css.map */\n", "/* angular:styles/component:css;bca26e30255f97050c97d01916e393232d7590812a5be7a916612a3f35cdb4f6;C:/my-working-files/GitHub/design-assistant/src/app/views/page-assistant/components/problems/component-guidance/component-guidance.component.ts */\n.muted {\n  color: #6b7280;\n  font-size: 12px;\n}\n.issues {\n  margin: 0;\n  padding-left: 1rem;\n}\n.health-cell {\n  gap: 0.4rem;\n  align-items: center;\n  flex-wrap: wrap;\n}\n.chip-list {\n  display: flex;\n  flex-wrap: wrap;\n  gap: 0.25rem;\n  padding: 0;\n  margin: 0;\n}\n.chip-list .chip,\n.chip-list .p-chip {\n  white-space: normal;\n  word-break: break-word;\n  max-width: 100%;\n}\n.expansion-table {\n  width: 100%;\n  max-width: 100%;\n  overflow: hidden;\n}\n:host ::ng-deep .expansion-table .p-datatable-table {\n  width: 100%;\n  border: 1px solid #d1d5db;\n  border-radius: 6px;\n}\n:host ::ng-deep .expansion-table .p-datatable-wrapper {\n  width: 100%;\n  overflow-x: auto;\n}\n:host ::ng-deep .expansion-table .p-datatable-tbody > tr > td,\n:host ::ng-deep .expansion-table .p-datatable-thead > tr > th {\n  white-space: normal;\n  word-break: normal;\n  overflow-wrap: normal;\n}\n.tag {\n  font-size: 11px;\n  padding: 0.05rem 0.4rem;\n  border-radius: 6px;\n  border: 1px solid transparent;\n}\n.topic-doormat-evidence-metric {\n  display: inline-flex;\n  margin-right: 0.2rem;\n  vertical-align: baseline;\n}\n.topic-doormat-evidence-list {\n  list-style: none;\n  display: grid;\n  gap: 0.25rem;\n  margin: 0;\n  padding: 0;\n}\n.topic-doormat-evidence-list li {\n  display: flex;\n  align-items: center;\n  gap: 0.35rem;\n  flex-wrap: wrap;\n}\n.ai-btn {\n  font-weight: 600;\n}\n.sr-only {\n  position: absolute;\n  width: 1px;\n  height: 1px;\n  padding: 0;\n  margin: -1px;\n  overflow: hidden;\n  clip: rect(0, 0, 0, 0);\n  white-space: nowrap;\n  border: 0;\n}\n/*# sourceMappingURL=component-guidance.component.css.map */\n", "/* angular:styles/component:css;c0806e59c14ba3c53784f6243c5c92cc29bf483de8f80121dc534aca8504d932;C:/my-working-files/GitHub/design-assistant/src/app/views/page-assistant/components/problems/component-guidance/component-guidance.component.ts */\n.caption-actions {\n  display: flex;\n  align-items: center;\n  justify-content: flex-end;\n  gap: 0.5rem;\n}\n/*# sourceMappingURL=component-guidance.component.css.map */\n"] }]
   }], () => [], { analysisAvailable: [{
     type: Output
   }] });
@@ -49527,6 +49607,7 @@ ${custom}` : promptBody;
     if (!data?.modifiedHtml || !data?.modifiedUrl)
       return;
     this.uploadState.savePreviousUploadData();
+    this.topicDoormatAnalysisState.clear();
     this.uploadState.mergeOriginalData({
       originalHtml: data.modifiedHtml,
       originalUrl: data.modifiedUrl
@@ -49541,6 +49622,7 @@ ${custom}` : promptBody;
     if (!data?.originalHtml || !data?.originalUrl)
       return;
     this.uploadState.savePreviousUploadData();
+    this.topicDoormatAnalysisState.clear();
     this.uploadState.mergeModifiedData({
       modifiedHtml: data.originalHtml,
       modifiedUrl: data.originalUrl
@@ -49630,6 +49712,7 @@ ${custom}` : promptBody;
     if (!data)
       return;
     this.uploadState.savePreviousUploadData();
+    this.topicDoormatAnalysisState.clear();
     if (mode === "accept") {
       this.uploadState.mergeOriginalData({
         originalUrl: "Change accepted",
@@ -50130,4 +50213,4 @@ ${custom}` : promptBody;
 export {
   PageAssistantCompareComponent
 };
-//# sourceMappingURL=chunk-Q7R7SMCL.js.map
+//# sourceMappingURL=chunk-GRF6MQSW.js.map

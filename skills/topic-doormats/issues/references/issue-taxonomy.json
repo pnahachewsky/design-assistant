@@ -82,8 +82,8 @@
   },
   "language_thresholds": {
     "en": {
-      "link_text_max_characters": 35,
-      "description_max_characters": 95
+      "link_text_max_characters": 45,
+      "description_max_characters": 120
     },
     "fr": {
       "link_text_max_characters": 45,
@@ -290,14 +290,14 @@
       "group": "Link name",
       "label": "Link too long",
       "severity": "Low",
-      "condition": "The link text exceeds 35 characters, including spaces.",
-      "recommendation": "Shorten the link text. Keep link text under 35 characters, including spaces.",
+      "condition": "The link text exceeds 45 characters, including spaces.",
+      "recommendation": "Shorten the link text. Keep link text close to the ideal 45-character limit and below the 75-character maximum, including spaces.",
       "local_deterministic": true,
       "reporting": "AIDA reports this issue locally from linkTextCharacterCount. The model should not return this issue. AIDA reports one section-level row per affected H2 section, with a list of affected doormat numbers and character-count metrics.",
       "severity_override": {
-        "Low": "Use Low when the link text is 36 to 45 characters and label it as 'Opposite language link text may be too long'.",
-        "Medium": "Use Medium when the link text is 46 to 60 characters.",
-        "High": "Use High when the link text is 61 to 75 characters or longer."
+        "Low": "Use Low when the link text is 46 to 60 characters.",
+        "Medium": "Use Medium when the link text is 61 to 75 characters.",
+        "High": "Use High when the link text is 76 characters or longer."
       }
     },
     {
@@ -376,13 +376,13 @@
       "group": "Description clarity",
       "label": "Description too long",
       "severity": "Low",
-      "condition": "The English description exceeds 95 characters, including spaces. The official limit for link descriptions is 120 characters in both official languages, and the English version should aim to stay under 95 characters to allow for French expansion.",
-      "recommendation": "Shorten the description. Aim for the English version to be under 95 characters, including spaces, so the French version can stay under 120 characters.",
+      "condition": "The description exceeds 120 characters in at least one official language, including spaces.",
+      "recommendation": "Shorten the description. Keep both the English and French versions within 120 characters, including spaces.",
       "local_deterministic": true,
       "reporting": "AIDA reports this issue locally from descriptionCharacterCount. The model should not return this issue. AIDA reports one section-level row per affected H2 section, with a list of affected doormat numbers and character-count metrics.",
       "severity_override": {
-        "Low": "Use Low when the description is 96 to 110 characters and label it as 'Opposite language description may be too long'.",
-        "Medium": "Use Medium when the description is 111 to 120 characters and label it as 'Opposite language description may be too long'.",
+        "Low": "Use Low when the description is 121 to 130 characters.",
+        "Medium": "Use Medium when the description is 131 to 140 characters.",
         "High": "Use High when the description is 121 characters or longer."
       }
     },
