@@ -3080,8 +3080,8 @@ export class TopicDoormatIssueAnalysisService {
     const rows: TopicDoormatIssueRow[] = [];
 
     analyses.forEach((analysis) => {
-      if (analysis.dropdownEnhancementSummaries.length) {
-        analysis.dropdownEnhancementSummaries.forEach((summary) => {
+      if (analysis.fieldflowSummaries.length) {
+        analysis.fieldflowSummaries.forEach((summary) => {
           rows.push({
             include: false,
             rowType: 'doormat',
@@ -3211,7 +3211,7 @@ export class TopicDoormatIssueAnalysisService {
           TopicDoormatDescriptionStyle,
           number[]
         >();
-        const dropdownEnhancementSummaries = summaries.filter(
+        const fieldflowSummaries = summaries.filter(
           (summary) => summary.hasFieldflow,
         );
 
@@ -3243,7 +3243,7 @@ export class TopicDoormatIssueAnalysisService {
           sectionIndex,
           sectionTitle: summaries[0]?.sectionTitle || `Section ${sectionIndex}`,
           summaries,
-          dropdownEnhancementSummaries,
+          fieldflowSummaries,
           dominantStyle,
           styleCounts,
           examplesByStyle,

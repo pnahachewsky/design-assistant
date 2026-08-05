@@ -48,6 +48,7 @@ import { TopicDoormatPresenterService } from '../../../services/topic-doormats/t
 import { TopicDoormatAnalysisStateService } from '../../../services/topic-doormats/topic-doormat-analysis-state.service';
 import { TopicDoormatTemplateNormalizerService } from '../../../services/topic-doormats/topic-doormat-template-normalizer.service';
 import {
+  TOPIC_DOORMAT_DIAGNOSTIC_ISSUE_IDS,
   TopicDoormatCellProvenance,
   TopicDoormatEvidenceItem,
   TopicDoormatIssueGroup,
@@ -1111,8 +1112,7 @@ export class ComponentGuidanceComponent implements OnInit, OnDestroy {
   isNoIssueRow(issue: TopicDoormatIssueRow): boolean {
     return (
       issue.issueId === 'no-issues' ||
-      issue.issueId === 'consistent-description-style-in-section' ||
-      issue.issueId === 'valid-dropdown-enhancement'
+      TOPIC_DOORMAT_DIAGNOSTIC_ISSUE_IDS.has(issue.issueId)
     );
   }
 

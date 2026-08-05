@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
 import {
+  TOPIC_DOORMAT_DIAGNOSTIC_ISSUE_IDS,
   TopicDoormatIssueGroup,
   TopicDoormatIssueRow,
   TopicDoormatIssueSummary,
@@ -150,8 +151,7 @@ export class TopicDoormatPresenterService {
   private isNonCategoryRow(issue: TopicDoormatIssueRow): boolean {
     return (
       issue.issueId === 'no-issues' ||
-      issue.issueId === 'consistent-description-style-in-section' ||
-      issue.issueId === 'valid-dropdown-enhancement'
+      TOPIC_DOORMAT_DIAGNOSTIC_ISSUE_IDS.has(issue.issueId)
     );
   }
 }

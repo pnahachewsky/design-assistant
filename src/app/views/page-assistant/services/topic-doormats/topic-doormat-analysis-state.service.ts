@@ -1,6 +1,10 @@
 import { Injectable, computed, signal } from '@angular/core';
 
-import { TopicDoormatIssueRow, TopicDoormatSummary } from './topic-doormat.types';
+import {
+  TOPIC_DOORMAT_DIAGNOSTIC_ISSUE_IDS,
+  TopicDoormatIssueRow,
+  TopicDoormatSummary,
+} from './topic-doormat.types';
 
 export interface TopicDoormatIssueRewriteInput {
   rowType: 'section' | 'doormat';
@@ -51,12 +55,11 @@ export class TopicDoormatAnalysisStateService {
   getSelectedRewriteIssues(): TopicDoormatIssueRewriteInput[] {
     return this.issueRows()
       .filter(
-        (row) =>
-          row.include &&
-          row.issueId !== 'no-issues' &&
-          row.issueId !== 'consistent-description-style-in-section' &&
-          row.issueId !== 'valid-dropdown-enhancement',
-      )
+	        (row) =>
+	          row.include &&
+	          row.issueId !== 'no-issues' &&
+	          !TOPIC_DOORMAT_DIAGNOSTIC_ISSUE_IDS.has(row.issueId),
+	      )
       .map((row) => ({
         rowType: row.rowType,
         severity: row.severity,

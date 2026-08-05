@@ -71,6 +71,11 @@ export interface TopicDoormatIssueSummary {
   rowType: 'section' | 'doormat';
 }
 
+export const TOPIC_DOORMAT_DIAGNOSTIC_ISSUE_IDS = new Set([
+  'consistent-description-style-in-section',
+  'valid-dropdown-enhancement',
+]);
+
 export interface TopicDoormatSummary {
   index: number;
   linkText: string;
@@ -168,7 +173,7 @@ export interface TopicDoormatSectionStyleAnalysis {
   sectionIndex: number;
   sectionTitle: string;
   summaries: TopicDoormatSummary[];
-  dropdownEnhancementSummaries: TopicDoormatSummary[];
+  fieldflowSummaries: TopicDoormatSummary[];
   dominantStyle: Exclude<
     TopicDoormatDescriptionStyle,
     'mixed-or-unclear'
