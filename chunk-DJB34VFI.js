@@ -29362,6 +29362,9 @@ var TopicDoormatTemplateNormalizerService = class _TopicDoormatTemplateNormalize
         changed = true;
       }
     }
+    if (this.normalizeGcSrvinfoLayouts(doc)) {
+      changed = true;
+    }
     if (!changed)
       return { html, changed: false };
     return {
@@ -29370,7 +29373,27 @@ var TopicDoormatTemplateNormalizerService = class _TopicDoormatTemplateNormalize
     };
   }
   hasLegacyDoormatMarkup(html) {
-    return /\b(?:mwsdoormat-links-container|gc-drmt)\b/.test(html);
+    return /\b(?:mwsdoormat-links-container|gc-drmt)\b/.test(html) || /\bgc-srvinfo\b/.test(html);
+  }
+  normalizeGcSrvinfoLayouts(doc) {
+    let changed = false;
+    Array.from(doc.body.querySelectorAll(".gc-srvinfo")).forEach((section) => {
+      if (this.removeGridClasses(section)) {
+        changed = true;
+      }
+      Array.from(section.children).filter((child) => child instanceof HTMLElement && child.classList.contains("row") && child.classList.contains("wb-eqht")).forEach((row) => {
+        row.classList.remove("wb-eqht");
+        row.classList.add("wb-eqht-grd");
+        changed = true;
+      });
+    });
+    return changed;
+  }
+  removeGridClasses(element) {
+    const gridClassPattern = /^col-(?:xs|sm|md|lg|xl)-\d+$/;
+    const classesToRemove = Array.from(element.classList).filter((className) => gridClassPattern.test(className));
+    classesToRemove.forEach((className) => element.classList.remove(className));
+    return classesToRemove.length > 0;
   }
   buildModernSection(container) {
     const items = this.extractLegacyItems(container);
@@ -50440,4 +50463,4 @@ ${custom}` : promptBody;
 export {
   PageAssistantCompareComponent
 };
-//# sourceMappingURL=chunk-KIC4E4DJ.js.map
+//# sourceMappingURL=chunk-DJB34VFI.js.map
