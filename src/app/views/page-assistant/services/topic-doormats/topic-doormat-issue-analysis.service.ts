@@ -1837,8 +1837,8 @@ export class TopicDoormatIssueAnalysisService {
               doormat: this.buildTopicDoormatSectionLabel(1, doormatSummaries),
               doormatLabel: 'All doormats in section',
               issueId: 'outdated-topic-page-template',
-              issue: this.getTopicDoormatDeterministicText(
-                'outdatedTemplate.issue',
+              issue: this.getTopicDoormatIssueLabel(
+                'outdated-topic-page-template',
               ),
               evidence: this.getTopicDoormatDeterministicText(
                 'outdatedTemplate.evidence',
@@ -2355,11 +2355,7 @@ export class TopicDoormatIssueAnalysisService {
   private getTopicDoormatLengthIssueLabel(
     issueId: 'link-name-too-long' | 'description-too-long',
   ): string {
-    return this.getTopicDoormatDeterministicText(
-      issueId === 'link-name-too-long'
-        ? 'length.link.issue'
-        : 'length.description.issue',
-    );
+    return this.getTopicDoormatIssueLabel(issueId);
   }
 
   private buildLocalTopicDoormatDescriptionPersonRows(
@@ -3314,7 +3310,9 @@ export class TopicDoormatIssueAnalysisService {
           doormat: this.buildTopicDoormatLabel(summary),
           doormatLabel: summary.linkText || summary.href || 'Doormat',
           issueId: 'description-missing-needed-information',
-          issue: this.getTopicDoormatDeterministicText('contentGap.issue'),
+          issue: this.getTopicDoormatIssueLabel(
+            'description-missing-needed-information',
+          ),
           evidence: this.getTopicDoormatDeterministicText(
             'contentGap.evidence',
             { elements: evidenceParts.join('; ') },
@@ -3422,9 +3420,7 @@ export class TopicDoormatIssueAnalysisService {
             doormat: summary.linkText,
             doormatLabel: summary.linkText,
             issueId: 'valid-dropdown-enhancement',
-            issue: this.getTopicDoormatDeterministicText(
-              'dropdownEnhancementNote.issue',
-            ),
+            issue: this.getTopicDoormatIssueLabel('valid-dropdown-enhancement'),
             evidence: this.getTopicDoormatDeterministicText(
               'dropdownEnhancementNote.evidence',
             ),
@@ -3483,8 +3479,8 @@ export class TopicDoormatIssueAnalysisService {
         ),
         doormatLabel: 'All doormats in section',
         issueId: 'consistent-description-style-in-section',
-        issue: this.getTopicDoormatDeterministicText(
-          'consistentDescriptionStyle.issue',
+        issue: this.getTopicDoormatIssueLabel(
+          'consistent-description-style-in-section',
         ),
         evidence: this.getTopicDoormatDeterministicText(
           'consistentDescriptionStyle.evidence',
@@ -3717,7 +3713,7 @@ export class TopicDoormatIssueAnalysisService {
       doormat: this.buildTopicDoormatLabel(doormat),
       doormatLabel: doormat.linkText || doormat.href || 'Doormat',
       issueId: 'no-issues',
-      issue: this.getTopicDoormatDeterministicText('noIssues.issue'),
+      issue: this.getTopicDoormatIssueLabel('no-issues'),
       evidence: this.getTopicDoormatDeterministicText('noIssues.evidence'),
       recommendation: '',
       doormatIndex: doormat.index || undefined,
@@ -3912,11 +3908,36 @@ export class TopicDoormatIssueAnalysisService {
   }
 
   private getTopicDoormatIssueLabel(issueId: string): string {
-    if (issueId === 'no-issues') return 'No issues';
+    const translationKey = `page.tools.guidance.topicDoormats.issues.${issueId}`;
+    const translated = this.translate.instant(translationKey);
+    if (translated && translated !== translationKey) return translated;
+    const legacyKey = this.getLegacyTopicDoormatIssueLabelKey(issueId);
+    if (legacyKey) {
+      const legacyTranslated = this.getTopicDoormatDeterministicText(legacyKey);
+      if (legacyTranslated && legacyTranslated !== legacyKey) {
+        return legacyTranslated;
+      }
+    }
     return (
       this.topicDoormatIssueIdToLabel.get(issueId) ??
       this.toTitleCase(issueId.replace(/-/g, ' '))
     );
+  }
+
+  private getLegacyTopicDoormatIssueLabelKey(issueId: string): string {
+    const legacyKeys: Record<string, string> = {
+      'link-name-too-long': 'length.link.issue',
+      'description-too-long': 'length.description.issue',
+      'description-missing-needed-information': 'contentGap.issue',
+      'consistent-description-style-in-section':
+        'consistentDescriptionStyle.issue',
+      'valid-dropdown-enhancement': 'dropdownEnhancementNote.issue',
+      'no-issues': 'noIssues.issue',
+      'missing-needed-doormat': 'missingNeededDoormat.issue',
+      'unnecessary-doormat': 'unnecessaryDoormat.issue',
+      'outdated-topic-page-template': 'outdatedTemplate.issue',
+    };
+    return legacyKeys[issueId] ?? '';
   }
 
   private toTitleCase(value: string): string {

@@ -310,6 +310,22 @@ describe('TopicDoormatIssueAnalysisService', () => {
     ) as unknown as OpenRouterServiceStub;
   });
 
+  it('uses i18n for topic doormat issue labels', () => {
+    const translate = TestBed.inject(TranslateService);
+    spyOn(translate, 'instant').and.callFake((key: string) =>
+      key ===
+      'page.tools.guidance.topicDoormats.issues.description-repeats-link-text'
+        ? 'Translated repeat label'
+        : key,
+    );
+
+    expect(
+      (service as any).getTopicDoormatIssueLabel(
+        'description-repeats-link-text',
+      ),
+    ).toBe('Translated repeat label');
+  });
+
   it('preserves no-issue rows when the model reports no issues', async () => {
     openRouter.call.and.resolveTo({
       choices: [
