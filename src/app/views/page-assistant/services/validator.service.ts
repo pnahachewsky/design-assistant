@@ -121,7 +121,8 @@ export class ValidatorService {
     if (
       root.querySelector('.gc-srvinfo') ||
       root.querySelector('.gc-drmt') ||
-      root.querySelector('.mwsdoormat-links-container')
+      root.querySelector('.mwsdoormat-links-container') ||
+      this.hasLegacyTopicListGroup(root)
     ) {
       return true;
     }
@@ -152,6 +153,65 @@ export class ValidatorService {
     }
 
     return linkedHeadingCount >= 2;
+  }
+
+  private hasLegacyTopicListGroup(root: Element): boolean {
+    return Array.from(root.querySelectorAll<HTMLElement>('main ul.list-group'))
+      .some((list) => this.isLegacyTopicListGroup(list));
+  }
+
+  private isLegacyTopicListGroup(list: HTMLElement): boolean {
+    if (
+      list.closest(
+        'nav, header, footer, aside, details, [hidden], [aria-hidden="true"], .gc-most-requested, .pagedetails, .gc-srvinfo, .gc-subway',
+      )
+    ) {
+      return false;
+    }
+
+    const items = Array.from(list.children).filter(
+      (child): child is HTMLElement => child.matches('li'),
+    );
+    const qualifyingItemCount = items.filter((item) => {
+      const link = item.querySelector<HTMLAnchorElement>('a[href]');
+      return !!link && !!this.getLegacyListGroupItemDescription(item);
+    }).length;
+    if (qualifyingItemCount < 2) return false;
+
+    return (
+      this.hasLegacyTopicListHeading(list) ||
+      list.classList.contains('background-medium') ||
+      !!list.querySelector('.background-medium')
+    );
+  }
+
+  private getLegacyListGroupItemDescription(item: HTMLElement): string {
+    const clone = item.cloneNode(true) as HTMLElement;
+    clone.querySelector('a[href]')?.remove();
+    clone
+      .querySelectorAll(
+        'ul, ol, nav, details, [hidden], [aria-hidden="true"], .pagedetails',
+      )
+      .forEach((element) => element.remove());
+    return (clone.textContent || '').replace(/\s+/g, ' ').trim();
+  }
+
+  private hasLegacyTopicListHeading(list: HTMLElement): boolean {
+    let current = list.previousElementSibling as HTMLElement | null;
+    while (current) {
+      if (current.matches('h2, h3')) {
+        const text = (current.textContent || '')
+          .replace(/\s+/g, ' ')
+          .trim()
+          .toLowerCase();
+        return /^(services and information|topics|services et renseignements|services et information|sujets)$/.test(
+          text,
+        );
+      }
+      if (current.matches('h1')) return false;
+      current = current.previousElementSibling as HTMLElement | null;
+    }
+    return false;
   }
 
   private walkForGuidance(node: Element, found: Map<string, { id?: string; name: string; url: string }>) {

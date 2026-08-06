@@ -165,7 +165,7 @@
     "page.tools.guidance.topicDoormats.length.description.recommendation": "Assurez-vous que le francais et l'anglais comptent tous deux 120 caracteres ou moins (espaces compris).",
     "page.tools.guidance.topicDoormats.length.description.issue": "La description est trop longue dans au moins une langue",
     "page.tools.guidance.topicDoormats.outdatedTemplate.issue": "Le modele de page de theme est desuet",
-    "page.tools.guidance.topicDoormats.outdatedTemplate.evidence": "Cette section utilise l'ancien balisage des menus d'accueil thematiques: .gc-drmt ou .mwsdoormat-links-container.",
+    "page.tools.guidance.topicDoormats.outdatedTemplate.evidence": "Cette section utilise l'ancien balisage des menus d'accueil thematiques ou une ancienne mise en page de theme avec list-group.",
     "page.tools.guidance.topicDoormats.outdatedTemplate.recommendation": "Mettez a jour la page pour utiliser le modele actuel de menu d'accueil thematique de GCWeb.",
     "page.tools.guidance.topicDoormats.tooManyDoormats.evidence": "Il y a {{count}} menus d'accueil dans cette section.",
     "page.tools.guidance.topicDoormats.tooManyDoormats.recommendation": "Examinez la section. Faut-il supprimer des menus d'accueil? Faut-il diviser la section?",

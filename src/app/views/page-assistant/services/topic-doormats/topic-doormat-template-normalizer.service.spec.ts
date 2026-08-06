@@ -146,4 +146,54 @@ describe('TopicDoormatTemplateNormalizerService', () => {
     expect(result.html).toContain('<a href="/two.html">Two</a>');
     expect(result.html).not.toContain('gc-drmt');
   });
+
+  it('converts legacy list-group topic layouts to modern gc-srvinfo markup', () => {
+    const html = `
+      <main>
+        <h1>PRPP information for individuals</h1>
+        <p>Intro text remains.</p>
+        <h2>Services and information</h2>
+        <ul class="list-group">
+          <li class="background-medium">
+            <a href="/joining.html">Joining a PRPP</a>
+            <p>Eligibility and participation in a PRPP</p>
+          </li>
+          <li class="background-medium">
+            <a href="/contributions.html">Contributions to a PRPP</a>
+            <p>Member and employer contributions to a PRPP</p>
+          </li>
+        </ul>
+        <h2>Related links</h2>
+      </main>
+    `;
+
+    const result = service.normalizeLegacyDoormats(html);
+
+    expect(result.changed).toBeTrue();
+    expect(result.html).toContain('<section class="gc-srvinfo">');
+    expect(result.html).toContain('<h2>Services and information</h2>');
+    expect(result.html).toContain('<div class="row wb-eqht-grd">');
+    expect(result.html).toContain('<a href="/joining.html">Joining a PRPP</a>');
+    expect(result.html).toContain(
+      '<p>Eligibility and participation in a PRPP</p>',
+    );
+    expect(result.html).toContain('Intro text remains.');
+    expect(result.html).toContain('<h2>Related links</h2>');
+    expect(result.html).not.toContain('<ul class="list-group">');
+    expect(result.html).not.toContain('background-medium');
+  });
+
+  it('does not convert list-group markup from background-medium alone', () => {
+    const html = `
+      <main>
+        <h1>Ordinary page</h1>
+        <div class="background-medium">Decorative legacy class</div>
+      </main>
+    `;
+
+    expect(service.normalizeLegacyDoormats(html)).toEqual({
+      html,
+      changed: false,
+    });
+  });
 });

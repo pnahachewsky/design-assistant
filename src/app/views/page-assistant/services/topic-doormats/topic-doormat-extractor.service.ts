@@ -9,6 +9,13 @@ import {
   TopicDoormatUploadData,
 } from './topic-doormat.types';
 
+interface TopicDoormatLegacyLinkCandidate {
+  link: HTMLAnchorElement;
+  wrapper: HTMLElement | null;
+  item: HTMLElement | null;
+  descriptionOverride?: string;
+}
+
 @Injectable({ providedIn: 'root' })
 export class TopicDoormatExtractorService {
   private readonly fetchService = inject(FetchService);
@@ -200,6 +207,7 @@ export class TopicDoormatExtractorService {
         wrapper: HTMLElement | null,
         item: HTMLElement | null,
         linkTextOverride = '',
+        descriptionOverride = '',
       ): void => {
         const heading = link.closest('h2, h3');
         const headingLinkCount = heading
@@ -233,7 +241,9 @@ export class TopicDoormatExtractorService {
         const sectionRows = sectionSummaries.get(sectionIndex) ?? [];
         sectionSummaries.set(sectionIndex, sectionRows);
         const descriptionElement = item?.querySelector('p') ?? null;
-        const description = this.cleanVisibleElementText(descriptionElement);
+        const description =
+          this.cleanVisibleText(descriptionOverride) ||
+          this.cleanVisibleElementText(descriptionElement);
         const fieldflowLinkCount = item
           ? item.querySelectorAll('.wb-fieldflow a[href]').length
           : 0;
@@ -289,9 +299,11 @@ export class TopicDoormatExtractorService {
         );
       });
 
-      this.getLegacyLinks(doc).forEach(({ link, wrapper, item }) => {
-        addSummary(link, wrapper, item);
-      });
+      this.getLegacyLinks(doc).forEach(
+        ({ link, wrapper, item, descriptionOverride }) => {
+          addSummary(link, wrapper, item, '', descriptionOverride);
+        },
+      );
 
       sectionSummaries.forEach((sectionRows) => {
         sectionRows.forEach((summary) => {
@@ -327,7 +339,8 @@ export class TopicDoormatExtractorService {
   hasLegacyTemplate(doc: Document): boolean {
     return (
       !!doc.querySelector('.gc-drmt') ||
-      !!doc.querySelector('.mwsdoormat-links-container')
+      !!doc.querySelector('.mwsdoormat-links-container') ||
+      this.getLegacyListGroupLinks(doc).length >= 2
     );
   }
 
@@ -752,16 +765,8 @@ export class TopicDoormatExtractorService {
     ].some((pattern) => text.includes(pattern));
   }
 
-  private getLegacyLinks(doc: Document): {
-    link: HTMLAnchorElement;
-    wrapper: HTMLElement | null;
-    item: HTMLElement | null;
-  }[] {
-    const candidates: {
-      link: HTMLAnchorElement;
-      wrapper: HTMLElement | null;
-      item: HTMLElement | null;
-    }[] = [];
+  private getLegacyLinks(doc: Document): TopicDoormatLegacyLinkCandidate[] {
+    const candidates: TopicDoormatLegacyLinkCandidate[] = [];
 
     const legacyContainers = Array.from(
       doc.querySelectorAll<HTMLElement>(
@@ -819,7 +824,94 @@ export class TopicDoormatExtractorService {
       }
     }
 
+    candidates.push(...this.getLegacyListGroupLinks(doc));
+
     return candidates;
+  }
+
+  private getLegacyListGroupLinks(
+    doc: Document,
+  ): TopicDoormatLegacyLinkCandidate[] {
+    const candidates: TopicDoormatLegacyLinkCandidate[] = [];
+    Array.from(doc.querySelectorAll<HTMLElement>('main ul.list-group')).forEach(
+      (list) => {
+        if (!this.isLegacyTopicListGroup(list)) return;
+        Array.from(list.children)
+          .filter((child): child is HTMLElement => child.matches('li'))
+          .forEach((item) => {
+            const link = this.getLegacyListGroupItemLink(item);
+            if (!link) return;
+            const descriptionOverride =
+              this.getLegacyListGroupItemDescription(item);
+            if (!descriptionOverride) return;
+            candidates.push({
+              link,
+              wrapper: list,
+              item,
+              descriptionOverride,
+            });
+          });
+      },
+    );
+    return candidates;
+  }
+
+  private isLegacyTopicListGroup(list: HTMLElement): boolean {
+    if (
+      list.closest(
+        'nav, header, footer, aside, details, [hidden], [aria-hidden="true"], .gc-most-requested, .pagedetails, .gc-srvinfo, .gc-subway',
+      )
+    ) {
+      return false;
+    }
+
+    const items = Array.from(list.children).filter(
+      (child): child is HTMLElement => child.matches('li'),
+    );
+    const qualifyingItemCount = items.filter((item) => {
+      const link = this.getLegacyListGroupItemLink(item);
+      return !!link && !!this.getLegacyListGroupItemDescription(item);
+    }).length;
+    if (qualifyingItemCount < 2) return false;
+
+    return (
+      this.hasLegacyTopicListHeading(list) ||
+      list.classList.contains('background-medium') ||
+      !!list.querySelector('.background-medium')
+    );
+  }
+
+  private getLegacyListGroupItemLink(
+    item: HTMLElement,
+  ): HTMLAnchorElement | null {
+    return item.querySelector<HTMLAnchorElement>('a[href]');
+  }
+
+  private getLegacyListGroupItemDescription(item: HTMLElement): string {
+    const clone = item.cloneNode(true) as HTMLElement;
+    const link = clone.querySelector('a[href]');
+    link?.remove();
+    clone
+      .querySelectorAll(
+        'ul, ol, nav, details, [hidden], [aria-hidden="true"], .pagedetails',
+      )
+      .forEach((element) => element.remove());
+    return this.cleanVisibleText(clone.textContent);
+  }
+
+  private hasLegacyTopicListHeading(list: HTMLElement): boolean {
+    let current = list.previousElementSibling as HTMLElement | null;
+    while (current) {
+      if (current.matches('h2, h3')) {
+        const text = this.cleanVisibleText(current.textContent).toLowerCase();
+        return /^(services and information|topics|services et renseignements|services et information|sujets)$/.test(
+          text,
+        );
+      }
+      if (current.matches('h1')) return false;
+      current = current.previousElementSibling as HTMLElement | null;
+    }
+    return false;
   }
 
   private getTopicHeadingElement(doc: Document): HTMLElement | null {

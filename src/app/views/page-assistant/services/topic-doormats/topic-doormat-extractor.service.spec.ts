@@ -112,6 +112,77 @@ describe('TopicDoormatExtractorService', () => {
     );
   });
 
+  it('extracts legacy list-group topic doormats with descriptions', () => {
+    const doc = service.parseHtmlDocument(`
+      <main>
+        <h1>PRPP information for individuals</h1>
+        <p>Information about pooled registered pension plans.</p>
+        <h2>Services and information</h2>
+        <ul class="list-group">
+          <li class="background-medium">
+            <a href="/en/prpp/join.html">Joining a PRPP</a>
+            <p>Eligibility and participation in a PRPP</p>
+          </li>
+          <li class="background-medium">
+            <a href="/en/prpp/contributions.html">Contributions to a PRPP</a>
+            <p>Member and employer contributions to a PRPP</p>
+          </li>
+        </ul>
+      </main>
+    `);
+
+    expect(doc).not.toBeNull();
+    const summaries = service.extractSummaries(doc as Document);
+
+    expect(service.hasCandidates(doc as Document)).toBeTrue();
+    expect(service.hasLegacyTemplate(doc as Document)).toBeTrue();
+    expect(summaries.length).toBe(2);
+    expect(summaries[0]).toEqual(
+      jasmine.objectContaining({
+        linkText: 'Joining a PRPP',
+        href: '/en/prpp/join.html',
+        description: 'Eligibility and participation in a PRPP',
+        sectionTitle: 'Services and information',
+        sectionItemIndex: 1,
+        sectionDoormatCount: 2,
+      }),
+    );
+    expect(summaries[1]).toEqual(
+      jasmine.objectContaining({
+        linkText: 'Contributions to a PRPP',
+        description: 'Member and employer contributions to a PRPP',
+        sectionItemIndex: 2,
+      }),
+    );
+  });
+
+  it('uses background-medium only as supporting evidence for legacy list-group topic doormats', () => {
+    const supportedDoc = service.parseHtmlDocument(`
+      <main>
+        <h1>PRPP information for individuals</h1>
+        <ul class="list-group">
+          <li class="background-medium">
+            <a href="/en/prpp/join.html">Joining a PRPP</a>
+            Eligibility and participation in a PRPP
+          </li>
+          <li class="background-medium">
+            <a href="/en/prpp/contributions.html">Contributions to a PRPP</a>
+            Member and employer contributions to a PRPP
+          </li>
+        </ul>
+      </main>
+    `);
+    const unsupportedDoc = service.parseHtmlDocument(`
+      <main>
+        <h1>Ordinary page</h1>
+        <div class="background-medium">Decorative legacy class</div>
+      </main>
+    `);
+
+    expect(service.hasLegacyTemplate(supportedDoc as Document)).toBeTrue();
+    expect(service.hasLegacyTemplate(unsupportedDoc as Document)).toBeFalse();
+  });
+
   it('excludes status labels after modern topic doormat links from link text counts', () => {
     const doc = service.parseHtmlDocument(`
       <main>
@@ -313,6 +384,76 @@ describe('TopicDoormatExtractorService', () => {
         linkText: 'Apply for benefits',
         description: 'Applications, documents, deadlines',
         sectionTitle: 'Benefit topics',
+        source: 'topic-doormat',
+      },
+    ]);
+  });
+
+  it('uses destination legacy list-group doormats as compact context for topic pages', async () => {
+    fetchService.fetchContentWithResponse.and.resolveTo({
+      document: new DOMParser().parseFromString(
+        `<html><head><title>PRPP information for individuals</title></head><body><main>
+          <h1>PRPP information for individuals</h1>
+          <p>Introductory topic text.</p>
+          <h2>Services and information</h2>
+          <ul class="list-group">
+            <li class="background-medium">
+              <a href="/en/prpp/join.html">Joining a PRPP</a>
+              <p>Eligibility and participation in a PRPP</p>
+            </li>
+            <li class="background-medium">
+              <a href="/en/prpp/transfers.html">PRPP transfers</a>
+              <p>Transfers to and from a PRPP</p>
+            </li>
+          </ul>
+          <h2>Related links</h2>
+        </main></body></html>`,
+        'text/html',
+      ),
+      status: 200,
+      statusText: 'OK',
+      url: 'https://www.canada.ca/en/revenue-agency/services/tax/individuals/topics/prpp.html',
+    });
+
+    const enriched = await service.enrichDestinationContext(
+      [
+        {
+          index: 1,
+          linkText: 'PRPP information for individuals',
+          href: '/en/revenue-agency/services/tax/individuals/topics/prpp.html',
+          description: '',
+          headingLevel: 3,
+          itemLinkCount: 1,
+          headingLinkCount: 1,
+          descriptionLinkCount: 0,
+          hasSplitHeadingLink: false,
+          hasDescriptionLink: false,
+          hasDescriptionIconOrImage: false,
+          hasDescriptionSpecialFormatting: false,
+          rawItemText: '',
+          linkTextCharacterCount: 32,
+          descriptionCharacterCount: 0,
+          sectionIndex: 1,
+          sectionTitle: 'Pensions',
+          sectionItemIndex: 1,
+          sectionDoormatCount: 1,
+        },
+      ],
+      { originalUrl: 'https://www.canada.ca/en/services/taxes.html' },
+    );
+
+    expect(enriched[0].destinationPageType).toBe('topic');
+    expect(enriched[0].destinationNavigationItems).toEqual([
+      {
+        linkText: 'Joining a PRPP',
+        description: 'Eligibility and participation in a PRPP',
+        sectionTitle: 'Services and information',
+        source: 'topic-doormat',
+      },
+      {
+        linkText: 'PRPP transfers',
+        description: 'Transfers to and from a PRPP',
+        sectionTitle: 'Services and information',
         source: 'topic-doormat',
       },
     ]);

@@ -57,4 +57,46 @@ describe('ValidatorService', () => {
       }),
     );
   });
+
+  it('detects legacy list-group topic doormat guidance', () => {
+    const rows = service.collectGuidanceUrls(`
+      <main>
+        <h1>PRPP information for individuals</h1>
+        <h2>Services and information</h2>
+        <ul class="list-group">
+          <li class="background-medium">
+            <a href="/joining.html">Joining a PRPP</a>
+            <p>Eligibility and participation in a PRPP</p>
+          </li>
+          <li class="background-medium">
+            <a href="/contributions.html">Contributions to a PRPP</a>
+            <p>Member and employer contributions to a PRPP</p>
+          </li>
+        </ul>
+      </main>
+    `);
+
+    expect(rows).toContain(
+      jasmine.objectContaining({
+        id: 'topicDoormats',
+        name: 'page.tools.guidance.craVariant.topicDoormats.title',
+        url: 'page.tools.guidance.craVariant.doormats.url',
+      }),
+    );
+  });
+
+  it('does not detect background-medium alone as topic doormat guidance', () => {
+    const rows = service.collectGuidanceUrls(`
+      <main>
+        <h1>Ordinary page</h1>
+        <div class="background-medium">Decorative legacy class</div>
+      </main>
+    `);
+
+    expect(rows).not.toContain(
+      jasmine.objectContaining({
+        id: 'topicDoormats',
+      }),
+    );
+  });
 });

@@ -171,7 +171,7 @@
   "page.tools.guidance.topicDoormats.length.description.recommendation": "Ensure the French and English are both within 120 characters (with spaces).",
   "page.tools.guidance.topicDoormats.length.description.issue": "Description is too long in at least one language",
   "page.tools.guidance.topicDoormats.outdatedTemplate.issue": "Topic page template is outdated",
-  "page.tools.guidance.topicDoormats.outdatedTemplate.evidence": "This section uses legacy topic doormat markup: .gc-drmt or .mwsdoormat-links-container.",
+  "page.tools.guidance.topicDoormats.outdatedTemplate.evidence": "This section uses legacy topic doormat markup or an old list-group topic layout.",
   "page.tools.guidance.topicDoormats.outdatedTemplate.recommendation": "Update the page to use the current GCWeb topic page doormat template.",
   "page.tools.guidance.topicDoormats.tooManyDoormats.evidence": "There are {{count}} doormats in this section.",
   "page.tools.guidance.topicDoormats.tooManyDoormats.recommendation": "Review. Should any doormats be removed? Should the section be divided?",

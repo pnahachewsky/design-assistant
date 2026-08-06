@@ -455,4 +455,49 @@ describe('PageAssistantCompareComponent', () => {
     expect(result).not.toContain('gc-drmt');
     expect(result).not.toContain('Original description');
   });
+
+  it('normalizes legacy list-group doormat markup before applying doormat rewrites', () => {
+    const originalHtml = `
+      <main>
+        <h1>PRPP information for individuals</h1>
+        <h2>Services and information</h2>
+        <ul class="list-group">
+          <li class="background-medium">
+            <a href="/joining.html">Joining a PRPP</a>
+            <p>Original joining description</p>
+          </li>
+          <li class="background-medium">
+            <a href="/contributions.html">Contributions to a PRPP</a>
+            <p>Original contribution description</p>
+          </li>
+        </ul>
+      </main>
+    `;
+    const rewriteHtml = `
+      <section class="gc-srvinfo">
+        <div>
+          <h3><a href="/joining.html">Join a PRPP</a></h3>
+          <p>Updated joining description</p>
+        </div>
+        <div>
+          <h3><a href="/contributions.html">PRPP contributions</a></h3>
+          <p>Updated contribution description</p>
+        </div>
+      </section>
+    `;
+
+    const result = (component as any).applyDoormatRewriteToPageHtml(
+      originalHtml,
+      rewriteHtml,
+    );
+
+    expect(result).toContain('<section class="gc-srvinfo">');
+    expect(result).toContain('Join a PRPP');
+    expect(result).toContain('Updated joining description');
+    expect(result).toContain('PRPP contributions');
+    expect(result).toContain('Updated contribution description');
+    expect(result).not.toContain('<ul class="list-group">');
+    expect(result).not.toContain('background-medium');
+    expect(result).not.toContain('Original joining description');
+  });
 });

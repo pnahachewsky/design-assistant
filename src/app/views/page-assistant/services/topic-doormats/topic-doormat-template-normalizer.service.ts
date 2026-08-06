@@ -34,6 +34,12 @@ export class TopicDoormatTemplateNormalizerService {
     });
 
     if (!doc.body.querySelector('.gc-srvinfo')) {
+      if (this.normalizeLegacyListGroupTopicDoormats(doc)) {
+        changed = true;
+      }
+    }
+
+    if (!doc.body.querySelector('.gc-srvinfo')) {
       const standaloneSection = this.buildStandaloneModernSection(doc);
       if (standaloneSection) {
         standaloneSection.source.replaceWith(standaloneSection.section);
@@ -56,7 +62,8 @@ export class TopicDoormatTemplateNormalizerService {
   private hasLegacyDoormatMarkup(html: string): boolean {
     return (
       /\b(?:mwsdoormat-links-container|gc-drmt)\b/.test(html) ||
-      /\bgc-srvinfo\b/.test(html)
+      /\bgc-srvinfo\b/.test(html) ||
+      /\blist-group\b/.test(html)
     );
   }
 
@@ -85,6 +92,122 @@ export class TopicDoormatTemplateNormalizerService {
     );
 
     return changed;
+  }
+
+  private normalizeLegacyListGroupTopicDoormats(doc: Document): boolean {
+    let changed = false;
+
+    Array.from(
+      doc.body.querySelectorAll<HTMLElement>('main ul.list-group'),
+    ).forEach((list) => {
+      if (!this.isLegacyTopicListGroup(list)) return;
+      const section = this.buildModernSectionFromLegacyListGroup(list);
+      if (!section) return;
+
+      const heading = this.findLegacyTopicListHeading(list);
+      if (heading) {
+        heading.replaceWith(section);
+        list.remove();
+      } else {
+        list.replaceWith(section);
+      }
+      changed = true;
+    });
+
+    return changed;
+  }
+
+  private buildModernSectionFromLegacyListGroup(
+    list: HTMLElement,
+  ): HTMLElement | null {
+    const items = Array.from(list.children)
+      .filter((child): child is HTMLElement => child.matches('li'))
+      .map((item) => {
+        const link = item.querySelector<HTMLAnchorElement>('a[href]');
+        const href = link?.getAttribute('href')?.trim() ?? '';
+        const label = this.cleanVisibleText(link?.textContent);
+        const description = this.getLegacyListGroupItemDescription(item);
+        return { href, label, description };
+      })
+      .filter((item) => item.href && item.label && item.description);
+    if (items.length < 2) return null;
+
+    const doc = list.ownerDocument;
+    const section = doc.createElement('section');
+    section.className = 'gc-srvinfo';
+
+    const heading = doc.createElement('h2');
+    heading.textContent =
+      this.cleanVisibleText(this.findLegacyTopicListHeading(list)?.textContent) ||
+      'Services and information';
+    section.appendChild(heading);
+
+    const row = doc.createElement('div');
+    row.className = 'row wb-eqht-grd';
+    row.innerHTML = items
+      .map((item) =>
+        this.snippetService.applySnippet(TOPIC_PAGE_SNIPPETS.serviceItem, {
+          url: this.escapeHtml(item.href),
+          label: this.escapeHtml(item.label),
+          description: this.escapeHtml(item.description),
+        }),
+      )
+      .join('\n');
+    section.appendChild(row);
+
+    return section;
+  }
+
+  private isLegacyTopicListGroup(list: HTMLElement): boolean {
+    if (
+      list.closest(
+        'nav, header, footer, aside, details, [hidden], [aria-hidden="true"], .gc-most-requested, .pagedetails, .gc-srvinfo, .gc-subway',
+      )
+    ) {
+      return false;
+    }
+
+    const qualifyingItemCount = Array.from(list.children)
+      .filter((child): child is HTMLElement => child.matches('li'))
+      .filter((item) => {
+        const link = item.querySelector<HTMLAnchorElement>('a[href]');
+        return !!link && !!this.getLegacyListGroupItemDescription(item);
+      }).length;
+    if (qualifyingItemCount < 2) return false;
+
+    return (
+      !!this.findLegacyTopicListHeading(list) ||
+      list.classList.contains('background-medium') ||
+      !!list.querySelector('.background-medium')
+    );
+  }
+
+  private getLegacyListGroupItemDescription(item: HTMLElement): string {
+    const clone = item.cloneNode(true) as HTMLElement;
+    clone.querySelector('a[href]')?.remove();
+    clone
+      .querySelectorAll(
+        'ul, ol, nav, details, [hidden], [aria-hidden="true"], .pagedetails',
+      )
+      .forEach((element) => element.remove());
+    return this.cleanVisibleText(clone.textContent);
+  }
+
+  private findLegacyTopicListHeading(list: HTMLElement): HTMLElement | null {
+    let current = list.previousElementSibling as HTMLElement | null;
+    while (current) {
+      if (current.matches('h2, h3')) {
+        const text = this.cleanVisibleText(current.textContent).toLowerCase();
+        return /^(services and information|topics|services et renseignements|services et information|sujets)$/.test(
+          text,
+        )
+          ? current
+          : null;
+      }
+      if (current.matches('h1')) return null;
+      current = current.previousElementSibling as HTMLElement | null;
+    }
+    return null;
   }
 
   private removeGridClasses(element: HTMLElement): boolean {
