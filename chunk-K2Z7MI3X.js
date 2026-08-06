@@ -25072,7 +25072,7 @@ var TopicDoormatExtractorService = class _TopicDoormatExtractorService {
       const sectionIndexes = /* @__PURE__ */ new Map();
       const sectionTitles = /* @__PURE__ */ new Map();
       const sectionSummaries = /* @__PURE__ */ new Map();
-      const addSummary = (link, wrapper, item, linkTextOverride = "") => {
+      const addSummary = (link, wrapper, item, linkTextOverride = "", descriptionOverride = "") => {
         const heading = link.closest("h2, h3");
         const headingLinkCount = heading ? heading.querySelectorAll("a[href]").length : 1;
         const headingText = this.cleanVisibleElementText(heading);
@@ -25095,7 +25095,7 @@ var TopicDoormatExtractorService = class _TopicDoormatExtractorService {
         const sectionRows = sectionSummaries.get(sectionIndex) ?? [];
         sectionSummaries.set(sectionIndex, sectionRows);
         const descriptionElement = item?.querySelector("p") ?? null;
-        const description = this.cleanVisibleElementText(descriptionElement);
+        const description = this.cleanVisibleText(descriptionOverride) || this.cleanVisibleElementText(descriptionElement);
         const fieldflowLinkCount = item ? item.querySelectorAll(".wb-fieldflow a[href]").length : 0;
         const summary = {
           index: summaries.length + 1,
@@ -25133,8 +25133,8 @@ var TopicDoormatExtractorService = class _TopicDoormatExtractorService {
         const headingLinkCount = heading.querySelectorAll("a[href]").length;
         addSummary(link, wrapper, this.findItem(link, wrapper), headingLinkCount > 1 ? this.cleanVisibleElementText(heading) : "");
       });
-      this.getLegacyLinks(doc).forEach(({ link, wrapper, item }) => {
-        addSummary(link, wrapper, item);
+      this.getLegacyLinks(doc).forEach(({ link, wrapper, item, descriptionOverride }) => {
+        addSummary(link, wrapper, item, "", descriptionOverride);
       });
       sectionSummaries.forEach((sectionRows) => {
         sectionRows.forEach((summary) => {
@@ -25156,7 +25156,7 @@ var TopicDoormatExtractorService = class _TopicDoormatExtractorService {
     return !!doc.querySelector(".gc-srvinfo") || !!doc.querySelector(".gc-drmt") || !!doc.querySelector(".mwsdoormat-links-container") || this.getLegacyLinks(doc).length >= 2;
   }
   hasLegacyTemplate(doc) {
-    return !!doc.querySelector(".gc-drmt") || !!doc.querySelector(".mwsdoormat-links-container");
+    return !!doc.querySelector(".gc-drmt") || !!doc.querySelector(".mwsdoormat-links-container") || this.getLegacyListGroupLinks(doc).length >= 2;
   }
   extractMostRequestedLinks(doc) {
     try {
@@ -25464,7 +25464,66 @@ var TopicDoormatExtractorService = class _TopicDoormatExtractorService {
         current = current.nextElementSibling;
       }
     }
+    candidates.push(...this.getLegacyListGroupLinks(doc));
     return candidates;
+  }
+  getLegacyListGroupLinks(doc) {
+    const candidates = [];
+    Array.from(doc.querySelectorAll("main ul.list-group")).forEach((list) => {
+      if (!this.isLegacyTopicListGroup(list))
+        return;
+      Array.from(list.children).filter((child) => child.matches("li")).forEach((item) => {
+        const link = this.getLegacyListGroupItemLink(item);
+        if (!link)
+          return;
+        const descriptionOverride = this.getLegacyListGroupItemDescription(item);
+        if (!descriptionOverride)
+          return;
+        candidates.push({
+          link,
+          wrapper: list,
+          item,
+          descriptionOverride
+        });
+      });
+    });
+    return candidates;
+  }
+  isLegacyTopicListGroup(list) {
+    if (list.closest('nav, header, footer, aside, details, [hidden], [aria-hidden="true"], .gc-most-requested, .pagedetails, .gc-srvinfo, .gc-subway')) {
+      return false;
+    }
+    const items = Array.from(list.children).filter((child) => child.matches("li"));
+    const qualifyingItemCount = items.filter((item) => {
+      const link = this.getLegacyListGroupItemLink(item);
+      return !!link && !!this.getLegacyListGroupItemDescription(item);
+    }).length;
+    if (qualifyingItemCount < 2)
+      return false;
+    return this.hasLegacyTopicListHeading(list) || list.classList.contains("background-medium") || !!list.querySelector(".background-medium");
+  }
+  getLegacyListGroupItemLink(item) {
+    return item.querySelector("a[href]");
+  }
+  getLegacyListGroupItemDescription(item) {
+    const clone = item.cloneNode(true);
+    const link = clone.querySelector("a[href]");
+    link?.remove();
+    clone.querySelectorAll('ul, ol, nav, details, [hidden], [aria-hidden="true"], .pagedetails').forEach((element) => element.remove());
+    return this.cleanVisibleText(clone.textContent);
+  }
+  hasLegacyTopicListHeading(list) {
+    let current = list.previousElementSibling;
+    while (current) {
+      if (current.matches("h2, h3")) {
+        const text = this.cleanVisibleText(current.textContent).toLowerCase();
+        return /^(services and information|topics|services et renseignements|services et information|sujets)$/.test(text);
+      }
+      if (current.matches("h1"))
+        return false;
+      current = current.previousElementSibling;
+    }
+    return false;
   }
   getTopicHeadingElement(doc) {
     return Array.from(doc.querySelectorAll("main h2, main h3, h2, h3")).find((heading) => this.cleanVisibleText(heading.textContent).toLowerCase() === "topics") ?? null;
@@ -26173,6 +26232,33 @@ var TopicDoormatModelClientService = class _TopicDoormatModelClientService {
       }
     });
   }
+  requestIssueDecisionRepair(request) {
+    return __async(this, null, function* () {
+      if (!request.model)
+        return "";
+      try {
+        request.debug("model issue decision repair request prepared", {
+          phase: "issue-decision-repair",
+          model: request.model,
+          timeoutMs: this.topicDoormatModelAttemptTimeoutMs,
+          request: this.buildRequestMetrics(request.messages, request.doormatSummaries)
+        });
+        const resp = yield this.openRouter.call(request.model, request.messages, {
+          temperature: 0,
+          title: "Content Assistant - Topic Doormat Issue Decision Repair",
+          throwOnError: true,
+          timeoutMs: this.topicDoormatModelAttemptTimeoutMs
+        });
+        return resp?.choices?.[0]?.message?.content?.trim() || "";
+      } catch (err) {
+        request.debug("model issue decision repair request failed", {
+          model: request.model,
+          error: err instanceof Error ? err.message : String(err)
+        });
+        return "";
+      }
+    });
+  }
   buildModelRotation(requested) {
     const freeModels = this.openRouter.freeModels;
     if (requested && this.openRouter.models.includes(requested)) {
@@ -26314,7 +26400,7 @@ var TopicDoormatModelClientService = class _TopicDoormatModelClientService {
           {
             role: "user",
             content: JSON.stringify({
-              requiredShape: '{ "section_issues": [], "doormats": [{ "doormat_index": number, "link_text": string, "href": string, "description": string, "detected_link_text_style": string, "detected_description_style": string, "destination_link_relationship": string, "destination_link_relationship_basis": string, "destination_link_relationship_reason": string, "destination_content_assessment": { "important_element_ids": [], "covered_element_ids": [], "missing_important_element_ids": [] }, "issues": [] }] }',
+              requiredShape: '{ "section_issues": [], "doormats": [{ "doormat_index": number, "link_text": string, "href": string, "description": string, "detected_link_text_style": string, "detected_description_style": string, "destination_link_relationship": string, "destination_link_relationship_basis": string, "destination_link_relationship_reason": string, "destination_content_assessment": { "important_element_ids": [], "covered_element_ids": [], "missing_important_element_ids": [] }, "issue_decisions": [{ "issue_id": string, "decision": "applies|does_not_apply|not_applicable", "reason": string }], "issues": [] }] }',
               validDoormatIndexes: doormatSummaries.map((summary) => summary.index),
               responseToRepair: invalidText
             })
@@ -26628,6 +26714,29 @@ var TopicDoormatIssueAnalysisService = class _TopicDoormatIssueAnalysisService {
     "unnecessary-doormat",
     "inconsistent-link-name-style"
   ]);
+  topicDoormatRequiredIssueDecisionIds = [
+    "missing-description",
+    "description-uses-icons-or-images",
+    "description-special-formatting",
+    "description-capitalization",
+    "description-list-separators",
+    "description-uses-and-before-final-item",
+    "misdirected-link",
+    "link-name-lacks-clarity",
+    "link-name-not-unique",
+    "description-lacks-clarity",
+    "description-incorrect-style",
+    "description-repeats-link-text",
+    "duplicate-or-near-duplicate-description",
+    "inconsistent-description-style",
+    "enhancement-label-not-needed",
+    "enhancement-label-wrong-type"
+  ];
+  topicDoormatIssueDecisionValues = /* @__PURE__ */ new Set([
+    "applies",
+    "does_not_apply",
+    "not_applicable"
+  ]);
   topicDoormatDescriptionStyleOrder = [
     "keyword-list",
     "task-list",
@@ -26734,7 +26843,8 @@ var TopicDoormatIssueAnalysisService = class _TopicDoormatIssueAnalysisService {
         })
       ]);
       const { text, model } = issueJson;
-      const resolvedText = text ? yield this.repairTopicDoormatIncompleteIssueFields(text, model, input) : text;
+      const decisionGuardedText = text ? yield this.repairTopicDoormatIssueDecisions(text, model, input) : text;
+      const resolvedText = decisionGuardedText ? yield this.repairTopicDoormatIncompleteIssueFields(decisionGuardedText, model, input) : decisionGuardedText;
       const localIaRows = localIaResult.rows;
       const rows = resolvedText ? this.parseTopicDoormatIssueRows(resolvedText, input.doormatSummaries, input.hasLegacyTopicDoormatTemplate, input.pageLanguage, input.mostRequestedLinks, input.uploadData, localIaRows) : this.buildTopicDoormatFallbackRows(input.doormatSummaries, input.hasLegacyTopicDoormatTemplate, input.pageLanguage, input.mostRequestedLinks, input.uploadData, localIaRows);
       const rowsWithIaMeta = this.applyTopicDoormatSectionItemMeta(rows, localIaResult.metaByDoormatIndex);
@@ -26863,6 +26973,215 @@ var TopicDoormatIssueAnalysisService = class _TopicDoormatIssueAnalysisService {
       }
     });
     return doormats.length || sectionIssues.length ? JSON.stringify({ section_issues: sectionIssues, doormats }) : "";
+  }
+  repairTopicDoormatIssueDecisions(text, model, input) {
+    return __async(this, null, function* () {
+      const parsed = this.looseJsonParse(this.stripCodeFences(text));
+      if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+        return text;
+      }
+      const root = parsed;
+      const targets = this.getTopicDoormatIssueDecisionRepairTargets(root, input.doormatSummaries);
+      if (!targets.length)
+        return text;
+      const repairModel = model && model !== "multiple models" ? model : input.selectedModel || "";
+      const repairText = yield this.modelClient.requestIssueDecisionRepair({
+        model: repairModel,
+        messages: this.buildTopicDoormatIssueDecisionRepairMessages(targets, input.reportLanguage),
+        doormatSummaries: targets.map((target) => target.summary),
+        debug: (event, details) => this.debugTopicDoormatIssues(event, details)
+      });
+      const repairedCount = this.mergeTopicDoormatIssueDecisionRepairs(root, targets, repairText);
+      this.debugTopicDoormatIssues("model issue decision repair resolved", {
+        requestedDecisionCount: targets.length,
+        repairedDecisionCount: repairedCount
+      });
+      return repairedCount ? JSON.stringify(root) : text;
+    });
+  }
+  getTopicDoormatIssueDecisionRepairTargets(root, doormatSummaries) {
+    const doormats = Array.isArray(root["doormats"]) ? root["doormats"] : [];
+    const doormatsByIndex = /* @__PURE__ */ new Map();
+    doormats.forEach((rawDoormat) => {
+      if (!rawDoormat || typeof rawDoormat !== "object")
+        return;
+      const doormat = rawDoormat;
+      const index = this.toNumber(doormat["doormat_index"]);
+      if (index)
+        doormatsByIndex.set(index, doormat);
+    });
+    return doormatSummaries.flatMap((summary) => {
+      const doormat = doormatsByIndex.get(summary.index);
+      if (!doormat)
+        return [];
+      const issues = Array.isArray(doormat["issues"]) ? doormat["issues"] : [];
+      if (issues.some((issue) => !!issue && typeof issue === "object" && this.getTopicDoormatIssueId(issue) === "description-repeats-link-text")) {
+        return [];
+      }
+      const decisions = Array.isArray(doormat["issue_decisions"]) ? doormat["issue_decisions"] : [];
+      const decision = decisions.find((rawDecision) => !!rawDecision && typeof rawDecision === "object" && this.cleanString(rawDecision["issue_id"]) === "description-repeats-link-text");
+      if (this.cleanString(decision?.["decision"]) === "applies")
+        return [];
+      const candidate = this.getTopicDoormatDescriptionRepeatCandidate(summary);
+      if (!candidate)
+        return [];
+      return [
+        {
+          issueId: "description-repeats-link-text",
+          summary,
+          currentDecision: this.cleanString(decision?.["decision"]) || "missing",
+          currentReason: this.cleanString(decision?.["reason"]),
+          localGuardrailReason: candidate.reason,
+          overlapTokens: candidate.overlapTokens
+        }
+      ];
+    });
+  }
+  buildTopicDoormatIssueDecisionRepairMessages(targets, reportLanguage) {
+    return [
+      {
+        role: "system",
+        content: [
+          "You repair only Topic doormat issue decisions.",
+          "Return JSON only.",
+          this.buildTopicDoormatReportLanguageInstruction(reportLanguage),
+          "Do not re-analyze unrelated doormats or unrelated issues.",
+          "For each supplied candidate, decide only whether description-repeats-link-text applies.",
+          "The model owns the final decision. Confirm applies only when the description repeats the same words or meaning already present in the link text and adds little distinct decision-making information.",
+          "If decision is applies, include a complete issue object for description-repeats-link-text with description, evidence, recommendation, and severity."
+        ].join("\n")
+      },
+      {
+        role: "user",
+        content: JSON.stringify({
+          requiredShape: '{ "repairs": [{ "doormat_index": number, "issue_id": "description-repeats-link-text", "decision": "applies|does_not_apply|not_applicable", "reason": string, "issue": { "issue_category": "description-repeats-link-text", "description": string, "evidence": string, "recommendation": string, "severity": "High|Medium|Low" } }] }',
+          candidates: targets.map((target) => ({
+            doormat_index: target.summary.index,
+            link_text: target.summary.linkText,
+            description: target.summary.description,
+            current_decision: target.currentDecision,
+            current_reason: target.currentReason,
+            local_guardrail_reason: target.localGuardrailReason,
+            overlap_tokens: target.overlapTokens
+          }))
+        })
+      }
+    ];
+  }
+  mergeTopicDoormatIssueDecisionRepairs(root, targets, repairText) {
+    if (!repairText)
+      return 0;
+    const parsed = this.looseJsonParse(this.stripCodeFences(repairText));
+    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+      return 0;
+    }
+    const repairs = Array.isArray(parsed["repairs"]) ? parsed["repairs"] : [];
+    if (!repairs.length)
+      return 0;
+    const targetIndexes = new Set(targets.map((target) => target.summary.index));
+    const doormats = Array.isArray(root["doormats"]) ? root["doormats"] : [];
+    const doormatsByIndex = /* @__PURE__ */ new Map();
+    doormats.forEach((rawDoormat) => {
+      if (!rawDoormat || typeof rawDoormat !== "object")
+        return;
+      const doormat = rawDoormat;
+      const index = this.toNumber(doormat["doormat_index"]);
+      if (index)
+        doormatsByIndex.set(index, doormat);
+    });
+    let repairedCount = 0;
+    repairs.forEach((rawRepair) => {
+      if (!rawRepair || typeof rawRepair !== "object")
+        return;
+      const repair = rawRepair;
+      const doormatIndex = this.toNumber(repair["doormat_index"]);
+      if (!doormatIndex || !targetIndexes.has(doormatIndex))
+        return;
+      if (this.cleanString(repair["issue_id"]) !== "description-repeats-link-text") {
+        return;
+      }
+      const decision = this.cleanString(repair["decision"]);
+      if (!this.topicDoormatIssueDecisionValues.has(decision))
+        return;
+      const doormat = doormatsByIndex.get(doormatIndex);
+      if (!doormat)
+        return;
+      this.upsertTopicDoormatIssueDecision(doormat, {
+        issue_id: "description-repeats-link-text",
+        decision,
+        reason: this.cleanString(repair["reason"])
+      });
+      repairedCount += 1;
+      if (decision !== "applies")
+        return;
+      const issue = repair["issue"] && typeof repair["issue"] === "object" ? repair["issue"] : null;
+      if (!issue)
+        return;
+      issue["issue_category"] = "description-repeats-link-text";
+      if (!this.isValidTopicDoormatModelIssue(issue, false))
+        return;
+      const issues = Array.isArray(doormat["issues"]) ? doormat["issues"] : [];
+      if (issues.some((rawIssue) => !!rawIssue && typeof rawIssue === "object" && this.getTopicDoormatIssueId(rawIssue) === "description-repeats-link-text")) {
+        return;
+      }
+      issues.push(issue);
+      doormat["issues"] = issues;
+    });
+    return repairedCount;
+  }
+  upsertTopicDoormatIssueDecision(doormat, decision) {
+    const decisions = Array.isArray(doormat["issue_decisions"]) ? doormat["issue_decisions"] : [];
+    const existingIndex = decisions.findIndex((rawDecision) => !!rawDecision && typeof rawDecision === "object" && this.cleanString(rawDecision["issue_id"]) === this.cleanString(decision["issue_id"]));
+    if (existingIndex >= 0) {
+      decisions[existingIndex] = decision;
+    } else {
+      decisions.push(decision);
+    }
+    doormat["issue_decisions"] = decisions;
+  }
+  getTopicDoormatDescriptionRepeatCandidate(summary) {
+    const linkTokens = this.getTopicDoormatRepeatCheckTokens(summary.linkText);
+    const descriptionTokens = this.getTopicDoormatRepeatCheckTokens(summary.description);
+    if (linkTokens.length < 2 || descriptionTokens.length < 2)
+      return null;
+    const linkTokenSet = new Set(linkTokens);
+    const overlapTokens = descriptionTokens.filter((token) => linkTokenSet.has(token));
+    const distinctDescriptionTokens = descriptionTokens.filter((token) => !linkTokenSet.has(token));
+    const descriptionOverlapRatio = overlapTokens.length / descriptionTokens.length;
+    const linkOverlapRatio = overlapTokens.length / linkTokens.length;
+    if (overlapTokens.length >= 2 && descriptionOverlapRatio >= 0.67 && linkOverlapRatio >= 0.4 && distinctDescriptionTokens.length <= 1) {
+      return {
+        reason: "The description has high token overlap with the link text and adds little distinct information.",
+        overlapTokens
+      };
+    }
+    return null;
+  }
+  getTopicDoormatRepeatCheckTokens(value) {
+    const repeatStopWords = /* @__PURE__ */ new Set([
+      ...this.topicDoormatDestinationStopWords,
+      "find",
+      "learn",
+      "information",
+      "info",
+      "about",
+      "how",
+      "what",
+      "when",
+      "where",
+      "why",
+      "savoir",
+      "renseignement",
+      "renseignements",
+      "information",
+      "informations",
+      "comment",
+      "quand",
+      "quoi",
+      "ou",
+      "pourquoi"
+    ]);
+    return Array.from(new Set(this.normalizeTopicDoormatDestinationComparisonText(value).split(/\s+/).filter((token) => token.length > 2 && !repeatStopWords.has(token))));
   }
   repairTopicDoormatIncompleteIssueFields(text, model, input) {
     return __async(this, null, function* () {
@@ -27452,7 +27771,7 @@ var TopicDoormatIssueAnalysisService = class _TopicDoormatIssueAnalysisService {
         doormat: this.buildTopicDoormatSectionLabel(1, doormatSummaries),
         doormatLabel: "All doormats in section",
         issueId: "outdated-topic-page-template",
-        issue: this.getTopicDoormatDeterministicText("outdatedTemplate.issue"),
+        issue: this.getTopicDoormatIssueLabel("outdated-topic-page-template"),
         evidence: this.getTopicDoormatDeterministicText("outdatedTemplate.evidence"),
         recommendation: this.getTopicDoormatDeterministicText("outdatedTemplate.recommendation"),
         sectionIndex: 1,
@@ -27715,7 +28034,7 @@ var TopicDoormatIssueAnalysisService = class _TopicDoormatIssueAnalysisService {
     return "High";
   }
   getTopicDoormatLengthIssueLabel(issueId) {
-    return this.getTopicDoormatDeterministicText(issueId === "link-name-too-long" ? "length.link.issue" : "length.description.issue");
+    return this.getTopicDoormatIssueLabel(issueId);
   }
   buildLocalTopicDoormatDescriptionPersonRows(doormatSummaries) {
     return doormatSummaries.flatMap((summary) => {
@@ -28344,7 +28663,7 @@ var TopicDoormatIssueAnalysisService = class _TopicDoormatIssueAnalysisService {
             doormat: summary.linkText,
             doormatLabel: summary.linkText,
             issueId: "valid-dropdown-enhancement",
-            issue: this.getTopicDoormatDeterministicText("dropdownEnhancementNote.issue"),
+            issue: this.getTopicDoormatIssueLabel("valid-dropdown-enhancement"),
             evidence: this.getTopicDoormatDeterministicText("dropdownEnhancementNote.evidence"),
             recommendation: this.getTopicDoormatDeterministicText("dropdownEnhancementNote.recommendation"),
             doormatIndex: summary.index,
@@ -28383,7 +28702,7 @@ var TopicDoormatIssueAnalysisService = class _TopicDoormatIssueAnalysisService {
         doormat: this.buildTopicDoormatSectionLabel(analysis.sectionIndex, doormatSummaries),
         doormatLabel: "All doormats in section",
         issueId: "consistent-description-style-in-section",
-        issue: this.getTopicDoormatDeterministicText("consistentDescriptionStyle.issue"),
+        issue: this.getTopicDoormatIssueLabel("consistent-description-style-in-section"),
         evidence: this.getTopicDoormatDeterministicText("consistentDescriptionStyle.evidence", {
           count: analysis.summaries.length,
           style: this.getTopicDoormatStyleLabel(analysis.dominantStyle)
@@ -28523,7 +28842,7 @@ var TopicDoormatIssueAnalysisService = class _TopicDoormatIssueAnalysisService {
       doormat: this.buildTopicDoormatLabel(doormat),
       doormatLabel: doormat.linkText || doormat.href || "Doormat",
       issueId: "no-issues",
-      issue: this.getTopicDoormatDeterministicText("noIssues.issue"),
+      issue: this.getTopicDoormatIssueLabel("no-issues"),
       evidence: this.getTopicDoormatDeterministicText("noIssues.evidence"),
       recommendation: "",
       doormatIndex: doormat.index || void 0,
@@ -28622,6 +28941,7 @@ var TopicDoormatIssueAnalysisService = class _TopicDoormatIssueAnalysisService {
       instruction: "This compact runtime contract is authoritative. Report only allowed_issue_categories. Complete the required per-doormat classification fields before reporting issues.",
       evidence_style: source["evidence_style"],
       runtime_editorial_evidence_overrides: source["runtime_editorial_evidence_overrides"],
+      required_per_doormat_issue_decisions: source["required_per_doormat_issue_decisions"],
       style_detection: source["style_detection"],
       destination_content_assessment: source["destination_content_assessment"],
       destination_link_relationship: source["destination_link_relationship"],
@@ -28654,9 +28974,32 @@ ${JSON.stringify(contract)}`;
     return this.topicDoormatIssueAliasToId.get(normalized) ?? normalized;
   }
   getTopicDoormatIssueLabel(issueId) {
-    if (issueId === "no-issues")
-      return "No issues";
+    const translationKey = `page.tools.guidance.topicDoormats.issues.${issueId}`;
+    const translated = this.translate.instant(translationKey);
+    if (translated && translated !== translationKey)
+      return translated;
+    const legacyKey = this.getLegacyTopicDoormatIssueLabelKey(issueId);
+    if (legacyKey) {
+      const legacyTranslated = this.getTopicDoormatDeterministicText(legacyKey);
+      if (legacyTranslated && legacyTranslated !== legacyKey) {
+        return legacyTranslated;
+      }
+    }
     return this.topicDoormatIssueIdToLabel.get(issueId) ?? this.toTitleCase(issueId.replace(/-/g, " "));
+  }
+  getLegacyTopicDoormatIssueLabelKey(issueId) {
+    const legacyKeys = {
+      "link-name-too-long": "length.link.issue",
+      "description-too-long": "length.description.issue",
+      "description-missing-needed-information": "contentGap.issue",
+      "consistent-description-style-in-section": "consistentDescriptionStyle.issue",
+      "valid-dropdown-enhancement": "dropdownEnhancementNote.issue",
+      "no-issues": "noIssues.issue",
+      "missing-needed-doormat": "missingNeededDoormat.issue",
+      "unnecessary-doormat": "unnecessaryDoormat.issue",
+      "outdated-topic-page-template": "outdatedTemplate.issue"
+    };
+    return legacyKeys[issueId] ?? "";
   }
   toTitleCase(value) {
     return value.replace(/\b\w/g, (match) => match.toUpperCase());
@@ -28996,7 +29339,24 @@ ${JSON.stringify(contract)}`;
     }
     const doormat = value;
     const index = this.toNumber(doormat["doormat_index"]);
-    return index !== null && index > 0 && typeof doormat["link_text"] === "string" && typeof doormat["href"] === "string" && typeof doormat["description"] === "string" && this.normalizeTopicDoormatLinkTextStyle(doormat["detected_link_text_style"]) !== null && this.normalizeTopicDoormatDescriptionStyle(doormat["detected_description_style"]) !== null && this.normalizeTopicDoormatDestinationLinkRelationship(doormat["destination_link_relationship"]) !== null && this.normalizeTopicDoormatDestinationLinkRelationshipBasis(doormat["destination_link_relationship_basis"]) !== null && typeof doormat["destination_link_relationship_reason"] === "string" && this.isValidTopicDoormatDestinationContentAssessment(doormat["destination_content_assessment"]) && Array.isArray(doormat["issues"]) && doormat["issues"].every((issue) => this.isValidTopicDoormatModelIssue(issue, false));
+    return index !== null && index > 0 && typeof doormat["link_text"] === "string" && typeof doormat["href"] === "string" && typeof doormat["description"] === "string" && this.normalizeTopicDoormatLinkTextStyle(doormat["detected_link_text_style"]) !== null && this.normalizeTopicDoormatDescriptionStyle(doormat["detected_description_style"]) !== null && this.normalizeTopicDoormatDestinationLinkRelationship(doormat["destination_link_relationship"]) !== null && this.normalizeTopicDoormatDestinationLinkRelationshipBasis(doormat["destination_link_relationship_basis"]) !== null && typeof doormat["destination_link_relationship_reason"] === "string" && this.isValidTopicDoormatDestinationContentAssessment(doormat["destination_content_assessment"]) && this.isValidTopicDoormatIssueDecisions(doormat["issue_decisions"]) && Array.isArray(doormat["issues"]) && doormat["issues"].every((issue) => this.isValidTopicDoormatModelIssue(issue, false));
+  }
+  isValidTopicDoormatIssueDecisions(value) {
+    if (!Array.isArray(value))
+      return false;
+    const decisionsByIssueId = /* @__PURE__ */ new Map();
+    value.forEach((rawDecision) => {
+      if (!rawDecision || typeof rawDecision !== "object")
+        return;
+      const decision = rawDecision;
+      const issueId = this.cleanString(decision["issue_id"]);
+      if (issueId)
+        decisionsByIssueId.set(issueId, decision);
+    });
+    return this.topicDoormatRequiredIssueDecisionIds.every((issueId) => {
+      const decision = decisionsByIssueId.get(issueId);
+      return !!decision && this.topicDoormatIssueDecisionValues.has(this.cleanString(decision["decision"])) && typeof decision["reason"] === "string";
+    });
   }
   isValidTopicDoormatDestinationContentAssessment(value) {
     if (!value || typeof value !== "object" || Array.isArray(value)) {
@@ -29356,6 +29716,11 @@ var TopicDoormatTemplateNormalizerService = class _TopicDoormatTemplateNormalize
       changed = true;
     });
     if (!doc.body.querySelector(".gc-srvinfo")) {
+      if (this.normalizeLegacyListGroupTopicDoormats(doc)) {
+        changed = true;
+      }
+    }
+    if (!doc.body.querySelector(".gc-srvinfo")) {
       const standaloneSection = this.buildStandaloneModernSection(doc);
       if (standaloneSection) {
         standaloneSection.source.replaceWith(standaloneSection.section);
@@ -29373,7 +29738,7 @@ var TopicDoormatTemplateNormalizerService = class _TopicDoormatTemplateNormalize
     };
   }
   hasLegacyDoormatMarkup(html) {
-    return /\b(?:mwsdoormat-links-container|gc-drmt)\b/.test(html) || /\bgc-srvinfo\b/.test(html);
+    return /\b(?:mwsdoormat-links-container|gc-drmt)\b/.test(html) || /\bgc-srvinfo\b/.test(html) || /\blist-group\b/.test(html);
   }
   normalizeGcSrvinfoLayouts(doc) {
     let changed = false;
@@ -29388,6 +29753,82 @@ var TopicDoormatTemplateNormalizerService = class _TopicDoormatTemplateNormalize
       });
     });
     return changed;
+  }
+  normalizeLegacyListGroupTopicDoormats(doc) {
+    let changed = false;
+    Array.from(doc.body.querySelectorAll("main ul.list-group")).forEach((list) => {
+      if (!this.isLegacyTopicListGroup(list))
+        return;
+      const section = this.buildModernSectionFromLegacyListGroup(list);
+      if (!section)
+        return;
+      const heading = this.findLegacyTopicListHeading(list);
+      if (heading) {
+        heading.replaceWith(section);
+        list.remove();
+      } else {
+        list.replaceWith(section);
+      }
+      changed = true;
+    });
+    return changed;
+  }
+  buildModernSectionFromLegacyListGroup(list) {
+    const items = Array.from(list.children).filter((child) => child.matches("li")).map((item) => {
+      const link = item.querySelector("a[href]");
+      const href = link?.getAttribute("href")?.trim() ?? "";
+      const label = this.cleanVisibleText(link?.textContent);
+      const description = this.getLegacyListGroupItemDescription(item);
+      return { href, label, description };
+    }).filter((item) => item.href && item.label && item.description);
+    if (items.length < 2)
+      return null;
+    const doc = list.ownerDocument;
+    const section = doc.createElement("section");
+    section.className = "gc-srvinfo";
+    const heading = doc.createElement("h2");
+    heading.textContent = this.cleanVisibleText(this.findLegacyTopicListHeading(list)?.textContent) || "Services and information";
+    section.appendChild(heading);
+    const row = doc.createElement("div");
+    row.className = "row wb-eqht-grd";
+    row.innerHTML = items.map((item) => this.snippetService.applySnippet(TOPIC_PAGE_SNIPPETS.serviceItem, {
+      url: this.escapeHtml(item.href),
+      label: this.escapeHtml(item.label),
+      description: this.escapeHtml(item.description)
+    })).join("\n");
+    section.appendChild(row);
+    return section;
+  }
+  isLegacyTopicListGroup(list) {
+    if (list.closest('nav, header, footer, aside, details, [hidden], [aria-hidden="true"], .gc-most-requested, .pagedetails, .gc-srvinfo, .gc-subway')) {
+      return false;
+    }
+    const qualifyingItemCount = Array.from(list.children).filter((child) => child.matches("li")).filter((item) => {
+      const link = item.querySelector("a[href]");
+      return !!link && !!this.getLegacyListGroupItemDescription(item);
+    }).length;
+    if (qualifyingItemCount < 2)
+      return false;
+    return !!this.findLegacyTopicListHeading(list) || list.classList.contains("background-medium") || !!list.querySelector(".background-medium");
+  }
+  getLegacyListGroupItemDescription(item) {
+    const clone = item.cloneNode(true);
+    clone.querySelector("a[href]")?.remove();
+    clone.querySelectorAll('ul, ol, nav, details, [hidden], [aria-hidden="true"], .pagedetails').forEach((element) => element.remove());
+    return this.cleanVisibleText(clone.textContent);
+  }
+  findLegacyTopicListHeading(list) {
+    let current = list.previousElementSibling;
+    while (current) {
+      if (current.matches("h2, h3")) {
+        const text = this.cleanVisibleText(current.textContent).toLowerCase();
+        return /^(services and information|topics|services et renseignements|services et information|sujets)$/.test(text) ? current : null;
+      }
+      if (current.matches("h1"))
+        return null;
+      current = current.previousElementSibling;
+    }
+    return null;
   }
   removeGridClasses(element) {
     const gridClassPattern = /^col-(?:xs|sm|md|lg|xl)-\d+$/;
@@ -33915,7 +34356,7 @@ var ValidatorService = class _ValidatorService {
     }
   }
   hasLegacyTopicDoormatStructure(root) {
-    if (root.querySelector(".gc-srvinfo") || root.querySelector(".gc-drmt") || root.querySelector(".mwsdoormat-links-container")) {
+    if (root.querySelector(".gc-srvinfo") || root.querySelector(".gc-drmt") || root.querySelector(".mwsdoormat-links-container") || this.hasLegacyTopicListGroup(root)) {
       return true;
     }
     const topicsHeading = Array.from(root.querySelectorAll("h2, h3")).find((heading) => (heading.textContent || "").replace(/\s+/g, " ").trim().toLowerCase() === "topics");
@@ -33934,6 +34375,41 @@ var ValidatorService = class _ValidatorService {
       current = current.nextElementSibling;
     }
     return linkedHeadingCount >= 2;
+  }
+  hasLegacyTopicListGroup(root) {
+    return Array.from(root.querySelectorAll("main ul.list-group")).some((list) => this.isLegacyTopicListGroup(list));
+  }
+  isLegacyTopicListGroup(list) {
+    if (list.closest('nav, header, footer, aside, details, [hidden], [aria-hidden="true"], .gc-most-requested, .pagedetails, .gc-srvinfo, .gc-subway')) {
+      return false;
+    }
+    const items = Array.from(list.children).filter((child) => child.matches("li"));
+    const qualifyingItemCount = items.filter((item) => {
+      const link = item.querySelector("a[href]");
+      return !!link && !!this.getLegacyListGroupItemDescription(item);
+    }).length;
+    if (qualifyingItemCount < 2)
+      return false;
+    return this.hasLegacyTopicListHeading(list) || list.classList.contains("background-medium") || !!list.querySelector(".background-medium");
+  }
+  getLegacyListGroupItemDescription(item) {
+    const clone = item.cloneNode(true);
+    clone.querySelector("a[href]")?.remove();
+    clone.querySelectorAll('ul, ol, nav, details, [hidden], [aria-hidden="true"], .pagedetails').forEach((element) => element.remove());
+    return (clone.textContent || "").replace(/\s+/g, " ").trim();
+  }
+  hasLegacyTopicListHeading(list) {
+    let current = list.previousElementSibling;
+    while (current) {
+      if (current.matches("h2, h3")) {
+        const text = (current.textContent || "").replace(/\s+/g, " ").trim().toLowerCase();
+        return /^(services and information|topics|services et renseignements|services et information|sujets)$/.test(text);
+      }
+      if (current.matches("h1"))
+        return false;
+      current = current.previousElementSibling;
+    }
+    return false;
   }
   walkForGuidance(node, found) {
     if (node.nodeType === Node.ELEMENT_NODE) {
@@ -50463,4 +50939,4 @@ ${custom}` : promptBody;
 export {
   PageAssistantCompareComponent
 };
-//# sourceMappingURL=chunk-DJB34VFI.js.map
+//# sourceMappingURL=chunk-K2Z7MI3X.js.map

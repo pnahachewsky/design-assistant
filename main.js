@@ -42901,7 +42901,7 @@ var routes = [
       }
       return true;
     }],
-    loadComponent: () => import("./chunk-DJB34VFI.js").then((m) => m.PageAssistantCompareComponent)
+    loadComponent: () => import("./chunk-K2Z7MI3X.js").then((m) => m.PageAssistantCompareComponent)
   },
   {
     path: "page-assistant/share",

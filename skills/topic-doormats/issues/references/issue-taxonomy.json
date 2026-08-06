@@ -47,6 +47,28 @@
       ]
     }
   ],
+  "required_per_doormat_issue_decisions": {
+    "instruction": "For every doormat, return issue_decisions with exactly one decision for each listed model-owned per-doormat check. Complete these decisions before writing the issues array. Do not let the presence or absence of severe issues on one doormat change the threshold for another doormat.",
+    "decision_values": ["applies", "does_not_apply", "not_applicable"],
+    "issue_ids": [
+      "missing-description",
+      "description-uses-icons-or-images",
+      "description-special-formatting",
+      "description-capitalization",
+      "description-list-separators",
+      "description-uses-and-before-final-item",
+      "misdirected-link",
+      "link-name-lacks-clarity",
+      "link-name-not-unique",
+      "description-lacks-clarity",
+      "description-incorrect-style",
+      "description-repeats-link-text",
+      "duplicate-or-near-duplicate-description",
+      "inconsistent-description-style",
+      "enhancement-label-not-needed",
+      "enhancement-label-wrong-type"
+    ]
+  },
   "check_group_guidance": {
     "deterministic_structural_checks": "These checks are objective. Apply them even when the doormat content appears clear or comes from a live Canada.ca page.",
     "judgment_editorial_checks": "These checks require editorial judgment. Report them only when the evidence is concrete enough to justify a recommendation."
@@ -362,9 +384,9 @@
     {
       "id": "description-missing-needed-information",
       "group": "Description clarity",
-      "label": "Description has at least one content gap",
+      "label": "Doormat has at least one content gap",
       "severity": "Medium",
-      "condition": "One or more important intro paragraphs or H2 headings from the supplied destination context are not represented by the doormat link text or description, and the omission prevents users from deciding whether the destination is relevant.",
+      "condition": "One or more important intro paragraphs or H2 headings from the supplied destination context are not represented by the doormat link text or description, and the omission prevents users from deciding whether the destination is relevant. For doormats about a benefit, program, credit, rebate, payment, allowance, relief measure, service, form, or tool, do not require the doormat to list every expected destination facet such as who is eligible, what the program is, and how to apply, file, or use it. Treat those facets as covered when they are clearly implied by the link text and description together. Report a content gap only when a missing facet changes whether users can decide that this destination is relevant.",
       "recommendation": "Add the missing decision-making detail while keeping the description concise.",
       "local_from_model_assessment": true,
       "reporting": "Do not return this issue directly. Return destination_content_assessment with grounded element IDs. AIDA reports the issue only when missing_important_element_ids is a non-empty validated subset of important_element_ids from an available destination context."
