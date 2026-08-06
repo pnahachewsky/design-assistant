@@ -17,6 +17,13 @@ export interface TopicDoormatIssueFieldRepairRequest {
   debug: (event: string, details: Record<string, unknown>) => void;
 }
 
+export interface TopicDoormatIssueDecisionRepairRequest {
+  model: string;
+  messages: ChatMessage[];
+  doormatSummaries: TopicDoormatSummary[];
+  debug: (event: string, details: Record<string, unknown>) => void;
+}
+
 export interface TopicDoormatModelClientResult {
   text: string;
   model: string;
@@ -94,6 +101,36 @@ export class TopicDoormatModelClientService {
       return resp?.choices?.[0]?.message?.content?.trim() || '';
     } catch (err) {
       request.debug('model issue field repair request failed', {
+        model: request.model,
+        error: err instanceof Error ? err.message : String(err),
+      });
+      return '';
+    }
+  }
+
+  async requestIssueDecisionRepair(
+    request: TopicDoormatIssueDecisionRepairRequest,
+  ): Promise<string> {
+    if (!request.model) return '';
+    try {
+      request.debug('model issue decision repair request prepared', {
+        phase: 'issue-decision-repair',
+        model: request.model,
+        timeoutMs: this.topicDoormatModelAttemptTimeoutMs,
+        request: this.buildRequestMetrics(
+          request.messages,
+          request.doormatSummaries,
+        ),
+      });
+      const resp = await this.openRouter.call(request.model, request.messages, {
+        temperature: 0,
+        title: 'Content Assistant - Topic Doormat Issue Decision Repair',
+        throwOnError: true,
+        timeoutMs: this.topicDoormatModelAttemptTimeoutMs,
+      });
+      return resp?.choices?.[0]?.message?.content?.trim() || '';
+    } catch (err) {
+      request.debug('model issue decision repair request failed', {
         model: request.model,
         error: err instanceof Error ? err.message : String(err),
       });
@@ -292,7 +329,7 @@ export class TopicDoormatModelClientService {
           role: 'user',
           content: JSON.stringify({
             requiredShape:
-              '{ "section_issues": [], "doormats": [{ "doormat_index": number, "link_text": string, "href": string, "description": string, "detected_link_text_style": string, "detected_description_style": string, "destination_link_relationship": string, "destination_link_relationship_basis": string, "destination_link_relationship_reason": string, "destination_content_assessment": { "important_element_ids": [], "covered_element_ids": [], "missing_important_element_ids": [] }, "issues": [] }] }',
+              '{ "section_issues": [], "doormats": [{ "doormat_index": number, "link_text": string, "href": string, "description": string, "detected_link_text_style": string, "detected_description_style": string, "destination_link_relationship": string, "destination_link_relationship_basis": string, "destination_link_relationship_reason": string, "destination_content_assessment": { "important_element_ids": [], "covered_element_ids": [], "missing_important_element_ids": [] }, "issue_decisions": [{ "issue_id": string, "decision": "applies|does_not_apply|not_applicable", "reason": string }], "issues": [] }] }',
             validDoormatIndexes: doormatSummaries.map((summary) => summary.index),
             responseToRepair: invalidText,
           }),

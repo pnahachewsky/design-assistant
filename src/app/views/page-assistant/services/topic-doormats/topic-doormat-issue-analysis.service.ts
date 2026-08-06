@@ -79,6 +79,15 @@ interface TopicDoormatIncompleteIssueFieldTarget {
   summary?: TopicDoormatSummary;
 }
 
+interface TopicDoormatIssueDecisionRepairTarget {
+  issueId: 'description-repeats-link-text';
+  summary: TopicDoormatSummary;
+  currentDecision: string;
+  currentReason: string;
+  localGuardrailReason: string;
+  overlapTokens: string[];
+}
+
 @Injectable({ providedIn: 'root' })
 export class TopicDoormatIssueAnalysisService {
   private readonly http = inject(HttpClient);
@@ -192,6 +201,29 @@ export class TopicDoormatIssueAnalysisService {
     'too-many-doormats-in-section',
     'unnecessary-doormat',
     'inconsistent-link-name-style',
+  ]);
+  private readonly topicDoormatRequiredIssueDecisionIds = [
+    'missing-description',
+    'description-uses-icons-or-images',
+    'description-special-formatting',
+    'description-capitalization',
+    'description-list-separators',
+    'description-uses-and-before-final-item',
+    'misdirected-link',
+    'link-name-lacks-clarity',
+    'link-name-not-unique',
+    'description-lacks-clarity',
+    'description-incorrect-style',
+    'description-repeats-link-text',
+    'duplicate-or-near-duplicate-description',
+    'inconsistent-description-style',
+    'enhancement-label-not-needed',
+    'enhancement-label-wrong-type',
+  ] as const;
+  private readonly topicDoormatIssueDecisionValues = new Set([
+    'applies',
+    'does_not_apply',
+    'not_applicable',
   ]);
   private readonly topicDoormatDescriptionStyleOrder: Exclude<
     TopicDoormatDescriptionStyle,
@@ -328,9 +360,16 @@ export class TopicDoormatIssueAnalysisService {
         }),
     ]);
     const { text, model } = issueJson;
-    const resolvedText = text
-      ? await this.repairTopicDoormatIncompleteIssueFields(text, model, input)
+    const decisionGuardedText = text
+      ? await this.repairTopicDoormatIssueDecisions(text, model, input)
       : text;
+    const resolvedText = decisionGuardedText
+      ? await this.repairTopicDoormatIncompleteIssueFields(
+          decisionGuardedText,
+          model,
+          input,
+        )
+      : decisionGuardedText;
     const localIaRows = localIaResult.rows;
     const rows = resolvedText
       ? this.parseTopicDoormatIssueRows(
@@ -535,6 +574,302 @@ export class TopicDoormatIssueAnalysisService {
     return doormats.length || sectionIssues.length
       ? JSON.stringify({ section_issues: sectionIssues, doormats })
       : '';
+  }
+
+  private async repairTopicDoormatIssueDecisions(
+    text: string,
+    model: string,
+    input: TopicDoormatIssueAnalysisInput,
+  ): Promise<string> {
+    const parsed = this.looseJsonParse(this.stripCodeFences(text));
+    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+      return text;
+    }
+    const root = parsed as Record<string, unknown>;
+    const targets = this.getTopicDoormatIssueDecisionRepairTargets(
+      root,
+      input.doormatSummaries,
+    );
+    if (!targets.length) return text;
+
+    const repairModel =
+      model && model !== 'multiple models' ? model : input.selectedModel || '';
+    const repairText = await this.modelClient.requestIssueDecisionRepair({
+      model: repairModel,
+      messages: this.buildTopicDoormatIssueDecisionRepairMessages(
+        targets,
+        input.reportLanguage,
+      ),
+      doormatSummaries: targets.map((target) => target.summary),
+      debug: (event, details) => this.debugTopicDoormatIssues(event, details),
+    });
+    const repairedCount = this.mergeTopicDoormatIssueDecisionRepairs(
+      root,
+      targets,
+      repairText,
+    );
+    this.debugTopicDoormatIssues('model issue decision repair resolved', {
+      requestedDecisionCount: targets.length,
+      repairedDecisionCount: repairedCount,
+    });
+    return repairedCount ? JSON.stringify(root) : text;
+  }
+
+  private getTopicDoormatIssueDecisionRepairTargets(
+    root: Record<string, unknown>,
+    doormatSummaries: TopicDoormatSummary[],
+  ): TopicDoormatIssueDecisionRepairTarget[] {
+    const doormats = Array.isArray(root['doormats']) ? root['doormats'] : [];
+    const doormatsByIndex = new Map<number, Record<string, unknown>>();
+    doormats.forEach((rawDoormat) => {
+      if (!rawDoormat || typeof rawDoormat !== 'object') return;
+      const doormat = rawDoormat as Record<string, unknown>;
+      const index = this.toNumber(doormat['doormat_index']);
+      if (index) doormatsByIndex.set(index, doormat);
+    });
+
+    return doormatSummaries.flatMap((summary) => {
+      const doormat = doormatsByIndex.get(summary.index);
+      if (!doormat) return [];
+      const issues = Array.isArray(doormat['issues']) ? doormat['issues'] : [];
+      if (
+        issues.some(
+          (issue) =>
+            !!issue &&
+            typeof issue === 'object' &&
+            this.getTopicDoormatIssueId(issue as Record<string, unknown>) ===
+              'description-repeats-link-text',
+        )
+      ) {
+        return [];
+      }
+      const decisions = Array.isArray(doormat['issue_decisions'])
+        ? doormat['issue_decisions']
+        : [];
+      const decision = decisions.find(
+        (rawDecision) =>
+          !!rawDecision &&
+          typeof rawDecision === 'object' &&
+          this.cleanString(
+            (rawDecision as Record<string, unknown>)['issue_id'],
+          ) === 'description-repeats-link-text',
+      ) as Record<string, unknown> | undefined;
+      if (this.cleanString(decision?.['decision']) === 'applies') return [];
+      const candidate =
+        this.getTopicDoormatDescriptionRepeatCandidate(summary);
+      if (!candidate) return [];
+      return [
+        {
+          issueId: 'description-repeats-link-text',
+          summary,
+          currentDecision:
+            this.cleanString(decision?.['decision']) || 'missing',
+          currentReason: this.cleanString(decision?.['reason']),
+          localGuardrailReason: candidate.reason,
+          overlapTokens: candidate.overlapTokens,
+        } satisfies TopicDoormatIssueDecisionRepairTarget,
+      ];
+    });
+  }
+
+  private buildTopicDoormatIssueDecisionRepairMessages(
+    targets: TopicDoormatIssueDecisionRepairTarget[],
+    reportLanguage?: TopicDoormatReportLanguage,
+  ): ChatMessage[] {
+    return [
+      {
+        role: 'system',
+        content: [
+          'You repair only Topic doormat issue decisions.',
+          'Return JSON only.',
+          this.buildTopicDoormatReportLanguageInstruction(reportLanguage),
+          'Do not re-analyze unrelated doormats or unrelated issues.',
+          'For each supplied candidate, decide only whether description-repeats-link-text applies.',
+          'The model owns the final decision. Confirm applies only when the description repeats the same words or meaning already present in the link text and adds little distinct decision-making information.',
+          'If decision is applies, include a complete issue object for description-repeats-link-text with description, evidence, recommendation, and severity.',
+        ].join('\n'),
+      },
+      {
+        role: 'user',
+        content: JSON.stringify({
+          requiredShape:
+            '{ "repairs": [{ "doormat_index": number, "issue_id": "description-repeats-link-text", "decision": "applies|does_not_apply|not_applicable", "reason": string, "issue": { "issue_category": "description-repeats-link-text", "description": string, "evidence": string, "recommendation": string, "severity": "High|Medium|Low" } }] }',
+          candidates: targets.map((target) => ({
+            doormat_index: target.summary.index,
+            link_text: target.summary.linkText,
+            description: target.summary.description,
+            current_decision: target.currentDecision,
+            current_reason: target.currentReason,
+            local_guardrail_reason: target.localGuardrailReason,
+            overlap_tokens: target.overlapTokens,
+          })),
+        }),
+      },
+    ];
+  }
+
+  private mergeTopicDoormatIssueDecisionRepairs(
+    root: Record<string, unknown>,
+    targets: TopicDoormatIssueDecisionRepairTarget[],
+    repairText: string,
+  ): number {
+    if (!repairText) return 0;
+    const parsed = this.looseJsonParse(this.stripCodeFences(repairText));
+    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+      return 0;
+    }
+    const repairs = Array.isArray((parsed as Record<string, unknown>)['repairs'])
+      ? ((parsed as Record<string, unknown>)['repairs'] as unknown[])
+      : [];
+    if (!repairs.length) return 0;
+    const targetIndexes = new Set(targets.map((target) => target.summary.index));
+    const doormats = Array.isArray(root['doormats']) ? root['doormats'] : [];
+    const doormatsByIndex = new Map<number, Record<string, unknown>>();
+    doormats.forEach((rawDoormat) => {
+      if (!rawDoormat || typeof rawDoormat !== 'object') return;
+      const doormat = rawDoormat as Record<string, unknown>;
+      const index = this.toNumber(doormat['doormat_index']);
+      if (index) doormatsByIndex.set(index, doormat);
+    });
+
+    let repairedCount = 0;
+    repairs.forEach((rawRepair) => {
+      if (!rawRepair || typeof rawRepair !== 'object') return;
+      const repair = rawRepair as Record<string, unknown>;
+      const doormatIndex = this.toNumber(repair['doormat_index']);
+      if (!doormatIndex || !targetIndexes.has(doormatIndex)) return;
+      if (this.cleanString(repair['issue_id']) !== 'description-repeats-link-text') {
+        return;
+      }
+      const decision = this.cleanString(repair['decision']);
+      if (!this.topicDoormatIssueDecisionValues.has(decision)) return;
+      const doormat = doormatsByIndex.get(doormatIndex);
+      if (!doormat) return;
+      this.upsertTopicDoormatIssueDecision(doormat, {
+        issue_id: 'description-repeats-link-text',
+        decision,
+        reason: this.cleanString(repair['reason']),
+      });
+      repairedCount += 1;
+      if (decision !== 'applies') return;
+      const issue =
+        repair['issue'] && typeof repair['issue'] === 'object'
+          ? (repair['issue'] as Record<string, unknown>)
+          : null;
+      if (!issue) return;
+      issue['issue_category'] = 'description-repeats-link-text';
+      if (!this.isValidTopicDoormatModelIssue(issue, false)) return;
+      const issues = Array.isArray(doormat['issues'])
+        ? (doormat['issues'] as unknown[])
+        : [];
+      if (
+        issues.some(
+          (rawIssue) =>
+            !!rawIssue &&
+            typeof rawIssue === 'object' &&
+            this.getTopicDoormatIssueId(rawIssue as Record<string, unknown>) ===
+              'description-repeats-link-text',
+        )
+      ) {
+        return;
+      }
+      issues.push(issue);
+      doormat['issues'] = issues;
+    });
+    return repairedCount;
+  }
+
+  private upsertTopicDoormatIssueDecision(
+    doormat: Record<string, unknown>,
+    decision: Record<string, unknown>,
+  ): void {
+    const decisions = Array.isArray(doormat['issue_decisions'])
+      ? (doormat['issue_decisions'] as unknown[])
+      : [];
+    const existingIndex = decisions.findIndex(
+      (rawDecision) =>
+        !!rawDecision &&
+        typeof rawDecision === 'object' &&
+        this.cleanString(
+          (rawDecision as Record<string, unknown>)['issue_id'],
+        ) === this.cleanString(decision['issue_id']),
+    );
+    if (existingIndex >= 0) {
+      decisions[existingIndex] = decision;
+    } else {
+      decisions.push(decision);
+    }
+    doormat['issue_decisions'] = decisions;
+  }
+
+  private getTopicDoormatDescriptionRepeatCandidate(
+    summary: TopicDoormatSummary,
+  ): { reason: string; overlapTokens: string[] } | null {
+    const linkTokens = this.getTopicDoormatRepeatCheckTokens(summary.linkText);
+    const descriptionTokens = this.getTopicDoormatRepeatCheckTokens(
+      summary.description,
+    );
+    if (linkTokens.length < 2 || descriptionTokens.length < 2) return null;
+    const linkTokenSet = new Set(linkTokens);
+    const overlapTokens = descriptionTokens.filter((token) =>
+      linkTokenSet.has(token),
+    );
+    const distinctDescriptionTokens = descriptionTokens.filter(
+      (token) => !linkTokenSet.has(token),
+    );
+    const descriptionOverlapRatio =
+      overlapTokens.length / descriptionTokens.length;
+    const linkOverlapRatio = overlapTokens.length / linkTokens.length;
+    if (
+      overlapTokens.length >= 2 &&
+      descriptionOverlapRatio >= 0.67 &&
+      linkOverlapRatio >= 0.4 &&
+      distinctDescriptionTokens.length <= 1
+    ) {
+      return {
+        reason:
+          'The description has high token overlap with the link text and adds little distinct information.',
+        overlapTokens,
+      };
+    }
+    return null;
+  }
+
+  private getTopicDoormatRepeatCheckTokens(value: string): string[] {
+    const repeatStopWords = new Set([
+      ...this.topicDoormatDestinationStopWords,
+      'find',
+      'learn',
+      'information',
+      'info',
+      'about',
+      'how',
+      'what',
+      'when',
+      'where',
+      'why',
+      'savoir',
+      'renseignement',
+      'renseignements',
+      'information',
+      'informations',
+      'comment',
+      'quand',
+      'quoi',
+      'ou',
+      'pourquoi',
+    ]);
+    return Array.from(
+      new Set(
+        this.normalizeTopicDoormatDestinationComparisonText(value)
+          .split(/\s+/)
+          .filter(
+            (token) =>
+              token.length > 2 &&
+              !repeatStopWords.has(token),
+          ),
+      ),
+    );
   }
 
   private async repairTopicDoormatIncompleteIssueFields(
@@ -3530,6 +3865,8 @@ export class TopicDoormatIssueAnalysisService {
       evidence_style: source['evidence_style'],
       runtime_editorial_evidence_overrides:
         source['runtime_editorial_evidence_overrides'],
+      required_per_doormat_issue_decisions:
+        source['required_per_doormat_issue_decisions'],
       style_detection: source['style_detection'],
       destination_content_assessment: source['destination_content_assessment'],
       destination_link_relationship: source['destination_link_relationship'],
@@ -4239,11 +4576,34 @@ export class TopicDoormatIssueAnalysisService {
       this.isValidTopicDoormatDestinationContentAssessment(
         doormat['destination_content_assessment'],
       ) &&
+      this.isValidTopicDoormatIssueDecisions(doormat['issue_decisions']) &&
       Array.isArray(doormat['issues']) &&
       doormat['issues'].every((issue: unknown) =>
         this.isValidTopicDoormatModelIssue(issue, false),
       )
     );
+  }
+
+  private isValidTopicDoormatIssueDecisions(value: unknown): boolean {
+    if (!Array.isArray(value)) return false;
+    const decisionsByIssueId = new Map<string, Record<string, unknown>>();
+    value.forEach((rawDecision) => {
+      if (!rawDecision || typeof rawDecision !== 'object') return;
+      const decision = rawDecision as Record<string, unknown>;
+      const issueId = this.cleanString(decision['issue_id']);
+      if (issueId) decisionsByIssueId.set(issueId, decision);
+    });
+
+    return this.topicDoormatRequiredIssueDecisionIds.every((issueId) => {
+      const decision = decisionsByIssueId.get(issueId);
+      return (
+        !!decision &&
+        this.topicDoormatIssueDecisionValues.has(
+          this.cleanString(decision['decision']),
+        ) &&
+        typeof decision['reason'] === 'string'
+      );
+    });
   }
 
   private isValidTopicDoormatDestinationContentAssessment(

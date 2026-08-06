@@ -77,6 +77,7 @@
           "destination_link_relationship_basis",
           "destination_link_relationship_reason",
           "destination_content_assessment",
+          "issue_decisions",
           "issues"
         ],
         "properties": {
@@ -177,6 +178,44 @@
                 "items": {
                   "type": "string",
                   "pattern": "^(intro|h2)-[1-9][0-9]*$"
+                }
+              }
+            }
+          },
+          "issue_decisions": {
+            "type": "array",
+            "description": "Required audit decisions for model-owned per-doormat issue checks. Include one decision for every required issue ID, even when the issue does not apply.",
+            "items": {
+              "type": "object",
+              "required": ["issue_id", "decision", "reason"],
+              "properties": {
+                "issue_id": {
+                  "type": "string",
+                  "enum": [
+                    "missing-description",
+                    "description-uses-icons-or-images",
+                    "description-special-formatting",
+                    "description-capitalization",
+                    "description-list-separators",
+                    "description-uses-and-before-final-item",
+                    "misdirected-link",
+                    "link-name-lacks-clarity",
+                    "link-name-not-unique",
+                    "description-lacks-clarity",
+                    "description-incorrect-style",
+                    "description-repeats-link-text",
+                    "duplicate-or-near-duplicate-description",
+                    "inconsistent-description-style",
+                    "enhancement-label-not-needed",
+                    "enhancement-label-wrong-type"
+                  ]
+                },
+                "decision": {
+                  "type": "string",
+                  "enum": ["applies", "does_not_apply", "not_applicable"]
+                },
+                "reason": {
+                  "type": "string"
                 }
               }
             }

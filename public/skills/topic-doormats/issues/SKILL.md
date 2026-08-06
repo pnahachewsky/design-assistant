@@ -14,6 +14,13 @@ Use this skill for issue analysis of topic doormat sets.
 - Use the issue taxonomy resource as the authoritative ruleset
 - Use the issues output schema as the required response shape
 - Run deterministic structural checks first, then judgment/editorial checks
+- Evaluate each doormat independently. Use the same reporting threshold for
+  every doormat, regardless of whether other doormats have obvious issues.
+- For every doormat, return `issue_decisions` with one decision for each
+  required model-owned per-doormat check in the output schema. Complete these
+  decisions before writing the `issues` array. If a decision is `applies`, add
+  the corresponding issue to `issues` unless another instruction says AIDA
+  owns or derives that issue.
 - Treat caller-provided H2 section metadata as authoritative for section-local
   doormat numbering and the 9-doormat limit
 - Apply the 9-doormat limit per H2 section only; reset the count at each H2
@@ -85,6 +92,13 @@ Use this skill for issue analysis of topic doormat sets.
 - Do not treat every destination H2 as important. Secondary navigation,
   supporting details, and information users can reasonably discover after
   choosing the destination are not content gaps.
+- For doormats about a benefit, program, credit, rebate, payment, allowance,
+  relief measure, service, form, or tool, do not require the doormat to list
+  every expected destination facet such as who is eligible, what the program
+  is, and how to apply, file, or use it. Treat those facets as covered when
+  they are clearly implied by the link text and description together. Report a
+  content gap only when a missing facet changes whether users can decide that
+  this destination is relevant.
 - Doormat labels are acceptable. Do not report `misdirected-link` only because
   of a label or because the destination is closed, archived, replaced,
   inactive, or no longer available. Judge the non-label portion of the link

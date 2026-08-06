@@ -257,11 +257,36 @@ describe('TopicDoormatIssueAnalysisService', () => {
     missing_important_element_ids: [],
   });
 
+  const defaultIssueDecisions = () =>
+    [
+      'missing-description',
+      'description-uses-icons-or-images',
+      'description-special-formatting',
+      'description-capitalization',
+      'description-list-separators',
+      'description-uses-and-before-final-item',
+      'misdirected-link',
+      'link-name-lacks-clarity',
+      'link-name-not-unique',
+      'description-lacks-clarity',
+      'description-incorrect-style',
+      'description-repeats-link-text',
+      'duplicate-or-near-duplicate-description',
+      'inconsistent-description-style',
+      'enhancement-label-not-needed',
+      'enhancement-label-wrong-type',
+    ].map((issueId) => ({
+      issue_id: issueId,
+      decision: 'does_not_apply',
+      reason: 'No matching evidence.',
+    }));
+
   const defaultLinkClassifications = () => ({
     detected_link_text_style: 'topic',
     destination_link_relationship: 'unavailable',
     destination_link_relationship_basis: 'unavailable',
     destination_link_relationship_reason: '',
+    issue_decisions: defaultIssueDecisions(),
   });
 
   beforeEach(() => {
@@ -449,6 +474,109 @@ describe('TopicDoormatIssueAnalysisService', () => {
           'The description repeats the link text instead of adding decision-making detail.',
         recommendation:
           'Use the description to add distinct information about the destination.',
+      }),
+    );
+  });
+
+  it('asks the model to repair high-confidence missed description-repeat decisions', async () => {
+    const issueDecisions = defaultIssueDecisions().map((decision) =>
+      decision.issue_id === 'description-repeats-link-text'
+        ? {
+            ...decision,
+            decision: 'does_not_apply',
+            reason: 'The description appears to add enough context.',
+          }
+        : decision,
+    );
+    openRouter.call.and.returnValues(
+      Promise.resolve({
+        choices: [
+          {
+            message: {
+              content: JSON.stringify({
+                doormats: [
+                  {
+                    doormat_index: 1,
+                    link_text:
+                      'Quand payer le solde dû sur votre déclaration de fiducie',
+                    href: '/fr/fiducies/quand-payer.html',
+                    description: 'Pour savoir quand payer un solde dû',
+                    detected_description_style: 'task-list',
+                    ...defaultLinkClassifications(),
+                    issue_decisions: issueDecisions,
+                    destination_content_assessment:
+                      emptyDestinationContentAssessment(),
+                    issues: [],
+                  },
+                ],
+              }),
+            },
+          },
+        ],
+      }),
+      Promise.resolve({
+        choices: [
+          {
+            message: {
+              content: JSON.stringify({
+                repairs: [
+                  {
+                    doormat_index: 1,
+                    issue_id: 'description-repeats-link-text',
+                    decision: 'applies',
+                    reason:
+                      'The description repeats the same payment timing meaning.',
+                    issue: {
+                      issue_category: 'description-repeats-link-text',
+                      description:
+                        'The description repeats the link text meaning.',
+                      evidence:
+                        'The description repeats when to pay a balance due.',
+                      recommendation:
+                        'Use the description to add distinct decision-making information.',
+                      severity: 'Medium',
+                    },
+                  },
+                ],
+              }),
+            },
+          },
+        ],
+      }),
+    );
+
+    const result = await service.analyze({
+      doormatSummaries: [
+        summary({
+          linkText:
+            'Quand payer le solde dû sur votre déclaration de fiducie',
+          href: '/fr/fiducies/quand-payer.html',
+          description: 'Pour savoir quand payer un solde dû',
+          rawItemText:
+            'Quand payer le solde dû sur votre déclaration de fiducie Pour savoir quand payer un solde dû',
+        }),
+      ],
+      pageLanguage: 'fr',
+      hasLegacyTopicDoormatTemplate: false,
+      mostRequestedLinks: [],
+      selectedModel: 'selected-model',
+    });
+
+    expect(openRouter.call).toHaveBeenCalledTimes(2);
+    expect(openRouter.call.calls.allArgs()[1][2]).toEqual(
+      jasmine.objectContaining({
+        title: 'Content Assistant - Topic Doormat Issue Decision Repair',
+      }),
+    );
+    expect(
+      result.rows.find(
+        (row) => row.issueId === 'description-repeats-link-text',
+      ),
+    ).toEqual(
+      jasmine.objectContaining({
+        severity: 'Medium',
+        doormatIndex: 1,
+        evidence: 'The description repeats when to pay a balance due.',
       }),
     );
   });
@@ -1382,6 +1510,7 @@ describe('TopicDoormatIssueAnalysisService', () => {
                   item.relationship === 'broader-but-accurate'
                     ? 'Trusts accurately describes the T3 trust-return program context.'
                     : '',
+                issue_decisions: defaultIssueDecisions(),
                 destination_content_assessment:
                   emptyDestinationContentAssessment(),
                 issues:
@@ -1466,6 +1595,7 @@ describe('TopicDoormatIssueAnalysisService', () => {
                     'conflicting-core-concept',
                   destination_link_relationship_reason:
                     'The destination concerns benefit payment dates, not trust filing deadlines.',
+                  issue_decisions: defaultIssueDecisions(),
                   destination_content_assessment:
                     emptyDestinationContentAssessment(),
                   issues: [],
