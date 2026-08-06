@@ -60,7 +60,7 @@ class HttpClientStub {
         },
         {
           id: 'description-missing-needed-information',
-          label: 'Description has at least one content gap',
+          label: 'Doormat has at least one content gap',
         },
         {
           id: 'description-uses-first-or-second-person',
@@ -179,6 +179,9 @@ class TranslateServiceStub {
     }
     if (key.includes('contentGap.recommendation')) {
       return 'Add the missing decision-making information to the description without repeating the link text.';
+    }
+    if (key.includes('contentGap.issue')) {
+      return 'Doormat has at least one content gap';
     }
     if (key.includes('descriptionPerson.evidence')) {
       return `Description starts with first or second person: '${params?.['pronoun']}'.`;
@@ -723,8 +726,8 @@ describe('TopicDoormatIssueAnalysisService', () => {
                     ? [
                         {
                           issue_category:
-                            'description-missing-needed-information',
-                          description: 'The description has a content gap.',
+                          'description-missing-needed-information',
+                          description: 'The doormat has a content gap.',
                           recommendation: 'Add more information.',
                           severity: 'High',
                         },
@@ -1622,6 +1625,7 @@ describe('TopicDoormatIssueAnalysisService', () => {
         rowType: 'doormat',
         severity: 'Medium',
         doormatIndex: 1,
+        issue: 'Doormat has at least one content gap',
       }),
     );
     expect(contentGapRow?.evidence).toContain(

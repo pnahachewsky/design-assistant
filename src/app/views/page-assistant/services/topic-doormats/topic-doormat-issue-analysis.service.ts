@@ -2979,9 +2979,7 @@ export class TopicDoormatIssueAnalysisService {
           doormat: this.buildTopicDoormatLabel(summary),
           doormatLabel: summary.linkText || summary.href || 'Doormat',
           issueId: 'description-missing-needed-information',
-          issue: this.getTopicDoormatIssueLabel(
-            'description-missing-needed-information',
-          ),
+          issue: this.getTopicDoormatDeterministicText('contentGap.issue'),
           evidence: this.getTopicDoormatDeterministicText(
             'contentGap.evidence',
             { elements: evidenceParts.join('; ') },

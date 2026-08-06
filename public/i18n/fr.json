@@ -196,6 +196,7 @@
     "page.tools.guidance.topicDoormats.inconsistentLinkNameStyle.recommendation": "Utilisez le style dominant des noms de liens, sauf si ce menu d'accueil a une raison claire de differer.",
     "page.tools.guidance.topicDoormats.destinationMismatch.evidence": "Nom du lien: \"{{linkText}}\". {{destinationEvidence}} {{reason}}",
     "page.tools.guidance.topicDoormats.destinationMismatch.recommendation": "Reecrivez le nom du lien afin qu'il decrive correctement le sujet, le produit ou service, l'action, l'auditoire et la portee de la destination.",
+    "page.tools.guidance.topicDoormats.contentGap.issue": "Le menu d'accueil a au moins une lacune de contenu",
     "page.tools.guidance.topicDoormats.contentGap.evidence": "Elements de la destination non couverts par le texte du lien ou la description: {{elements}}.",
     "page.tools.guidance.topicDoormats.contentGap.h2": "H2: \"{{text}}\"",
     "page.tools.guidance.topicDoormats.contentGap.doormat": "Menu d'accueil de destination: \"{{text}}\"",

@@ -90,7 +90,7 @@ Use this skill for issue analysis of topic doormat sets.
   inactive, or no longer available. Judge the non-label portion of the link
   against the destination title/H1 by meaning and information scent, not exact
   wording.
-- Do not treat a destination label/status line as a description content gap
+- Do not treat a destination label/status line as a doormat content gap
   when the doormat already exposes that same label/status state in its label or
   visible item text.
 - Doormat labels may carry lifecycle or status information such as Closed,
