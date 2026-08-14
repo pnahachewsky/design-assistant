@@ -1,0 +1,656 @@
+import { Injectable, inject } from '@angular/core';
+import { TranslateService } from '@ngx-translate/core';
+import { MessageService } from 'primeng/api';
+
+import { AlertAiService } from '../alerts/alert-ai.service';
+import { SkillManagerService } from '../skill-manager.service';
+import { UploadStateService } from '../upload-state.service';
+import { UrlDataService } from '../url-data.service';
+import { PromptKey, AiModel } from '../../data/data.model';
+import {
+  TopicDoormatAnalysisStateService,
+  TopicDoormatIssueRewriteInput,
+} from './topic-doormat-analysis-state.service';
+import { TopicDoormatExtractorService } from './topic-doormat-extractor.service';
+import { TopicDoormatIssueAnalysisService } from './topic-doormat-issue-analysis.service';
+import { TopicDoormatTemplateNormalizerService } from './topic-doormat-template-normalizer.service';
+import { TopicDoormatIssueRow, TopicDoormatSummary } from './topic-doormat.types';
+
+export interface TopicDoormatAnalyzeAndRewriteResult {
+  analyzedHtml: string;
+  rewrittenHtml: string;
+  issueRows: TopicDoormatIssueRow[];
+  analysisModel?: string;
+  rewriteModel?: string;
+}
+
+@Injectable({ providedIn: 'root' })
+export class TopicDoormatRewriteOrchestratorService {
+  private readonly translate = inject(TranslateService);
+  private readonly messageService = inject(MessageService);
+  private readonly uploadState = inject(UploadStateService);
+  private readonly skillManager = inject(SkillManagerService);
+  private readonly alertAi = inject(AlertAiService);
+  private readonly urlDataService = inject(UrlDataService);
+  private readonly topicDoormatAnalysisState = inject(TopicDoormatAnalysisStateService);
+  private readonly topicDoormatExtractor = inject(TopicDoormatExtractorService);
+  private readonly topicDoormatIssueAnalysis = inject(TopicDoormatIssueAnalysisService);
+  private readonly topicDoormatTemplateNormalizer = inject(
+    TopicDoormatTemplateNormalizerService,
+  );
+
+  async analyzeAndRewriteGeneratedTopicHtml(
+    html: string,
+    model: AiModel,
+  ): Promise<TopicDoormatAnalyzeAndRewriteResult | null> {
+    const normalized =
+      this.topicDoormatTemplateNormalizer.normalizeLegacyDoormats(html);
+    const analyzedHtml = normalized.html;
+    const doc = this.topicDoormatExtractor.parseHtmlDocument(analyzedHtml);
+    if (!doc) return null;
+
+    const extractedSummaries = this.topicDoormatExtractor.extractSummaries(doc);
+    if (!extractedSummaries.length) {
+      this.messageService.add({
+        severity: 'info',
+        summary: this.translate.instant('common.ai.topicDoormatsNotFound'),
+        life: 3000,
+      });
+      return null;
+    }
+
+    this.messageService.add({
+      severity: 'info',
+      summary: this.translate.instant('common.ai.generating'),
+      life: 2000,
+    });
+
+    const uploadData = this.uploadState.getUploadData();
+    const pageLanguage = this.topicDoormatExtractor.detectPageLanguage(
+      doc,
+      uploadData,
+    );
+    const bilingualSummaries =
+      await this.topicDoormatExtractor.enrichOppositeLanguageLengths(
+        extractedSummaries,
+        uploadData,
+        pageLanguage,
+      );
+    const doormatSummaries =
+      await this.topicDoormatExtractor.enrichDestinationContext(
+        bilingualSummaries,
+        uploadData,
+      );
+
+    const analysis = await this.topicDoormatIssueAnalysis.analyze({
+      doormatSummaries,
+      pageLanguage,
+      reportLanguage: this.translate.currentLang === 'fr' ? 'fr' : 'en',
+      hasLegacyTopicDoormatTemplate:
+        this.topicDoormatExtractor.hasLegacyTemplate(doc),
+      mostRequestedLinks: this.topicDoormatExtractor.extractMostRequestedLinks(doc),
+      uploadData,
+      selectedModel: model,
+    });
+    this.topicDoormatAnalysisState.setAnalysis(
+      analyzedHtml,
+      analysis.rows,
+      doormatSummaries,
+    );
+    this.messageService.add({
+      severity: 'info',
+      summary: analysis.rows.length
+        ? this.translate.instant('common.ai.topicDoormatIssuesReceived', {
+            model: this.getShortModelName(analysis.model || model),
+          })
+        : this.translate.instant('common.ai.topicDoormatIssuesNotIdentified'),
+      life: 3000,
+    });
+
+    const prompt = await this.buildRewritePrompt();
+    const userContent = this.buildRewriteUserContent(
+      analyzedHtml,
+      analysis.rows,
+      doormatSummaries,
+    );
+    const rewrite = await this.callOpenRouterForRewrite(model, [
+      { role: 'system', content: prompt },
+      { role: 'user', content: userContent },
+    ]);
+    const rewriteHtml =
+      this.extractDoormatRewriteHtmlFromStructuredResponse(rewrite.text) ??
+      rewrite.text;
+    if (this.looksLikeStructuredAiJsonResponse(rewriteHtml)) {
+      throw new Error(
+        'The AI returned structured JSON where HTML was expected. No comparison update was applied.',
+      );
+    }
+
+    const patchedHtml = this.applyDoormatRewriteToPageHtml(
+      analyzedHtml,
+      rewriteHtml,
+    );
+    const rewrittenHtml = await this.urlDataService.formatHtml(patchedHtml, 'ai');
+    return {
+      analyzedHtml,
+      rewrittenHtml,
+      issueRows: analysis.rows,
+      analysisModel: analysis.model,
+      rewriteModel: rewrite.usedModel,
+    };
+  }
+
+  private async buildRewritePrompt(): Promise<string> {
+    const composed = await this.skillManager.composePrompt({
+      basePrompt:
+        'Return raw HTML only. Return the full HTML input with only the doormat section updated. Do not return JSON, Markdown, schema-shaped output, or fields such as rewritten_doormat_set_html or full_updated_html. Do not remove, reorder, or rewrite unrelated sections. Preserve page title, alerts, headings, and all other components exactly as provided. Return only updated HTML code with no other commentary.',
+      queryText:
+        'rewrite topic doormats replacement updated html doormat overview list content design',
+      promptKey: PromptKey.Doormats,
+      outputMode: 'html',
+      includeReferences: true,
+      includeAssets: false,
+      requireSkill: true,
+    });
+    return composed.prompt;
+  }
+
+  private buildRewriteUserContent(
+    html: string,
+    rows: TopicDoormatIssueRow[],
+    summaries: TopicDoormatSummary[],
+  ): string {
+    const selectedIssues = rows
+      .filter((row) => row.include && row.issueId !== 'no-issues')
+      .map((row) => this.toRewriteIssueInput(row));
+    const placeholderIssues = summaries
+      .filter((summary) => this.hasGeneratedPlaceholderDescription(summary))
+      .map((summary) => this.toGeneratedPlaceholderIssue(summary));
+    const allIssues = [...selectedIssues, ...placeholderIssues];
+    const affectedDoormatIndexes = this.getAffectedDoormatIndexesForRewrite(
+      allIssues,
+    );
+    const summariesByIndex = new Map(
+      summaries.map((summary) => [summary.index, summary]),
+    );
+
+    return JSON.stringify({
+      page_html: html,
+      topic_doormat_issue_analysis: {
+        status: allIssues.length
+          ? 'selected-issues'
+          : 'analysis-available-no-selected-issues',
+        instruction:
+          'Use selected issues as rewrite priorities. Fix them when possible without violating the rewrite rules. Preserve doormats that do not have selected issues. If a doormat has a generated placeholder description, write a concise description from destination context.',
+        selected_issues: allIssues.map((issue) =>
+          this.toDoormatRewriteIssuePayload(issue),
+        ),
+      },
+      doormats_with_selected_issues: Array.from(affectedDoormatIndexes)
+        .map((index) => summariesByIndex.get(index))
+        .filter((summary): summary is TopicDoormatSummary => summary !== undefined)
+        .map((summary) => this.toDoormatDestinationRewritePayload(summary)),
+    });
+  }
+
+  private toRewriteIssueInput(
+    row: TopicDoormatIssueRow,
+  ): TopicDoormatIssueRewriteInput {
+    return {
+      rowType: row.rowType,
+      severity: row.severity,
+      issueId: row.issueId,
+      issue: row.issue,
+      recommendation: row.recommendation,
+      evidence: row.evidence || undefined,
+      evidenceMetric: row.evidenceMetric || undefined,
+      sectionIndex: row.sectionIndex,
+      sectionTitle: row.sectionTitle,
+      sectionItemIndex: row.sectionItemIndex,
+      doormatIndex: row.doormatIndex,
+      affectedDoormatIndexes: row.affectedDoormatIndexes,
+      doormatLabel: row.doormatLabel || undefined,
+    };
+  }
+
+  private toGeneratedPlaceholderIssue(
+    summary: TopicDoormatSummary,
+  ): TopicDoormatIssueRewriteInput {
+    return {
+      rowType: 'doormat',
+      severity: 'Medium',
+      issueId: 'generated-topic-placeholder-description',
+      issue: 'Generated doormat needs a destination-specific description',
+      recommendation:
+        'Write a concise doormat description from the destination page context.',
+      evidence: summary.description,
+      sectionIndex: summary.sectionIndex,
+      sectionTitle: summary.sectionTitle,
+      sectionItemIndex: summary.sectionItemIndex,
+      doormatIndex: summary.index,
+      doormatLabel: summary.linkText,
+    };
+  }
+
+  private hasGeneratedPlaceholderDescription(summary: TopicDoormatSummary): boolean {
+    return /\[\*\*\*.*(?:action verbs|keywords|tasks|links to).*?\*\*\*\]/i.test(
+      summary.description || '',
+    );
+  }
+
+  private async callOpenRouterForRewrite(
+    model: AiModel,
+    messages: Array<{ role: string; content: string }>,
+  ): Promise<{ text: string; usedModel: string }> {
+    const apiKey = localStorage.getItem('apiKey');
+    if (!apiKey) throw new Error('Missing API key');
+    const headers = {
+      Authorization: `Bearer ${apiKey}`,
+      'Content-Type': 'application/json',
+    };
+    const candidates = this.buildModelRotation(model);
+    let lastError: Error | undefined;
+
+    for (const candidate of candidates) {
+      const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({
+          models: [candidate],
+          messages,
+          temperature: 0,
+          provider: { allow_fallbacks: false },
+        }),
+      });
+      if (response.status !== 200) {
+        lastError = new Error(
+          `Doormat rewrite failed (${response.status}) for ${this.getShortModelName(candidate)}.`,
+        );
+        continue;
+      }
+      const rawJson = ((await response.json().catch(() => ({}))) || {}) as Record<
+        string,
+        unknown
+      >;
+      const errorObj = rawJson['error'];
+      if (errorObj && typeof errorObj === 'object') {
+        const errorMessage = (errorObj as Record<string, unknown>)['message'];
+        lastError = new Error(
+          `Doormat rewrite error (${this.getShortModelName(candidate)}): ${
+            typeof errorMessage === 'string' ? errorMessage : 'Unknown error'
+          }`,
+        );
+        continue;
+      }
+      const choices = Array.isArray(rawJson['choices'])
+        ? (rawJson['choices'] as Array<Record<string, unknown>>)
+        : [];
+      const firstChoice = choices[0];
+      const message =
+        firstChoice && typeof firstChoice['message'] === 'object'
+          ? (firstChoice['message'] as Record<string, unknown>)
+          : null;
+      const text = message ? this.extractOpenRouterMessageText(message) : '';
+      const usedModel =
+        typeof rawJson['model'] === 'string' ? rawJson['model'] : candidate;
+      if (!text) {
+        lastError = new Error(
+          `Doormat rewrite response was empty (${this.getShortModelName(candidate)}).`,
+        );
+        continue;
+      }
+      return { text, usedModel };
+    }
+
+    throw lastError ?? new Error('Doormat rewrite response was empty.');
+  }
+
+  private buildModelRotation(model: AiModel): string[] {
+    const fallbackOrder: AiModel[] = [
+      AiModel.NemotronUltra,
+      AiModel.GptOSS20BFree,
+      AiModel.NemotronSuper,
+    ];
+    return [
+      model,
+      ...fallbackOrder.filter((candidate) => candidate !== model),
+    ];
+  }
+
+  private extractOpenRouterMessageText(message: Record<string, unknown>): string {
+    const content = message['content'];
+    if (typeof content === 'string') return content;
+    if (!Array.isArray(content)) return '';
+    return content
+      .map((part) => {
+        if (typeof part === 'string') return part;
+        if (part && typeof part === 'object') {
+          const block = part as Record<string, unknown>;
+          const text = block['text'] ?? block['content'];
+          return typeof text === 'string' ? text : '';
+        }
+        return '';
+      })
+      .filter((part) => !!part.trim())
+      .join('\n')
+      .trim();
+  }
+
+  private extractDoormatRewriteHtmlFromStructuredResponse(
+    text: string,
+  ): string | null {
+    const cleaned = (text || '').trim();
+    if (!cleaned) return null;
+    const stripped = this.alertAi.stripCodeFences(cleaned);
+    const parsed = this.alertAi.looseJsonParse(stripped);
+    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+      return null;
+    }
+    const payload = parsed as Record<string, unknown>;
+    const candidates = [
+      payload['fullUpdatedHtml'],
+      payload['full_updated_html'],
+      payload['rewrittenDoormatSetHtml'],
+      payload['rewritten_doormat_set_html'],
+      payload['updatedHtml'],
+      payload['updated_html'],
+    ];
+    for (const candidate of candidates) {
+      if (typeof candidate !== 'string') continue;
+      const html = candidate.trim();
+      if (this.containsRenderableHtml(html)) return html;
+    }
+    return this.extractDoormatUpdatedHtmlFragments(payload['doormats']);
+  }
+
+  private extractDoormatUpdatedHtmlFragments(value: unknown): string | null {
+    if (!Array.isArray(value)) return null;
+    const fragments = value
+      .map((entry) => {
+        if (!entry || typeof entry !== 'object') return '';
+        const item = entry as Record<string, unknown>;
+        const html = item['updatedHtml'] ?? item['updated_html'];
+        return typeof html === 'string' && this.containsRenderableHtml(html)
+          ? html.trim()
+          : '';
+      })
+      .filter(Boolean);
+    return fragments.length ? fragments.join('\n') : null;
+  }
+
+  private looksLikeStructuredAiJsonResponse(text: string): boolean {
+    const cleaned = (text || '').trim();
+    if (!cleaned) return false;
+    if (cleaned.startsWith('<') && this.containsRenderableHtml(cleaned)) {
+      return false;
+    }
+    const stripped = this.alertAi.stripCodeFences(cleaned);
+    const parsed = this.alertAi.looseJsonParse(stripped);
+    if (parsed && typeof parsed === 'object') return true;
+    return /"(?:rewrittenDoormatSetHtml|rewritten_doormat_set_html|fullUpdatedHtml|full_updated_html|updatedHtml|updated_html|doormats)"\s*:/i.test(
+      stripped,
+    );
+  }
+
+  private containsRenderableHtml(value: string): boolean {
+    return /<[a-z][\s\S]*>/i.test(value);
+  }
+
+  private applyDoormatRewriteToPageHtml(
+    originalHtml: string,
+    rewriteHtml: string,
+  ): string {
+    const normalizedOriginal =
+      this.topicDoormatTemplateNormalizer.normalizeLegacyDoormats(originalHtml);
+    const htmlToPatch = normalizedOriginal.html;
+    const parser = new DOMParser();
+    const originalDoc = parser.parseFromString(htmlToPatch, 'text/html');
+    const rewriteDoc = parser.parseFromString(rewriteHtml, 'text/html');
+    const originalDoormatSections = Array.from(
+      originalDoc.body.querySelectorAll('.gc-srvinfo'),
+    );
+    const rewrittenDoormatSections = Array.from(
+      rewriteDoc.body.querySelectorAll('.gc-srvinfo'),
+    );
+
+    if (!originalDoormatSections.length) {
+      throw new Error(
+        'The current page does not contain a topic doormat section to update.',
+      );
+    }
+    if (!rewrittenDoormatSections.length) {
+      if (this.getDoormatItemsByHref(rewriteDoc.body).size) {
+        originalDoormatSections.forEach((section) => {
+          this.applyDoormatItemRewritesByHref(originalDoc, section, rewriteDoc.body);
+        });
+        return this.serializeParsedHtmlLikeInput(htmlToPatch, originalDoc);
+      }
+      throw new Error(
+        'The AI response did not include a topic doormat section. No comparison update was applied.',
+      );
+    }
+    rewrittenDoormatSections.forEach((section) => {
+      const originalSection = this.findOriginalDoormatSectionForRewrite(
+        originalDoormatSections,
+        section,
+      );
+      if (!originalSection) return;
+      this.applyDoormatItemRewritesByHref(originalDoc, originalSection, section);
+    });
+
+    return this.serializeParsedHtmlLikeInput(htmlToPatch, originalDoc);
+  }
+
+  private findOriginalDoormatSectionForRewrite(
+    originalSections: Element[],
+    rewrittenSection: Element,
+  ): Element | null {
+    const rewrittenHrefs = this.getDoormatSectionHrefs(rewrittenSection);
+    if (!rewrittenHrefs.size) return null;
+    const candidates = originalSections
+      .map((section) => ({
+        section,
+        matchCount: Array.from(rewrittenHrefs).filter((href) =>
+          this.getDoormatSectionHrefs(section).has(href),
+        ).length,
+      }))
+      .filter((candidate) => candidate.matchCount > 0)
+      .sort((a, b) => b.matchCount - a.matchCount);
+    return candidates[0]?.section ?? null;
+  }
+
+  private applyDoormatItemRewritesByHref(
+    originalDoc: Document,
+    originalSection: Element,
+    rewrittenSection: Element,
+  ): void {
+    const originalItemsByHref = this.getDoormatItemsByHref(originalSection);
+    this.getDoormatItemsByHref(rewrittenSection).forEach(
+      (rewrittenItem, href) => {
+        const originalItem = originalItemsByHref.get(href);
+        if (!originalItem) return;
+        this.patchOriginalDoormatItemFromRewrite(
+          originalDoc,
+          originalItem,
+          rewrittenItem,
+          href,
+        );
+      },
+    );
+  }
+
+  private patchOriginalDoormatItemFromRewrite(
+    originalDoc: Document,
+    originalItem: Element,
+    rewrittenItem: Element,
+    href: string,
+  ): void {
+    const originalLink = this.findDoormatLinkByHref(originalItem, href);
+    const rewrittenLink = this.findDoormatLinkByHref(rewrittenItem, href);
+    if (originalLink && rewrittenLink) {
+      originalLink.textContent = this.cleanDoormatRewriteText(
+        rewrittenLink.textContent,
+      );
+    }
+    const originalDescription = originalItem.querySelector('p');
+    const rewrittenDescription = rewrittenItem.querySelector('p');
+    if (originalDescription && rewrittenDescription) {
+      originalDescription.innerHTML = rewrittenDescription.innerHTML;
+    }
+    this.patchOriginalDoormatLabelsFromRewrite(
+      originalDoc,
+      originalItem,
+      rewrittenItem,
+      originalLink,
+    );
+  }
+
+  private patchOriginalDoormatLabelsFromRewrite(
+    originalDoc: Document,
+    originalItem: Element,
+    rewrittenItem: Element,
+    originalLink: HTMLAnchorElement | null,
+  ): void {
+    const originalLabels = Array.from(
+      originalItem.querySelectorAll(this.getDoormatLabelSelector()),
+    );
+    const rewrittenLabels = Array.from(
+      rewrittenItem.querySelectorAll(this.getDoormatLabelSelector()),
+    );
+    originalLabels.forEach((label) => label.remove());
+    if (!rewrittenLabels.length || !originalLink) return;
+    const parent = originalLink.parentElement;
+    if (!parent) return;
+    let insertionPoint: ChildNode = originalLink;
+    rewrittenLabels.forEach((label) => {
+      const spacer = originalDoc.createTextNode(' ');
+      const importedLabel = originalDoc.importNode(label, true);
+      parent.insertBefore(spacer, insertionPoint.nextSibling);
+      parent.insertBefore(importedLabel, spacer.nextSibling);
+      insertionPoint = importedLabel;
+    });
+  }
+
+  private findDoormatLinkByHref(
+    item: Element,
+    href: string,
+  ): HTMLAnchorElement | null {
+    return (
+      Array.from(
+        item.querySelectorAll<HTMLAnchorElement>('h2 a[href], h3 a[href]'),
+      ).find((link) => link.getAttribute('href')?.trim() === href) ?? null
+    );
+  }
+
+  private getDoormatSectionHrefs(section: Element): Set<string> {
+    return new Set(this.getDoormatItemsByHref(section).keys());
+  }
+
+  private getDoormatItemsByHref(section: Element): Map<string, Element> {
+    const itemsByHref = new Map<string, Element>();
+    Array.from(
+      section.querySelectorAll<HTMLAnchorElement>('h2 a[href], h3 a[href]'),
+    ).forEach((link) => {
+      const href = link.getAttribute('href')?.trim();
+      if (!href || itemsByHref.has(href)) return;
+      const item = this.findDoormatItemForRewrite(link, section);
+      if (item) itemsByHref.set(href, item);
+    });
+    return itemsByHref;
+  }
+
+  private findDoormatItemForRewrite(
+    link: HTMLAnchorElement,
+    section: Element,
+  ): Element | null {
+    let current: Element | null = link;
+    while (current && current !== section) {
+      if (current !== link && current.querySelector('p')) return current;
+      current = current.parentElement;
+    }
+    return section.querySelector('p') ? section : null;
+  }
+
+  private getDoormatLabelSelector(): string {
+    return '.label, .badge, [class*="label-"], [class*="badge-"]';
+  }
+
+  private cleanDoormatRewriteText(value: string | null | undefined): string {
+    return (value || '').replace(/\s+/g, ' ').trim();
+  }
+
+  private serializeParsedHtmlLikeInput(originalHtml: string, doc: Document): string {
+    if (/<html[\s>]/i.test(originalHtml)) {
+      const doctype = originalHtml.trimStart().toLowerCase().startsWith('<!doctype')
+        ? '<!doctype html>\n'
+        : '';
+      return `${doctype}${doc.documentElement.outerHTML}`;
+    }
+    if (/<body[\s>]/i.test(originalHtml)) return doc.body.outerHTML;
+    return doc.body.innerHTML;
+  }
+
+  private getAffectedDoormatIndexesForRewrite(
+    issues: TopicDoormatIssueRewriteInput[],
+  ): Set<number> {
+    const indexes = new Set<number>();
+    issues.forEach((issue) => {
+      if (typeof issue.doormatIndex === 'number') indexes.add(issue.doormatIndex);
+      (issue.affectedDoormatIndexes ?? []).forEach((index) => {
+        if (typeof index === 'number') indexes.add(index);
+      });
+    });
+    return indexes;
+  }
+
+  private toDoormatDestinationRewritePayload(
+    summary: TopicDoormatSummary,
+  ): Record<string, unknown> {
+    return {
+      index: summary.index,
+      section_index: summary.sectionIndex,
+      section_title: summary.sectionTitle,
+      section_item_index: summary.sectionItemIndex,
+      href: summary.href,
+      current_link_text: summary.linkText,
+      current_description: summary.description,
+      destination: {
+        url: summary.destinationUrl,
+        http_status: summary.destinationHttpStatus,
+        title: summary.destinationPageTitle,
+        h1: summary.destinationPageHeading,
+        intro_paragraphs: summary.destinationIntroParagraphs ?? [],
+        h2_headings: summary.destinationSectionHeadings ?? [],
+        label_evidence: summary.destinationLabelEvidence ?? [],
+        main_html: summary.destinationMainHtml || '',
+        main_html_truncated: !!summary.destinationMainHtmlTruncated,
+        context_status: summary.destinationContextStatus,
+      },
+    };
+  }
+
+  private toDoormatRewriteIssuePayload(
+    issue: TopicDoormatIssueRewriteInput,
+  ): Record<string, unknown> {
+    return {
+      row_type: issue.rowType,
+      severity: issue.severity,
+      issue_id: issue.issueId,
+      issue: issue.issue,
+      recommendation: issue.recommendation,
+      evidence: issue.evidence,
+      evidence_metric: issue.evidenceMetric,
+      section_index: issue.sectionIndex,
+      section_title: issue.sectionTitle,
+      section_item_index: issue.sectionItemIndex,
+      doormat_index: issue.doormatIndex,
+      affected_doormat_indexes: issue.affectedDoormatIndexes,
+      doormat_label: issue.doormatLabel,
+    };
+  }
+
+  private getShortModelName(model: string): string {
+    const parts = model.split('/');
+    return parts[parts.length - 1] || model;
+  }
+}

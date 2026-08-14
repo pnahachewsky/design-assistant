@@ -38,6 +38,7 @@ import { IaStructureService } from '../../../../services/ia-structure.service';
 import { TranslateService, TranslateModule } from '@ngx-translate/core';
 import { ThemeService } from '../../../../../../services/theme.service';
 import topicPageExceptionsJson from './topic-page-exceptions.json';
+import { TopicPageSectionExtractorService } from '../../../../services/topic-page-section-extractor.service';
 
 import { MenuItem, TreeNode, TreeDragDropService, MessageService } from 'primeng/api';
 import { FullscreenHTMLElement } from '../../../../../../views/ia-assistant/data/data.model';
@@ -200,6 +201,7 @@ export class TopicPageIaComponent implements OnInit {
   private theme = inject(ThemeService);
   private iaStructure = inject(IaStructureService);
   private messageService = inject(MessageService);
+  private topicPageSectionExtractor = inject(TopicPageSectionExtractorService);
 
   production: boolean = environment.production;
   activeStep = 1;
@@ -746,52 +748,30 @@ export class TopicPageIaComponent implements OnInit {
 
   private updateTopicPageSectionMap(): void {
     const html = this.uploadState.getUploadData()?.originalHtml || '';
-    this.nonTopicPageLinks = new Map();
     if (!html) {
       this.isTopicPage = false;
       this.topicPageSections = new Map();
+      this.nonTopicPageLinks = new Map();
       return;
     }
 
-    const doc = new DOMParser().parseFromString(html, 'text/html');
-    const hasDoormats = !!doc.querySelector('.gc-srvinfo');
-    this.isTopicPage = hasDoormats;
-    if (!hasDoormats) {
-      this.topicPageSections = new Map();
-      this.nonTopicPageLinks = this.collectNonTopicPageLinks(doc);
-      return;
-    }
-
-    const map = new Map<string, TopicPageLinkInfo>();
-    const baseUrl = this.originalUrl || '';
-    const sections: Array<{ key: TopicSection; selector: string }> = [
-      { key: 'most', selector: '.gc-most-requested' },
-      { key: 'doormats', selector: '.gc-srvinfo' },
-      { key: 'feature', selector: '.gc-features' },
-    ];
-
-    for (const section of sections) {
-      const container = doc.querySelector(section.selector);
-      if (!container) continue;
-      const links = container.querySelectorAll('a[href]');
-      links.forEach((link) => {
-        const href = link.getAttribute('href');
-        if (!href) return;
-        const text = (link.textContent || '').trim();
-        const normalized = this.normalizeUrl(
-          this.resolveUrl(href, baseUrl),
-        );
-        if (this.isExcludedUrl(normalized)) return;
-        if (normalized) {
-          map.set(normalized, {
-            section: section.key,
-            label: text || href,
-          });
-        }
-      });
-    }
-
-    this.topicPageSections = map;
+    const result = this.topicPageSectionExtractor.extract(html, {
+      baseUrl: this.originalUrl || '',
+      excludedUrlFragments: this.topicPageExcludedUrlFragments,
+    });
+    this.isTopicPage = result.isTopicPage;
+    this.nonTopicPageLinks = result.nonTopicPageLinks;
+    this.topicPageSections = new Map(
+      Array.from(result.sections.entries())
+        .filter(([, info]) => info.section !== 'focus')
+        .map(([url, info]) => [
+          url,
+          {
+            section: info.section as TopicSection,
+            label: info.label,
+          },
+        ]),
+    );
   }
 
   private collectNonTopicPageLinks(doc: Document): Map<string, string> {

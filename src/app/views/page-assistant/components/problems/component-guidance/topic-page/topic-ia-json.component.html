@@ -123,6 +123,8 @@
               label="Generate topic HTML"
               icon="pi pi-file-export"
               severity="primary"
+              [loading]="isGeneratingTopicHtml"
+              [disabled]="isGeneratingTopicHtml"
               (click)="generateTopicHtml()"
             />
           </div>

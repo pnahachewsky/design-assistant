@@ -302,6 +302,11 @@ export class ComponentGuidanceComponent implements OnInit, OnDestroy {
       this.lastGuidanceRevision = revision;
       this.syncAlertGuidanceRowForWorkingHtml(html);
       this.syncTopicDoormatGuidanceRowForWorkingHtml(html);
+      this.applySharedTopicDoormatAnalysis(
+        this.topicDoormatAnalysisState.hasAnalysis(),
+        this.topicDoormatAnalysisState.getAnalyzedHtml(),
+        this.topicDoormatAnalysisState.getIssueRows(),
+      );
     });
     effect(() => {
       const analyzedHtml = this.topicDoormatAnalysisState.getAnalyzedHtml();

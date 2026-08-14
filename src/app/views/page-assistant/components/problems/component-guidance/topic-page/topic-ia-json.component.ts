@@ -40,18 +40,18 @@ import { TOPIC_PAGE_SNIPPETS } from '../../../../data/canada-ca-snippets.constan
 import { SnippetService } from '../../../../services/snippet.service';
 import topicPageExceptionsJson from './topic-page-exceptions.json';
 import { UrlDataService } from '../../../../services/url-data.service';
+import { TopicDoormatRewriteOrchestratorService } from '../../../../services/topic-doormats/topic-doormat-rewrite-orchestrator.service';
+import {
+  TopicPageLinkInfo,
+  TopicPageSection as TopicSection,
+  TopicPageSectionExtractorService,
+} from '../../../../services/topic-page-section-extractor.service';
 
 import { MenuItem, TreeNode, TreeDragDropService, MessageService } from 'primeng/api';
 import { FullscreenHTMLElement } from '../../../../../../views/ia-assistant/data/data.model';
 
 import { environment } from '../../../../../../../environments/environment';
 
-type TopicSection = 'most' | 'doormats' | 'focus' | 'feature';
-type TopicPageLinkInfo = {
-  section: TopicSection;
-  label: string;
-  description?: string;
-};
 interface TopicAiRecommendation {
   url?: string;
   label?: string;
@@ -249,6 +249,10 @@ export class TopicIaJsonComponent implements OnInit {
   private openRouter = inject(OpenRouterService);
   private urlDataService = inject(UrlDataService);
   private snippetService = inject(SnippetService);
+  private topicDoormatRewriteOrchestrator = inject(
+    TopicDoormatRewriteOrchestratorService,
+  );
+  private topicPageSectionExtractor = inject(TopicPageSectionExtractorService);
 
   production: boolean = environment.production;
   activeStep = 1;
@@ -289,6 +293,7 @@ export class TopicIaJsonComponent implements OnInit {
   step1Complete = false;
   topicPageTree: TreeNode[] = [];
   topicPageChartTree: TreeNode[] = [];
+  isGeneratingTopicHtml = false;
   visitsByUrl = new Map<string, number>();
   visitsByPath = new Map<string, number>();
   visitsLoaded = false;
@@ -1175,65 +1180,20 @@ export class TopicIaJsonComponent implements OnInit {
 
   private updateTopicPageSectionMap(): void {
     const html = this.uploadState.getUploadData()?.originalHtml || '';
-    this.nonTopicPageLinks = new Map();
     if (!html) {
       this.isTopicPage = false;
       this.topicPageSections = new Map();
+      this.nonTopicPageLinks = new Map();
       return;
     }
 
-    const doc = new DOMParser().parseFromString(html, 'text/html');
-    const hasDoormats = !!doc.querySelector('.gc-srvinfo');
-    this.isTopicPage = hasDoormats;
-    if (!hasDoormats) {
-      this.topicPageSections = new Map();
-      this.nonTopicPageLinks = this.collectNonTopicPageLinks(doc);
-      return;
-    }
-
-    const map = new Map<string, TopicPageLinkInfo>();
-    const baseUrl = this.originalUrl || '';
-    const sections: Array<{ key: TopicSection; selector: string }> = [
-      { key: 'most', selector: '.gc-most-requested' },
-      { key: 'doormats', selector: '.gc-srvinfo' },
-      { key: 'focus', selector: '' },
-      { key: 'feature', selector: '.gc-features' },
-    ];
-
-    for (const section of sections) {
-      const container =
-        section.key === 'focus'
-          ? this.findFocusOnContainer(doc)
-          : section.key === 'feature'
-            ? this.findFeaturesContainer(doc)
-            : doc.querySelector(section.selector);
-      if (!container) continue;
-      const links = container.querySelectorAll('a[href]');
-      links.forEach((link) => {
-        if (section.key === 'feature' && this.isSocialMediaLink(link)) return;
-        const href = link.getAttribute('href');
-        if (!href) return;
-        const text = this.extractTopicSectionLinkLabel(link, section.key);
-        const normalized = this.normalizeUrl(
-          this.resolveUrl(href, baseUrl),
-        );
-        if (this.isExcludedUrl(normalized)) return;
-        if (normalized) {
-          map.set(normalized, {
-            section: section.key,
-            label: text || href,
-            description:
-              section.key === 'doormats'
-                ? this.extractDoormatDescription(link)
-                : section.key === 'feature'
-                  ? this.extractFeatureDescription(link)
-                : undefined,
-          });
-        }
-      });
-    }
-
-    this.topicPageSections = map;
+    const result = this.topicPageSectionExtractor.extract(html, {
+      baseUrl: this.originalUrl || '',
+      excludedUrlFragments: this.topicPageExcludedUrlFragments,
+    });
+    this.isTopicPage = result.isTopicPage;
+    this.topicPageSections = result.sections;
+    this.nonTopicPageLinks = result.nonTopicPageLinks;
   }
 
   private findFeaturesContainer(doc: Document): Element | null {
@@ -2204,6 +2164,7 @@ export class TopicIaJsonComponent implements OnInit {
   exportTable() {}
 
   async generateTopicHtml(): Promise<void> {
+    if (this.isGeneratingTopicHtml) return;
     if (!this.topicPageTree?.length) {
       this.messageService.add({
         severity: 'warn',
@@ -2214,165 +2175,195 @@ export class TopicIaJsonComponent implements OnInit {
       return;
     }
 
-    const template = await this.loadTopicTemplate();
-    if (!template) return;
-
-    const root = this.topicPageTree[0];
-    const categories = root?.children ?? [];
-    const mostRequested = this.getCategoryByLabel(categories, 'Most requested');
-    const doormats = this.getCategoryByLabel(categories, 'Doormats');
-    const focus = this.getCategoryByLabel(categories, 'Focus on');
-    const features = this.getCategoryByLabel(categories, 'Features');
-
-    const mostRequestedItems = this.buildMostRequestedItems(
-      mostRequested?.children ?? [],
-    );
-    const mostRequestedSection = this.buildMostRequestedSection(
-      mostRequestedItems,
-    );
-    const servicesItems = this.buildServicesItems(doormats?.children ?? []);
-    const focusItems = this.buildFocusItems(focus?.children ?? []);
-    const hasFocus = focusItems.trim().length > 0;
-    const focusSectionStart = hasFocus
-      ? ''
-      : TOPIC_PAGE_SNIPPETS.focusSectionStartComment;
-    const focusSectionEnd = hasFocus
-      ? ''
-      : TOPIC_PAGE_SNIPPETS.focusSectionEndComment;
-    const originalHtml = this.uploadState.getUploadData()?.originalHtml ?? '';
-    const featureImageMap = this.buildFeatureImageMap(originalHtml);
-    const featureNodesAll = (features?.children ?? []).filter(
-      (node) => !node?.data?.isCategory,
-    );
-    if (featureNodesAll.length > 3) {
-      this.messageService.add({
-        severity: 'warn',
-        summary: 'Feature limit reached',
-        detail:
-          'First 3 (max) features are used',
-        life: 4000,
-      });
-    }
-    const featureNodes = featureNodesAll.slice(0, 3);
-    const featureCount = featureNodes.length;
-    const allowSocialBlock = this.isHighLevelTopicPageFromBreadcrumb(
-      this.breadcrumb,
-    );
-    const allowContributorBlock = this.shouldSuggestContributorBlock(
-      this.breadcrumb,
-    );
-    const socialMediaBlock = allowSocialBlock
-      ? this.buildSocialMediaBlock()
-      : '';
-    const contributorBlock = allowContributorBlock
-      ? this.buildContributorBlock()
-      : '';
-    const hasSocialBlock = socialMediaBlock.trim().length > 0;
-    const hasContributorBlock = contributorBlock.trim().length > 0;
-    const inlineSocialWithFeatures =
-      featureCount === 2 && !hasContributorBlock && hasSocialBlock;
-
-    let featuresSection = '';
-    let featureRowStart = '';
-    let featureRowEnd = '';
-    let socialColStart = '';
-    let socialColEnd = '';
-    let socialBlockPlacement = '';
-    let contributorBlockPlacement = '';
-
-    if (featureCount === 0) {
-      contributorBlockPlacement = this.buildTopicFooterRow(
-        contributorBlock,
-        socialMediaBlock,
-      );
-    } else if (featureCount === 1) {
-      const featureItem = this.buildFeatureItem(featureNodes, featureImageMap);
-      featuresSection = this.buildFeaturesSectionFullWidth(featureItem);
-      contributorBlockPlacement = this.buildTopicFooterRow(
-        contributorBlock,
-        socialMediaBlock,
-      );
-    } else if (featureCount === 2) {
-      featuresSection = this.buildFeaturesSectionTwo(
-        featureNodes,
-        featureImageMap,
-        inlineSocialWithFeatures ? socialMediaBlock : '',
-      );
-      contributorBlockPlacement = inlineSocialWithFeatures
-        ? ''
-        : this.buildTopicFooterRow(contributorBlock, socialMediaBlock);
-    } else if (featureCount >= 3) {
-      featuresSection = this.buildFeaturesSectionThree(
-        featureNodes,
-        featureImageMap,
-      );
-      contributorBlockPlacement = this.buildTopicFooterRow(
-        contributorBlock,
-        socialMediaBlock,
-      );
-    }
-
-    const titles = this.extractPageTitles(originalHtml);
-    const sectionTitleBlock = titles.sectionTitle
-      ? this.snippetService.applySnippet(TOPIC_PAGE_SNIPPETS.sectionTitleBlock, {
-          sectionTitle: this.escapeHtml(titles.sectionTitle),
-        })
-      : '';
-    const topicTitle = this.cleanTopicTitle(
-      titles.topicTitle || this.getCurrentPageLabel(),
-    );
-    const rescueLinkHtml = this.extractRescueLinkHtml(originalHtml);
-    const alertsBlockHtml = this.extractAlertsHtml(originalHtml);
-    const hasAlerts = alertsBlockHtml.trim().length > 0;
-    const heroImageBlock = hasAlerts
-      ? ''
-      : TOPIC_PAGE_SNIPPETS.heroImageBlock;
-    const heroTextColClass = hasAlerts ? 'col-md-12' : 'col-md-6';
-
-    const html = template
-      .replace('{{section_title_block}}', sectionTitleBlock)
-      .replace('{{topic_title}}', this.escapeHtml(topicTitle))
-      .replace('{{rescue_link}}', rescueLinkHtml)
-      .replace('{{alerts_block}}', alertsBlockHtml)
-      .replace('{{hero_image_block}}', heroImageBlock)
-      .replace('{{hero_text_col_class}}', heroTextColClass)
-      .replace('{{most_requested_section}}', mostRequestedSection)
-      .replace('{{services_items}}', servicesItems)
-      .replace('{{focus_items}}', focusItems)
-      .replace('{{focus_section_start}}', focusSectionStart)
-      .replace('{{focus_section_end}}', focusSectionEnd)
-      .replace('{{features_section}}', featuresSection)
-      .replace('{{feature_row_start}}', featureRowStart)
-      .replace('{{feature_row_end}}', featureRowEnd)
-      .replace('{{social_col_start}}', socialColStart)
-      .replace('{{social_col_end}}', socialColEnd)
-      .replace('{{social_block}}', socialBlockPlacement)
-      .replace('{{contributor_block}}', contributorBlockPlacement);
-
-    const formattedHtml = await this.urlDataService.formatHtml(html, 'ai');
-
-    this.uploadState.savePreviousUploadData();
-    this.uploadState.mergeModifiedData({
-      modifiedUrl: 'Generated topic template',
-      modifiedHtml: formattedHtml,
-    });
-
+    this.isGeneratingTopicHtml = true;
     try {
-      await navigator.clipboard.writeText(formattedHtml);
-      this.messageService.add({
-        severity: 'success',
-        summary: 'Topic HTML generated',
-        detail: 'HTML copied to clipboard and applied to comparison view.',
-        life: 4000,
+      const template = await this.loadTopicTemplate();
+      if (!template) return;
+
+      const root = this.topicPageTree[0];
+      const categories = root?.children ?? [];
+      const mostRequested = this.getCategoryByLabel(categories, 'Most requested');
+      const doormats = this.getCategoryByLabel(categories, 'Doormats');
+      const focus = this.getCategoryByLabel(categories, 'Focus on');
+      const features = this.getCategoryByLabel(categories, 'Features');
+
+      const mostRequestedItems = this.buildMostRequestedItems(
+        mostRequested?.children ?? [],
+      );
+      const mostRequestedSection = this.buildMostRequestedSection(
+        mostRequestedItems,
+      );
+      const servicesItems = this.buildServicesItems(doormats?.children ?? []);
+      const focusItems = this.buildFocusItems(focus?.children ?? []);
+      const hasFocus = focusItems.trim().length > 0;
+      const focusSectionStart = hasFocus
+        ? ''
+        : TOPIC_PAGE_SNIPPETS.focusSectionStartComment;
+      const focusSectionEnd = hasFocus
+        ? ''
+        : TOPIC_PAGE_SNIPPETS.focusSectionEndComment;
+      const originalHtml = this.uploadState.getUploadData()?.originalHtml ?? '';
+      const featureImageMap = this.buildFeatureImageMap(originalHtml);
+      const featureNodesAll = (features?.children ?? []).filter(
+        (node) => !node?.data?.isCategory,
+      );
+      if (featureNodesAll.length > 3) {
+        this.messageService.add({
+          severity: 'warn',
+          summary: 'Feature limit reached',
+          detail:
+            'First 3 (max) features are used',
+          life: 4000,
+        });
+      }
+      const featureNodes = featureNodesAll.slice(0, 3);
+      const featureCount = featureNodes.length;
+      const allowSocialBlock = this.isHighLevelTopicPageFromBreadcrumb(
+        this.breadcrumb,
+      );
+      const allowContributorBlock = this.shouldSuggestContributorBlock(
+        this.breadcrumb,
+      );
+      const socialMediaBlock = allowSocialBlock
+        ? this.buildSocialMediaBlock()
+        : '';
+      const contributorBlock = allowContributorBlock
+        ? this.buildContributorBlock()
+        : '';
+      const hasSocialBlock = socialMediaBlock.trim().length > 0;
+      const hasContributorBlock = contributorBlock.trim().length > 0;
+      const inlineSocialWithFeatures =
+        featureCount === 2 && !hasContributorBlock && hasSocialBlock;
+
+      let featuresSection = '';
+      let featureRowStart = '';
+      let featureRowEnd = '';
+      let socialColStart = '';
+      let socialColEnd = '';
+      let socialBlockPlacement = '';
+      let contributorBlockPlacement = '';
+
+      if (featureCount === 0) {
+        contributorBlockPlacement = this.buildTopicFooterRow(
+          contributorBlock,
+          socialMediaBlock,
+        );
+      } else if (featureCount === 1) {
+        const featureItem = this.buildFeatureItem(featureNodes, featureImageMap);
+        featuresSection = this.buildFeaturesSectionFullWidth(featureItem);
+        contributorBlockPlacement = this.buildTopicFooterRow(
+          contributorBlock,
+          socialMediaBlock,
+        );
+      } else if (featureCount === 2) {
+        featuresSection = this.buildFeaturesSectionTwo(
+          featureNodes,
+          featureImageMap,
+          inlineSocialWithFeatures ? socialMediaBlock : '',
+        );
+        contributorBlockPlacement = inlineSocialWithFeatures
+          ? ''
+          : this.buildTopicFooterRow(contributorBlock, socialMediaBlock);
+      } else if (featureCount >= 3) {
+        featuresSection = this.buildFeaturesSectionThree(
+          featureNodes,
+          featureImageMap,
+        );
+        contributorBlockPlacement = this.buildTopicFooterRow(
+          contributorBlock,
+          socialMediaBlock,
+        );
+      }
+
+      const titles = this.extractPageTitles(originalHtml);
+      const sectionTitleBlock = titles.sectionTitle
+        ? this.snippetService.applySnippet(TOPIC_PAGE_SNIPPETS.sectionTitleBlock, {
+            sectionTitle: this.escapeHtml(titles.sectionTitle),
+          })
+        : '';
+      const topicTitle = this.cleanTopicTitle(
+        titles.topicTitle || this.getCurrentPageLabel(),
+      );
+      const rescueLinkHtml = this.extractRescueLinkHtml(originalHtml);
+      const alertsBlockHtml = this.extractAlertsHtml(originalHtml);
+      const hasAlerts = alertsBlockHtml.trim().length > 0;
+      const heroImageBlock = hasAlerts
+        ? ''
+        : TOPIC_PAGE_SNIPPETS.heroImageBlock;
+      const heroTextColClass = hasAlerts ? 'col-md-12' : 'col-md-6';
+
+      const html = template
+        .replace('{{section_title_block}}', sectionTitleBlock)
+        .replace('{{topic_title}}', this.escapeHtml(topicTitle))
+        .replace('{{rescue_link}}', rescueLinkHtml)
+        .replace('{{alerts_block}}', alertsBlockHtml)
+        .replace('{{hero_image_block}}', heroImageBlock)
+        .replace('{{hero_text_col_class}}', heroTextColClass)
+        .replace('{{most_requested_section}}', mostRequestedSection)
+        .replace('{{services_items}}', servicesItems)
+        .replace('{{focus_items}}', focusItems)
+        .replace('{{focus_section_start}}', focusSectionStart)
+        .replace('{{focus_section_end}}', focusSectionEnd)
+        .replace('{{features_section}}', featuresSection)
+        .replace('{{feature_row_start}}', featureRowStart)
+        .replace('{{feature_row_end}}', featureRowEnd)
+        .replace('{{social_col_start}}', socialColStart)
+        .replace('{{social_col_end}}', socialColEnd)
+        .replace('{{social_block}}', socialBlockPlacement)
+        .replace('{{contributor_block}}', contributorBlockPlacement);
+
+      const formattedHtml = await this.urlDataService.formatHtml(html, 'ai');
+      let finalHtml = formattedHtml;
+      let doormatRewriteApplied = false;
+      try {
+        const doormatResult =
+          await this.topicDoormatRewriteOrchestrator.analyzeAndRewriteGeneratedTopicHtml(
+            formattedHtml,
+            this.uploadState.getSelectedAiModel(),
+          );
+        if (doormatResult?.rewrittenHtml) {
+          finalHtml = doormatResult.rewrittenHtml;
+          doormatRewriteApplied = true;
+        }
+      } catch (err) {
+        console.error('Generated topic doormat analysis/rewrite failed:', err);
+        this.messageService.add({
+          severity: 'warn',
+          summary: 'Doormat rewrite failed',
+          detail:
+            'Topic HTML was generated, but doormat analysis or rewrite could not be completed.',
+          life: 6000,
+        });
+      }
+
+      this.uploadState.savePreviousUploadData();
+      this.uploadState.mergeModifiedData({
+        modifiedUrl: 'Generated topic template',
+        modifiedHtml: finalHtml,
       });
-    } catch (err) {
-      console.error('Clipboard write failed:', err);
-      this.messageService.add({
-        severity: 'warn',
-        summary: 'Generated',
-        detail: 'HTML applied to comparison view but could not be copied to clipboard.',
-        life: 4000,
-      });
+
+      try {
+        await navigator.clipboard.writeText(finalHtml);
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Topic HTML generated',
+          detail: doormatRewriteApplied
+            ? 'HTML copied to clipboard and applied to comparison view. Topic doormat analysis opened and rewrites applied.'
+            : 'HTML copied to clipboard and applied to comparison view.',
+          life: 5000,
+        });
+      } catch (err) {
+        console.error('Clipboard write failed:', err);
+        this.messageService.add({
+          severity: 'warn',
+          summary: 'Generated',
+          detail:
+            'HTML applied to comparison view but could not be copied to clipboard.',
+          life: 4000,
+        });
+      }
+    } finally {
+      this.isGeneratingTopicHtml = false;
     }
   }
 
