@@ -24,6 +24,16 @@ export interface TopicDoormatAnalyzeAndRewriteResult {
   rewriteModel?: string;
 }
 
+export interface TopicDoormatDraftResult {
+  rewrittenHtml: string;
+  rewriteModel?: string;
+}
+
+export interface TopicFeatureDraftResult {
+  rewrittenHtml: string;
+  rewriteModel?: string;
+}
+
 @Injectable({ providedIn: 'root' })
 export class TopicDoormatRewriteOrchestratorService {
   private readonly translate = inject(TranslateService);
@@ -70,47 +80,63 @@ export class TopicDoormatRewriteOrchestratorService {
       doc,
       uploadData,
     );
-    const bilingualSummaries =
-      await this.topicDoormatExtractor.enrichOppositeLanguageLengths(
-        extractedSummaries,
-        uploadData,
-        pageLanguage,
-      );
-    const doormatSummaries =
-      await this.topicDoormatExtractor.enrichDestinationContext(
-        bilingualSummaries,
-        uploadData,
-      );
+    const hasCurrentAnalysis =
+      this.topicDoormatAnalysisState.hasAnalysis() &&
+      this.topicDoormatAnalysisState.getAnalyzedHtml() === analyzedHtml &&
+      this.topicDoormatAnalysisState.getDoormatSummaries().length > 0;
+    let doormatSummaries: TopicDoormatSummary[];
+    let issueRows: TopicDoormatIssueRow[];
+    let analysisModel: string | undefined;
 
-    const analysis = await this.topicDoormatIssueAnalysis.analyze({
-      doormatSummaries,
-      pageLanguage,
-      reportLanguage: this.translate.currentLang === 'fr' ? 'fr' : 'en',
-      hasLegacyTopicDoormatTemplate:
-        this.topicDoormatExtractor.hasLegacyTemplate(doc),
-      mostRequestedLinks: this.topicDoormatExtractor.extractMostRequestedLinks(doc),
-      uploadData,
-      selectedModel: model,
-    });
-    this.topicDoormatAnalysisState.setAnalysis(
-      analyzedHtml,
-      analysis.rows,
-      doormatSummaries,
-    );
-    this.messageService.add({
-      severity: 'info',
-      summary: analysis.rows.length
-        ? this.translate.instant('common.ai.topicDoormatIssuesReceived', {
-            model: this.getShortModelName(analysis.model || model),
-          })
-        : this.translate.instant('common.ai.topicDoormatIssuesNotIdentified'),
-      life: 3000,
-    });
+    if (hasCurrentAnalysis) {
+      doormatSummaries = this.topicDoormatAnalysisState.getDoormatSummaries();
+      issueRows = this.topicDoormatAnalysisState.getIssueRows();
+    } else {
+      const bilingualSummaries =
+        await this.topicDoormatExtractor.enrichOppositeLanguageLengths(
+          extractedSummaries,
+          uploadData,
+          pageLanguage,
+        );
+      doormatSummaries =
+        await this.topicDoormatExtractor.enrichDestinationContext(
+          bilingualSummaries,
+          uploadData,
+        );
+
+      const analysis = await this.topicDoormatIssueAnalysis.analyze({
+        doormatSummaries,
+        pageLanguage,
+        reportLanguage: this.translate.currentLang === 'fr' ? 'fr' : 'en',
+        hasLegacyTopicDoormatTemplate:
+          this.topicDoormatExtractor.hasLegacyTemplate(doc),
+        mostRequestedLinks:
+          this.topicDoormatExtractor.extractMostRequestedLinks(doc),
+        uploadData,
+        selectedModel: model,
+      });
+      issueRows = analysis.rows;
+      analysisModel = analysis.model;
+      this.topicDoormatAnalysisState.setAnalysis(
+        analyzedHtml,
+        issueRows,
+        doormatSummaries,
+      );
+      this.messageService.add({
+        severity: 'info',
+        summary: issueRows.length
+          ? this.translate.instant('common.ai.topicDoormatIssuesReceived', {
+              model: this.getShortModelName(analysis.model || model),
+            })
+          : this.translate.instant('common.ai.topicDoormatIssuesNotIdentified'),
+        life: 3000,
+      });
+    }
 
     const prompt = await this.buildRewritePrompt();
     const userContent = this.buildRewriteUserContent(
       analyzedHtml,
-      analysis.rows,
+      issueRows,
       doormatSummaries,
     );
     const rewrite = await this.callOpenRouterForRewrite(model, [
@@ -134,8 +160,106 @@ export class TopicDoormatRewriteOrchestratorService {
     return {
       analyzedHtml,
       rewrittenHtml,
-      issueRows: analysis.rows,
-      analysisModel: analysis.model,
+      issueRows,
+      analysisModel,
+      rewriteModel: rewrite.usedModel,
+    };
+  }
+
+  async draftGeneratedTopicDoormatsFromDestinationContext(
+    html: string,
+    model: AiModel,
+  ): Promise<TopicDoormatDraftResult | null> {
+    const normalized =
+      this.topicDoormatTemplateNormalizer.normalizeLegacyDoormats(html);
+    const workingHtml = normalized.html;
+    const doc = this.topicDoormatExtractor.parseHtmlDocument(workingHtml);
+    if (!doc) return null;
+
+    const extractedSummaries = this.topicDoormatExtractor.extractSummaries(doc);
+    if (!extractedSummaries.length) return null;
+
+    const uploadData = this.uploadState.getUploadData();
+    const pageLanguage = this.topicDoormatExtractor.detectPageLanguage(
+      doc,
+      uploadData,
+    );
+    const bilingualSummaries =
+      await this.topicDoormatExtractor.enrichOppositeLanguageLengths(
+        extractedSummaries,
+        uploadData,
+        pageLanguage,
+      );
+    const doormatSummaries =
+      await this.topicDoormatExtractor.enrichDestinationContext(
+        bilingualSummaries,
+        uploadData,
+      );
+
+    const prompt = await this.buildRewritePrompt();
+    const userContent = this.buildDraftUserContent(
+      workingHtml,
+      doormatSummaries,
+    );
+    const rewrite = await this.callOpenRouterForRewrite(model, [
+      { role: 'system', content: prompt },
+      { role: 'user', content: userContent },
+    ]);
+    const rewriteHtml =
+      this.extractDoormatRewriteHtmlFromStructuredResponse(rewrite.text) ??
+      rewrite.text;
+    if (this.looksLikeStructuredAiJsonResponse(rewriteHtml)) {
+      throw new Error(
+        'The AI returned structured JSON where HTML was expected. No comparison update was applied.',
+      );
+    }
+
+    const patchedHtml = this.applyDoormatRewriteToPageHtml(
+      workingHtml,
+      rewriteHtml,
+    );
+    return {
+      rewrittenHtml: await this.urlDataService.formatHtml(patchedHtml, 'ai'),
+      rewriteModel: rewrite.usedModel,
+    };
+  }
+
+  async draftGeneratedTopicFeaturesFromDestinationContext(
+    html: string,
+    model: AiModel,
+  ): Promise<TopicFeatureDraftResult | null> {
+    const doc = this.topicDoormatExtractor.parseHtmlDocument(html);
+    if (!doc) return null;
+
+    const featureSummaries = this.extractGeneratedFeatureSummaries(doc);
+    if (!featureSummaries.length) return null;
+
+    const summariesWithContext =
+      await this.topicDoormatExtractor.enrichDestinationContext(
+        featureSummaries,
+        this.uploadState.getUploadData(),
+      );
+    const prompt = await this.buildFeatureDraftPrompt();
+    const userContent = this.buildFeatureDraftUserContent(
+      html,
+      summariesWithContext,
+    );
+    const rewrite = await this.callOpenRouterForRewrite(model, [
+      { role: 'system', content: prompt },
+      { role: 'user', content: userContent },
+    ]);
+    const rewriteHtml =
+      this.extractDoormatRewriteHtmlFromStructuredResponse(rewrite.text) ??
+      rewrite.text;
+    if (this.looksLikeStructuredAiJsonResponse(rewriteHtml)) {
+      throw new Error(
+        'The AI returned structured JSON where HTML was expected. No comparison update was applied.',
+      );
+    }
+
+    const patchedHtml = this.applyFeatureRewriteToPageHtml(html, rewriteHtml);
+    return {
+      rewrittenHtml: await this.urlDataService.formatHtml(patchedHtml, 'ai'),
       rewriteModel: rewrite.usedModel,
     };
   }
@@ -155,14 +279,36 @@ export class TopicDoormatRewriteOrchestratorService {
     return composed.prompt;
   }
 
+  private async buildFeatureDraftPrompt(): Promise<string> {
+    const composed = await this.skillManager.composePrompt({
+      basePrompt:
+        'Return raw HTML only. Return the full HTML input with only generated topic feature card descriptions updated. Do not return JSON, Markdown, schema-shaped output, or explanatory text. Preserve feature link text, hrefs, images, layout, headings, doormats, intro, alerts, and all unrelated page HTML exactly as provided. Use the topic doormat writing rules for concise, destination-specific descriptions: write from destination context, do not copy destination intro paragraphs verbatim, do not use rescue-link text such as "You may be looking for", and do not invent unsupported details.',
+      queryText:
+        'rewrite topic feature card descriptions from destination context using doormat description rules',
+      promptKey: PromptKey.Doormats,
+      outputMode: 'html',
+      includeReferences: true,
+      includeAssets: false,
+      requireSkill: true,
+    });
+    return composed.prompt;
+  }
+
   private buildRewriteUserContent(
     html: string,
     rows: TopicDoormatIssueRow[],
     summaries: TopicDoormatSummary[],
   ): string {
-    const selectedIssues = rows
-      .filter((row) => row.include && row.issueId !== 'no-issues')
-      .map((row) => this.toRewriteIssueInput(row));
+    const selectedStateIssues =
+      this.topicDoormatAnalysisState.hasAnalysis() &&
+      this.topicDoormatAnalysisState.getAnalyzedHtml() === html
+        ? this.topicDoormatAnalysisState.getSelectedRewriteIssues()
+        : [];
+    const selectedIssues = selectedStateIssues.length
+      ? selectedStateIssues
+      : rows
+          .filter((row) => row.include && row.issueId !== 'no-issues')
+          .map((row) => this.toRewriteIssueInput(row));
     const placeholderIssues = summaries
       .filter((summary) => this.hasGeneratedPlaceholderDescription(summary))
       .map((summary) => this.toGeneratedPlaceholderIssue(summary));
@@ -191,6 +337,109 @@ export class TopicDoormatRewriteOrchestratorService {
         .filter((summary): summary is TopicDoormatSummary => summary !== undefined)
         .map((summary) => this.toDoormatDestinationRewritePayload(summary)),
     });
+  }
+
+  private buildDraftUserContent(
+    html: string,
+    summaries: TopicDoormatSummary[],
+  ): string {
+    const draftIssues = summaries.map((summary) =>
+      this.toGeneratedPlaceholderIssue(summary),
+    );
+    return JSON.stringify({
+      page_html: html,
+      topic_doormat_issue_analysis: {
+        status: 'generated-topic-draft',
+        instruction:
+          'This is a newly generated topic page. Write every generated topic doormat link name and description from destination context. Keep hrefs, order, and valid GCWeb doormat markup. Use concise link text and short, specific descriptions. After drafting, preserve unrelated page HTML.',
+        selected_issues: draftIssues.map((issue) =>
+          this.toDoormatRewriteIssuePayload(issue),
+        ),
+      },
+      doormats_with_selected_issues: summaries.map((summary) =>
+        this.toDoormatDestinationRewritePayload(summary),
+      ),
+    });
+  }
+
+  private buildFeatureDraftUserContent(
+    html: string,
+    summaries: TopicDoormatSummary[],
+  ): string {
+    return JSON.stringify({
+      page_html: html,
+      topic_feature_description_draft: {
+        status: 'generated-topic-feature-draft',
+        instruction:
+          'Write only the missing generated feature card descriptions. Use the same concise destination-specific description rules as topic doormats. Use destination context as evidence, not copy text. Do not use rescue-link text, page furniture, generic labels, or destination intro paragraphs verbatim. Preserve feature card link text, hrefs, images, order, and unrelated page HTML.',
+      },
+      features_requiring_descriptions: summaries.map((summary) =>
+        this.toDoormatDestinationRewritePayload(summary),
+      ),
+    });
+  }
+
+  private extractGeneratedFeatureSummaries(doc: Document): TopicDoormatSummary[] {
+    const summaries: TopicDoormatSummary[] = [];
+    const featureSections = Array.from(
+      doc.body.querySelectorAll<HTMLElement>('.gc-features'),
+    );
+    featureSections.forEach((section, sectionIndex) => {
+      const links = Array.from(
+        section.querySelectorAll<HTMLAnchorElement>('h2 a[href], h3 a[href]'),
+      );
+      links.forEach((link) => {
+        const item = this.findFeatureItemForRewrite(link, section);
+        const description = this.cleanDoormatRewriteText(
+          item?.querySelector('p')?.textContent,
+        );
+        if (!this.hasGeneratedFeaturePlaceholderDescription(description)) {
+          return;
+        }
+        const href = link.getAttribute('href')?.trim() || '';
+        const linkText = this.cleanDoormatRewriteText(link.textContent);
+        if (!href || !linkText) return;
+        summaries.push({
+          index: summaries.length + 1,
+          linkText,
+          href,
+          description,
+          headingLevel: this.toHeadingLevel(link.closest('h2, h3')),
+          itemLinkCount: item?.querySelectorAll('a[href]').length ?? 1,
+          headingLinkCount: link.closest('h2, h3')?.querySelectorAll('a[href]')
+            .length ?? 1,
+          descriptionLinkCount: item?.querySelector('p')?.querySelectorAll(
+            'a[href]',
+          ).length ?? 0,
+          hasSplitHeadingLink: false,
+          hasDescriptionLink: !!item?.querySelector('p a[href]'),
+          hasDescriptionIconOrImage: !!item?.querySelector('p img, p svg'),
+          hasDescriptionSpecialFormatting: !!item?.querySelector(
+            'p strong, p b, p em, p i, p ul, p ol, p li, p mark, p code',
+          ),
+          rawItemText: this.cleanDoormatRewriteText(item?.textContent).slice(
+            0,
+            500,
+          ),
+          linkTextCharacterCount: linkText.length,
+          descriptionCharacterCount: description.length,
+          sectionIndex: sectionIndex + 1,
+          sectionTitle: 'Features',
+          sectionItemIndex: summaries.length + 1,
+          sectionDoormatCount: links.length,
+        });
+      });
+    });
+    return summaries;
+  }
+
+  private hasGeneratedFeaturePlaceholderDescription(description: string): boolean {
+    return (
+      !description ||
+      /\[\*\*\*.*(?:brief description|feature being promoted|action verbs|keywords|tasks|links to).*?\*\*\*\]/i.test(
+        description,
+      )
+    );
   }
 
   private toRewriteIssueInput(
@@ -441,6 +690,46 @@ export class TopicDoormatRewriteOrchestratorService {
     return this.serializeParsedHtmlLikeInput(htmlToPatch, originalDoc);
   }
 
+  private applyFeatureRewriteToPageHtml(
+    originalHtml: string,
+    rewriteHtml: string,
+  ): string {
+    const parser = new DOMParser();
+    const originalDoc = parser.parseFromString(originalHtml, 'text/html');
+    const rewriteDoc = parser.parseFromString(rewriteHtml, 'text/html');
+    const originalFeatures = this.getFeatureItemsByHref(originalDoc.body);
+    const rewrittenFeatures = this.getFeatureItemsByHref(rewriteDoc.body);
+
+    if (!originalFeatures.size) {
+      throw new Error(
+        'The current page does not contain generated topic feature cards to update.',
+      );
+    }
+    if (!rewrittenFeatures.size) {
+      throw new Error(
+        'The AI response did not include topic feature cards. No comparison update was applied.',
+      );
+    }
+
+    rewrittenFeatures.forEach((rewrittenItem, href) => {
+      const originalItem = originalFeatures.get(href);
+      if (!originalItem) return;
+      const originalDescription = originalItem.querySelector('p');
+      const rewrittenDescription = rewrittenItem.querySelector('p');
+      if (!originalDescription || !rewrittenDescription) return;
+      if (
+        !this.hasGeneratedFeaturePlaceholderDescription(
+          this.cleanDoormatRewriteText(originalDescription.textContent),
+        )
+      ) {
+        return;
+      }
+      originalDescription.innerHTML = rewrittenDescription.innerHTML;
+    });
+
+    return this.serializeParsedHtmlLikeInput(originalHtml, originalDoc);
+  }
+
   private findOriginalDoormatSectionForRewrite(
     originalSections: Element[],
     rewrittenSection: Element,
@@ -571,12 +860,50 @@ export class TopicDoormatRewriteOrchestratorService {
     return section.querySelector('p') ? section : null;
   }
 
+  private getFeatureItemsByHref(container: ParentNode): Map<string, Element> {
+    const itemsByHref = new Map<string, Element>();
+    Array.from(
+      container.querySelectorAll<HTMLAnchorElement>(
+        '.gc-features h2 a[href], .gc-features h3 a[href]',
+      ),
+    ).forEach((link) => {
+      const href = link.getAttribute('href')?.trim();
+      if (!href || itemsByHref.has(href)) return;
+      const section = link.closest('.gc-features');
+      const item = section ? this.findFeatureItemForRewrite(link, section) : null;
+      if (item) itemsByHref.set(href, item);
+    });
+    return itemsByHref;
+  }
+
+  private findFeatureItemForRewrite(
+    link: HTMLAnchorElement,
+    section: Element,
+  ): Element | null {
+    const column = link.closest(
+      '.col-lg-4, .col-md-6, .col-sm-6, .col-md-12',
+    );
+    if (column?.querySelector('p')) return column;
+    let current: Element | null = link;
+    while (current && current !== section) {
+      if (current !== link && current.querySelector('p')) return current;
+      current = current.parentElement;
+    }
+    return section.querySelector('p') ? section : null;
+  }
+
   private getDoormatLabelSelector(): string {
     return '.label, .badge, [class*="label-"], [class*="badge-"]';
   }
 
   private cleanDoormatRewriteText(value: string | null | undefined): string {
     return (value || '').replace(/\s+/g, ' ').trim();
+  }
+
+  private toHeadingLevel(heading: Element | null): number | null {
+    if (!heading) return null;
+    const level = Number.parseInt(heading.tagName.slice(1), 10);
+    return Number.isFinite(level) ? level : null;
   }
 
   private serializeParsedHtmlLikeInput(originalHtml: string, doc: Document): string {

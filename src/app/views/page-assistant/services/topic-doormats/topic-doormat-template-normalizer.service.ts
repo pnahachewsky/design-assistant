@@ -34,15 +34,21 @@ export class TopicDoormatTemplateNormalizerService {
     });
 
     if (!doc.body.querySelector('.gc-srvinfo')) {
+      const standaloneSection = this.buildStandaloneModernSection(doc);
+      if (standaloneSection) {
+        standaloneSection.source.replaceWith(standaloneSection.section);
+        changed = true;
+      }
+    }
+
+    if (!doc.body.querySelector('.gc-srvinfo')) {
       if (this.normalizeLegacyListGroupTopicDoormats(doc)) {
         changed = true;
       }
     }
 
     if (!doc.body.querySelector('.gc-srvinfo')) {
-      const standaloneSection = this.buildStandaloneModernSection(doc);
-      if (standaloneSection) {
-        standaloneSection.source.replaceWith(standaloneSection.section);
+      if (this.normalizeLegacyHeadingTopicDoormats(doc)) {
         changed = true;
       }
     }
@@ -63,7 +69,10 @@ export class TopicDoormatTemplateNormalizerService {
     return (
       /\b(?:mwsdoormat-links-container|gc-drmt)\b/.test(html) ||
       /\bgc-srvinfo\b/.test(html) ||
-      /\blist-group\b/.test(html)
+      /\blist-group\b/.test(html) ||
+      /\b(?:Services and information|Services et renseignements|Services et information|Topics|Sujets)\b/.test(
+        html,
+      )
     );
   }
 
@@ -191,6 +200,82 @@ export class TopicDoormatTemplateNormalizerService {
       )
       .forEach((element) => element.remove());
     return this.cleanVisibleText(clone.textContent);
+  }
+
+  private normalizeLegacyHeadingTopicDoormats(doc: Document): boolean {
+    const heading = this.findLegacyHeadingTopicSection(doc);
+    if (!heading) return false;
+
+    const groups = this.collectLegacyHeadingTopicItems(heading);
+    if (groups.length < 2) return false;
+
+    const section = this.buildModernSectionFromItems(
+      doc,
+      groups.map((group) => group.item),
+      this.cleanVisibleText(heading.textContent),
+    );
+    if (!section) return false;
+
+    heading.parentElement?.insertBefore(section, heading);
+    heading.remove();
+    groups
+      .flatMap((group) => group.sourceNodes)
+      .forEach((node) => node.parentElement?.removeChild(node));
+    return true;
+  }
+
+  private findLegacyHeadingTopicSection(doc: Document): HTMLElement | null {
+    return (
+      Array.from(
+        doc.body.querySelectorAll<HTMLElement>('main h2, main h3, h2, h3'),
+      ).find((heading) =>
+        this.isGenericLegacyHeading(
+          this.cleanVisibleText(heading.textContent),
+        ),
+      ) ?? null
+    );
+  }
+
+  private collectLegacyHeadingTopicItems(
+    heading: HTMLElement,
+  ): Array<{ item: HTMLElement; sourceNodes: HTMLElement[] }> {
+    const items: Array<{ item: HTMLElement; sourceNodes: HTMLElement[] }> = [];
+    let current = heading.nextElementSibling as HTMLElement | null;
+    while (current) {
+      if (
+        current.matches('h2') &&
+          !this.isGenericLegacyHeading(
+          this.cleanVisibleText(current.textContent),
+        )
+      ) {
+        break;
+      }
+      if (current.matches('h2, h3')) {
+        const sourceNodes = this.getLegacyHeadingTopicSourceNodes(current);
+        const item = this.cloneLegacyHeadingTopicItem(sourceNodes);
+        const link = item.querySelector<HTMLAnchorElement>('h2 a[href], h3 a[href]');
+        if (link) items.push({ item, sourceNodes });
+      }
+      current = current.nextElementSibling as HTMLElement | null;
+    }
+    return items;
+  }
+
+  private getLegacyHeadingTopicSourceNodes(heading: HTMLElement): HTMLElement[] {
+    const nodes = [heading];
+    let current = heading.nextElementSibling as HTMLElement | null;
+    while (current && !current.matches('h2, h3')) {
+      nodes.push(current);
+      current = current.nextElementSibling as HTMLElement | null;
+    }
+    return nodes;
+  }
+
+  private cloneLegacyHeadingTopicItem(nodes: HTMLElement[]): HTMLElement {
+    const doc = nodes[0].ownerDocument;
+    const item = doc.createElement('div');
+    nodes.forEach((node) => item.appendChild(node.cloneNode(true)));
+    return item;
   }
 
   private findLegacyTopicListHeading(list: HTMLElement): HTMLElement | null {
@@ -369,7 +454,9 @@ export class TopicDoormatTemplateNormalizerService {
   }
 
   private isGenericLegacyHeading(value: string | null | undefined): boolean {
-    return this.cleanVisibleText(value).toLowerCase() === 'topics';
+    return /^(topics|services and information|services et renseignements|services et information|sujets)$/.test(
+      this.cleanVisibleText(value).toLowerCase(),
+    );
   }
 
   private serializeParsedHtmlLikeInput(originalHtml: string, doc: Document): string {

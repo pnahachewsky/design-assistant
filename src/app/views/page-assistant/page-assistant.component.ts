@@ -49,6 +49,7 @@ import {
   removeNonReportableAlertsFromHtml,
 } from './services/alerts/alert-reportable.utils';
 import { AlertRewriteOrchestratorService } from './services/alerts/alert-rewrite-orchestrator.service';
+import { TopicDoormatRewriteOrchestratorService } from './services/topic-doormats/topic-doormat-rewrite-orchestrator.service';
 import {
   TopicDoormatAnalysisStateService,
   TopicDoormatIssueRewriteInput,
@@ -119,6 +120,9 @@ export class PageAssistantCompareComponent
   private alertAi = inject(AlertAiService);
   private alertContext = inject(AlertContextService);
   private alertRewriteOrchestrator = inject(AlertRewriteOrchestratorService);
+  private topicDoormatRewriteOrchestrator = inject(
+    TopicDoormatRewriteOrchestratorService,
+  );
   private topicDoormatAnalysisState = inject(TopicDoormatAnalysisStateService);
   private topicDoormatExtractor = inject(TopicDoormatExtractorService);
   private topicDoormatIssueAnalysis = inject(TopicDoormatIssueAnalysisService);
@@ -1412,7 +1416,6 @@ export class PageAssistantCompareComponent
         ? this.uploadState.getWorkingHtml()
         : uploadData?.originalHtml;
       if (!html) throw new Error('No HTML to send');
-      const workingHtmlBeforeRequest = html;
       if (isDoormats) {
         const normalization =
           this.topicDoormatTemplateNormalizer.normalizeLegacyDoormats(html);
@@ -1437,19 +1440,41 @@ export class PageAssistantCompareComponent
         const hadCurrentDoormatAnalysis =
           this.topicDoormatAnalysisState.hasAnalysis() &&
           this.topicDoormatAnalysisState.getAnalyzedHtml() === html;
-        const doormatAnalysisReady =
-          await this.ensureTopicDoormatIssueAnalysisForRewrite(
+        aiRequestStarted = true;
+        const doormatResult =
+          await this.topicDoormatRewriteOrchestrator.analyzeAndRewriteGeneratedTopicHtml(
             html,
             model,
-            workingHtmlBeforeRequest,
           );
-        if (!doormatAnalysisReady) {
+        if (!doormatResult) {
           return;
         }
         doormatIssueAnalysisRan = !hadCurrentDoormatAnalysis;
+        doormatRewritePromptSent = true;
         timingFlow = doormatIssueAnalysisRan
           ? 'doormat-issues-and-rewrite'
           : 'doormat-rewrite-with-cached-issues';
+
+        this.uploadState.mergeModifiedData({
+          modifiedUrl: 'AI generated',
+          modifiedHtml: doormatResult.rewrittenHtml,
+        });
+
+        const usedModel = this.getShortModelName(
+          doormatResult.rewriteModel || doormatResult.analysisModel || model,
+        );
+        this.statusSeverity = 'success';
+        this.statusMessage = this.translate.instant(
+          'common.ai.comparisonUpdatedWithModel',
+          { model: usedModel },
+        );
+        this.messageService.add({
+          severity: 'success',
+          summary: this.translate.instant('common.ai.responseReceived.summary'),
+          detail: this.translate.instant('common.ai.responseReceived.detail'),
+          life: 5000,
+        });
+        return;
       }
 
       const prompt = await this.getPromptForKey(promptKeyForRequest);

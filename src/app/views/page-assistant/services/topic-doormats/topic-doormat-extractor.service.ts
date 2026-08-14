@@ -340,7 +340,8 @@ export class TopicDoormatExtractorService {
     return (
       !!doc.querySelector('.gc-drmt') ||
       !!doc.querySelector('.mwsdoormat-links-container') ||
-      this.getLegacyListGroupLinks(doc).length >= 2
+      this.getLegacyListGroupLinks(doc).length >= 2 ||
+      this.getLegacyLinks(doc).length >= 2
     );
   }
 
@@ -724,6 +725,7 @@ export class TopicDoormatExtractorService {
       Node.DOCUMENT_POSITION_FOLLOWING
     );
     if (!followsHeading) return false;
+    if (this.isRescueParagraph(paragraph)) return false;
     if (!firstSectionHeading) return true;
     return !!(
       paragraph.compareDocumentPosition(firstSectionHeading) &
@@ -755,6 +757,7 @@ export class TopicDoormatExtractorService {
     if (!text) return false;
     return [
       'services et information',
+      'services et renseignements',
       'tps/tvh',
       'imp\u00f4t',
       'imp\u00f4ts',
@@ -800,14 +803,18 @@ export class TopicDoormatExtractorService {
       },
     );
 
-    const topicHeading = this.getTopicHeadingElement(doc);
+    const topicHeading = this.getLegacyDoormatHeadingElement(doc);
     if (topicHeading) {
       let current = topicHeading.nextElementSibling as HTMLElement | null;
       while (current) {
         const headingText = this.cleanVisibleText(
           current.textContent,
         ).toLowerCase();
-        if (current.matches('h2') && headingText && headingText !== 'topics') {
+        if (
+          current.matches('h2') &&
+          headingText &&
+          !this.isLegacyDoormatSectionHeadingText(headingText)
+        ) {
           break;
         }
         if (current.matches('h2, h3')) {
@@ -914,14 +921,28 @@ export class TopicDoormatExtractorService {
     return false;
   }
 
-  private getTopicHeadingElement(doc: Document): HTMLElement | null {
+  private isRescueParagraph(paragraph: HTMLElement): boolean {
+    return /^you may be looking for:?$/i.test(
+      this.cleanVisibleText(paragraph.textContent),
+    );
+  }
+
+  private getLegacyDoormatHeadingElement(doc: Document): HTMLElement | null {
     return (
       Array.from(
         doc.querySelectorAll<HTMLElement>('main h2, main h3, h2, h3'),
       ).find(
         (heading) =>
-          this.cleanVisibleText(heading.textContent).toLowerCase() === 'topics',
+          this.isLegacyDoormatSectionHeadingText(
+            this.cleanVisibleText(heading.textContent).toLowerCase(),
+          ),
       ) ?? null
+    );
+  }
+
+  private isLegacyDoormatSectionHeadingText(text: string): boolean {
+    return /^(topics|services and information|services et renseignements|services et information|sujets)$/.test(
+      text,
     );
   }
 

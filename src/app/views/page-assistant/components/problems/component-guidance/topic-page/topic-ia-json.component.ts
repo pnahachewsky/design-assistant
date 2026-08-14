@@ -2275,15 +2275,22 @@ export class TopicIaJsonComponent implements OnInit {
         );
       }
 
-      const titles = this.extractPageTitles(originalHtml);
-      const sectionTitleBlock = titles.sectionTitle
-        ? this.snippetService.applySnippet(TOPIC_PAGE_SNIPPETS.sectionTitleBlock, {
-            sectionTitle: this.escapeHtml(titles.sectionTitle),
-          })
-        : '';
-      const topicTitle = this.cleanTopicTitle(
-        titles.topicTitle || this.getCurrentPageLabel(),
+      const originalTopicSections = this.topicPageSectionExtractor.extract(
+        originalHtml,
+        {
+          baseUrl: this.originalUrl || '',
+          excludedUrlFragments: this.topicPageExcludedUrlFragments,
+        },
       );
+      const topicIntroHtml =
+        originalTopicSections.introHtml
+          ? originalTopicSections.introHtml
+          : this.buildGeneratedTopicIntroHtml([
+              ...(doormats?.children ?? []),
+              ...(focus?.children ?? []),
+              ...(features?.children ?? []),
+            ]);
+      const topicHeadingBlock = this.buildTopicHeadingBlock(originalHtml);
       const rescueLinkHtml = this.extractRescueLinkHtml(originalHtml);
       const alertsBlockHtml = this.extractAlertsHtml(originalHtml);
       const hasAlerts = alertsBlockHtml.trim().length > 0;
@@ -2293,13 +2300,17 @@ export class TopicIaJsonComponent implements OnInit {
       const heroTextColClass = hasAlerts ? 'col-md-12' : 'col-md-6';
 
       const html = template
-        .replace('{{section_title_block}}', sectionTitleBlock)
-        .replace('{{topic_title}}', this.escapeHtml(topicTitle))
+        .replace('{{topic_heading_block}}', topicHeadingBlock)
         .replace('{{rescue_link}}', rescueLinkHtml)
         .replace('{{alerts_block}}', alertsBlockHtml)
+        .replace('{{topic_intro}}', topicIntroHtml)
         .replace('{{hero_image_block}}', heroImageBlock)
         .replace('{{hero_text_col_class}}', heroTextColClass)
         .replace('{{most_requested_section}}', mostRequestedSection)
+        .replace(
+          '{{pre_doormat_content}}',
+          originalTopicSections.preDoormatHtml,
+        )
         .replace('{{services_items}}', servicesItems)
         .replace('{{focus_items}}', focusItems)
         .replace('{{focus_section_start}}', focusSectionStart)
@@ -2312,28 +2323,78 @@ export class TopicIaJsonComponent implements OnInit {
         .replace('{{social_block}}', socialBlockPlacement)
         .replace('{{contributor_block}}', contributorBlockPlacement);
 
-      const formattedHtml = await this.urlDataService.formatHtml(html, 'ai');
-      let finalHtml = formattedHtml;
-      let doormatRewriteApplied = false;
-      try {
-        const doormatResult =
-          await this.topicDoormatRewriteOrchestrator.analyzeAndRewriteGeneratedTopicHtml(
-            formattedHtml,
-            this.uploadState.getSelectedAiModel(),
-          );
-        if (doormatResult?.rewrittenHtml) {
-          finalHtml = doormatResult.rewrittenHtml;
-          doormatRewriteApplied = true;
+	      const formattedHtml = await this.urlDataService.formatHtml(html, 'ai');
+	      let finalHtml = formattedHtml;
+	      try {
+	        const featureResult =
+	          await this.topicDoormatRewriteOrchestrator.draftGeneratedTopicFeaturesFromDestinationContext(
+	            finalHtml,
+	            this.uploadState.getSelectedAiModel(),
+	          );
+	        if (featureResult?.rewrittenHtml) {
+	          finalHtml = featureResult.rewrittenHtml;
+	        }
+	      } catch (err) {
+	        console.error('Generated topic feature drafting failed:', err);
+	        this.messageService.add({
+	          severity: 'warn',
+	          summary: 'Feature drafting failed',
+	          detail:
+	            'Topic HTML was generated, but generated feature descriptions could not be drafted from destination context.',
+	          life: 6000,
+	        });
+	      }
+	      let doormatRewriteApplied = false;
+	      let doormatAnalysisOpened = false;
+	      if (originalTopicSections.isTopicPage) {
+	        try {
+	          const doormatResult =
+	            await this.topicDoormatRewriteOrchestrator.analyzeAndRewriteGeneratedTopicHtml(
+	              finalHtml,
+	              this.uploadState.getSelectedAiModel(),
+	            );
+          if (doormatResult?.rewrittenHtml) {
+            finalHtml = doormatResult.rewrittenHtml;
+            doormatRewriteApplied = true;
+            doormatAnalysisOpened = true;
+          }
+        } catch (err) {
+          console.error('Generated topic doormat analysis/rewrite failed:', err);
+          this.messageService.add({
+            severity: 'warn',
+            summary: 'Doormat rewrite failed',
+            detail:
+              'Topic HTML was generated, but doormat analysis or rewrite could not be completed.',
+            life: 6000,
+          });
         }
-      } catch (err) {
-        console.error('Generated topic doormat analysis/rewrite failed:', err);
-        this.messageService.add({
-          severity: 'warn',
-          summary: 'Doormat rewrite failed',
-          detail:
-            'Topic HTML was generated, but doormat analysis or rewrite could not be completed.',
-          life: 6000,
-        });
+      } else {
+        try {
+	          const doormatResult =
+	            await this.topicDoormatRewriteOrchestrator.draftGeneratedTopicDoormatsFromDestinationContext(
+	              finalHtml,
+	              this.uploadState.getSelectedAiModel(),
+	            );
+          if (doormatResult?.rewrittenHtml) {
+            finalHtml = await this.urlDataService.formatHtml(
+              this.applyGeneratedTopicIntroFromDoormats(
+                doormatResult.rewrittenHtml,
+                originalTopicSections.introHtml,
+              ),
+              'ai',
+            );
+            doormatRewriteApplied = true;
+          }
+        } catch (err) {
+          console.error('Generated topic doormat drafting failed:', err);
+          this.messageService.add({
+            severity: 'warn',
+            summary: 'Doormat drafting failed',
+            detail:
+              'Topic HTML was generated, but generated doormat descriptions could not be drafted from destination context.',
+            life: 6000,
+          });
+        }
       }
 
       this.uploadState.savePreviousUploadData();
@@ -2348,7 +2409,9 @@ export class TopicIaJsonComponent implements OnInit {
           severity: 'success',
           summary: 'Topic HTML generated',
           detail: doormatRewriteApplied
-            ? 'HTML copied to clipboard and applied to comparison view. Topic doormat analysis opened and rewrites applied.'
+            ? doormatAnalysisOpened
+              ? 'HTML copied to clipboard and applied to comparison view. Topic doormat analysis opened and rewrites applied.'
+              : 'HTML copied to clipboard and applied to comparison view. Doormats and intro drafted from destination context.'
             : 'HTML copied to clipboard and applied to comparison view.',
           life: 5000,
         });
@@ -2509,14 +2572,181 @@ export class TopicIaJsonComponent implements OnInit {
     );
   }
 
+  private buildGeneratedTopicIntroHtml(nodes: TreeNode[]): string {
+    const contextLabels = this.getTopicIntroContextLabels(nodes);
+    const topicTitle = this.cleanTopicTitle(this.getCurrentPageLabel());
+    const topicPhrase = topicTitle
+      ? ` about ${this.escapeHtml(topicTitle)}`
+      : '';
+    const contextPhrase = contextLabels.length
+      ? `, including ${this.formatInlineList(contextLabels)}`
+      : '';
+    return `<p>Find information and services${topicPhrase}${contextPhrase}.</p>`;
+  }
+
+  private applyGeneratedTopicIntroFromDoormats(
+    html: string,
+    preservedIntroHtml = '',
+  ): string {
+    const doc = new DOMParser().parseFromString(html, 'text/html');
+    const introParagraph =
+      doc.body.querySelector<HTMLElement>('div.gc-srvinfo p');
+    if (!introParagraph) return html;
+
+    if (preservedIntroHtml.trim()) {
+      introParagraph.outerHTML = preservedIntroHtml;
+      return doc.body.innerHTML;
+    }
+
+    const contextLabels = this.getDraftedDoormatIntroContextLabels(doc);
+    const topicTitle = this.cleanTopicTitle(
+      doc.body.querySelector('h1')?.textContent || this.getCurrentPageLabel(),
+    );
+    const topicPhrase = topicTitle
+      ? ` about ${this.escapeHtml(topicTitle)}`
+      : '';
+    const contextPhrase = contextLabels.length
+      ? `, including ${this.formatInlineList(contextLabels)}`
+      : '';
+    introParagraph.outerHTML = `<p>Find information and services${topicPhrase}${contextPhrase}.</p>`;
+    return doc.body.innerHTML;
+  }
+
+  private getDraftedDoormatIntroContextLabels(doc: Document): string[] {
+    const values = Array.from(
+      doc.body.querySelectorAll<HTMLAnchorElement>(
+        'section.gc-srvinfo h2 a[href], section.gc-srvinfo h3 a[href]',
+      ),
+    )
+      .flatMap((link) => {
+        const item = link.closest('.col-lg-4, .col-md-6, li, div');
+        const description = item?.querySelector('p')?.textContent || '';
+        return [description, link.textContent || ''];
+      })
+      .map((value) => this.cleanTopicIntroContextText(value))
+      .filter(Boolean);
+    return Array.from(new Set(values)).slice(0, 3);
+  }
+
+  private getTopicIntroContextLabels(nodes: TreeNode[]): string[] {
+    const values = nodes
+      .filter((node) => !node?.data?.isCategory)
+      .flatMap((node) => [
+        this.getNodeLabelText(node),
+        this.getNodeDescriptionText(node),
+      ])
+      .map((value) => this.cleanTopicIntroContextText(value))
+      .filter(Boolean);
+    return Array.from(new Set(values)).slice(0, 3);
+  }
+
+  private getNodeLabelText(node: TreeNode): string {
+    const raw =
+      typeof node?.data?.originalLabel === 'string' &&
+      node.data.originalLabel.trim().length
+        ? node.data.originalLabel
+        : (node?.label ?? '').toString();
+    const withoutBadges = this.stripBadges(raw);
+    const bottomLine = this.selectBottomLine(withoutBadges);
+    const cleaned = bottomLine.replace(/<[^>]+>/g, '').trim();
+    return this.trimAfterDash(cleaned);
+  }
+
+  private getNodeDescriptionText(node: TreeNode): string {
+    return typeof node?.data?.originalDescription === 'string'
+      ? node.data.originalDescription.trim()
+      : '';
+  }
+
+  private cleanTopicIntroContextText(value: string): string {
+    return value
+      .replace(/\[\*\*\*[\s\S]*?\*\*\*\]/g, '')
+      .replace(/\s+/g, ' ')
+      .replace(/[.!?:;]+$/g, '')
+      .trim();
+  }
+
+  private formatInlineList(values: string[]): string {
+    const escaped = values.map((value) => this.escapeHtml(value));
+    if (escaped.length <= 1) return escaped[0] ?? '';
+    if (escaped.length === 2) return `${escaped[0]} and ${escaped[1]}`;
+    return `${escaped.slice(0, -1).join(', ')}, and ${escaped[escaped.length - 1]}`;
+  }
+
   private getFeatureDescription(node: TreeNode): string {
     const description =
       typeof node?.data?.originalDescription === 'string'
         ? node.data.originalDescription.trim()
         : '';
+    const generatedDescription =
+      typeof node?.data?.generatedFeatureDescription === 'string'
+        ? node.data.generatedFeatureDescription.trim()
+        : '';
     return this.escapeHtml(
-      description || '[***Brief description of the feature being promoted.***]',
+      description ||
+        generatedDescription ||
+        '[***Brief description of the feature being promoted.***]',
     );
+  }
+
+  private buildTopicHeadingBlock(sourceHtml: string): string {
+    const preservedHeading = this.extractTopicHeadingBlockHtml(sourceHtml);
+    if (preservedHeading) return preservedHeading;
+
+    const titles = this.extractPageTitles(sourceHtml);
+    const sectionTitleBlock = titles.sectionTitle
+      ? this.snippetService.applySnippet(TOPIC_PAGE_SNIPPETS.sectionTitleBlock, {
+          sectionTitle: this.escapeHtml(titles.sectionTitle),
+        })
+      : '';
+    const topicTitle = this.cleanTopicTitle(
+      titles.topicTitle || this.getCurrentPageLabel(),
+    );
+    return [
+      '<hgroup id="wb-cont">',
+      sectionTitleBlock,
+      `<h1>${this.escapeHtml(topicTitle)}</h1>`,
+      '</hgroup>',
+    ]
+      .filter((line) => line.trim())
+      .join('\n');
+  }
+
+  private extractTopicHeadingBlockHtml(sourceHtml: string): string {
+    if (!sourceHtml) return '';
+    const doc = new DOMParser().parseFromString(sourceHtml, 'text/html');
+    const hgroup = doc.querySelector('hgroup#wb-cont');
+    if (hgroup?.querySelector('h1')) return hgroup.outerHTML;
+
+    const h1 = this.pickTopicH1(
+      doc,
+      Array.from(doc.querySelectorAll('h1')).filter((candidate) =>
+        !candidate.closest('nav'),
+      ),
+      Array.from(doc.querySelectorAll('h1')),
+    );
+    if (!h1) return '';
+
+    const stackedLabel = this.findStackedH1LabelElement(h1);
+    if (stackedLabel) {
+      return `${stackedLabel.outerHTML}\n${h1.outerHTML}`;
+    }
+    return h1.outerHTML;
+  }
+
+  private findStackedH1LabelElement(h1: Element): Element | null {
+    const previous = h1.previousElementSibling;
+    if (!previous || previous.tagName.toLowerCase() !== 'p') return null;
+    const text = (previous.textContent || '').replace(/\s+/g, ' ').trim();
+    if (!text) return null;
+    if (
+      previous.matches(
+        '.lead, .text-muted, .pagetagline, [class*="h1"], [class*="stack"]',
+      )
+    ) {
+      return previous;
+    }
+    return null;
   }
 
   private extractPageTitles(sourceHtml: string): {
