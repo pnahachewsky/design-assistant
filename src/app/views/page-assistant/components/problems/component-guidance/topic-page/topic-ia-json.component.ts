@@ -2294,9 +2294,7 @@ export class TopicIaJsonComponent implements OnInit {
       const rescueLinkHtml = this.extractRescueLinkHtml(originalHtml);
       const alertsBlockHtml = this.extractAlertsHtml(originalHtml);
       const hasAlerts = alertsBlockHtml.trim().length > 0;
-      const heroImageBlock = hasAlerts
-        ? ''
-        : TOPIC_PAGE_SNIPPETS.heroImageBlock;
+      const heroImageBlock = hasAlerts ? '' : TOPIC_PAGE_SNIPPETS.heroImageBlock;
       const heroTextColClass = hasAlerts ? 'col-md-12' : 'col-md-6';
 
       const html = template

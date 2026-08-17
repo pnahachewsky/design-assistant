@@ -266,12 +266,12 @@ export class TopicPageSectionExtractorService {
     if (!this.cleanVisibleText(element.textContent)) return false;
     if (
       element.matches(
-        'nav, header, footer, aside, details, .gc-most-requested, .gc-srvinfo, .gc-features, .pagedetails, .gc-subway',
+        'nav, header, footer, aside, details, .alert, .gc-most-requested, .gc-srvinfo, .gc-features, .pagedetails, .gc-subway',
       )
     ) {
       return false;
     }
-    if (element.closest('.gc-most-requested, .gc-srvinfo, .gc-features')) {
+    if (element.closest('.alert, .gc-most-requested, .gc-srvinfo, .gc-features')) {
       return false;
     }
     if (element.getAttribute('aria-hidden') === 'true') return false;
