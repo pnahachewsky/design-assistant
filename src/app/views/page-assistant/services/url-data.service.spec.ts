@@ -71,4 +71,54 @@ describe('UrlDataService', () => {
       }),
     );
   });
+
+  it('does not add rendered whitespace before commas after inline nowrap spans', async () => {
+    const result = await service.formatHtml(
+      '<main><p>Temporary GST/HST relief on certain items from <span class="nowrap">December 14, 2024</span>, to <span class="nowrap">February 15, 2025</span></p></main>',
+    );
+
+    expect(result).toContain(
+      '<span class="nowrap">December 14, 2024</span>, to',
+    );
+    expect(result).not.toContain(
+      '<span class="nowrap">December 14, 2024</span>\n                  , to',
+    );
+  });
+
+  it('removes formatter whitespace before colons in English', async () => {
+    const result = (service as any).cleanupFormattedSpacing(
+      '<p>For details<span class="nowrap"> online</span>\n  : check your account.</p>',
+      'en',
+    );
+
+    expect(result).toContain('<span class="nowrap"> online</span>: check');
+  });
+
+  it('preserves formatter whitespace before colons in French', async () => {
+    const result = (service as any).cleanupFormattedSpacing(
+      '<p>Pour en savoir plus<span class="nowrap"> en ligne</span>\n  : consultez votre compte.</p>',
+      'fr',
+    );
+
+    expect(result).not.toContain('<span class="nowrap"> en ligne</span>:');
+    expect(result).toContain('<span class="nowrap"> en ligne</span>\n  :');
+  });
+
+  it('normalizes authored English spaces before punctuation at the formatter boundary', async () => {
+    const result = await service.formatHtml(
+      '<html lang="en"><body><main><p>One , two . three ; four : five ! six ?</p></main></body></html>',
+    );
+
+    expect(result).toContain('One, two. three; four: five! six?');
+  });
+
+  it('normalizes authored French spaces before punctuation at the formatter boundary', async () => {
+    const result = await service.formatHtml(
+      '<html lang="fr"><body><main><p>Un , deux . trois ; remarque : cinq ! six ?</p></main></body></html>',
+    );
+
+    expect(result.replace(/&nbsp;/g, '\u00a0')).toContain(
+      'Un, deux. trois; remarque\u00a0: cinq! six?',
+    );
+  });
 });

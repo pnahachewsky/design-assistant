@@ -6,6 +6,10 @@ import { UploadStateService } from './upload-state.service';
 //import prettier from 'prettier/standalone';
 import * as parserHtml from 'prettier/parser-html';
 import { FetchService } from '../../../services/fetch.service';
+import {
+  WritingRulesLanguage,
+  WritingRulesService,
+} from './writing-rules.service';
 
 @Injectable({
   providedIn: 'root'
@@ -13,6 +17,7 @@ import { FetchService } from '../../../services/fetch.service';
 export class UrlDataService {
   private uploadState = inject(UploadStateService);
   private fetchService = inject(FetchService)
+  private writingRules = inject(WritingRulesService);
 
   /** Gets HTML content from a URL and processes it. **/
 
@@ -57,7 +62,7 @@ export class UrlDataService {
     const content = main ? main.outerHTML : doc.body.innerHTML.trim();
 
     return {
-      html: await this.formatHtml(content),
+      html: await this.formatHtml(content, undefined, this.detectPageLanguage(doc, metadata)),
       found: foundFlags,
       metadata: metadata,
       breadcrumb: breadcrumb
@@ -67,9 +72,14 @@ export class UrlDataService {
   //START OF CLEAN-UP FUNCTIONS
 
   //Prettier HTML
-  async formatHtml(html: string, source?: 'url' | 'paste' | 'word' | 'ai' | 'edit'): Promise<string> {
+  async formatHtml(
+    html: string,
+    source?: 'url' | 'paste' | 'word' | 'ai' | 'edit',
+    language?: WritingRulesLanguage,
+  ): Promise<string> {
     try {
       const { default: prettier } = await import('prettier/standalone');
+      const formatLanguage = language ?? this.detectFormatLanguage(html);
       if (source === 'word') {
         // Wrap word content in <main>
         html = `<main  property="mainContentOfPage" resource="#wb-main" typeof="WebPageElement" class="container">${html}</main>`;
@@ -98,7 +108,10 @@ export class UrlDataService {
         printWidth: 200,
         singleAttributePerLine: false,
       });
-      return this.cleanupFormattedSpacing(formatted);
+      return this.writingRules.normalizeHtmlDocument(
+        this.cleanupFormattedSpacing(formatted, formatLanguage),
+        formatLanguage,
+      );
     } catch (error) {
       console.error('Error formatting HTML:', error);
       return html; // returns unformatted HTML
@@ -138,14 +151,55 @@ export class UrlDataService {
     return doc.body.outerHTML;
   }
 
-  private cleanupFormattedSpacing(html: string): string {
+  private cleanupFormattedSpacing(
+    html: string,
+    language: WritingRulesLanguage,
+  ): string {
     // Keep pretty formatting intact; only remove specific newline/indent blocks
     // that create punctuation/link and inline-tag spacing artifacts.
+    const punctuationPattern =
+      language === 'fr'
+        ? /(?:\r?\n[ \t\u00A0\u202F\u2007]*)+(?=[,.;!?])/g
+        : /(?:\r?\n[ \t\u00A0\u202F\u2007]*)+(?=[,.;:!?])/g;
     return html
-      .replace(/(?:\r?\n[ \t\u00A0\u202F\u2007]*)+(?=\.)/g, '')
+      .replace(punctuationPattern, '')
       .replace(/(?:\r?\n[ \t\u00A0\u202F\u2007]*)+(?=<\/a>)/gi, '')
       .replace(/(<p\b[^>]*>)(?:\r?\n[ \t\u00A0\u202F\u2007]*)+/gi, '$1')
       .replace(/(?:\r?\n[ \t\u00A0\u202F\u2007]*)+(<\/p>)/gi, '$1');
+  }
+
+  private detectFormatLanguage(html: string): WritingRulesLanguage {
+    const doc = new DOMParser().parseFromString(html || '', 'text/html');
+    return this.detectPageLanguage(
+      doc,
+      this.uploadState.getUploadData()?.metadata ?? [],
+    );
+  }
+
+  private detectPageLanguage(
+    doc: Document,
+    metadata: MetadataData[] = [],
+  ): WritingRulesLanguage {
+    const htmlLang =
+      doc.documentElement.getAttribute('lang') ||
+      doc.querySelector('html')?.getAttribute('lang') ||
+      '';
+    if (htmlLang.trim().toLowerCase().startsWith('fr')) return 'fr';
+    if (htmlLang.trim().toLowerCase().startsWith('en')) return 'en';
+
+    const metaLanguage =
+      doc.querySelector<HTMLMetaElement>('meta[name="dcterms.language"]')?.content ||
+      String(
+        metadata.find((item) => item.name === 'dcterms.language')?.content ?? '',
+      );
+    const normalizedMetaLanguage = metaLanguage.trim().toLowerCase();
+    if (
+      normalizedMetaLanguage === 'fra' ||
+      normalizedMetaLanguage.startsWith('fr')
+    ) {
+      return 'fr';
+    }
+    return 'en';
   }
 
   //Get text or json content for AJAX or JSON calls
