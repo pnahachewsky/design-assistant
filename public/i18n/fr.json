@@ -242,7 +242,7 @@
     "page.tools.guidance.topicDoormats.contentGap.introMissing": "Concepts dans l'introduction",
     "page.tools.guidance.topicDoormats.contentGap.recommendation": "Examinez le menu d'accueil pour verifier qu'il represente les elements necessaires de la page.",
     "page.tools.guidance.topicDoormats.mixedDescriptionStyle.evidence.default": "La section melange des styles de description.",
-    "page.tools.guidance.topicDoormats.mixedDescriptionStyle.evidence.twoGroups": "Melange {{firstStyle}} et {{secondStyle}}. Exemples {{firstExampleLabel}}: {{firstExamples}}. Exemples {{secondExampleLabel}}: {{secondExamples}}.",
+    "page.tools.guidance.topicDoormats.mixedDescriptionStyle.evidence.twoGroups": "Melange {{firstStyle}} et {{secondStyle}}. {{firstExampleLabel}}: {{firstExamples}}. {{secondExampleLabel}}: {{secondExamples}}.",
     "page.tools.guidance.topicDoormats.mixedDescriptionStyle.evidence.multipleGroups": "La section melange des styles de description. {{styleParts}}.",
     "page.tools.guidance.topicDoormats.mixedDescriptionStyle.recommendation": "Reecrivez les descriptions afin qu'elles utilisent un style uniforme dans la section.",
     "page.tools.guidance.topicDoormats.noIssues.issue": "Aucun probleme",

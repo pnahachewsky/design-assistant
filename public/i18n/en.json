@@ -248,7 +248,7 @@
   "page.tools.guidance.topicDoormats.contentGap.introMissing": "Concepts in intro",
   "page.tools.guidance.topicDoormats.contentGap.recommendation": "Review doormat to ensure it represents necessary elements of the page.",
   "page.tools.guidance.topicDoormats.mixedDescriptionStyle.evidence.default": "Mixes description styles in this section.",
-  "page.tools.guidance.topicDoormats.mixedDescriptionStyle.evidence.twoGroups": "Mixes {{firstStyle}} with {{secondStyle}}. {{firstExampleLabel}} examples: {{firstExamples}}. {{secondExampleLabel}} examples: {{secondExamples}}.",
+  "page.tools.guidance.topicDoormats.mixedDescriptionStyle.evidence.twoGroups": "Mixes {{firstStyle}} with {{secondStyle}}. {{firstExampleLabel}}: {{firstExamples}}. {{secondExampleLabel}}: {{secondExamples}}.",
   "page.tools.guidance.topicDoormats.mixedDescriptionStyle.evidence.multipleGroups": "Mixes description styles in this section. {{styleParts}}.",
   "page.tools.guidance.topicDoormats.mixedDescriptionStyle.recommendation": "Rewrite the descriptions so they use one consistent description style across the section.",
   "page.tools.guidance.topicDoormats.consistentDescriptionStyle.issue": "Consistent description style",
