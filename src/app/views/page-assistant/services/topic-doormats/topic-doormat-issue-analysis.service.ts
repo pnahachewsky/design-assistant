@@ -1352,7 +1352,9 @@ export class TopicDoormatIssueAnalysisService {
             this.getTopicDoormatDisplayedModelRecommendation(issue);
           return {
             include:
-              typeof issue['include'] === 'boolean' ? issue['include'] : true,
+              typeof issue['include'] === 'boolean'
+                ? issue['include']
+                : this.getDefaultTopicDoormatIssueInclude(issueId, severity),
             rowType: 'doormat',
             severity,
             doormat: label,
@@ -1702,7 +1704,10 @@ export class TopicDoormatIssueAnalysisService {
       this.getTopicDoormatDisplayedModelRecommendation(issue);
 
     return {
-      include: typeof issue['include'] === 'boolean' ? issue['include'] : true,
+      include:
+        typeof issue['include'] === 'boolean'
+          ? issue['include']
+          : this.getDefaultTopicDoormatIssueInclude(issueId, severity),
       rowType: 'section',
       severity,
       doormat: this.buildTopicDoormatSectionLabel(
@@ -2086,7 +2091,7 @@ export class TopicDoormatIssueAnalysisService {
         );
 
         return {
-          include: true,
+          include: this.getDefaultTopicDoormatIssueInclude(issueId, severity),
           rowType: 'section',
           severity,
           doormat: this.buildTopicDoormatSectionLabel(
@@ -2356,6 +2361,14 @@ export class TopicDoormatIssueAnalysisService {
     issueId: 'link-name-too-long' | 'description-too-long',
   ): string {
     return this.getTopicDoormatIssueLabel(issueId);
+  }
+
+  private getDefaultTopicDoormatIssueInclude(
+    issueId: string,
+    severity: string,
+  ): boolean {
+    if (issueId !== 'link-name-too-long') return true;
+    return severity.trim().toLowerCase() === 'high';
   }
 
   private buildLocalTopicDoormatDescriptionPersonRows(
