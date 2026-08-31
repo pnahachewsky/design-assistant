@@ -24,14 +24,17 @@ export interface OpenRouterCallOptions {
 
 @Injectable({ providedIn: 'root' })
 export class OpenRouterService {
+  static readonly defaultRequestTimeoutMs = 240000;
+
   private readonly http = inject(HttpClient);
   private readonly apiKeyService = inject(ApiKeyService);
 
   private readonly openRouterApiUrl = 'https://openrouter.ai/api/v1/chat/completions';
   private readonly freeModelOrder: string[] = [
     AiModel.NemotronUltra,
-    AiModel.GptOSS20BFree,
+    AiModel.NemotronLightning,
     AiModel.NemotronSuper,
+    AiModel.FreeModelsRouter,
   ];
   // Canonical model lists used by the assistant UI and fallback helpers.
   readonly models: string[] = Object.values(AiModel);
@@ -67,13 +70,15 @@ export class OpenRouterService {
     };
 
     try {
+      const effectiveTimeoutMs =
+        options.timeoutMs ?? OpenRouterService.defaultRequestTimeoutMs;
       let request$ = this.http.post(this.openRouterApiUrl, payload, {
-          headers,
-          responseType: 'text',
-          observe: 'response',
-        });
-      if (options.timeoutMs && options.timeoutMs > 0) {
-        request$ = request$.pipe(timeout(options.timeoutMs));
+        headers,
+        responseType: 'text',
+        observe: 'response',
+      });
+      if (effectiveTimeoutMs > 0) {
+        request$ = request$.pipe(timeout(effectiveTimeoutMs));
       }
       const resp = (await request$.toPromise()) as HttpResponse<string> | null;
 
@@ -95,7 +100,10 @@ export class OpenRouterService {
       // Return undefined by default so higher-level flows can rotate models or surface custom messages.
       const timeoutErr = err as { name?: string };
       if (timeoutErr?.name === 'TimeoutError') {
-        const message = `OpenRouter request timed out (model: ${model}, timeoutMs: ${options.timeoutMs})`;
+        const effectiveTimeoutMs =
+          options.timeoutMs ?? OpenRouterService.defaultRequestTimeoutMs;
+        const message =
+          `OpenRouter request timed out (model: ${model}, timeoutMs: ${effectiveTimeoutMs})`;
         console.error(message);
         if (options.throwOnError) {
           throw new Error(message);

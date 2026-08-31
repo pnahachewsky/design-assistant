@@ -1366,8 +1366,9 @@ export class PageAssistantCompareComponent
     // Fallback order after the user-selected model.
     const fallbackOrder: AiModel[] = [
       AiModel.NemotronUltra,
-      AiModel.GptOSS20BFree,
+      AiModel.NemotronLightning,
       AiModel.NemotronSuper,
+      AiModel.FreeModelsRouter,
     ];
     const available = new Set(this.openRouter.freeModels);
     const rotation: string[] = [model];

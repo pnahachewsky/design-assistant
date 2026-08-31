@@ -71,7 +71,9 @@ describe('TopicDoormatModelClientService', () => {
     expect(result.model).toBe('selected-model');
     expect(openRouter.call.calls.first().args[0]).toBe('selected-model');
     expect(openRouter.call.calls.first().args[2]).toEqual(
-      jasmine.objectContaining({ timeoutMs: 60000 }),
+      jasmine.objectContaining({
+        timeoutMs: TopicDoormatModelClientService.modelAttemptTimeoutMs,
+      }),
     );
     expect(debug).toHaveBeenCalledWith(
       'model attempt started',
@@ -87,6 +89,27 @@ describe('TopicDoormatModelClientService', () => {
         }),
       }),
     );
+  });
+
+  it('retries a paid selected model once before free fallback models', () => {
+    openRouter.models = ['paid-model', 'fallback-model'];
+    openRouter.freeModels = ['fallback-model'];
+
+    expect(service.buildModelRotation('paid-model')).toEqual([
+      'paid-model',
+      'paid-model',
+      'fallback-model',
+    ]);
+  });
+
+  it('does not duplicate a free selected model before fallback models', () => {
+    openRouter.models = ['free-model', 'fallback-model'];
+    openRouter.freeModels = ['fallback-model', 'free-model'];
+
+    expect(service.buildModelRotation('free-model')).toEqual([
+      'free-model',
+      'fallback-model',
+    ]);
   });
 
   it('rotates to the next model when a topic doormat attempt times out', async () => {
@@ -140,7 +163,9 @@ describe('TopicDoormatModelClientService', () => {
     expect(result.text).toBe('{"doormats":[]}');
     expect(openRouter.call.calls.allArgs()[1][0]).toBe('selected-model');
     expect(openRouter.call.calls.allArgs()[1][2]).toEqual(
-      jasmine.objectContaining({ timeoutMs: 60000 }),
+      jasmine.objectContaining({
+        timeoutMs: TopicDoormatModelClientService.modelAttemptTimeoutMs,
+      }),
     );
     expect(debug).toHaveBeenCalledWith(
       'model json repair succeeded',
@@ -166,7 +191,7 @@ describe('TopicDoormatModelClientService', () => {
     expect(openRouter.call.calls.first().args[2]).toEqual(
       jasmine.objectContaining({
         title: 'Content Assistant - Topic Doormat Issue Field Repair',
-        timeoutMs: 60000,
+        timeoutMs: TopicDoormatModelClientService.modelAttemptTimeoutMs,
       }),
     );
     expect(debug).toHaveBeenCalledWith(

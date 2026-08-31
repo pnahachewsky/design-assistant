@@ -97,9 +97,11 @@ export enum PromptKey {
 export enum AiModel {
   // Free models
   NemotronUltra = 'nvidia/nemotron-3-ultra-550b-a55b:free',
-  GptOSS20BFree = 'openai/gpt-oss-20b:free', //131k context free
+  NemotronLightning = 'nvidia/nemotron-3.5-lightning:free',
   NemotronSuper = 'nvidia/nemotron-3-super-120b-a12b:free', //262k context, 263B weekly, 120B parameters
+  FreeModelsRouter = 'openrouter/free',
   // Paid models
+  AutoRouter = 'openrouter/auto',
   GptOSS20B = 'openai/gpt-oss-20b', // 131k context paid
   Gemini = 'google/gemini-3.1-flash-lite',
   GPT54Mini = 'openai/gpt-5.4-mini',

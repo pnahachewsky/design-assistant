@@ -100,6 +100,8 @@ export class TopicDoormatIssueAnalysisService {
     'pageAssistant.topicDoormatDebug';
   private readonly topicDoormatIssueTaxonomyPath =
     'skills/topic-doormats/issues/references/issue-taxonomy.json';
+  private readonly topicDoormatDestinationContextElementLimit = 20;
+  private readonly topicDoormatDestinationContextTextLimit = 300;
   private readonly topicDoormatTrailingPunctuationPattern = /[.:;?!,]$/;
   private readonly topicDoormatDestinationStopWords = new Set([
     'and',
@@ -274,6 +276,7 @@ export class TopicDoormatIssueAnalysisService {
       this.topicDoormatModelIssueContract,
       localOwnershipInstruction,
       reportLanguageInstruction,
+      this.buildTopicDoormatJsonOnlyInstruction(),
     ]
       .filter(Boolean)
       .join('\n\n');
@@ -526,9 +529,52 @@ export class TopicDoormatIssueAnalysisService {
             sectionTitle: summary.sectionTitle,
             sectionItemIndex: summary.sectionItemIndex,
           })),
+          response_format: this.buildTopicDoormatIssueResponseFormat(),
         }),
       },
     ];
+  }
+
+  private buildTopicDoormatJsonOnlyInstruction(): string {
+    return [
+      '### Required JSON response',
+      'Return one valid JSON object and nothing else.',
+      'The first non-whitespace character must be { and the last non-whitespace character must be }.',
+      'Do not return Markdown, code fences, comments, explanations, or a schema description.',
+      'Use double-quoted JSON strings and no trailing commas.',
+      'Root keys required: section_issues and doormats.',
+      'Return section_issues: [] when there are no section-level issues.',
+      'Return exactly one doormats[] object for each input doormat index, even when that doormat has no issues.',
+      'Return issues: [] on a doormat when no model-owned issues apply to that doormat.',
+    ].join('\n');
+  }
+
+  private buildTopicDoormatIssueResponseFormat(): Record<string, unknown> {
+    return {
+      output: 'json_object_only',
+      no_markdown: true,
+      no_code_fences: true,
+      root_required_keys: ['section_issues', 'doormats'],
+      section_issues: 'array of section-level issue objects, or []',
+      doormats:
+        'array with exactly one object for each input doormat index, in input order',
+      required_doormat_fields: [
+        'doormat_index',
+        'link_text',
+        'href',
+        'description',
+        'detected_link_text_style',
+        'detected_description_style',
+        'destination_link_relationship',
+        'destination_link_relationship_basis',
+        'destination_link_relationship_reason',
+        'destination_content_assessment',
+        'issue_decisions',
+        'issues',
+      ],
+      empty_issue_arrays:
+        'Use [] for section_issues and doormat issues when no model-owned issues apply.',
+    };
   }
 
   private buildTopicDoormatSectionBatches(
@@ -3062,20 +3108,22 @@ export class TopicDoormatIssueAnalysisService {
   ): TopicDoormatDestinationContextElement[] {
     const navigationItems = summary.destinationNavigationItems ?? [];
     if (navigationItems.length) {
-      return navigationItems
-        .map((item) => ({
-          text: this.cleanVisibleText(
-            [item.linkText, item.description].filter(Boolean).join(': '),
-          ),
-          source: item.source,
-        }))
-        .filter((item) => item.text)
-        .map((item, index) => ({
-          id: `doormat-${index + 1}`,
-          type: 'doormat' as const,
-          text: item.text,
-          source: item.source,
-        }));
+      return this.compactTopicDoormatDestinationContextElements(
+        navigationItems
+          .map((item) => ({
+            text: this.cleanVisibleText(
+              [item.linkText, item.description].filter(Boolean).join(': '),
+            ),
+            source: item.source,
+          }))
+          .filter((item) => item.text)
+          .map((item, index) => ({
+            id: `doormat-${index + 1}`,
+            type: 'doormat' as const,
+            text: item.text,
+            source: item.source,
+          })),
+      );
     }
 
     const introElements = (summary.destinationIntroParagraphs ?? [])
@@ -3094,7 +3142,21 @@ export class TopicDoormatIssueAnalysisService {
         type: 'h2' as const,
         text,
       }));
-    return [...introElements, ...sectionElements];
+    return this.compactTopicDoormatDestinationContextElements([
+      ...introElements,
+      ...sectionElements,
+    ]);
+  }
+
+  private compactTopicDoormatDestinationContextElements(
+    elements: TopicDoormatDestinationContextElement[],
+  ): TopicDoormatDestinationContextElement[] {
+    return elements
+      .slice(0, this.topicDoormatDestinationContextElementLimit)
+      .map((element) => ({
+        ...element,
+        text: element.text.slice(0, this.topicDoormatDestinationContextTextLimit),
+      }));
   }
 
   private buildLocalTopicDoormatLinkStyleIssueRows(

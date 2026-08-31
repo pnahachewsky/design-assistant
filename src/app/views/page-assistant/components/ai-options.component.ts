@@ -104,10 +104,12 @@ export class AiOptionsComponent implements OnInit {
   // Free and paid model groups are rendered separately in the UI.
   freeAiOptions = [
     { id: AiModel.NemotronUltra, label: 'page.ai-options.model.NemotronUltra', disabled: false },
-    { id: AiModel.GptOSS20BFree, label: 'page.ai-options.model.GptOSS20BFree', disabled: false },
+    { id: AiModel.NemotronLightning, label: 'page.ai-options.model.NemotronLightning', disabled: false },
     { id: AiModel.NemotronSuper, label: 'page.ai-options.model.NemotronSuper', disabled: false },
+    { id: AiModel.FreeModelsRouter, label: 'page.ai-options.model.FreeModelsRouter', disabled: false },
   ];
   paidAiOptions = [
+    { id: AiModel.AutoRouter, label: 'page.ai-options.model.AutoRouter', disabled: false },
     { id: AiModel.GptOSS20B, label: 'page.ai-options.model.GptOSS20B', disabled: false },
     { id: AiModel.DeepSeekV4Flash, label: 'page.ai-options.model.DeepSeekV4Flash', disabled: false },
     { id: AiModel.DeepSeekV4Pro, label: 'page.ai-options.model.DeepSeekV4Pro', disabled: false },

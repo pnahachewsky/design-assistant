@@ -12,6 +12,9 @@ Use this skill for rewriting topic doormat sets.
 ## Instructions
 
 - Use the rewrite rules resource as the authoritative ruleset
+- If the user payload includes `topic_doormat_examples`, use those examples for
+  set-level pattern guidance only. Do not copy example wording, hrefs, or legacy
+  markup into unrelated rewrites.
 - Use the rewrite output schema only when the caller requests structured JSON
 - Preserve all unrelated page HTML
 - Rewrite the doormat set consistently

@@ -6,6 +6,7 @@ import { AlertAiService } from '../alerts/alert-ai.service';
 import { SkillManagerService } from '../skill-manager.service';
 import { UploadStateService } from '../upload-state.service';
 import { UrlDataService } from '../url-data.service';
+import { ChatMessage, OpenRouterService } from '../openrouter.service';
 import { PromptKey, AiModel } from '../../data/data.model';
 import {
   TopicDoormatAnalysisStateService,
@@ -14,7 +15,38 @@ import {
 import { TopicDoormatExtractorService } from './topic-doormat-extractor.service';
 import { TopicDoormatIssueAnalysisService } from './topic-doormat-issue-analysis.service';
 import { TopicDoormatTemplateNormalizerService } from './topic-doormat-template-normalizer.service';
-import { TopicDoormatIssueRow, TopicDoormatSummary } from './topic-doormat.types';
+import {
+  TopicDoormatIssueRow,
+  TopicDoormatPageLanguage,
+  TopicDoormatSummary,
+} from './topic-doormat.types';
+
+interface TopicDoormatRewriteExampleLanguageSet {
+  sourceHtmlShape?: unknown;
+  items?: unknown;
+  sourceHtml?: unknown;
+}
+
+interface TopicDoormatRewriteExampleItem {
+  position?: unknown;
+  linkText?: unknown;
+  description?: unknown;
+}
+
+interface TopicDoormatRewriteExample {
+  id?: unknown;
+  languages?: unknown;
+  languagePair?: unknown;
+  pageTopic?: unknown;
+  setSize?: unknown;
+  setSizeBand?: unknown;
+  pageType?: unknown;
+  domainTags?: unknown;
+  patternTags?: unknown;
+  issueTags?: unknown;
+  notes?: unknown;
+  sets?: Partial<Record<TopicDoormatPageLanguage, TopicDoormatRewriteExampleLanguageSet>>;
+}
 
 export interface TopicDoormatAnalyzeAndRewriteResult {
   analyzedHtml: string;
@@ -41,6 +73,7 @@ export class TopicDoormatRewriteOrchestratorService {
   private readonly uploadState = inject(UploadStateService);
   private readonly skillManager = inject(SkillManagerService);
   private readonly alertAi = inject(AlertAiService);
+  private readonly openRouter = inject(OpenRouterService);
   private readonly urlDataService = inject(UrlDataService);
   private readonly topicDoormatAnalysisState = inject(TopicDoormatAnalysisStateService);
   private readonly topicDoormatExtractor = inject(TopicDoormatExtractorService);
@@ -48,6 +81,12 @@ export class TopicDoormatRewriteOrchestratorService {
   private readonly topicDoormatTemplateNormalizer = inject(
     TopicDoormatTemplateNormalizerService,
   );
+  private readonly topicDoormatRewriteAttemptTimeoutMs = 150000;
+  private readonly examplesPath = new URL(
+    'skills/topic-doormats/rewrite/references/examples.json',
+    document.baseURI,
+  ).toString();
+  private examplesCache: TopicDoormatRewriteExample[] | null = null;
 
   async analyzeAndRewriteGeneratedTopicHtml(
     html: string,
@@ -134,10 +173,13 @@ export class TopicDoormatRewriteOrchestratorService {
     }
 
     const prompt = await this.buildRewritePrompt();
+    const examples = await this.getExamplesForLanguage(pageLanguage);
     const userContent = this.buildRewriteUserContent(
       analyzedHtml,
       issueRows,
       doormatSummaries,
+      pageLanguage,
+      examples,
     );
     const rewrite = await this.callOpenRouterForRewrite(model, [
       { role: 'system', content: prompt },
@@ -197,9 +239,12 @@ export class TopicDoormatRewriteOrchestratorService {
       );
 
     const prompt = await this.buildRewritePrompt();
+    const examples = await this.getExamplesForLanguage(pageLanguage);
     const userContent = this.buildDraftUserContent(
       workingHtml,
       doormatSummaries,
+      pageLanguage,
+      examples,
     );
     const rewrite = await this.callOpenRouterForRewrite(model, [
       { role: 'system', content: prompt },
@@ -298,6 +343,8 @@ export class TopicDoormatRewriteOrchestratorService {
     html: string,
     rows: TopicDoormatIssueRow[],
     summaries: TopicDoormatSummary[],
+    pageLanguage: TopicDoormatPageLanguage,
+    examples: Record<string, unknown>[],
   ): string {
     const selectedStateIssues =
       this.topicDoormatAnalysisState.hasAnalysis() &&
@@ -336,12 +383,25 @@ export class TopicDoormatRewriteOrchestratorService {
         .map((index) => summariesByIndex.get(index))
         .filter((summary): summary is TopicDoormatSummary => summary !== undefined)
         .map((summary) => this.toDoormatDestinationRewritePayload(summary)),
+      ...(examples.length
+        ? {
+            topic_doormat_examples: {
+              status: 'language-filtered',
+              page_language: pageLanguage,
+              instruction:
+                'Use these examples as set-level pattern guidance only. Do not copy example wording or legacy source markup. Follow the rewrite rules and preserve the current page language.',
+              examples,
+            },
+          }
+        : {}),
     });
   }
 
   private buildDraftUserContent(
     html: string,
     summaries: TopicDoormatSummary[],
+    pageLanguage: TopicDoormatPageLanguage,
+    examples: Record<string, unknown>[],
   ): string {
     const draftIssues = summaries.map((summary) =>
       this.toGeneratedPlaceholderIssue(summary),
@@ -359,6 +419,17 @@ export class TopicDoormatRewriteOrchestratorService {
       doormats_with_selected_issues: summaries.map((summary) =>
         this.toDoormatDestinationRewritePayload(summary),
       ),
+      ...(examples.length
+        ? {
+            topic_doormat_examples: {
+              status: 'language-filtered',
+              page_language: pageLanguage,
+              instruction:
+                'Use these examples as set-level pattern guidance only. Do not copy example wording or legacy source markup. Follow the rewrite rules and preserve the current page language.',
+              examples,
+            },
+          }
+        : {}),
     });
   }
 
@@ -487,68 +558,122 @@ export class TopicDoormatRewriteOrchestratorService {
     );
   }
 
+  private async getExamplesForLanguage(
+    pageLanguage: TopicDoormatPageLanguage,
+  ): Promise<Record<string, unknown>[]> {
+    const examples = await this.loadExamples();
+    return examples
+      .map((example) => this.toLanguageFilteredExample(example, pageLanguage))
+      .filter((example): example is Record<string, unknown> => !!example);
+  }
+
+  private async loadExamples(): Promise<TopicDoormatRewriteExample[]> {
+    if (this.examplesCache) {
+      return this.examplesCache;
+    }
+
+    try {
+      const response = await fetch(this.examplesPath);
+      if (!response.ok) {
+        throw new Error(`Failed to load topic doormat examples (${response.status}).`);
+      }
+      const payload = (await response.json()) as unknown;
+      const rawExamples = Array.isArray(payload)
+        ? payload
+        : payload &&
+            typeof payload === 'object' &&
+            Array.isArray((payload as Record<string, unknown>)['examples'])
+          ? ((payload as Record<string, unknown>)['examples'] as unknown[])
+          : [];
+      this.examplesCache = rawExamples
+        .filter(
+          (example): example is TopicDoormatRewriteExample =>
+            !!example && typeof example === 'object' && !Array.isArray(example),
+        )
+        .map((example) => example as TopicDoormatRewriteExample);
+      return this.examplesCache;
+    } catch (err) {
+      console.warn('Unable to load topic doormat rewrite examples:', err);
+      this.examplesCache = [];
+      return [];
+    }
+  }
+
+  private toLanguageFilteredExample(
+    example: TopicDoormatRewriteExample,
+    pageLanguage: TopicDoormatPageLanguage,
+  ): Record<string, unknown> | null {
+    const languageSet = example.sets?.[pageLanguage];
+    if (!languageSet || typeof languageSet !== 'object') return null;
+
+    return {
+      id: example.id,
+      languages: example.languages,
+      languagePair: example.languagePair,
+      pageTopic: example.pageTopic,
+      setSize: example.setSize,
+      setSizeBand: example.setSizeBand,
+      pageType: example.pageType,
+      domainTags: example.domainTags,
+      patternTags: example.patternTags,
+      issueTags: example.issueTags,
+      notes: example.notes,
+      selectedLanguage: pageLanguage,
+      set: this.toModelExampleSet(languageSet),
+    };
+  }
+
+  private toModelExampleSet(
+    languageSet: TopicDoormatRewriteExampleLanguageSet,
+  ): Record<string, unknown> {
+    return {
+      sourceHtmlShape: languageSet.sourceHtmlShape,
+      items: Array.isArray(languageSet.items)
+        ? languageSet.items
+            .filter(
+              (item): item is TopicDoormatRewriteExampleItem =>
+                !!item && typeof item === 'object' && !Array.isArray(item),
+            )
+            .map((item) => ({
+              position: item.position,
+              linkText: item.linkText,
+              description: item.description,
+            }))
+        : [],
+    };
+  }
+
   private async callOpenRouterForRewrite(
     model: AiModel,
-    messages: Array<{ role: string; content: string }>,
+    messages: ChatMessage[],
   ): Promise<{ text: string; usedModel: string }> {
-    const apiKey = localStorage.getItem('apiKey');
-    if (!apiKey) throw new Error('Missing API key');
-    const headers = {
-      Authorization: `Bearer ${apiKey}`,
-      'Content-Type': 'application/json',
-    };
     const candidates = this.buildModelRotation(model);
     let lastError: Error | undefined;
 
     for (const candidate of candidates) {
-      const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-        method: 'POST',
-        headers,
-        body: JSON.stringify({
-          models: [candidate],
-          messages,
+      try {
+        const response = await this.openRouter.call(candidate, messages, {
           temperature: 0,
-          provider: { allow_fallbacks: false },
-        }),
-      });
-      if (response.status !== 200) {
+          title: 'Content Assistant - Topic Doormat Rewrite',
+          throwOnError: true,
+          timeoutMs: this.topicDoormatRewriteAttemptTimeoutMs,
+        });
+        const text = response?.choices?.[0]?.message?.content?.trim() || '';
+        if (!text) {
+          lastError = new Error(
+            `Doormat rewrite response was empty (${this.getShortModelName(candidate)}).`,
+          );
+          continue;
+        }
+        return { text, usedModel: candidate };
+      } catch (err) {
         lastError = new Error(
-          `Doormat rewrite failed (${response.status}) for ${this.getShortModelName(candidate)}.`,
-        );
-        continue;
-      }
-      const rawJson = ((await response.json().catch(() => ({}))) || {}) as Record<
-        string,
-        unknown
-      >;
-      const errorObj = rawJson['error'];
-      if (errorObj && typeof errorObj === 'object') {
-        const errorMessage = (errorObj as Record<string, unknown>)['message'];
-        lastError = new Error(
-          `Doormat rewrite error (${this.getShortModelName(candidate)}): ${
-            typeof errorMessage === 'string' ? errorMessage : 'Unknown error'
+          `Doormat rewrite failed for ${this.getShortModelName(candidate)}: ${
+            err instanceof Error ? err.message : String(err)
           }`,
         );
         continue;
       }
-      const choices = Array.isArray(rawJson['choices'])
-        ? (rawJson['choices'] as Array<Record<string, unknown>>)
-        : [];
-      const firstChoice = choices[0];
-      const message =
-        firstChoice && typeof firstChoice['message'] === 'object'
-          ? (firstChoice['message'] as Record<string, unknown>)
-          : null;
-      const text = message ? this.extractOpenRouterMessageText(message) : '';
-      const usedModel =
-        typeof rawJson['model'] === 'string' ? rawJson['model'] : candidate;
-      if (!text) {
-        lastError = new Error(
-          `Doormat rewrite response was empty (${this.getShortModelName(candidate)}).`,
-        );
-        continue;
-      }
-      return { text, usedModel };
     }
 
     throw lastError ?? new Error('Doormat rewrite response was empty.');
@@ -557,32 +682,14 @@ export class TopicDoormatRewriteOrchestratorService {
   private buildModelRotation(model: AiModel): string[] {
     const fallbackOrder: AiModel[] = [
       AiModel.NemotronUltra,
-      AiModel.GptOSS20BFree,
+      AiModel.NemotronLightning,
       AiModel.NemotronSuper,
+      AiModel.FreeModelsRouter,
     ];
     return [
       model,
       ...fallbackOrder.filter((candidate) => candidate !== model),
     ];
-  }
-
-  private extractOpenRouterMessageText(message: Record<string, unknown>): string {
-    const content = message['content'];
-    if (typeof content === 'string') return content;
-    if (!Array.isArray(content)) return '';
-    return content
-      .map((part) => {
-        if (typeof part === 'string') return part;
-        if (part && typeof part === 'object') {
-          const block = part as Record<string, unknown>;
-          const text = block['text'] ?? block['content'];
-          return typeof text === 'string' ? text : '';
-        }
-        return '';
-      })
-      .filter((part) => !!part.trim())
-      .join('\n')
-      .trim();
   }
 
   private extractDoormatRewriteHtmlFromStructuredResponse(

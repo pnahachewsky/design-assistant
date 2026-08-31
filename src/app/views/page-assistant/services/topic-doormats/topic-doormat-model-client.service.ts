@@ -32,10 +32,13 @@ export interface TopicDoormatModelClientResult {
 
 @Injectable({ providedIn: 'root' })
 export class TopicDoormatModelClientService {
+  static readonly modelAttemptTimeoutMs = 150000;
+
   private readonly openRouter = inject(OpenRouterService);
   private readonly topicDoormatForceParseFailureStorageKey =
     'pageAssistant.topicDoormatForceParseFailure';
-  private readonly topicDoormatModelAttemptTimeoutMs = 60000;
+  private readonly topicDoormatModelAttemptTimeoutMs =
+    TopicDoormatModelClientService.modelAttemptTimeoutMs;
 
   async requestIssueJson(
     request: TopicDoormatModelClientRequest,
@@ -141,8 +144,10 @@ export class TopicDoormatModelClientService {
   buildModelRotation(requested?: string): string[] {
     const freeModels = this.openRouter.freeModels;
     if (requested && this.openRouter.models.includes(requested)) {
+      const selectedModelIsPaid = !freeModels.includes(requested);
       return [
         requested,
+        ...(selectedModelIsPaid ? [requested] : []),
         ...freeModels.filter((candidate) => candidate !== requested),
       ];
     }

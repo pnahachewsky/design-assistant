@@ -1,0 +1,146 @@
+{
+  "version": "draft-2026-08-28",
+  "scope": "Set-level examples for GCWeb topic doormat rewriting. Use as pattern guidance only; do not copy wording, hrefs, or source markup into unrelated rewrites.",
+  "examples": [
+    {
+      "id": "doormat-set-gst-hst-businesses-001",
+      "languages": [
+        "en",
+        "fr"
+      ],
+      "languagePair": "en-fr",
+      "pageTopic": "GST/HST for businesses",
+      "setSize": 8,
+      "setSizeBand": "medium",
+      "pageType": "topic-landing",
+      "domainTags": [
+        "tax",
+        "business",
+        "gst-hst"
+      ],
+      "patternTags": [
+        "complete-set",
+        "task-sequence",
+        "short-descriptions",
+        "bilingual-alignment",
+        "acronym-heavy"
+      ],
+      "issueTags": [
+        "generated-placeholder-description",
+        "mixed-description-style",
+        "repeated-description-opening"
+      ],
+      "notes": "Shows a complete medium-sized topic doormat set with task-oriented link text, concise descriptions, and close bilingual alignment. The source HTML uses a row doormat shape; follow the loaded rewrite rules for required output markup.",
+      "sets": {
+        "en": {
+          "sourceHtmlShape": "row wb-eqht-grd",
+          "items": [
+            {
+              "position": 1,
+              "linkText": "Who needs to register for GST/HST",
+              "description": "Find out if you have to register and start charging the GST/HST",
+              "href": "/en/revenue-agency/services/tax/businesses/topics/gst-hst-businesses/when-register-charge.html"
+            },
+            {
+              "position": 2,
+              "linkText": "Get a GST/HST number and manage your account",
+              "description": "Register for a GST/HST account, change or close your account",
+              "href": "/en/revenue-agency/services/tax/businesses/topics/gst-hst-businesses/gst-hst-account.html"
+            },
+            {
+              "position": 3,
+              "linkText": "Charge and collect the GST/HST",
+              "description": "Determine the rate to charge, manage receipts, what to do with tax you collect",
+              "href": "/en/revenue-agency/services/tax/businesses/topics/gst-hst-businesses/charge-collect-which-rate.html"
+            },
+            {
+              "position": 4,
+              "linkText": "Calculate and prepare to report the GST/HST",
+              "description": "How to calculate net tax, determine input tax credits and prepare a return",
+              "href": "/en/revenue-agency/services/tax/businesses/topics/gst-hst-businesses/calculate-prepare-report.html"
+            },
+            {
+              "position": 5,
+              "linkText": "File your GST/HST return",
+              "description": "When and how to file a return for each period, confirm and make changes after you file",
+              "href": "/en/revenue-agency/services/tax/businesses/topics/gst-hst-businesses/file-gst-hst-return.html"
+            },
+            {
+              "position": 6,
+              "linkText": "Remit (pay) the GST/HST you collected",
+              "description": "When and how to remit (pay) the tax, including by instalments",
+              "href": "/en/revenue-agency/services/tax/businesses/topics/gst-hst-businesses/remit-pay-gst-hst-collected.html"
+            },
+            {
+              "position": 7,
+              "linkText": "Claim a GST/HST rebate",
+              "description": "Claim a rebate of the GST/HST (or QST) you paid in certain situations",
+              "href": "/en/revenue-agency/services/tax/businesses/topics/gst-hst-businesses/gst-hst-rebates.html"
+            },
+            {
+              "position": 8,
+              "linkText": "Confirm a GST/HST number",
+              "description": "Find out if a business is registered to charge the GST/HST",
+              "href": "/en/revenue-agency/services/e-services/digital-services-businesses/confirming-a-gst-hst-account-number.html"
+            }
+          ],
+          "sourceHtml": "<div class=\"row wb-eqht-grd\"><div class=\"col-lg-4 col-md-6\"><h3><a href=\"/en/revenue-agency/services/tax/businesses/topics/gst-hst-businesses/when-register-charge.html\">Who needs to register for GST/HST</a></h3><p>Find out if you have to register and start charging the GST/HST</p></div><div class=\"col-lg-4 col-md-6\"><h3><a href=\"/en/revenue-agency/services/tax/businesses/topics/gst-hst-businesses/gst-hst-account.html\">Get a GST/HST number and manage your account</a></h3><p>Register for a GST/HST account or change or close your account</p></div><div class=\"col-lg-4 col-md-6\"><h3><a href=\"/en/revenue-agency/services/tax/businesses/topics/gst-hst-businesses/charge-collect-which-rate.html\">Charge and collect the GST/HST</a></h3><p>Determine the rate to charge, manage receipts, and what to do with tax you collect</p></div><div class=\"col-lg-4 col-md-6\"><h3><a href=\"/en/revenue-agency/services/tax/businesses/topics/gst-hst-businesses/calculate-prepare-report.html\">Calculate and prepare to report the GST/HST</a></h3><p>How to calculate net tax, determine input tax credits and prepare a return</p></div><div class=\"col-lg-4 col-md-6\"><h3><a href=\"/en/revenue-agency/services/tax/businesses/topics/gst-hst-businesses/file-gst-hst-return.html\">File your GST/HST return</a></h3><p>When and how to file a return for each period, confirm and make changes after you file</p></div><div class=\"col-lg-4 col-md-6\"><h3><a href=\"/en/revenue-agency/services/tax/businesses/topics/gst-hst-businesses/remit-pay-gst-hst-collected.html\">Remit (pay) the GST/HST you collected</a></h3><p>When and how to remit (pay) the tax, including by instalments</p></div><div class=\"col-lg-4 col-md-6\"><h3><a href=\"/en/revenue-agency/services/tax/businesses/topics/gst-hst-businesses/gst-hst-rebates.html\">Claim a GST/HST rebate</a></h3><p>Claim a rebate of the GST/HST (or QST) you paid in certain situations</p></div><div class=\"col-lg-4 col-md-6\"><h3><a href=\"/en/revenue-agency/services/e-services/digital-services-businesses/confirming-a-gst-hst-account-number.html\">Confirm a GST/HST number</a></h3><p>Find out if a business is registered to charge the GST/HST</p></div></div>"
+        },
+        "fr": {
+          "sourceHtmlShape": "row wb-eqht-grd",
+          "items": [
+            {
+              "position": 1,
+              "linkText": "Qui doit s'inscrire à la TPS/TVH",
+              "description": "Déterminez si vous devez vous inscrire et commencer à facturer la TPS/TVH",
+              "href": "/fr/agence-revenu/services/impot/entreprises/sujets/tps-tvh-entreprises/quand-inscirie-facture.html"
+            },
+            {
+              "position": 2,
+              "linkText": "Obtenir un numéro de TPS/TVH et gérer votre compte",
+              "description": "Inscrivez-vous à un compte de TPS/TVH, modifiez ou fermez votre compte",
+              "href": "/fr/agence-revenu/services/impot/entreprises/sujets/tps-tvh-entreprises/compte-tps-tvh.html"
+            },
+            {
+              "position": 3,
+              "linkText": "Facturer et percevoir la TPS/TVH",
+              "description": "Déterminez le taux à appliquer, gérez les reçus, et quoi faire avec les taxes que vous percevez",
+              "href": "/fr/agence-revenu/services/impot/entreprises/sujets/tps-tvh-entreprises/facturer-percevoir-quel-taux.html"
+            },
+            {
+              "position": 4,
+              "linkText": "Calculer et se préparer à déclarer la TPS/TVH",
+              "description": "Comment calculer la taxe nette, déterminer les crédits de taxe sur les intrants et produire une déclaration",
+              "href": "/fr/agence-revenu/services/impot/entreprises/sujets/tps-tvh-entreprises/calculer-preparer-declarer.html"
+            },
+            {
+              "position": 5,
+              "linkText": "Produire votre déclaration de TPS/TVH",
+              "description": "Quand et comment produire une déclaration pour chaque période, confirmer et apporter des changements après la production",
+              "href": "/fr/agence-revenu/services/impot/entreprises/sujets/tps-tvh-entreprises/produire-declaration-tps-tvh.html"
+            },
+            {
+              "position": 6,
+              "linkText": "Verser (payer) la TPS/TVH que vous avez perçue",
+              "description": "Quand et comment verser (payer) la taxe, y compris par acomptes provisionnels",
+              "href": "/fr/agence-revenu/services/impot/entreprises/sujets/tps-tvh-entreprises/verser-payer-tps-tvh-percue.html"
+            },
+            {
+              "position": 7,
+              "linkText": "Demander un remboursement de la TPS/TVH",
+              "description": "Demandez un remboursement de la TPS/TVH (ou TVQ) que vous avez payée dans certaines situations",
+              "href": "/fr/agence-revenu/services/impot/entreprises/sujets/tps-tvh-entreprises/remboursements-tps-tvh.html"
+            },
+            {
+              "position": 8,
+              "linkText": "Confirmer un numéro de compte de TPS/TVH",
+              "description": "Déterminez si une entreprise qui vous demande de payer la TPS/TVH est inscrite",
+              "href": "/fr/agence-revenu/services/services-electroniques/services-numeriques-entreprises/confirmation-numero-compte-tps-tvh.html"
+            }
+          ],
+          "sourceHtml": "<div class=\"row wb-eqht-grd\"><div class=\"col-lg-4 col-md-6\"><h3><a href=\"/fr/agence-revenu/services/impot/entreprises/sujets/tps-tvh-entreprises/quand-inscirie-facture.html\">Qui doit s'inscrire à la TPS/TVH</a></h3><p>Déterminez si vous devez vous inscrire et commencer à facturer la TPS/TVH</p></div><div class=\"col-lg-4 col-md-6\"><h3><a href=\"/fr/agence-revenu/services/impot/entreprises/sujets/tps-tvh-entreprises/compte-tps-tvh.html\">Obtenir un numéro de TPS/TVH et gérer votre compte</a></h3><p>Inscrivez-vous à un compte de TPS/TVH ou modifiez ou fermez votre compte</p></div><div class=\"col-lg-4 col-md-6\"><h3><a href=\"/fr/agence-revenu/services/impot/entreprises/sujets/tps-tvh-entreprises/facturer-percevoir-quel-taux.html\">Facturer et percevoir la TPS/TVH</a></h3><p>Déterminez le taux à appliquer, gérez les reçus, et quoi faire avec les taxes que vous percevez</p></div><div class=\"col-lg-4 col-md-6\"><h3><a href=\"/fr/agence-revenu/services/impot/entreprises/sujets/tps-tvh-entreprises/calculer-preparer-declarer.html\">Calculer et se préparer à déclarer la TPS/TVH</a></h3><p>Comment calculer la taxe nette, déterminer les crédits de taxe sur les intrants et produire une déclaration</p></div><div class=\"col-lg-4 col-md-6\"><h3><a href=\"/fr/agence-revenu/services/impot/entreprises/sujets/tps-tvh-entreprises/produire-declaration-tps-tvh.html\">Produire votre déclaration de TPS/TVH</a></h3><p>Quand et comment produire une déclaration pour chaque période, confirmer et apporter des changements après la production</p></div><div class=\"col-lg-4 col-md-6\"><h3><a href=\"/fr/agence-revenu/services/impot/entreprises/sujets/tps-tvh-entreprises/verser-payer-tps-tvh-percue.html\">Verser (payer) la TPS/TVH que vous avez perçue</a></h3><p>Quand et comment verser (payer) la taxe, y compris par acomptes provisionnels</p></div><div class=\"col-lg-4 col-md-6\"><h3><a href=\"/fr/agence-revenu/services/impot/entreprises/sujets/tps-tvh-entreprises/remboursements-tps-tvh.html\">Demander un remboursement de la TPS/TVH</a></h3><p>Demandez un remboursement de la TPS/TVH (ou TVQ) que vous avez payée dans certaines situations</p></div><div class=\"col-lg-4 col-md-6\"><h3><a href=\"/fr/agence-revenu/services/services-electroniques/services-numeriques-entreprises/confirmation-numero-compte-tps-tvh.html\">Confirmer un numéro de compte de TPS/TVH</a></h3><p>Déterminez si une entreprise qui vous demande de payer la TPS/TVH est inscrite</p></div></div>"
+        }
+      }
+    }
+  ]
+}
