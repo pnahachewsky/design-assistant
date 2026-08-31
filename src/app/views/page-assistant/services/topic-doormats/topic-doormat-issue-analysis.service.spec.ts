@@ -205,6 +205,10 @@ class OpenRouterServiceStub {
   models = ['selected-model', 'fallback-model'];
   freeModels = ['selected-model', 'fallback-model'];
   call = jasmine.createSpy('call');
+  buildResponseMetadata = jasmine.createSpy('buildResponseMetadata').and.returnValue({
+    receivedResponse: true,
+    choiceCount: 1,
+  });
 }
 
 class SkillManagerServiceStub {

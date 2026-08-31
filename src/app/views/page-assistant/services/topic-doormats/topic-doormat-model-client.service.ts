@@ -1,5 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { ChatMessage, OpenRouterService } from '../openrouter.service';
+import { AiModel } from '../../data/data.model';
 import { TopicDoormatSummary } from './topic-doormat.types';
 
 export interface TopicDoormatModelClientRequest {
@@ -101,7 +102,44 @@ export class TopicDoormatModelClientService {
         throwOnError: true,
         timeoutMs: this.topicDoormatModelAttemptTimeoutMs,
       });
-      return resp?.choices?.[0]?.message?.content?.trim() || '';
+      if (this.hasNoOpenRouterChoices(resp)) {
+        const error = new Error(
+          `OpenRouter provider returned no choices for ${request.model}.`,
+        );
+        request.debug('model issue field repair request failed', {
+          phase: 'issue-field-repair',
+          model: request.model,
+          error: error.message,
+          response: this.openRouter.buildResponseMetadata(resp),
+        });
+        this.logTopicDoormatModelEvent(
+          'model issue field repair request failed',
+          {
+            phase: 'issue-field-repair',
+            model: request.model,
+            error: error.message,
+            response: this.openRouter.buildResponseMetadata(resp),
+          },
+        );
+        return '';
+      }
+      const text = resp?.choices?.[0]?.message?.content?.trim() || '';
+      if (!text) {
+        request.debug('model issue field repair returned empty content', {
+          phase: 'issue-field-repair',
+          model: request.model,
+          response: this.openRouter.buildResponseMetadata(resp),
+        });
+        this.logTopicDoormatModelEvent(
+          'model issue field repair returned empty content',
+          {
+            phase: 'issue-field-repair',
+            model: request.model,
+            response: this.openRouter.buildResponseMetadata(resp),
+          },
+        );
+      }
+      return text;
     } catch (err) {
       request.debug('model issue field repair request failed', {
         model: request.model,
@@ -131,7 +169,44 @@ export class TopicDoormatModelClientService {
         throwOnError: true,
         timeoutMs: this.topicDoormatModelAttemptTimeoutMs,
       });
-      return resp?.choices?.[0]?.message?.content?.trim() || '';
+      if (this.hasNoOpenRouterChoices(resp)) {
+        const error = new Error(
+          `OpenRouter provider returned no choices for ${request.model}.`,
+        );
+        request.debug('model issue decision repair request failed', {
+          phase: 'issue-decision-repair',
+          model: request.model,
+          error: error.message,
+          response: this.openRouter.buildResponseMetadata(resp),
+        });
+        this.logTopicDoormatModelEvent(
+          'model issue decision repair request failed',
+          {
+            phase: 'issue-decision-repair',
+            model: request.model,
+            error: error.message,
+            response: this.openRouter.buildResponseMetadata(resp),
+          },
+        );
+        return '';
+      }
+      const text = resp?.choices?.[0]?.message?.content?.trim() || '';
+      if (!text) {
+        request.debug('model issue decision repair returned empty content', {
+          phase: 'issue-decision-repair',
+          model: request.model,
+          response: this.openRouter.buildResponseMetadata(resp),
+        });
+        this.logTopicDoormatModelEvent(
+          'model issue decision repair returned empty content',
+          {
+            phase: 'issue-decision-repair',
+            model: request.model,
+            response: this.openRouter.buildResponseMetadata(resp),
+          },
+        );
+      }
+      return text;
     } catch (err) {
       request.debug('model issue decision repair request failed', {
         model: request.model,
@@ -143,6 +218,9 @@ export class TopicDoormatModelClientService {
 
   buildModelRotation(requested?: string): string[] {
     const freeModels = this.openRouter.freeModels;
+    if (requested === AiModel.FreeModelsRouter) {
+      return freeModels;
+    }
     if (requested && this.openRouter.models.includes(requested)) {
       const selectedModelIsPaid = !freeModels.includes(requested);
       return [
@@ -196,6 +274,25 @@ export class TopicDoormatModelClientService {
           throwOnError: true,
           timeoutMs: this.topicDoormatModelAttemptTimeoutMs,
         });
+        if (this.hasNoOpenRouterChoices(resp)) {
+          const error = new Error(
+            `OpenRouter provider returned no choices for ${model}.`,
+          );
+          lastError = error;
+          debug('model attempt failed', {
+            ...attemptMetadata,
+            elapsedMs: Math.round(performance.now() - modelStart),
+            error: error.message,
+            response: this.openRouter.buildResponseMetadata(resp),
+          });
+          this.logTopicDoormatModelEvent('model attempt failed', {
+            ...attemptMetadata,
+            elapsedMs: Math.round(performance.now() - modelStart),
+            error: error.message,
+            response: this.openRouter.buildResponseMetadata(resp),
+          });
+          continue;
+        }
         const text = resp?.choices?.[0]?.message?.content?.trim() || '';
         if (text) {
           const forcedParseFailureMode =
@@ -279,10 +376,12 @@ export class TopicDoormatModelClientService {
         debug('model attempt returned empty content', {
           ...attemptMetadata,
           elapsedMs: Math.round(performance.now() - modelStart),
+          response: this.openRouter.buildResponseMetadata(resp),
         });
         this.logTopicDoormatModelEvent('model attempt returned empty content', {
           ...attemptMetadata,
           elapsedMs: Math.round(performance.now() - modelStart),
+          response: this.openRouter.buildResponseMetadata(resp),
         });
       } catch (err) {
         lastError = err;
@@ -369,7 +468,61 @@ export class TopicDoormatModelClientService {
         throwOnError: true,
         timeoutMs: this.topicDoormatModelAttemptTimeoutMs,
       });
-      return resp?.choices?.[0]?.message?.content?.trim() || '';
+      if (this.hasNoOpenRouterChoices(resp)) {
+        const error = new Error(
+          `OpenRouter provider returned no choices for ${model}.`,
+        );
+        debug('model json repair request failed', {
+          phase: 'json-repair',
+          model,
+          requestedModel: requestedModel || '',
+          repairModelRole:
+            requestedModel && model === requestedModel
+              ? 'selected-model'
+              : 'fallback-model',
+          error: error.message,
+          response: this.openRouter.buildResponseMetadata(resp),
+        });
+        this.logTopicDoormatModelEvent('model json repair request failed', {
+          phase: 'json-repair',
+          model,
+          requestedModel: requestedModel || '',
+          repairModelRole:
+            requestedModel && model === requestedModel
+              ? 'selected-model'
+              : 'fallback-model',
+          error: error.message,
+          response: this.openRouter.buildResponseMetadata(resp),
+        });
+        return '';
+      }
+      const text = resp?.choices?.[0]?.message?.content?.trim() || '';
+      if (!text) {
+        debug('model json repair returned empty content', {
+          phase: 'json-repair',
+          model,
+          requestedModel: requestedModel || '',
+          repairModelRole:
+            requestedModel && model === requestedModel
+              ? 'selected-model'
+              : 'fallback-model',
+          response: this.openRouter.buildResponseMetadata(resp),
+        });
+        this.logTopicDoormatModelEvent(
+          'model json repair returned empty content',
+          {
+            phase: 'json-repair',
+            model,
+            requestedModel: requestedModel || '',
+            repairModelRole:
+              requestedModel && model === requestedModel
+                ? 'selected-model'
+                : 'fallback-model',
+            response: this.openRouter.buildResponseMetadata(resp),
+          },
+        );
+      }
+      return text;
     } catch (err) {
       debug('model json repair request failed', {
         phase: 'json-repair',
@@ -400,6 +553,14 @@ export class TopicDoormatModelClientService {
     details: Record<string, unknown>,
   ): void {
     console.info(`[TopicDoormatIssues] ${event}`, details);
+  }
+
+  private hasNoOpenRouterChoices(response: unknown): boolean {
+    return (
+      !!response &&
+      (!Array.isArray((response as { choices?: unknown }).choices) ||
+        (response as { choices?: unknown[] }).choices?.length === 0)
+    );
   }
 
   private buildTopicDoormatAttemptMetadata(

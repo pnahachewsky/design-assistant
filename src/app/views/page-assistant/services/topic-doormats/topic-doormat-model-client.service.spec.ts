@@ -1,5 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 import { OpenRouterService } from '../openrouter.service';
+import { AiModel } from '../../data/data.model';
 import { TopicDoormatModelClientService } from './topic-doormat-model-client.service';
 import { TopicDoormatSummary } from './topic-doormat.types';
 
@@ -37,12 +38,17 @@ describe('TopicDoormatModelClientService', () => {
   beforeEach(() => {
     openRouter = jasmine.createSpyObj<OpenRouterService>('OpenRouterService', [
       'call',
+      'buildResponseMetadata',
     ]) as jasmine.SpyObj<OpenRouterService> & {
       models: string[];
       freeModels: string[];
     };
     openRouter.models = ['selected-model', 'fallback-model'];
     openRouter.freeModels = ['fallback-model', 'selected-model'];
+    openRouter.buildResponseMetadata.and.returnValue({
+      receivedResponse: true,
+      choiceCount: 1,
+    });
 
     TestBed.configureTestingModule({
       providers: [
@@ -112,6 +118,25 @@ describe('TopicDoormatModelClientService', () => {
     ]);
   });
 
+  it('keeps the free router last when it is selected for topic doormat analysis', () => {
+    openRouter.models = [
+      'free-model-a',
+      'free-model-b',
+      AiModel.FreeModelsRouter,
+    ];
+    openRouter.freeModels = [
+      'free-model-a',
+      'free-model-b',
+      AiModel.FreeModelsRouter,
+    ];
+
+    expect(service.buildModelRotation(AiModel.FreeModelsRouter)).toEqual([
+      'free-model-a',
+      'free-model-b',
+      AiModel.FreeModelsRouter,
+    ]);
+  });
+
   it('rotates to the next model when a topic doormat attempt times out', async () => {
     openRouter.call.and.returnValues(
       Promise.reject(new Error('OpenRouter request timed out')),
@@ -139,6 +164,112 @@ describe('TopicDoormatModelClientService', () => {
       jasmine.objectContaining({
         model: 'selected-model',
         error: 'OpenRouter request timed out',
+      }),
+    );
+  });
+
+  it('logs OpenRouter metadata when an attempt returns empty content', async () => {
+    const emptyResponse = {
+      id: 'response-id',
+      model: 'selected-model',
+      choices: [
+        {
+          finish_reason: 'stop',
+          native_finish_reason: 'stop',
+          message: { role: 'assistant', content: '' },
+        },
+      ],
+      usage: { prompt_tokens: 10, completion_tokens: 0 },
+    } as any;
+    openRouter.call.and.returnValues(
+      Promise.resolve(emptyResponse),
+      Promise.resolve(
+        { choices: [{ message: { content: '{"doormats":[]}' } }] } as any,
+      ),
+    );
+    openRouter.buildResponseMetadata.and.returnValue({
+      receivedResponse: true,
+      id: 'response-id',
+      responseModel: 'selected-model',
+      choiceCount: 1,
+      choices: [
+        {
+          finishReason: 'stop',
+          nativeFinishReason: 'stop',
+          contentCharacters: 0,
+          trimmedContentCharacters: 0,
+        },
+      ],
+      usage: { prompt_tokens: 10, completion_tokens: 0 },
+    });
+    const debug = jasmine.createSpy('debug');
+
+    await service.requestIssueJson({
+      messages: [{ role: 'user', content: '{}' }],
+      requestedModel: 'selected-model',
+      doormatSummaries,
+      isParseableResponseText: () => true,
+      debug,
+    });
+
+    expect(openRouter.buildResponseMetadata).toHaveBeenCalledWith(emptyResponse);
+    expect(debug).toHaveBeenCalledWith(
+      'model attempt returned empty content',
+      jasmine.objectContaining({
+        model: 'selected-model',
+        response: jasmine.objectContaining({
+          id: 'response-id',
+          choiceCount: 1,
+          choices: [
+            jasmine.objectContaining({
+              finishReason: 'stop',
+              contentCharacters: 0,
+            }),
+          ],
+        }),
+      }),
+    );
+  });
+
+  it('treats zero-choice OpenRouter responses as provider failures', async () => {
+    const zeroChoiceResponse = {
+      id: '',
+      model: '',
+      choices: [],
+    } as any;
+    openRouter.call.and.returnValues(
+      Promise.resolve(zeroChoiceResponse),
+      Promise.resolve(
+        { choices: [{ message: { content: '{"doormats":[]}' } }] } as any,
+      ),
+    );
+    openRouter.buildResponseMetadata.and.returnValue({
+      receivedResponse: true,
+      id: '',
+      responseModel: '',
+      choiceCount: 0,
+      choices: [],
+    });
+    const debug = jasmine.createSpy('debug');
+
+    const result = await service.requestIssueJson({
+      messages: [{ role: 'user', content: '{}' }],
+      requestedModel: 'selected-model',
+      doormatSummaries,
+      isParseableResponseText: () => true,
+      debug,
+    });
+
+    expect(result.model).toBe('fallback-model');
+    expect(debug).toHaveBeenCalledWith(
+      'model attempt failed',
+      jasmine.objectContaining({
+        model: 'selected-model',
+        error: 'OpenRouter provider returned no choices for selected-model.',
+        response: jasmine.objectContaining({
+          receivedResponse: true,
+          choiceCount: 0,
+        }),
       }),
     );
   });

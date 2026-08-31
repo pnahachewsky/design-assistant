@@ -11,9 +11,19 @@ export interface ChatMessage {
 }
 export interface OpenRouterChoice {
   message?: { role?: string; content?: string };
+  finish_reason?: string;
+  native_finish_reason?: string;
+  error?: unknown;
 }
 export interface OpenRouterResponse {
+  id?: string;
+  model?: string;
   choices?: OpenRouterChoice[];
+  usage?: unknown;
+  error?: unknown;
+  provider?: unknown;
+  openrouter?: unknown;
+  openrouter_metadata?: unknown;
 }
 export interface OpenRouterCallOptions {
   temperature?: number;
@@ -42,6 +52,31 @@ export class OpenRouterService {
 
   get hasApiKey(): boolean {
     return !!this.apiKeyService.getCurrentKey();
+  }
+
+  buildResponseMetadata(
+    response: OpenRouterResponse | undefined,
+  ): Record<string, unknown> {
+    if (!response) {
+      return {
+        receivedResponse: false,
+      };
+    }
+
+    const choices = Array.isArray(response.choices) ? response.choices : [];
+    return {
+      receivedResponse: true,
+      id: response.id || '',
+      responseModel: response.model || '',
+      choiceCount: choices.length,
+      choices: choices.map((choice) => this.buildChoiceMetadata(choice)),
+      usage: this.sanitizeMetadata(response.usage),
+      error: this.sanitizeMetadata(response.error),
+      provider: this.sanitizeMetadata(response.provider),
+      openrouter: this.sanitizeMetadata(response.openrouter),
+      openrouterMetadata: this.sanitizeMetadata(response.openrouter_metadata),
+      responseKeys: Object.keys(response),
+    };
   }
 
   // Minimal transport wrapper around OpenRouter chat completions.
@@ -124,5 +159,45 @@ export class OpenRouterService {
       }
       return undefined;
     }
+  }
+
+  private buildChoiceMetadata(choice: OpenRouterChoice): Record<string, unknown> {
+    const message = choice.message;
+    const content =
+      typeof message?.content === 'string' ? message.content : '';
+    return {
+      finishReason: choice.finish_reason || '',
+      nativeFinishReason: choice.native_finish_reason || '',
+      hasMessage: !!message,
+      messageRole: message?.role || '',
+      messageKeys:
+        message && typeof message === 'object' ? Object.keys(message) : [],
+      contentCharacters: content.length,
+      trimmedContentCharacters: content.trim().length,
+      error: this.sanitizeMetadata(choice.error),
+      choiceKeys: Object.keys(choice),
+    };
+  }
+
+  private sanitizeMetadata(value: unknown): unknown {
+    if (value == null) return value;
+    if (typeof value === 'string') {
+      return value.length > 500 ? `${value.slice(0, 500)}...` : value;
+    }
+    if (typeof value === 'number' || typeof value === 'boolean') return value;
+    if (Array.isArray(value)) {
+      return value.slice(0, 10).map((item) => this.sanitizeMetadata(item));
+    }
+    if (typeof value === 'object') {
+      return Object.fromEntries(
+        Object.entries(value as Record<string, unknown>)
+          .filter(([key]) => !/content|prompt|message/i.test(key))
+          .map(([key, nestedValue]) => [
+            key,
+            this.sanitizeMetadata(nestedValue),
+          ]),
+      );
+    }
+    return String(value);
   }
 }

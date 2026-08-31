@@ -658,8 +658,25 @@ export class TopicDoormatRewriteOrchestratorService {
           throwOnError: true,
           timeoutMs: this.topicDoormatRewriteAttemptTimeoutMs,
         });
+        if (this.hasNoOpenRouterChoices(response)) {
+          console.info('[TopicDoormatRewrite] model attempt failed', {
+            model: candidate,
+            timeoutMs: this.topicDoormatRewriteAttemptTimeoutMs,
+            error: `OpenRouter provider returned no choices for ${candidate}.`,
+            response: this.openRouter.buildResponseMetadata(response),
+          });
+          lastError = new Error(
+            `Doormat rewrite failed for ${this.getShortModelName(candidate)}: OpenRouter provider returned no choices.`,
+          );
+          continue;
+        }
         const text = response?.choices?.[0]?.message?.content?.trim() || '';
         if (!text) {
+          console.info('[TopicDoormatRewrite] model attempt returned empty content', {
+            model: candidate,
+            timeoutMs: this.topicDoormatRewriteAttemptTimeoutMs,
+            response: this.openRouter.buildResponseMetadata(response),
+          });
           lastError = new Error(
             `Doormat rewrite response was empty (${this.getShortModelName(candidate)}).`,
           );
@@ -686,10 +703,21 @@ export class TopicDoormatRewriteOrchestratorService {
       AiModel.NemotronSuper,
       AiModel.FreeModelsRouter,
     ];
+    if (model === AiModel.FreeModelsRouter) {
+      return fallbackOrder;
+    }
     return [
       model,
       ...fallbackOrder.filter((candidate) => candidate !== model),
     ];
+  }
+
+  private hasNoOpenRouterChoices(response: unknown): boolean {
+    return (
+      !!response &&
+      (!Array.isArray((response as { choices?: unknown }).choices) ||
+        (response as { choices?: unknown[] }).choices?.length === 0)
+    );
   }
 
   private extractDoormatRewriteHtmlFromStructuredResponse(
