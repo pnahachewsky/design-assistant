@@ -53,7 +53,6 @@
       "description-special-formatting",
       "description-capitalization",
       "description-list-separators",
-      "description-uses-and-before-final-item",
       "misdirected-link",
       "link-name-lacks-clarity",
       "link-name-not-unique",
@@ -336,7 +335,7 @@
       "label": "Inconsistent link name style",
       "severity": "Low",
       "condition": "One or more doormat link texts are clear outliers from a dominant link text style used by the rest of the set, such as a lone action link among topic links.",
-      "recommendation": "Use the dominant link text style for this outlier unless the page context clearly justifies the exception.",
+      "recommendation": "Use the dominant link name style unless this doormat has a clear reason to differ. Only revise if a more specific, equally accurate product/service label is available.",
       "reporting": "Do not return this issue directly. AIDA derives it from detected_link_text_style only when a section has one dominant style and no reportable section-level mix.",
       "evidence_required": [
         "dominant_style",

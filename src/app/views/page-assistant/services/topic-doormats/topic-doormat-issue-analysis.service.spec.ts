@@ -66,6 +66,10 @@ class HttpClientStub {
           id: 'description-uses-first-or-second-person',
           label: 'Description starts with first or second person',
         },
+        {
+          id: 'description-uses-and-before-final-item',
+          label: 'Description uses and before final item',
+        },
         { id: 'description-lacks-clarity', label: 'Description lacks clarity' },
         { id: 'misdirected-link', label: 'Misdirected link' },
         {
@@ -189,6 +193,12 @@ class TranslateServiceStub {
     if (key.includes('descriptionPerson.recommendation')) {
       return 'Rewrite the description without first or second person.';
     }
+    if (key.includes('descriptionAndBeforeFinalItem.evidence')) {
+      return `The key-term description uses '${params?.['connector']}' to join final list items.`;
+    }
+    if (key.includes('descriptionAndBeforeFinalItem.recommendation')) {
+      return `Use commas only between parallel key terms. Remove '${params?.['connector']}' unless it is part of a fixed expression or needed for clarity.`;
+    }
     if (key.includes('noIssues.issue')) return 'No issues';
     if (key.includes('noIssues.evidence')) return 'No issues reported by AI.';
     if (key.includes('missingAiEvidence')) {
@@ -270,7 +280,6 @@ describe('TopicDoormatIssueAnalysisService', () => {
       'description-special-formatting',
       'description-capitalization',
       'description-list-separators',
-      'description-uses-and-before-final-item',
       'misdirected-link',
       'link-name-lacks-clarity',
       'link-name-not-unique',
@@ -2121,6 +2130,155 @@ describe('TopicDoormatIssueAnalysisService', () => {
 
     expect(
       result.rows.some((row) => row.issueId === 'link-name-too-long'),
+    ).toBeFalse();
+  });
+
+  it('flags and before final item in likely key-term descriptions deterministically', async () => {
+    openRouter.call.and.resolveTo({
+      choices: [{ message: { content: '' } }],
+    });
+
+    const result = await service.analyze({
+      doormatSummaries: [
+        summary({
+          description:
+            'Annual limits, administrative procedures for registered plans, and links to bulletins, newsletters, and manuals',
+        }),
+      ],
+      pageLanguage: 'en',
+      hasLegacyTopicDoormatTemplate: false,
+      mostRequestedLinks: [],
+      selectedModel: 'selected-model',
+    });
+
+    const row = result.rows.find(
+      (item) => item.issueId === 'description-uses-and-before-final-item',
+    );
+    expect(row).toEqual(
+      jasmine.objectContaining({
+        rowType: 'doormat',
+        severity: 'Low',
+        evidence: "The key-term description uses 'and' to join final list items.",
+        recommendation:
+          "Use commas only between parallel key terms. Remove 'and' unless it is part of a fixed expression or needed for clarity.",
+        doormatIndex: 1,
+      }),
+    );
+  });
+
+  it('does not flag and before final item in task-style descriptions', async () => {
+    openRouter.call.and.resolveTo({
+      choices: [{ message: { content: '' } }],
+    });
+
+    const result = await service.analyze({
+      doormatSummaries: [
+        summary({
+          description:
+            'Open an account, calculate your contribution room, and make withdrawals',
+        }),
+      ],
+      pageLanguage: 'en',
+      hasLegacyTopicDoormatTemplate: false,
+      mostRequestedLinks: [],
+      selectedModel: 'selected-model',
+    });
+
+    expect(
+      result.rows.some(
+        (row) => row.issueId === 'description-uses-and-before-final-item',
+      ),
+    ).toBeFalse();
+  });
+
+  it('flags et before final item in likely French key-term descriptions deterministically', async () => {
+    openRouter.call.and.resolveTo({
+      choices: [{ message: { content: '' } }],
+    });
+
+    const result = await service.analyze({
+      doormatSummaries: [
+        summary({
+          description:
+            'Plafonds annuels, procedures administratives pour les regimes enregistres, et liens vers les bulletins, infolettres, et manuels',
+        }),
+      ],
+      pageLanguage: 'fr',
+      hasLegacyTopicDoormatTemplate: false,
+      mostRequestedLinks: [],
+      selectedModel: 'selected-model',
+    });
+
+    const row = result.rows.find(
+      (item) => item.issueId === 'description-uses-and-before-final-item',
+    );
+    expect(row).toEqual(
+      jasmine.objectContaining({
+        rowType: 'doormat',
+        severity: 'Low',
+        evidence: "The key-term description uses 'et' to join final list items.",
+        recommendation:
+          "Use commas only between parallel key terms. Remove 'et' unless it is part of a fixed expression or needed for clarity.",
+        doormatIndex: 1,
+      }),
+    );
+  });
+
+  it('flags et without a preceding comma in likely French key-term descriptions deterministically', async () => {
+    openRouter.call.and.resolveTo({
+      choices: [{ message: { content: '' } }],
+    });
+
+    const result = await service.analyze({
+      doormatSummaries: [
+        summary({
+          description:
+            'Plafonds annuels, procedures administratives et ressources pour les administrateurs de regimes',
+        }),
+      ],
+      pageLanguage: 'fr',
+      hasLegacyTopicDoormatTemplate: false,
+      mostRequestedLinks: [],
+      selectedModel: 'selected-model',
+    });
+
+    const row = result.rows.find(
+      (item) => item.issueId === 'description-uses-and-before-final-item',
+    );
+    expect(row).toEqual(
+      jasmine.objectContaining({
+        rowType: 'doormat',
+        severity: 'Low',
+        evidence: "The key-term description uses 'et' to join final list items.",
+        recommendation:
+          "Use commas only between parallel key terms. Remove 'et' unless it is part of a fixed expression or needed for clarity.",
+        doormatIndex: 1,
+      }),
+    );
+  });
+
+  it('does not flag or before final item in key-term descriptions', async () => {
+    openRouter.call.and.resolveTo({
+      choices: [{ message: { content: '' } }],
+    });
+
+    const result = await service.analyze({
+      doormatSummaries: [
+        summary({
+          description:
+            'Annual limits, administrative procedures, or guidance manuals',
+        }),
+      ],
+      pageLanguage: 'en',
+      hasLegacyTopicDoormatTemplate: false,
+      mostRequestedLinks: [],
+      selectedModel: 'selected-model',
+    });
+
+    expect(
+      result.rows.some(
+        (row) => row.issueId === 'description-uses-and-before-final-item',
+      ),
     ).toBeFalse();
   });
 
