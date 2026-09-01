@@ -1747,12 +1747,31 @@ export class TopicDoormatIssueAnalysisService {
       if (!rawDoormat || typeof rawDoormat !== 'object') return;
       const doormat = rawDoormat as Record<string, unknown>;
       const index = this.toNumber(doormat['doormat_index']);
-      const style = this.normalizeTopicDoormatLinkTextStyle(
+      let style = this.normalizeTopicDoormatLinkTextStyle(
         doormat['detected_link_text_style'],
       );
+      if (
+        style === 'action' &&
+        this.isInformationalTaskLinkText(doormat['link_text'])
+      ) {
+        style = 'topic';
+      }
       if (index && style) stylesByDoormatIndex.set(index, style);
     });
     return stylesByDoormatIndex;
+  }
+
+  private isInformationalTaskLinkText(value: unknown): boolean {
+    const text = this.cleanString(value);
+    if (!text) return false;
+    if (/^(?:how|who|what|when|where|why)\b/i.test(text)) return true;
+    if (/\bhow to\b/i.test(text)) return true;
+
+    const firstWord = text.match(/^[A-Za-z][A-Za-z'-]*/)?.[0] ?? '';
+    if (!firstWord || !/ing$/i.test(firstWord)) return false;
+
+    const imperativeLikeIngWords = new Set(['bring', 'swing']);
+    return !imperativeLikeIngWords.has(firstWord.toLowerCase());
   }
 
   private parseTopicDoormatDestinationLinkAssessments(

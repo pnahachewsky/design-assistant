@@ -58,6 +58,13 @@ Use this skill for issue analysis of topic doormat sets.
   take or a task they can complete, such as "Notify the CRA of the date of
   death", "Apply for the CPP/QPP death benefit", "Represent someone who died",
   or "Apply for a clearance certificate".
+- Classify gerund link names such as "Filing a trust return" or "Submitting
+  documents online" as `topic` when they frame the destination as how to or
+  instructions for a task. Do not classify a gerund as `action` only because
+  the underlying subject is a task. Classify only imperative task commands such
+  as "File a trust return" or "Submit documents online" as `action`, unless
+  destination evidence clearly shows the gerund link is being used as a direct
+  transactional entry point.
 - Classify link names as `audience-group` when they are framed as an audience or
   user group, such as "Individuals", "Businesses", "Charitable organizations",
   "Non-Canadians", or "Tax professionals".

@@ -16,7 +16,7 @@
     },
     {
       "id": "use-issue-analysis",
-      "text": "When selected topic doormat issues are supplied, use them as rewrite priorities. Fix each selected issue when possible without creating new length, style, destination, structure, or consistency problems. Preserve doormats that do not have selected issues. If an issue cannot be fixed safely, preserve the safest wording."
+      "text": "When selected topic doormat issues are supplied, use them as rewrite priorities. Fix each selected issue when possible without creating new length, style, destination, structure, or consistency problems. Preserve doormats that do not have selected issues. Preserve link text unless a selected issue for that doormat is explicitly about link text, such as link length, link clarity, link uniqueness, destination-title mismatch, or link-name style. Description issues, review flags, IA child-page flags, and repeated-opening issues do not authorize link text changes. If an issue cannot be fixed safely, preserve the safest wording."
     },
     {
       "id": "minimal-formatting-and-length-fixes",
@@ -24,7 +24,7 @@
     },
     {
       "id": "link-text",
-      "text": "Use unique, descriptive link text that preserves destination meaning. Keep link text style consistent within each H2 section because links are the first scannable part of the doormat set and often read like headings. Avoid vague terms, duplicate wording, unnecessary words, and trailing punctuation. Keep under 75 characters, including spaces, and aim for 35 or fewer."
+      "text": "Use unique, descriptive link text that preserves destination meaning. Keep link text style consistent within each H2 section because links are the first scannable part of the doormat set and often read like headings. Choose task framing based on destination intent: use imperative action wording when the destination or section lets users start, complete, or continue the task; use gerund, how-to, or explanatory wording when the destination mainly provides information, instructions, requirements, eligibility, timing, or rules about the task. Do not change an informational link into an imperative task link unless destination evidence shows the task can actually be completed or started there. Do not change a transactional task link into gerund or how-to wording when the destination is primarily where users complete the task. Avoid vague terms, duplicate wording, unnecessary words, and trailing punctuation. Keep under 75 characters, including spaces, and aim for 35 or fewer."
     },
     {
       "id": "description-evidence",

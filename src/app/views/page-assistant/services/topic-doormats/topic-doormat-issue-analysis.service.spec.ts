@@ -1538,7 +1538,7 @@ describe('TopicDoormatIssueAnalysisService', () => {
     expect(result.rows.some((row) => row.issueId === 'multiple-links')).toBeFalse();
   });
 
-  it('derives link-style and destination rows from classifications for the trust-page regression case', async () => {
+  it('treats gerund and how-when link names as topic style in the trust-page regression case', async () => {
     const linkCases = [
       {
         linkText: 'Filing a trust return',
@@ -1657,8 +1657,7 @@ describe('TopicDoormatIssueAnalysisService', () => {
     const mixedLinkStyleRows = result.rows.filter(
       (row) => row.issueId === 'mixed-link-name-styles-in-section',
     );
-    expect(mixedLinkStyleRows.length).toBe(1);
-    expect(mixedLinkStyleRows[0].severity).toBe('Low');
+    expect(mixedLinkStyleRows.length).toBe(0);
     expect(
       result.rows.some((row) => row.issueId === 'inconsistent-link-name-style'),
     ).toBeFalse();

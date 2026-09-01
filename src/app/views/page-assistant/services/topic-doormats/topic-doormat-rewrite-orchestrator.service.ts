@@ -191,6 +191,11 @@ export class TopicDoormatRewriteOrchestratorService {
     const modelRewriteIssues = this.getModelRewriteIssues(
       selectedIssuesForRewrite,
     );
+    const linkTextRewriteAllowedIndexes =
+      this.getLinkTextRewriteAllowedIndexes(
+        selectedIssuesForRewrite,
+        doormatSummaries,
+      );
     const modelRequiredDoormatIndexes = this.getAffectedDoormatIndexesForRewrite(
       modelRewriteIssues,
       doormatSummaries,
@@ -288,10 +293,14 @@ export class TopicDoormatRewriteOrchestratorService {
         }
       }
     }
-    const cleanedPatchedHtml = this.applyDescriptionTrailingPunctuationCleanupToHtml(
-      patchedHtml,
+    const cleanedPatchedHtml = this.preserveUnselectedLinkTextInHtml(
+      this.applyDescriptionTrailingPunctuationCleanupToHtml(
+        patchedHtml,
+        doormatSummaries,
+        descriptionTrailingPunctuationIndexes,
+      ),
       doormatSummaries,
-      descriptionTrailingPunctuationIndexes,
+      linkTextRewriteAllowedIndexes,
     );
     const rewrittenHtml = await this.urlDataService.formatHtml(
       cleanedPatchedHtml,
@@ -1050,6 +1059,32 @@ export class TopicDoormatRewriteOrchestratorService {
     return this.serializeParsedHtmlLikeInput(html, doc);
   }
 
+  private preserveUnselectedLinkTextInHtml(
+    html: string,
+    summaries: TopicDoormatSummary[],
+    linkTextRewriteAllowedIndexes: Set<number>,
+  ): string {
+    const summariesToPreserve = summaries.filter(
+      (summary) => !linkTextRewriteAllowedIndexes.has(summary.index),
+    );
+    if (!summariesToPreserve.length) return html;
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(html, 'text/html');
+    const summariesByHref = new Map(
+      summariesToPreserve.map((summary) => [summary.href, summary]),
+    );
+    Array.from(doc.body.querySelectorAll('.gc-srvinfo')).forEach((section) => {
+      this.getDoormatItemsByHref(section).forEach((item, href) => {
+        const summary = summariesByHref.get(href);
+        if (!summary) return;
+        const link = this.findDoormatLinkByHref(item, href);
+        if (!link) return;
+        link.textContent = summary.linkText;
+      });
+    });
+    return this.serializeParsedHtmlLikeInput(html, doc);
+  }
+
   private getUnchangedModelRequiredDoormatIndexes(
     beforeHtml: string,
     afterHtml: string,
@@ -1402,6 +1437,28 @@ export class TopicDoormatRewriteOrchestratorService {
       }
     });
     return indexes;
+  }
+
+  private getLinkTextRewriteAllowedIndexes(
+    issues: TopicDoormatIssueRewriteInput[],
+    summaries: TopicDoormatSummary[],
+  ): Set<number> {
+    return this.getAffectedDoormatIndexesForRewrite(
+      issues.filter((issue) => this.isLinkTextRewriteIssue(issue.issueId)),
+      summaries,
+    );
+  }
+
+  private isLinkTextRewriteIssue(issueId: string): boolean {
+    return new Set([
+      'link-name-too-long',
+      'link-name-trailing-punctuation',
+      'link-name-lacks-clarity',
+      'link-name-not-unique',
+      'link-name-too-different-from-destination-title',
+      'mixed-link-name-styles-in-section',
+      'inconsistent-link-name-style',
+    ]).has(issueId);
   }
 
   private toDoormatDestinationRewritePayload(

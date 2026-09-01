@@ -122,7 +122,7 @@
     "link_text_style_definitions": {
       "topic": "A broad subject area or information category that names what the destination is about, such as Arts and media, History and heritage, Cultural trade and investment, or Sport.",
       "product-or-service": "A named product, program, plan, benefit, credit, form, tool, service, or account, such as Registered retirement savings plan, Tax-free savings accounts, Registered education savings plan, Registered disability savings plan, or First home savings account.",
-      "action": "A link name framed as an action the user can take or a task they can complete, such as Notify the CRA of the date of death, Apply for the CPP/QPP death benefit, Represent someone who died, or Apply for a clearance certificate.",
+      "action": "A link name framed as an imperative action the user can take or a task they can complete, such as Notify the CRA of the date of death, Apply for the CPP/QPP death benefit, Represent someone who died, or Apply for a clearance certificate. Classify gerund link names such as Filing a trust return or Submitting documents online as topic when they frame the destination as how to or instructions for a task. Do not classify a gerund as action only because the underlying subject is a task, unless destination evidence clearly shows the gerund link is being used as a direct transactional entry point.",
       "audience-group": "A link name framed as an audience or user group, such as Individuals, Businesses, Charitable organizations, Non-Canadians, or Tax professionals.",
       "mixed-or-unclear": "Use only when the link name genuinely cannot be assigned one of the other styles."
     },

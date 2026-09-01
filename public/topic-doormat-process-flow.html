@@ -438,7 +438,7 @@
             <li>Detect current and legacy topic doormat blocks.</li>
             <li>Extract link text, labels, destination, description, counts, language, and H2 section metadata.</li>
             <li>Fetch destination context and local IA child-page context when available.</li>
-            <li>Run local deterministic checks for counts, link validity, structure, formatting, repeated openings, Most requested duplicates, and IA review flags.</li>
+            <li>Run local deterministic checks for counts, link validity, structure, formatting, trailing description punctuation, list connector usage, repeated openings, Most requested duplicates, and IA review flags.</li>
             <li>Send the complete doormat set to the Topic doormats issue skill.</li>
             <li>Ask the model to classify every doormat using constrained values and grounded evidence.</li>
             <li>Let AIDA validate and aggregate the classifications, apply local decision rules, and build the displayed issues.</li>
@@ -607,12 +607,15 @@
           <summary>Structure and formatting</summary>
           <div class="ex-hide-content">
             <p>AIDA reports objective structure and formatting issues locally where the page markup already proves the issue, including split heading links, multiple links in one doormat, links inside descriptions, trailing punctuation, first- or second-person description openings, and legacy topic doormat markup.</p>
+            <p>Description trailing punctuation is handled deterministically in both the issue report and rewrite flow. When that issue is selected, AIDA removes only the final punctuation mark without asking the model to rewrite the wording for that issue.</p>
+            <p>AIDA also detects likely key-term descriptions that use <span class="inline-code">and</span> or <span class="inline-code">et</span> before final list items. English checks the comma-before-<span class="inline-code">and</span> pattern in comma-list descriptions. French also checks the normal <span class="inline-code">A, B et C</span> pattern. AIDA does not run the same check for <span class="inline-code">or</span> or <span class="inline-code">ou</span>.</p>
           </div>
         </details>
         <details class="ex-hide">
           <summary>Description and link style</summary>
           <div class="ex-hide-content">
-            <p>The model classifies each description and link by grammatical construction. Link styles are <span class="inline-code">task</span>, <span class="inline-code">topic</span>, <span class="inline-code">situation</span>, or <span class="inline-code">mixed-or-unclear</span>. Description styles are <span class="inline-code">sentence</span>, <span class="inline-code">phrase</span>, <span class="inline-code">keyword-list</span>, or <span class="inline-code">mixed-or-unclear</span>. AIDA groups those labels by H2 section and creates section-level mixed-style rows or individual outlier rows when warranted. Mixed-style issues are Low severity. AIDA does not report individual outliers when the whole section is already mixed.</p>
+            <p>The model classifies each description and link by grammatical construction. Link styles are <span class="inline-code">topic</span>, <span class="inline-code">product-or-service</span>, <span class="inline-code">action</span>, <span class="inline-code">audience-group</span>, or <span class="inline-code">mixed-or-unclear</span>. Description rewrite guidance uses <span class="inline-code">leave-unchanged</span>, <span class="inline-code">retain-phrase</span>, <span class="inline-code">tighten-phrase</span>, <span class="inline-code">add-specificity</span>, <span class="inline-code">convert-to-keyword-list</span>, or <span class="inline-code">convert-to-task-list</span>. AIDA groups link-style labels by H2 section and creates section-level mixed-style rows or individual outlier rows when warranted. Mixed-style issues are Low severity. AIDA does not report individual outliers when the whole section is already mixed.</p>
+            <p>For link-style classification, gerund link names such as <span class="inline-code">Filing a trust return</span> or <span class="inline-code">Submitting documents online</span> are treated as <span class="inline-code">topic</span> when they mean how to or instructions for the task. AIDA also normalizes model classifications so gerund, how-to, and who/what/when/where/why link names are not treated as imperative <span class="inline-code">action</span> links merely because the underlying subject is a task.</p>
           </div>
         </details>
         <details class="ex-hide">
@@ -829,6 +832,7 @@
         <article class="source-card">
           <h3>Topic doormat rewriting</h3>
           <p>Used to guide rewritten topic doormat content, issue-aware rewrite priorities, destination evidence for affected doormats, and output format.</p>
+          <p>Rewrite guidance uses destination intent to preserve link framing. Imperative link names are appropriate when the destination lets users start, complete, or continue a task. Gerund, how-to, or explanatory link names are appropriate when the destination mainly provides information, instructions, requirements, eligibility, timing, or rules about the task.</p>
           <ul>
             <li><a href="./skills/topic-doormats/rewrite/SKILL.md">skills/topic-doormats/rewrite/SKILL.md</a></li>
             <li><a href="./skills/topic-doormats/rewrite/references/rewrite-rules.json">skills/topic-doormats/rewrite/references/rewrite-rules.json</a></li>
@@ -852,8 +856,9 @@
         <p>Bottom line: AIDA evaluates Topic doormats together, uses H2 sections for
           section-local limits, style consistency, repeated openings, and IA review
           flags, strips doormat labels from destination-analysis text, validates
-          model classifications against supplied destination context, keeps
-          deterministic checks local, and stores selected issue rows plus cleaned
+          model classifications against supplied destination context, normalizes
+          informational gerund and how/when link names away from imperative action
+          style, keeps deterministic checks local, and stores selected issue rows plus cleaned
           destination main HTML for affected doormats so the Doormats rewrite model
           can fix grounded issues while preserving doormats with no selected issue.
           The skill files linked above are the active source of issue and rewrite guidance.
