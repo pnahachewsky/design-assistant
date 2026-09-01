@@ -16,6 +16,8 @@ export class UploadStateService {
     'pageAssistant.includeAlertRewriteExamples';
   private readonly useCompactAlertsPageContextKey =
     'pageAssistant.useCompactAlertsPageContext';
+  private readonly useDescriptionStyleAsPrimaryIssueKey =
+    'pageAssistant.useDescriptionStyleAsPrimaryIssue';
 
   // Upload source chosen in the drawer.
   private selectedUploadType = signal<'url' | 'paste' | 'word'>('url');
@@ -61,6 +63,19 @@ export class UploadStateService {
     this.storage.saveData(this.useCompactAlertsPageContextKey, String(!!useCompact));
   }
 
+  // Whether doormat analysis treats description style as a primary issue again.
+  private useDescriptionStyleAsPrimaryIssue = signal<boolean>(false);
+  getUseDescriptionStyleAsPrimaryIssue = computed(() =>
+    this.useDescriptionStyleAsPrimaryIssue(),
+  );
+  setUseDescriptionStyleAsPrimaryIssue(useAsPrimary: boolean) {
+    this.useDescriptionStyleAsPrimaryIssue.set(!!useAsPrimary);
+    this.storage.saveData(
+      this.useDescriptionStyleAsPrimaryIssueKey,
+      String(!!useAsPrimary),
+    );
+  }
+
   // Working page data plus shallow history for undo.
   private uploadData = signal<Partial<UploadData> | null>(null);
   private originalUploadData: Partial<UploadData> | null = null; // reserved for future compare-with-original behavior
@@ -90,6 +105,7 @@ export class UploadStateService {
       this.storage.removeData(this.includeAlertRewriteExamplesKey);
       this.storage.removeData('pageAssistant.useJsonAlertsIssuesPrompt');
       this.storage.removeData(this.useCompactAlertsPageContextKey);
+      this.storage.removeData(this.useDescriptionStyleAsPrimaryIssueKey);
       this.storage.removeData('pageAssistant.useSkillPrompts');
       return;
     }
@@ -182,6 +198,7 @@ export class UploadStateService {
     this.editPromptText.set('');
     this.includeAlertRewriteExamples.set(true);
     this.useCompactAlertsPageContext.set(true);
+    this.useDescriptionStyleAsPrimaryIssue.set(false);
     this.uploadData.set(null);
     this.recommendationReviewPending.set(false);
     this.bumpWorkingContentRevision();
@@ -192,6 +209,7 @@ export class UploadStateService {
     this.storage.removeData(this.includeAlertRewriteExamplesKey);
     this.storage.removeData('pageAssistant.useJsonAlertsIssuesPrompt');
     this.storage.removeData(this.useCompactAlertsPageContextKey);
+    this.storage.removeData(this.useDescriptionStyleAsPrimaryIssueKey);
     this.storage.removeData('pageAssistant.useSkillPrompts');
     this.storage.removeData(this.uploadDataKey);
   }
@@ -247,6 +265,18 @@ export class UploadStateService {
     ) {
       this.useCompactAlertsPageContext.set(
         storedUseCompactAlertsPageContext === 'true',
+      );
+    }
+
+    const storedUseDescriptionStyleAsPrimaryIssue = this.storage.getData(
+      this.useDescriptionStyleAsPrimaryIssueKey,
+    );
+    if (
+      storedUseDescriptionStyleAsPrimaryIssue === 'true' ||
+      storedUseDescriptionStyleAsPrimaryIssue === 'false'
+    ) {
+      this.useDescriptionStyleAsPrimaryIssue.set(
+        storedUseDescriptionStyleAsPrimaryIssue === 'true',
       );
     }
 

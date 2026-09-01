@@ -100,6 +100,7 @@ export class AiOptionsComponent implements OnInit {
 
   includeAlertRewriteExamples = true;
   useCompactAlertsPageContext = true;
+  useDescriptionStyleAsPrimaryIssue = false;
 
   // Free and paid model groups are rendered separately in the UI.
   freeAiOptions = [
@@ -114,6 +115,8 @@ export class AiOptionsComponent implements OnInit {
     { id: AiModel.DeepSeekV4Flash, label: 'page.ai-options.model.DeepSeekV4Flash', disabled: false },
     { id: AiModel.DeepSeekV4Pro, label: 'page.ai-options.model.DeepSeekV4Pro', disabled: false },
     { id: AiModel.Gemini, label: 'page.ai-options.model.Gemini', disabled: false },
+    { id: AiModel.GPT56LunaPro, label: 'page.ai-options.model.GPT56LunaPro', disabled: false },
+    { id: AiModel.GPT5Mini, label: 'page.ai-options.model.GPT5Mini', disabled: false },
     { id: AiModel.GPT54Mini, label: 'page.ai-options.model.GPT54Mini', disabled: false },
   ];
 
@@ -133,6 +136,8 @@ export class AiOptionsComponent implements OnInit {
       this.uploadState.getIncludeAlertRewriteExamples();
     this.useCompactAlertsPageContext =
       this.uploadState.getUseCompactAlertsPageContext();
+    this.useDescriptionStyleAsPrimaryIssue =
+      this.uploadState.getUseDescriptionStyleAsPrimaryIssue();
   }
 
   isAiCheckboxDisabled(id: AiModel): boolean {
@@ -154,6 +159,11 @@ export class AiOptionsComponent implements OnInit {
   onUseCompactAlertsPageContextSelect(useCompact: boolean): void {
     this.useCompactAlertsPageContext = useCompact;
     this.uploadState.setUseCompactAlertsPageContext(useCompact);
+  }
+
+  onUseDescriptionStyleAsPrimaryIssueSelect(useAsPrimary: boolean): void {
+    this.useDescriptionStyleAsPrimaryIssue = useAsPrimary;
+    this.uploadState.setUseDescriptionStyleAsPrimaryIssue(useAsPrimary);
   }
 
   // Close the drawer and let the parent component execute the request.

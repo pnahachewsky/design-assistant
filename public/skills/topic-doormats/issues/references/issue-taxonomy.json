@@ -3,7 +3,7 @@
   "scope": "Issue analysis for GCWeb topic page doormats.",
   "precondition": "Run this analysis only when AIDA heuristics have detected one or more topic doormat items. Missing doormat-section detection is handled before invoking this skill.",
   "analysis_unit": "Analyze one complete topic doormat set at a time. Compare doormats within each caller-provided H2 section before assigning section-scoped issues. Use caller-provided H2 section metadata for section-local numbering, the 9-doormat limit, and section-level style issues.",
-  "reporting_unit": "Return issue reports for each affected doormat item. If an editorial issue applies to a whole section rather than a single doormat, return it in section_issues with the affected section_index. Do not repeat section-level issues on every doormat. Do not return mixed-description-style-in-section; AIDA derives it from the required per-doormat detected_description_style classifications. Report too-many-doormats-in-section as one section_issues item for the affected H2 section, not as repeated per-doormat issues.",
+  "reporting_unit": "Return issue reports for each affected doormat item. If an editorial issue applies to a whole section rather than a single doormat, return it in section_issues with the affected section_index. Do not repeat section-level issues on every doormat. Unless runtime instructions say the description-style primary issue flag is enabled, do not return mixed-description-style-in-section or inconsistent-description-style; description style is secondary rewrite guidance, not a primary issue driver by default. Report too-many-doormats-in-section as one section_issues item for the affected H2 section, not as repeated per-doormat issues.",
   "runtime_editorial_evidence_overrides": {
     "description-lacks-clarity": "Report only genuinely ambiguous wording. evidence_details.unclear_phrase must quote an exact phrase from the description and evidence_details.ambiguity_explanation must explain competing interpretations. Generic wording, missing detail, repetition, and incomplete destination coverage are not clarity issues.",
     "misdirected-link": "Do not infer misdirection from URL path structure, site hierarchy, section placement, labels, or closed/archived/replaced destination states. Doormat labels are acceptable when the substantive link text still matches the destination title or H1 in meaning. Do not require exact wording. Section suitability is handled by AIDA's IA checks."
@@ -35,13 +35,10 @@
         "link-name-not-unique",
         "link-name-too-different-from-destination-title",
         "description-lacks-clarity",
-        "description-incorrect-style",
         "description-repeats-link-text",
         "duplicate-or-near-duplicate-description",
-        "mixed-description-style-in-section",
         "mixed-link-name-styles-in-section",
         "inconsistent-link-name-style",
-        "inconsistent-description-style",
         "enhancement-label-not-needed",
         "enhancement-label-wrong-type"
       ]
@@ -61,10 +58,8 @@
       "link-name-lacks-clarity",
       "link-name-not-unique",
       "description-lacks-clarity",
-      "description-incorrect-style",
       "description-repeats-link-text",
       "duplicate-or-near-duplicate-description",
-      "inconsistent-description-style",
       "enhancement-label-not-needed",
       "enhancement-label-wrong-type"
     ]
@@ -78,29 +73,28 @@
     "section_level_issues": "Aim for under 180 characters. Summarize the pattern and include only representative doormat numbers. Do not list every doormat.",
     "doormat_level_issues": "Keep evidence concise. State the concrete fact and avoid repeating full link text or description text unless needed.",
     "url_evidence": "Do not include doormat_href, most_requested_href, destination URLs, or 'Most requested: n/a' in evidence unless the issue depends on broken links, misdirected links, duplicate links, destination-title comparison, or destination context.",
-    "mixed_description_style": "For mixed-description-style-in-section, name the style groups and include 2 to 4 representative doormat indexes per style group. Do not list every doormat. Do not quote full descriptions. Example: Mixes keyword-list and task-list descriptions. Keyword-list examples: 1, 3, 5. Task-list examples: 2, 6, 10.",
+    "mixed_description_style": "Unless runtime instructions say the description-style primary issue flag is enabled, do not report mixed-description-style-in-section. Description style is secondary rewrite guidance, not a primary issue driver by default.",
     "runtime_missing_field_guardrail": "AIDA treats empty strings and dash-only placeholders as missing evidence or recommendation for model-owned issues. It sends only the incomplete issue fields back to the model for repair. If repair still returns unusable text, AIDA keeps the issue visible and displays 'No AI evidence was received.' or 'No AI recommendation was received.' for the missing field."
   },
-  "mandatory_description_style_audit": {
-    "instruction": "Classify every doormat description using exactly one allowed detected_description_style value from the CRA doormat description style options. Classify the description by what kind of information it provides, not only by grammatical construction. Do not return mixed-description-style-in-section; AIDA aggregates the classifications and reports that issue. If a section is otherwise consistent and only one or two descriptions are clear outliers, inconsistent-description-style may still be reported on those doormats.",
-    "style_groups_to_compare": [
-      "comma-separated keyword lists",
-      "task lists",
-      "benefit and eligibility descriptions",
-      "dropdown enhancements"
+  "description_rewrite_guidance": {
+    "instruction": "Return exactly one description_rewrite_guidance value for every doormat. This guidance is secondary to link text style, destination accuracy, clarity, and useful information scent. Prefer the smallest useful edit. Preserve accurate phrase-style descriptions when they are clear. Do not convert descriptions to keyword lists by default.",
+    "allowed_values": [
+      "leave-unchanged",
+      "retain-phrase",
+      "tighten-phrase",
+      "add-specificity",
+      "convert-to-keyword-list",
+      "convert-to-task-list"
     ],
-    "must_classify_as_distinct_styles_when": [
-      "The section mixes comma-separated keyword lists with task-list descriptions.",
-      "The section mixes task-list descriptions with benefit and eligibility descriptions.",
-      "The section mixes ordinary descriptions with dropdown enhancements.",
-      "A small section, including a section with 4 or fewer doormats, has a visible split between accepted description styles."
+    "use_convert_to_keyword_list_only_when": [
+      "The description contains several distinct destination concepts that are easier to scan as parallel terms.",
+      "The existing description is already list-like and only needs cleanup.",
+      "A phrase-style rewrite would be less clear or harder to scan."
     ],
-    "reporting": "Return the classification on every doormat as detected_description_style. AIDA determines whether the classifications form a reportable section-level mix and constructs the evidence from representative doormat indexes.",
-    "do_not_dismiss_because": [
-      "The page is a live Canada.ca page.",
-      "Each individual description is understandable on its own.",
-      "The descriptions are all short or under the character limit.",
-      "There is no single dominant style."
+    "do_not_use_description_style_as_primary_issue": [
+      "Unless runtime instructions say the description-style primary issue flag is enabled, do not report mixed-description-style-in-section.",
+      "Unless runtime instructions say the description-style primary issue flag is enabled, do not report inconsistent-description-style.",
+      "Do not report description-incorrect-style only because a description is phrase-style."
     ]
   },
   "language_thresholds": {
@@ -133,29 +127,7 @@
       "audience-group": "A link name framed as an audience or user group, such as Individuals, Businesses, Charitable organizations, Non-Canadians, or Tax professionals.",
       "mixed-or-unclear": "Use only when the link name genuinely cannot be assigned one of the other styles."
     },
-    "description_styles": [
-      "keyword-list",
-      "task-list",
-      "benefit-eligibility",
-      "dropdown-enhancement",
-      "mixed-or-unclear"
-    ],
-    "description_style_definitions": {
-      "keyword-list": "A comma-separated list of links, headings, keywords, topics, or keyword phrases from the destination page. This is the recommended style. Do not include 'and' before the last item unless it is part of a fixed phrase, program name, service name, or common combined concept.",
-      "task-list": "A description of tasks the user can complete on the destination page, usually using action verbs or action phrases such as file, apply, get, check, register, make, find, or contact.",
-      "benefit-eligibility": "A description of what users can get and who is eligible, such as a payment, benefit, credit, service, document, or outcome plus audience or eligibility information.",
-      "dropdown-enhancement": "A drop-down menu used in place of a link description to provide access to a large number of same-level items or to replace a destination page that consists primarily of a list of links. If text appears before the drop-down, classify that text instead of the drop-down.",
-      "mixed-or-unclear": "Use only when the complete description genuinely cannot be assigned one of the accepted CRA doormat description styles."
-    },
-    "classification_priority": [
-      "Classify by the CRA doormat description style option used.",
-      "Use keyword-list for comma-separated lists of destination links, headings, topics, or keyword phrases.",
-      "Use task-list for descriptions of tasks the user can complete, even when the tasks are comma-separated.",
-      "Use benefit-eligibility for descriptions of what users can get and who is eligible.",
-      "Use dropdown-enhancement only when there is no text description before the drop-down. If a paragraph appears before the drop-down, classify the paragraph text as keyword-list, task-list, benefit-eligibility, or mixed-or-unclear.",
-      "Return one detected_description_style for every doormat before evaluating issues."
-    ],
-    "instruction": "Return exactly one allowed detected_link_text_style and detected_description_style for every doormat. AIDA aggregates the classifications into section mixes and individual outliers. Do not return mixed-description-style-in-section, mixed-link-name-styles-in-section, or inconsistent-link-name-style directly."
+    "instruction": "Return exactly one allowed detected_link_text_style for every doormat. Link text style is the primary style consistency contract. Unless runtime instructions say the description-style primary issue flag is enabled, return description_rewrite_guidance for descriptions and do not use description style as a primary consistency issue. AIDA aggregates link style classifications into section mixes and individual outliers. Do not return mixed-link-name-styles-in-section or inconsistent-link-name-style directly."
   },
   "destination_link_relationship": {
     "required": true,
@@ -203,13 +175,13 @@
     ]
   },
   "style_inconsistency_reporting": {
-    "minimum_standard": "Do not report a style inconsistency just because descriptions are not identical. Return a detected_description_style for every doormat so AIDA can evaluate section-level mixes. Use inconsistent-description-style only for one or two clear outliers from an otherwise consistent section.",
+    "minimum_standard": "Do not report a style inconsistency just because descriptions are not identical. Unless runtime instructions say the description-style primary issue flag is enabled, description style is secondary rewrite guidance. Use description_rewrite_guidance to recommend the smallest useful edit and preserve clear phrases. Link text style remains the primary consistency contract.",
     "dominant_style_required": true,
     "outlier_only_reporting": true,
     "mixed_section_reporting_allowed": false,
     "different_style_required": true,
-    "same_style_is_not_inconsistent": "If dominant_style and outlier_style are the same style label, do not report inconsistent-link-name-style or inconsistent-description-style.",
-    "style_issue_must_survive_length_fix": "If the doormat already has description-too-long, do not also report inconsistent-description-style unless the style problem would still exist after shortening the description.",
+    "same_style_is_not_inconsistent": "If dominant_style and outlier_style are the same link style label, do not report inconsistent-link-name-style.",
+    "description_style_issue_ids_retired": "Unless runtime instructions say the description-style primary issue flag is enabled, do not return description-incorrect-style, mixed-description-style-in-section, or inconsistent-description-style.",
     "forbidden_style_evidence_terms": [
       "verbose",
       "longer",
@@ -221,30 +193,29 @@
     ],
     "do_not_report_when": [
       "Most or all doormats would receive the same style inconsistency issue.",
-      "The affected doormat is already covered by mixed-description-style-in-section.",
+      "The issue depends only on description style classification.",
       "The only evidence is that descriptions have different topics, lengths, or wording.",
       "The only evidence is that one description is longer, more detailed, or more complex than descriptions in the same style category.",
       "The doormat has description-too-long and the style concern depends on the description being long, verbose, detailed, or complex.",
       "The style difference does not reduce clarity, scannability, or the user's ability to compare choices."
     ],
     "use_other_issue_instead": [
-      "Use description-too-long for length issues; do not also report inconsistent-description-style for the same length evidence.",
-      "Use description-lacks-clarity for unclear descriptions. For incomplete descriptions, return a grounded destination_content_assessment so AIDA can determine whether a content-gap issue applies; do not use inconsistent-description-style as a substitute.",
-      "Return accurate detected_description_style values when the section-level style mix is the actual problem; AIDA creates mixed-description-style-in-section.",
-      "Use description-incorrect-style only when the description does not fit any accepted style."
+      "Use description-too-long for length issues.",
+      "Use description-lacks-clarity for unclear descriptions. For incomplete descriptions, return a grounded destination_content_assessment so AIDA can determine whether a content-gap issue applies.",
+      "Use description_rewrite_guidance when a description would benefit from phrase retention, tightening, specificity, or conversion to a list."
     ],
     "evidence_required": [
       "dominant_style",
       "outlier_style",
       "why_this_doormat_is_an_outlier"
     ],
-    "evidence_format": "Evidence for outlier style inconsistency must explicitly state dominant_style and outlier_style using two different values from the allowed style list. Keep evidence concise. Do not use length, verbosity, detail level, or complexity as the reason.",
+    "evidence_format": "Evidence for link style outlier inconsistency must explicitly state dominant_style and outlier_style using two different values from the allowed link style list. Keep evidence concise. Do not use length, verbosity, detail level, or complexity as the reason.",
     "severity_default": "Low",
     "severity_escalation": "Use Medium only when the outlier style makes the doormat harder to compare with the rest of the set."
   },
   "set_level_checks": [
     "Check whether link texts use one grammatical style across the set, but report only clear outliers from a dominant style.",
-    "Classify every description so AIDA can check description style within each H2 section. Do not return mixed-description-style-in-section.",
+    "Return description_rewrite_guidance for every description. Keep description style secondary to link style, clarity, destination accuracy, and useful information scent.",
     "Check whether each description is specific enough to distinguish its doormat from the others.",
     "Check for duplicate or near-duplicate descriptions across the set.",
     "Check for repeated generic task lists across the set.",
@@ -354,7 +325,7 @@
     {
       "id": "link-name-trailing-punctuation",
       "group": "Link name",
-      "label": "Link has trailing punctuation",
+      "label": "Link ends with punctuation",
       "severity": "Low",
       "condition": "The link text ends with a period, colon, question mark, exclamation mark, semicolon, or comma. Link text should not end with punctuation regardless of whether it is classified as topic, product-or-service, action, or audience-group.",
       "recommendation": "Remove trailing punctuation from the link text."
@@ -417,10 +388,10 @@
     {
       "id": "description-incorrect-style",
       "group": "Description clarity",
-      "label": "Description has incorrect style",
+      "label": "Deprecated: description has incorrect style",
       "severity": "Medium",
-      "condition": "The description style does not fit one of the accepted CRA doormat description styles: keyword list, task list, benefit and eligibility description, or valid drop-down enhancement.",
-      "recommendation": "Rewrite using one accepted style and keep that style consistent across the set."
+      "condition": "Deprecated. Do not use this issue.",
+      "recommendation": "Return description_rewrite_guidance instead. Preserve clear phrase-style descriptions when they work."
     },
     {
       "id": "description-repeats-link-text",
@@ -455,11 +426,11 @@
     {
       "id": "mixed-description-style-in-section",
       "group": "Description clarity",
-      "label": "Mixed description styles in section",
+      "label": "Deprecated: mixed description styles in section",
       "severity": "Low",
-      "condition": "The doormat section mixes two or more accepted description styles: keyword list, task list, benefit and eligibility description, or drop-down enhancement.",
-      "recommendation": "Rewrite the descriptions so they use one consistent description style across the section.",
-      "reporting": "Do not return this issue. AIDA reports it once for an affected section by aggregating detected_description_style values and constructs concise evidence with representative doormat indexes.",
+      "condition": "Deprecated. Do not use this issue.",
+      "recommendation": "Return description_rewrite_guidance for individual descriptions only when a rewrite would materially improve clarity or scanning.",
+      "reporting": "Do not return this issue. AIDA no longer reports description style mixes as primary issues.",
       "evidence_required": [
         "section_description_styles",
         "representative_doormat_indexes",
@@ -482,10 +453,10 @@
     {
       "id": "inconsistent-description-style",
       "group": "Description clarity",
-      "label": "Inconsistent description style",
+      "label": "Deprecated: inconsistent description style",
       "severity": "Low",
-      "condition": "One or more descriptions are clear outliers from a dominant description style used by the rest of the set, such as a task-list description among keyword-list descriptions.",
-      "recommendation": "Use the dominant description style for this outlier unless the page context clearly justifies the exception.",
+      "condition": "Deprecated. Do not use this issue.",
+      "recommendation": "Return description_rewrite_guidance instead. Do not force a clear phrase into a keyword list solely for consistency.",
       "evidence_required": [
         "dominant_style",
         "outlier_style",
@@ -548,7 +519,7 @@
     {
       "id": "description-trailing-punctuation",
       "group": "Description formatting",
-      "label": "Description has trailing punctuation",
+      "label": "Description ends with punctuation",
       "severity": "Low",
       "condition": "The description ends with punctuation. Topic doormat descriptions should not end with punctuation, even when the description is a complete sentence or sentence-like clause.",
       "recommendation": "Remove final punctuation from the description."

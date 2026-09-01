@@ -29,18 +29,23 @@ Use this skill for issue analysis of topic doormat sets.
   affected H2 section, not as repeated per-doormat issues
 - Apply consistency checks within the caller-provided H2 section unless the
   taxonomy explicitly scopes a check more broadly
-- Classify every doormat description using exactly one
-  `detected_description_style` value from the output schema. Classify the CRA
-  doormat description style option being used: comma-separated keyword list,
-  task list, benefit and eligibility description, or valid drop-down
-  enhancement. If text appears before a drop-down, classify that text rather
-  than the drop-down enhancement. Do not classify by grammar alone.
-- Do not return `mixed-description-style-in-section`. AIDA derives that section
-  issue by aggregating the per-doormat description style classifications.
 - Audit link name style within each H2 section. Report a section-level mixed
   link name style by returning exactly one `detected_link_text_style` for every
   doormat. Classify using the CRA link name style options: `topic`,
   `product-or-service`, `action`, `audience-group`, or `mixed-or-unclear`.
+  Link name style is the primary style consistency requirement because link
+  names are the first scannable part of a doormat set.
+- Unless runtime instructions say the description-style primary issue flag is
+  enabled, treat description style as secondary rewrite guidance. Return
+  exactly one `description_rewrite_guidance` value for every doormat. Prefer
+  retaining accurate phrase-style descriptions when they are clear. Do not
+  recommend converting descriptions to keyword lists unless that materially
+  improves scanning for a description with several distinct concepts.
+- Unless runtime instructions say the description-style primary issue flag is
+  enabled, do not return `mixed-description-style-in-section`,
+  `description-incorrect-style`, or `inconsistent-description-style`; AIDA does
+  not use description style classification as a primary issue driver by
+  default.
 - Classify link names as `topic` when they name a broad subject area or
   information category, such as "Arts and media", "History and heritage",
   "Cultural trade and investment", or "Sport".

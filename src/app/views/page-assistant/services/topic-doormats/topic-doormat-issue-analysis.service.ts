@@ -38,6 +38,7 @@ export interface TopicDoormatIssueAnalysisInput {
   mostRequestedLinks: MostRequestedLinkSummary[];
   uploadData?: Partial<UploadData> | null;
   selectedModel?: string;
+  useDescriptionStyleAsPrimaryIssue?: boolean;
 }
 
 export interface TopicDoormatIssueAnalysisResult {
@@ -195,7 +196,6 @@ export class TopicDoormatIssueAnalysisService {
     'link-name-too-different-from-destination-title',
     'link-name-trailing-punctuation',
     'missing-needed-doormat',
-    'mixed-description-style-in-section',
     'mixed-link-name-styles-in-section',
     'multiple-links',
     'repeated-description-opening',
@@ -215,12 +215,14 @@ export class TopicDoormatIssueAnalysisService {
     'link-name-lacks-clarity',
     'link-name-not-unique',
     'description-lacks-clarity',
-    'description-incorrect-style',
     'description-repeats-link-text',
     'duplicate-or-near-duplicate-description',
-    'inconsistent-description-style',
     'enhancement-label-not-needed',
     'enhancement-label-wrong-type',
+  ] as const;
+  private readonly topicDoormatDescriptionStyleIssueDecisionIds = [
+    'description-incorrect-style',
+    'inconsistent-description-style',
   ] as const;
   private readonly topicDoormatIssueDecisionValues = new Set([
     'applies',
@@ -265,9 +267,11 @@ export class TopicDoormatIssueAnalysisService {
       'Runtime issue ownership: AIDA calculates the following issues locally.',
       'Do not return them in section_issues or doormat issues:',
       Array.from(this.locallyOwnedTopicDoormatIssueIds).join(', '),
-      'You must still return exactly one allowed detected_description_style for every doormat.',
       'You must still return exactly one allowed detected_link_text_style, destination_link_relationship, and destination_link_relationship_basis for every doormat.',
-      'Classify the description using the CRA doormat description style options, not grammatical construction alone.',
+      'Link text style is the primary style consistency contract because link names are the first scannable elements and act like section-level choices.',
+      input.useDescriptionStyleAsPrimaryIssue
+        ? 'Feature flag enabled: use description style as a primary issue. You must return exactly one allowed detected_description_style for every doormat and may report description style issues when they reduce scannability or comparison.'
+        : 'Feature flag disabled: description style is secondary. Return description_rewrite_guidance to guide the smallest useful rewrite; prefer preserving clear phrase-style descriptions over converting descriptions into keyword lists. Do not return description-incorrect-style, mixed-description-style-in-section, or inconsistent-description-style.',
     ].join('\n');
     const reportLanguageInstruction =
       this.buildTopicDoormatReportLanguageInstruction(input.reportLanguage);
@@ -283,12 +287,15 @@ export class TopicDoormatIssueAnalysisService {
     const messages = this.buildTopicDoormatIssueMessages(
       systemPrompt,
       input.doormatSummaries,
+      input.useDescriptionStyleAsPrimaryIssue,
     );
     const modelRotation = this.modelClient.buildModelRotation(
       input.selectedModel,
     );
     this.debugTopicDoormatIssues('request prepared', {
       selectedModel: input.selectedModel,
+      useDescriptionStyleAsPrimaryIssue:
+        input.useDescriptionStyleAsPrimaryIssue ?? false,
       modelRotation,
       pageLanguage: input.pageLanguage,
       doormatSummaryCount: input.doormatSummaries.length,
@@ -348,6 +355,8 @@ export class TopicDoormatIssueAnalysisService {
       this.requestTopicDoormatIssueJsonBySection({
         systemPrompt,
         selectedModel: input.selectedModel,
+        useDescriptionStyleAsPrimaryIssue:
+          input.useDescriptionStyleAsPrimaryIssue,
         doormatSummaries: input.doormatSummaries,
       }),
       this.iaCheck
@@ -383,6 +392,7 @@ export class TopicDoormatIssueAnalysisService {
           input.mostRequestedLinks,
           input.uploadData,
           localIaRows,
+          input.useDescriptionStyleAsPrimaryIssue,
         )
       : this.buildTopicDoormatFallbackRows(
           input.doormatSummaries,
@@ -410,6 +420,7 @@ export class TopicDoormatIssueAnalysisService {
   private async requestTopicDoormatIssueJsonBySection(params: {
     systemPrompt: string;
     selectedModel?: string;
+    useDescriptionStyleAsPrimaryIssue?: boolean;
     doormatSummaries: TopicDoormatSummary[];
   }): Promise<TopicDoormatModelClientResult> {
     const sectionBatches = this.buildTopicDoormatSectionBatches(
@@ -424,11 +435,18 @@ export class TopicDoormatIssueAnalysisService {
         messages: this.buildTopicDoormatIssueMessages(
           params.systemPrompt,
           params.doormatSummaries,
+          params.useDescriptionStyleAsPrimaryIssue,
         ),
         requestedModel: params.selectedModel,
+        issueJsonRequiredShape: this.buildTopicDoormatIssueRequiredShape(
+          params.useDescriptionStyleAsPrimaryIssue,
+        ),
         doormatSummaries: params.doormatSummaries,
         isParseableResponseText: (value) =>
-          this.isParseableTopicDoormatIssueResponseText(value),
+          this.isParseableTopicDoormatIssueResponseText(
+            value,
+            params.useDescriptionStyleAsPrimaryIssue,
+          ),
         debug: (event, details) => this.debugTopicDoormatIssues(event, details),
       });
     }
@@ -445,11 +463,18 @@ export class TopicDoormatIssueAnalysisService {
         messages: this.buildTopicDoormatIssueMessages(
           params.systemPrompt,
           batch.doormatSummaries,
+          params.useDescriptionStyleAsPrimaryIssue,
         ),
         requestedModel: params.selectedModel,
+        issueJsonRequiredShape: this.buildTopicDoormatIssueRequiredShape(
+          params.useDescriptionStyleAsPrimaryIssue,
+        ),
         doormatSummaries: batch.doormatSummaries,
         isParseableResponseText: (value) =>
-          this.isParseableTopicDoormatIssueResponseText(value),
+          this.isParseableTopicDoormatIssueResponseText(
+            value,
+            params.useDescriptionStyleAsPrimaryIssue,
+          ),
         debug: (event, details) =>
           this.debugTopicDoormatIssues(event, {
             ...details,
@@ -486,6 +511,7 @@ export class TopicDoormatIssueAnalysisService {
   private buildTopicDoormatIssueMessages(
     systemPrompt: string,
     doormatSummaries: TopicDoormatSummary[],
+    useDescriptionStyleAsPrimaryIssue = false,
   ): ChatMessage[] {
     return [
       {
@@ -529,7 +555,9 @@ export class TopicDoormatIssueAnalysisService {
             sectionTitle: summary.sectionTitle,
             sectionItemIndex: summary.sectionItemIndex,
           })),
-          response_format: this.buildTopicDoormatIssueResponseFormat(),
+          response_format: this.buildTopicDoormatIssueResponseFormat(
+            useDescriptionStyleAsPrimaryIssue,
+          ),
         }),
       },
     ];
@@ -549,7 +577,9 @@ export class TopicDoormatIssueAnalysisService {
     ].join('\n');
   }
 
-  private buildTopicDoormatIssueResponseFormat(): Record<string, unknown> {
+  private buildTopicDoormatIssueResponseFormat(
+    useDescriptionStyleAsPrimaryIssue = false,
+  ): Record<string, unknown> {
     return {
       output: 'json_object_only',
       no_markdown: true,
@@ -564,7 +594,9 @@ export class TopicDoormatIssueAnalysisService {
         'href',
         'description',
         'detected_link_text_style',
-        'detected_description_style',
+        useDescriptionStyleAsPrimaryIssue
+          ? 'detected_description_style'
+          : 'description_rewrite_guidance',
         'destination_link_relationship',
         'destination_link_relationship_basis',
         'destination_link_relationship_reason',
@@ -574,7 +606,30 @@ export class TopicDoormatIssueAnalysisService {
       ],
       empty_issue_arrays:
         'Use [] for section_issues and doormat issues when no model-owned issues apply.',
+      required_issue_decision_ids: this.getTopicDoormatRequiredIssueDecisionIds(
+        useDescriptionStyleAsPrimaryIssue,
+      ),
     };
+  }
+
+  private buildTopicDoormatIssueRequiredShape(
+    useDescriptionStyleAsPrimaryIssue = false,
+  ): string {
+    const styleField = useDescriptionStyleAsPrimaryIssue
+      ? '"detected_description_style": string'
+      : '"description_rewrite_guidance": string';
+    return `{ "section_issues": [], "doormats": [{ "doormat_index": number, "link_text": string, "href": string, "description": string, "detected_link_text_style": string, ${styleField}, "destination_link_relationship": string, "destination_link_relationship_basis": string, "destination_link_relationship_reason": string, "destination_content_assessment": { "important_element_ids": [], "covered_element_ids": [], "missing_important_element_ids": [] }, "issue_decisions": [{ "issue_id": string, "decision": "applies|does_not_apply|not_applicable", "reason": string }], "issues": [] }] }`;
+  }
+
+  private getTopicDoormatRequiredIssueDecisionIds(
+    useDescriptionStyleAsPrimaryIssue: boolean,
+  ): string[] {
+    return [
+      ...this.topicDoormatRequiredIssueDecisionIds,
+      ...(useDescriptionStyleAsPrimaryIssue
+        ? this.topicDoormatDescriptionStyleIssueDecisionIds
+        : []),
+    ];
   }
 
   private buildTopicDoormatSectionBatches(
@@ -1247,6 +1302,7 @@ export class TopicDoormatIssueAnalysisService {
     mostRequestedLinks: MostRequestedLinkSummary[] = [],
     uploadData?: Partial<UploadData> | null,
     localIaRows: TopicDoormatIssueRow[] = [],
+    useDescriptionStyleAsPrimaryIssue = false,
   ): TopicDoormatIssueRow[] {
     const parsed = this.looseJsonParse(this.stripCodeFences(text));
     if (!parsed || typeof parsed !== 'object') {
@@ -1268,7 +1324,9 @@ export class TopicDoormatIssueAnalysisService {
     const root = parsed as Record<string, unknown>;
     const doormats = Array.isArray(root['doormats']) ? root['doormats'] : [];
     const descriptionStylesByDoormatIndex =
-      this.parseTopicDoormatDescriptionStyles(doormats);
+      useDescriptionStyleAsPrimaryIssue
+        ? this.parseTopicDoormatDescriptionStyles(doormats)
+        : new Map<number, TopicDoormatDescriptionStyle>();
     const linkStylesByDoormatIndex =
       this.parseTopicDoormatLinkTextStyles(doormats);
     const destinationLinkAssessmentsByDoormatIndex =
@@ -1370,8 +1428,26 @@ export class TopicDoormatIssueAnalysisService {
           }
           if (
             issueId === 'mixed-description-style-in-section' ||
-            issueId === 'mixed-link-name-styles-in-section'
+            issueId === 'description-incorrect-style'
           ) {
+            if (!useDescriptionStyleAsPrimaryIssue) return null;
+          }
+          if (issueId === 'mixed-description-style-in-section') {
+            const sectionRow = this.buildTopicDoormatSectionIssueRow(
+              issue,
+              summary?.sectionIndex,
+            );
+            if (!sectionRow) return null;
+            const sectionKey = `${sectionRow.sectionIndex ?? 0}|${
+              sectionRow.issueId
+            }`;
+            if (!sectionIssueKeys.has(sectionKey)) {
+              sectionIssueRows.push(sectionRow);
+              sectionIssueKeys.add(sectionKey);
+            }
+            return null;
+          }
+          if (issueId === 'mixed-link-name-styles-in-section') {
             const sectionRow = this.buildTopicDoormatSectionIssueRow(
               issue,
               summary?.sectionIndex,
@@ -1424,17 +1500,26 @@ export class TopicDoormatIssueAnalysisService {
     });
 
     const reportableSectionIssueRows = sectionIssueRows.filter(
-      (row) => !this.locallyOwnedTopicDoormatIssueIds.has(row.issueId),
+      (row) =>
+        !this.locallyOwnedTopicDoormatIssueIds.has(row.issueId) &&
+        row.issueId !== 'mixed-description-style-in-section' &&
+        (useDescriptionStyleAsPrimaryIssue ||
+          (row.issueId !== 'inconsistent-description-style' &&
+            row.issueId !== 'description-incorrect-style')),
     );
     const effectiveDescriptionStylesByDoormatIndex =
-      this.applyTopicDoormatDescriptionStyleOverrides(
-        doormatSummaries,
-        descriptionStylesByDoormatIndex,
-      );
-    const descriptionStyleAnalyses = this.analyzeTopicDoormatDescriptionStyles(
-      doormatSummaries,
-      effectiveDescriptionStylesByDoormatIndex,
-    );
+      useDescriptionStyleAsPrimaryIssue
+        ? this.applyTopicDoormatDescriptionStyleOverrides(
+            doormatSummaries,
+            descriptionStylesByDoormatIndex,
+          )
+        : new Map<number, TopicDoormatDescriptionStyle>();
+    const descriptionStyleAnalyses = useDescriptionStyleAsPrimaryIssue
+      ? this.analyzeTopicDoormatDescriptionStyles(
+          doormatSummaries,
+          effectiveDescriptionStylesByDoormatIndex,
+        )
+      : [];
     const descriptionStyleAnalysisBySection = new Map(
       descriptionStyleAnalyses.map((analysis) => [
         analysis.sectionIndex,
@@ -1471,6 +1556,17 @@ export class TopicDoormatIssueAnalysisService {
       if (this.isLocalIaOwnedTopicDoormatIssue(row.issueId)) return true;
       if (!row.sectionIndex) return false;
       if (
+        row.issueId === 'description-incorrect-style'
+      ) {
+        return !useDescriptionStyleAsPrimaryIssue;
+      }
+      if (
+        row.issueId === 'inconsistent-description-style' &&
+        !useDescriptionStyleAsPrimaryIssue
+      ) {
+        return true;
+      }
+      if (
         row.issueId === 'inconsistent-description-style' &&
         mixedDescriptionStyleSectionIndexes.has(row.sectionIndex)
       ) {
@@ -1481,7 +1577,7 @@ export class TopicDoormatIssueAnalysisService {
           row.sectionIndex,
         );
         const rowStyle = row.doormatIndex
-            ? effectiveDescriptionStylesByDoormatIndex.get(row.doormatIndex)
+          ? effectiveDescriptionStylesByDoormatIndex.get(row.doormatIndex)
           : undefined;
         return (
           !analysis?.dominantStyle ||
@@ -1518,6 +1614,7 @@ export class TopicDoormatIssueAnalysisService {
       mostRequestedLinks,
       uploadData,
       effectiveDescriptionStylesByDoormatIndex,
+      useDescriptionStyleAsPrimaryIssue,
       destinationContentAssessmentsByDoormatIndex,
       linkStylesByDoormatIndex,
       destinationLinkAssessmentsByDoormatIndex,
@@ -1569,14 +1666,6 @@ export class TopicDoormatIssueAnalysisService {
       ),
       modelRawSectionIssueRows: sectionIssueRows.length,
       modelDisplayedSectionIssueRows: reportableSectionIssueRows.length,
-      descriptionStylesByDoormatIndex: doormatSummaries.map((summary) => ({
-        doormatIndex: summary.index,
-        sectionIndex: summary.sectionIndex,
-        sectionItemIndex: summary.sectionItemIndex,
-        style:
-          effectiveDescriptionStylesByDoormatIndex.get(summary.index) ??
-          'missing-or-invalid',
-      })),
       linkStylesByDoormatIndex: doormatSummaries.map((summary) => ({
         doormatIndex: summary.index,
         sectionIndex: summary.sectionIndex,
@@ -1860,6 +1949,7 @@ export class TopicDoormatIssueAnalysisService {
       number,
       TopicDoormatDescriptionStyle
     > = new Map<number, TopicDoormatDescriptionStyle>(),
+    useDescriptionStyleAsPrimaryIssue = false,
     destinationContentAssessmentsByDoormatIndex: Map<
       number,
       TopicDoormatDestinationContentAssessment
@@ -1980,10 +2070,10 @@ export class TopicDoormatIssueAnalysisService {
         doormatSummaries,
         destinationLinkAssessmentsByDoormatIndex,
       ),
-      ...this.buildLocalTopicDoormatStyleIssueRows(
+      ...this.buildLocalTopicDoormatDescriptionStructureRows(
         doormatSummaries,
-        existingIssueKeys,
         descriptionStylesByDoormatIndex,
+        useDescriptionStyleAsPrimaryIssue,
       ),
     ];
   }
@@ -3474,45 +3564,42 @@ export class TopicDoormatIssueAnalysisService {
     return false;
   }
 
-  private buildLocalTopicDoormatStyleIssueRows(
+  private buildLocalTopicDoormatDescriptionStructureRows(
     doormatSummaries: TopicDoormatSummary[],
-    existingIssueKeys: Set<string>,
     descriptionStylesByDoormatIndex: Map<number, TopicDoormatDescriptionStyle>,
+    useDescriptionStyleAsPrimaryIssue: boolean,
   ): TopicDoormatIssueRow[] {
+    const fieldflowRows: TopicDoormatIssueRow[] = doormatSummaries
+      .filter((summary) => summary.hasFieldflow)
+      .map((summary) => ({
+        include: false,
+        rowType: 'doormat',
+        severity: 'OK',
+        doormat: summary.linkText,
+        doormatLabel: summary.linkText,
+        issueId: 'valid-dropdown-enhancement',
+        issue: this.getTopicDoormatIssueLabel('valid-dropdown-enhancement'),
+        evidence: this.getTopicDoormatDeterministicText(
+          'dropdownEnhancementNote.evidence',
+        ),
+        recommendation: this.getTopicDoormatDeterministicText(
+          'dropdownEnhancementNote.recommendation',
+        ),
+        doormatIndex: summary.index,
+        sectionIndex: summary.sectionIndex,
+        sectionTitle: summary.sectionTitle,
+        sectionItemIndex: summary.sectionItemIndex,
+      }));
+    if (!useDescriptionStyleAsPrimaryIssue) return fieldflowRows;
+
     const analyses = this.analyzeTopicDoormatDescriptionStyles(
       doormatSummaries,
       descriptionStylesByDoormatIndex,
     );
-    const rows: TopicDoormatIssueRow[] = [];
+    const rows: TopicDoormatIssueRow[] = [...fieldflowRows];
 
     analyses.forEach((analysis) => {
-      if (analysis.fieldflowSummaries.length) {
-        analysis.fieldflowSummaries.forEach((summary) => {
-          rows.push({
-            include: false,
-            rowType: 'doormat',
-            severity: 'OK',
-            doormat: summary.linkText,
-            doormatLabel: summary.linkText,
-            issueId: 'valid-dropdown-enhancement',
-            issue: this.getTopicDoormatIssueLabel('valid-dropdown-enhancement'),
-            evidence: this.getTopicDoormatDeterministicText(
-              'dropdownEnhancementNote.evidence',
-            ),
-            recommendation: this.getTopicDoormatDeterministicText(
-              'dropdownEnhancementNote.recommendation',
-            ),
-            doormatIndex: summary.index,
-            sectionIndex: summary.sectionIndex,
-            sectionTitle: summary.sectionTitle,
-            sectionItemIndex: summary.sectionItemIndex,
-          });
-        });
-      }
-
-      const key = `${analysis.sectionIndex}|mixed-description-style-in-section`;
       if (analysis.isMixed) {
-        if (existingIssueKeys.has(key)) return;
         rows.push({
           include: true,
           rowType: 'section',
@@ -4624,7 +4711,10 @@ export class TopicDoormatIssueAnalysisService {
     return null;
   }
 
-  private isParseableTopicDoormatIssueResponseText(text: string): boolean {
+  private isParseableTopicDoormatIssueResponseText(
+    text: string,
+    useDescriptionStyleAsPrimaryIssue = false,
+  ): boolean {
     const parsed = this.looseJsonParse(this.stripCodeFences(text));
     if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
       return false;
@@ -4637,14 +4727,22 @@ export class TopicDoormatIssueAnalysisService {
       return false;
     }
     return (
-      doormats.every((value) => this.isValidTopicDoormatModelResult(value)) &&
+      doormats.every((value) =>
+        this.isValidTopicDoormatModelResult(
+          value,
+          useDescriptionStyleAsPrimaryIssue,
+        ),
+      ) &&
       (sectionIssues ?? []).every((value: unknown) =>
         this.isValidTopicDoormatModelIssue(value, true),
       )
     );
   }
 
-  private isValidTopicDoormatModelResult(value: unknown): boolean {
+  private isValidTopicDoormatModelResult(
+    value: unknown,
+    useDescriptionStyleAsPrimaryIssue = false,
+  ): boolean {
     if (!value || typeof value !== 'object' || Array.isArray(value)) {
       return false;
     }
@@ -4659,9 +4757,11 @@ export class TopicDoormatIssueAnalysisService {
       this.normalizeTopicDoormatLinkTextStyle(
         doormat['detected_link_text_style'],
       ) !== null &&
-      this.normalizeTopicDoormatDescriptionStyle(
-        doormat['detected_description_style'],
-      ) !== null &&
+      (useDescriptionStyleAsPrimaryIssue
+        ? this.normalizeTopicDoormatDescriptionStyle(
+            doormat['detected_description_style'],
+          ) !== null
+        : typeof doormat['description_rewrite_guidance'] === 'string') &&
       this.normalizeTopicDoormatDestinationLinkRelationship(
         doormat['destination_link_relationship'],
       ) !== null &&
@@ -4672,7 +4772,10 @@ export class TopicDoormatIssueAnalysisService {
       this.isValidTopicDoormatDestinationContentAssessment(
         doormat['destination_content_assessment'],
       ) &&
-      this.isValidTopicDoormatIssueDecisions(doormat['issue_decisions']) &&
+      this.isValidTopicDoormatIssueDecisions(
+        doormat['issue_decisions'],
+        useDescriptionStyleAsPrimaryIssue,
+      ) &&
       Array.isArray(doormat['issues']) &&
       doormat['issues'].every((issue: unknown) =>
         this.isValidTopicDoormatModelIssue(issue, false),
@@ -4680,7 +4783,10 @@ export class TopicDoormatIssueAnalysisService {
     );
   }
 
-  private isValidTopicDoormatIssueDecisions(value: unknown): boolean {
+  private isValidTopicDoormatIssueDecisions(
+    value: unknown,
+    useDescriptionStyleAsPrimaryIssue = false,
+  ): boolean {
     if (!Array.isArray(value)) return false;
     const decisionsByIssueId = new Map<string, Record<string, unknown>>();
     value.forEach((rawDecision) => {
@@ -4690,7 +4796,9 @@ export class TopicDoormatIssueAnalysisService {
       if (issueId) decisionsByIssueId.set(issueId, decision);
     });
 
-    return this.topicDoormatRequiredIssueDecisionIds.every((issueId) => {
+    return this.getTopicDoormatRequiredIssueDecisionIds(
+      useDescriptionStyleAsPrimaryIssue,
+    ).every((issueId) => {
       const decision = decisionsByIssueId.get(issueId);
       return (
         !!decision &&

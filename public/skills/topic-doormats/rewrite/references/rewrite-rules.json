@@ -4,7 +4,7 @@
   "rules": [
     {
       "id": "rewrite-complete-set",
-      "text": "Rewrite the complete doormat set together. Keep title style, description style, order, and destination choices consistent across each H2 section and the full set."
+      "text": "Rewrite the complete doormat set together. Keep link text style, order, and destination choices consistent across each H2 section and the full set. Treat description style as secondary to readability, destination accuracy, and useful information scent."
     },
     {
       "id": "return-full-updated-set",
@@ -20,7 +20,7 @@
     },
     {
       "id": "link-text",
-      "text": "Use unique, descriptive link text that preserves destination meaning. Prefer action verbs or concise topic keywords; avoid vague terms, duplicate wording, unnecessary words, and trailing punctuation. Keep under 75 characters, including spaces, and aim for 35 or fewer."
+      "text": "Use unique, descriptive link text that preserves destination meaning. Keep link text style consistent within each H2 section because links are the first scannable part of the doormat set and often read like headings. Avoid vague terms, duplicate wording, unnecessary words, and trailing punctuation. Keep under 75 characters, including spaces, and aim for 35 or fewer."
     },
     {
       "id": "description-evidence",
@@ -36,7 +36,7 @@
     },
     {
       "id": "description-style",
-      "text": "Use one description style across the set. Prefer concise comma-separated keywords or task phrases. For keyword-list descriptions, separate parallel phrases with commas only; do not add 'and' before the final item unless it is part of a fixed phrase, program name, service name, common combined concept, or task phrase. Use a sentence-like description only when fragments cannot clearly describe the destination, and do not add final punctuation."
+      "text": "Description style is secondary. Prefer retaining accurate phrase-style descriptions when they are clear, concise, and useful. Do not convert descriptions to keyword lists by default. Use a comma-separated keyword list only when the destination contains several distinct concepts that are easier to scan as parallel terms, or when the existing description is already list-like and only needs cleanup. Use task phrases only when the destination is primarily about tasks users can complete. Keep descriptions compatible in length, tone, and specificity across the section without forcing every description into the same grammatical shape."
     },
     {
       "id": "description-quality",
@@ -44,7 +44,7 @@
     },
     {
       "id": "existing-description",
-      "text": "Treat existing descriptions as reference evidence only. Keep them when accurate, concise, and consistent; rewrite when incomplete, generic, repetitive, misleading, too long, or inconsistent."
+      "text": "Treat existing descriptions as strong source text. Keep or lightly tighten them when accurate, concise, readable, and specific enough. Rewrite when incomplete, generic, repetitive, misleading, too long, or hard to scan."
     },
     {
       "id": "localized-alignment",

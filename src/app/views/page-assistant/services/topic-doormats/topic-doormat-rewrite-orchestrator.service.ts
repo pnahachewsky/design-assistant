@@ -153,6 +153,8 @@ export class TopicDoormatRewriteOrchestratorService {
           this.topicDoormatExtractor.extractMostRequestedLinks(doc),
         uploadData,
         selectedModel: model,
+        useDescriptionStyleAsPrimaryIssue:
+          this.uploadState.getUseDescriptionStyleAsPrimaryIssue(),
       });
       issueRows = analysis.rows;
       analysisModel = analysis.model;

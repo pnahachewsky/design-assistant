@@ -261,7 +261,9 @@ describe('TopicDoormatIssueAnalysisService', () => {
     missing_important_element_ids: [],
   });
 
-  const defaultIssueDecisions = () =>
+  const defaultIssueDecisions = (
+    includeDescriptionStyleDecisions = false,
+  ) =>
     [
       'missing-description',
       'description-uses-icons-or-images',
@@ -273,10 +275,14 @@ describe('TopicDoormatIssueAnalysisService', () => {
       'link-name-lacks-clarity',
       'link-name-not-unique',
       'description-lacks-clarity',
-      'description-incorrect-style',
+      ...(includeDescriptionStyleDecisions
+        ? ['description-incorrect-style']
+        : []),
       'description-repeats-link-text',
       'duplicate-or-near-duplicate-description',
-      'inconsistent-description-style',
+      ...(includeDescriptionStyleDecisions
+        ? ['inconsistent-description-style']
+        : []),
       'enhancement-label-not-needed',
       'enhancement-label-wrong-type',
     ].map((issueId) => ({
@@ -285,12 +291,15 @@ describe('TopicDoormatIssueAnalysisService', () => {
       reason: 'No matching evidence.',
     }));
 
-  const defaultLinkClassifications = () => ({
+  const defaultLinkClassifications = (
+    includeDescriptionStyleDecisions = false,
+  ) => ({
     detected_link_text_style: 'topic',
+    description_rewrite_guidance: 'retain-phrase',
     destination_link_relationship: 'unavailable',
     destination_link_relationship_basis: 'unavailable',
     destination_link_relationship_reason: '',
-    issue_decisions: defaultIssueDecisions(),
+    issue_decisions: defaultIssueDecisions(includeDescriptionStyleDecisions),
   });
 
   beforeEach(() => {
@@ -1004,7 +1013,7 @@ describe('TopicDoormatIssueAnalysisService', () => {
     );
   });
 
-  it('builds a mixed-style section issue from per-doormat model classifications', async () => {
+  it('does not build description-style section issues from model classifications', async () => {
     const classifiedDescriptions = [
       {
         description: 'Learn how to submit a trust return.',
@@ -1062,6 +1071,82 @@ describe('TopicDoormatIssueAnalysisService', () => {
       selectedModel: 'selected-model',
     });
 
+    expect(
+      result.rows.some(
+        (row) => row.issueId === 'mixed-description-style-in-section',
+      ),
+    ).toBeFalse();
+    expect(
+      result.rows.some(
+        (row) => row.issueId === 'inconsistent-description-style',
+      ),
+    ).toBeFalse();
+    expect(
+      result.rows.some(
+        (row) => row.issueId === 'consistent-description-style-in-section',
+      ),
+    ).toBeFalse();
+  });
+
+  it('builds description-style section issues when the legacy style flag is enabled', async () => {
+    const classifiedDescriptions = [
+      {
+        description: 'Learn how to submit a trust return.',
+        style: 'task-list',
+      },
+      {
+        description: 'Apply for a trust account number.',
+        style: 'task-list',
+      },
+      {
+        description: 'Available to qualifying resident trusts.',
+        style: 'benefit-eligibility',
+      },
+      {
+        description: 'Monthly support for eligible beneficiaries.',
+        style: 'benefit-eligibility',
+      },
+    ];
+    openRouter.call.and.resolveTo({
+      choices: [
+        {
+          message: {
+            content: JSON.stringify({
+              doormats: classifiedDescriptions.map((item, index) => ({
+                doormat_index: index + 1,
+                link_text: `Trust topic ${index + 1}`,
+                href: `/trust/topic-${index + 1}.html`,
+                description: item.description,
+                detected_description_style: item.style,
+                ...defaultLinkClassifications(true),
+                destination_content_assessment:
+                  emptyDestinationContentAssessment(),
+                issues: [],
+              })),
+            }),
+          },
+        },
+      ],
+    });
+
+    const result = await service.analyze({
+      doormatSummaries: classifiedDescriptions.map((item, index) =>
+        summary({
+          index: index + 1,
+          linkText: `Trust topic ${index + 1}`,
+          href: `/trust/topic-${index + 1}.html`,
+          description: item.description,
+          sectionItemIndex: index + 1,
+          sectionDoormatCount: classifiedDescriptions.length,
+        }),
+      ),
+      pageLanguage: 'en',
+      hasLegacyTopicDoormatTemplate: false,
+      mostRequestedLinks: [],
+      selectedModel: 'selected-model',
+      useDescriptionStyleAsPrimaryIssue: true,
+    });
+
     const mixedStyleRow = result.rows.find(
       (row) => row.issueId === 'mixed-description-style-in-section',
     );
@@ -1078,7 +1163,7 @@ describe('TopicDoormatIssueAnalysisService', () => {
     );
   });
 
-  it('adds a non-actionable section row for a consistent description style', async () => {
+  it('does not add diagnostic rows for a consistent description style', async () => {
     const descriptions = [
       'File income tax, get the benefit package',
       'Apply for benefits, check payment status',
@@ -1123,20 +1208,11 @@ describe('TopicDoormatIssueAnalysisService', () => {
       selectedModel: 'selected-model',
     });
 
-    const styleRow = result.rows.find(
-      (row) => row.issueId === 'consistent-description-style-in-section',
-    );
-    expect(styleRow).toEqual(
-      jasmine.objectContaining({
-        include: false,
-        rowType: 'section',
-        severity: 'OK',
-        sectionIndex: 1,
-        issue: 'Consistent description style',
-        evidence: 'All 3 descriptions classified as task lists.',
-        recommendation: 'Temporary diagnostic row for reviewing AI classification.',
-      }),
-    );
+    expect(
+      result.rows.some(
+        (row) => row.issueId === 'consistent-description-style-in-section',
+      ),
+    ).toBeFalse();
     expect(
       result.rows.some(
         (row) => row.issueId === 'mixed-description-style-in-section',
@@ -1248,15 +1324,7 @@ describe('TopicDoormatIssueAnalysisService', () => {
     const consistentStyleRow = result.rows.find(
       (row) => row.issueId === 'consistent-description-style-in-section',
     );
-	    expect(consistentStyleRow).toEqual(
-	      jasmine.objectContaining({
-	        include: false,
-	        rowType: 'section',
-	        severity: 'OK',
-	        evidence:
-	          'All 3 descriptions classified as benefit and eligibility descriptions.',
-	      }),
-	    );
+    expect(consistentStyleRow).toBeUndefined();
     expect(
       result.rows.some(
         (row) => row.issueId === 'mixed-description-style-in-section',
@@ -1376,20 +1444,16 @@ describe('TopicDoormatIssueAnalysisService', () => {
     );
     expect(dropdownNoteRow?.rowType).toBe('doormat');
     expect(dropdownNoteRow?.doormatIndex).toBe(1);
-    const mixedStyleRow = result.rows.find(
-      (row) => row.issueId === 'mixed-description-style-in-section',
-    );
-	    expect(mixedStyleRow).toEqual(
-	      jasmine.objectContaining({
-	        rowType: 'section',
-	        severity: 'Low',
-	      }),
-	    );
-	    expect(mixedStyleRow?.evidence).toContain('Keyword list examples: 2, 3.');
-	    expect(mixedStyleRow?.evidence).toContain('Task list examples: 4.');
-	    expect(mixedStyleRow?.evidence).toContain(
-	      'Benefit and eligibility examples: 1.',
-	    );
+    expect(
+      result.rows.some(
+        (row) => row.issueId === 'mixed-description-style-in-section',
+      ),
+    ).toBeFalse();
+    expect(
+      result.rows.some(
+        (row) => row.issueId === 'consistent-description-style-in-section',
+      ),
+    ).toBeFalse();
   });
 
   it('rejects dropdown enhancement classifications on doormats without fieldflow', async () => {
@@ -1518,6 +1582,7 @@ describe('TopicDoormatIssueAnalysisService', () => {
                 href: `/trust/topic-${index + 1}.html`,
                 description: `Description ${index + 1}`,
                 detected_link_text_style: item.style,
+                description_rewrite_guidance: 'retain-phrase',
                 detected_description_style: 'phrase',
                 destination_link_relationship: item.relationship,
                 destination_link_relationship_basis:
@@ -1609,6 +1674,7 @@ describe('TopicDoormatIssueAnalysisService', () => {
                   href: '/benefits/payment-dates.html',
                   description: 'Find trust return filing deadlines',
                   detected_link_text_style: 'topic',
+                  description_rewrite_guidance: 'retain-phrase',
                   detected_description_style: 'sentence',
                   destination_link_relationship: 'materially-different',
                   destination_link_relationship_basis:
@@ -1666,6 +1732,7 @@ describe('TopicDoormatIssueAnalysisService', () => {
                   href: '/trust/clearance-certificate.html',
                   description: 'Find out when you need a clearance certificate',
                   detected_link_text_style: 'topic',
+                  description_rewrite_guidance: 'retain-phrase',
                   detected_description_style: 'sentence',
                   destination_link_relationship: 'materially-different',
                   destination_link_relationship_basis:

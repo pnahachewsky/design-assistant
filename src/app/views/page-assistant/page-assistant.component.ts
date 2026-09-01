@@ -1192,6 +1192,8 @@ export class PageAssistantCompareComponent
         this.topicDoormatExtractor.extractMostRequestedLinks(doc),
       uploadData,
       selectedModel: model,
+      useDescriptionStyleAsPrimaryIssue:
+        this.uploadState.getUseDescriptionStyleAsPrimaryIssue(),
     });
     if (this.uploadState.getWorkingHtml() !== expectedWorkingHtml) return false;
 

@@ -6,6 +6,7 @@ import { TopicDoormatSummary } from './topic-doormat.types';
 export interface TopicDoormatModelClientRequest {
   messages: ChatMessage[];
   requestedModel?: string;
+  issueJsonRequiredShape?: string;
   doormatSummaries: TopicDoormatSummary[];
   isParseableResponseText: (text: string) => boolean;
   debug: (event: string, details: Record<string, unknown>) => void;
@@ -77,6 +78,7 @@ export class TopicDoormatModelClientService {
       request.doormatSummaries,
       request.isParseableResponseText,
       request.debug,
+      request.issueJsonRequiredShape,
     );
 
     return { text, model, modelRotation };
@@ -233,12 +235,13 @@ export class TopicDoormatModelClientService {
   }
 
   private async callTopicDoormatIssuesWithFallback(
-      messages: ChatMessage[],
-      models: string[],
-      requestedModel: string | undefined,
-      doormatSummaries: TopicDoormatSummary[],
-      isParseableResponseText: (text: string) => boolean,
-      debug: (event: string, details: Record<string, unknown>) => void,
+    messages: ChatMessage[],
+    models: string[],
+    requestedModel: string | undefined,
+    doormatSummaries: TopicDoormatSummary[],
+    isParseableResponseText: (text: string) => boolean,
+    debug: (event: string, details: Record<string, unknown>) => void,
+    issueJsonRequiredShape?: string,
   ): Promise<{ text: string; model: string }> {
     let lastError: unknown;
     let lastModel = models[0] ?? '';
@@ -347,6 +350,7 @@ export class TopicDoormatModelClientService {
             doormatSummaries,
             debug,
             requestedModel,
+            issueJsonRequiredShape,
           );
           if (repairedText && isParseableResponseText(repairedText)) {
             debug('model json repair succeeded', {
@@ -421,6 +425,8 @@ export class TopicDoormatModelClientService {
     doormatSummaries: TopicDoormatSummary[],
     debug: (event: string, details: Record<string, unknown>) => void,
     requestedModel?: string,
+    issueJsonRequiredShape =
+      '{ "section_issues": [], "doormats": [{ "doormat_index": number, "link_text": string, "href": string, "description": string, "detected_link_text_style": string, "description_rewrite_guidance": string, "destination_link_relationship": string, "destination_link_relationship_basis": string, "destination_link_relationship_reason": string, "destination_content_assessment": { "important_element_ids": [], "covered_element_ids": [], "missing_important_element_ids": [] }, "issue_decisions": [{ "issue_id": string, "decision": "applies|does_not_apply|not_applicable", "reason": string }], "issues": [] }] }',
   ): Promise<string> {
     try {
       const repairMessages: ChatMessage[] = [
@@ -432,8 +438,7 @@ export class TopicDoormatModelClientService {
         {
           role: 'user',
           content: JSON.stringify({
-            requiredShape:
-              '{ "section_issues": [], "doormats": [{ "doormat_index": number, "link_text": string, "href": string, "description": string, "detected_link_text_style": string, "detected_description_style": string, "destination_link_relationship": string, "destination_link_relationship_basis": string, "destination_link_relationship_reason": string, "destination_content_assessment": { "important_element_ids": [], "covered_element_ids": [], "missing_important_element_ids": [] }, "issue_decisions": [{ "issue_id": string, "decision": "applies|does_not_apply|not_applicable", "reason": string }], "issues": [] }] }',
+            requiredShape: issueJsonRequiredShape,
             validDoormatIndexes: doormatSummaries.map((summary) => summary.index),
             responseToRepair: invalidText,
           }),

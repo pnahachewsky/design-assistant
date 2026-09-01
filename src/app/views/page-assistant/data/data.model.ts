@@ -104,8 +104,10 @@ export enum AiModel {
   AutoRouter = 'openrouter/auto',
   GptOSS20B = 'openai/gpt-oss-20b', // 131k context paid
   Gemini = 'google/gemini-3.1-flash-lite',
+  GPT56LunaPro = 'openai/gpt-5.6-luna-pro',
+  GPT5Mini = 'openai/gpt-5-mini',
   GPT54Mini = 'openai/gpt-5.4-mini',
-  DeepSeekV4Flash = 'deepseek/deepseek-v4-flash',
+  DeepSeekV4Flash = 'deepseek/deepseek-v4-flash-latest',
   DeepSeekV4Pro = 'deepseek/deepseek-v4-pro',
 }
 

@@ -26,6 +26,17 @@
             "mixed-or-unclear"
           ]
         },
+        "description_rewrite_guidance": {
+          "type": "string",
+          "enum": [
+            "leave-unchanged",
+            "retain-phrase",
+            "tighten-phrase",
+            "add-specificity",
+            "convert-to-keyword-list",
+            "convert-to-task-list"
+          ]
+        },
         "detected_description_style": {
           "type": "string",
           "enum": [
@@ -34,7 +45,8 @@
             "benefit-eligibility",
             "dropdown-enhancement",
             "mixed-or-unclear"
-          ]
+          ],
+          "description": "Optional legacy/advisory classification. Do not use this as the primary rewrite target."
         },
         "overall_assessment": {
           "type": "string"
@@ -72,7 +84,7 @@
           "href",
           "description",
           "detected_link_text_style",
-          "detected_description_style",
+          "description_rewrite_guidance",
           "destination_link_relationship",
           "destination_link_relationship_basis",
           "destination_link_relationship_reason",
@@ -112,6 +124,17 @@
               "mixed-or-unclear"
             ]
           },
+          "description_rewrite_guidance": {
+            "type": "string",
+            "enum": [
+              "leave-unchanged",
+              "retain-phrase",
+              "tighten-phrase",
+              "add-specificity",
+              "convert-to-keyword-list",
+              "convert-to-task-list"
+            ]
+          },
           "detected_description_style": {
             "type": "string",
             "enum": [
@@ -120,7 +143,8 @@
               "benefit-eligibility",
               "dropdown-enhancement",
               "mixed-or-unclear"
-            ]
+            ],
+            "description": "Optional legacy/advisory classification. Do not use this as the primary rewrite target."
           },
           "destination_link_relationship": {
             "type": "string",
