@@ -174,14 +174,37 @@ export class TopicDoormatRewriteOrchestratorService {
       });
     }
 
+    const selectedIssuesForRewrite = this.getSelectedRewriteIssuesForHtml(
+      analyzedHtml,
+      issueRows,
+    );
+    const descriptionTrailingPunctuationIndexes =
+      this.getDescriptionTrailingPunctuationIndexes(
+        selectedIssuesForRewrite,
+        doormatSummaries,
+      );
+    const htmlForRewrite = this.applyDescriptionTrailingPunctuationCleanupToHtml(
+      analyzedHtml,
+      doormatSummaries,
+      descriptionTrailingPunctuationIndexes,
+    );
+    const modelRewriteIssues = this.getModelRewriteIssues(
+      selectedIssuesForRewrite,
+    );
+    const modelRequiredDoormatIndexes = this.getAffectedDoormatIndexesForRewrite(
+      modelRewriteIssues,
+      doormatSummaries,
+    );
+
     const prompt = await this.buildRewritePrompt();
     const examples = await this.getExamplesForLanguage(pageLanguage);
     const userContent = this.buildRewriteUserContent(
-      analyzedHtml,
+      htmlForRewrite,
       issueRows,
       doormatSummaries,
       pageLanguage,
       examples,
+      modelRewriteIssues,
     );
     const rewrite = await this.callOpenRouterForRewrite(model, [
       { role: 'system', content: prompt },
@@ -196,17 +219,90 @@ export class TopicDoormatRewriteOrchestratorService {
       );
     }
 
-    const patchedHtml = this.applyDoormatRewriteToPageHtml(
-      analyzedHtml,
+    let patchedHtml = this.applyDoormatRewriteToPageHtml(
+      htmlForRewrite,
       rewriteHtml,
     );
-    const rewrittenHtml = await this.urlDataService.formatHtml(patchedHtml, 'ai');
+    let rewriteModel = rewrite.usedModel;
+    const unchangedModelRequiredIndexes =
+      this.getUnchangedModelRequiredDoormatIndexes(
+        htmlForRewrite,
+        patchedHtml,
+        modelRequiredDoormatIndexes,
+        doormatSummaries,
+      );
+    if (unchangedModelRequiredIndexes.size) {
+      console.warn(
+        '[TopicDoormatRewrite] selected model-required doormats unchanged',
+        {
+          unchangedDoormatIndexes: Array.from(unchangedModelRequiredIndexes),
+          selectedIssueIds: Array.from(
+            new Set(modelRewriteIssues.map((issue) => issue.issueId)),
+          ),
+        },
+      );
+      const repairIssues = this.getRewriteIssuesForDoormatIndexes(
+        modelRewriteIssues,
+        unchangedModelRequiredIndexes,
+        doormatSummaries,
+      );
+      if (repairIssues.length) {
+        const repairContent = this.buildModelRequiredRepairUserContent(
+          patchedHtml,
+          repairIssues,
+          doormatSummaries,
+          pageLanguage,
+          examples,
+          unchangedModelRequiredIndexes,
+        );
+        const repair = await this.callOpenRouterForRewrite(model, [
+          { role: 'system', content: prompt },
+          { role: 'user', content: repairContent },
+        ]);
+        const repairHtml =
+          this.extractDoormatRewriteHtmlFromStructuredResponse(repair.text) ??
+          repair.text;
+        if (this.looksLikeStructuredAiJsonResponse(repairHtml)) {
+          throw new Error(
+            'The AI returned structured JSON where HTML was expected. No comparison update was applied.',
+          );
+        }
+        patchedHtml = this.applyDoormatRewriteToPageHtml(patchedHtml, repairHtml);
+        rewriteModel = repair.usedModel;
+        const stillUnchanged = this.getUnchangedModelRequiredDoormatIndexes(
+          htmlForRewrite,
+          patchedHtml,
+          unchangedModelRequiredIndexes,
+          doormatSummaries,
+        );
+        if (stillUnchanged.size) {
+          console.warn(
+            '[TopicDoormatRewrite] selected model-required doormats still unchanged after repair',
+            {
+              unchangedDoormatIndexes: Array.from(stillUnchanged),
+              selectedIssueIds: Array.from(
+                new Set(repairIssues.map((issue) => issue.issueId)),
+              ),
+            },
+          );
+        }
+      }
+    }
+    const cleanedPatchedHtml = this.applyDescriptionTrailingPunctuationCleanupToHtml(
+      patchedHtml,
+      doormatSummaries,
+      descriptionTrailingPunctuationIndexes,
+    );
+    const rewrittenHtml = await this.urlDataService.formatHtml(
+      cleanedPatchedHtml,
+      'ai',
+    );
     return {
       analyzedHtml,
       rewrittenHtml,
       issueRows,
       analysisModel,
-      rewriteModel: rewrite.usedModel,
+      rewriteModel,
     };
   }
 
@@ -347,23 +443,22 @@ export class TopicDoormatRewriteOrchestratorService {
     summaries: TopicDoormatSummary[],
     pageLanguage: TopicDoormatPageLanguage,
     examples: Record<string, unknown>[],
+    selectedIssuesOverride?: TopicDoormatIssueRewriteInput[],
   ): string {
-    const selectedStateIssues =
-      this.topicDoormatAnalysisState.hasAnalysis() &&
-      this.topicDoormatAnalysisState.getAnalyzedHtml() === html
-        ? this.topicDoormatAnalysisState.getSelectedRewriteIssues()
-        : [];
-    const selectedIssues = selectedStateIssues.length
-      ? selectedStateIssues
-      : rows
-          .filter((row) => row.include && row.issueId !== 'no-issues')
-          .map((row) => this.toRewriteIssueInput(row));
+    const selectedIssues =
+      selectedIssuesOverride ??
+      this.getSelectedRewriteIssuesForHtml(html, rows);
     const placeholderIssues = summaries
       .filter((summary) => this.hasGeneratedPlaceholderDescription(summary))
       .map((summary) => this.toGeneratedPlaceholderIssue(summary));
     const allIssues = [...selectedIssues, ...placeholderIssues];
     const affectedDoormatIndexes = this.getAffectedDoormatIndexesForRewrite(
       allIssues,
+      summaries,
+    );
+    const modelRequiredDoormatIndexes = this.getAffectedDoormatIndexesForRewrite(
+      selectedIssues,
+      summaries,
     );
     const summariesByIndex = new Map(
       summaries.map((summary) => [summary.index, summary]),
@@ -381,6 +476,15 @@ export class TopicDoormatRewriteOrchestratorService {
           this.toDoormatRewriteIssuePayload(issue),
         ),
       },
+      model_required_selected_issues: {
+        status: selectedIssues.length ? 'required' : 'none',
+        instruction:
+          'These selected issues still require model rewriting. Rewrite the affected doormats to fix these issues unless the issue is impossible to fix safely. Do not return unchanged link text or descriptions for these targets when a selected issue is fixable. Preserve doormats not listed here.',
+        selected_issues: selectedIssues.map((issue) =>
+          this.toDoormatRewriteIssuePayload(issue),
+        ),
+        affected_doormat_indexes: Array.from(modelRequiredDoormatIndexes),
+      },
       doormats_with_selected_issues: Array.from(affectedDoormatIndexes)
         .map((index) => summariesByIndex.get(index))
         .filter((summary): summary is TopicDoormatSummary => summary !== undefined)
@@ -392,6 +496,46 @@ export class TopicDoormatRewriteOrchestratorService {
               page_language: pageLanguage,
               instruction:
                 'Use these examples as set-level pattern guidance only. Do not copy example wording or legacy source markup. Follow the rewrite rules and preserve the current page language.',
+              examples,
+            },
+          }
+        : {}),
+    });
+  }
+
+  private buildModelRequiredRepairUserContent(
+    html: string,
+    issues: TopicDoormatIssueRewriteInput[],
+    summaries: TopicDoormatSummary[],
+    pageLanguage: TopicDoormatPageLanguage,
+    examples: Record<string, unknown>[],
+    requiredDoormatIndexes: Set<number>,
+  ): string {
+    const summariesByIndex = new Map(
+      summaries.map((summary) => [summary.index, summary]),
+    );
+    return JSON.stringify({
+      page_html: html,
+      topic_doormat_repair: {
+        status: 'selected-issues-left-unchanged',
+        instruction:
+          'The previous rewrite left these selected issue targets unchanged. Rewrite only these doormats. Fix the selected issues unless impossible to fix safely. Preserve hrefs, order, labels, markup shape, unrelated doormats, and unrelated page HTML. Return raw HTML only.',
+        selected_issues: issues.map((issue) =>
+          this.toDoormatRewriteIssuePayload(issue),
+        ),
+        affected_doormat_indexes: Array.from(requiredDoormatIndexes),
+      },
+      doormats_requiring_repair: Array.from(requiredDoormatIndexes)
+        .map((index) => summariesByIndex.get(index))
+        .filter((summary): summary is TopicDoormatSummary => summary !== undefined)
+        .map((summary) => this.toDoormatDestinationRewritePayload(summary)),
+      ...(examples.length
+        ? {
+            topic_doormat_examples: {
+              status: 'language-filtered',
+              page_language: pageLanguage,
+              instruction:
+                'Use these examples as pattern guidance only. Do not copy wording. Preserve the current page language.',
               examples,
             },
           }
@@ -450,6 +594,59 @@ export class TopicDoormatRewriteOrchestratorService {
         this.toDoormatDestinationRewritePayload(summary),
       ),
     });
+  }
+
+  private getSelectedRewriteIssuesForHtml(
+    html: string,
+    rows: TopicDoormatIssueRow[],
+  ): TopicDoormatIssueRewriteInput[] {
+    const selectedStateIssues =
+      this.topicDoormatAnalysisState.hasAnalysis() &&
+      this.topicDoormatAnalysisState.getAnalyzedHtml() === html
+        ? this.topicDoormatAnalysisState.getSelectedRewriteIssues()
+        : [];
+    return selectedStateIssues.length
+      ? selectedStateIssues
+      : rows
+          .filter((row) => row.include && row.issueId !== 'no-issues')
+          .map((row) => this.toRewriteIssueInput(row));
+  }
+
+  private getDescriptionTrailingPunctuationIndexes(
+    issues: TopicDoormatIssueRewriteInput[],
+    summaries: TopicDoormatSummary[],
+  ): Set<number> {
+    const indexes = new Set<number>();
+    issues
+      .filter((issue) => issue.issueId === 'description-trailing-punctuation')
+      .forEach((issue) => {
+        if (typeof issue.doormatIndex === 'number') indexes.add(issue.doormatIndex);
+        (issue.affectedDoormatIndexes ?? []).forEach((index) => {
+          if (typeof index === 'number') indexes.add(index);
+        });
+        if (
+          issue.rowType === 'section' &&
+          typeof issue.sectionIndex === 'number' &&
+          !issue.affectedDoormatIndexes?.length
+        ) {
+          summaries
+            .filter(
+              (summary) =>
+                summary.sectionIndex === issue.sectionIndex &&
+                this.hasDescriptionTrailingPunctuation(summary.description),
+            )
+            .forEach((summary) => indexes.add(summary.index));
+        }
+      });
+    return indexes;
+  }
+
+  private getModelRewriteIssues(
+    issues: TopicDoormatIssueRewriteInput[],
+  ): TopicDoormatIssueRewriteInput[] {
+    return issues.filter(
+      (issue) => issue.issueId !== 'description-trailing-punctuation',
+    );
   }
 
   private extractGeneratedFeatureSummaries(doc: Document): TopicDoormatSummary[] {
@@ -827,6 +1024,126 @@ export class TopicDoormatRewriteOrchestratorService {
     return this.serializeParsedHtmlLikeInput(htmlToPatch, originalDoc);
   }
 
+  private applyDescriptionTrailingPunctuationCleanupToHtml(
+    html: string,
+    summaries: TopicDoormatSummary[],
+    doormatIndexes: Set<number>,
+  ): string {
+    if (!doormatIndexes.size) return html;
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(html, 'text/html');
+    const summariesByHref = new Map(
+      summaries
+        .filter((summary) => doormatIndexes.has(summary.index))
+        .map((summary) => [summary.href, summary]),
+    );
+    Array.from(doc.body.querySelectorAll('.gc-srvinfo')).forEach((section) => {
+      this.getDoormatItemsByHref(section).forEach((item, href) => {
+        if (!summariesByHref.has(href)) return;
+        const description = item.querySelector('p');
+        if (!description) return;
+        description.textContent = this.removeFinalDoormatPunctuation(
+          description.textContent,
+        );
+      });
+    });
+    return this.serializeParsedHtmlLikeInput(html, doc);
+  }
+
+  private getUnchangedModelRequiredDoormatIndexes(
+    beforeHtml: string,
+    afterHtml: string,
+    requiredDoormatIndexes: Set<number>,
+    summaries: TopicDoormatSummary[],
+  ): Set<number> {
+    if (!requiredDoormatIndexes.size) return new Set();
+    const beforeItems = this.getDoormatSnapshotsByIndex(beforeHtml, summaries);
+    const afterItems = this.getDoormatSnapshotsByIndex(afterHtml, summaries);
+    const unchangedIndexes = Array.from(requiredDoormatIndexes).filter((index) => {
+      const before = beforeItems.get(index);
+      const after = afterItems.get(index);
+      return (
+        before &&
+        after &&
+        before.linkText === after.linkText &&
+        before.description === after.description
+      );
+    });
+    return new Set(unchangedIndexes);
+  }
+
+  private getRewriteIssuesForDoormatIndexes(
+    issues: TopicDoormatIssueRewriteInput[],
+    doormatIndexes: Set<number>,
+    summaries: TopicDoormatSummary[],
+  ): TopicDoormatIssueRewriteInput[] {
+    return issues.flatMap((issue) => {
+      if (
+        typeof issue.doormatIndex === 'number' &&
+        doormatIndexes.has(issue.doormatIndex)
+      ) {
+        return [issue];
+      }
+      const affected = (issue.affectedDoormatIndexes ?? []).filter((index) =>
+        doormatIndexes.has(index),
+      );
+      if (issue.affectedDoormatIndexes?.length) {
+        return affected.length
+          ? [{ ...issue, affectedDoormatIndexes: affected }]
+          : [];
+      }
+      if (
+        issue.rowType === 'section' &&
+        typeof issue.sectionIndex === 'number' &&
+        summaries.some(
+          (summary) =>
+            summary.sectionIndex === issue.sectionIndex &&
+            doormatIndexes.has(summary.index),
+        )
+      ) {
+        return [
+          {
+            ...issue,
+            affectedDoormatIndexes: summaries
+              .filter(
+                (summary) =>
+                  summary.sectionIndex === issue.sectionIndex &&
+                  doormatIndexes.has(summary.index),
+              )
+              .map((summary) => summary.index),
+          },
+        ];
+      }
+      return [];
+    });
+  }
+
+  private getDoormatSnapshotsByIndex(
+    html: string,
+    summaries: TopicDoormatSummary[],
+  ): Map<number, { linkText: string; description: string }> {
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(html, 'text/html');
+    const summaryByHref = new Map(
+      summaries.map((summary) => [summary.href, summary]),
+    );
+    const snapshots = new Map<number, { linkText: string; description: string }>();
+    Array.from(doc.body.querySelectorAll('.gc-srvinfo')).forEach((section) => {
+      this.getDoormatItemsByHref(section).forEach((item, href) => {
+        const summary = summaryByHref.get(href);
+        if (!summary) return;
+        const link = this.findDoormatLinkByHref(item, href);
+        snapshots.set(summary.index, {
+          linkText: this.cleanDoormatRewriteText(link?.textContent),
+          description: this.cleanDoormatRewriteText(
+            item.querySelector('p')?.textContent,
+          ),
+        });
+      });
+    });
+    return snapshots;
+  }
+
   private applyFeatureRewriteToPageHtml(
     originalHtml: string,
     rewriteHtml: string,
@@ -1037,6 +1354,16 @@ export class TopicDoormatRewriteOrchestratorService {
     return (value || '').replace(/\s+/g, ' ').trim();
   }
 
+  private hasDescriptionTrailingPunctuation(value: string): boolean {
+    return /[.:;?!,]$/.test((value || '').trim());
+  }
+
+  private removeFinalDoormatPunctuation(
+    value: string | null | undefined,
+  ): string {
+    return (value || '').replace(/\s*[.:;?!,]\s*$/, '').trim();
+  }
+
   private toHeadingLevel(heading: Element | null): number | null {
     if (!heading) return null;
     const level = Number.parseInt(heading.tagName.slice(1), 10);
@@ -1056,6 +1383,7 @@ export class TopicDoormatRewriteOrchestratorService {
 
   private getAffectedDoormatIndexesForRewrite(
     issues: TopicDoormatIssueRewriteInput[],
+    summaries: TopicDoormatSummary[],
   ): Set<number> {
     const indexes = new Set<number>();
     issues.forEach((issue) => {
@@ -1063,6 +1391,15 @@ export class TopicDoormatRewriteOrchestratorService {
       (issue.affectedDoormatIndexes ?? []).forEach((index) => {
         if (typeof index === 'number') indexes.add(index);
       });
+      if (
+        issue.rowType === 'section' &&
+        typeof issue.sectionIndex === 'number' &&
+        !issue.affectedDoormatIndexes?.length
+      ) {
+        summaries
+          .filter((summary) => summary.sectionIndex === issue.sectionIndex)
+          .forEach((summary) => indexes.add(summary.index));
+      }
     });
     return indexes;
   }

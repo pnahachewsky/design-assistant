@@ -2657,6 +2657,9 @@ export class TopicDoormatIssueAnalysisService {
           ),
           evidence:
             this.buildTopicDoormatSectionTrailingPunctuationEvidence(affected),
+          affectedDoormatIndexes: affected
+            .map((summary) => summary.index)
+            .filter((index): index is number => Number.isFinite(index)),
           recommendation: this.getTopicDoormatDeterministicText(
             'descriptionTrailingPunctuation.sectionRecommendation',
           ),

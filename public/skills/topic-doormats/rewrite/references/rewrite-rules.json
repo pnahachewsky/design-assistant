@@ -19,6 +19,10 @@
       "text": "When selected topic doormat issues are supplied, use them as rewrite priorities. Fix each selected issue when possible without creating new length, style, destination, structure, or consistency problems. Preserve doormats that do not have selected issues. If an issue cannot be fixed safely, preserve the safest wording."
     },
     {
+      "id": "minimal-formatting-and-length-fixes",
+      "text": "For formatting-only or length-only issues, make the smallest edit that fixes the issue. If the issue is trailing punctuation, remove final punctuation only. If the issue is length, shorten while preserving the destination intent and any existing explanatory or task framing. Do not change a guidance phrase into a direct task phrase, or change a direct task phrase into guidance wording, only to fix punctuation or length."
+    },
+    {
       "id": "link-text",
       "text": "Use unique, descriptive link text that preserves destination meaning. Keep link text style consistent within each H2 section because links are the first scannable part of the doormat set and often read like headings. Avoid vague terms, duplicate wording, unnecessary words, and trailing punctuation. Keep under 75 characters, including spaces, and aim for 35 or fewer."
     },
@@ -31,12 +35,20 @@
       "text": "Describe the destination's main topic, purpose, audience, or primary task so users can decide whether the link is relevant. Add useful information not already present in the link text and explain what users can expect to find or do after selecting it."
     },
     {
+      "id": "description-intent",
+      "text": "Choose description wording based on destination intent. Use direct task phrasing when the destination is where users can complete, start, or continue the task, such as open an account, apply for a benefit, file a return, make a payment, or update information. Use learning or explanatory phrasing when the destination explains how something works, who it applies to, what rules or requirements apply, what users need, or when something happens. In those cases, how/who/what/when phrasing, Learn about, or Find out can be appropriate. Do not rewrite a guidance destination such as how to open an account as the task open an account unless the destination actually lets users open the account or clearly starts that transaction. Do not add how to to a direct task link when the destination is primarily transactional. Avoid repeating the link text inside the description when using how/who/what/when phrasing; prefer the acronym or the specific concept after the link has already named the full product, service, program, or plan."
+    },
+    {
+      "id": "preserve-explanatory-framing",
+      "text": "Preserve useful explanatory framing. If the current description uses how, who, what, when, Learn about, or Find out to signal a guidance page, keep that framing unless a selected issue requires changing it. Do not convert explanatory wording into direct task wording just to make it shorter or more active."
+    },
+    {
       "id": "description-length",
       "text": "Keep descriptions under 120 characters, including spaces. Aim for fewer than 100 characters when possible."
     },
     {
       "id": "description-style",
-      "text": "Description style is secondary. Prefer retaining accurate phrase-style descriptions when they are clear, concise, and useful. Do not convert descriptions to keyword lists by default. Use a comma-separated keyword list only when the destination contains several distinct concepts that are easier to scan as parallel terms, or when the existing description is already list-like and only needs cleanup. Use task phrases only when the destination is primarily about tasks users can complete. Keep descriptions compatible in length, tone, and specificity across the section without forcing every description into the same grammatical shape."
+      "text": "Description style is secondary to destination intent. Use the description form that best helps users predict the destination: an idiomatic short phrase, a task phrase, a how/who/what/when framing, Learn about, Find out, or a comma-separated keyword list. Prefer natural, readable phrasing over compressed noun lists. Use keyword lists only when the destination contains several distinct concepts that are easier to scan as parallel terms, or when the existing description is already list-like and only needs cleanup. Do not rewrite a whole section into one description style just to make descriptions look consistent. Keep descriptions compatible in length, tone, and specificity across the section without forcing every description into the same grammatical shape."
     },
     {
       "id": "description-quality",
