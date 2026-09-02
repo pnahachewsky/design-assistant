@@ -134,6 +134,7 @@
 	"page.ai-options.prompt.Doormats": "Chapeaux de page",
 	"page.ai-options.prompt.PlainLanguage": "Langage clair",
 	"page.ai-options.prompt.Alerts": "Alertes",
+	"page.ai-options.prompt.includeTopicDoormatRewriteExamples": "Utiliser des exemples pour la reecriture",
 	"page.ai-options.prompt.useDescriptionStyleAsPrimaryIssue": "Utiliser le style des descriptions comme enjeu principal pour les chapeaux de page",
 	"page.ai-options.prompt.Banana": "Banane?!?",
 	"page.ai-options.model.header": "Modèle IA",

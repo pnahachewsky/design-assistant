@@ -99,6 +99,7 @@ export class AiOptionsComponent implements OnInit {
   selectedAis: AiModel[] = [];
 
   includeAlertRewriteExamples = true;
+  includeTopicDoormatRewriteExamples = false;
   useCompactAlertsPageContext = true;
   useDescriptionStyleAsPrimaryIssue = false;
 
@@ -134,6 +135,8 @@ export class AiOptionsComponent implements OnInit {
     this.selectedAis = this.selectedAis.filter((id) => freeIds.has(id));
     this.includeAlertRewriteExamples =
       this.uploadState.getIncludeAlertRewriteExamples();
+    this.includeTopicDoormatRewriteExamples =
+      this.uploadState.getIncludeTopicDoormatRewriteExamples();
     this.useCompactAlertsPageContext =
       this.uploadState.getUseCompactAlertsPageContext();
     this.useDescriptionStyleAsPrimaryIssue =
@@ -154,6 +157,11 @@ export class AiOptionsComponent implements OnInit {
   onIncludeAlertRewriteExamplesSelect(include: boolean): void {
     this.includeAlertRewriteExamples = include;
     this.uploadState.setIncludeAlertRewriteExamples(include);
+  }
+
+  onIncludeTopicDoormatRewriteExamplesSelect(include: boolean): void {
+    this.includeTopicDoormatRewriteExamples = include;
+    this.uploadState.setIncludeTopicDoormatRewriteExamples(include);
   }
 
   onUseCompactAlertsPageContextSelect(useCompact: boolean): void {

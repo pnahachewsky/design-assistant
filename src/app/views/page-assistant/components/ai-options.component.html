@@ -97,6 +97,17 @@
                 }
                 @if (selectedPrompt === 'doormats') {
                   <div class="flex flex-column gap-2 mt-3">
+                    <div class="p-field-checkbox">
+                      <p-checkbox
+                        [(ngModel)]="includeTopicDoormatRewriteExamples"
+                        [binary]="true"
+                        inputId="includeTopicDoormatRewriteExamples"
+                        (onChange)="onIncludeTopicDoormatRewriteExamplesSelect(includeTopicDoormatRewriteExamples)"
+                      />
+                      <label for="includeTopicDoormatRewriteExamples" class="pl-2">
+                        {{ 'page.ai-options.prompt.includeTopicDoormatRewriteExamples' | translate }}
+                      </label>
+                    </div>
                     <div class="p-field-checkbox mt-2">
                       <p-checkbox
                         [(ngModel)]="useDescriptionStyleAsPrimaryIssue"

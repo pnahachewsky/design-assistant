@@ -202,7 +202,7 @@ export class TopicDoormatRewriteOrchestratorService {
     );
 
     const prompt = await this.buildRewritePrompt();
-    const examples = await this.getExamplesForLanguage(pageLanguage);
+    const examples = await this.getExamplesForLanguageIfEnabled(pageLanguage);
     const userContent = this.buildRewriteUserContent(
       htmlForRewrite,
       issueRows,
@@ -346,7 +346,7 @@ export class TopicDoormatRewriteOrchestratorService {
       );
 
     const prompt = await this.buildRewritePrompt();
-    const examples = await this.getExamplesForLanguage(pageLanguage);
+    const examples = await this.getExamplesForLanguageIfEnabled(pageLanguage);
     const userContent = this.buildDraftUserContent(
       workingHtml,
       doormatSummaries,
@@ -773,6 +773,13 @@ export class TopicDoormatRewriteOrchestratorService {
     return examples
       .map((example) => this.toLanguageFilteredExample(example, pageLanguage))
       .filter((example): example is Record<string, unknown> => !!example);
+  }
+
+  private async getExamplesForLanguageIfEnabled(
+    pageLanguage: TopicDoormatPageLanguage,
+  ): Promise<Record<string, unknown>[]> {
+    if (!this.uploadState.getIncludeTopicDoormatRewriteExamples()) return [];
+    return this.getExamplesForLanguage(pageLanguage);
   }
 
   private async loadExamples(): Promise<TopicDoormatRewriteExample[]> {

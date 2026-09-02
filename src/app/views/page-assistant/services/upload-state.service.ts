@@ -14,6 +14,8 @@ export class UploadStateService {
   private readonly editPromptKey = 'pageAssistant.editPrompt';
   private readonly includeAlertRewriteExamplesKey =
     'pageAssistant.includeAlertRewriteExamples';
+  private readonly includeTopicDoormatRewriteExamplesKey =
+    'pageAssistant.includeTopicDoormatRewriteExamples';
   private readonly useCompactAlertsPageContextKey =
     'pageAssistant.useCompactAlertsPageContext';
   private readonly useDescriptionStyleAsPrimaryIssueKey =
@@ -51,6 +53,19 @@ export class UploadStateService {
   setIncludeAlertRewriteExamples(include: boolean) {
     this.includeAlertRewriteExamples.set(!!include);
     this.storage.saveData(this.includeAlertRewriteExamplesKey, String(!!include));
+  }
+
+  // Whether topic doormat rewrite prompts should include selected good examples.
+  private includeTopicDoormatRewriteExamples = signal<boolean>(false);
+  getIncludeTopicDoormatRewriteExamples = computed(() =>
+    this.includeTopicDoormatRewriteExamples(),
+  );
+  setIncludeTopicDoormatRewriteExamples(include: boolean) {
+    this.includeTopicDoormatRewriteExamples.set(!!include);
+    this.storage.saveData(
+      this.includeTopicDoormatRewriteExamplesKey,
+      String(!!include),
+    );
   }
 
   // Whether alert issue analysis uses compact extracted page context instead of raw HTML.
@@ -103,6 +118,7 @@ export class UploadStateService {
       this.storage.removeData(this.aiModelKey);
       this.storage.removeData(this.uploadDataKey);
       this.storage.removeData(this.includeAlertRewriteExamplesKey);
+      this.storage.removeData(this.includeTopicDoormatRewriteExamplesKey);
       this.storage.removeData('pageAssistant.useJsonAlertsIssuesPrompt');
       this.storage.removeData(this.useCompactAlertsPageContextKey);
       this.storage.removeData(this.useDescriptionStyleAsPrimaryIssueKey);
@@ -197,6 +213,7 @@ export class UploadStateService {
     this.selectedAiModel.set(AiModel.Gemini);
     this.editPromptText.set('');
     this.includeAlertRewriteExamples.set(true);
+    this.includeTopicDoormatRewriteExamples.set(false);
     this.useCompactAlertsPageContext.set(true);
     this.useDescriptionStyleAsPrimaryIssue.set(false);
     this.uploadData.set(null);
@@ -207,6 +224,7 @@ export class UploadStateService {
     this.storage.removeData(this.aiModelKey);
     this.storage.removeData(this.editPromptKey);
     this.storage.removeData(this.includeAlertRewriteExamplesKey);
+    this.storage.removeData(this.includeTopicDoormatRewriteExamplesKey);
     this.storage.removeData('pageAssistant.useJsonAlertsIssuesPrompt');
     this.storage.removeData(this.useCompactAlertsPageContextKey);
     this.storage.removeData(this.useDescriptionStyleAsPrimaryIssueKey);
@@ -265,6 +283,18 @@ export class UploadStateService {
     ) {
       this.useCompactAlertsPageContext.set(
         storedUseCompactAlertsPageContext === 'true',
+      );
+    }
+
+    const storedIncludeTopicDoormatRewriteExamples = this.storage.getData(
+      this.includeTopicDoormatRewriteExamplesKey,
+    );
+    if (
+      storedIncludeTopicDoormatRewriteExamples === 'true' ||
+      storedIncludeTopicDoormatRewriteExamples === 'false'
+    ) {
+      this.includeTopicDoormatRewriteExamples.set(
+        storedIncludeTopicDoormatRewriteExamples === 'true',
       );
     }
 
