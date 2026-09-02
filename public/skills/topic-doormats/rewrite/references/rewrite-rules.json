@@ -43,6 +43,10 @@
       "text": "Preserve useful explanatory framing. If the current description uses how, who, what, when, Learn about, or Find out to signal a guidance page, keep that framing unless a selected issue requires changing it. Do not convert explanatory wording into direct task wording just to make it shorter or more active."
     },
     {
+      "id": "preserve-human-framing",
+      "text": "Preserve human-centred wording when the person, audience, or lived situation is part of the destination meaning. Do not compress people into abstract nouns only to shorten wording. Prefer plain-language framing such as who is eligible, people with an impairment, people with disabilities, families, seniors, students, newcomers, residents, or beneficiaries when the destination is about who qualifies, applies, receives, needs, owes, or is affected. Avoid rewrites such as tax credit for impairments when the intended meaning is tax credit for people with an impairment, or eligibility when who is eligible is clearer and more user-centred."
+    },
+    {
       "id": "description-length",
       "text": "Keep descriptions under 120 characters, including spaces. Aim for fewer than 100 characters when possible."
     },

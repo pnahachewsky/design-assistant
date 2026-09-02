@@ -616,6 +616,7 @@
           <div class="ex-hide-content">
             <p>The model classifies each description and link by grammatical construction. Link styles are <span class="inline-code">topic</span>, <span class="inline-code">product-or-service</span>, <span class="inline-code">action</span>, <span class="inline-code">audience-group</span>, or <span class="inline-code">mixed-or-unclear</span>. Description rewrite guidance uses <span class="inline-code">leave-unchanged</span>, <span class="inline-code">retain-phrase</span>, <span class="inline-code">tighten-phrase</span>, <span class="inline-code">add-specificity</span>, <span class="inline-code">convert-to-keyword-list</span>, or <span class="inline-code">convert-to-task-list</span>. AIDA groups link-style labels by H2 section and creates section-level mixed-style rows or individual outlier rows when warranted. Mixed-style issues are Low severity. AIDA does not report individual outliers when the whole section is already mixed.</p>
             <p>For link-style classification, gerund link names such as <span class="inline-code">Filing a trust return</span> or <span class="inline-code">Submitting documents online</span> are treated as <span class="inline-code">topic</span> when they mean how to or instructions for the task. AIDA also normalizes model classifications so gerund, how-to, and who/what/when/where/why link names are not treated as imperative <span class="inline-code">action</span> links merely because the underlying subject is a task.</p>
+            <p>For rewrites, AIDA also preserves human-centred framing when the person, audience, or lived situation is part of the meaning. It should not compress wording such as <span class="inline-code">people with an impairment</span> into abstract nouns such as <span class="inline-code">impairments</span>, or replace plain-language wording such as <span class="inline-code">who is eligible</span> with <span class="inline-code">eligibility</span> when the human framing helps users recognize themselves in the content.</p>
           </div>
         </details>
         <details class="ex-hide">
@@ -833,6 +834,7 @@
           <h3>Topic doormat rewriting</h3>
           <p>Used to guide rewritten topic doormat content, issue-aware rewrite priorities, destination evidence for affected doormats, and output format.</p>
           <p>Rewrite guidance uses destination intent to preserve link framing. Imperative link names are appropriate when the destination lets users start, complete, or continue a task. Gerund, how-to, or explanatory link names are appropriate when the destination mainly provides information, instructions, requirements, eligibility, timing, or rules about the task.</p>
+          <p>AIDA also protects link text after the model responds. Unless a selected issue for a doormat is explicitly about link text, AIDA restores that doormat's original link text in the rewritten HTML. Description issues, repeated-opening issues, review flags, and IA child-page flags can change descriptions, but they do not authorize link-name changes.</p>
           <ul>
             <li><a href="./skills/topic-doormats/rewrite/SKILL.md">skills/topic-doormats/rewrite/SKILL.md</a></li>
             <li><a href="./skills/topic-doormats/rewrite/references/rewrite-rules.json">skills/topic-doormats/rewrite/references/rewrite-rules.json</a></li>
@@ -858,7 +860,8 @@
           flags, strips doormat labels from destination-analysis text, validates
           model classifications against supplied destination context, normalizes
           informational gerund and how/when link names away from imperative action
-          style, keeps deterministic checks local, and stores selected issue rows plus cleaned
+          style, keeps deterministic checks local, restores link text when selected
+          issues do not authorize link-name changes, and stores selected issue rows plus cleaned
           destination main HTML for affected doormats so the Doormats rewrite model
           can fix grounded issues while preserving doormats with no selected issue.
           The skill files linked above are the active source of issue and rewrite guidance.
