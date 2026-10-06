@@ -12,6 +12,12 @@ Use this skill for rewriting topic doormat sets.
 ## Instructions
 
 - Use the rewrite rules resource as the authoritative ruleset
+- If the user payload includes `topic_doormat_examples`, use only lessons relevant
+  to selected issues. These are reference subsets; assess the actual page as a
+  complete doormat set. Before text is not necessarily wrong, and preference
+  changes are optional. Context-only items do not authorize extra edits. Preserve
+  adequate wording, including unchanged examples. Do not copy example facts,
+  wording, hrefs, or markup; use the current destination evidence for content.
 - Use the rewrite output schema only when the caller requests structured JSON
 - Preserve all unrelated page HTML
 - Rewrite the doormat set consistently

@@ -1,0 +1,468 @@
+{
+  "version": "2026-09-29",
+  "sourceDocument": "Doormat examples - rewrites - Sept 24.docx",
+  "scope": "Complete bilingual editorial reference sets. Runtime selects issue-matched items and necessary context only. Before text is authentic, not deliberately bad. Preference changes are not mandatory corrections. Link names apply to both versions; only description revisions were supplied. Count annotations are excluded.",
+  "examples": [
+    {
+      "id": "gst-hst-businesses",
+      "pageTopic": "GST/HST for businesses",
+      "sets": {
+        "en": {
+          "items": [
+            {
+              "position": 1,
+              "linkText": "Who needs to register for GST/HST",
+              "before": "Find out if you have to register and start charging the GST/HST",
+              "after": "Find out if you need to register for a GST/HST account and start charging the tax",
+              "issueTags": [],
+              "changeType": "preference",
+              "reason": "Clarifies the object of registration. Optional when the existing description is already adequate."
+            },
+            {
+              "position": 2,
+              "linkText": "Get a GST/HST number and manage your account",
+              "before": "Register for a GST/HST account or change or close your account",
+              "after": "Register for a GST/HST account, manage or close your account",
+              "issueTags": [],
+              "changeType": "preference",
+              "reason": "Groups account actions compactly. Do not rewrite adequate wording solely to imitate this phrasing."
+            },
+            {
+              "position": 3,
+              "linkText": "Charge and collect the GST/HST",
+              "before": "Determine the rate to charge, manage receipts, and what to do with tax you collect",
+              "after": "Determine the rate to charge, manage receipts, what to do with tax you collect",
+              "issueTags": [],
+              "changeType": "preference",
+              "reason": "A separator preference, not a universal rule to remove conjunctions from natural task phrases."
+            },
+            {
+              "position": 4,
+              "linkText": "Calculate and prepare to report the GST/HST",
+              "before": "How to calculate net tax, determine input tax credits and prepare a return",
+              "after": "How to calculate net tax, determine input tax credits, prepare a GST/HST return",
+              "issueTags": [],
+              "changeType": "preference",
+              "reason": "Specifies the return type while retaining how-to framing. Do not add repeated tax names just to imitate this example."
+            },
+            {
+              "position": 5,
+              "linkText": "File your GST/HST return",
+              "before": "When and how to file a return for each period, confirm and make changes after you file",
+              "after": "When and how to file a return for each period, how to confirm or make changes to your return",
+              "issueTags": [],
+              "changeType": "preference",
+              "reason": "Makes the object of confirmation and changes explicit. Keep existing wording when it already conveys this clearly."
+            },
+            {
+              "position": 6,
+              "linkText": "Remit (pay) the GST/HST you collected",
+              "before": "When and how to remit (pay) the tax, including by instalments",
+              "after": "When and how to remit (pay) the tax, including by instalments, how we charge interest",
+              "issueTags": [
+                "description-missing-important-destination-content"
+              ],
+              "changeType": "content-selection",
+              "reason": "Interest is supported by the destination. Add it only for a relevant content gap; secondary details do not justify exceeding the length target.",
+              "destinationEvidence": {
+                "summary": "The destination explains payment methods, deadlines, instalments and interest on late or insufficient payments.",
+                "urls": [
+                  "https://www.canada.ca/en/revenue-agency/services/tax/businesses/topics/gst-hst-businesses/remit-pay-gst-hst-collected.html"
+                ],
+                "verifiedOn": "2026-09-29"
+              }
+            },
+            {
+              "position": 7,
+              "linkText": "Claim a GST/HST rebate",
+              "before": "Claim a rebate of the GST/HST (or QST) you paid in certain situations",
+              "after": "Review situations where you may claim a rebate for the GST/HST or QST you paid",
+              "issueTags": [
+                "description-lacks-clarity",
+                "generated-placeholder-description",
+                "missing-description"
+              ],
+              "changeType": "clarity",
+              "reason": "Describe choosing a relevant rebate situation rather than implying submission on this page. Follow destination evidence, not the example topic.",
+              "contextPositions": [
+                8
+              ],
+              "destinationEvidence": {
+                "summary": "The destination lists rebate situations with links to specific guidance and forms; users choose a rebate to check whether it applies.",
+                "urls": [
+                  "https://www.canada.ca/en/revenue-agency/services/tax/businesses/topics/gst-hst-businesses/gst-hst-rebates.html"
+                ],
+                "verifiedOn": "2026-09-29"
+              }
+            },
+            {
+              "position": 8,
+              "linkText": "Confirm a GST/HST number",
+              "before": "Find out if a business is registered to charge the GST/HST",
+              "after": "Find out if a business is registered to charge the GST/HST",
+              "issueTags": [],
+              "changeType": "unchanged",
+              "reason": "No change: the existing description already explains the destination. Preserve adequate text when neighbouring doormats change."
+            }
+          ]
+        },
+        "fr": {
+          "items": [
+            {
+              "position": 1,
+              "linkText": "Qui doit s’inscrire à la TPS/TVH",
+              "before": "Déterminez si vous devez vous inscrire et commencer à facturer la TPS/TVH",
+              "after": "Déterminez si vous devez vous inscrire à la TPS/TVH et commencer à facturer la taxe",
+              "issueTags": [],
+              "changeType": "preference",
+              "reason": "Préciser l'objet de l'inscription. Facultatif si la description existante est déjà suffisante."
+            },
+            {
+              "position": 2,
+              "linkText": "Obtenir un numéro de TPS/TVH et gérer votre compte",
+              "before": "Inscrivez-vous à un compte de TPS/TVH ou modifiez ou fermez votre compt",
+              "after": "Inscrivez-vous à un compte de TPS/TVH, gérez ou fermez votre compte",
+              "issueTags": [],
+              "changeType": "preference",
+              "reason": "Regrouper les actions du compte. Ne pas réécrire un texte adéquat uniquement pour imiter cette formulation."
+            },
+            {
+              "position": 3,
+              "linkText": "Facturer et percevoir la TPS/TVH",
+              "before": "Déterminez le taux à appliquer, gérez les reçus, et quoi faire avec les taxes que vous percevez",
+              "after": "Déterminez le taux à appliquer, gérez les reçus, quoi faire avec la taxe que vous percevez",
+              "issueTags": [],
+              "changeType": "preference",
+              "reason": "Une préférence de séparation, pas une règle générale supprimant les conjonctions dans les formulations naturelles."
+            },
+            {
+              "position": 4,
+              "linkText": "Calculer et se préparer à déclarer la TPS/TVH",
+              "before": "Comment calculer la taxe nette, déterminer les crédits de taxe sur les intrants et produire une déclaration",
+              "after": "Comment calculer la taxe nette, déterminer les crédits de taxe sur les intrants, préparer une déclaration de TPS/TVH",
+              "issueTags": [],
+              "changeType": "preference",
+              "reason": "Préciser le type de déclaration en conservant la formulation explicative. Ne pas répéter la taxe uniquement pour imiter cet exemple."
+            },
+            {
+              "position": 5,
+              "linkText": "Produire votre déclaration de TPS/TVH",
+              "before": "Quand et comment produire une déclaration pour chaque période, confirmer et apporter des changements après la production",
+              "after": "Quand et comment produire une déclaration pour chaque période, comment confirmer et modifier votre déclaration",
+              "issueTags": [],
+              "changeType": "preference",
+              "reason": "Préciser ce qui est confirmé ou modifié. Conserver le texte existant s'il l'exprime déjà clairement."
+            },
+            {
+              "position": 6,
+              "linkText": "Verser (payer) la TPS/TVH que vous avez perçue",
+              "before": "Quand et comment verser (payer) la taxe, y compris par acomptes provisionnels",
+              "after": "Quand et comment verser (payer) la taxe, y compris par acomptes provisionnels, comment nous appliquons les intérêts",
+              "issueTags": [
+                "description-missing-important-destination-content"
+              ],
+              "changeType": "content-selection",
+              "reason": "Les intérêts sont appuyés par la destination. Les ajouter seulement pour un manque pertinent; les détails secondaires ne justifient pas de dépasser la longueur cible.",
+              "destinationEvidence": {
+                "summary": "La destination explique les modes de paiement, les échéances, les acomptes et les intérêts sur les paiements en retard ou insuffisants.",
+                "urls": [
+                  "https://www.canada.ca/fr/agence-revenu/services/impot/entreprises/sujets/tps-tvh-entreprises/verser-payer-tps-tvh-percue.html"
+                ],
+                "verifiedOn": "2026-09-29"
+              }
+            },
+            {
+              "position": 7,
+              "linkText": "Demander un remboursement de la TPS/TVH",
+              "before": "Demandez un remboursement de la TPS/TVH (ou TVQ) que vous avez payée dans certaines situations",
+              "after": "Vérifiez dans quelles situations vous pourriez demander un remboursement de la TPS/TVH (ou TVQ) que vous avez payée",
+              "issueTags": [
+                "description-lacks-clarity",
+                "generated-placeholder-description",
+                "missing-description"
+              ],
+              "changeType": "clarity",
+              "reason": "Présenter le choix d'une situation de remboursement plutôt que laisser croire à une soumission sur cette page. Suivre les preuves de la destination.",
+              "contextPositions": [
+                8
+              ],
+              "destinationEvidence": {
+                "summary": "La destination propose des situations de remboursement avec des liens vers les renseignements et formulaires; les utilisateurs choisissent la situation pertinente.",
+                "urls": [
+                  "https://www.canada.ca/fr/agence-revenu/services/impot/entreprises/sujets/tps-tvh-entreprises/remboursements-tps-tvh.html"
+                ],
+                "verifiedOn": "2026-09-29"
+              }
+            },
+            {
+              "position": 8,
+              "linkText": "Confirmer un numéro de compte de TPS/TVH",
+              "before": "Déterminez si une entreprise qui vous demande de payer la TPS/TVH est inscrite",
+              "after": "Déterminez si une entreprise qui vous demande de payer la TPS/TVH est inscrite au registre",
+              "issueTags": [],
+              "changeType": "preference",
+              "reason": "La mention du registre est une précision facultative; elle n'oblige pas à modifier une description déjà claire."
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "savings-and-pension-plans",
+      "pageTopic": "Savings and pension plans",
+      "sets": {
+        "en": {
+          "items": [
+            {
+              "position": 1,
+              "linkText": "Registered retirement savings plan (RRSP)",
+              "before": "Set up a registered retirement savings plan, and make a contribution.",
+              "after": "How to set up an RRSP, make contributions and withdrawals, find out about related plans",
+              "issueTags": [
+                "description-repeats-link-text",
+                "description-missing-important-destination-content"
+              ],
+              "changeType": "content-selection",
+              "reason": "Use the acronym after the link names the plan. Describe guidance and add only destination-supported topics; do not list every related plan.",
+              "destinationEvidence": {
+                "summary": "The destination covers RRSP setup and contributions, withdrawals for home buying and education, and related retirement plans.",
+                "urls": [
+                  "https://www.canada.ca/en/revenue-agency/services/tax/individuals/topics/rrsps-related-plans.html"
+                ],
+                "verifiedOn": "2026-09-29"
+              }
+            },
+            {
+              "position": 2,
+              "linkText": "Tax-free savings accounts (TFSA)",
+              "before": "How to open a TFSA, calculate your contribution room, and make withdrawals",
+              "after": "How to open a TFSA, calculate your contribution room, make withdrawals and transfers",
+              "issueTags": [
+                "description-missing-important-destination-content"
+              ],
+              "changeType": "content-selection",
+              "reason": "Keep explanatory wording. Add transfers only for a relevant content gap; the original is not automatically incorrect.",
+              "destinationEvidence": {
+                "summary": "The destination covers opening, contribution room, withdrawals and transfers between TFSAs or institutions.",
+                "urls": [
+                  "https://www.canada.ca/en/revenue-agency/services/tax/individuals/topics/tax-free-savings-account.html"
+                ],
+                "verifiedOn": "2026-09-29"
+              }
+            },
+            {
+              "position": 3,
+              "linkText": "Registered education savings plan (RESP)",
+              "before": "Learn how registered education savings plans work, who can apply and receive payments, and the rules on contributions.",
+              "after": "How RESPs work, who can apply, how to contribute, rules for payments and transfers",
+              "issueTags": [
+                "description-repeats-link-text",
+                "duplicate-or-near-duplicate-description"
+              ],
+              "changeType": "clarity",
+              "reason": "Reduce repetition while retaining how/who framing. Compare the neighbouring disability plan to keep each description specific.",
+              "contextPositions": [
+                4
+              ],
+              "destinationEvidence": {
+                "summary": "The destination covers subscribers, contributions and payments, and links to transfers and rollovers.",
+                "urls": [
+                  "https://www.canada.ca/en/revenue-agency/services/tax/individuals/topics/registered-education-savings-plans-resps.html"
+                ],
+                "verifiedOn": "2026-09-29"
+              }
+            },
+            {
+              "position": 4,
+              "linkText": "Registered disability savings plan",
+              "before": "Learn how registered disability savings plans work, who can apply and receive payments, and the rules on contributions.",
+              "after": "How the plans work, who can be a holder, who can receive payments, what the contribution rules are",
+              "issueTags": [
+                "description-lacks-clarity",
+                "duplicate-or-near-duplicate-description",
+                "description-repeats-link-text"
+              ],
+              "changeType": "clarity",
+              "reason": "Distinguish holders from payment recipients. Keep explanatory framing and compare the neighbouring education plan.",
+              "contextPositions": [
+                3
+              ],
+              "destinationEvidence": {
+                "summary": "The destination distinguishes opening a plan and being its holder from beneficiary eligibility, contributions and payment rules.",
+                "urls": [
+                  "https://www.canada.ca/en/revenue-agency/services/tax/individuals/topics/registered-disability-savings-plan-rdsp.html"
+                ],
+                "verifiedOn": "2026-09-29"
+              }
+            },
+            {
+              "position": 5,
+              "linkText": "Pooled registered pension plan",
+              "before": "Join a pooled registered pension plan, and get information about contributions, transfers, and withdrawals.",
+              "after": "How to join a pooled registered pension plan, make contributions, transfers, withdrawals",
+              "issueTags": [],
+              "changeType": "preference",
+              "reason": "An editorial choice of explanatory framing, not a requirement to start every product description with How to."
+            },
+            {
+              "position": 6,
+              "linkText": "Savings and pension plan administration",
+              "before": "Annual limits, administrative procedures for registered plans, and links to bulletins, newsletters, and manuals.",
+              "after": "Annual limits, administrative procedures for registered plans, links to guides, forms, publications",
+              "issueTags": [
+                "description-missing-important-destination-content"
+              ],
+              "changeType": "content-selection",
+              "reason": "Use the resource types actually offered by the destination, only when this resolves the selected content gap.",
+              "destinationEvidence": {
+                "summary": "The destination covers annual limits and administration, with links to registered-plan forms, guides and publications.",
+                "urls": [
+                  "https://www.canada.ca/en/services/taxes/savings-and-pension-plans/savings-and-pension-plan-administration.html"
+                ],
+                "verifiedOn": "2026-09-29"
+              }
+            },
+            {
+              "position": 7,
+              "linkText": "First home savings account (FHSA)",
+              "before": "Who can open a first home savings account, annual and lifetime limits, and the rules on contributions, transfers, and withdrawals.",
+              "after": "Who can open a FHSA, annual and lifetime limits, the rules on contributions, transfers, withdrawals",
+              "issueTags": [
+                "description-too-long",
+                "description-repeats-link-text"
+              ],
+              "changeType": "compression",
+              "reason": "Replace the repeated full account name with its acronym while preserving who can open it, limits and rules. Preserve essential meaning."
+            }
+          ]
+        },
+        "fr": {
+          "items": [
+            {
+              "position": 1,
+              "linkText": "Régimes enregistrés d'épargne-retraite (REER)",
+              "before": "Établissez un régime enregistré d'épargne-retraite et versez des cotisations.",
+              "after": "Comment souscrire un REER, verser des cotisations et en retirer, en apprendre plus sur les régimes connexes",
+              "issueTags": [
+                "description-repeats-link-text",
+                "description-missing-important-destination-content"
+              ],
+              "changeType": "content-selection",
+              "reason": "Employer le sigle après le nom dans le lien. Présenter les conseils et seulement les sujets appuyés par la destination.",
+              "destinationEvidence": {
+                "summary": "La destination couvre la souscription et les cotisations aux REER, les retraits pour une habitation ou des études et les régimes connexes.",
+                "urls": [
+                  "https://www.canada.ca/fr/agence-revenu/services/impot/particuliers/sujets/reer-regimes-connexes.html"
+                ],
+                "verifiedOn": "2026-09-29"
+              }
+            },
+            {
+              "position": 2,
+              "linkText": "Comptes d'épargne libre d'impôt (CELI)",
+              "before": "Comment ouvrir un CELI, calculer vos droits de cotisation et effectuer des retraits.",
+              "after": "Comment ouvrir un CELI, calculer vos droits de cotisation, effectuer des retraits et des transferts",
+              "issueTags": [
+                "description-missing-important-destination-content"
+              ],
+              "changeType": "content-selection",
+              "reason": "Conserver la formulation explicative. Ajouter les transferts seulement pour un manque pertinent; la version originale n'est pas nécessairement incorrecte.",
+              "destinationEvidence": {
+                "summary": "La destination couvre l'ouverture, les droits de cotisation, les retraits et les transferts entre CELI ou institutions.",
+                "urls": [
+                  "https://www.canada.ca/fr/agence-revenu/services/impot/particuliers/sujets/compte-epargne-libre-impot.html"
+                ],
+                "verifiedOn": "2026-09-29"
+              }
+            },
+            {
+              "position": 3,
+              "linkText": "Régimes enregistrés d'épargne-études",
+              "before": "Comment fonctionnent les REEE, qui peut souscrire et recevoir des paiements et les règles liées aux cotisations.",
+              "after": "Comment fonctionnent les REEE, qui peut souscrire, comment cotiser, règles liées aux paiements et aux transferts",
+              "issueTags": [
+                "description-repeats-link-text",
+                "duplicate-or-near-duplicate-description"
+              ],
+              "changeType": "clarity",
+              "reason": "Réduire la répétition en conservant comment/qui. Comparer avec le régime d'invalidité voisin pour distinguer les descriptions.",
+              "contextPositions": [
+                4
+              ],
+              "destinationEvidence": {
+                "summary": "La destination couvre les souscripteurs, les cotisations et les paiements. Sa page liée sur les paiements explique aussi les transferts entre REEE.",
+                "urls": [
+                  "https://www.canada.ca/fr/agence-revenu/services/impot/particuliers/sujets/regime-enregistre-epargne-etudes-reee.html",
+                  "https://www.canada.ca/fr/agence-revenu/services/impot/particuliers/sujets/regime-enregistre-epargne-etudes-reee/paiements-reee.html"
+                ],
+                "verifiedOn": "2026-09-29"
+              }
+            },
+            {
+              "position": 4,
+              "linkText": "Régime enregistré d'épargne-invalidité",
+              "before": "Comment fonctionnent les REEI, qui peut souscrire et recevoir des paiements et les règles liées aux cotisations.",
+              "after": "Comment fonctionnent les REEI, qui peut devenir titulaire, qui peut recevoir des paiements, règles liées aux cotisations",
+              "issueTags": [
+                "description-lacks-clarity",
+                "duplicate-or-near-duplicate-description",
+                "description-repeats-link-text"
+              ],
+              "changeType": "clarity",
+              "reason": "Distinguer les titulaires des personnes qui reçoivent les paiements. Conserver la formulation explicative et comparer avec le régime d'études voisin.",
+              "contextPositions": [
+                3
+              ],
+              "destinationEvidence": {
+                "summary": "La destination distingue l'ouverture et le titulaire du régime de l'admissibilité des bénéficiaires, des cotisations et des règles de paiement.",
+                "urls": [
+                  "https://www.canada.ca/fr/agence-revenu/services/impot/particuliers/sujets/regime-enregistre-epargne-invalidite-reei.html"
+                ],
+                "verifiedOn": "2026-09-29"
+              }
+            },
+            {
+              "position": 5,
+              "linkText": "Régimes de pension agréés collectifs",
+              "before": "Joignez-vous à un régime de pension agréé collectif renseignez-vous sur les cotisations, les transferts et les retraits.",
+              "after": "Comment se joindre à un régime de pension agréé collectif, faire des cotisations, des transferts et des retraits",
+              "issueTags": [],
+              "changeType": "preference",
+              "reason": "Un choix de formulation explicative, pas une obligation de commencer toutes les descriptions par Comment."
+            },
+            {
+              "position": 6,
+              "linkText": "Administration des régimes d'épargne et de pension",
+              "before": "Plafonds annuels, procédures administratives pour les régimes et liens vers les bulletins, les manuels et l'information.",
+              "after": "Plafonds annuels, procédures administratives pour les régimes, liens vers les guides, formulaires et publications",
+              "issueTags": [
+                "description-missing-important-destination-content"
+              ],
+              "changeType": "content-selection",
+              "reason": "Nommer les types de ressources offerts à destination seulement si cela corrige le manque de contenu sélectionné.",
+              "destinationEvidence": {
+                "summary": "La destination couvre les plafonds annuels et l'administration, avec des liens vers les formulaires, guides et publications.",
+                "urls": [
+                  "https://www.canada.ca/fr/services/impots/regimes-depargne-et-de-pension/administration-des-regimes-depargne-et-de-pension.html"
+                ],
+                "verifiedOn": "2026-09-29"
+              }
+            },
+            {
+              "position": 7,
+              "linkText": "Compte d'épargne libre d'impôt pour l'achat d'une première propriété",
+              "before": "Qui peut ouvrir un compte d'épargne libre d'impôt pour l'achat d'une première propriété, droit de participation annuel et plafond à vie et les règles sur les cotisations, transferts et retraits.",
+              "after": "Qui peut ouvrir un CELIAPP, droits de participation annuels et à vie, règles sur les cotisations, transferts et retraits",
+              "issueTags": [
+                "description-too-long",
+                "description-repeats-link-text"
+              ],
+              "changeType": "compression",
+              "reason": "Remplacer le nom répété du compte par son sigle en conservant qui peut l'ouvrir, les plafonds et les règles."
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

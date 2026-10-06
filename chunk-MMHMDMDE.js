@@ -54,6 +54,7 @@ import {
   NgForOf,
   NgIf,
   NgModel,
+  NgSelectOption,
   NgStyle,
   NgSwitch,
   NgSwitchCase,
@@ -75,6 +76,7 @@ import {
   RouterLink,
   RouterModule,
   RowToggler,
+  SelectControlValueAccessor,
   SelectableRow,
   SharedModule,
   SortIcon,
@@ -136,8 +138,9 @@ import {
   setAttribute,
   unblockBodyScroll,
   uuid,
-  zindexutils
-} from "./chunk-AEQM6JS7.js";
+  zindexutils,
+  ɵNgSelectMultipleOption
+} from "./chunk-325IGRTZ.js";
 import {
   ChangeDetectionStrategy,
   ChangeDetectorRef,
@@ -21329,19 +21332,42 @@ var ShadowDomService = class _ShadowDomService {
 
 // src/app/views/page-assistant/services/openrouter.service.ts
 var OpenRouterService = class _OpenRouterService {
+  static defaultRequestTimeoutMs = 24e4;
   http = inject(HttpClient);
   apiKeyService = inject(ApiKeyService);
   openRouterApiUrl = "https://openrouter.ai/api/v1/chat/completions";
   freeModelOrder = [
     AiModel.NemotronUltra,
-    AiModel.GptOSS20BFree,
-    AiModel.NemotronSuper
+    AiModel.NemotronLightning,
+    AiModel.NemotronSuper,
+    AiModel.FreeModelsRouter
   ];
   // Canonical model lists used by the assistant UI and fallback helpers.
   models = Object.values(AiModel);
   freeModels = [...this.freeModelOrder];
   get hasApiKey() {
     return !!this.apiKeyService.getCurrentKey();
+  }
+  buildResponseMetadata(response) {
+    if (!response) {
+      return {
+        receivedResponse: false
+      };
+    }
+    const choices = Array.isArray(response.choices) ? response.choices : [];
+    return {
+      receivedResponse: true,
+      id: response.id || "",
+      responseModel: response.model || "",
+      choiceCount: choices.length,
+      choices: choices.map((choice) => this.buildChoiceMetadata(choice)),
+      usage: this.sanitizeMetadata(response.usage),
+      error: this.sanitizeMetadata(response.error),
+      provider: this.sanitizeMetadata(response.provider),
+      openrouter: this.sanitizeMetadata(response.openrouter),
+      openrouterMetadata: this.sanitizeMetadata(response.openrouter_metadata),
+      responseKeys: Object.keys(response)
+    };
   }
   // Minimal transport wrapper around OpenRouter chat completions.
   // Callers own prompt construction, fallback policy, and response interpretation.
@@ -21363,13 +21389,14 @@ var OpenRouterService = class _OpenRouterService {
         temperature: options.temperature ?? 0
       };
       try {
+        const effectiveTimeoutMs = options.timeoutMs ?? _OpenRouterService.defaultRequestTimeoutMs;
         let request$ = this.http.post(this.openRouterApiUrl, payload, {
           headers,
           responseType: "text",
           observe: "response"
         });
-        if (options.timeoutMs && options.timeoutMs > 0) {
-          request$ = request$.pipe(timeout(options.timeoutMs));
+        if (effectiveTimeoutMs > 0) {
+          request$ = request$.pipe(timeout(effectiveTimeoutMs));
         }
         const resp = yield request$.toPromise();
         const ct = resp?.headers.get("content-type") || "";
@@ -21386,7 +21413,8 @@ var OpenRouterService = class _OpenRouterService {
       } catch (err) {
         const timeoutErr = err;
         if (timeoutErr?.name === "TimeoutError") {
-          const message2 = `OpenRouter request timed out (model: ${model}, timeoutMs: ${options.timeoutMs})`;
+          const effectiveTimeoutMs = options.timeoutMs ?? _OpenRouterService.defaultRequestTimeoutMs;
+          const message2 = `OpenRouter request timed out (model: ${model}, timeoutMs: ${effectiveTimeoutMs})`;
           console.error(message2);
           if (options.throwOnError) {
             throw new Error(message2);
@@ -21404,6 +21432,40 @@ var OpenRouterService = class _OpenRouterService {
         return void 0;
       }
     });
+  }
+  buildChoiceMetadata(choice) {
+    const message = choice.message;
+    const content = typeof message?.content === "string" ? message.content : "";
+    return {
+      finishReason: choice.finish_reason || "",
+      nativeFinishReason: choice.native_finish_reason || "",
+      hasMessage: !!message,
+      messageRole: message?.role || "",
+      messageKeys: message && typeof message === "object" ? Object.keys(message) : [],
+      contentCharacters: content.length,
+      trimmedContentCharacters: content.trim().length,
+      error: this.sanitizeMetadata(choice.error),
+      choiceKeys: Object.keys(choice)
+    };
+  }
+  sanitizeMetadata(value) {
+    if (value == null)
+      return value;
+    if (typeof value === "string") {
+      return value.length > 500 ? `${value.slice(0, 500)}...` : value;
+    }
+    if (typeof value === "number" || typeof value === "boolean")
+      return value;
+    if (Array.isArray(value)) {
+      return value.slice(0, 10).map((item) => this.sanitizeMetadata(item));
+    }
+    if (typeof value === "object") {
+      return Object.fromEntries(Object.entries(value).filter(([key2]) => !/content|prompt|message/i.test(key2)).map(([key2, nestedValue]) => [
+        key2,
+        this.sanitizeMetadata(nestedValue)
+      ]));
+    }
+    return String(value);
   }
   static \u0275fac = function OpenRouterService_Factory(__ngFactoryType__) {
     return new (__ngFactoryType__ || _OpenRouterService)();
@@ -25156,7 +25218,7 @@ var TopicDoormatExtractorService = class _TopicDoormatExtractorService {
     return !!doc.querySelector(".gc-srvinfo") || !!doc.querySelector(".gc-drmt") || !!doc.querySelector(".mwsdoormat-links-container") || this.getLegacyLinks(doc).length >= 2;
   }
   hasLegacyTemplate(doc) {
-    return !!doc.querySelector(".gc-drmt") || !!doc.querySelector(".mwsdoormat-links-container") || this.getLegacyListGroupLinks(doc).length >= 2;
+    return !!doc.querySelector(".gc-drmt") || !!doc.querySelector(".mwsdoormat-links-container") || this.getLegacyListGroupLinks(doc).length >= 2 || this.getLegacyLinks(doc).length >= 2;
   }
   extractMostRequestedLinks(doc) {
     try {
@@ -25388,6 +25450,8 @@ var TopicDoormatExtractorService = class _TopicDoormatExtractorService {
     const followsHeading = !!(heading.compareDocumentPosition(paragraph) & Node.DOCUMENT_POSITION_FOLLOWING);
     if (!followsHeading)
       return false;
+    if (this.isRescueParagraph(paragraph))
+      return false;
     if (!firstSectionHeading)
       return true;
     return !!(paragraph.compareDocumentPosition(firstSectionHeading) & Node.DOCUMENT_POSITION_FOLLOWING);
@@ -25414,6 +25478,7 @@ var TopicDoormatExtractorService = class _TopicDoormatExtractorService {
       return false;
     return [
       "services et information",
+      "services et renseignements",
       "tps/tvh",
       "imp\xF4t",
       "imp\xF4ts",
@@ -25443,12 +25508,12 @@ var TopicDoormatExtractorService = class _TopicDoormatExtractorService {
         return;
       candidates.push({ link, wrapper, item });
     });
-    const topicHeading = this.getTopicHeadingElement(doc);
+    const topicHeading = this.getLegacyDoormatHeadingElement(doc);
     if (topicHeading) {
       let current = topicHeading.nextElementSibling;
       while (current) {
         const headingText = this.cleanVisibleText(current.textContent).toLowerCase();
-        if (current.matches("h2") && headingText && headingText !== "topics") {
+        if (current.matches("h2") && headingText && !this.isLegacyDoormatSectionHeadingText(headingText)) {
           break;
         }
         if (current.matches("h2, h3")) {
@@ -25525,8 +25590,14 @@ var TopicDoormatExtractorService = class _TopicDoormatExtractorService {
     }
     return false;
   }
-  getTopicHeadingElement(doc) {
-    return Array.from(doc.querySelectorAll("main h2, main h3, h2, h3")).find((heading) => this.cleanVisibleText(heading.textContent).toLowerCase() === "topics") ?? null;
+  isRescueParagraph(paragraph) {
+    return /^you may be looking for:?$/i.test(this.cleanVisibleText(paragraph.textContent));
+  }
+  getLegacyDoormatHeadingElement(doc) {
+    return Array.from(doc.querySelectorAll("main h2, main h3, h2, h3")).find((heading) => this.isLegacyDoormatSectionHeadingText(this.cleanVisibleText(heading.textContent).toLowerCase())) ?? null;
+  }
+  isLegacyDoormatSectionHeadingText(text) {
+    return /^(topics|services and information|services et renseignements|services et information|sujets)$/.test(text);
   }
   findLegacyTopicHeadingItem(heading) {
     const doc = heading.ownerDocument;
@@ -26176,9 +26247,10 @@ var TopicDoormatIaCheckService = class _TopicDoormatIaCheckService {
 
 // src/app/views/page-assistant/services/topic-doormats/topic-doormat-model-client.service.ts
 var TopicDoormatModelClientService = class _TopicDoormatModelClientService {
+  static modelAttemptTimeoutMs = 15e4;
   openRouter = inject(OpenRouterService);
   topicDoormatForceParseFailureStorageKey = "pageAssistant.topicDoormatForceParseFailure";
-  topicDoormatModelAttemptTimeoutMs = 6e4;
+  topicDoormatModelAttemptTimeoutMs = _TopicDoormatModelClientService.modelAttemptTimeoutMs;
   requestIssueJson(request) {
     return __async(this, null, function* () {
       const modelRotation = this.buildModelRotation(request.requestedModel);
@@ -26201,7 +26273,7 @@ var TopicDoormatModelClientService = class _TopicDoormatModelClientService {
         modelRotation,
         timeoutMs: this.topicDoormatModelAttemptTimeoutMs
       });
-      const { text, model } = yield this.callTopicDoormatIssuesWithFallback(request.messages, modelRotation, request.requestedModel, request.doormatSummaries, request.isParseableResponseText, request.debug);
+      const { text, model } = yield this.callTopicDoormatIssuesWithFallback(request.messages, modelRotation, request.requestedModel, request.doormatSummaries, request.isParseableResponseText, request.debug, request.issueJsonRequiredShape);
       return { text, model, modelRotation };
     });
   }
@@ -26222,7 +26294,36 @@ var TopicDoormatModelClientService = class _TopicDoormatModelClientService {
           throwOnError: true,
           timeoutMs: this.topicDoormatModelAttemptTimeoutMs
         });
-        return resp?.choices?.[0]?.message?.content?.trim() || "";
+        if (this.hasNoOpenRouterChoices(resp)) {
+          const error = new Error(`OpenRouter provider returned no choices for ${request.model}.`);
+          request.debug("model issue field repair request failed", {
+            phase: "issue-field-repair",
+            model: request.model,
+            error: error.message,
+            response: this.openRouter.buildResponseMetadata(resp)
+          });
+          this.logTopicDoormatModelEvent("model issue field repair request failed", {
+            phase: "issue-field-repair",
+            model: request.model,
+            error: error.message,
+            response: this.openRouter.buildResponseMetadata(resp)
+          });
+          return "";
+        }
+        const text = resp?.choices?.[0]?.message?.content?.trim() || "";
+        if (!text) {
+          request.debug("model issue field repair returned empty content", {
+            phase: "issue-field-repair",
+            model: request.model,
+            response: this.openRouter.buildResponseMetadata(resp)
+          });
+          this.logTopicDoormatModelEvent("model issue field repair returned empty content", {
+            phase: "issue-field-repair",
+            model: request.model,
+            response: this.openRouter.buildResponseMetadata(resp)
+          });
+        }
+        return text;
       } catch (err) {
         request.debug("model issue field repair request failed", {
           model: request.model,
@@ -26249,7 +26350,36 @@ var TopicDoormatModelClientService = class _TopicDoormatModelClientService {
           throwOnError: true,
           timeoutMs: this.topicDoormatModelAttemptTimeoutMs
         });
-        return resp?.choices?.[0]?.message?.content?.trim() || "";
+        if (this.hasNoOpenRouterChoices(resp)) {
+          const error = new Error(`OpenRouter provider returned no choices for ${request.model}.`);
+          request.debug("model issue decision repair request failed", {
+            phase: "issue-decision-repair",
+            model: request.model,
+            error: error.message,
+            response: this.openRouter.buildResponseMetadata(resp)
+          });
+          this.logTopicDoormatModelEvent("model issue decision repair request failed", {
+            phase: "issue-decision-repair",
+            model: request.model,
+            error: error.message,
+            response: this.openRouter.buildResponseMetadata(resp)
+          });
+          return "";
+        }
+        const text = resp?.choices?.[0]?.message?.content?.trim() || "";
+        if (!text) {
+          request.debug("model issue decision repair returned empty content", {
+            phase: "issue-decision-repair",
+            model: request.model,
+            response: this.openRouter.buildResponseMetadata(resp)
+          });
+          this.logTopicDoormatModelEvent("model issue decision repair returned empty content", {
+            phase: "issue-decision-repair",
+            model: request.model,
+            response: this.openRouter.buildResponseMetadata(resp)
+          });
+        }
+        return text;
       } catch (err) {
         request.debug("model issue decision repair request failed", {
           model: request.model,
@@ -26261,15 +26391,20 @@ var TopicDoormatModelClientService = class _TopicDoormatModelClientService {
   }
   buildModelRotation(requested) {
     const freeModels = this.openRouter.freeModels;
+    if (requested === AiModel.FreeModelsRouter) {
+      return freeModels;
+    }
     if (requested && this.openRouter.models.includes(requested)) {
+      const selectedModelIsPaid = !freeModels.includes(requested);
       return [
         requested,
+        ...selectedModelIsPaid ? [requested] : [],
         ...freeModels.filter((candidate) => candidate !== requested)
       ];
     }
     return freeModels;
   }
-  callTopicDoormatIssuesWithFallback(messages, models, requestedModel, doormatSummaries, isParseableResponseText, debug) {
+  callTopicDoormatIssuesWithFallback(messages, models, requestedModel, doormatSummaries, isParseableResponseText, debug, issueJsonRequiredShape) {
     return __async(this, null, function* () {
       let lastError;
       let lastModel = models[0] ?? "";
@@ -26294,6 +26429,21 @@ var TopicDoormatModelClientService = class _TopicDoormatModelClientService {
             throwOnError: true,
             timeoutMs: this.topicDoormatModelAttemptTimeoutMs
           });
+          if (this.hasNoOpenRouterChoices(resp)) {
+            const error = new Error(`OpenRouter provider returned no choices for ${model}.`);
+            lastError = error;
+            debug("model attempt failed", __spreadProps(__spreadValues({}, attemptMetadata), {
+              elapsedMs: Math.round(performance.now() - modelStart),
+              error: error.message,
+              response: this.openRouter.buildResponseMetadata(resp)
+            }));
+            this.logTopicDoormatModelEvent("model attempt failed", __spreadProps(__spreadValues({}, attemptMetadata), {
+              elapsedMs: Math.round(performance.now() - modelStart),
+              error: error.message,
+              response: this.openRouter.buildResponseMetadata(resp)
+            }));
+            continue;
+          }
           const text = resp?.choices?.[0]?.message?.content?.trim() || "";
           if (text) {
             const forcedParseFailureMode = this.getTopicDoormatForceParseFailureMode();
@@ -26332,7 +26482,7 @@ var TopicDoormatModelClientService = class _TopicDoormatModelClientService {
               elapsedMs: Math.round(performance.now() - modelStart),
               responseCharacters: text.length
             }));
-            const repairedText = yield this.repairTopicDoormatIssueJson(model, text, doormatSummaries, debug, requestedModel);
+            const repairedText = yield this.repairTopicDoormatIssueJson(model, text, doormatSummaries, debug, requestedModel, issueJsonRequiredShape);
             if (repairedText && isParseableResponseText(repairedText)) {
               debug("model json repair succeeded", __spreadProps(__spreadValues({}, attemptMetadata), {
                 phase: "json-repair",
@@ -26355,10 +26505,12 @@ var TopicDoormatModelClientService = class _TopicDoormatModelClientService {
             continue;
           }
           debug("model attempt returned empty content", __spreadProps(__spreadValues({}, attemptMetadata), {
-            elapsedMs: Math.round(performance.now() - modelStart)
+            elapsedMs: Math.round(performance.now() - modelStart),
+            response: this.openRouter.buildResponseMetadata(resp)
           }));
           this.logTopicDoormatModelEvent("model attempt returned empty content", __spreadProps(__spreadValues({}, attemptMetadata), {
-            elapsedMs: Math.round(performance.now() - modelStart)
+            elapsedMs: Math.round(performance.now() - modelStart),
+            response: this.openRouter.buildResponseMetadata(resp)
           }));
         } catch (err) {
           lastError = err;
@@ -26389,7 +26541,7 @@ var TopicDoormatModelClientService = class _TopicDoormatModelClientService {
       return { text: "", model: lastModel };
     });
   }
-  repairTopicDoormatIssueJson(model, invalidText, doormatSummaries, debug, requestedModel) {
+  repairTopicDoormatIssueJson(model, invalidText, doormatSummaries, debug, requestedModel, issueJsonRequiredShape = '{ "section_issues": [], "doormats": [{ "doormat_index": number, "link_text": string, "href": string, "description": string, "detected_link_text_style": string, "description_rewrite_guidance": string, "destination_link_relationship": string, "destination_link_relationship_basis": string, "destination_link_relationship_reason": string, "destination_content_assessment": { "important_element_ids": [], "covered_element_ids": [], "missing_important_element_ids": [] }, "issue_decisions": [{ "issue_id": string, "decision": "applies|does_not_apply|not_applicable", "reason": string }], "issues": [] }] }') {
     return __async(this, null, function* () {
       try {
         const repairMessages = [
@@ -26400,7 +26552,7 @@ var TopicDoormatModelClientService = class _TopicDoormatModelClientService {
           {
             role: "user",
             content: JSON.stringify({
-              requiredShape: '{ "section_issues": [], "doormats": [{ "doormat_index": number, "link_text": string, "href": string, "description": string, "detected_link_text_style": string, "detected_description_style": string, "destination_link_relationship": string, "destination_link_relationship_basis": string, "destination_link_relationship_reason": string, "destination_content_assessment": { "important_element_ids": [], "covered_element_ids": [], "missing_important_element_ids": [] }, "issue_decisions": [{ "issue_id": string, "decision": "applies|does_not_apply|not_applicable", "reason": string }], "issues": [] }] }',
+              requiredShape: issueJsonRequiredShape,
               validDoormatIndexes: doormatSummaries.map((summary) => summary.index),
               responseToRepair: invalidText
             })
@@ -26429,7 +26581,44 @@ var TopicDoormatModelClientService = class _TopicDoormatModelClientService {
           throwOnError: true,
           timeoutMs: this.topicDoormatModelAttemptTimeoutMs
         });
-        return resp?.choices?.[0]?.message?.content?.trim() || "";
+        if (this.hasNoOpenRouterChoices(resp)) {
+          const error = new Error(`OpenRouter provider returned no choices for ${model}.`);
+          debug("model json repair request failed", {
+            phase: "json-repair",
+            model,
+            requestedModel: requestedModel || "",
+            repairModelRole: requestedModel && model === requestedModel ? "selected-model" : "fallback-model",
+            error: error.message,
+            response: this.openRouter.buildResponseMetadata(resp)
+          });
+          this.logTopicDoormatModelEvent("model json repair request failed", {
+            phase: "json-repair",
+            model,
+            requestedModel: requestedModel || "",
+            repairModelRole: requestedModel && model === requestedModel ? "selected-model" : "fallback-model",
+            error: error.message,
+            response: this.openRouter.buildResponseMetadata(resp)
+          });
+          return "";
+        }
+        const text = resp?.choices?.[0]?.message?.content?.trim() || "";
+        if (!text) {
+          debug("model json repair returned empty content", {
+            phase: "json-repair",
+            model,
+            requestedModel: requestedModel || "",
+            repairModelRole: requestedModel && model === requestedModel ? "selected-model" : "fallback-model",
+            response: this.openRouter.buildResponseMetadata(resp)
+          });
+          this.logTopicDoormatModelEvent("model json repair returned empty content", {
+            phase: "json-repair",
+            model,
+            requestedModel: requestedModel || "",
+            repairModelRole: requestedModel && model === requestedModel ? "selected-model" : "fallback-model",
+            response: this.openRouter.buildResponseMetadata(resp)
+          });
+        }
+        return text;
       } catch (err) {
         debug("model json repair request failed", {
           phase: "json-repair",
@@ -26451,6 +26640,9 @@ var TopicDoormatModelClientService = class _TopicDoormatModelClientService {
   }
   logTopicDoormatModelEvent(event, details) {
     console.info(`[TopicDoormatIssues] ${event}`, details);
+  }
+  hasNoOpenRouterChoices(response) {
+    return !!response && (!Array.isArray(response.choices) || response.choices?.length === 0);
   }
   buildTopicDoormatAttemptMetadata(index, models, model, requestedModel) {
     const isSelectedModel = !!requestedModel && model === requestedModel;
@@ -26623,6 +26815,8 @@ var TopicDoormatIssueAnalysisService = class _TopicDoormatIssueAnalysisService {
   urlComparison = inject(TopicDoormatUrlComparisonService);
   topicDoormatDebugStorageKey = "pageAssistant.topicDoormatDebug";
   topicDoormatIssueTaxonomyPath = "skills/topic-doormats/issues/references/issue-taxonomy.json";
+  topicDoormatDestinationContextElementLimit = 20;
+  topicDoormatDestinationContextTextLimit = 300;
   topicDoormatTrailingPunctuationPattern = /[.:;?!,]$/;
   topicDoormatDestinationStopWords = /* @__PURE__ */ new Set([
     "and",
@@ -26700,12 +26894,12 @@ var TopicDoormatIssueAnalysisService = class _TopicDoormatIssueAnalysisService {
     "description-too-long",
     "description-trailing-punctuation",
     "description-uses-first-or-second-person",
+    "description-uses-and-before-final-item",
     "duplicate-link-in-most-requested",
     "link-name-too-long",
     "link-name-too-different-from-destination-title",
     "link-name-trailing-punctuation",
     "missing-needed-doormat",
-    "mixed-description-style-in-section",
     "mixed-link-name-styles-in-section",
     "multiple-links",
     "repeated-description-opening",
@@ -26720,17 +26914,18 @@ var TopicDoormatIssueAnalysisService = class _TopicDoormatIssueAnalysisService {
     "description-special-formatting",
     "description-capitalization",
     "description-list-separators",
-    "description-uses-and-before-final-item",
     "misdirected-link",
     "link-name-lacks-clarity",
     "link-name-not-unique",
     "description-lacks-clarity",
-    "description-incorrect-style",
     "description-repeats-link-text",
     "duplicate-or-near-duplicate-description",
-    "inconsistent-description-style",
     "enhancement-label-not-needed",
     "enhancement-label-wrong-type"
+  ];
+  topicDoormatDescriptionStyleIssueDecisionIds = [
+    "description-incorrect-style",
+    "inconsistent-description-style"
   ];
   topicDoormatIssueDecisionValues = /* @__PURE__ */ new Set([
     "applies",
@@ -26766,21 +26961,23 @@ var TopicDoormatIssueAnalysisService = class _TopicDoormatIssueAnalysisService {
         "Runtime issue ownership: AIDA calculates the following issues locally.",
         "Do not return them in section_issues or doormat issues:",
         Array.from(this.locallyOwnedTopicDoormatIssueIds).join(", "),
-        "You must still return exactly one allowed detected_description_style for every doormat.",
         "You must still return exactly one allowed detected_link_text_style, destination_link_relationship, and destination_link_relationship_basis for every doormat.",
-        "Classify the description using the CRA doormat description style options, not grammatical construction alone."
+        "Link text style is the primary style consistency contract because link names are the first scannable elements and act like section-level choices.",
+        input.useDescriptionStyleAsPrimaryIssue ? "Feature flag enabled: use description style as a primary issue. You must return exactly one allowed detected_description_style for every doormat and may report description style issues when they reduce scannability or comparison." : "Feature flag disabled: description style is secondary. Return description_rewrite_guidance to guide the smallest useful rewrite; prefer preserving clear phrase-style descriptions over converting descriptions into keyword lists. Do not return description-incorrect-style, mixed-description-style-in-section, or inconsistent-description-style."
       ].join("\n");
       const reportLanguageInstruction = this.buildTopicDoormatReportLanguageInstruction(input.reportLanguage);
       const systemPrompt = [
         composed.prompt,
         this.topicDoormatModelIssueContract,
         localOwnershipInstruction,
-        reportLanguageInstruction
+        reportLanguageInstruction,
+        this.buildTopicDoormatJsonOnlyInstruction()
       ].filter(Boolean).join("\n\n");
-      const messages = this.buildTopicDoormatIssueMessages(systemPrompt, input.doormatSummaries);
+      const messages = this.buildTopicDoormatIssueMessages(systemPrompt, input.doormatSummaries, input.useDescriptionStyleAsPrimaryIssue);
       const modelRotation = this.modelClient.buildModelRotation(input.selectedModel);
       this.debugTopicDoormatIssues("request prepared", {
         selectedModel: input.selectedModel,
+        useDescriptionStyleAsPrimaryIssue: input.useDescriptionStyleAsPrimaryIssue ?? false,
         modelRotation,
         pageLanguage: input.pageLanguage,
         doormatSummaryCount: input.doormatSummaries.length,
@@ -26830,6 +27027,7 @@ var TopicDoormatIssueAnalysisService = class _TopicDoormatIssueAnalysisService {
         this.requestTopicDoormatIssueJsonBySection({
           systemPrompt,
           selectedModel: input.selectedModel,
+          useDescriptionStyleAsPrimaryIssue: input.useDescriptionStyleAsPrimaryIssue,
           doormatSummaries: input.doormatSummaries
         }),
         this.iaCheck.analyze(input.doormatSummaries, input.uploadData).catch((err) => {
@@ -26846,7 +27044,7 @@ var TopicDoormatIssueAnalysisService = class _TopicDoormatIssueAnalysisService {
       const decisionGuardedText = text ? yield this.repairTopicDoormatIssueDecisions(text, model, input) : text;
       const resolvedText = decisionGuardedText ? yield this.repairTopicDoormatIncompleteIssueFields(decisionGuardedText, model, input) : decisionGuardedText;
       const localIaRows = localIaResult.rows;
-      const rows = resolvedText ? this.parseTopicDoormatIssueRows(resolvedText, input.doormatSummaries, input.hasLegacyTopicDoormatTemplate, input.pageLanguage, input.mostRequestedLinks, input.uploadData, localIaRows) : this.buildTopicDoormatFallbackRows(input.doormatSummaries, input.hasLegacyTopicDoormatTemplate, input.pageLanguage, input.mostRequestedLinks, input.uploadData, localIaRows);
+      const rows = resolvedText ? this.parseTopicDoormatIssueRows(resolvedText, input.doormatSummaries, input.hasLegacyTopicDoormatTemplate, input.pageLanguage, input.mostRequestedLinks, input.uploadData, localIaRows, input.useDescriptionStyleAsPrimaryIssue) : this.buildTopicDoormatFallbackRows(input.doormatSummaries, input.hasLegacyTopicDoormatTemplate, input.pageLanguage, input.mostRequestedLinks, input.uploadData, localIaRows);
       const rowsWithIaMeta = this.applyTopicDoormatSectionItemMeta(rows, localIaResult.metaByDoormatIndex);
       return {
         rows: rowsWithIaMeta,
@@ -26864,10 +27062,11 @@ var TopicDoormatIssueAnalysisService = class _TopicDoormatIssueAnalysisService {
       const modelRotation = this.modelClient.buildModelRotation(params.selectedModel);
       if (sectionBatches.length <= 1) {
         return this.modelClient.requestIssueJson({
-          messages: this.buildTopicDoormatIssueMessages(params.systemPrompt, params.doormatSummaries),
+          messages: this.buildTopicDoormatIssueMessages(params.systemPrompt, params.doormatSummaries, params.useDescriptionStyleAsPrimaryIssue),
           requestedModel: params.selectedModel,
+          issueJsonRequiredShape: this.buildTopicDoormatIssueRequiredShape(params.useDescriptionStyleAsPrimaryIssue),
           doormatSummaries: params.doormatSummaries,
-          isParseableResponseText: (value) => this.isParseableTopicDoormatIssueResponseText(value),
+          isParseableResponseText: (value) => this.isParseableTopicDoormatIssueResponseText(value, params.useDescriptionStyleAsPrimaryIssue),
           debug: (event, details) => this.debugTopicDoormatIssues(event, details)
         });
       }
@@ -26880,10 +27079,11 @@ var TopicDoormatIssueAnalysisService = class _TopicDoormatIssueAnalysisService {
           doormatIndexes: batch.doormatSummaries.map((summary) => summary.index)
         });
         const result = yield this.modelClient.requestIssueJson({
-          messages: this.buildTopicDoormatIssueMessages(params.systemPrompt, batch.doormatSummaries),
+          messages: this.buildTopicDoormatIssueMessages(params.systemPrompt, batch.doormatSummaries, params.useDescriptionStyleAsPrimaryIssue),
           requestedModel: params.selectedModel,
+          issueJsonRequiredShape: this.buildTopicDoormatIssueRequiredShape(params.useDescriptionStyleAsPrimaryIssue),
           doormatSummaries: batch.doormatSummaries,
-          isParseableResponseText: (value) => this.isParseableTopicDoormatIssueResponseText(value),
+          isParseableResponseText: (value) => this.isParseableTopicDoormatIssueResponseText(value, params.useDescriptionStyleAsPrimaryIssue),
           debug: (event, details) => this.debugTopicDoormatIssues(event, __spreadProps(__spreadValues({}, details), {
             sectionIndex: batch.sectionIndex,
             sectionTitle: batch.sectionTitle
@@ -26905,7 +27105,7 @@ var TopicDoormatIssueAnalysisService = class _TopicDoormatIssueAnalysisService {
       };
     });
   }
-  buildTopicDoormatIssueMessages(systemPrompt, doormatSummaries) {
+  buildTopicDoormatIssueMessages(systemPrompt, doormatSummaries, useDescriptionStyleAsPrimaryIssue = false) {
     return [
       {
         role: "system",
@@ -26938,9 +27138,59 @@ var TopicDoormatIssueAnalysisService = class _TopicDoormatIssueAnalysisService {
             sectionIndex: summary.sectionIndex,
             sectionTitle: summary.sectionTitle,
             sectionItemIndex: summary.sectionItemIndex
-          }))
+          })),
+          response_format: this.buildTopicDoormatIssueResponseFormat(useDescriptionStyleAsPrimaryIssue)
         })
       }
+    ];
+  }
+  buildTopicDoormatJsonOnlyInstruction() {
+    return [
+      "### Required JSON response",
+      "Return one valid JSON object and nothing else.",
+      "The first non-whitespace character must be { and the last non-whitespace character must be }.",
+      "Do not return Markdown, code fences, comments, explanations, or a schema description.",
+      "Use double-quoted JSON strings and no trailing commas.",
+      "Root keys required: section_issues and doormats.",
+      "Return section_issues: [] when there are no section-level issues.",
+      "Return exactly one doormats[] object for each input doormat index, even when that doormat has no issues.",
+      "Return issues: [] on a doormat when no model-owned issues apply to that doormat."
+    ].join("\n");
+  }
+  buildTopicDoormatIssueResponseFormat(useDescriptionStyleAsPrimaryIssue = false) {
+    return {
+      output: "json_object_only",
+      no_markdown: true,
+      no_code_fences: true,
+      root_required_keys: ["section_issues", "doormats"],
+      section_issues: "array of section-level issue objects, or []",
+      doormats: "array with exactly one object for each input doormat index, in input order",
+      required_doormat_fields: [
+        "doormat_index",
+        "link_text",
+        "href",
+        "description",
+        "detected_link_text_style",
+        useDescriptionStyleAsPrimaryIssue ? "detected_description_style" : "description_rewrite_guidance",
+        "destination_link_relationship",
+        "destination_link_relationship_basis",
+        "destination_link_relationship_reason",
+        "destination_content_assessment",
+        "issue_decisions",
+        "issues"
+      ],
+      empty_issue_arrays: "Use [] for section_issues and doormat issues when no model-owned issues apply.",
+      required_issue_decision_ids: this.getTopicDoormatRequiredIssueDecisionIds(useDescriptionStyleAsPrimaryIssue)
+    };
+  }
+  buildTopicDoormatIssueRequiredShape(useDescriptionStyleAsPrimaryIssue = false) {
+    const styleField = useDescriptionStyleAsPrimaryIssue ? '"detected_description_style": string' : '"description_rewrite_guidance": string';
+    return `{ "section_issues": [], "doormats": [{ "doormat_index": number, "link_text": string, "href": string, "description": string, "detected_link_text_style": string, ${styleField}, "destination_link_relationship": string, "destination_link_relationship_basis": string, "destination_link_relationship_reason": string, "destination_content_assessment": { "important_element_ids": [], "covered_element_ids": [], "missing_important_element_ids": [] }, "issue_decisions": [{ "issue_id": string, "decision": "applies|does_not_apply|not_applicable", "reason": string }], "issues": [] }] }`;
+  }
+  getTopicDoormatRequiredIssueDecisionIds(useDescriptionStyleAsPrimaryIssue) {
+    return [
+      ...this.topicDoormatRequiredIssueDecisionIds,
+      ...useDescriptionStyleAsPrimaryIssue ? this.topicDoormatDescriptionStyleIssueDecisionIds : []
     ];
   }
   buildTopicDoormatSectionBatches(doormatSummaries) {
@@ -27410,7 +27660,7 @@ var TopicDoormatIssueAnalysisService = class _TopicDoormatIssueAnalysisService {
       return false;
     }
   }
-  parseTopicDoormatIssueRows(text, doormatSummaries = [], hasLegacyTopicDoormatTemplate = false, pageLanguage = "en", mostRequestedLinks = [], uploadData, localIaRows = []) {
+  parseTopicDoormatIssueRows(text, doormatSummaries = [], hasLegacyTopicDoormatTemplate = false, pageLanguage = "en", mostRequestedLinks = [], uploadData, localIaRows = [], useDescriptionStyleAsPrimaryIssue = false) {
     const parsed = this.looseJsonParse(this.stripCodeFences(text));
     if (!parsed || typeof parsed !== "object") {
       const fallbackRows = this.buildTopicDoormatFallbackRows(doormatSummaries, hasLegacyTopicDoormatTemplate, pageLanguage, mostRequestedLinks, uploadData, localIaRows);
@@ -27423,7 +27673,7 @@ var TopicDoormatIssueAnalysisService = class _TopicDoormatIssueAnalysisService {
     }
     const root = parsed;
     const doormats = Array.isArray(root["doormats"]) ? root["doormats"] : [];
-    const descriptionStylesByDoormatIndex = this.parseTopicDoormatDescriptionStyles(doormats);
+    const descriptionStylesByDoormatIndex = useDescriptionStyleAsPrimaryIssue ? this.parseTopicDoormatDescriptionStyles(doormats) : /* @__PURE__ */ new Map();
     const linkStylesByDoormatIndex = this.parseTopicDoormatLinkTextStyles(doormats);
     const destinationLinkAssessmentsByDoormatIndex = this.parseTopicDoormatDestinationLinkAssessments(doormats);
     const destinationContentAssessmentsByDoormatIndex = this.parseTopicDoormatDestinationContentAssessments(doormats);
@@ -27484,7 +27734,22 @@ var TopicDoormatIssueAnalysisService = class _TopicDoormatIssueAnalysisService {
         if (issueId === "description-lacks-clarity" && index && contentGapDoormatIndexes.has(index)) {
           return null;
         }
-        if (issueId === "mixed-description-style-in-section" || issueId === "mixed-link-name-styles-in-section") {
+        if (issueId === "mixed-description-style-in-section" || issueId === "description-incorrect-style") {
+          if (!useDescriptionStyleAsPrimaryIssue)
+            return null;
+        }
+        if (issueId === "mixed-description-style-in-section") {
+          const sectionRow = this.buildTopicDoormatSectionIssueRow(issue, summary?.sectionIndex);
+          if (!sectionRow)
+            return null;
+          const sectionKey = `${sectionRow.sectionIndex ?? 0}|${sectionRow.issueId}`;
+          if (!sectionIssueKeys.has(sectionKey)) {
+            sectionIssueRows.push(sectionRow);
+            sectionIssueKeys.add(sectionKey);
+          }
+          return null;
+        }
+        if (issueId === "mixed-link-name-styles-in-section") {
           const sectionRow = this.buildTopicDoormatSectionIssueRow(issue, summary?.sectionIndex);
           if (!sectionRow)
             return null;
@@ -27503,7 +27768,7 @@ var TopicDoormatIssueAnalysisService = class _TopicDoormatIssueAnalysisService {
         const evidence = this.getTopicDoormatDisplayedModelEvidence(issue, summary);
         const recommendation = this.getTopicDoormatDisplayedModelRecommendation(issue);
         return {
-          include: typeof issue["include"] === "boolean" ? issue["include"] : true,
+          include: typeof issue["include"] === "boolean" ? issue["include"] : this.getDefaultTopicDoormatIssueInclude(issueId, severity),
           rowType: "doormat",
           severity,
           doormat: label,
@@ -27524,9 +27789,9 @@ var TopicDoormatIssueAnalysisService = class _TopicDoormatIssueAnalysisService {
         };
       }).filter((row) => row !== null);
     });
-    const reportableSectionIssueRows = sectionIssueRows.filter((row) => !this.locallyOwnedTopicDoormatIssueIds.has(row.issueId));
-    const effectiveDescriptionStylesByDoormatIndex = this.applyTopicDoormatDescriptionStyleOverrides(doormatSummaries, descriptionStylesByDoormatIndex);
-    const descriptionStyleAnalyses = this.analyzeTopicDoormatDescriptionStyles(doormatSummaries, effectiveDescriptionStylesByDoormatIndex);
+    const reportableSectionIssueRows = sectionIssueRows.filter((row) => !this.locallyOwnedTopicDoormatIssueIds.has(row.issueId) && row.issueId !== "mixed-description-style-in-section" && (useDescriptionStyleAsPrimaryIssue || row.issueId !== "inconsistent-description-style" && row.issueId !== "description-incorrect-style"));
+    const effectiveDescriptionStylesByDoormatIndex = useDescriptionStyleAsPrimaryIssue ? this.applyTopicDoormatDescriptionStyleOverrides(doormatSummaries, descriptionStylesByDoormatIndex) : /* @__PURE__ */ new Map();
+    const descriptionStyleAnalyses = useDescriptionStyleAsPrimaryIssue ? this.analyzeTopicDoormatDescriptionStyles(doormatSummaries, effectiveDescriptionStylesByDoormatIndex) : [];
     const descriptionStyleAnalysisBySection = new Map(descriptionStyleAnalyses.map((analysis) => [
       analysis.sectionIndex,
       analysis
@@ -27546,6 +27811,12 @@ var TopicDoormatIssueAnalysisService = class _TopicDoormatIssueAnalysisService {
         return true;
       if (!row.sectionIndex)
         return false;
+      if (row.issueId === "description-incorrect-style") {
+        return !useDescriptionStyleAsPrimaryIssue;
+      }
+      if (row.issueId === "inconsistent-description-style" && !useDescriptionStyleAsPrimaryIssue) {
+        return true;
+      }
       if (row.issueId === "inconsistent-description-style" && mixedDescriptionStyleSectionIndexes.has(row.sectionIndex)) {
         return true;
       }
@@ -27566,7 +27837,7 @@ var TopicDoormatIssueAnalysisService = class _TopicDoormatIssueAnalysisService {
       return sectionCount > 0 && flaggedCount >= Math.max(2, sectionCount - 1);
     });
     const modelIssueRows = rows.filter((row) => !suppressedModelIssueRows.includes(row));
-    const deterministicRows = this.buildDeterministicTopicDoormatIssueRows(doormatSummaries, [...modelIssueRows, ...reportableSectionIssueRows, ...localIaRows], hasLegacyTopicDoormatTemplate, pageLanguage, mostRequestedLinks, uploadData, effectiveDescriptionStylesByDoormatIndex, destinationContentAssessmentsByDoormatIndex, linkStylesByDoormatIndex, destinationLinkAssessmentsByDoormatIndex);
+    const deterministicRows = this.buildDeterministicTopicDoormatIssueRows(doormatSummaries, [...modelIssueRows, ...reportableSectionIssueRows, ...localIaRows], hasLegacyTopicDoormatTemplate, pageLanguage, mostRequestedLinks, uploadData, effectiveDescriptionStylesByDoormatIndex, useDescriptionStyleAsPrimaryIssue, destinationContentAssessmentsByDoormatIndex, linkStylesByDoormatIndex, destinationLinkAssessmentsByDoormatIndex);
     const representedIndexes = new Set([
       ...modelIssueRows,
       ...deterministicRows,
@@ -27598,12 +27869,6 @@ var TopicDoormatIssueAnalysisService = class _TopicDoormatIssueAnalysisService {
       suppressedModelIssueBreakdown: this.countTopicDoormatRowsByIssue(suppressedModelIssueRows),
       modelRawSectionIssueRows: sectionIssueRows.length,
       modelDisplayedSectionIssueRows: reportableSectionIssueRows.length,
-      descriptionStylesByDoormatIndex: doormatSummaries.map((summary) => ({
-        doormatIndex: summary.index,
-        sectionIndex: summary.sectionIndex,
-        sectionItemIndex: summary.sectionItemIndex,
-        style: effectiveDescriptionStylesByDoormatIndex.get(summary.index) ?? "missing-or-invalid"
-      })),
       linkStylesByDoormatIndex: doormatSummaries.map((summary) => ({
         doormatIndex: summary.index,
         sectionIndex: summary.sectionIndex,
@@ -27659,11 +27924,28 @@ var TopicDoormatIssueAnalysisService = class _TopicDoormatIssueAnalysisService {
         return;
       const doormat = rawDoormat;
       const index = this.toNumber(doormat["doormat_index"]);
-      const style2 = this.normalizeTopicDoormatLinkTextStyle(doormat["detected_link_text_style"]);
+      let style2 = this.normalizeTopicDoormatLinkTextStyle(doormat["detected_link_text_style"]);
+      if (style2 === "action" && this.isInformationalTaskLinkText(doormat["link_text"])) {
+        style2 = "topic";
+      }
       if (index && style2)
         stylesByDoormatIndex.set(index, style2);
     });
     return stylesByDoormatIndex;
+  }
+  isInformationalTaskLinkText(value) {
+    const text = this.cleanString(value);
+    if (!text)
+      return false;
+    if (/^(?:how|who|what|when|where|why)\b/i.test(text))
+      return true;
+    if (/\bhow to\b/i.test(text))
+      return true;
+    const firstWord = text.match(/^[A-Za-z][A-Za-z'-]*/)?.[0] ?? "";
+    if (!firstWord || !/ing$/i.test(firstWord))
+      return false;
+    const imperativeLikeIngWords = /* @__PURE__ */ new Set(["bring", "swing"]);
+    return !imperativeLikeIngWords.has(firstWord.toLowerCase());
   }
   parseTopicDoormatDestinationLinkAssessments(rawDoormats) {
     const assessments = /* @__PURE__ */ new Map();
@@ -27716,7 +27998,7 @@ var TopicDoormatIssueAnalysisService = class _TopicDoormatIssueAnalysisService {
     const evidence = this.getTopicDoormatDisplayedModelEvidence(issue);
     const recommendation = this.getTopicDoormatDisplayedModelRecommendation(issue);
     return {
-      include: typeof issue["include"] === "boolean" ? issue["include"] : true,
+      include: typeof issue["include"] === "boolean" ? issue["include"] : this.getDefaultTopicDoormatIssueInclude(issueId, severity),
       rowType: "section",
       severity,
       doormat: this.buildTopicDoormatSectionLabel(sectionIndex, doormatSummaries),
@@ -27761,7 +28043,7 @@ var TopicDoormatIssueAnalysisService = class _TopicDoormatIssueAnalysisService {
       return aIndex - bIndex;
     }));
   }
-  buildDeterministicTopicDoormatIssueRows(doormatSummaries, existingRows, hasLegacyTopicDoormatTemplate = false, pageLanguage = "en", mostRequestedLinks = [], uploadData, descriptionStylesByDoormatIndex = /* @__PURE__ */ new Map(), destinationContentAssessmentsByDoormatIndex = /* @__PURE__ */ new Map(), linkStylesByDoormatIndex = /* @__PURE__ */ new Map(), destinationLinkAssessmentsByDoormatIndex = /* @__PURE__ */ new Map()) {
+  buildDeterministicTopicDoormatIssueRows(doormatSummaries, existingRows, hasLegacyTopicDoormatTemplate = false, pageLanguage = "en", mostRequestedLinks = [], uploadData, descriptionStylesByDoormatIndex = /* @__PURE__ */ new Map(), useDescriptionStyleAsPrimaryIssue = false, destinationContentAssessmentsByDoormatIndex = /* @__PURE__ */ new Map(), linkStylesByDoormatIndex = /* @__PURE__ */ new Map(), destinationLinkAssessmentsByDoormatIndex = /* @__PURE__ */ new Map()) {
     const existingIssueKeys = new Set(existingRows.map((row) => `${row.sectionIndex ?? 0}|${row.issueId}`));
     const outdatedTemplateRows = hasLegacyTopicDoormatTemplate && !existingIssueKeys.has("1|outdated-topic-page-template") ? [
       {
@@ -27805,13 +28087,14 @@ var TopicDoormatIssueAnalysisService = class _TopicDoormatIssueAnalysisService {
       ...this.buildLocalTopicDoormatDescriptionLengthRows(doormatSummaries, pageLanguage),
       ...this.buildLocalTopicDoormatTrailingPunctuationRows(doormatSummaries, existingRows),
       ...this.buildLocalTopicDoormatDescriptionPersonRows(doormatSummaries),
+      ...this.buildLocalTopicDoormatAndBeforeFinalItemRows(doormatSummaries, existingRows, pageLanguage),
       ...this.buildLocalTopicDoormatMostRequestedDuplicateRows(doormatSummaries, mostRequestedLinks, existingRows, uploadData),
       ...this.buildLocalTopicDoormatLinkCodeRows(doormatSummaries),
       ...this.buildLocalTopicDoormatRepeatedDescriptionOpeningRows(doormatSummaries),
       ...this.buildLocalTopicDoormatContentGapRows(doormatSummaries, destinationContentAssessmentsByDoormatIndex),
       ...this.buildLocalTopicDoormatLinkStyleIssueRows(doormatSummaries, linkStylesByDoormatIndex),
       ...this.buildLocalTopicDoormatDestinationMismatchRows(doormatSummaries, destinationLinkAssessmentsByDoormatIndex),
-      ...this.buildLocalTopicDoormatStyleIssueRows(doormatSummaries, existingIssueKeys, descriptionStylesByDoormatIndex)
+      ...this.buildLocalTopicDoormatDescriptionStructureRows(doormatSummaries, descriptionStylesByDoormatIndex, useDescriptionStyleAsPrimaryIssue)
     ];
   }
   buildLocalTopicDoormatLinkNameLengthRows(doormatSummaries, pageLanguage) {
@@ -27885,7 +28168,7 @@ var TopicDoormatIssueAnalysisService = class _TopicDoormatIssueAnalysisService {
       const affectedDoormatIndexes = summaries.map((summary) => summary.index).filter((index) => Number.isFinite(index));
       const severity = this.getHighestTopicDoormatSeverity(evidenceItems.map((item) => item.severity));
       return {
-        include: true,
+        include: this.getDefaultTopicDoormatIssueInclude(issueId, severity),
         rowType: "section",
         severity,
         doormat: this.buildTopicDoormatSectionLabel(sectionIndex, overLimitSummaries),
@@ -28036,6 +28319,11 @@ var TopicDoormatIssueAnalysisService = class _TopicDoormatIssueAnalysisService {
   getTopicDoormatLengthIssueLabel(issueId) {
     return this.getTopicDoormatIssueLabel(issueId);
   }
+  getDefaultTopicDoormatIssueInclude(issueId, severity) {
+    if (issueId !== "link-name-too-long")
+      return true;
+    return severity.trim().toLowerCase() === "high";
+  }
   buildLocalTopicDoormatDescriptionPersonRows(doormatSummaries) {
     return doormatSummaries.flatMap((summary) => {
       const matchedPronoun = this.getFirstOrSecondPersonPronoun(summary.description);
@@ -28106,6 +28394,50 @@ var TopicDoormatIssueAnalysisService = class _TopicDoormatIssueAnalysisService {
     ]);
     return openingPronouns.has(normalizedBase) ? firstToken : "";
   }
+  buildLocalTopicDoormatAndBeforeFinalItemRows(doormatSummaries, existingRows, pageLanguage) {
+    const existingIssueKeys = new Set(existingRows.filter((row) => row.doormatIndex).map((row) => `${row.doormatIndex}|${row.issueId}`));
+    return doormatSummaries.flatMap((summary) => {
+      if (existingIssueKeys.has(`${summary.index}|description-uses-and-before-final-item`) || !this.getAndBeforeFinalItemConnectorInKeyTermDescription(summary.description, pageLanguage)) {
+        return [];
+      }
+      const connector = this.getAndBeforeFinalItemConnectorInKeyTermDescription(summary.description, pageLanguage);
+      return [
+        {
+          include: true,
+          rowType: "doormat",
+          severity: "Low",
+          doormat: this.buildTopicDoormatLabel(summary),
+          doormatLabel: summary.linkText || summary.href || "Doormat",
+          issueId: "description-uses-and-before-final-item",
+          issue: this.getTopicDoormatIssueLabel("description-uses-and-before-final-item"),
+          evidence: this.getTopicDoormatDeterministicText("descriptionAndBeforeFinalItem.evidence", { connector }),
+          recommendation: this.getTopicDoormatDeterministicText("descriptionAndBeforeFinalItem.recommendation", { connector }),
+          doormatIndex: summary.index || void 0,
+          sectionIndex: summary.sectionIndex || void 0,
+          sectionTitle: summary.sectionTitle || void 0,
+          sectionItemIndex: summary.sectionItemIndex || void 0
+        }
+      ];
+    });
+  }
+  getAndBeforeFinalItemConnectorInKeyTermDescription(description, pageLanguage) {
+    const text = this.cleanVisibleText(description);
+    if (this.startsLikeTaskOrGuidanceDescription(text))
+      return null;
+    const commaCount = (text.match(/,/g) ?? []).length;
+    if (pageLanguage === "fr") {
+      if (commaCount < 1)
+        return null;
+      return /(?:,\s*et\s+|,\s*[^,]+?\s+et\s+)/i.test(text) ? "et" : null;
+    }
+    const connector = text.match(/,\s+(and)\s+/i)?.[1]?.toLowerCase();
+    if (!connector || commaCount < 2)
+      return null;
+    return connector;
+  }
+  startsLikeTaskOrGuidanceDescription(text) {
+    return /^(?:apply|access|calculate|check|complete|contact|download|file|find|find out|get|join|learn|learn about|learn how|make|manage|open|pay|register|renew|report|request|review|set up|submit|update|use|view|how|who|what|when|where|why)\b/i.test(text.trim());
+  }
   buildLocalTopicDoormatTrailingPunctuationRows(doormatSummaries, existingRows) {
     const existingDoormatIssueKeys = new Set(existingRows.filter((row) => row.doormatIndex).map((row) => `${row.doormatIndex}|${row.issueId}`));
     const sectionLevelDescriptionPunctuationIndexes = this.getLocalDescriptionTrailingPunctuationSectionIndexes(doormatSummaries);
@@ -28128,6 +28460,7 @@ var TopicDoormatIssueAnalysisService = class _TopicDoormatIssueAnalysisService {
           issueId: "description-trailing-punctuation",
           issue: this.getTopicDoormatIssueLabel("description-trailing-punctuation"),
           evidence: this.buildTopicDoormatSectionTrailingPunctuationEvidence(affected),
+          affectedDoormatIndexes: affected.map((summary) => summary.index).filter((index) => Number.isFinite(index)),
           recommendation: this.getTopicDoormatDeterministicText("descriptionTrailingPunctuation.sectionRecommendation"),
           sectionIndex,
           sectionTitle: firstSummary.sectionTitle
@@ -28430,7 +28763,7 @@ var TopicDoormatIssueAnalysisService = class _TopicDoormatIssueAnalysisService {
   buildTopicDoormatDestinationContextElements(summary) {
     const navigationItems = summary.destinationNavigationItems ?? [];
     if (navigationItems.length) {
-      return navigationItems.map((item) => ({
+      return this.compactTopicDoormatDestinationContextElements(navigationItems.map((item) => ({
         text: this.cleanVisibleText([item.linkText, item.description].filter(Boolean).join(": ")),
         source: item.source
       })).filter((item) => item.text).map((item, index) => ({
@@ -28438,7 +28771,7 @@ var TopicDoormatIssueAnalysisService = class _TopicDoormatIssueAnalysisService {
         type: "doormat",
         text: item.text,
         source: item.source
-      }));
+      })));
     }
     const introElements = (summary.destinationIntroParagraphs ?? []).map((text) => this.cleanVisibleText(text)).filter(Boolean).map((text, index) => ({
       id: `intro-${index + 1}`,
@@ -28450,7 +28783,15 @@ var TopicDoormatIssueAnalysisService = class _TopicDoormatIssueAnalysisService {
       type: "h2",
       text
     }));
-    return [...introElements, ...sectionElements];
+    return this.compactTopicDoormatDestinationContextElements([
+      ...introElements,
+      ...sectionElements
+    ]);
+  }
+  compactTopicDoormatDestinationContextElements(elements) {
+    return elements.slice(0, this.topicDoormatDestinationContextElementLimit).map((element) => __spreadProps(__spreadValues({}, element), {
+      text: element.text.slice(0, this.topicDoormatDestinationContextTextLimit)
+    }));
   }
   buildLocalTopicDoormatLinkStyleIssueRows(doormatSummaries, stylesByDoormatIndex) {
     const sections = /* @__PURE__ */ new Map();
@@ -28650,33 +28991,28 @@ var TopicDoormatIssueAnalysisService = class _TopicDoormatIssueAnalysisService {
     }
     return false;
   }
-  buildLocalTopicDoormatStyleIssueRows(doormatSummaries, existingIssueKeys, descriptionStylesByDoormatIndex) {
+  buildLocalTopicDoormatDescriptionStructureRows(doormatSummaries, descriptionStylesByDoormatIndex, useDescriptionStyleAsPrimaryIssue) {
+    const fieldflowRows = doormatSummaries.filter((summary) => summary.hasFieldflow).map((summary) => ({
+      include: false,
+      rowType: "doormat",
+      severity: "OK",
+      doormat: summary.linkText,
+      doormatLabel: summary.linkText,
+      issueId: "valid-dropdown-enhancement",
+      issue: this.getTopicDoormatIssueLabel("valid-dropdown-enhancement"),
+      evidence: this.getTopicDoormatDeterministicText("dropdownEnhancementNote.evidence"),
+      recommendation: this.getTopicDoormatDeterministicText("dropdownEnhancementNote.recommendation"),
+      doormatIndex: summary.index,
+      sectionIndex: summary.sectionIndex,
+      sectionTitle: summary.sectionTitle,
+      sectionItemIndex: summary.sectionItemIndex
+    }));
+    if (!useDescriptionStyleAsPrimaryIssue)
+      return fieldflowRows;
     const analyses = this.analyzeTopicDoormatDescriptionStyles(doormatSummaries, descriptionStylesByDoormatIndex);
-    const rows = [];
+    const rows = [...fieldflowRows];
     analyses.forEach((analysis) => {
-      if (analysis.fieldflowSummaries.length) {
-        analysis.fieldflowSummaries.forEach((summary) => {
-          rows.push({
-            include: false,
-            rowType: "doormat",
-            severity: "OK",
-            doormat: summary.linkText,
-            doormatLabel: summary.linkText,
-            issueId: "valid-dropdown-enhancement",
-            issue: this.getTopicDoormatIssueLabel("valid-dropdown-enhancement"),
-            evidence: this.getTopicDoormatDeterministicText("dropdownEnhancementNote.evidence"),
-            recommendation: this.getTopicDoormatDeterministicText("dropdownEnhancementNote.recommendation"),
-            doormatIndex: summary.index,
-            sectionIndex: summary.sectionIndex,
-            sectionTitle: summary.sectionTitle,
-            sectionItemIndex: summary.sectionItemIndex
-          });
-        });
-      }
-      const key2 = `${analysis.sectionIndex}|mixed-description-style-in-section`;
       if (analysis.isMixed) {
-        if (existingIssueKeys.has(key2))
-          return;
         rows.push({
           include: true,
           rowType: "section",
@@ -28918,7 +29254,7 @@ var TopicDoormatIssueAnalysisService = class _TopicDoormatIssueAnalysisService {
     });
   }
   compactTopicDoormatIssueCategory(category) {
-    const compact = {};
+    const compact2 = {};
     [
       "id",
       "label",
@@ -28931,9 +29267,9 @@ var TopicDoormatIssueAnalysisService = class _TopicDoormatIssueAnalysisService {
       "severity_override"
     ].forEach((key2) => {
       if (category[key2] !== void 0)
-        compact[key2] = category[key2];
+        compact2[key2] = category[key2];
     });
-    return compact;
+    return compact2;
   }
   buildCompactTopicDoormatModelIssueContract(taxonomy, modelIssueCategories) {
     const source = taxonomy;
@@ -29318,7 +29654,7 @@ ${JSON.stringify(contract)}`;
     }
     return null;
   }
-  isParseableTopicDoormatIssueResponseText(text) {
+  isParseableTopicDoormatIssueResponseText(text, useDescriptionStyleAsPrimaryIssue = false) {
     const parsed = this.looseJsonParse(this.stripCodeFences(text));
     if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
       return false;
@@ -29331,17 +29667,17 @@ ${JSON.stringify(contract)}`;
     if (sectionIssues !== void 0 && !Array.isArray(sectionIssues)) {
       return false;
     }
-    return doormats.every((value) => this.isValidTopicDoormatModelResult(value)) && (sectionIssues ?? []).every((value) => this.isValidTopicDoormatModelIssue(value, true));
+    return doormats.every((value) => this.isValidTopicDoormatModelResult(value, useDescriptionStyleAsPrimaryIssue)) && (sectionIssues ?? []).every((value) => this.isValidTopicDoormatModelIssue(value, true));
   }
-  isValidTopicDoormatModelResult(value) {
+  isValidTopicDoormatModelResult(value, useDescriptionStyleAsPrimaryIssue = false) {
     if (!value || typeof value !== "object" || Array.isArray(value)) {
       return false;
     }
     const doormat = value;
     const index = this.toNumber(doormat["doormat_index"]);
-    return index !== null && index > 0 && typeof doormat["link_text"] === "string" && typeof doormat["href"] === "string" && typeof doormat["description"] === "string" && this.normalizeTopicDoormatLinkTextStyle(doormat["detected_link_text_style"]) !== null && this.normalizeTopicDoormatDescriptionStyle(doormat["detected_description_style"]) !== null && this.normalizeTopicDoormatDestinationLinkRelationship(doormat["destination_link_relationship"]) !== null && this.normalizeTopicDoormatDestinationLinkRelationshipBasis(doormat["destination_link_relationship_basis"]) !== null && typeof doormat["destination_link_relationship_reason"] === "string" && this.isValidTopicDoormatDestinationContentAssessment(doormat["destination_content_assessment"]) && this.isValidTopicDoormatIssueDecisions(doormat["issue_decisions"]) && Array.isArray(doormat["issues"]) && doormat["issues"].every((issue) => this.isValidTopicDoormatModelIssue(issue, false));
+    return index !== null && index > 0 && typeof doormat["link_text"] === "string" && typeof doormat["href"] === "string" && typeof doormat["description"] === "string" && this.normalizeTopicDoormatLinkTextStyle(doormat["detected_link_text_style"]) !== null && (useDescriptionStyleAsPrimaryIssue ? this.normalizeTopicDoormatDescriptionStyle(doormat["detected_description_style"]) !== null : typeof doormat["description_rewrite_guidance"] === "string") && this.normalizeTopicDoormatDestinationLinkRelationship(doormat["destination_link_relationship"]) !== null && this.normalizeTopicDoormatDestinationLinkRelationshipBasis(doormat["destination_link_relationship_basis"]) !== null && typeof doormat["destination_link_relationship_reason"] === "string" && this.isValidTopicDoormatDestinationContentAssessment(doormat["destination_content_assessment"]) && this.isValidTopicDoormatIssueDecisions(doormat["issue_decisions"], useDescriptionStyleAsPrimaryIssue) && Array.isArray(doormat["issues"]) && doormat["issues"].every((issue) => this.isValidTopicDoormatModelIssue(issue, false));
   }
-  isValidTopicDoormatIssueDecisions(value) {
+  isValidTopicDoormatIssueDecisions(value, useDescriptionStyleAsPrimaryIssue = false) {
     if (!Array.isArray(value))
       return false;
     const decisionsByIssueId = /* @__PURE__ */ new Map();
@@ -29353,7 +29689,7 @@ ${JSON.stringify(contract)}`;
       if (issueId)
         decisionsByIssueId.set(issueId, decision);
     });
-    return this.topicDoormatRequiredIssueDecisionIds.every((issueId) => {
+    return this.getTopicDoormatRequiredIssueDecisionIds(useDescriptionStyleAsPrimaryIssue).every((issueId) => {
       const decision = decisionsByIssueId.get(issueId);
       return !!decision && this.topicDoormatIssueDecisionValues.has(this.cleanString(decision["decision"])) && typeof decision["reason"] === "string";
     });
@@ -29716,14 +30052,19 @@ var TopicDoormatTemplateNormalizerService = class _TopicDoormatTemplateNormalize
       changed = true;
     });
     if (!doc.body.querySelector(".gc-srvinfo")) {
+      const standaloneSection = this.buildStandaloneModernSection(doc);
+      if (standaloneSection) {
+        standaloneSection.source.replaceWith(standaloneSection.section);
+        changed = true;
+      }
+    }
+    if (!doc.body.querySelector(".gc-srvinfo")) {
       if (this.normalizeLegacyListGroupTopicDoormats(doc)) {
         changed = true;
       }
     }
     if (!doc.body.querySelector(".gc-srvinfo")) {
-      const standaloneSection = this.buildStandaloneModernSection(doc);
-      if (standaloneSection) {
-        standaloneSection.source.replaceWith(standaloneSection.section);
+      if (this.normalizeLegacyHeadingTopicDoormats(doc)) {
         changed = true;
       }
     }
@@ -29738,7 +30079,7 @@ var TopicDoormatTemplateNormalizerService = class _TopicDoormatTemplateNormalize
     };
   }
   hasLegacyDoormatMarkup(html) {
-    return /\b(?:mwsdoormat-links-container|gc-drmt)\b/.test(html) || /\bgc-srvinfo\b/.test(html) || /\blist-group\b/.test(html);
+    return /\b(?:mwsdoormat-links-container|gc-drmt)\b/.test(html) || /\bgc-srvinfo\b/.test(html) || /\blist-group\b/.test(html) || /\b(?:Services and information|Services et renseignements|Services et information|Topics|Sujets)\b/.test(html);
   }
   normalizeGcSrvinfoLayouts(doc) {
     let changed = false;
@@ -29816,6 +30157,57 @@ var TopicDoormatTemplateNormalizerService = class _TopicDoormatTemplateNormalize
     clone.querySelector("a[href]")?.remove();
     clone.querySelectorAll('ul, ol, nav, details, [hidden], [aria-hidden="true"], .pagedetails').forEach((element) => element.remove());
     return this.cleanVisibleText(clone.textContent);
+  }
+  normalizeLegacyHeadingTopicDoormats(doc) {
+    const heading = this.findLegacyHeadingTopicSection(doc);
+    if (!heading)
+      return false;
+    const groups = this.collectLegacyHeadingTopicItems(heading);
+    if (groups.length < 2)
+      return false;
+    const section = this.buildModernSectionFromItems(doc, groups.map((group) => group.item), this.cleanVisibleText(heading.textContent));
+    if (!section)
+      return false;
+    heading.parentElement?.insertBefore(section, heading);
+    heading.remove();
+    groups.flatMap((group) => group.sourceNodes).forEach((node) => node.parentElement?.removeChild(node));
+    return true;
+  }
+  findLegacyHeadingTopicSection(doc) {
+    return Array.from(doc.body.querySelectorAll("main h2, main h3, h2, h3")).find((heading) => this.isGenericLegacyHeading(this.cleanVisibleText(heading.textContent))) ?? null;
+  }
+  collectLegacyHeadingTopicItems(heading) {
+    const items = [];
+    let current = heading.nextElementSibling;
+    while (current) {
+      if (current.matches("h2") && !this.isGenericLegacyHeading(this.cleanVisibleText(current.textContent))) {
+        break;
+      }
+      if (current.matches("h2, h3")) {
+        const sourceNodes = this.getLegacyHeadingTopicSourceNodes(current);
+        const item = this.cloneLegacyHeadingTopicItem(sourceNodes);
+        const link = item.querySelector("h2 a[href], h3 a[href]");
+        if (link)
+          items.push({ item, sourceNodes });
+      }
+      current = current.nextElementSibling;
+    }
+    return items;
+  }
+  getLegacyHeadingTopicSourceNodes(heading) {
+    const nodes = [heading];
+    let current = heading.nextElementSibling;
+    while (current && !current.matches("h2, h3")) {
+      nodes.push(current);
+      current = current.nextElementSibling;
+    }
+    return nodes;
+  }
+  cloneLegacyHeadingTopicItem(nodes) {
+    const doc = nodes[0].ownerDocument;
+    const item = doc.createElement("div");
+    nodes.forEach((node) => item.appendChild(node.cloneNode(true)));
+    return item;
   }
   findLegacyTopicListHeading(list) {
     let current = list.previousElementSibling;
@@ -29935,7 +30327,7 @@ var TopicDoormatTemplateNormalizerService = class _TopicDoormatTemplateNormalize
     return this.isGenericLegacyHeading(legacyHeading?.textContent);
   }
   isGenericLegacyHeading(value) {
-    return this.cleanVisibleText(value).toLowerCase() === "topics";
+    return /^(topics|services and information|services et renseignements|services et information|sujets)$/.test(this.cleanVisibleText(value).toLowerCase());
   }
   serializeParsedHtmlLikeInput(originalHtml, doc) {
     if (/<html[\s>]/i.test(originalHtml)) {
@@ -29960,6 +30352,1003 @@ var TopicDoormatTemplateNormalizerService = class _TopicDoormatTemplateNormalize
 };
 (() => {
   (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(TopicDoormatTemplateNormalizerService, [{
+    type: Injectable,
+    args: [{ providedIn: "root" }]
+  }], null, null);
+})();
+
+// src/app/views/page-assistant/services/topic-doormats/topic-doormat-example-selector.ts
+var MAX_MATCHED_ITEMS = 2;
+var MAX_TOTAL_ITEMS = 3;
+function selectTopicDoormatExamples(examples, pageLanguage, issueIds, format) {
+  const selectedIssueIds = new Set(issueIds.filter(Boolean));
+  if (!selectedIssueIds.size)
+    return [];
+  const matched = [];
+  for (const example of examples) {
+    for (const item of getItems(example, pageLanguage)) {
+      if (!getStrings(item.issueTags).some((tag) => selectedIssueIds.has(tag)))
+        continue;
+      matched.push({ example, item });
+      if (matched.length === MAX_MATCHED_ITEMS)
+        break;
+    }
+    if (matched.length === MAX_MATCHED_ITEMS)
+      break;
+  }
+  if (!matched.length)
+    return [];
+  const selected = [...matched];
+  const context = findContextItem(matched, pageLanguage);
+  if (context && selected.length < MAX_TOTAL_ITEMS)
+    selected.push(context);
+  const grouped = /* @__PURE__ */ new Map();
+  for (const selection of selected) {
+    const items = grouped.get(selection.example) ?? [];
+    if (!items.includes(selection.item))
+      items.push(selection.item);
+    grouped.set(selection.example, items);
+  }
+  return Array.from(grouped, ([example, items]) => ({
+    id: example.id,
+    pageTopic: example.pageTopic,
+    selectedLanguage: pageLanguage,
+    items: items.map((item) => formatItem(item, format))
+  }));
+}
+function findContextItem(matched, pageLanguage) {
+  for (const selection of matched) {
+    const items = getItems(selection.example, pageLanguage);
+    for (const position of getNumbers(selection.item.contextPositions)) {
+      const item = items.find((candidate) => candidate.position === position);
+      if (item && !matched.some((entry) => entry.item === item)) {
+        return { example: selection.example, item };
+      }
+    }
+  }
+  for (const selection of matched) {
+    const item = getItems(selection.example, pageLanguage).find((candidate) => candidate.changeType === "unchanged" && !matched.some((entry) => entry.item === candidate));
+    if (item)
+      return { example: selection.example, item };
+  }
+  return null;
+}
+function getItems(example, pageLanguage) {
+  const items = example.sets?.[pageLanguage]?.items;
+  if (!Array.isArray(items))
+    return [];
+  return items.filter((item) => !!item && typeof item === "object" && !Array.isArray(item));
+}
+function formatItem(item, format) {
+  if (format === "final-only") {
+    return compact({
+      position: item.position,
+      linkText: item.linkText,
+      description: item.after
+    });
+  }
+  return compact({
+    position: item.position,
+    linkText: item.linkText,
+    before: item.before,
+    after: item.after,
+    issueTags: item.issueTags,
+    changeType: item.changeType,
+    reason: item.reason,
+    destinationEvidence: item.destinationEvidence
+  });
+}
+function compact(value) {
+  return Object.fromEntries(Object.entries(value).filter(([, item]) => item !== void 0));
+}
+function getStrings(value) {
+  return Array.isArray(value) ? value.filter((item) => typeof item === "string") : [];
+}
+function getNumbers(value) {
+  return Array.isArray(value) ? value.filter((item) => typeof item === "number") : [];
+}
+
+// src/app/views/page-assistant/services/topic-doormats/topic-doormat-rewrite-orchestrator.service.ts
+var TopicDoormatRewriteOrchestratorService = class _TopicDoormatRewriteOrchestratorService {
+  translate = inject(TranslateService);
+  messageService = inject(MessageService);
+  uploadState = inject(UploadStateService);
+  skillManager = inject(SkillManagerService);
+  alertAi = inject(AlertAiService);
+  openRouter = inject(OpenRouterService);
+  urlDataService = inject(UrlDataService);
+  topicDoormatAnalysisState = inject(TopicDoormatAnalysisStateService);
+  topicDoormatExtractor = inject(TopicDoormatExtractorService);
+  topicDoormatIssueAnalysis = inject(TopicDoormatIssueAnalysisService);
+  topicDoormatTemplateNormalizer = inject(TopicDoormatTemplateNormalizerService);
+  topicDoormatRewriteAttemptTimeoutMs = 15e4;
+  examplesPath = new URL("skills/topic-doormats/rewrite/references/examples.json", document.baseURI).toString();
+  examplesCache = null;
+  analyzeAndRewriteGeneratedTopicHtml(html, model) {
+    return __async(this, null, function* () {
+      const normalized = this.topicDoormatTemplateNormalizer.normalizeLegacyDoormats(html);
+      const analyzedHtml = normalized.html;
+      const doc = this.topicDoormatExtractor.parseHtmlDocument(analyzedHtml);
+      if (!doc)
+        return null;
+      const extractedSummaries = this.topicDoormatExtractor.extractSummaries(doc);
+      if (!extractedSummaries.length) {
+        this.messageService.add({
+          severity: "info",
+          summary: this.translate.instant("common.ai.topicDoormatsNotFound"),
+          life: 3e3
+        });
+        return null;
+      }
+      this.messageService.add({
+        severity: "info",
+        summary: this.translate.instant("common.ai.generating"),
+        life: 2e3
+      });
+      const uploadData = this.uploadState.getUploadData();
+      const pageLanguage = this.topicDoormatExtractor.detectPageLanguage(doc, uploadData);
+      const hasCurrentAnalysis = this.topicDoormatAnalysisState.hasAnalysis() && this.topicDoormatAnalysisState.getAnalyzedHtml() === analyzedHtml && this.topicDoormatAnalysisState.getDoormatSummaries().length > 0;
+      let doormatSummaries;
+      let issueRows;
+      let analysisModel;
+      if (hasCurrentAnalysis) {
+        doormatSummaries = this.topicDoormatAnalysisState.getDoormatSummaries();
+        issueRows = this.topicDoormatAnalysisState.getIssueRows();
+      } else {
+        const bilingualSummaries = yield this.topicDoormatExtractor.enrichOppositeLanguageLengths(extractedSummaries, uploadData, pageLanguage);
+        doormatSummaries = yield this.topicDoormatExtractor.enrichDestinationContext(bilingualSummaries, uploadData);
+        const analysis = yield this.topicDoormatIssueAnalysis.analyze({
+          doormatSummaries,
+          pageLanguage,
+          reportLanguage: this.translate.currentLang === "fr" ? "fr" : "en",
+          hasLegacyTopicDoormatTemplate: this.topicDoormatExtractor.hasLegacyTemplate(doc),
+          mostRequestedLinks: this.topicDoormatExtractor.extractMostRequestedLinks(doc),
+          uploadData,
+          selectedModel: model,
+          useDescriptionStyleAsPrimaryIssue: this.uploadState.getUseDescriptionStyleAsPrimaryIssue()
+        });
+        issueRows = analysis.rows;
+        analysisModel = analysis.model;
+        this.topicDoormatAnalysisState.setAnalysis(analyzedHtml, issueRows, doormatSummaries);
+        this.messageService.add({
+          severity: "info",
+          summary: issueRows.length ? this.translate.instant("common.ai.topicDoormatIssuesReceived", {
+            model: this.getShortModelName(analysis.model || model)
+          }) : this.translate.instant("common.ai.topicDoormatIssuesNotIdentified"),
+          life: 3e3
+        });
+      }
+      const selectedIssuesForRewrite = this.getSelectedRewriteIssuesForHtml(analyzedHtml, issueRows);
+      const descriptionTrailingPunctuationIndexes = this.getDescriptionTrailingPunctuationIndexes(selectedIssuesForRewrite, doormatSummaries);
+      const htmlForRewrite = this.applyDescriptionTrailingPunctuationCleanupToHtml(analyzedHtml, doormatSummaries, descriptionTrailingPunctuationIndexes);
+      const modelRewriteIssues = this.getModelRewriteIssues(selectedIssuesForRewrite);
+      const linkTextRewriteAllowedIndexes = this.getLinkTextRewriteAllowedIndexes(selectedIssuesForRewrite, doormatSummaries);
+      const modelRequiredDoormatIndexes = this.getRequiredChangeIndexes(modelRewriteIssues, doormatSummaries);
+      const prompt = yield this.buildRewritePrompt();
+      const examples = yield this.getExamplesForLanguageIfEnabled(pageLanguage, [
+        ...modelRewriteIssues.map((issue) => issue.issueId),
+        ...doormatSummaries.some((summary) => this.hasGeneratedPlaceholderDescription(summary)) ? ["generated-placeholder-description"] : []
+      ]);
+      const userContent = this.buildRewriteUserContent(htmlForRewrite, issueRows, doormatSummaries, pageLanguage, examples, modelRewriteIssues);
+      const rewrite = yield this.callOpenRouterForRewrite(model, [
+        { role: "system", content: prompt },
+        { role: "user", content: userContent }
+      ]);
+      const rewriteHtml = this.extractDoormatRewriteHtmlFromStructuredResponse(rewrite.text) ?? rewrite.text;
+      if (this.looksLikeStructuredAiJsonResponse(rewriteHtml)) {
+        throw new Error("The AI returned structured JSON where HTML was expected. No comparison update was applied.");
+      }
+      let patchedHtml = this.applyDoormatRewriteToPageHtml(htmlForRewrite, rewriteHtml);
+      let rewriteModel = rewrite.usedModel;
+      const unchangedModelRequiredIndexes = this.getUnchangedModelRequiredDoormatIndexes(htmlForRewrite, patchedHtml, modelRequiredDoormatIndexes, doormatSummaries);
+      if (unchangedModelRequiredIndexes.size) {
+        console.warn("[TopicDoormatRewrite] selected model-required doormats unchanged", {
+          unchangedDoormatIndexes: Array.from(unchangedModelRequiredIndexes),
+          selectedIssueIds: Array.from(new Set(modelRewriteIssues.map((issue) => issue.issueId)))
+        });
+        const repairIssues = this.getRewriteIssuesForDoormatIndexes(modelRewriteIssues, unchangedModelRequiredIndexes, doormatSummaries);
+        if (repairIssues.length) {
+          const repairContent = this.buildModelRequiredRepairUserContent(patchedHtml, repairIssues, doormatSummaries, pageLanguage, yield this.getExamplesForLanguageIfEnabled(pageLanguage, repairIssues.map((issue) => issue.issueId)), unchangedModelRequiredIndexes);
+          const repair = yield this.callOpenRouterForRewrite(model, [
+            { role: "system", content: prompt },
+            { role: "user", content: repairContent }
+          ]);
+          const repairHtml = this.extractDoormatRewriteHtmlFromStructuredResponse(repair.text) ?? repair.text;
+          if (this.looksLikeStructuredAiJsonResponse(repairHtml)) {
+            throw new Error("The AI returned structured JSON where HTML was expected. No comparison update was applied.");
+          }
+          patchedHtml = this.applyDoormatRewriteToPageHtml(patchedHtml, repairHtml);
+          rewriteModel = repair.usedModel;
+          const stillUnchanged = this.getUnchangedModelRequiredDoormatIndexes(htmlForRewrite, patchedHtml, unchangedModelRequiredIndexes, doormatSummaries);
+          if (stillUnchanged.size) {
+            console.warn("[TopicDoormatRewrite] selected model-required doormats still unchanged after repair", {
+              unchangedDoormatIndexes: Array.from(stillUnchanged),
+              selectedIssueIds: Array.from(new Set(repairIssues.map((issue) => issue.issueId)))
+            });
+          }
+        }
+      }
+      const cleanedPatchedHtml = this.preserveUnselectedLinkTextInHtml(this.applyDescriptionTrailingPunctuationCleanupToHtml(patchedHtml, doormatSummaries, descriptionTrailingPunctuationIndexes), doormatSummaries, linkTextRewriteAllowedIndexes);
+      const rewrittenHtml = yield this.urlDataService.formatHtml(cleanedPatchedHtml, "ai");
+      return {
+        analyzedHtml,
+        rewrittenHtml,
+        issueRows,
+        analysisModel,
+        rewriteModel
+      };
+    });
+  }
+  draftGeneratedTopicDoormatsFromDestinationContext(html, model) {
+    return __async(this, null, function* () {
+      const normalized = this.topicDoormatTemplateNormalizer.normalizeLegacyDoormats(html);
+      const workingHtml = normalized.html;
+      const doc = this.topicDoormatExtractor.parseHtmlDocument(workingHtml);
+      if (!doc)
+        return null;
+      const extractedSummaries = this.topicDoormatExtractor.extractSummaries(doc);
+      if (!extractedSummaries.length)
+        return null;
+      const uploadData = this.uploadState.getUploadData();
+      const pageLanguage = this.topicDoormatExtractor.detectPageLanguage(doc, uploadData);
+      const bilingualSummaries = yield this.topicDoormatExtractor.enrichOppositeLanguageLengths(extractedSummaries, uploadData, pageLanguage);
+      const doormatSummaries = yield this.topicDoormatExtractor.enrichDestinationContext(bilingualSummaries, uploadData);
+      const prompt = yield this.buildRewritePrompt();
+      const examples = yield this.getExamplesForLanguageIfEnabled(pageLanguage, ["generated-placeholder-description"]);
+      const userContent = this.buildDraftUserContent(workingHtml, doormatSummaries, pageLanguage, examples);
+      const rewrite = yield this.callOpenRouterForRewrite(model, [
+        { role: "system", content: prompt },
+        { role: "user", content: userContent }
+      ]);
+      const rewriteHtml = this.extractDoormatRewriteHtmlFromStructuredResponse(rewrite.text) ?? rewrite.text;
+      if (this.looksLikeStructuredAiJsonResponse(rewriteHtml)) {
+        throw new Error("The AI returned structured JSON where HTML was expected. No comparison update was applied.");
+      }
+      const patchedHtml = this.applyDoormatRewriteToPageHtml(workingHtml, rewriteHtml);
+      return {
+        rewrittenHtml: yield this.urlDataService.formatHtml(patchedHtml, "ai"),
+        rewriteModel: rewrite.usedModel
+      };
+    });
+  }
+  draftGeneratedTopicFeaturesFromDestinationContext(html, model) {
+    return __async(this, null, function* () {
+      const doc = this.topicDoormatExtractor.parseHtmlDocument(html);
+      if (!doc)
+        return null;
+      const featureSummaries = this.extractGeneratedFeatureSummaries(doc);
+      if (!featureSummaries.length)
+        return null;
+      const summariesWithContext = yield this.topicDoormatExtractor.enrichDestinationContext(featureSummaries, this.uploadState.getUploadData());
+      const prompt = yield this.buildFeatureDraftPrompt();
+      const userContent = this.buildFeatureDraftUserContent(html, summariesWithContext);
+      const rewrite = yield this.callOpenRouterForRewrite(model, [
+        { role: "system", content: prompt },
+        { role: "user", content: userContent }
+      ]);
+      const rewriteHtml = this.extractDoormatRewriteHtmlFromStructuredResponse(rewrite.text) ?? rewrite.text;
+      if (this.looksLikeStructuredAiJsonResponse(rewriteHtml)) {
+        throw new Error("The AI returned structured JSON where HTML was expected. No comparison update was applied.");
+      }
+      const patchedHtml = this.applyFeatureRewriteToPageHtml(html, rewriteHtml);
+      return {
+        rewrittenHtml: yield this.urlDataService.formatHtml(patchedHtml, "ai"),
+        rewriteModel: rewrite.usedModel
+      };
+    });
+  }
+  buildRewritePrompt() {
+    return __async(this, null, function* () {
+      const composed = yield this.skillManager.composePrompt({
+        basePrompt: "Return raw HTML only. Return the full HTML input with only the doormat section updated. Do not return JSON, Markdown, schema-shaped output, or fields such as rewritten_doormat_set_html or full_updated_html. Do not remove, reorder, or rewrite unrelated sections. Preserve page title, alerts, headings, and all other components exactly as provided. Return only updated HTML code with no other commentary.",
+        queryText: "rewrite topic doormats replacement updated html doormat overview list content design",
+        promptKey: PromptKey.Doormats,
+        outputMode: "html",
+        includeReferences: true,
+        includeAssets: false,
+        requireSkill: true
+      });
+      return composed.prompt;
+    });
+  }
+  buildFeatureDraftPrompt() {
+    return __async(this, null, function* () {
+      const composed = yield this.skillManager.composePrompt({
+        basePrompt: 'Return raw HTML only. Return the full HTML input with only generated topic feature card descriptions updated. Do not return JSON, Markdown, schema-shaped output, or explanatory text. Preserve feature link text, hrefs, images, layout, headings, doormats, intro, alerts, and all unrelated page HTML exactly as provided. Use the topic doormat writing rules for concise, destination-specific descriptions: write from destination context, do not copy destination intro paragraphs verbatim, do not use rescue-link text such as "You may be looking for", and do not invent unsupported details.',
+        queryText: "rewrite topic feature card descriptions from destination context using doormat description rules",
+        promptKey: PromptKey.Doormats,
+        outputMode: "html",
+        includeReferences: true,
+        includeAssets: false,
+        requireSkill: true
+      });
+      return composed.prompt;
+    });
+  }
+  buildRewriteUserContent(html, rows, summaries, pageLanguage, examples, selectedIssuesOverride) {
+    const selectedIssues = selectedIssuesOverride ?? this.getSelectedRewriteIssuesForHtml(html, rows);
+    const placeholderIssues = summaries.filter((summary) => this.hasGeneratedPlaceholderDescription(summary)).map((summary) => this.toGeneratedPlaceholderIssue(summary));
+    const allIssues = [...selectedIssues, ...placeholderIssues];
+    const affectedDoormatIndexes = this.getAffectedDoormatIndexesForRewrite(allIssues, summaries);
+    const modelRequiredDoormatIndexes = this.getRequiredChangeIndexes(selectedIssues, summaries);
+    const summariesByIndex = new Map(summaries.map((summary) => [summary.index, summary]));
+    const examplePayload = this.buildExamplePayload(examples, pageLanguage, "rewrite");
+    return JSON.stringify(__spreadValues({
+      page_html: html,
+      topic_doormat_issue_analysis: {
+        status: allIssues.length ? "selected-issues" : "analysis-available-no-selected-issues",
+        instruction: "Use selected issues as rewrite priorities. Fix them when possible without violating the rewrite rules. Preserve doormats that do not have selected issues. If a doormat has a generated placeholder description, write a concise description from destination context.",
+        selected_issues: allIssues.map((issue) => this.toDoormatRewriteIssuePayload(issue))
+      },
+      model_required_selected_issues: {
+        status: selectedIssues.length ? "required" : "none",
+        instruction: "Review these selected issues and fix them where safe. For a description-length issue, first remove repetition, unnecessary wording, and secondary details, then try a shorter accurate phrasing. Exceed 120 characters only when essential meaning or accuracy cannot otherwise be preserved. Other fixable issues require changes. Preserve doormats without selected issues.",
+        selected_issues: selectedIssues.map((issue) => this.toDoormatRewriteIssuePayload(issue)),
+        affected_doormat_indexes: Array.from(modelRequiredDoormatIndexes)
+      },
+      doormats_with_selected_issues: Array.from(affectedDoormatIndexes).map((index) => summariesByIndex.get(index)).filter((summary) => summary !== void 0).map((summary) => this.toDoormatDestinationRewritePayload(summary))
+    }, examplePayload));
+  }
+  buildModelRequiredRepairUserContent(html, issues, summaries, pageLanguage, examples, requiredDoormatIndexes) {
+    const summariesByIndex = new Map(summaries.map((summary) => [summary.index, summary]));
+    const examplePayload = this.buildExamplePayload(examples, pageLanguage, "repair");
+    return JSON.stringify(__spreadValues({
+      page_html: html,
+      topic_doormat_repair: {
+        status: "selected-issues-left-unchanged",
+        instruction: "The previous rewrite left these selected issue targets unchanged. Rewrite only these doormats. Fix the selected issues unless impossible to fix safely. Preserve hrefs, order, labels, markup shape, unrelated doormats, and unrelated page HTML. Return raw HTML only.",
+        selected_issues: issues.map((issue) => this.toDoormatRewriteIssuePayload(issue)),
+        affected_doormat_indexes: Array.from(requiredDoormatIndexes)
+      },
+      doormats_requiring_repair: Array.from(requiredDoormatIndexes).map((index) => summariesByIndex.get(index)).filter((summary) => summary !== void 0).map((summary) => this.toDoormatDestinationRewritePayload(summary))
+    }, examplePayload));
+  }
+  buildDraftUserContent(html, summaries, pageLanguage, examples) {
+    const draftIssues = summaries.map((summary) => this.toGeneratedPlaceholderIssue(summary));
+    const examplePayload = this.buildExamplePayload(examples, pageLanguage, "draft");
+    return JSON.stringify(__spreadValues({
+      page_html: html,
+      topic_doormat_issue_analysis: {
+        status: "generated-topic-draft",
+        instruction: "This is a newly generated topic page. Write every generated topic doormat link name and description from destination context. Keep hrefs, order, and valid GCWeb doormat markup. Use concise link text and short, specific descriptions. After drafting, preserve unrelated page HTML.",
+        selected_issues: draftIssues.map((issue) => this.toDoormatRewriteIssuePayload(issue))
+      },
+      doormats_with_selected_issues: summaries.map((summary) => this.toDoormatDestinationRewritePayload(summary))
+    }, examplePayload));
+  }
+  buildFeatureDraftUserContent(html, summaries) {
+    return JSON.stringify({
+      page_html: html,
+      topic_feature_description_draft: {
+        status: "generated-topic-feature-draft",
+        instruction: "Write only the missing generated feature card descriptions. Use the same concise destination-specific description rules as topic doormats. Use destination context as evidence, not copy text. Do not use rescue-link text, page furniture, generic labels, or destination intro paragraphs verbatim. Preserve feature card link text, hrefs, images, order, and unrelated page HTML."
+      },
+      features_requiring_descriptions: summaries.map((summary) => this.toDoormatDestinationRewritePayload(summary))
+    });
+  }
+  getSelectedRewriteIssuesForHtml(html, rows) {
+    const selectedStateIssues = this.topicDoormatAnalysisState.hasAnalysis() && this.topicDoormatAnalysisState.getAnalyzedHtml() === html ? this.topicDoormatAnalysisState.getSelectedRewriteIssues() : [];
+    return selectedStateIssues.length ? selectedStateIssues : rows.filter((row) => row.include && row.issueId !== "no-issues").map((row) => this.toRewriteIssueInput(row));
+  }
+  getDescriptionTrailingPunctuationIndexes(issues, summaries) {
+    const indexes = /* @__PURE__ */ new Set();
+    issues.filter((issue) => issue.issueId === "description-trailing-punctuation").forEach((issue) => {
+      if (typeof issue.doormatIndex === "number")
+        indexes.add(issue.doormatIndex);
+      (issue.affectedDoormatIndexes ?? []).forEach((index) => {
+        if (typeof index === "number")
+          indexes.add(index);
+      });
+      if (issue.rowType === "section" && typeof issue.sectionIndex === "number" && !issue.affectedDoormatIndexes?.length) {
+        summaries.filter((summary) => summary.sectionIndex === issue.sectionIndex && this.hasDescriptionTrailingPunctuation(summary.description)).forEach((summary) => indexes.add(summary.index));
+      }
+    });
+    return indexes;
+  }
+  getModelRewriteIssues(issues) {
+    return issues.filter((issue) => issue.issueId !== "description-trailing-punctuation");
+  }
+  getRequiredChangeIndexes(issues, summaries) {
+    const required = /* @__PURE__ */ new Set();
+    for (const issue of issues) {
+      for (const index of this.getAffectedDoormatIndexesForRewrite([issue], summaries)) {
+        if (issue.issueId !== "description-too-long")
+          required.add(index);
+      }
+    }
+    return required;
+  }
+  extractGeneratedFeatureSummaries(doc) {
+    const summaries = [];
+    const featureSections = Array.from(doc.body.querySelectorAll(".gc-features"));
+    featureSections.forEach((section, sectionIndex) => {
+      const links = Array.from(section.querySelectorAll("h2 a[href], h3 a[href]"));
+      links.forEach((link) => {
+        const item = this.findFeatureItemForRewrite(link, section);
+        const description = this.cleanDoormatRewriteText(item?.querySelector("p")?.textContent);
+        if (!this.hasGeneratedFeaturePlaceholderDescription(description)) {
+          return;
+        }
+        const href = link.getAttribute("href")?.trim() || "";
+        const linkText = this.cleanDoormatRewriteText(link.textContent);
+        if (!href || !linkText)
+          return;
+        summaries.push({
+          index: summaries.length + 1,
+          linkText,
+          href,
+          description,
+          headingLevel: this.toHeadingLevel(link.closest("h2, h3")),
+          itemLinkCount: item?.querySelectorAll("a[href]").length ?? 1,
+          headingLinkCount: link.closest("h2, h3")?.querySelectorAll("a[href]").length ?? 1,
+          descriptionLinkCount: item?.querySelector("p")?.querySelectorAll("a[href]").length ?? 0,
+          hasSplitHeadingLink: false,
+          hasDescriptionLink: !!item?.querySelector("p a[href]"),
+          hasDescriptionIconOrImage: !!item?.querySelector("p img, p svg"),
+          hasDescriptionSpecialFormatting: !!item?.querySelector("p strong, p b, p em, p i, p ul, p ol, p li, p mark, p code"),
+          rawItemText: this.cleanDoormatRewriteText(item?.textContent).slice(0, 500),
+          linkTextCharacterCount: linkText.length,
+          descriptionCharacterCount: description.length,
+          sectionIndex: sectionIndex + 1,
+          sectionTitle: "Features",
+          sectionItemIndex: summaries.length + 1,
+          sectionDoormatCount: links.length
+        });
+      });
+    });
+    return summaries;
+  }
+  hasGeneratedFeaturePlaceholderDescription(description) {
+    return !description || /\[\*\*\*.*(?:brief description|feature being promoted|action verbs|keywords|tasks|links to).*?\*\*\*\]/i.test(description);
+  }
+  toRewriteIssueInput(row) {
+    return {
+      rowType: row.rowType,
+      severity: row.severity,
+      issueId: row.issueId,
+      issue: row.issue,
+      recommendation: row.recommendation,
+      evidence: row.evidence || void 0,
+      evidenceMetric: row.evidenceMetric || void 0,
+      sectionIndex: row.sectionIndex,
+      sectionTitle: row.sectionTitle,
+      sectionItemIndex: row.sectionItemIndex,
+      doormatIndex: row.doormatIndex,
+      affectedDoormatIndexes: row.affectedDoormatIndexes,
+      doormatLabel: row.doormatLabel || void 0
+    };
+  }
+  toGeneratedPlaceholderIssue(summary) {
+    return {
+      rowType: "doormat",
+      severity: "Medium",
+      issueId: "generated-topic-placeholder-description",
+      issue: "Generated doormat needs a destination-specific description",
+      recommendation: "Write a concise doormat description from the destination page context.",
+      evidence: summary.description,
+      sectionIndex: summary.sectionIndex,
+      sectionTitle: summary.sectionTitle,
+      sectionItemIndex: summary.sectionItemIndex,
+      doormatIndex: summary.index,
+      doormatLabel: summary.linkText
+    };
+  }
+  hasGeneratedPlaceholderDescription(summary) {
+    return /\[\*\*\*.*(?:action verbs|keywords|tasks|links to).*?\*\*\*\]/i.test(summary.description || "");
+  }
+  getExamplesForLanguageIfEnabled(pageLanguage, issueIds) {
+    return __async(this, null, function* () {
+      if (!this.uploadState.getIncludeTopicDoormatRewriteExamples())
+        return [];
+      return selectTopicDoormatExamples(yield this.loadExamples(), pageLanguage, issueIds, this.uploadState.getTopicDoormatExampleFormat());
+    });
+  }
+  getExampleInstruction() {
+    return "These are reference subsets, not the page being edited. Use only lessons relevant to selected issues; context-only items do not authorize extra edits. Before text is not necessarily wrong and preference changes are optional. Preserve adequate descriptions, including unchanged examples. Ground all facts in the current page destination evidence, not example facts. Do not copy example wording. Preserve the page language and the complete actual doormat set.";
+  }
+  buildExamplePayload(examples, pageLanguage, requestType) {
+    if (!examples.length)
+      return {};
+    const topicDoormatExamples = {
+      status: "language-and-issue-filtered",
+      format: this.uploadState.getTopicDoormatExampleFormat(),
+      page_language: pageLanguage,
+      instruction: this.getExampleInstruction(),
+      examples
+    };
+    console.info("[TopicDoormatRewrite] Example payload sent to model", {
+      requestType,
+      topic_doormat_examples: topicDoormatExamples
+    });
+    return { topic_doormat_examples: topicDoormatExamples };
+  }
+  loadExamples() {
+    return __async(this, null, function* () {
+      if (this.examplesCache) {
+        return this.examplesCache;
+      }
+      try {
+        const response = yield fetch(this.examplesPath);
+        if (!response.ok) {
+          throw new Error(`Failed to load topic doormat examples (${response.status}).`);
+        }
+        const payload = yield response.json();
+        const rawExamples = Array.isArray(payload) ? payload : payload && typeof payload === "object" && Array.isArray(payload["examples"]) ? payload["examples"] : [];
+        this.examplesCache = rawExamples.filter((example) => !!example && typeof example === "object" && !Array.isArray(example)).map((example) => example);
+        return this.examplesCache;
+      } catch (err) {
+        console.warn("Unable to load topic doormat rewrite examples:", err);
+        this.examplesCache = [];
+        return [];
+      }
+    });
+  }
+  callOpenRouterForRewrite(model, messages) {
+    return __async(this, null, function* () {
+      const candidates = this.buildModelRotation(model);
+      let lastError;
+      for (const candidate of candidates) {
+        try {
+          const response = yield this.openRouter.call(candidate, messages, {
+            temperature: 0,
+            title: "Content Assistant - Topic Doormat Rewrite",
+            throwOnError: true,
+            timeoutMs: this.topicDoormatRewriteAttemptTimeoutMs
+          });
+          if (this.hasNoOpenRouterChoices(response)) {
+            console.info("[TopicDoormatRewrite] model attempt failed", {
+              model: candidate,
+              timeoutMs: this.topicDoormatRewriteAttemptTimeoutMs,
+              error: `OpenRouter provider returned no choices for ${candidate}.`,
+              response: this.openRouter.buildResponseMetadata(response)
+            });
+            lastError = new Error(`Doormat rewrite failed for ${this.getShortModelName(candidate)}: OpenRouter provider returned no choices.`);
+            continue;
+          }
+          const text = response?.choices?.[0]?.message?.content?.trim() || "";
+          if (!text) {
+            console.info("[TopicDoormatRewrite] model attempt returned empty content", {
+              model: candidate,
+              timeoutMs: this.topicDoormatRewriteAttemptTimeoutMs,
+              response: this.openRouter.buildResponseMetadata(response)
+            });
+            lastError = new Error(`Doormat rewrite response was empty (${this.getShortModelName(candidate)}).`);
+            continue;
+          }
+          return { text, usedModel: candidate };
+        } catch (err) {
+          lastError = new Error(`Doormat rewrite failed for ${this.getShortModelName(candidate)}: ${err instanceof Error ? err.message : String(err)}`);
+          continue;
+        }
+      }
+      throw lastError ?? new Error("Doormat rewrite response was empty.");
+    });
+  }
+  buildModelRotation(model) {
+    const fallbackOrder = [
+      AiModel.NemotronUltra,
+      AiModel.NemotronLightning,
+      AiModel.NemotronSuper,
+      AiModel.FreeModelsRouter
+    ];
+    if (model === AiModel.FreeModelsRouter) {
+      return fallbackOrder;
+    }
+    return [
+      model,
+      ...fallbackOrder.filter((candidate) => candidate !== model)
+    ];
+  }
+  hasNoOpenRouterChoices(response) {
+    return !!response && (!Array.isArray(response.choices) || response.choices?.length === 0);
+  }
+  extractDoormatRewriteHtmlFromStructuredResponse(text) {
+    const cleaned = (text || "").trim();
+    if (!cleaned)
+      return null;
+    const stripped = this.alertAi.stripCodeFences(cleaned);
+    const parsed = this.alertAi.looseJsonParse(stripped);
+    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+      return null;
+    }
+    const payload = parsed;
+    const candidates = [
+      payload["fullUpdatedHtml"],
+      payload["full_updated_html"],
+      payload["rewrittenDoormatSetHtml"],
+      payload["rewritten_doormat_set_html"],
+      payload["updatedHtml"],
+      payload["updated_html"]
+    ];
+    for (const candidate of candidates) {
+      if (typeof candidate !== "string")
+        continue;
+      const html = candidate.trim();
+      if (this.containsRenderableHtml(html))
+        return html;
+    }
+    return this.extractDoormatUpdatedHtmlFragments(payload["doormats"]);
+  }
+  extractDoormatUpdatedHtmlFragments(value) {
+    if (!Array.isArray(value))
+      return null;
+    const fragments = value.map((entry) => {
+      if (!entry || typeof entry !== "object")
+        return "";
+      const item = entry;
+      const html = item["updatedHtml"] ?? item["updated_html"];
+      return typeof html === "string" && this.containsRenderableHtml(html) ? html.trim() : "";
+    }).filter(Boolean);
+    return fragments.length ? fragments.join("\n") : null;
+  }
+  looksLikeStructuredAiJsonResponse(text) {
+    const cleaned = (text || "").trim();
+    if (!cleaned)
+      return false;
+    if (cleaned.startsWith("<") && this.containsRenderableHtml(cleaned)) {
+      return false;
+    }
+    const stripped = this.alertAi.stripCodeFences(cleaned);
+    const parsed = this.alertAi.looseJsonParse(stripped);
+    if (parsed && typeof parsed === "object")
+      return true;
+    return /"(?:rewrittenDoormatSetHtml|rewritten_doormat_set_html|fullUpdatedHtml|full_updated_html|updatedHtml|updated_html|doormats)"\s*:/i.test(stripped);
+  }
+  containsRenderableHtml(value) {
+    return /<[a-z][\s\S]*>/i.test(value);
+  }
+  applyDoormatRewriteToPageHtml(originalHtml, rewriteHtml) {
+    const normalizedOriginal = this.topicDoormatTemplateNormalizer.normalizeLegacyDoormats(originalHtml);
+    const htmlToPatch = normalizedOriginal.html;
+    const parser = new DOMParser();
+    const originalDoc = parser.parseFromString(htmlToPatch, "text/html");
+    const rewriteDoc = parser.parseFromString(rewriteHtml, "text/html");
+    const originalDoormatSections = Array.from(originalDoc.body.querySelectorAll(".gc-srvinfo"));
+    const rewrittenDoormatSections = Array.from(rewriteDoc.body.querySelectorAll(".gc-srvinfo"));
+    if (!originalDoormatSections.length) {
+      throw new Error("The current page does not contain a topic doormat section to update.");
+    }
+    if (!rewrittenDoormatSections.length) {
+      if (this.getDoormatItemsByHref(rewriteDoc.body).size) {
+        originalDoormatSections.forEach((section) => {
+          this.applyDoormatItemRewritesByHref(originalDoc, section, rewriteDoc.body);
+        });
+        return this.serializeParsedHtmlLikeInput(htmlToPatch, originalDoc);
+      }
+      throw new Error("The AI response did not include a topic doormat section. No comparison update was applied.");
+    }
+    rewrittenDoormatSections.forEach((section) => {
+      const originalSection = this.findOriginalDoormatSectionForRewrite(originalDoormatSections, section);
+      if (!originalSection)
+        return;
+      this.applyDoormatItemRewritesByHref(originalDoc, originalSection, section);
+    });
+    return this.serializeParsedHtmlLikeInput(htmlToPatch, originalDoc);
+  }
+  applyDescriptionTrailingPunctuationCleanupToHtml(html, summaries, doormatIndexes) {
+    if (!doormatIndexes.size)
+      return html;
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(html, "text/html");
+    const summariesByHref = new Map(summaries.filter((summary) => doormatIndexes.has(summary.index)).map((summary) => [summary.href, summary]));
+    Array.from(doc.body.querySelectorAll(".gc-srvinfo")).forEach((section) => {
+      this.getDoormatItemsByHref(section).forEach((item, href) => {
+        if (!summariesByHref.has(href))
+          return;
+        const description = item.querySelector("p");
+        if (!description)
+          return;
+        description.textContent = this.removeFinalDoormatPunctuation(description.textContent);
+      });
+    });
+    return this.serializeParsedHtmlLikeInput(html, doc);
+  }
+  preserveUnselectedLinkTextInHtml(html, summaries, linkTextRewriteAllowedIndexes) {
+    const summariesToPreserve = summaries.filter((summary) => !linkTextRewriteAllowedIndexes.has(summary.index));
+    if (!summariesToPreserve.length)
+      return html;
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(html, "text/html");
+    const summariesByHref = new Map(summariesToPreserve.map((summary) => [summary.href, summary]));
+    Array.from(doc.body.querySelectorAll(".gc-srvinfo")).forEach((section) => {
+      this.getDoormatItemsByHref(section).forEach((item, href) => {
+        const summary = summariesByHref.get(href);
+        if (!summary)
+          return;
+        const link = this.findDoormatLinkByHref(item, href);
+        if (!link)
+          return;
+        link.textContent = summary.linkText;
+      });
+    });
+    return this.serializeParsedHtmlLikeInput(html, doc);
+  }
+  getUnchangedModelRequiredDoormatIndexes(beforeHtml, afterHtml, requiredDoormatIndexes, summaries) {
+    if (!requiredDoormatIndexes.size)
+      return /* @__PURE__ */ new Set();
+    const beforeItems = this.getDoormatSnapshotsByIndex(beforeHtml, summaries);
+    const afterItems = this.getDoormatSnapshotsByIndex(afterHtml, summaries);
+    const unchangedIndexes = Array.from(requiredDoormatIndexes).filter((index) => {
+      const before = beforeItems.get(index);
+      const after = afterItems.get(index);
+      return before && after && before.linkText === after.linkText && before.description === after.description;
+    });
+    return new Set(unchangedIndexes);
+  }
+  getRewriteIssuesForDoormatIndexes(issues, doormatIndexes, summaries) {
+    return issues.flatMap((issue) => {
+      if (typeof issue.doormatIndex === "number" && doormatIndexes.has(issue.doormatIndex)) {
+        return [issue];
+      }
+      const affected = (issue.affectedDoormatIndexes ?? []).filter((index) => doormatIndexes.has(index));
+      if (issue.affectedDoormatIndexes?.length) {
+        return affected.length ? [__spreadProps(__spreadValues({}, issue), { affectedDoormatIndexes: affected })] : [];
+      }
+      if (issue.rowType === "section" && typeof issue.sectionIndex === "number" && summaries.some((summary) => summary.sectionIndex === issue.sectionIndex && doormatIndexes.has(summary.index))) {
+        return [
+          __spreadProps(__spreadValues({}, issue), {
+            affectedDoormatIndexes: summaries.filter((summary) => summary.sectionIndex === issue.sectionIndex && doormatIndexes.has(summary.index)).map((summary) => summary.index)
+          })
+        ];
+      }
+      return [];
+    });
+  }
+  getDoormatSnapshotsByIndex(html, summaries) {
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(html, "text/html");
+    const summaryByHref = new Map(summaries.map((summary) => [summary.href, summary]));
+    const snapshots = /* @__PURE__ */ new Map();
+    Array.from(doc.body.querySelectorAll(".gc-srvinfo")).forEach((section) => {
+      this.getDoormatItemsByHref(section).forEach((item, href) => {
+        const summary = summaryByHref.get(href);
+        if (!summary)
+          return;
+        const link = this.findDoormatLinkByHref(item, href);
+        snapshots.set(summary.index, {
+          linkText: this.cleanDoormatRewriteText(link?.textContent),
+          description: this.cleanDoormatRewriteText(item.querySelector("p")?.textContent)
+        });
+      });
+    });
+    return snapshots;
+  }
+  applyFeatureRewriteToPageHtml(originalHtml, rewriteHtml) {
+    const parser = new DOMParser();
+    const originalDoc = parser.parseFromString(originalHtml, "text/html");
+    const rewriteDoc = parser.parseFromString(rewriteHtml, "text/html");
+    const originalFeatures = this.getFeatureItemsByHref(originalDoc.body);
+    const rewrittenFeatures = this.getFeatureItemsByHref(rewriteDoc.body);
+    if (!originalFeatures.size) {
+      throw new Error("The current page does not contain generated topic feature cards to update.");
+    }
+    if (!rewrittenFeatures.size) {
+      throw new Error("The AI response did not include topic feature cards. No comparison update was applied.");
+    }
+    rewrittenFeatures.forEach((rewrittenItem, href) => {
+      const originalItem = originalFeatures.get(href);
+      if (!originalItem)
+        return;
+      const originalDescription = originalItem.querySelector("p");
+      const rewrittenDescription = rewrittenItem.querySelector("p");
+      if (!originalDescription || !rewrittenDescription)
+        return;
+      if (!this.hasGeneratedFeaturePlaceholderDescription(this.cleanDoormatRewriteText(originalDescription.textContent))) {
+        return;
+      }
+      originalDescription.innerHTML = rewrittenDescription.innerHTML;
+    });
+    return this.serializeParsedHtmlLikeInput(originalHtml, originalDoc);
+  }
+  findOriginalDoormatSectionForRewrite(originalSections, rewrittenSection) {
+    const rewrittenHrefs = this.getDoormatSectionHrefs(rewrittenSection);
+    if (!rewrittenHrefs.size)
+      return null;
+    const candidates = originalSections.map((section) => ({
+      section,
+      matchCount: Array.from(rewrittenHrefs).filter((href) => this.getDoormatSectionHrefs(section).has(href)).length
+    })).filter((candidate) => candidate.matchCount > 0).sort((a, b) => b.matchCount - a.matchCount);
+    return candidates[0]?.section ?? null;
+  }
+  applyDoormatItemRewritesByHref(originalDoc, originalSection, rewrittenSection) {
+    const originalItemsByHref = this.getDoormatItemsByHref(originalSection);
+    this.getDoormatItemsByHref(rewrittenSection).forEach((rewrittenItem, href) => {
+      const originalItem = originalItemsByHref.get(href);
+      if (!originalItem)
+        return;
+      this.patchOriginalDoormatItemFromRewrite(originalDoc, originalItem, rewrittenItem, href);
+    });
+  }
+  patchOriginalDoormatItemFromRewrite(originalDoc, originalItem, rewrittenItem, href) {
+    const originalLink = this.findDoormatLinkByHref(originalItem, href);
+    const rewrittenLink = this.findDoormatLinkByHref(rewrittenItem, href);
+    if (originalLink && rewrittenLink) {
+      originalLink.textContent = this.cleanDoormatRewriteText(rewrittenLink.textContent);
+    }
+    const originalDescription = originalItem.querySelector("p");
+    const rewrittenDescription = rewrittenItem.querySelector("p");
+    if (originalDescription && rewrittenDescription) {
+      originalDescription.innerHTML = rewrittenDescription.innerHTML;
+    }
+    this.patchOriginalDoormatLabelsFromRewrite(originalDoc, originalItem, rewrittenItem, originalLink);
+  }
+  patchOriginalDoormatLabelsFromRewrite(originalDoc, originalItem, rewrittenItem, originalLink) {
+    const originalLabels = Array.from(originalItem.querySelectorAll(this.getDoormatLabelSelector()));
+    const rewrittenLabels = Array.from(rewrittenItem.querySelectorAll(this.getDoormatLabelSelector()));
+    originalLabels.forEach((label) => label.remove());
+    if (!rewrittenLabels.length || !originalLink)
+      return;
+    const parent = originalLink.parentElement;
+    if (!parent)
+      return;
+    let insertionPoint = originalLink;
+    rewrittenLabels.forEach((label) => {
+      const spacer = originalDoc.createTextNode(" ");
+      const importedLabel = originalDoc.importNode(label, true);
+      parent.insertBefore(spacer, insertionPoint.nextSibling);
+      parent.insertBefore(importedLabel, spacer.nextSibling);
+      insertionPoint = importedLabel;
+    });
+  }
+  findDoormatLinkByHref(item, href) {
+    return Array.from(item.querySelectorAll("h2 a[href], h3 a[href]")).find((link) => link.getAttribute("href")?.trim() === href) ?? null;
+  }
+  getDoormatSectionHrefs(section) {
+    return new Set(this.getDoormatItemsByHref(section).keys());
+  }
+  getDoormatItemsByHref(section) {
+    const itemsByHref = /* @__PURE__ */ new Map();
+    Array.from(section.querySelectorAll("h2 a[href], h3 a[href]")).forEach((link) => {
+      const href = link.getAttribute("href")?.trim();
+      if (!href || itemsByHref.has(href))
+        return;
+      const item = this.findDoormatItemForRewrite(link, section);
+      if (item)
+        itemsByHref.set(href, item);
+    });
+    return itemsByHref;
+  }
+  findDoormatItemForRewrite(link, section) {
+    let current = link;
+    while (current && current !== section) {
+      if (current !== link && current.querySelector("p"))
+        return current;
+      current = current.parentElement;
+    }
+    return section.querySelector("p") ? section : null;
+  }
+  getFeatureItemsByHref(container) {
+    const itemsByHref = /* @__PURE__ */ new Map();
+    Array.from(container.querySelectorAll(".gc-features h2 a[href], .gc-features h3 a[href]")).forEach((link) => {
+      const href = link.getAttribute("href")?.trim();
+      if (!href || itemsByHref.has(href))
+        return;
+      const section = link.closest(".gc-features");
+      const item = section ? this.findFeatureItemForRewrite(link, section) : null;
+      if (item)
+        itemsByHref.set(href, item);
+    });
+    return itemsByHref;
+  }
+  findFeatureItemForRewrite(link, section) {
+    const column = link.closest(".col-lg-4, .col-md-6, .col-sm-6, .col-md-12");
+    if (column?.querySelector("p"))
+      return column;
+    let current = link;
+    while (current && current !== section) {
+      if (current !== link && current.querySelector("p"))
+        return current;
+      current = current.parentElement;
+    }
+    return section.querySelector("p") ? section : null;
+  }
+  getDoormatLabelSelector() {
+    return '.label, .badge, [class*="label-"], [class*="badge-"]';
+  }
+  cleanDoormatRewriteText(value) {
+    return (value || "").replace(/\s+/g, " ").trim();
+  }
+  hasDescriptionTrailingPunctuation(value) {
+    return /[.:;?!,]$/.test((value || "").trim());
+  }
+  removeFinalDoormatPunctuation(value) {
+    return (value || "").replace(/\s*[.:;?!,]\s*$/, "").trim();
+  }
+  toHeadingLevel(heading) {
+    if (!heading)
+      return null;
+    const level = Number.parseInt(heading.tagName.slice(1), 10);
+    return Number.isFinite(level) ? level : null;
+  }
+  serializeParsedHtmlLikeInput(originalHtml, doc) {
+    if (/<html[\s>]/i.test(originalHtml)) {
+      const doctype = originalHtml.trimStart().toLowerCase().startsWith("<!doctype") ? "<!doctype html>\n" : "";
+      return `${doctype}${doc.documentElement.outerHTML}`;
+    }
+    if (/<body[\s>]/i.test(originalHtml))
+      return doc.body.outerHTML;
+    return doc.body.innerHTML;
+  }
+  getAffectedDoormatIndexesForRewrite(issues, summaries) {
+    const indexes = /* @__PURE__ */ new Set();
+    issues.forEach((issue) => {
+      if (typeof issue.doormatIndex === "number")
+        indexes.add(issue.doormatIndex);
+      (issue.affectedDoormatIndexes ?? []).forEach((index) => {
+        if (typeof index === "number")
+          indexes.add(index);
+      });
+      if (issue.rowType === "section" && typeof issue.sectionIndex === "number" && !issue.affectedDoormatIndexes?.length) {
+        summaries.filter((summary) => summary.sectionIndex === issue.sectionIndex).forEach((summary) => indexes.add(summary.index));
+      }
+    });
+    return indexes;
+  }
+  getLinkTextRewriteAllowedIndexes(issues, summaries) {
+    return this.getAffectedDoormatIndexesForRewrite(issues.filter((issue) => this.isLinkTextRewriteIssue(issue.issueId)), summaries);
+  }
+  isLinkTextRewriteIssue(issueId) {
+    return (/* @__PURE__ */ new Set([
+      "link-name-too-long",
+      "link-name-trailing-punctuation",
+      "link-name-lacks-clarity",
+      "link-name-not-unique",
+      "link-name-too-different-from-destination-title",
+      "mixed-link-name-styles-in-section",
+      "inconsistent-link-name-style"
+    ])).has(issueId);
+  }
+  toDoormatDestinationRewritePayload(summary) {
+    return {
+      index: summary.index,
+      section_index: summary.sectionIndex,
+      section_title: summary.sectionTitle,
+      section_item_index: summary.sectionItemIndex,
+      href: summary.href,
+      current_link_text: summary.linkText,
+      current_description: summary.description,
+      destination: {
+        url: summary.destinationUrl,
+        http_status: summary.destinationHttpStatus,
+        title: summary.destinationPageTitle,
+        h1: summary.destinationPageHeading,
+        intro_paragraphs: summary.destinationIntroParagraphs ?? [],
+        h2_headings: summary.destinationSectionHeadings ?? [],
+        label_evidence: summary.destinationLabelEvidence ?? [],
+        main_html: summary.destinationMainHtml || "",
+        main_html_truncated: !!summary.destinationMainHtmlTruncated,
+        context_status: summary.destinationContextStatus
+      }
+    };
+  }
+  toDoormatRewriteIssuePayload(issue) {
+    return {
+      row_type: issue.rowType,
+      severity: issue.severity,
+      issue_id: issue.issueId,
+      issue: issue.issue,
+      recommendation: issue.recommendation,
+      evidence: issue.evidence,
+      evidence_metric: issue.evidenceMetric,
+      section_index: issue.sectionIndex,
+      section_title: issue.sectionTitle,
+      section_item_index: issue.sectionItemIndex,
+      doormat_index: issue.doormatIndex,
+      affected_doormat_indexes: issue.affectedDoormatIndexes,
+      doormat_label: issue.doormatLabel
+    };
+  }
+  getShortModelName(model) {
+    const parts = model.split("/");
+    return parts[parts.length - 1] || model;
+  }
+  static \u0275fac = function TopicDoormatRewriteOrchestratorService_Factory(__ngFactoryType__) {
+    return new (__ngFactoryType__ || _TopicDoormatRewriteOrchestratorService)();
+  };
+  static \u0275prov = /* @__PURE__ */ \u0275\u0275defineInjectable({ token: _TopicDoormatRewriteOrchestratorService, factory: _TopicDoormatRewriteOrchestratorService.\u0275fac, providedIn: "root" });
+};
+(() => {
+  (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(TopicDoormatRewriteOrchestratorService, [{
     type: Injectable,
     args: [{ providedIn: "root" }]
   }], null, null);
@@ -32474,6 +33863,101 @@ function AiOptionsComponent_Conditional_16_Conditional_22_Template(rf, ctx) {
     \u0275\u0275property("binary", true);
   }
 }
+function AiOptionsComponent_Conditional_16_Conditional_23_Conditional_6_Template(rf, ctx) {
+  if (rf & 1) {
+    const _r12 = \u0275\u0275getCurrentView();
+    \u0275\u0275elementStart(0, "label", 37);
+    \u0275\u0275text(1);
+    \u0275\u0275pipe(2, "translate");
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(3, "select", 38);
+    \u0275\u0275twoWayListener("ngModelChange", function AiOptionsComponent_Conditional_16_Conditional_23_Conditional_6_Template_select_ngModelChange_3_listener($event) {
+      \u0275\u0275restoreView(_r12);
+      const ctx_r1 = \u0275\u0275nextContext(3);
+      \u0275\u0275twoWayBindingSet(ctx_r1.topicDoormatExampleFormat, $event) || (ctx_r1.topicDoormatExampleFormat = $event);
+      return \u0275\u0275resetView($event);
+    });
+    \u0275\u0275listener("ngModelChange", function AiOptionsComponent_Conditional_16_Conditional_23_Conditional_6_Template_select_ngModelChange_3_listener($event) {
+      \u0275\u0275restoreView(_r12);
+      const ctx_r1 = \u0275\u0275nextContext(3);
+      return \u0275\u0275resetView(ctx_r1.onTopicDoormatExampleFormatSelect($event));
+    });
+    \u0275\u0275elementStart(4, "option", 39);
+    \u0275\u0275text(5);
+    \u0275\u0275pipe(6, "translate");
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(7, "option", 40);
+    \u0275\u0275text(8);
+    \u0275\u0275pipe(9, "translate");
+    \u0275\u0275elementEnd()();
+  }
+  if (rf & 2) {
+    const ctx_r1 = \u0275\u0275nextContext(3);
+    \u0275\u0275advance();
+    \u0275\u0275textInterpolate1(" ", \u0275\u0275pipeBind1(2, 4, "page.ai-options.prompt.topicDoormatExampleFormat"), " ");
+    \u0275\u0275advance(2);
+    \u0275\u0275twoWayProperty("ngModel", ctx_r1.topicDoormatExampleFormat);
+    \u0275\u0275advance(2);
+    \u0275\u0275textInterpolate(\u0275\u0275pipeBind1(6, 6, "page.ai-options.prompt.topicDoormatExamplesBeforeAfter"));
+    \u0275\u0275advance(3);
+    \u0275\u0275textInterpolate(\u0275\u0275pipeBind1(9, 8, "page.ai-options.prompt.topicDoormatExamplesFinalOnly"));
+  }
+}
+function AiOptionsComponent_Conditional_16_Conditional_23_Template(rf, ctx) {
+  if (rf & 1) {
+    const _r11 = \u0275\u0275getCurrentView();
+    \u0275\u0275elementStart(0, "div", 22)(1, "div", 24)(2, "p-checkbox", 33);
+    \u0275\u0275twoWayListener("ngModelChange", function AiOptionsComponent_Conditional_16_Conditional_23_Template_p_checkbox_ngModelChange_2_listener($event) {
+      \u0275\u0275restoreView(_r11);
+      const ctx_r1 = \u0275\u0275nextContext(2);
+      \u0275\u0275twoWayBindingSet(ctx_r1.includeTopicDoormatRewriteExamples, $event) || (ctx_r1.includeTopicDoormatRewriteExamples = $event);
+      return \u0275\u0275resetView($event);
+    });
+    \u0275\u0275listener("onChange", function AiOptionsComponent_Conditional_16_Conditional_23_Template_p_checkbox_onChange_2_listener() {
+      \u0275\u0275restoreView(_r11);
+      const ctx_r1 = \u0275\u0275nextContext(2);
+      return \u0275\u0275resetView(ctx_r1.onIncludeTopicDoormatRewriteExamplesSelect(ctx_r1.includeTopicDoormatRewriteExamples));
+    });
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(3, "label", 34);
+    \u0275\u0275text(4);
+    \u0275\u0275pipe(5, "translate");
+    \u0275\u0275elementEnd()();
+    \u0275\u0275template(6, AiOptionsComponent_Conditional_16_Conditional_23_Conditional_6_Template, 10, 10);
+    \u0275\u0275elementStart(7, "div", 28)(8, "p-checkbox", 35);
+    \u0275\u0275twoWayListener("ngModelChange", function AiOptionsComponent_Conditional_16_Conditional_23_Template_p_checkbox_ngModelChange_8_listener($event) {
+      \u0275\u0275restoreView(_r11);
+      const ctx_r1 = \u0275\u0275nextContext(2);
+      \u0275\u0275twoWayBindingSet(ctx_r1.useDescriptionStyleAsPrimaryIssue, $event) || (ctx_r1.useDescriptionStyleAsPrimaryIssue = $event);
+      return \u0275\u0275resetView($event);
+    });
+    \u0275\u0275listener("onChange", function AiOptionsComponent_Conditional_16_Conditional_23_Template_p_checkbox_onChange_8_listener() {
+      \u0275\u0275restoreView(_r11);
+      const ctx_r1 = \u0275\u0275nextContext(2);
+      return \u0275\u0275resetView(ctx_r1.onUseDescriptionStyleAsPrimaryIssueSelect(ctx_r1.useDescriptionStyleAsPrimaryIssue));
+    });
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(9, "label", 36);
+    \u0275\u0275text(10);
+    \u0275\u0275pipe(11, "translate");
+    \u0275\u0275elementEnd()()();
+  }
+  if (rf & 2) {
+    const ctx_r1 = \u0275\u0275nextContext(2);
+    \u0275\u0275advance(2);
+    \u0275\u0275twoWayProperty("ngModel", ctx_r1.includeTopicDoormatRewriteExamples);
+    \u0275\u0275property("binary", true);
+    \u0275\u0275advance(2);
+    \u0275\u0275textInterpolate1(" ", \u0275\u0275pipeBind1(5, 7, "page.ai-options.prompt.includeTopicDoormatRewriteExamples"), " ");
+    \u0275\u0275advance(2);
+    \u0275\u0275conditional(ctx_r1.includeTopicDoormatRewriteExamples ? 6 : -1);
+    \u0275\u0275advance(2);
+    \u0275\u0275twoWayProperty("ngModel", ctx_r1.useDescriptionStyleAsPrimaryIssue);
+    \u0275\u0275property("binary", true);
+    \u0275\u0275advance(2);
+    \u0275\u0275textInterpolate1(" ", \u0275\u0275pipeBind1(11, 9, "page.ai-options.prompt.useDescriptionStyleAsPrimaryIssue"), " ");
+  }
+}
 function AiOptionsComponent_Conditional_16_Template(rf, ctx) {
   if (rf & 1) {
     const _r4 = \u0275\u0275getCurrentView();
@@ -32521,15 +34005,15 @@ function AiOptionsComponent_Conditional_16_Template(rf, ctx) {
       return \u0275\u0275resetView(ctx_r1.emitEditPrompt(ctx_r1.currentEditLevel.prompt));
     });
     \u0275\u0275elementEnd()();
-    \u0275\u0275template(22, AiOptionsComponent_Conditional_16_Conditional_22_Template, 9, 4, "div", 22);
+    \u0275\u0275template(22, AiOptionsComponent_Conditional_16_Conditional_22_Template, 9, 4, "div", 22)(23, AiOptionsComponent_Conditional_16_Conditional_23_Template, 12, 11, "div", 22);
     \u0275\u0275elementEnd()()()();
   }
   if (rf & 2) {
     const ctx_r1 = \u0275\u0275nextContext();
     \u0275\u0275advance(2);
-    \u0275\u0275textInterpolate(\u0275\u0275pipeBind1(3, 12, "page.ai-options.prompt.header"));
+    \u0275\u0275textInterpolate(\u0275\u0275pipeBind1(3, 13, "page.ai-options.prompt.header"));
     \u0275\u0275advance(5);
-    \u0275\u0275textInterpolate(\u0275\u0275pipeBind1(8, 14, "page.ai-options.prompt.legend"));
+    \u0275\u0275textInterpolate(\u0275\u0275pipeBind1(8, 15, "page.ai-options.prompt.legend"));
     \u0275\u0275advance(3);
     \u0275\u0275conditional(!ctx_r1.isTwoPrompts ? 10 : -1);
     \u0275\u0275advance();
@@ -32538,7 +34022,7 @@ function AiOptionsComponent_Conditional_16_Template(rf, ctx) {
     \u0275\u0275twoWayProperty("ngModel", ctx_r1.addCustom);
     \u0275\u0275property("binary", true);
     \u0275\u0275advance(2);
-    \u0275\u0275textInterpolate(\u0275\u0275pipeBind1(16, 16, "page.ai-options.prompt.checkbox"));
+    \u0275\u0275textInterpolate(\u0275\u0275pipeBind1(16, 17, "page.ai-options.prompt.checkbox"));
     \u0275\u0275advance(2);
     \u0275\u0275conditional(ctx_r1.addCustom ? 17 : -1);
     \u0275\u0275advance(3);
@@ -32548,56 +34032,22 @@ function AiOptionsComponent_Conditional_16_Template(rf, ctx) {
     \u0275\u0275property("step", 25);
     \u0275\u0275advance();
     \u0275\u0275conditional(ctx_r1.selectedPrompt === "alertsRecommendations" ? 22 : -1);
+    \u0275\u0275advance();
+    \u0275\u0275conditional(ctx_r1.selectedPrompt === "doormats" ? 23 : -1);
   }
 }
 function AiOptionsComponent_Conditional_17_Conditional_10_ng_container_3_Template(rf, ctx) {
   if (rf & 1) {
-    const _r11 = \u0275\u0275getCurrentView();
+    const _r13 = \u0275\u0275getCurrentView();
     \u0275\u0275elementContainerStart(0);
-    \u0275\u0275elementStart(1, "div", 13)(2, "p-radioButton", 35);
+    \u0275\u0275elementStart(1, "div", 13)(2, "p-radioButton", 43);
     \u0275\u0275twoWayListener("ngModelChange", function AiOptionsComponent_Conditional_17_Conditional_10_ng_container_3_Template_p_radioButton_ngModelChange_2_listener($event) {
-      \u0275\u0275restoreView(_r11);
+      \u0275\u0275restoreView(_r13);
       const ctx_r1 = \u0275\u0275nextContext(3);
       \u0275\u0275twoWayBindingSet(ctx_r1.selectedAi, $event) || (ctx_r1.selectedAi = $event);
       return \u0275\u0275resetView($event);
     });
     \u0275\u0275listener("onClick", function AiOptionsComponent_Conditional_17_Conditional_10_ng_container_3_Template_p_radioButton_onClick_2_listener() {
-      \u0275\u0275restoreView(_r11);
-      const ctx_r1 = \u0275\u0275nextContext(3);
-      return \u0275\u0275resetView(ctx_r1.onAiSelect(ctx_r1.selectedAi));
-    });
-    \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(3, "label", 15);
-    \u0275\u0275text(4);
-    \u0275\u0275pipe(5, "translate");
-    \u0275\u0275elementEnd()();
-    \u0275\u0275elementContainerEnd();
-  }
-  if (rf & 2) {
-    const option_r12 = ctx.$implicit;
-    const ctx_r1 = \u0275\u0275nextContext(3);
-    \u0275\u0275advance(2);
-    \u0275\u0275property("value", option_r12.id);
-    \u0275\u0275twoWayProperty("ngModel", ctx_r1.selectedAi);
-    \u0275\u0275property("inputId", option_r12.id)("disabled", option_r12.disabled);
-    \u0275\u0275advance();
-    \u0275\u0275property("for", option_r12.id);
-    \u0275\u0275advance();
-    \u0275\u0275textInterpolate(\u0275\u0275pipeBind1(5, 6, option_r12.label));
-  }
-}
-function AiOptionsComponent_Conditional_17_Conditional_10_ng_container_7_Template(rf, ctx) {
-  if (rf & 1) {
-    const _r13 = \u0275\u0275getCurrentView();
-    \u0275\u0275elementContainerStart(0);
-    \u0275\u0275elementStart(1, "div", 13)(2, "p-radioButton", 35);
-    \u0275\u0275twoWayListener("ngModelChange", function AiOptionsComponent_Conditional_17_Conditional_10_ng_container_7_Template_p_radioButton_ngModelChange_2_listener($event) {
-      \u0275\u0275restoreView(_r13);
-      const ctx_r1 = \u0275\u0275nextContext(3);
-      \u0275\u0275twoWayBindingSet(ctx_r1.selectedAi, $event) || (ctx_r1.selectedAi = $event);
-      return \u0275\u0275resetView($event);
-    });
-    \u0275\u0275listener("onClick", function AiOptionsComponent_Conditional_17_Conditional_10_ng_container_7_Template_p_radioButton_onClick_2_listener() {
       \u0275\u0275restoreView(_r13);
       const ctx_r1 = \u0275\u0275nextContext(3);
       return \u0275\u0275resetView(ctx_r1.onAiSelect(ctx_r1.selectedAi));
@@ -32606,8 +34056,6 @@ function AiOptionsComponent_Conditional_17_Conditional_10_ng_container_7_Templat
     \u0275\u0275elementStart(3, "label", 15);
     \u0275\u0275text(4);
     \u0275\u0275pipe(5, "translate");
-    \u0275\u0275element(6, "p-chip", 36);
-    \u0275\u0275pipe(7, "translate");
     \u0275\u0275elementEnd()();
     \u0275\u0275elementContainerEnd();
   }
@@ -32621,19 +34069,57 @@ function AiOptionsComponent_Conditional_17_Conditional_10_ng_container_7_Templat
     \u0275\u0275advance();
     \u0275\u0275property("for", option_r14.id);
     \u0275\u0275advance();
-    \u0275\u0275textInterpolate1(" ", \u0275\u0275pipeBind1(5, 7, option_r14.label), " ");
+    \u0275\u0275textInterpolate(\u0275\u0275pipeBind1(5, 6, option_r14.label));
+  }
+}
+function AiOptionsComponent_Conditional_17_Conditional_10_ng_container_7_Template(rf, ctx) {
+  if (rf & 1) {
+    const _r15 = \u0275\u0275getCurrentView();
+    \u0275\u0275elementContainerStart(0);
+    \u0275\u0275elementStart(1, "div", 13)(2, "p-radioButton", 43);
+    \u0275\u0275twoWayListener("ngModelChange", function AiOptionsComponent_Conditional_17_Conditional_10_ng_container_7_Template_p_radioButton_ngModelChange_2_listener($event) {
+      \u0275\u0275restoreView(_r15);
+      const ctx_r1 = \u0275\u0275nextContext(3);
+      \u0275\u0275twoWayBindingSet(ctx_r1.selectedAi, $event) || (ctx_r1.selectedAi = $event);
+      return \u0275\u0275resetView($event);
+    });
+    \u0275\u0275listener("onClick", function AiOptionsComponent_Conditional_17_Conditional_10_ng_container_7_Template_p_radioButton_onClick_2_listener() {
+      \u0275\u0275restoreView(_r15);
+      const ctx_r1 = \u0275\u0275nextContext(3);
+      return \u0275\u0275resetView(ctx_r1.onAiSelect(ctx_r1.selectedAi));
+    });
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(3, "label", 15);
+    \u0275\u0275text(4);
+    \u0275\u0275pipe(5, "translate");
+    \u0275\u0275element(6, "p-chip", 44);
+    \u0275\u0275pipe(7, "translate");
+    \u0275\u0275elementEnd()();
+    \u0275\u0275elementContainerEnd();
+  }
+  if (rf & 2) {
+    const option_r16 = ctx.$implicit;
+    const ctx_r1 = \u0275\u0275nextContext(3);
+    \u0275\u0275advance(2);
+    \u0275\u0275property("value", option_r16.id);
+    \u0275\u0275twoWayProperty("ngModel", ctx_r1.selectedAi);
+    \u0275\u0275property("inputId", option_r16.id)("disabled", option_r16.disabled);
+    \u0275\u0275advance();
+    \u0275\u0275property("for", option_r16.id);
+    \u0275\u0275advance();
+    \u0275\u0275textInterpolate1(" ", \u0275\u0275pipeBind1(5, 7, option_r16.label), " ");
     \u0275\u0275advance(2);
     \u0275\u0275property("label", \u0275\u0275pipeBind1(7, 9, "page.ai-options.model.paidBadge"));
   }
 }
 function AiOptionsComponent_Conditional_17_Conditional_10_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275elementStart(0, "p", 33);
+    \u0275\u0275elementStart(0, "p", 41);
     \u0275\u0275text(1);
     \u0275\u0275pipe(2, "translate");
     \u0275\u0275elementEnd();
     \u0275\u0275template(3, AiOptionsComponent_Conditional_17_Conditional_10_ng_container_3_Template, 6, 8, "ng-container", 8);
-    \u0275\u0275elementStart(4, "p", 34);
+    \u0275\u0275elementStart(4, "p", 42);
     \u0275\u0275text(5);
     \u0275\u0275pipe(6, "translate");
     \u0275\u0275elementEnd();
@@ -32653,41 +34139,10 @@ function AiOptionsComponent_Conditional_17_Conditional_10_Template(rf, ctx) {
 }
 function AiOptionsComponent_Conditional_17_Conditional_11_ng_container_3_Template(rf, ctx) {
   if (rf & 1) {
-    const _r15 = \u0275\u0275getCurrentView();
-    \u0275\u0275elementContainerStart(0);
-    \u0275\u0275elementStart(1, "div", 24)(2, "p-checkbox", 25);
-    \u0275\u0275twoWayListener("ngModelChange", function AiOptionsComponent_Conditional_17_Conditional_11_ng_container_3_Template_p_checkbox_ngModelChange_2_listener($event) {
-      \u0275\u0275restoreView(_r15);
-      const ctx_r1 = \u0275\u0275nextContext(3);
-      \u0275\u0275twoWayBindingSet(ctx_r1.selectedAis, $event) || (ctx_r1.selectedAis = $event);
-      return \u0275\u0275resetView($event);
-    });
-    \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(3, "label", 15);
-    \u0275\u0275text(4);
-    \u0275\u0275pipe(5, "translate");
-    \u0275\u0275elementEnd()();
-    \u0275\u0275elementContainerEnd();
-  }
-  if (rf & 2) {
-    const option_r16 = ctx.$implicit;
-    const ctx_r1 = \u0275\u0275nextContext(3);
-    \u0275\u0275advance(2);
-    \u0275\u0275property("value", option_r16.id);
-    \u0275\u0275twoWayProperty("ngModel", ctx_r1.selectedAis);
-    \u0275\u0275property("inputId", option_r16.id)("disabled", option_r16.disabled || ctx_r1.isAiCheckboxDisabled(option_r16.id));
-    \u0275\u0275advance();
-    \u0275\u0275property("for", option_r16.id);
-    \u0275\u0275advance();
-    \u0275\u0275textInterpolate(\u0275\u0275pipeBind1(5, 6, option_r16.label));
-  }
-}
-function AiOptionsComponent_Conditional_17_Conditional_11_ng_container_7_Template(rf, ctx) {
-  if (rf & 1) {
     const _r17 = \u0275\u0275getCurrentView();
     \u0275\u0275elementContainerStart(0);
     \u0275\u0275elementStart(1, "div", 24)(2, "p-checkbox", 25);
-    \u0275\u0275twoWayListener("ngModelChange", function AiOptionsComponent_Conditional_17_Conditional_11_ng_container_7_Template_p_checkbox_ngModelChange_2_listener($event) {
+    \u0275\u0275twoWayListener("ngModelChange", function AiOptionsComponent_Conditional_17_Conditional_11_ng_container_3_Template_p_checkbox_ngModelChange_2_listener($event) {
       \u0275\u0275restoreView(_r17);
       const ctx_r1 = \u0275\u0275nextContext(3);
       \u0275\u0275twoWayBindingSet(ctx_r1.selectedAis, $event) || (ctx_r1.selectedAis = $event);
@@ -32697,8 +34152,6 @@ function AiOptionsComponent_Conditional_17_Conditional_11_ng_container_7_Templat
     \u0275\u0275elementStart(3, "label", 15);
     \u0275\u0275text(4);
     \u0275\u0275pipe(5, "translate");
-    \u0275\u0275element(6, "p-chip", 36);
-    \u0275\u0275pipe(7, "translate");
     \u0275\u0275elementEnd()();
     \u0275\u0275elementContainerEnd();
   }
@@ -32712,19 +34165,52 @@ function AiOptionsComponent_Conditional_17_Conditional_11_ng_container_7_Templat
     \u0275\u0275advance();
     \u0275\u0275property("for", option_r18.id);
     \u0275\u0275advance();
-    \u0275\u0275textInterpolate1(" ", \u0275\u0275pipeBind1(5, 7, option_r18.label), " ");
+    \u0275\u0275textInterpolate(\u0275\u0275pipeBind1(5, 6, option_r18.label));
+  }
+}
+function AiOptionsComponent_Conditional_17_Conditional_11_ng_container_7_Template(rf, ctx) {
+  if (rf & 1) {
+    const _r19 = \u0275\u0275getCurrentView();
+    \u0275\u0275elementContainerStart(0);
+    \u0275\u0275elementStart(1, "div", 24)(2, "p-checkbox", 25);
+    \u0275\u0275twoWayListener("ngModelChange", function AiOptionsComponent_Conditional_17_Conditional_11_ng_container_7_Template_p_checkbox_ngModelChange_2_listener($event) {
+      \u0275\u0275restoreView(_r19);
+      const ctx_r1 = \u0275\u0275nextContext(3);
+      \u0275\u0275twoWayBindingSet(ctx_r1.selectedAis, $event) || (ctx_r1.selectedAis = $event);
+      return \u0275\u0275resetView($event);
+    });
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(3, "label", 15);
+    \u0275\u0275text(4);
+    \u0275\u0275pipe(5, "translate");
+    \u0275\u0275element(6, "p-chip", 44);
+    \u0275\u0275pipe(7, "translate");
+    \u0275\u0275elementEnd()();
+    \u0275\u0275elementContainerEnd();
+  }
+  if (rf & 2) {
+    const option_r20 = ctx.$implicit;
+    const ctx_r1 = \u0275\u0275nextContext(3);
+    \u0275\u0275advance(2);
+    \u0275\u0275property("value", option_r20.id);
+    \u0275\u0275twoWayProperty("ngModel", ctx_r1.selectedAis);
+    \u0275\u0275property("inputId", option_r20.id)("disabled", option_r20.disabled || ctx_r1.isAiCheckboxDisabled(option_r20.id));
+    \u0275\u0275advance();
+    \u0275\u0275property("for", option_r20.id);
+    \u0275\u0275advance();
+    \u0275\u0275textInterpolate1(" ", \u0275\u0275pipeBind1(5, 7, option_r20.label), " ");
     \u0275\u0275advance(2);
     \u0275\u0275property("label", \u0275\u0275pipeBind1(7, 9, "page.ai-options.model.paidBadge"));
   }
 }
 function AiOptionsComponent_Conditional_17_Conditional_11_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275elementStart(0, "p", 33);
+    \u0275\u0275elementStart(0, "p", 41);
     \u0275\u0275text(1);
     \u0275\u0275pipe(2, "translate");
     \u0275\u0275elementEnd();
     \u0275\u0275template(3, AiOptionsComponent_Conditional_17_Conditional_11_ng_container_3_Template, 6, 8, "ng-container", 8);
-    \u0275\u0275elementStart(4, "p", 34);
+    \u0275\u0275elementStart(4, "p", 42);
     \u0275\u0275text(5);
     \u0275\u0275pipe(6, "translate");
     \u0275\u0275elementEnd();
@@ -32770,11 +34256,11 @@ function AiOptionsComponent_Conditional_17_Template(rf, ctx) {
 }
 function AiOptionsComponent_Conditional_18_Template(rf, ctx) {
   if (rf & 1) {
-    const _r19 = \u0275\u0275getCurrentView();
-    \u0275\u0275elementStart(0, "p-button", 37);
+    const _r21 = \u0275\u0275getCurrentView();
+    \u0275\u0275elementStart(0, "p-button", 45);
     \u0275\u0275pipe(1, "translate");
     \u0275\u0275listener("click", function AiOptionsComponent_Conditional_18_Template_p_button_click_0_listener() {
-      \u0275\u0275restoreView(_r19);
+      \u0275\u0275restoreView(_r21);
       const ctx_r1 = \u0275\u0275nextContext();
       return \u0275\u0275resetView(ctx_r1.onSubmit());
     });
@@ -32786,7 +34272,7 @@ function AiOptionsComponent_Conditional_18_Template(rf, ctx) {
 }
 function AiOptionsComponent_Conditional_19_ca_upload_url_1_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275element(0, "ca-upload-url", 39);
+    \u0275\u0275element(0, "ca-upload-url", 47);
   }
   if (rf & 2) {
     \u0275\u0275property("showSampleDataButton", false);
@@ -32794,7 +34280,7 @@ function AiOptionsComponent_Conditional_19_ca_upload_url_1_Template(rf, ctx) {
 }
 function AiOptionsComponent_Conditional_19_ca_upload_paste_2_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275element(0, "ca-upload-paste", 39);
+    \u0275\u0275element(0, "ca-upload-paste", 47);
   }
   if (rf & 2) {
     \u0275\u0275property("showSampleDataButton", false);
@@ -32802,7 +34288,7 @@ function AiOptionsComponent_Conditional_19_ca_upload_paste_2_Template(rf, ctx) {
 }
 function AiOptionsComponent_Conditional_19_ca_upload_word_3_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275element(0, "ca-upload-word", 39);
+    \u0275\u0275element(0, "ca-upload-word", 47);
   }
   if (rf & 2) {
     \u0275\u0275property("showSampleDataButton", false);
@@ -32811,7 +34297,7 @@ function AiOptionsComponent_Conditional_19_ca_upload_word_3_Template(rf, ctx) {
 function AiOptionsComponent_Conditional_19_Template(rf, ctx) {
   if (rf & 1) {
     \u0275\u0275elementContainerStart(0, 12);
-    \u0275\u0275template(1, AiOptionsComponent_Conditional_19_ca_upload_url_1_Template, 1, 1, "ca-upload-url", 38)(2, AiOptionsComponent_Conditional_19_ca_upload_paste_2_Template, 1, 1, "ca-upload-paste", 38)(3, AiOptionsComponent_Conditional_19_ca_upload_word_3_Template, 1, 1, "ca-upload-word", 38);
+    \u0275\u0275template(1, AiOptionsComponent_Conditional_19_ca_upload_url_1_Template, 1, 1, "ca-upload-url", 46)(2, AiOptionsComponent_Conditional_19_ca_upload_paste_2_Template, 1, 1, "ca-upload-paste", 46)(3, AiOptionsComponent_Conditional_19_ca_upload_word_3_Template, 1, 1, "ca-upload-word", 46);
     \u0275\u0275elementContainerEnd();
   }
   if (rf & 2) {
@@ -32879,18 +34365,25 @@ var AiOptionsComponent = class _AiOptionsComponent {
   selectedAi = AiModel.Gemini;
   selectedAis = [];
   includeAlertRewriteExamples = true;
+  includeTopicDoormatRewriteExamples = false;
+  topicDoormatExampleFormat = "before-after";
   useCompactAlertsPageContext = true;
+  useDescriptionStyleAsPrimaryIssue = false;
   // Free and paid model groups are rendered separately in the UI.
   freeAiOptions = [
     { id: AiModel.NemotronUltra, label: "page.ai-options.model.NemotronUltra", disabled: false },
-    { id: AiModel.GptOSS20BFree, label: "page.ai-options.model.GptOSS20BFree", disabled: false },
-    { id: AiModel.NemotronSuper, label: "page.ai-options.model.NemotronSuper", disabled: false }
+    { id: AiModel.NemotronLightning, label: "page.ai-options.model.NemotronLightning", disabled: false },
+    { id: AiModel.NemotronSuper, label: "page.ai-options.model.NemotronSuper", disabled: false },
+    { id: AiModel.FreeModelsRouter, label: "page.ai-options.model.FreeModelsRouter", disabled: false }
   ];
   paidAiOptions = [
+    { id: AiModel.AutoRouter, label: "page.ai-options.model.AutoRouter", disabled: false },
     { id: AiModel.GptOSS20B, label: "page.ai-options.model.GptOSS20B", disabled: false },
     { id: AiModel.DeepSeekV4Flash, label: "page.ai-options.model.DeepSeekV4Flash", disabled: false },
     { id: AiModel.DeepSeekV4Pro, label: "page.ai-options.model.DeepSeekV4Pro", disabled: false },
     { id: AiModel.Gemini, label: "page.ai-options.model.Gemini", disabled: false },
+    { id: AiModel.GPT56LunaPro, label: "page.ai-options.model.GPT56LunaPro", disabled: false },
+    { id: AiModel.GPT5Mini, label: "page.ai-options.model.GPT5Mini", disabled: false },
     { id: AiModel.GPT54Mini, label: "page.ai-options.model.GPT54Mini", disabled: false }
   ];
   ngOnInit() {
@@ -32905,7 +34398,10 @@ var AiOptionsComponent = class _AiOptionsComponent {
     }
     this.selectedAis = this.selectedAis.filter((id) => freeIds.has(id));
     this.includeAlertRewriteExamples = this.uploadState.getIncludeAlertRewriteExamples();
+    this.includeTopicDoormatRewriteExamples = this.uploadState.getIncludeTopicDoormatRewriteExamples();
+    this.topicDoormatExampleFormat = this.uploadState.getTopicDoormatExampleFormat();
     this.useCompactAlertsPageContext = this.uploadState.getUseCompactAlertsPageContext();
+    this.useDescriptionStyleAsPrimaryIssue = this.uploadState.getUseDescriptionStyleAsPrimaryIssue();
   }
   isAiCheckboxDisabled(id) {
     return !this.selectedAis.includes(id) && this.selectedAis.length >= 2;
@@ -32917,9 +34413,21 @@ var AiOptionsComponent = class _AiOptionsComponent {
     this.includeAlertRewriteExamples = include;
     this.uploadState.setIncludeAlertRewriteExamples(include);
   }
+  onIncludeTopicDoormatRewriteExamplesSelect(include) {
+    this.includeTopicDoormatRewriteExamples = include;
+    this.uploadState.setIncludeTopicDoormatRewriteExamples(include);
+  }
   onUseCompactAlertsPageContextSelect(useCompact) {
     this.useCompactAlertsPageContext = useCompact;
     this.uploadState.setUseCompactAlertsPageContext(useCompact);
+  }
+  onTopicDoormatExampleFormatSelect(format) {
+    this.topicDoormatExampleFormat = format;
+    this.uploadState.setTopicDoormatExampleFormat(format);
+  }
+  onUseDescriptionStyleAsPrimaryIssueSelect(useAsPrimary) {
+    this.useDescriptionStyleAsPrimaryIssue = useAsPrimary;
+    this.uploadState.setUseDescriptionStyleAsPrimaryIssue(useAsPrimary);
   }
   // Close the drawer and let the parent component execute the request.
   onSubmit() {
@@ -32956,7 +34464,7 @@ var AiOptionsComponent = class _AiOptionsComponent {
   static \u0275fac = function AiOptionsComponent_Factory(__ngFactoryType__) {
     return new (__ngFactoryType__ || _AiOptionsComponent)();
   };
-  static \u0275cmp = /* @__PURE__ */ \u0275\u0275defineComponent({ type: _AiOptionsComponent, selectors: [["ca-ai-options"]], outputs: { promptChange: "promptChange", customPrompt: "customPrompt", editPrompt: "editPrompt", aiChange: "aiChange", aiSubmit: "aiSubmit" }, decls: 20, vars: 22, consts: [["label", "Options", "icon", "pi pi-bars", "severity", "info", 3, "click"], ["position", "right", 3, "visibleChange", "visible", "header"], [1, "flex", "flex-column", "gap-3"], [1, "flex", "flex-column", "gap-3", 3, "value", "multiple"], ["value", "0", 1, "border-1", "border-round-md", "border-surface"], [1, "border-none"], [1, "font-bold", "mb-2"], [1, "flex", "flex-column", "gap-2"], [4, "ngFor", "ngForOf", "ngForTrackBy"], ["value", "1", 1, "border-1", "border-round-md", "border-surface"], ["value", "2", 1, "border-1", "border-round-md", "border-surface"], ["icon", "pi pi-comments", "severity", "primary", 3, "label"], [3, "ngSwitch"], [1, "p-field-radiobutton"], ["name", "taskOptions", 3, "ngModelChange", "value", "ngModel", "inputId", "disabled"], [1, "pl-2", 3, "for"], [1, "p-field-checkbox", "mt-3"], ["inputId", "appendCustom", 3, "ngModelChange", "onChange", "ngModel", "binary"], ["for", "appendCustom", 1, "pl-2"], [1, "flex", "flex-column", "gap-3", "mt-3"], ["id", "ai-changes"], ["ariaLabelledBy", "ai-changes", "fluid", "", 3, "ngModelChange", "onChange", "ngModel", "step"], [1, "flex", "flex-column", "gap-2", "mt-3"], ["name", "promptOptions", 3, "ngModelChange", "onClick", "value", "ngModel", "inputId", "disabled"], [1, "p-field-checkbox"], [3, "ngModelChange", "value", "ngModel", "inputId", "disabled"], ["pTextarea", "", "id", "customPrompt", "fluid", "", 3, "ngModelChange", "blur", "ngModel", "autoResize"], ["for", "customPrompt"], [1, "p-field-checkbox", "mt-2"], ["inputId", "useCompactAlertsPageContext", 3, "ngModelChange", "onChange", "ngModel", "binary"], ["for", "useCompactAlertsPageContext", 1, "pl-2"], ["inputId", "includeAlertRewriteExamples", 3, "ngModelChange", "onChange", "ngModel", "binary"], ["for", "includeAlertRewriteExamples", 1, "pl-2"], [1, "text-xs", "text-500"], [1, "text-xs", "text-500", "mt-3"], ["name", "aiOptions", 3, "ngModelChange", "onClick", "value", "ngModel", "inputId", "disabled"], ["styleClass", "chip chip-severe ml-2", 3, "label"], ["icon", "pi pi-comments", "severity", "primary", 3, "click", "label"], ["mode", "prototype", 3, "showSampleDataButton", 4, "ngSwitchCase"], ["mode", "prototype", 3, "showSampleDataButton"]], template: function AiOptionsComponent_Template(rf, ctx) {
+  static \u0275cmp = /* @__PURE__ */ \u0275\u0275defineComponent({ type: _AiOptionsComponent, selectors: [["ca-ai-options"]], outputs: { promptChange: "promptChange", customPrompt: "customPrompt", editPrompt: "editPrompt", aiChange: "aiChange", aiSubmit: "aiSubmit" }, decls: 20, vars: 22, consts: [["label", "Options", "icon", "pi pi-bars", "severity", "info", 3, "click"], ["position", "right", 3, "visibleChange", "visible", "header"], [1, "flex", "flex-column", "gap-3"], [1, "flex", "flex-column", "gap-3", 3, "value", "multiple"], ["value", "0", 1, "border-1", "border-round-md", "border-surface"], [1, "border-none"], [1, "font-bold", "mb-2"], [1, "flex", "flex-column", "gap-2"], [4, "ngFor", "ngForOf", "ngForTrackBy"], ["value", "1", 1, "border-1", "border-round-md", "border-surface"], ["value", "2", 1, "border-1", "border-round-md", "border-surface"], ["icon", "pi pi-comments", "severity", "primary", 3, "label"], [3, "ngSwitch"], [1, "p-field-radiobutton"], ["name", "taskOptions", 3, "ngModelChange", "value", "ngModel", "inputId", "disabled"], [1, "pl-2", 3, "for"], [1, "p-field-checkbox", "mt-3"], ["inputId", "appendCustom", 3, "ngModelChange", "onChange", "ngModel", "binary"], ["for", "appendCustom", 1, "pl-2"], [1, "flex", "flex-column", "gap-3", "mt-3"], ["id", "ai-changes"], ["ariaLabelledBy", "ai-changes", "fluid", "", 3, "ngModelChange", "onChange", "ngModel", "step"], [1, "flex", "flex-column", "gap-2", "mt-3"], ["name", "promptOptions", 3, "ngModelChange", "onClick", "value", "ngModel", "inputId", "disabled"], [1, "p-field-checkbox"], [3, "ngModelChange", "value", "ngModel", "inputId", "disabled"], ["pTextarea", "", "id", "customPrompt", "fluid", "", 3, "ngModelChange", "blur", "ngModel", "autoResize"], ["for", "customPrompt"], [1, "p-field-checkbox", "mt-2"], ["inputId", "useCompactAlertsPageContext", 3, "ngModelChange", "onChange", "ngModel", "binary"], ["for", "useCompactAlertsPageContext", 1, "pl-2"], ["inputId", "includeAlertRewriteExamples", 3, "ngModelChange", "onChange", "ngModel", "binary"], ["for", "includeAlertRewriteExamples", 1, "pl-2"], ["inputId", "includeTopicDoormatRewriteExamples", 3, "ngModelChange", "onChange", "ngModel", "binary"], ["for", "includeTopicDoormatRewriteExamples", 1, "pl-2"], ["inputId", "useDescriptionStyleAsPrimaryIssue", 3, "ngModelChange", "onChange", "ngModel", "binary"], ["for", "useDescriptionStyleAsPrimaryIssue", 1, "pl-2"], ["for", "topicDoormatExampleFormat"], ["id", "topicDoormatExampleFormat", 1, "p-inputtext", 3, "ngModelChange", "ngModel"], ["value", "before-after"], ["value", "final-only"], [1, "text-xs", "text-500"], [1, "text-xs", "text-500", "mt-3"], ["name", "aiOptions", 3, "ngModelChange", "onClick", "value", "ngModel", "inputId", "disabled"], ["styleClass", "chip chip-severe ml-2", 3, "label"], ["icon", "pi pi-comments", "severity", "primary", 3, "click", "label"], ["mode", "prototype", 3, "showSampleDataButton", 4, "ngSwitchCase"], ["mode", "prototype", 3, "showSampleDataButton"]], template: function AiOptionsComponent_Template(rf, ctx) {
     if (rf & 1) {
       \u0275\u0275elementStart(0, "p-button", 0);
       \u0275\u0275listener("click", function AiOptionsComponent_Template_p_button_click_0_listener() {
@@ -32980,7 +34488,7 @@ var AiOptionsComponent = class _AiOptionsComponent {
       \u0275\u0275elementStart(14, "div", 7);
       \u0275\u0275template(15, AiOptionsComponent_ng_container_15_Template, 6, 8, "ng-container", 8);
       \u0275\u0275elementEnd()()()();
-      \u0275\u0275template(16, AiOptionsComponent_Conditional_16_Template, 23, 18, "p-accordion-panel", 9)(17, AiOptionsComponent_Conditional_17_Template, 12, 8, "p-accordion-panel", 10);
+      \u0275\u0275template(16, AiOptionsComponent_Conditional_16_Template, 24, 19, "p-accordion-panel", 9)(17, AiOptionsComponent_Conditional_17_Template, 12, 8, "p-accordion-panel", 10);
       \u0275\u0275elementEnd();
       \u0275\u0275template(18, AiOptionsComponent_Conditional_18_Template, 2, 3, "p-button", 11)(19, AiOptionsComponent_Conditional_19_Template, 4, 4, "ng-container", 12);
       \u0275\u0275elementEnd()();
@@ -33007,7 +34515,7 @@ var AiOptionsComponent = class _AiOptionsComponent {
       \u0275\u0275advance();
       \u0275\u0275conditional(ctx.isPrototype ? 19 : -1);
     }
-  }, dependencies: [TranslateModule, TranslatePipe, CommonModule, NgForOf, NgSwitch, NgSwitchCase, FormsModule, DefaultValueAccessor, NgControlStatus, NgModel, ButtonModule, Button, DrawerModule, Drawer, RadioButtonModule, RadioButton, CheckboxModule, Checkbox, AccordionModule, Accordion, AccordionPanel, AccordionHeader, AccordionContent, ChipModule, Chip, TextareaModule, Textarea, IftaLabelModule, IftaLabel, SliderModule, Slider, UploadUrlComponent, UploadPasteComponent, UploadWordComponent], encapsulation: 2 });
+  }, dependencies: [TranslateModule, TranslatePipe, CommonModule, NgForOf, NgSwitch, NgSwitchCase, FormsModule, NgSelectOption, \u0275NgSelectMultipleOption, DefaultValueAccessor, SelectControlValueAccessor, NgControlStatus, NgModel, ButtonModule, Button, DrawerModule, Drawer, RadioButtonModule, RadioButton, CheckboxModule, Checkbox, AccordionModule, Accordion, AccordionPanel, AccordionHeader, AccordionContent, ChipModule, Chip, TextareaModule, Textarea, IftaLabelModule, IftaLabel, SliderModule, Slider, UploadUrlComponent, UploadPasteComponent, UploadWordComponent], encapsulation: 2 });
 };
 (() => {
   (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(AiOptionsComponent, [{
@@ -33099,8 +34607,8 @@ var AiOptionsComponent = class _AiOptionsComponent {
                             (onChange)="emitEditPrompt(currentEditLevel!.prompt)" fluid />\r
                 </div>\r
 \r
-                @if (selectedPrompt === 'alertsRecommendations') {\r
-                  <div class="flex flex-column gap-2 mt-3">\r
+                @if (selectedPrompt === 'alertsRecommendations') {
+                  <div class="flex flex-column gap-2 mt-3">
                     <div class="p-field-checkbox mt-2">\r
                       <p-checkbox\r
                         [(ngModel)]="useCompactAlertsPageContext"\r
@@ -33122,11 +34630,51 @@ var AiOptionsComponent = class _AiOptionsComponent {
                       <label for="includeAlertRewriteExamples" class="pl-2">\r
                         Use examples for rewriting\r
                       </label>\r
-                    </div>\r
-                  </div>\r
-                }\r
-              </div>\r
-            </fieldset>\r
+                    </div>
+                  </div>
+                }
+                @if (selectedPrompt === 'doormats') {
+                  <div class="flex flex-column gap-2 mt-3">
+                    <div class="p-field-checkbox">
+                      <p-checkbox
+                        [(ngModel)]="includeTopicDoormatRewriteExamples"
+                        [binary]="true"
+                        inputId="includeTopicDoormatRewriteExamples"
+                        (onChange)="onIncludeTopicDoormatRewriteExamplesSelect(includeTopicDoormatRewriteExamples)"
+                      />
+                      <label for="includeTopicDoormatRewriteExamples" class="pl-2">
+                        {{ 'page.ai-options.prompt.includeTopicDoormatRewriteExamples' | translate }}
+                      </label>
+                    </div>
+                    @if (includeTopicDoormatRewriteExamples) {
+                      <label for="topicDoormatExampleFormat">
+                        {{ 'page.ai-options.prompt.topicDoormatExampleFormat' | translate }}
+                      </label>
+                      <select
+                        id="topicDoormatExampleFormat"
+                        class="p-inputtext"
+                        [(ngModel)]="topicDoormatExampleFormat"
+                        (ngModelChange)="onTopicDoormatExampleFormatSelect($event)"
+                      >
+                        <option value="before-after">{{ 'page.ai-options.prompt.topicDoormatExamplesBeforeAfter' | translate }}</option>
+                        <option value="final-only">{{ 'page.ai-options.prompt.topicDoormatExamplesFinalOnly' | translate }}</option>
+                      </select>
+                    }
+                    <div class="p-field-checkbox mt-2">
+                      <p-checkbox
+                        [(ngModel)]="useDescriptionStyleAsPrimaryIssue"
+                        [binary]="true"
+                        inputId="useDescriptionStyleAsPrimaryIssue"
+                        (onChange)="onUseDescriptionStyleAsPrimaryIssueSelect(useDescriptionStyleAsPrimaryIssue)"
+                      />
+                      <label for="useDescriptionStyleAsPrimaryIssue" class="pl-2">
+                        {{ 'page.ai-options.prompt.useDescriptionStyleAsPrimaryIssue' | translate }}
+                      </label>
+                    </div>
+                  </div>
+                }
+              </div>
+            </fieldset>
 \r
           </p-accordion-content>\r
         </p-accordion-panel>\r
@@ -35982,6 +37530,7 @@ var ComponentGuidanceComponent = class _ComponentGuidanceComponent {
       this.lastGuidanceRevision = revision;
       this.syncAlertGuidanceRowForWorkingHtml(html);
       this.syncTopicDoormatGuidanceRowForWorkingHtml(html);
+      this.applySharedTopicDoormatAnalysis(this.topicDoormatAnalysisState.hasAnalysis(), this.topicDoormatAnalysisState.getAnalyzedHtml(), this.topicDoormatAnalysisState.getIssueRows());
     });
     effect(() => {
       const analyzedHtml = this.topicDoormatAnalysisState.getAnalyzedHtml();
@@ -37274,32 +38823,32 @@ var ComponentGuidanceComponent = class _ComponentGuidanceComponent {
                     </p-table>\r
                   </section>\r
                 }\r
-              } @else {
-                <div class="topic-doormat-empty">
-                  @if (topicDoormatIssuesLoading) {
-                    <span class="muted">Waiting for AI response</span>
-                  } @else if (topicDoormatIssuesResponseReceived) {
-                    <span class="muted">No issues returned</span>
-                  } @else {
-                    <span class="muted">Expand this row to analyze topic doormats</span>
-                  }
-                </div>
-              }
-              @if (topicDoormatIssuesResponseReceived) {
-                <div class="topic-doormat-actions">
-                  <button
-                    pButton
-                    type="button"
-                    label="Clear issues report"
-                    icon="pi pi-times"
-                    class="p-button-secondary p-button-sm"
-                    [disabled]="topicDoormatIssuesLoading"
-                    (click)="clearTopicDoormatIssuesReport()">
-                  </button>
-                </div>
-              }
-            } @else {
-              <p-table styleClass="p-datatable-sm expansion-table">
+              } @else {\r
+                <div class="topic-doormat-empty">\r
+                  @if (topicDoormatIssuesLoading) {\r
+                    <span class="muted">Waiting for AI response</span>\r
+                  } @else if (topicDoormatIssuesResponseReceived) {\r
+                    <span class="muted">No issues returned</span>\r
+                  } @else {\r
+                    <span class="muted">Expand this row to analyze topic doormats</span>\r
+                  }\r
+                </div>\r
+              }\r
+              @if (topicDoormatIssuesResponseReceived) {\r
+                <div class="topic-doormat-actions">\r
+                  <button\r
+                    pButton\r
+                    type="button"\r
+                    label="Clear issues report"\r
+                    icon="pi pi-times"\r
+                    class="p-button-secondary p-button-sm"\r
+                    [disabled]="topicDoormatIssuesLoading"\r
+                    (click)="clearTopicDoormatIssuesReport()">\r
+                  </button>\r
+                </div>\r
+              }\r
+            } @else {\r
+              <p-table styleClass="p-datatable-sm expansion-table">\r
                 <ng-template pTemplate="header">\r
                   <tr>\r
                     <th>Column 1</th>\r
@@ -41842,6 +43391,348 @@ var topic_page_exceptions_default = [
   "/en/revenue-agency/services/e-services/cra-login-services.html"
 ];
 
+// src/app/views/page-assistant/services/topic-page-section-extractor.service.ts
+var TopicPageSectionExtractorService = class _TopicPageSectionExtractorService {
+  topicDoormatExtractor = inject(TopicDoormatExtractorService);
+  topicDoormatTemplateNormalizer = inject(TopicDoormatTemplateNormalizerService);
+  extract(html, options) {
+    if (!html) {
+      return this.emptyResult("");
+    }
+    const normalization = this.topicDoormatTemplateNormalizer.normalizeLegacyDoormats(html);
+    const normalizedHtml = normalization.html;
+    const doc = new DOMParser().parseFromString(normalizedHtml, "text/html");
+    const hasTopicDoormatCandidates = this.topicDoormatExtractor.hasCandidates(doc);
+    if (!hasTopicDoormatCandidates) {
+      return {
+        isTopicPage: false,
+        normalizedHtml,
+        introHtml: this.extractTopicIntroHtml(doc),
+        preDoormatHtml: this.extractPreDoormatHtml(doc),
+        sections: /* @__PURE__ */ new Map(),
+        nonTopicPageLinks: this.collectNonTopicPageLinks(doc, options)
+      };
+    }
+    return {
+      isTopicPage: true,
+      normalizedHtml,
+      introHtml: this.extractTopicIntroHtml(doc),
+      preDoormatHtml: this.extractPreDoormatHtml(doc),
+      sections: this.collectTopicPageSections(doc, options),
+      nonTopicPageLinks: /* @__PURE__ */ new Map()
+    };
+  }
+  emptyResult(normalizedHtml) {
+    return {
+      isTopicPage: false,
+      normalizedHtml,
+      introHtml: "",
+      preDoormatHtml: "",
+      sections: /* @__PURE__ */ new Map(),
+      nonTopicPageLinks: /* @__PURE__ */ new Map()
+    };
+  }
+  extractTopicIntroHtml(doc) {
+    const hgroup = doc.querySelector("hgroup#wb-cont");
+    const h1 = hgroup?.querySelector("h1") ?? doc.querySelector("main h1#wb-cont, main h1, h1#wb-cont, h1");
+    const hgroupContainer = hgroup?.parentElement ?? h1?.parentElement ?? null;
+    const introContainer = hgroupContainer?.querySelector(":scope > .gc-srvinfo:not(section)") ?? hgroupContainer?.querySelector(":scope > div.gc-srvinfo, :scope > section.gc-srvinfo") ?? null;
+    const containerParagraph = introContainer ? this.findFirstMeaningfulParagraph(introContainer, hgroup ?? h1) : null;
+    if (containerParagraph)
+      return containerParagraph.outerHTML;
+    const leadParagraph = this.findLeadIntroParagraph(hgroupContainer, hgroup ?? h1) ?? this.findLeadIntroParagraph(h1?.parentElement ?? null, hgroup ?? h1);
+    if (leadParagraph && this.cleanVisibleText(leadParagraph.textContent)) {
+      return leadParagraph.outerHTML;
+    }
+    const main = this.findMainContentElement(doc) ?? doc.body;
+    if (!main)
+      return "";
+    const boundary = this.findIntroBoundary(main);
+    const headingBoundary = hgroup ?? h1;
+    const paragraphs = Array.from(main.querySelectorAll("p"));
+    const candidates = paragraphs.filter((paragraph) => {
+      if (!this.isIntroParagraphCandidate(paragraph))
+        return false;
+      if (paragraph.closest("nav, header, footer, aside, details, .gc-most-requested, section.gc-srvinfo, .gc-features, .pagedetails, .gc-subway")) {
+        return false;
+      }
+      if (this.isRescueParagraph(paragraph))
+        return false;
+      if (headingBoundary && !this.isAfter(paragraph, headingBoundary)) {
+        return false;
+      }
+      if (boundary && !this.isBefore(paragraph, boundary))
+        return false;
+      return true;
+    });
+    return candidates.map((paragraph) => paragraph.outerHTML).join("\n");
+  }
+  extractPreDoormatHtml(doc) {
+    const hgroup = doc.querySelector("hgroup#wb-cont");
+    const h1 = hgroup?.querySelector("h1") ?? doc.querySelector("main h1#wb-cont, main h1, h1#wb-cont, h1");
+    const headingBoundary = hgroup ?? h1;
+    const main = this.findMainContentElement(doc) ?? doc.body;
+    if (!main || !headingBoundary)
+      return "";
+    const doormatBoundary = this.findDoormatBoundary(main);
+    const introNodes = new Set(this.getIntroParagraphElements(main, headingBoundary, doormatBoundary));
+    const preserved = [];
+    let current = this.getNextContentSibling(headingBoundary);
+    while (current) {
+      if (doormatBoundary && current === doormatBoundary)
+        break;
+      if (this.shouldPreservePreDoormatElement(current, introNodes)) {
+        preserved.push(current.outerHTML);
+      }
+      current = current.nextElementSibling;
+    }
+    return preserved.join("\n");
+  }
+  findFirstMeaningfulParagraph(container, headingBoundary) {
+    return Array.from(container.querySelectorAll("p")).find((paragraph) => {
+      if (!this.isIntroParagraphCandidate(paragraph))
+        return false;
+      if (headingBoundary && !this.isAfter(paragraph, headingBoundary)) {
+        return false;
+      }
+      return true;
+    }) ?? null;
+  }
+  findLeadIntroParagraph(container, headingBoundary) {
+    if (!container)
+      return null;
+    return Array.from(container.querySelectorAll(":scope > p.gc-lead, :scope > p.pagetagline, :scope > p.lead")).find((paragraph) => {
+      if (!this.isIntroParagraphCandidate(paragraph))
+        return false;
+      if (headingBoundary && !this.isAfter(paragraph, headingBoundary)) {
+        return false;
+      }
+      return true;
+    }) ?? null;
+  }
+  isIntroParagraphCandidate(paragraph) {
+    if (!this.cleanVisibleText(paragraph.textContent))
+      return false;
+    if (paragraph.getAttribute("aria-hidden") === "true")
+      return false;
+    if (paragraph.classList.contains("text-muted"))
+      return false;
+    return true;
+  }
+  findIntroBoundary(container) {
+    return container.querySelector("section.gc-most-requested") || container.querySelector("section.gc-srvinfo") || container.querySelector(".mwsdoormat-links-container") || container.querySelector(".gc-drmt") || container.querySelector("section.gc-features") || container.querySelector("h2");
+  }
+  findDoormatBoundary(container) {
+    return container.querySelector("section.gc-most-requested") || container.querySelector("section.gc-srvinfo") || container.querySelector(".mwsdoormat-links-container") || container.querySelector(".gc-drmt") || this.findLegacyDoormatSectionHeading(container);
+  }
+  findLegacyDoormatSectionHeading(container) {
+    return Array.from(container.querySelectorAll("h2, h3")).find((heading) => /^(topics|services and information|services et renseignements|services et information|sujets)$/i.test(this.cleanVisibleText(heading.textContent))) ?? null;
+  }
+  getIntroParagraphElements(container, headingBoundary, boundary) {
+    return Array.from(container.querySelectorAll("p")).filter((paragraph) => {
+      if (!this.isIntroParagraphCandidate(paragraph))
+        return false;
+      if (paragraph.closest("nav, header, footer, aside, details, .gc-most-requested, section.gc-srvinfo, .gc-features, .pagedetails, .gc-subway")) {
+        return false;
+      }
+      if (this.isRescueParagraph(paragraph))
+        return false;
+      if (!this.isAfter(paragraph, headingBoundary))
+        return false;
+      if (boundary && !this.isBefore(paragraph, boundary))
+        return false;
+      return true;
+    });
+  }
+  getNextContentSibling(element) {
+    const container = element.closest("hgroup") ?? element;
+    return container.nextElementSibling;
+  }
+  shouldPreservePreDoormatElement(element, introNodes) {
+    if (introNodes.has(element))
+      return false;
+    if (!this.cleanVisibleText(element.textContent))
+      return false;
+    if (element.matches("nav, header, footer, aside, details, .alert, .gc-most-requested, .gc-srvinfo, .gc-features, .pagedetails, .gc-subway")) {
+      return false;
+    }
+    if (element.closest(".alert, .gc-most-requested, .gc-srvinfo, .gc-features")) {
+      return false;
+    }
+    if (element.getAttribute("aria-hidden") === "true")
+      return false;
+    if (element.classList.contains("text-muted"))
+      return false;
+    if (this.isRescueParagraph(element))
+      return false;
+    return true;
+  }
+  isBefore(a, b) {
+    const pos = a.compareDocumentPosition(b);
+    return Boolean(pos & Node.DOCUMENT_POSITION_FOLLOWING);
+  }
+  isAfter(a, b) {
+    const pos = a.compareDocumentPosition(b);
+    return Boolean(pos & Node.DOCUMENT_POSITION_PRECEDING);
+  }
+  isRescueParagraph(paragraph) {
+    return (paragraph.textContent || "").toLowerCase().includes("you may be looking for");
+  }
+  collectTopicPageSections(doc, options) {
+    const map = /* @__PURE__ */ new Map();
+    const sections = [
+      { key: "most", selector: ".gc-most-requested" },
+      { key: "doormats", selector: ".gc-srvinfo" },
+      { key: "focus", selector: "" },
+      { key: "feature", selector: ".gc-features" }
+    ];
+    for (const section of sections) {
+      const container = section.key === "focus" ? this.findFocusOnContainer(doc) : section.key === "feature" ? this.findFeaturesContainer(doc) : doc.querySelector(section.selector);
+      if (!container)
+        continue;
+      container.querySelectorAll("a[href]").forEach((link) => {
+        if (section.key === "feature" && this.isSocialMediaLink(link))
+          return;
+        const href = link.getAttribute("href");
+        if (!href)
+          return;
+        const normalized = this.normalizeUrl(this.resolveUrl(href, options.baseUrl));
+        if (!normalized || this.isExcludedUrl(normalized, options))
+          return;
+        const text = this.extractTopicSectionLinkLabel(link, section.key);
+        map.set(normalized, {
+          section: section.key,
+          label: text || href,
+          description: section.key === "doormats" ? this.extractDoormatDescription(link) : section.key === "feature" ? this.extractFeatureDescription(link) : void 0
+        });
+      });
+    }
+    return map;
+  }
+  collectNonTopicPageLinks(doc, options) {
+    const map = /* @__PURE__ */ new Map();
+    const container = this.findMainContentElement(doc) ?? doc.body ?? doc.documentElement;
+    if (!container)
+      return map;
+    container.querySelectorAll("a[href]").forEach((link) => {
+      const href = link.getAttribute("href");
+      if (!href || href.startsWith("#"))
+        return;
+      const normalized = this.normalizeUrl(this.resolveUrl(href, options.baseUrl));
+      if (!normalized || this.isExcludedUrl(normalized, options))
+        return;
+      const text = (link.textContent || "").trim();
+      map.set(normalized, text || href);
+    });
+    return map;
+  }
+  findFeaturesContainer(doc) {
+    const gcFeatures = doc.querySelector("section.gc-features");
+    if (gcFeatures)
+      return gcFeatures;
+    const headings = Array.from(doc.querySelectorAll("h2"));
+    const match = headings.find((h) => (h.textContent || "").trim().toLowerCase() === "features");
+    return match?.closest("section") ?? null;
+  }
+  findFocusOnContainer(doc) {
+    const headings = Array.from(doc.querySelectorAll("h2"));
+    const match = headings.find((h) => (h.textContent || "").trim().toLowerCase() === "focus on");
+    if (!match)
+      return null;
+    return match.closest(".well") ?? match.parentElement ?? match;
+  }
+  findMainContentElement(doc) {
+    const selectors = [
+      'main[property="mainContentOfPage"][resource="#wb-main"][typeof="WebPageElement"]',
+      'main[property="mainContentOfPage"][resource="#wb-main"][typeof="WebPageElement"].col-md-9.col-md-push-3',
+      'main[role="main"][property="mainContentOfPage"].container',
+      'main[role="main"][property="mainContentOfPage"]',
+      'main[role="main"]',
+      "main",
+      '[role="main"]'
+    ];
+    for (const selector of selectors) {
+      const element = doc.querySelector(selector);
+      if (!element)
+        continue;
+      const containerDiv = element.querySelector("div.container");
+      return containerDiv ?? element;
+    }
+    return null;
+  }
+  extractTopicSectionLinkLabel(link, section) {
+    if (section === "feature") {
+      const caption = (link.querySelector("figcaption")?.textContent || "").replace(/\s+/g, " ").trim();
+      if (caption)
+        return caption;
+    }
+    return (link.textContent || "").replace(/\s+/g, " ").trim();
+  }
+  extractDoormatDescription(link) {
+    const item = link.closest(".col-lg-4, .col-md-6, li");
+    const paragraph = item?.querySelector("p");
+    return (paragraph?.textContent || "").replace(/\s+/g, " ").trim();
+  }
+  extractFeatureDescription(link) {
+    const paragraph = link.querySelector("p");
+    return (paragraph?.textContent || "").replace(/\s+/g, " ").trim();
+  }
+  isSocialMediaLink(link) {
+    const href = link.getAttribute("href") || "";
+    if (!href)
+      return false;
+    try {
+      const host = new URL(href, window.location.origin).hostname.toLowerCase();
+      return [
+        "facebook.com",
+        "instagram.com",
+        "linkedin.com",
+        "threads.net",
+        "twitter.com",
+        "x.com",
+        "youtube.com"
+      ].some((domain) => host === domain || host.endsWith(`.${domain}`));
+    } catch {
+      return false;
+    }
+  }
+  isExcludedUrl(url, options) {
+    if (!url)
+      return false;
+    const normalized = url.toLowerCase();
+    return (options.excludedUrlFragments ?? []).some((fragment) => normalized.includes(fragment));
+  }
+  resolveUrl(href, baseUrl) {
+    try {
+      return new URL(href, baseUrl || void 0).href;
+    } catch {
+      return href;
+    }
+  }
+  normalizeUrl(url) {
+    try {
+      const parsed = new URL(url);
+      const normalized = `${parsed.origin.toLowerCase()}${parsed.pathname}`;
+      return normalized.replace(/\/+$/, "");
+    } catch {
+      return url.split("#")[0].split("?")[0].replace(/\/+$/, "");
+    }
+  }
+  cleanVisibleText(value) {
+    return (value || "").replace(/\s+/g, " ").trim();
+  }
+  static \u0275fac = function TopicPageSectionExtractorService_Factory(__ngFactoryType__) {
+    return new (__ngFactoryType__ || _TopicPageSectionExtractorService)();
+  };
+  static \u0275prov = /* @__PURE__ */ \u0275\u0275defineInjectable({ token: _TopicPageSectionExtractorService, factory: _TopicPageSectionExtractorService.\u0275fac, providedIn: "root" });
+};
+(() => {
+  (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(TopicPageSectionExtractorService, [{
+    type: Injectable,
+    args: [{ providedIn: "root" }]
+  }], null, null);
+})();
+
 // src/app/views/page-assistant/components/problems/component-guidance/topic-page/topic-page-ia.component.ts
 var _c010 = ["chartContainer"];
 var _c18 = ["cm"];
@@ -42519,6 +44410,7 @@ var TopicPageIaComponent = class _TopicPageIaComponent {
   theme = inject(ThemeService);
   iaStructure = inject(IaStructureService);
   messageService = inject(MessageService);
+  topicPageSectionExtractor = inject(TopicPageSectionExtractorService);
   production = environment.production;
   activeStep = 1;
   constructor() {
@@ -42966,49 +44858,25 @@ var TopicPageIaComponent = class _TopicPageIaComponent {
   }
   updateTopicPageSectionMap() {
     const html = this.uploadState.getUploadData()?.originalHtml || "";
-    this.nonTopicPageLinks = /* @__PURE__ */ new Map();
     if (!html) {
       this.isTopicPage = false;
       this.topicPageSections = /* @__PURE__ */ new Map();
+      this.nonTopicPageLinks = /* @__PURE__ */ new Map();
       return;
     }
-    const doc = new DOMParser().parseFromString(html, "text/html");
-    const hasDoormats = !!doc.querySelector(".gc-srvinfo");
-    this.isTopicPage = hasDoormats;
-    if (!hasDoormats) {
-      this.topicPageSections = /* @__PURE__ */ new Map();
-      this.nonTopicPageLinks = this.collectNonTopicPageLinks(doc);
-      return;
-    }
-    const map = /* @__PURE__ */ new Map();
-    const baseUrl = this.originalUrl || "";
-    const sections = [
-      { key: "most", selector: ".gc-most-requested" },
-      { key: "doormats", selector: ".gc-srvinfo" },
-      { key: "feature", selector: ".gc-features" }
-    ];
-    for (const section of sections) {
-      const container = doc.querySelector(section.selector);
-      if (!container)
-        continue;
-      const links = container.querySelectorAll("a[href]");
-      links.forEach((link) => {
-        const href = link.getAttribute("href");
-        if (!href)
-          return;
-        const text = (link.textContent || "").trim();
-        const normalized = this.normalizeUrl(this.resolveUrl(href, baseUrl));
-        if (this.isExcludedUrl(normalized))
-          return;
-        if (normalized) {
-          map.set(normalized, {
-            section: section.key,
-            label: text || href
-          });
-        }
-      });
-    }
-    this.topicPageSections = map;
+    const result = this.topicPageSectionExtractor.extract(html, {
+      baseUrl: this.originalUrl || "",
+      excludedUrlFragments: this.topicPageExcludedUrlFragments
+    });
+    this.isTopicPage = result.isTopicPage;
+    this.nonTopicPageLinks = result.nonTopicPageLinks;
+    this.topicPageSections = new Map(Array.from(result.sections.entries()).filter(([, info]) => info.section !== "focus").map(([url, info]) => [
+      url,
+      {
+        section: info.section,
+        label: info.label
+      }
+    ]));
   }
   collectNonTopicPageLinks(doc) {
     const map = /* @__PURE__ */ new Map();
@@ -44196,404 +46064,404 @@ var TopicPageIaComponent = class _TopicPageIaComponent {
       InputGroup,
       InputGroupAddonModule,
       FileUploadModule
-    ], providers: [TreeDragDropService], template: `<!--UI-->
-<p class="mt-0">
-  To edit this topic page or to convert it to one, follow these steps:
-</p>
-<p-stepper [(value)]="activeStep" [linear]="false" class="topic-ia-steps">
-  <p-step-list class="topic-ia-step-list">
-    <p-step [value]="1">Get current IA Structure</p-step>
-    <p-step [value]="2">Copy IA URLs</p-step>
-    <p-step [value]="3">Retrieve visits from UPD</p-step>
-    <p-step [value]="4">Create new topic page tree</p-step>
-  </p-step-list>
-</p-stepper>
-
-<div class="topic-ia-panels">
-  <div class="surface-0 border-1 border-round border-200 p-3">
-    <p class="mt-0"><strong>Execute a crawl</strong> of the IA (depth of 3 or 4 recommended). This will:</p>
-    <ul>
-      <li>Retrieve the subpages</li>
-      <li>Retrieve the depths</li>
-      <li>Generate a visual IA structure tree below</li>
-    </ul>
-    <div class="flex flex-row flex-wrap align-items-center gap-3 mt-0">
-      <p-iftalabel>
-        <p-inputnumber
-          [(ngModel)]="depth"
-          inputId="depth"
-          mode="decimal"
-          [showButtons]="true"
-          [min]="2"
-          [max]="6"
-        />
-        <label for="depth">Depth</label>
-      </p-iftalabel>
-      <p-button
-        label="Get subpages in IA"
-        [severity]="step1Complete ? 'secondary' : 'primary'"
-        (click)="checkIA()"
-        [loading]="isChartLoading"
-        icon="pi pi-info-circle"
-      />
-    </div>
-    @if (isChartLoading) {
-      <p-progressbar
-        [value]="iaProgress"
-        [showValue]="false"
-        [style]="{ height: '1rem' }"
-        styleClass="mt-3"
-      />
-    }
-  </div>
-
-  @if (step1Complete) {
-    <div class="surface-0 border-1 border-round border-200 p-3">
-    <p class="mt-0"><strong>Copy all URLs</strong> in the IA structure to the clipboard.</p>
-    @if (iaChart && iaChart.length > 0 && !isChartLoading) {
-      <p-button
-        label="Copy URLs to clipboard"
-        [severity]="hasCopiedUrls ? 'secondary' : 'primary'"
-        (click)="copyUrlsToClipboard()"
-        icon="pi pi-copy"
-      />
-    }
-    </div>
-  }
-
-  @if (hasCopiedUrls) {
-    <div class="surface-0 border-1 border-round border-200 p-3">
-    <p class="mt-0">Manually <strong>retrieve page visits</strong> from the UPD:</p>
-    <ol>
-      <li>Visit <a href="https://cra-arc.alpha.canada.ca/en/custom-reports/create">Custom reports page of the UPD</a></li>
-      <li>Select data granularity: <strong>None</strong></li>
-      <li>Select a date range > Preset: <strong>Last year</strong></li>
-      <li>Select pages > Bulk Pages: Paste the copied URLs into text field</li>
-      <li>Select metrics: check <strong>Visits</strong> box</li>
-      <li>Scroll down and select <strong>Generate report</strong></li>
-      <li>Export the report as a CSV and save it</li>
-    </ol>
-    <p-button
-      label="Next"
-      [severity]="updInstructionsComplete ? 'secondary' : 'primary'"
-      (click)="proceedToCsvUpload()"
-    />
-    </div>
-  }
-
-  @if (showCsvUpload) {
-    <div class="surface-0 border-1 border-round border-200 p-3">
-    <p class="mt-0"><strong>Upload your saved CSV</strong> file. This will:</p>
-    <ul>
-      <li>Display page visits in IA structure</li>
-      <li>Create a new tree: you can drag pages to design</li>
-      <li>Suggest pages for <strong>Most requested</strong> and <strong>Doormats</strong> based on visits and levels</li>
-    </ul>
-    <div class="flex justify-content-start">
-      <p-fileUpload
-        id="topic-ia-csv-upload"
-        name="topicIaCsv"
-        accept=".csv"
-        mode="basic"
-        [auto]="true"
-        [customUpload]="true"
-          (uploadHandler)="onCsvUpload($event)"
-          [chooseLabel]="'page.topicIa.csvUpload.choose' | translate"
-          chooseIcon="pi pi-upload"
-          [chooseStyleClass]="csvUploaded ? 'p-button-secondary' : 'p-button-primary'"
-          outlined
-        />
-    </div>
-    </div>
-  }
-</div>
-
-<!--Breadcrumb-->
-@if (breadcrumb.length > 0) {
-  <h2>Breadcrumb</h2>
-  <div class="flex flex-row align-items-center gap-3">
-    <p-breadcrumb class="max-w-full" styleClass="pl-1" [model]="breadcrumb" />
-    @if (urlFound === true) {
-      <span class="flex align-items-center gap-2 text-green-400">
-        <i class="pi pi-check-circle"></i>Link found on parent page
-      </span>
-    }
-    @if (urlFound === false) {
-      <span class="flex align-items-center gap-2 text-red-400">
-        <i class="pi pi-times-circle"></i>IA Orphan
-      </span>
-    }
-  </div>
-}
-
-<!--IA Tree-->
-
-@if (iaChart) {
-  <div class="grid">
-    <div class="col-12" [class.md:col-6]="visitsByUrl.size > 0">
-      <p-contextMenu #cm [model]="options"></p-contextMenu>
-      <h2>Current IA structure tree</h2>
-      <p-tree
-        [value]="iaChart"
-        styleClass="w-full md:w-[30rem]"
-        [selectionMode]="selectable ? 'multiple' : null"
-        [(selection)]="selectedNode"
-        [draggableNodes]="draggable"
-        [droppableNodes]="true"
-        draggableScope="self"
-        droppableScope="self"
-        (onNodeDrop)="handleNodeDrop($event)"
-        [validateDrop]="true"
-        [contextMenu]="cm"
-        (onNodeContextMenuSelect)="onNodeContextMenu($event)"
-      >
-        <ng-template pTemplate="default" let-node>
-          <div class="flex flex-row align-items-center gap-2 w-full">
-            @if (node.children.length > 0 && !draggable && !node.data.editing) {
-              <i class="pi pi-folder"></i>
-            }
-            @if (
-              (node.children.length === 0 || !node.children) &&
-              !draggable &&
-              !node.data.editing
-            ) {
-              <i class="pi pi-file"></i>
-            }
-            @if (draggable) {
-              <i class="pi pi-arrows-alt cursor-move text-color-secondary"></i>
-            }
-            @if (node.data.editing) {
-              <i class="pi pi-pencil text-color-secondary"></i>
-            }
-            @if (!node.data.editing) {
-              <a
-                [href]="node.data.url"
-                target="_blank"
-                (click)="onNodeClick($event)"
-                [innerHTML]="node.label"
-                class="ia-label"
-              ></a>
-            }
-            @if (node.data.editing === 'label') {
-              <p-inputgroup>
-                <input
-                  type="text"
-                  pInputText
-                  [(ngModel)]="node.label"
-                  pSize="small"
-                  class="ia-label"
-                  (keydown)="onInputKeydown($event)"
-                />
-                <p-inputgroup-addon
-                  ><p-button
-                    icon="pi pi-check"
-                    severity="secondary"
-                    size="small"
-                    (onClick)="saveNode()"
-                /></p-inputgroup-addon>
-              </p-inputgroup>
-            }
-            @if (node.data.editing === 'link') {
-              <p-inputgroup>
-                <input
-                  type="text"
-                  pInputText
-                  [(ngModel)]="node.data.url"
-                  pSize="small"
-                  class="ia-label"
-                  (keydown)="onInputKeydown($event)"
-                />
-                <p-inputgroup-addon
-                  ><p-button
-                    icon="pi pi-check"
-                    severity="secondary"
-                    size="small"
-                    (onClick)="saveNode()"
-                /></p-inputgroup-addon>
-              </p-inputgroup>
-            }
-          </div>
-        </ng-template>
-      </p-tree>
-    </div>
-    @if (visitsByUrl.size > 0) {
-      <div class="col-12 md:col-6">
-        <p-contextMenu #cmTopic [model]="options"></p-contextMenu>
-        <h2>Suggested topic page sections</h2>
-        <p-tree
-          [value]="topicPageTree"
-          styleClass="w-full md:w-[30rem]"
-          [selectionMode]="selectable ? 'multiple' : null"
-          [(selection)]="selectedNode"
-          [draggableNodes]="true"
-          [droppableNodes]="true"
-          draggableScope="topicPageTree"
-          droppableScope="topicPageTree"
-          [validateDrop]="true"
-          (onNodeDrop)="onTopicPageNodeDrop($event)"
-          [contextMenu]="cmTopic"
-          (onNodeContextMenuSelect)="onNodeContextMenu($event, 'topic')"
-        >
-          <ng-template pTemplate="default" let-node>
-            <div class="flex flex-row align-items-center gap-2 w-full">
-              @if (
-                node.children?.length &&
-                !draggable &&
-                !node.data?.isCategory &&
-                !node.data?.editing
-              ) {
-                <i class="pi pi-folder"></i>
-              }
-              @if (
-                !node.children?.length &&
-                !draggable &&
-                !node.data?.isCategory &&
-                !node.data?.editing
-              ) {
-                <i class="pi pi-file"></i>
-              }
-              @if (draggable && !node.data?.isCategory && !node.data?.editing) {
-                <i class="pi pi-arrows-alt cursor-move text-color-secondary"></i>
-              }
-              @if (node.data?.editing) {
-                <i class="pi pi-pencil text-color-secondary"></i>
-              }
-              @if (!node.data?.editing) {
-                @if (node.data?.url) {
-                  <a
-                    [href]="node.data.url"
-                    target="_blank"
-                    (click)="onNodeClick($event)"
-                    [innerHTML]="node.label"
-                    class="ia-label"
-                  ></a>
-                } @else {
-                  <span
-                    [innerHTML]="node.label"
-                    class="ia-label"
-                    [class.font-bold]="node.data?.isCategory"
-                  ></span>
-                }
-              }
-              @if (node.data?.editing === 'label') {
-                <p-inputgroup>
-                  <input
-                    type="text"
-                    pInputText
-                    [(ngModel)]="node.label"
-                    pSize="small"
-                    class="ia-label"
-                    (keydown)="onInputKeydown($event)"
-                  />
-                  <p-inputgroup-addon
-                    ><p-button
-                      icon="pi pi-check"
-                      severity="secondary"
-                      size="small"
-                      (onClick)="saveNode()"
-                  /></p-inputgroup-addon>
-                </p-inputgroup>
-              }
-              @if (node.data?.editing === 'link') {
-                <p-inputgroup>
-                  <input
-                    type="text"
-                    pInputText
-                    [(ngModel)]="node.data.url"
-                    pSize="small"
-                    class="ia-label"
-                    (keydown)="onInputKeydown($event)"
-                  />
-                  <p-inputgroup-addon
-                    ><p-button
-                      icon="pi pi-check"
-                      severity="secondary"
-                      size="small"
-                      (onClick)="saveNode()"
-                  /></p-inputgroup-addon>
-                </p-inputgroup>
-              }
-            </div>
-          </ng-template>
-        </p-tree>
-      </div>
-    }
-  </div>
-}
-
-<!--IA Chart-->
-@if (iaChart) {
-  <h2>IA structure</h2>
-  @if (iaChart.length > 0) {
-    <p-button
-      label="Maximize IA chart"
-      severity="secondary"
-      (click)="maximize(chartContainer)"
-      icon="pi pi-window-maximize"
-      styleClass="mt-1 mb-3"
-    />
-  }
-  @if (iaChart.length === 0) {
-    <p>No child pages found.</p>
-  }
-  @if (iaChart.length > 0) {
-    <div
-      #chartContainer
-      class="overflow-auto max-h-75vh surface-ground surface-border border-1 py-3 mb-3 ia-chart-container"
-    >
-      <p-organization-chart [value]="iaChart">
-        <ng-template let-node pTemplate="default">
-          <p>
-            <a
-              [href]="node.data.url"
-              target="_blank"
-              (click)="onNodeClick($event)"
-              [innerHTML]="node.label"
-              class="ia-label"
-            ></a>
-          </p>
-        </ng-template>
-      </p-organization-chart>
-    </div>
-  }
-}
-
-<!--Broken Links-->
-@if (iaChart) {
-  <h2>Broken links</h2>
-  @if (brokenLinks.length === 0) {
-    <p>
-      No broken links found on this page
-      @if (iaChart[0].children?.length) {
-        <span> or on any detected child pages</span>
-      }
-      .
-    </p>
-  }
-  @if (brokenLinks.length > 0) {
-    <p-table
-      [value]="brokenLinks"
-      size="small"
-      stripedRows
-      [tableStyle]="{ 'min-width': '50rem' }"
-    >
-      <ng-template #header>
-        <tr>
-          <th>Parent page</th>
-          <th>Broken link</th>
-          <th>Status</th>
-        </tr>
-      </ng-template>
-      <ng-template #body let-rowData>
-        <tr>
-          <td>{{ rowData.parentUrl }}</td>
-          <td>{{ rowData.url }}</td>
-          <td>{{ rowData.status }}</td>
-        </tr>
-      </ng-template>
-    </p-table>
-  }
-}
+    ], providers: [TreeDragDropService], template: `<!--UI-->\r
+<p class="mt-0">\r
+  To edit this topic page or to convert it to one, follow these steps:\r
+</p>\r
+<p-stepper [(value)]="activeStep" [linear]="false" class="topic-ia-steps">\r
+  <p-step-list class="topic-ia-step-list">\r
+    <p-step [value]="1">Get current IA Structure</p-step>\r
+    <p-step [value]="2">Copy IA URLs</p-step>\r
+    <p-step [value]="3">Retrieve visits from UPD</p-step>\r
+    <p-step [value]="4">Create new topic page tree</p-step>\r
+  </p-step-list>\r
+</p-stepper>\r
+\r
+<div class="topic-ia-panels">\r
+  <div class="surface-0 border-1 border-round border-200 p-3">\r
+    <p class="mt-0"><strong>Execute a crawl</strong> of the IA (depth of 3 or 4 recommended). This will:</p>\r
+    <ul>\r
+      <li>Retrieve the subpages</li>\r
+      <li>Retrieve the depths</li>\r
+      <li>Generate a visual IA structure tree below</li>\r
+    </ul>\r
+    <div class="flex flex-row flex-wrap align-items-center gap-3 mt-0">\r
+      <p-iftalabel>\r
+        <p-inputnumber\r
+          [(ngModel)]="depth"\r
+          inputId="depth"\r
+          mode="decimal"\r
+          [showButtons]="true"\r
+          [min]="2"\r
+          [max]="6"\r
+        />\r
+        <label for="depth">Depth</label>\r
+      </p-iftalabel>\r
+      <p-button\r
+        label="Get subpages in IA"\r
+        [severity]="step1Complete ? 'secondary' : 'primary'"\r
+        (click)="checkIA()"\r
+        [loading]="isChartLoading"\r
+        icon="pi pi-info-circle"\r
+      />\r
+    </div>\r
+    @if (isChartLoading) {\r
+      <p-progressbar\r
+        [value]="iaProgress"\r
+        [showValue]="false"\r
+        [style]="{ height: '1rem' }"\r
+        styleClass="mt-3"\r
+      />\r
+    }\r
+  </div>\r
+\r
+  @if (step1Complete) {\r
+    <div class="surface-0 border-1 border-round border-200 p-3">\r
+    <p class="mt-0"><strong>Copy all URLs</strong> in the IA structure to the clipboard.</p>\r
+    @if (iaChart && iaChart.length > 0 && !isChartLoading) {\r
+      <p-button\r
+        label="Copy URLs to clipboard"\r
+        [severity]="hasCopiedUrls ? 'secondary' : 'primary'"\r
+        (click)="copyUrlsToClipboard()"\r
+        icon="pi pi-copy"\r
+      />\r
+    }\r
+    </div>\r
+  }\r
+\r
+  @if (hasCopiedUrls) {\r
+    <div class="surface-0 border-1 border-round border-200 p-3">\r
+    <p class="mt-0">Manually <strong>retrieve page visits</strong> from the UPD:</p>\r
+    <ol>\r
+      <li>Visit <a href="https://cra-arc.alpha.canada.ca/en/custom-reports/create">Custom reports page of the UPD</a></li>\r
+      <li>Select data granularity: <strong>None</strong></li>\r
+      <li>Select a date range > Preset: <strong>Last year</strong></li>\r
+      <li>Select pages > Bulk Pages: Paste the copied URLs into text field</li>\r
+      <li>Select metrics: check <strong>Visits</strong> box</li>\r
+      <li>Scroll down and select <strong>Generate report</strong></li>\r
+      <li>Export the report as a CSV and save it</li>\r
+    </ol>\r
+    <p-button\r
+      label="Next"\r
+      [severity]="updInstructionsComplete ? 'secondary' : 'primary'"\r
+      (click)="proceedToCsvUpload()"\r
+    />\r
+    </div>\r
+  }\r
+\r
+  @if (showCsvUpload) {\r
+    <div class="surface-0 border-1 border-round border-200 p-3">\r
+    <p class="mt-0"><strong>Upload your saved CSV</strong> file. This will:</p>\r
+    <ul>\r
+      <li>Display page visits in IA structure</li>\r
+      <li>Create a new tree: you can drag pages to design</li>\r
+      <li>Suggest pages for <strong>Most requested</strong> and <strong>Doormats</strong> based on visits and levels</li>\r
+    </ul>\r
+    <div class="flex justify-content-start">\r
+      <p-fileUpload\r
+        id="topic-ia-csv-upload"\r
+        name="topicIaCsv"\r
+        accept=".csv"\r
+        mode="basic"\r
+        [auto]="true"\r
+        [customUpload]="true"\r
+          (uploadHandler)="onCsvUpload($event)"\r
+          [chooseLabel]="'page.topicIa.csvUpload.choose' | translate"\r
+          chooseIcon="pi pi-upload"\r
+          [chooseStyleClass]="csvUploaded ? 'p-button-secondary' : 'p-button-primary'"\r
+          outlined\r
+        />\r
+    </div>\r
+    </div>\r
+  }\r
+</div>\r
+\r
+<!--Breadcrumb-->\r
+@if (breadcrumb.length > 0) {\r
+  <h2>Breadcrumb</h2>\r
+  <div class="flex flex-row align-items-center gap-3">\r
+    <p-breadcrumb class="max-w-full" styleClass="pl-1" [model]="breadcrumb" />\r
+    @if (urlFound === true) {\r
+      <span class="flex align-items-center gap-2 text-green-400">\r
+        <i class="pi pi-check-circle"></i>Link found on parent page\r
+      </span>\r
+    }\r
+    @if (urlFound === false) {\r
+      <span class="flex align-items-center gap-2 text-red-400">\r
+        <i class="pi pi-times-circle"></i>IA Orphan\r
+      </span>\r
+    }\r
+  </div>\r
+}\r
+\r
+<!--IA Tree-->\r
+\r
+@if (iaChart) {\r
+  <div class="grid">\r
+    <div class="col-12" [class.md:col-6]="visitsByUrl.size > 0">\r
+      <p-contextMenu #cm [model]="options"></p-contextMenu>\r
+      <h2>Current IA structure tree</h2>\r
+      <p-tree\r
+        [value]="iaChart"\r
+        styleClass="w-full md:w-[30rem]"\r
+        [selectionMode]="selectable ? 'multiple' : null"\r
+        [(selection)]="selectedNode"\r
+        [draggableNodes]="draggable"\r
+        [droppableNodes]="true"\r
+        draggableScope="self"\r
+        droppableScope="self"\r
+        (onNodeDrop)="handleNodeDrop($event)"\r
+        [validateDrop]="true"\r
+        [contextMenu]="cm"\r
+        (onNodeContextMenuSelect)="onNodeContextMenu($event)"\r
+      >\r
+        <ng-template pTemplate="default" let-node>\r
+          <div class="flex flex-row align-items-center gap-2 w-full">\r
+            @if (node.children.length > 0 && !draggable && !node.data.editing) {\r
+              <i class="pi pi-folder"></i>\r
+            }\r
+            @if (\r
+              (node.children.length === 0 || !node.children) &&\r
+              !draggable &&\r
+              !node.data.editing\r
+            ) {\r
+              <i class="pi pi-file"></i>\r
+            }\r
+            @if (draggable) {\r
+              <i class="pi pi-arrows-alt cursor-move text-color-secondary"></i>\r
+            }\r
+            @if (node.data.editing) {\r
+              <i class="pi pi-pencil text-color-secondary"></i>\r
+            }\r
+            @if (!node.data.editing) {\r
+              <a\r
+                [href]="node.data.url"\r
+                target="_blank"\r
+                (click)="onNodeClick($event)"\r
+                [innerHTML]="node.label"\r
+                class="ia-label"\r
+              ></a>\r
+            }\r
+            @if (node.data.editing === 'label') {\r
+              <p-inputgroup>\r
+                <input\r
+                  type="text"\r
+                  pInputText\r
+                  [(ngModel)]="node.label"\r
+                  pSize="small"\r
+                  class="ia-label"\r
+                  (keydown)="onInputKeydown($event)"\r
+                />\r
+                <p-inputgroup-addon\r
+                  ><p-button\r
+                    icon="pi pi-check"\r
+                    severity="secondary"\r
+                    size="small"\r
+                    (onClick)="saveNode()"\r
+                /></p-inputgroup-addon>\r
+              </p-inputgroup>\r
+            }\r
+            @if (node.data.editing === 'link') {\r
+              <p-inputgroup>\r
+                <input\r
+                  type="text"\r
+                  pInputText\r
+                  [(ngModel)]="node.data.url"\r
+                  pSize="small"\r
+                  class="ia-label"\r
+                  (keydown)="onInputKeydown($event)"\r
+                />\r
+                <p-inputgroup-addon\r
+                  ><p-button\r
+                    icon="pi pi-check"\r
+                    severity="secondary"\r
+                    size="small"\r
+                    (onClick)="saveNode()"\r
+                /></p-inputgroup-addon>\r
+              </p-inputgroup>\r
+            }\r
+          </div>\r
+        </ng-template>\r
+      </p-tree>\r
+    </div>\r
+    @if (visitsByUrl.size > 0) {\r
+      <div class="col-12 md:col-6">\r
+        <p-contextMenu #cmTopic [model]="options"></p-contextMenu>\r
+        <h2>Suggested topic page sections</h2>\r
+        <p-tree\r
+          [value]="topicPageTree"\r
+          styleClass="w-full md:w-[30rem]"\r
+          [selectionMode]="selectable ? 'multiple' : null"\r
+          [(selection)]="selectedNode"\r
+          [draggableNodes]="true"\r
+          [droppableNodes]="true"\r
+          draggableScope="topicPageTree"\r
+          droppableScope="topicPageTree"\r
+          [validateDrop]="true"\r
+          (onNodeDrop)="onTopicPageNodeDrop($event)"\r
+          [contextMenu]="cmTopic"\r
+          (onNodeContextMenuSelect)="onNodeContextMenu($event, 'topic')"\r
+        >\r
+          <ng-template pTemplate="default" let-node>\r
+            <div class="flex flex-row align-items-center gap-2 w-full">\r
+              @if (\r
+                node.children?.length &&\r
+                !draggable &&\r
+                !node.data?.isCategory &&\r
+                !node.data?.editing\r
+              ) {\r
+                <i class="pi pi-folder"></i>\r
+              }\r
+              @if (\r
+                !node.children?.length &&\r
+                !draggable &&\r
+                !node.data?.isCategory &&\r
+                !node.data?.editing\r
+              ) {\r
+                <i class="pi pi-file"></i>\r
+              }\r
+              @if (draggable && !node.data?.isCategory && !node.data?.editing) {\r
+                <i class="pi pi-arrows-alt cursor-move text-color-secondary"></i>\r
+              }\r
+              @if (node.data?.editing) {\r
+                <i class="pi pi-pencil text-color-secondary"></i>\r
+              }\r
+              @if (!node.data?.editing) {\r
+                @if (node.data?.url) {\r
+                  <a\r
+                    [href]="node.data.url"\r
+                    target="_blank"\r
+                    (click)="onNodeClick($event)"\r
+                    [innerHTML]="node.label"\r
+                    class="ia-label"\r
+                  ></a>\r
+                } @else {\r
+                  <span\r
+                    [innerHTML]="node.label"\r
+                    class="ia-label"\r
+                    [class.font-bold]="node.data?.isCategory"\r
+                  ></span>\r
+                }\r
+              }\r
+              @if (node.data?.editing === 'label') {\r
+                <p-inputgroup>\r
+                  <input\r
+                    type="text"\r
+                    pInputText\r
+                    [(ngModel)]="node.label"\r
+                    pSize="small"\r
+                    class="ia-label"\r
+                    (keydown)="onInputKeydown($event)"\r
+                  />\r
+                  <p-inputgroup-addon\r
+                    ><p-button\r
+                      icon="pi pi-check"\r
+                      severity="secondary"\r
+                      size="small"\r
+                      (onClick)="saveNode()"\r
+                  /></p-inputgroup-addon>\r
+                </p-inputgroup>\r
+              }\r
+              @if (node.data?.editing === 'link') {\r
+                <p-inputgroup>\r
+                  <input\r
+                    type="text"\r
+                    pInputText\r
+                    [(ngModel)]="node.data.url"\r
+                    pSize="small"\r
+                    class="ia-label"\r
+                    (keydown)="onInputKeydown($event)"\r
+                  />\r
+                  <p-inputgroup-addon\r
+                    ><p-button\r
+                      icon="pi pi-check"\r
+                      severity="secondary"\r
+                      size="small"\r
+                      (onClick)="saveNode()"\r
+                  /></p-inputgroup-addon>\r
+                </p-inputgroup>\r
+              }\r
+            </div>\r
+          </ng-template>\r
+        </p-tree>\r
+      </div>\r
+    }\r
+  </div>\r
+}\r
+\r
+<!--IA Chart-->\r
+@if (iaChart) {\r
+  <h2>IA structure</h2>\r
+  @if (iaChart.length > 0) {\r
+    <p-button\r
+      label="Maximize IA chart"\r
+      severity="secondary"\r
+      (click)="maximize(chartContainer)"\r
+      icon="pi pi-window-maximize"\r
+      styleClass="mt-1 mb-3"\r
+    />\r
+  }\r
+  @if (iaChart.length === 0) {\r
+    <p>No child pages found.</p>\r
+  }\r
+  @if (iaChart.length > 0) {\r
+    <div\r
+      #chartContainer\r
+      class="overflow-auto max-h-75vh surface-ground surface-border border-1 py-3 mb-3 ia-chart-container"\r
+    >\r
+      <p-organization-chart [value]="iaChart">\r
+        <ng-template let-node pTemplate="default">\r
+          <p>\r
+            <a\r
+              [href]="node.data.url"\r
+              target="_blank"\r
+              (click)="onNodeClick($event)"\r
+              [innerHTML]="node.label"\r
+              class="ia-label"\r
+            ></a>\r
+          </p>\r
+        </ng-template>\r
+      </p-organization-chart>\r
+    </div>\r
+  }\r
+}\r
+\r
+<!--Broken Links-->\r
+@if (iaChart) {\r
+  <h2>Broken links</h2>\r
+  @if (brokenLinks.length === 0) {\r
+    <p>\r
+      No broken links found on this page\r
+      @if (iaChart[0].children?.length) {\r
+        <span> or on any detected child pages</span>\r
+      }\r
+      .\r
+    </p>\r
+  }\r
+  @if (brokenLinks.length > 0) {\r
+    <p-table\r
+      [value]="brokenLinks"\r
+      size="small"\r
+      stripedRows\r
+      [tableStyle]="{ 'min-width': '50rem' }"\r
+    >\r
+      <ng-template #header>\r
+        <tr>\r
+          <th>Parent page</th>\r
+          <th>Broken link</th>\r
+          <th>Status</th>\r
+        </tr>\r
+      </ng-template>\r
+      <ng-template #body let-rowData>\r
+        <tr>\r
+          <td>{{ rowData.parentUrl }}</td>\r
+          <td>{{ rowData.url }}</td>\r
+          <td>{{ rowData.status }}</td>\r
+        </tr>\r
+      </ng-template>\r
+    </p-table>\r
+  }\r
+}\r
 `, styles: ["/* angular:styles/component:css;f023c326fff2882959b5b1251af66b8449d673c76ad30dc90b38e91d13fe7f5c;C:/my-working-files/GitHub/design-assistant/src/app/views/page-assistant/components/problems/component-guidance/topic-page/topic-page-ia.component.ts */\n.ia-label {\n  white-space: pre-line;\n  display: inline-block;\n  color: var(--text-color) !important;\n  text-decoration: none !important;\n}\n::ng-deep .p-tree li[class*=text-white] > .p-tree-node-content .ia-label {\n  color: #ffffff !important;\n}\n::ng-deep .p-tree li[class*=text-black] > .p-tree-node-content .ia-label {\n  color: #000000 !important;\n}\n::ng-deep .p-tree .p-tree-node-content:hover {\n  background-color: unset !important;\n}\n:host ::ng-deep .topic-ia-steps .topic-ia-step-list {\n  display: grid;\n  grid-template-columns: repeat(4, minmax(0, 1fr));\n  gap: 0.5rem;\n  margin: 0;\n}\n@media (max-width: 1500px) {\n  :host ::ng-deep .topic-ia-steps .topic-ia-step-list {\n    grid-template-columns: minmax(0, 1fr);\n    gap: 0.1rem;\n  }\n}\n@media (max-width: 1500px) {\n  :host ::ng-deep .topic-ia-steps .p-step-header {\n    padding: 0;\n  }\n  :host ::ng-deep .topic-ia-steps .p-stepper-separator {\n    margin: 0;\n  }\n}\n:host ::ng-deep .topic-ia-steps {\n  margin-bottom: 0;\n}\n:host ::ng-deep .topic-ia-steps .p-step-title {\n  font-weight: 600;\n  font-size: 1.02rem;\n}\n:host ::ng-deep .topic-ia-steps .topic-ia-step-list .p-step {\n  justify-content: flex-start;\n  text-align: left;\n  width: 100%;\n}\n:host ::ng-deep .topic-ia-panels {\n  display: grid;\n  grid-template-columns: repeat(4, minmax(0, 1fr));\n  gap: 1rem;\n  margin-top: 0.75rem;\n}\n@media (max-width: 1500px) {\n  :host ::ng-deep .topic-ia-panels {\n    grid-template-columns: repeat(2, minmax(0, 1fr));\n  }\n}\n@media (max-width: 1000px) {\n  :host ::ng-deep .topic-ia-panels {\n    grid-template-columns: minmax(0, 1fr);\n  }\n}\n::ng-deep .topic-ia-badge {\n  display: inline-block;\n  margin-left: 0.5rem;\n  padding: 0.1rem 0.45rem;\n  border-radius: 9999px;\n  font-size: 0.875rem;\n  font-weight: 600;\n  border: 1px solid #d1d5db;\n  background: #e5e7eb;\n  color: #374151;\n  white-space: nowrap;\n}\n:host-context(.dark-mode) ::ng-deep .topic-ia-badge {\n  border-color: #4b5563;\n  background: #374151;\n  color: #f9fafb;\n}\n::ng-deep .ia-chart-container .p-organizationchart-node a {\n  color: var(--text-color) !important;\n  text-decoration: none !important;\n}\n::ng-deep .ia-chart-container .p-organizationchart-node.text-white a {\n  color: #ffffff !important;\n}\n::ng-deep .ia-chart-container .p-organizationchart-node.text-black a {\n  color: #000000 !important;\n}\n/*# sourceMappingURL=topic-page-ia.component.css.map */\n"] }]
   }], () => [], { chartContainer: [{
     type: ViewChild,
@@ -44604,7 +46472,7 @@ var TopicPageIaComponent = class _TopicPageIaComponent {
   }] });
 })();
 (() => {
-  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(TopicPageIaComponent, { className: "TopicPageIaComponent", filePath: "app/views/page-assistant/components/problems/component-guidance/topic-page/topic-page-ia.component.ts", lineNumber: 196 });
+  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(TopicPageIaComponent, { className: "TopicPageIaComponent", filePath: "app/views/page-assistant/components/problems/component-guidance/topic-page/topic-page-ia.component.ts", lineNumber: 197 });
 })();
 
 // src/app/views/page-assistant/components/problems/component-guidance/topic-page/topic-ia-json.component.ts
@@ -44722,6 +46590,8 @@ function TopicIaJsonComponent_Conditional_10_Conditional_3_Conditional_0_Templat
     \u0275\u0275twoWayProperty("ngModel", ctx_r0.callTroubleInput);
     \u0275\u0275advance(2);
     \u0275\u0275property("severity", ctx_r0.commObjectivesInput.trim() ? "primary" : "secondary")("loading", ctx_r0.isAiLoading)("disabled", !ctx_r0.commObjectivesInput.trim() || ctx_r0.isAiLoading);
+    \u0275\u0275advance(2);
+    \u0275\u0275property("loading", ctx_r0.isGeneratingTopicHtml)("disabled", ctx_r0.isGeneratingTopicHtml);
   }
 }
 function TopicIaJsonComponent_Conditional_10_Conditional_3_ng_template_5_Conditional_1_Template(rf, ctx) {
@@ -44867,7 +46737,7 @@ function TopicIaJsonComponent_Conditional_10_Conditional_3_ng_template_5_Templat
 function TopicIaJsonComponent_Conditional_10_Conditional_3_Template(rf, ctx) {
   if (rf & 1) {
     const _r2 = \u0275\u0275getCurrentView();
-    \u0275\u0275template(0, TopicIaJsonComponent_Conditional_10_Conditional_3_Conditional_0_Template, 21, 6, "div", 18);
+    \u0275\u0275template(0, TopicIaJsonComponent_Conditional_10_Conditional_3_Conditional_0_Template, 21, 8, "div", 18);
     \u0275\u0275elementStart(1, "div", 19);
     \u0275\u0275element(2, "p-contextMenu", 20, 0);
     \u0275\u0275elementStart(4, "p-tree", 21);
@@ -45080,6 +46950,8 @@ var TopicIaJsonComponent = class _TopicIaJsonComponent {
   openRouter = inject(OpenRouterService);
   urlDataService = inject(UrlDataService);
   snippetService = inject(SnippetService);
+  topicDoormatRewriteOrchestrator = inject(TopicDoormatRewriteOrchestratorService);
+  topicPageSectionExtractor = inject(TopicPageSectionExtractorService);
   production = environment.production;
   activeStep = 1;
   constructor() {
@@ -45115,6 +46987,7 @@ var TopicIaJsonComponent = class _TopicIaJsonComponent {
   step1Complete = false;
   topicPageTree = [];
   topicPageChartTree = [];
+  isGeneratingTopicHtml = false;
   visitsByUrl = /* @__PURE__ */ new Map();
   visitsByPath = /* @__PURE__ */ new Map();
   visitsLoaded = false;
@@ -45808,53 +47681,19 @@ var TopicIaJsonComponent = class _TopicIaJsonComponent {
   }
   updateTopicPageSectionMap() {
     const html = this.uploadState.getUploadData()?.originalHtml || "";
-    this.nonTopicPageLinks = /* @__PURE__ */ new Map();
     if (!html) {
       this.isTopicPage = false;
       this.topicPageSections = /* @__PURE__ */ new Map();
+      this.nonTopicPageLinks = /* @__PURE__ */ new Map();
       return;
     }
-    const doc = new DOMParser().parseFromString(html, "text/html");
-    const hasDoormats = !!doc.querySelector(".gc-srvinfo");
-    this.isTopicPage = hasDoormats;
-    if (!hasDoormats) {
-      this.topicPageSections = /* @__PURE__ */ new Map();
-      this.nonTopicPageLinks = this.collectNonTopicPageLinks(doc);
-      return;
-    }
-    const map = /* @__PURE__ */ new Map();
-    const baseUrl = this.originalUrl || "";
-    const sections = [
-      { key: "most", selector: ".gc-most-requested" },
-      { key: "doormats", selector: ".gc-srvinfo" },
-      { key: "focus", selector: "" },
-      { key: "feature", selector: ".gc-features" }
-    ];
-    for (const section of sections) {
-      const container = section.key === "focus" ? this.findFocusOnContainer(doc) : section.key === "feature" ? this.findFeaturesContainer(doc) : doc.querySelector(section.selector);
-      if (!container)
-        continue;
-      const links = container.querySelectorAll("a[href]");
-      links.forEach((link) => {
-        if (section.key === "feature" && this.isSocialMediaLink(link))
-          return;
-        const href = link.getAttribute("href");
-        if (!href)
-          return;
-        const text = this.extractTopicSectionLinkLabel(link, section.key);
-        const normalized = this.normalizeUrl(this.resolveUrl(href, baseUrl));
-        if (this.isExcludedUrl(normalized))
-          return;
-        if (normalized) {
-          map.set(normalized, {
-            section: section.key,
-            label: text || href,
-            description: section.key === "doormats" ? this.extractDoormatDescription(link) : section.key === "feature" ? this.extractFeatureDescription(link) : void 0
-          });
-        }
-      });
-    }
-    this.topicPageSections = map;
+    const result = this.topicPageSectionExtractor.extract(html, {
+      baseUrl: this.originalUrl || "",
+      excludedUrlFragments: this.topicPageExcludedUrlFragments
+    });
+    this.isTopicPage = result.isTopicPage;
+    this.topicPageSections = result.sections;
+    this.nonTopicPageLinks = result.nonTopicPageLinks;
   }
   findFeaturesContainer(doc) {
     const gcFeatures = doc.querySelector("section.gc-features");
@@ -46658,6 +48497,8 @@ var TopicIaJsonComponent = class _TopicIaJsonComponent {
   }
   generateTopicHtml() {
     return __async(this, null, function* () {
+      if (this.isGeneratingTopicHtml)
+        return;
       if (!this.topicPageTree?.length) {
         this.messageService.add({
           severity: "warn",
@@ -46667,95 +48508,156 @@ var TopicIaJsonComponent = class _TopicIaJsonComponent {
         });
         return;
       }
-      const template = yield this.loadTopicTemplate();
-      if (!template)
-        return;
-      const root = this.topicPageTree[0];
-      const categories = root?.children ?? [];
-      const mostRequested = this.getCategoryByLabel(categories, "Most requested");
-      const doormats = this.getCategoryByLabel(categories, "Doormats");
-      const focus = this.getCategoryByLabel(categories, "Focus on");
-      const features = this.getCategoryByLabel(categories, "Features");
-      const mostRequestedItems = this.buildMostRequestedItems(mostRequested?.children ?? []);
-      const mostRequestedSection = this.buildMostRequestedSection(mostRequestedItems);
-      const servicesItems = this.buildServicesItems(doormats?.children ?? []);
-      const focusItems = this.buildFocusItems(focus?.children ?? []);
-      const hasFocus = focusItems.trim().length > 0;
-      const focusSectionStart = hasFocus ? "" : TOPIC_PAGE_SNIPPETS.focusSectionStartComment;
-      const focusSectionEnd = hasFocus ? "" : TOPIC_PAGE_SNIPPETS.focusSectionEndComment;
-      const originalHtml = this.uploadState.getUploadData()?.originalHtml ?? "";
-      const featureImageMap = this.buildFeatureImageMap(originalHtml);
-      const featureNodesAll = (features?.children ?? []).filter((node) => !node?.data?.isCategory);
-      if (featureNodesAll.length > 3) {
-        this.messageService.add({
-          severity: "warn",
-          summary: "Feature limit reached",
-          detail: "First 3 (max) features are used",
-          life: 4e3
-        });
-      }
-      const featureNodes = featureNodesAll.slice(0, 3);
-      const featureCount = featureNodes.length;
-      const allowSocialBlock = this.isHighLevelTopicPageFromBreadcrumb(this.breadcrumb);
-      const allowContributorBlock = this.shouldSuggestContributorBlock(this.breadcrumb);
-      const socialMediaBlock = allowSocialBlock ? this.buildSocialMediaBlock() : "";
-      const contributorBlock = allowContributorBlock ? this.buildContributorBlock() : "";
-      const hasSocialBlock = socialMediaBlock.trim().length > 0;
-      const hasContributorBlock = contributorBlock.trim().length > 0;
-      const inlineSocialWithFeatures = featureCount === 2 && !hasContributorBlock && hasSocialBlock;
-      let featuresSection = "";
-      let featureRowStart = "";
-      let featureRowEnd = "";
-      let socialColStart = "";
-      let socialColEnd = "";
-      let socialBlockPlacement = "";
-      let contributorBlockPlacement = "";
-      if (featureCount === 0) {
-        contributorBlockPlacement = this.buildTopicFooterRow(contributorBlock, socialMediaBlock);
-      } else if (featureCount === 1) {
-        const featureItem = this.buildFeatureItem(featureNodes, featureImageMap);
-        featuresSection = this.buildFeaturesSectionFullWidth(featureItem);
-        contributorBlockPlacement = this.buildTopicFooterRow(contributorBlock, socialMediaBlock);
-      } else if (featureCount === 2) {
-        featuresSection = this.buildFeaturesSectionTwo(featureNodes, featureImageMap, inlineSocialWithFeatures ? socialMediaBlock : "");
-        contributorBlockPlacement = inlineSocialWithFeatures ? "" : this.buildTopicFooterRow(contributorBlock, socialMediaBlock);
-      } else if (featureCount >= 3) {
-        featuresSection = this.buildFeaturesSectionThree(featureNodes, featureImageMap);
-        contributorBlockPlacement = this.buildTopicFooterRow(contributorBlock, socialMediaBlock);
-      }
-      const titles = this.extractPageTitles(originalHtml);
-      const sectionTitleBlock = titles.sectionTitle ? this.snippetService.applySnippet(TOPIC_PAGE_SNIPPETS.sectionTitleBlock, {
-        sectionTitle: this.escapeHtml(titles.sectionTitle)
-      }) : "";
-      const topicTitle = this.cleanTopicTitle(titles.topicTitle || this.getCurrentPageLabel());
-      const rescueLinkHtml = this.extractRescueLinkHtml(originalHtml);
-      const alertsBlockHtml = this.extractAlertsHtml(originalHtml);
-      const hasAlerts = alertsBlockHtml.trim().length > 0;
-      const heroImageBlock = hasAlerts ? "" : TOPIC_PAGE_SNIPPETS.heroImageBlock;
-      const heroTextColClass = hasAlerts ? "col-md-12" : "col-md-6";
-      const html = template.replace("{{section_title_block}}", sectionTitleBlock).replace("{{topic_title}}", this.escapeHtml(topicTitle)).replace("{{rescue_link}}", rescueLinkHtml).replace("{{alerts_block}}", alertsBlockHtml).replace("{{hero_image_block}}", heroImageBlock).replace("{{hero_text_col_class}}", heroTextColClass).replace("{{most_requested_section}}", mostRequestedSection).replace("{{services_items}}", servicesItems).replace("{{focus_items}}", focusItems).replace("{{focus_section_start}}", focusSectionStart).replace("{{focus_section_end}}", focusSectionEnd).replace("{{features_section}}", featuresSection).replace("{{feature_row_start}}", featureRowStart).replace("{{feature_row_end}}", featureRowEnd).replace("{{social_col_start}}", socialColStart).replace("{{social_col_end}}", socialColEnd).replace("{{social_block}}", socialBlockPlacement).replace("{{contributor_block}}", contributorBlockPlacement);
-      const formattedHtml = yield this.urlDataService.formatHtml(html, "ai");
-      this.uploadState.savePreviousUploadData();
-      this.uploadState.mergeModifiedData({
-        modifiedUrl: "Generated topic template",
-        modifiedHtml: formattedHtml
-      });
+      this.isGeneratingTopicHtml = true;
       try {
-        yield navigator.clipboard.writeText(formattedHtml);
-        this.messageService.add({
-          severity: "success",
-          summary: "Topic HTML generated",
-          detail: "HTML copied to clipboard and applied to comparison view.",
-          life: 4e3
+        const template = yield this.loadTopicTemplate();
+        if (!template)
+          return;
+        const root = this.topicPageTree[0];
+        const categories = root?.children ?? [];
+        const mostRequested = this.getCategoryByLabel(categories, "Most requested");
+        const doormats = this.getCategoryByLabel(categories, "Doormats");
+        const focus = this.getCategoryByLabel(categories, "Focus on");
+        const features = this.getCategoryByLabel(categories, "Features");
+        const mostRequestedItems = this.buildMostRequestedItems(mostRequested?.children ?? []);
+        const mostRequestedSection = this.buildMostRequestedSection(mostRequestedItems);
+        const servicesItems = this.buildServicesItems(doormats?.children ?? []);
+        const focusItems = this.buildFocusItems(focus?.children ?? []);
+        const hasFocus = focusItems.trim().length > 0;
+        const focusSectionStart = hasFocus ? "" : TOPIC_PAGE_SNIPPETS.focusSectionStartComment;
+        const focusSectionEnd = hasFocus ? "" : TOPIC_PAGE_SNIPPETS.focusSectionEndComment;
+        const originalHtml = this.uploadState.getUploadData()?.originalHtml ?? "";
+        const featureImageMap = this.buildFeatureImageMap(originalHtml);
+        const featureNodesAll = (features?.children ?? []).filter((node) => !node?.data?.isCategory);
+        if (featureNodesAll.length > 3) {
+          this.messageService.add({
+            severity: "warn",
+            summary: "Feature limit reached",
+            detail: "First 3 (max) features are used",
+            life: 4e3
+          });
+        }
+        const featureNodes = featureNodesAll.slice(0, 3);
+        const featureCount = featureNodes.length;
+        const allowSocialBlock = this.isHighLevelTopicPageFromBreadcrumb(this.breadcrumb);
+        const allowContributorBlock = this.shouldSuggestContributorBlock(this.breadcrumb);
+        const socialMediaBlock = allowSocialBlock ? this.buildSocialMediaBlock() : "";
+        const contributorBlock = allowContributorBlock ? this.buildContributorBlock() : "";
+        const hasSocialBlock = socialMediaBlock.trim().length > 0;
+        const hasContributorBlock = contributorBlock.trim().length > 0;
+        const inlineSocialWithFeatures = featureCount === 2 && !hasContributorBlock && hasSocialBlock;
+        let featuresSection = "";
+        let featureRowStart = "";
+        let featureRowEnd = "";
+        let socialColStart = "";
+        let socialColEnd = "";
+        let socialBlockPlacement = "";
+        let contributorBlockPlacement = "";
+        if (featureCount === 0) {
+          contributorBlockPlacement = this.buildTopicFooterRow(contributorBlock, socialMediaBlock);
+        } else if (featureCount === 1) {
+          const featureItem = this.buildFeatureItem(featureNodes, featureImageMap);
+          featuresSection = this.buildFeaturesSectionFullWidth(featureItem);
+          contributorBlockPlacement = this.buildTopicFooterRow(contributorBlock, socialMediaBlock);
+        } else if (featureCount === 2) {
+          featuresSection = this.buildFeaturesSectionTwo(featureNodes, featureImageMap, inlineSocialWithFeatures ? socialMediaBlock : "");
+          contributorBlockPlacement = inlineSocialWithFeatures ? "" : this.buildTopicFooterRow(contributorBlock, socialMediaBlock);
+        } else if (featureCount >= 3) {
+          featuresSection = this.buildFeaturesSectionThree(featureNodes, featureImageMap);
+          contributorBlockPlacement = this.buildTopicFooterRow(contributorBlock, socialMediaBlock);
+        }
+        const originalTopicSections = this.topicPageSectionExtractor.extract(originalHtml, {
+          baseUrl: this.originalUrl || "",
+          excludedUrlFragments: this.topicPageExcludedUrlFragments
         });
-      } catch (err) {
-        console.error("Clipboard write failed:", err);
-        this.messageService.add({
-          severity: "warn",
-          summary: "Generated",
-          detail: "HTML applied to comparison view but could not be copied to clipboard.",
-          life: 4e3
+        const topicIntroHtml = originalTopicSections.introHtml ? originalTopicSections.introHtml : this.buildGeneratedTopicIntroHtml([
+          ...doormats?.children ?? [],
+          ...focus?.children ?? [],
+          ...features?.children ?? []
+        ]);
+        const topicHeadingBlock = this.buildTopicHeadingBlock(originalHtml);
+        const rescueLinkHtml = this.extractRescueLinkHtml(originalHtml);
+        const alertsBlockHtml = this.extractAlertsHtml(originalHtml);
+        const hasAlerts = alertsBlockHtml.trim().length > 0;
+        const heroImageBlock = hasAlerts ? "" : TOPIC_PAGE_SNIPPETS.heroImageBlock;
+        const heroTextColClass = hasAlerts ? "col-md-12" : "col-md-6";
+        const html = template.replace("{{topic_heading_block}}", topicHeadingBlock).replace("{{rescue_link}}", rescueLinkHtml).replace("{{alerts_block}}", alertsBlockHtml).replace("{{topic_intro}}", topicIntroHtml).replace("{{hero_image_block}}", heroImageBlock).replace("{{hero_text_col_class}}", heroTextColClass).replace("{{most_requested_section}}", mostRequestedSection).replace("{{pre_doormat_content}}", originalTopicSections.preDoormatHtml).replace("{{services_items}}", servicesItems).replace("{{focus_items}}", focusItems).replace("{{focus_section_start}}", focusSectionStart).replace("{{focus_section_end}}", focusSectionEnd).replace("{{features_section}}", featuresSection).replace("{{feature_row_start}}", featureRowStart).replace("{{feature_row_end}}", featureRowEnd).replace("{{social_col_start}}", socialColStart).replace("{{social_col_end}}", socialColEnd).replace("{{social_block}}", socialBlockPlacement).replace("{{contributor_block}}", contributorBlockPlacement);
+        const formattedHtml = yield this.urlDataService.formatHtml(html, "ai");
+        let finalHtml = formattedHtml;
+        try {
+          const featureResult = yield this.topicDoormatRewriteOrchestrator.draftGeneratedTopicFeaturesFromDestinationContext(finalHtml, this.uploadState.getSelectedAiModel());
+          if (featureResult?.rewrittenHtml) {
+            finalHtml = featureResult.rewrittenHtml;
+          }
+        } catch (err) {
+          console.error("Generated topic feature drafting failed:", err);
+          this.messageService.add({
+            severity: "warn",
+            summary: "Feature drafting failed",
+            detail: "Topic HTML was generated, but generated feature descriptions could not be drafted from destination context.",
+            life: 6e3
+          });
+        }
+        let doormatRewriteApplied = false;
+        let doormatAnalysisOpened = false;
+        if (originalTopicSections.isTopicPage) {
+          try {
+            const doormatResult = yield this.topicDoormatRewriteOrchestrator.analyzeAndRewriteGeneratedTopicHtml(finalHtml, this.uploadState.getSelectedAiModel());
+            if (doormatResult?.rewrittenHtml) {
+              finalHtml = doormatResult.rewrittenHtml;
+              doormatRewriteApplied = true;
+              doormatAnalysisOpened = true;
+            }
+          } catch (err) {
+            console.error("Generated topic doormat analysis/rewrite failed:", err);
+            this.messageService.add({
+              severity: "warn",
+              summary: "Doormat rewrite failed",
+              detail: "Topic HTML was generated, but doormat analysis or rewrite could not be completed.",
+              life: 6e3
+            });
+          }
+        } else {
+          try {
+            const doormatResult = yield this.topicDoormatRewriteOrchestrator.draftGeneratedTopicDoormatsFromDestinationContext(finalHtml, this.uploadState.getSelectedAiModel());
+            if (doormatResult?.rewrittenHtml) {
+              finalHtml = yield this.urlDataService.formatHtml(this.applyGeneratedTopicIntroFromDoormats(doormatResult.rewrittenHtml, originalTopicSections.introHtml), "ai");
+              doormatRewriteApplied = true;
+            }
+          } catch (err) {
+            console.error("Generated topic doormat drafting failed:", err);
+            this.messageService.add({
+              severity: "warn",
+              summary: "Doormat drafting failed",
+              detail: "Topic HTML was generated, but generated doormat descriptions could not be drafted from destination context.",
+              life: 6e3
+            });
+          }
+        }
+        this.uploadState.savePreviousUploadData();
+        this.uploadState.mergeModifiedData({
+          modifiedUrl: "Generated topic template",
+          modifiedHtml: finalHtml
         });
+        try {
+          yield navigator.clipboard.writeText(finalHtml);
+          this.messageService.add({
+            severity: "success",
+            summary: "Topic HTML generated",
+            detail: doormatRewriteApplied ? doormatAnalysisOpened ? "HTML copied to clipboard and applied to comparison view. Topic doormat analysis opened and rewrites applied." : "HTML copied to clipboard and applied to comparison view. Doormats and intro drafted from destination context." : "HTML copied to clipboard and applied to comparison view.",
+            life: 5e3
+          });
+        } catch (err) {
+          console.error("Clipboard write failed:", err);
+          this.messageService.add({
+            severity: "warn",
+            summary: "Generated",
+            detail: "HTML applied to comparison view but could not be copied to clipboard.",
+            life: 4e3
+          });
+        }
+      } finally {
+        this.isGeneratingTopicHtml = false;
       }
     });
   }
@@ -46856,9 +48758,114 @@ var TopicIaJsonComponent = class _TopicIaJsonComponent {
     const description = typeof node?.data?.originalDescription === "string" ? node.data.originalDescription.trim() : "";
     return this.escapeHtml(description || "[***Use action verbs, or simply list keywords to summarize the information or tasks that can be accomplished on the page it links to***]");
   }
+  buildGeneratedTopicIntroHtml(nodes) {
+    const contextLabels = this.getTopicIntroContextLabels(nodes);
+    const topicTitle = this.cleanTopicTitle(this.getCurrentPageLabel());
+    const topicPhrase = topicTitle ? ` about ${this.escapeHtml(topicTitle)}` : "";
+    const contextPhrase = contextLabels.length ? `, including ${this.formatInlineList(contextLabels)}` : "";
+    return `<p>Find information and services${topicPhrase}${contextPhrase}.</p>`;
+  }
+  applyGeneratedTopicIntroFromDoormats(html, preservedIntroHtml = "") {
+    const doc = new DOMParser().parseFromString(html, "text/html");
+    const introParagraph = doc.body.querySelector("div.gc-srvinfo p");
+    if (!introParagraph)
+      return html;
+    if (preservedIntroHtml.trim()) {
+      introParagraph.outerHTML = preservedIntroHtml;
+      return doc.body.innerHTML;
+    }
+    const contextLabels = this.getDraftedDoormatIntroContextLabels(doc);
+    const topicTitle = this.cleanTopicTitle(doc.body.querySelector("h1")?.textContent || this.getCurrentPageLabel());
+    const topicPhrase = topicTitle ? ` about ${this.escapeHtml(topicTitle)}` : "";
+    const contextPhrase = contextLabels.length ? `, including ${this.formatInlineList(contextLabels)}` : "";
+    introParagraph.outerHTML = `<p>Find information and services${topicPhrase}${contextPhrase}.</p>`;
+    return doc.body.innerHTML;
+  }
+  getDraftedDoormatIntroContextLabels(doc) {
+    const values = Array.from(doc.body.querySelectorAll("section.gc-srvinfo h2 a[href], section.gc-srvinfo h3 a[href]")).flatMap((link) => {
+      const item = link.closest(".col-lg-4, .col-md-6, li, div");
+      const description = item?.querySelector("p")?.textContent || "";
+      return [description, link.textContent || ""];
+    }).map((value) => this.cleanTopicIntroContextText(value)).filter(Boolean);
+    return Array.from(new Set(values)).slice(0, 3);
+  }
+  getTopicIntroContextLabels(nodes) {
+    const values = nodes.filter((node) => !node?.data?.isCategory).flatMap((node) => [
+      this.getNodeLabelText(node),
+      this.getNodeDescriptionText(node)
+    ]).map((value) => this.cleanTopicIntroContextText(value)).filter(Boolean);
+    return Array.from(new Set(values)).slice(0, 3);
+  }
+  getNodeLabelText(node) {
+    const raw = typeof node?.data?.originalLabel === "string" && node.data.originalLabel.trim().length ? node.data.originalLabel : (node?.label ?? "").toString();
+    const withoutBadges = this.stripBadges(raw);
+    const bottomLine = this.selectBottomLine(withoutBadges);
+    const cleaned = bottomLine.replace(/<[^>]+>/g, "").trim();
+    return this.trimAfterDash(cleaned);
+  }
+  getNodeDescriptionText(node) {
+    return typeof node?.data?.originalDescription === "string" ? node.data.originalDescription.trim() : "";
+  }
+  cleanTopicIntroContextText(value) {
+    return value.replace(/\[\*\*\*[\s\S]*?\*\*\*\]/g, "").replace(/\s+/g, " ").replace(/[.!?:;]+$/g, "").trim();
+  }
+  formatInlineList(values) {
+    const escaped = values.map((value) => this.escapeHtml(value));
+    if (escaped.length <= 1)
+      return escaped[0] ?? "";
+    if (escaped.length === 2)
+      return `${escaped[0]} and ${escaped[1]}`;
+    return `${escaped.slice(0, -1).join(", ")}, and ${escaped[escaped.length - 1]}`;
+  }
   getFeatureDescription(node) {
     const description = typeof node?.data?.originalDescription === "string" ? node.data.originalDescription.trim() : "";
-    return this.escapeHtml(description || "[***Brief description of the feature being promoted.***]");
+    const generatedDescription = typeof node?.data?.generatedFeatureDescription === "string" ? node.data.generatedFeatureDescription.trim() : "";
+    return this.escapeHtml(description || generatedDescription || "[***Brief description of the feature being promoted.***]");
+  }
+  buildTopicHeadingBlock(sourceHtml) {
+    const preservedHeading = this.extractTopicHeadingBlockHtml(sourceHtml);
+    if (preservedHeading)
+      return preservedHeading;
+    const titles = this.extractPageTitles(sourceHtml);
+    const sectionTitleBlock = titles.sectionTitle ? this.snippetService.applySnippet(TOPIC_PAGE_SNIPPETS.sectionTitleBlock, {
+      sectionTitle: this.escapeHtml(titles.sectionTitle)
+    }) : "";
+    const topicTitle = this.cleanTopicTitle(titles.topicTitle || this.getCurrentPageLabel());
+    return [
+      '<hgroup id="wb-cont">',
+      sectionTitleBlock,
+      `<h1>${this.escapeHtml(topicTitle)}</h1>`,
+      "</hgroup>"
+    ].filter((line) => line.trim()).join("\n");
+  }
+  extractTopicHeadingBlockHtml(sourceHtml) {
+    if (!sourceHtml)
+      return "";
+    const doc = new DOMParser().parseFromString(sourceHtml, "text/html");
+    const hgroup = doc.querySelector("hgroup#wb-cont");
+    if (hgroup?.querySelector("h1"))
+      return hgroup.outerHTML;
+    const h1 = this.pickTopicH1(doc, Array.from(doc.querySelectorAll("h1")).filter((candidate) => !candidate.closest("nav")), Array.from(doc.querySelectorAll("h1")));
+    if (!h1)
+      return "";
+    const stackedLabel = this.findStackedH1LabelElement(h1);
+    if (stackedLabel) {
+      return `${stackedLabel.outerHTML}
+${h1.outerHTML}`;
+    }
+    return h1.outerHTML;
+  }
+  findStackedH1LabelElement(h1) {
+    const previous = h1.previousElementSibling;
+    if (!previous || previous.tagName.toLowerCase() !== "p")
+      return null;
+    const text = (previous.textContent || "").replace(/\s+/g, " ").trim();
+    if (!text)
+      return null;
+    if (previous.matches('.lead, .text-muted, .pagetagline, [class*="h1"], [class*="stack"]')) {
+      return previous;
+    }
+    return null;
   }
   extractPageTitles(sourceHtml) {
     if (!sourceHtml)
@@ -47365,7 +49372,7 @@ var TopicIaJsonComponent = class _TopicIaJsonComponent {
       \u0275\u0275queryRefresh(_t = \u0275\u0275loadQuery()) && (ctx.chartContainer = _t.first);
       \u0275\u0275queryRefresh(_t = \u0275\u0275loadQuery()) && (ctx.cm = _t.first);
     }
-  }, features: [\u0275\u0275ProvidersFeature([TreeDragDropService])], decls: 13, vars: 11, consts: [["cmTopic", ""], ["topicChartContainer", ""], ["header", ""], ["body", ""], [1, "mt-0"], [1, "flex", "flex-row", "flex-wrap", "align-items-center", "gap-3", "mt-0"], ["inputId", "depth", "mode", "decimal", 3, "ngModelChange", "ngModel", "showButtons", "min", "max"], ["for", "depth"], ["label", "Get subpages in IA", "icon", "pi pi-info-circle", 3, "click", "severity", "loading"], ["styleClass", "mt-3", 3, "value", "showValue", "style"], ["styleClass", "mt-3", 3, "value", "showValue"], [1, "flex", "flex-row", "align-items-center", "gap-3"], ["styleClass", "pl-1", 1, "max-w-full", 3, "model"], [1, "flex", "align-items-center", "gap-2", "text-green-400"], [1, "flex", "align-items-center", "gap-2", "text-red-400"], [1, "pi", "pi-check-circle"], [1, "pi", "pi-times-circle"], [1, "grid"], [1, "col-12", "xl:col-4"], [1, "col-12", "xl:col-8"], [3, "model"], ["styleClass", "w-full md:w-[30rem] topic-page-tree", "draggableScope", "topicPageTree", "droppableScope", "topicPageTree", 3, "selectionChange", "onNodeDrop", "onNodeContextMenuSelect", "value", "selectionMode", "selection", "draggableNodes", "droppableNodes", "validateDrop", "contextMenu"], ["pTemplate", "default"], [1, "surface-card", "shadow-2", "border-round", "p-3", "mt-3"], [1, "flex", "flex-column", "gap-3"], ["for", "topic-ia-comm-objectives", 1, "block", "text-md", "font-semibold", "mb-2"], ["pTextarea", "", "id", "topic-ia-comm-objectives", "rows", "3", 1, "w-full", 2, "height", "7rem", "overflow", "auto", 3, "ngModelChange", "ngModel"], ["for", "topic-ia-feedback-insights", 1, "block", "text-md", "font-semibold", "mb-2"], ["pTextarea", "", "id", "topic-ia-feedback-insights", "rows", "3", 1, "w-full", 2, "height", "7rem", "overflow", "auto", 3, "ngModelChange", "ngModel"], ["for", "topic-ia-call-trouble", 1, "block", "text-md", "font-semibold", "mb-2"], ["pTextarea", "", "id", "topic-ia-call-trouble", "rows", "3", 1, "w-full", 2, "height", "7rem", "overflow", "auto", 3, "ngModelChange", "ngModel"], [1, "flex", "justify-content-end", "mt-3"], ["label", "Send contextual input to GenAI", "icon", "pi pi-send", 3, "click", "severity", "loading", "disabled"], [1, "flex", "flex-wrap", "justify-content-end", "gap-2", "mt-5"], ["label", "Generate topic HTML", "icon", "pi pi-file-export", "severity", "primary", 3, "click"], [1, "flex", "flex-row", "align-items-center", "gap-2", "w-full"], [1, "pi", "pi-folder"], [1, "pi", "pi-file"], [1, "pi", "pi-arrows-alt", "cursor-move", "text-color-secondary"], [1, "pi", "pi-pencil", "text-color-secondary"], ["target", "_blank", 1, "ia-label", 3, "href", "innerHTML"], [1, "ia-label", 3, "innerHTML", "font-bold"], ["target", "_blank", 1, "ia-label", 3, "click", "href", "innerHTML"], [1, "ia-label", 3, "innerHTML"], ["type", "text", "pInputText", "", "pSize", "small", 1, "ia-label", 3, "ngModelChange", "keydown", "ngModel"], ["icon", "pi pi-check", "severity", "secondary", "size", "small", 3, "onClick"], ["label", "Maximize suggested chart", "severity", "secondary", "icon", "pi pi-window-maximize", "styleClass", "mt-1 mb-3", 3, "click"], [1, "overflow-auto", "max-h-75vh", "surface-ground", "surface-border", "border-1", "py-3", "mb-3", "topic-ia-chart-container"], [3, "value"], ["size", "small", "stripedRows", "", 3, "value", "tableStyle"]], template: function TopicIaJsonComponent_Template(rf, ctx) {
+  }, features: [\u0275\u0275ProvidersFeature([TreeDragDropService])], decls: 13, vars: 11, consts: [["cmTopic", ""], ["topicChartContainer", ""], ["header", ""], ["body", ""], [1, "mt-0"], [1, "flex", "flex-row", "flex-wrap", "align-items-center", "gap-3", "mt-0"], ["inputId", "depth", "mode", "decimal", 3, "ngModelChange", "ngModel", "showButtons", "min", "max"], ["for", "depth"], ["label", "Get subpages in IA", "icon", "pi pi-info-circle", 3, "click", "severity", "loading"], ["styleClass", "mt-3", 3, "value", "showValue", "style"], ["styleClass", "mt-3", 3, "value", "showValue"], [1, "flex", "flex-row", "align-items-center", "gap-3"], ["styleClass", "pl-1", 1, "max-w-full", 3, "model"], [1, "flex", "align-items-center", "gap-2", "text-green-400"], [1, "flex", "align-items-center", "gap-2", "text-red-400"], [1, "pi", "pi-check-circle"], [1, "pi", "pi-times-circle"], [1, "grid"], [1, "col-12", "xl:col-4"], [1, "col-12", "xl:col-8"], [3, "model"], ["styleClass", "w-full md:w-[30rem] topic-page-tree", "draggableScope", "topicPageTree", "droppableScope", "topicPageTree", 3, "selectionChange", "onNodeDrop", "onNodeContextMenuSelect", "value", "selectionMode", "selection", "draggableNodes", "droppableNodes", "validateDrop", "contextMenu"], ["pTemplate", "default"], [1, "surface-card", "shadow-2", "border-round", "p-3", "mt-3"], [1, "flex", "flex-column", "gap-3"], ["for", "topic-ia-comm-objectives", 1, "block", "text-md", "font-semibold", "mb-2"], ["pTextarea", "", "id", "topic-ia-comm-objectives", "rows", "3", 1, "w-full", 2, "height", "7rem", "overflow", "auto", 3, "ngModelChange", "ngModel"], ["for", "topic-ia-feedback-insights", 1, "block", "text-md", "font-semibold", "mb-2"], ["pTextarea", "", "id", "topic-ia-feedback-insights", "rows", "3", 1, "w-full", 2, "height", "7rem", "overflow", "auto", 3, "ngModelChange", "ngModel"], ["for", "topic-ia-call-trouble", 1, "block", "text-md", "font-semibold", "mb-2"], ["pTextarea", "", "id", "topic-ia-call-trouble", "rows", "3", 1, "w-full", 2, "height", "7rem", "overflow", "auto", 3, "ngModelChange", "ngModel"], [1, "flex", "justify-content-end", "mt-3"], ["label", "Send contextual input to GenAI", "icon", "pi pi-send", 3, "click", "severity", "loading", "disabled"], [1, "flex", "flex-wrap", "justify-content-end", "gap-2", "mt-5"], ["label", "Generate topic HTML", "icon", "pi pi-file-export", "severity", "primary", 3, "click", "loading", "disabled"], [1, "flex", "flex-row", "align-items-center", "gap-2", "w-full"], [1, "pi", "pi-folder"], [1, "pi", "pi-file"], [1, "pi", "pi-arrows-alt", "cursor-move", "text-color-secondary"], [1, "pi", "pi-pencil", "text-color-secondary"], ["target", "_blank", 1, "ia-label", 3, "href", "innerHTML"], [1, "ia-label", 3, "innerHTML", "font-bold"], ["target", "_blank", 1, "ia-label", 3, "click", "href", "innerHTML"], [1, "ia-label", 3, "innerHTML"], ["type", "text", "pInputText", "", "pSize", "small", 1, "ia-label", 3, "ngModelChange", "keydown", "ngModel"], ["icon", "pi pi-check", "severity", "secondary", "size", "small", 3, "onClick"], ["label", "Maximize suggested chart", "severity", "secondary", "icon", "pi pi-window-maximize", "styleClass", "mt-1 mb-3", 3, "click"], [1, "overflow-auto", "max-h-75vh", "surface-ground", "surface-border", "border-1", "py-3", "mb-3", "topic-ia-chart-container"], [3, "value"], ["size", "small", "stripedRows", "", 3, "value", "tableStyle"]], template: function TopicIaJsonComponent_Template(rf, ctx) {
     if (rf & 1) {
       \u0275\u0275elementStart(0, "p", 4);
       \u0275\u0275text(1, "To edit this topic page (or to convert it to one), choose the depth of the IA crawl.");
@@ -47582,6 +49589,8 @@ var TopicIaJsonComponent = class _TopicIaJsonComponent {
               label="Generate topic HTML"
               icon="pi pi-file-export"
               severity="primary"
+              [loading]="isGeneratingTopicHtml"
+              [disabled]="isGeneratingTopicHtml"
               (click)="generateTopicHtml()"
             />
           </div>
@@ -48890,6 +50899,7 @@ var PageAssistantCompareComponent = class _PageAssistantCompareComponent {
   alertAi = inject(AlertAiService);
   alertContext = inject(AlertContextService);
   alertRewriteOrchestrator = inject(AlertRewriteOrchestratorService);
+  topicDoormatRewriteOrchestrator = inject(TopicDoormatRewriteOrchestratorService);
   topicDoormatAnalysisState = inject(TopicDoormatAnalysisStateService);
   topicDoormatExtractor = inject(TopicDoormatExtractorService);
   topicDoormatIssueAnalysis = inject(TopicDoormatIssueAnalysisService);
@@ -49664,7 +51674,8 @@ ${custom}` : promptBody;
         hasLegacyTopicDoormatTemplate: this.topicDoormatExtractor.hasLegacyTemplate(doc),
         mostRequestedLinks: this.topicDoormatExtractor.extractMostRequestedLinks(doc),
         uploadData,
-        selectedModel: model
+        selectedModel: model,
+        useDescriptionStyleAsPrimaryIssue: this.uploadState.getUseDescriptionStyleAsPrimaryIssue()
       });
       if (this.uploadState.getWorkingHtml() !== expectedWorkingHtml)
         return false;
@@ -49795,8 +51806,9 @@ ${custom}` : promptBody;
   buildModelRotation(model) {
     const fallbackOrder = [
       AiModel.NemotronUltra,
-      AiModel.GptOSS20BFree,
-      AiModel.NemotronSuper
+      AiModel.NemotronLightning,
+      AiModel.NemotronSuper,
+      AiModel.FreeModelsRouter
     ];
     const available = new Set(this.openRouter.freeModels);
     const rotation = [model];
@@ -49840,7 +51852,6 @@ ${custom}` : promptBody;
         let html = isAlertFlow || isDoormats ? this.uploadState.getWorkingHtml() : uploadData?.originalHtml;
         if (!html)
           throw new Error("No HTML to send");
-        const workingHtmlBeforeRequest = html;
         if (isDoormats) {
           const normalization = this.topicDoormatTemplateNormalizer.normalizeLegacyDoormats(html);
           html = normalization.html;
@@ -49857,12 +51868,28 @@ ${custom}` : promptBody;
         const model = this.selectedAiModel;
         if (isDoormats) {
           const hadCurrentDoormatAnalysis = this.topicDoormatAnalysisState.hasAnalysis() && this.topicDoormatAnalysisState.getAnalyzedHtml() === html;
-          const doormatAnalysisReady = yield this.ensureTopicDoormatIssueAnalysisForRewrite(html, model, workingHtmlBeforeRequest);
-          if (!doormatAnalysisReady) {
+          aiRequestStarted = true;
+          const doormatResult = yield this.topicDoormatRewriteOrchestrator.analyzeAndRewriteGeneratedTopicHtml(html, model);
+          if (!doormatResult) {
             return;
           }
           doormatIssueAnalysisRan = !hadCurrentDoormatAnalysis;
+          doormatRewritePromptSent = true;
           timingFlow = doormatIssueAnalysisRan ? "doormat-issues-and-rewrite" : "doormat-rewrite-with-cached-issues";
+          this.uploadState.mergeModifiedData({
+            modifiedUrl: "AI generated",
+            modifiedHtml: doormatResult.rewrittenHtml
+          });
+          const usedModel2 = this.getShortModelName(doormatResult.rewriteModel || doormatResult.analysisModel || model);
+          this.statusSeverity = "success";
+          this.statusMessage = this.translate.instant("common.ai.comparisonUpdatedWithModel", { model: usedModel2 });
+          this.messageService.add({
+            severity: "success",
+            summary: this.translate.instant("common.ai.responseReceived.summary"),
+            detail: this.translate.instant("common.ai.responseReceived.detail"),
+            life: 5e3
+          });
+          return;
         }
         const prompt = yield this.getPromptForKey(promptKeyForRequest);
         const requestedModelShort = this.getShortModelName(model);
@@ -50934,9 +52961,9 @@ ${custom}` : promptBody;
   }] });
 })();
 (() => {
-  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(PageAssistantCompareComponent, { className: "PageAssistantCompareComponent", filePath: "app/views/page-assistant/page-assistant.component.ts", lineNumber: 105 });
+  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(PageAssistantCompareComponent, { className: "PageAssistantCompareComponent", filePath: "app/views/page-assistant/page-assistant.component.ts", lineNumber: 106 });
 })();
 export {
   PageAssistantCompareComponent
 };
-//# sourceMappingURL=chunk-K2Z7MI3X.js.map
+//# sourceMappingURL=chunk-MMHMDMDE.js.map

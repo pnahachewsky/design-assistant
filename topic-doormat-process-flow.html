@@ -438,7 +438,7 @@
             <li>Detect current and legacy topic doormat blocks.</li>
             <li>Extract link text, labels, destination, description, counts, language, and H2 section metadata.</li>
             <li>Fetch destination context and local IA child-page context when available.</li>
-            <li>Run local deterministic checks for counts, link validity, structure, formatting, repeated openings, Most requested duplicates, and IA review flags.</li>
+            <li>Run local deterministic checks for counts, link validity, structure, formatting, trailing description punctuation, list connector usage, repeated openings, Most requested duplicates, and IA review flags.</li>
             <li>Send the complete doormat set to the Topic doormats issue skill.</li>
             <li>Ask the model to classify every doormat using constrained values and grounded evidence.</li>
             <li>Let AIDA validate and aggregate the classifications, apply local decision rules, and build the displayed issues.</li>
@@ -454,6 +454,7 @@
       <a href="#decision-boundary">Classification and decisions</a>
       <a href="#section-rules">Section rules</a>
       <a href="#quality-checks">How AIDA determines issues</a>
+      <a href="#rewrite-examples">Rewrite examples</a>
       <a href="#testing">Testing</a>
       <a href="#source-files">Reference files</a>
     </nav>
@@ -593,8 +594,10 @@
           <summary>Exact character counts</summary>
           <div class="ex-hide-content">
             <p>AIDA provides authoritative link text and description character counts and reports length issues locally. Extracted labels and badges are excluded from link and description counts in both languages. When both languages are available, AIDA compares the English and French equivalent doormat and uses the longer count for severity.</p>
-            <p>Link names use a 45-character ideal threshold and 75-character maximum threshold: 46-60 is Low, 61-75 is Medium, and more than 75 is High. Descriptions use a 120-character threshold: 121-130 is Low, 131-140 is Medium, and more than 140 is High.</p>
-            <p>AIDA reports at most one link-length issue and one description-length issue per section. Evidence keeps English and French counts in separate severity-coloured pills. Link pills keep the ideal limit, such as <span class="inline-code">FR 71/45</span>; description pills show only the count, such as <span class="inline-code">FR 133</span>.</p>
+            <p>The formal recommendation for link names remains an ideal limit of 45 characters and a maximum of 75 characters, including spaces. AIDA reports 46–60 characters as Low severity, 61–75 as Medium, and more than 75 as High.</p>
+            <p>The formal recommendation for descriptions remains 120 characters or fewer in both languages, including spaces. AIDA continues to report descriptions over 120 characters as length issues, using the existing severity bands: 121–130 is Low, 131–140 is Medium, and more than 140 is High.</p>
+            <p>The rewrite prompt treats 120 characters as the rule and tries other approaches first: remove repetition, unnecessary wording, and secondary details, then find a shorter accurate phrasing. A rewrite may exceed 120 only when that is absolutely necessary to preserve essential meaning or accuracy. This rewrite-only exception does not change the formal recommendation or prevent AIDA from reporting the length issue.</p>
+            <p>AIDA reports at most one link-length issue and one description-length issue per section. Evidence keeps English and French counts in separate severity-coloured pills. Link pills show the ideal limit, such as <span class="inline-code">FR 61/45</span>; description pills show only the count, such as <span class="inline-code">FR 133</span>.</p>
           </div>
         </details>
         <details class="ex-hide">
@@ -607,12 +610,16 @@
           <summary>Structure and formatting</summary>
           <div class="ex-hide-content">
             <p>AIDA reports objective structure and formatting issues locally where the page markup already proves the issue, including split heading links, multiple links in one doormat, links inside descriptions, trailing punctuation, first- or second-person description openings, and legacy topic doormat markup.</p>
+            <p>Description trailing punctuation is handled deterministically in both the issue report and rewrite flow. When that issue is selected, AIDA removes only the final punctuation mark without asking the model to rewrite the wording for that issue.</p>
+            <p>AIDA also detects likely key-term descriptions that use <span class="inline-code">and</span> or <span class="inline-code">et</span> before final list items. English checks the comma-before-<span class="inline-code">and</span> pattern in comma-list descriptions. French also checks the normal <span class="inline-code">A, B et C</span> pattern. AIDA does not run the same check for <span class="inline-code">or</span> or <span class="inline-code">ou</span>.</p>
           </div>
         </details>
         <details class="ex-hide">
           <summary>Description and link style</summary>
           <div class="ex-hide-content">
-            <p>The model classifies each description and link by grammatical construction. Link styles are <span class="inline-code">task</span>, <span class="inline-code">topic</span>, <span class="inline-code">situation</span>, or <span class="inline-code">mixed-or-unclear</span>. Description styles are <span class="inline-code">sentence</span>, <span class="inline-code">phrase</span>, <span class="inline-code">keyword-list</span>, or <span class="inline-code">mixed-or-unclear</span>. AIDA groups those labels by H2 section and creates section-level mixed-style rows or individual outlier rows when warranted. Mixed-style issues are Low severity. AIDA does not report individual outliers when the whole section is already mixed.</p>
+            <p>The model classifies each description and link by grammatical construction. Link styles are <span class="inline-code">topic</span>, <span class="inline-code">product-or-service</span>, <span class="inline-code">action</span>, <span class="inline-code">audience-group</span>, or <span class="inline-code">mixed-or-unclear</span>. Description rewrite guidance uses <span class="inline-code">leave-unchanged</span>, <span class="inline-code">retain-phrase</span>, <span class="inline-code">tighten-phrase</span>, <span class="inline-code">add-specificity</span>, <span class="inline-code">convert-to-keyword-list</span>, or <span class="inline-code">convert-to-task-list</span>. AIDA groups link-style labels by H2 section and creates section-level mixed-style rows or individual outlier rows when warranted. Mixed-style issues are Low severity. AIDA does not report individual outliers when the whole section is already mixed.</p>
+            <p>For link-style classification, gerund link names such as <span class="inline-code">Filing a trust return</span> or <span class="inline-code">Submitting documents online</span> are treated as <span class="inline-code">topic</span> when they mean how to or instructions for the task. AIDA also normalizes model classifications so gerund, how-to, and who/what/when/where/why link names are not treated as imperative <span class="inline-code">action</span> links merely because the underlying subject is a task.</p>
+            <p>For rewrites, AIDA also preserves human-centred framing when the person, audience, or lived situation is part of the meaning. It should not compress wording such as <span class="inline-code">people with an impairment</span> into abstract nouns such as <span class="inline-code">impairments</span>, or replace plain-language wording such as <span class="inline-code">who is eligible</span> with <span class="inline-code">eligibility</span> when the human framing helps users recognize themselves in the content.</p>
           </div>
         </details>
         <details class="ex-hide">
@@ -680,6 +687,27 @@
       </div>
     </section>
 
+    <section class="panel" id="rewrite-examples">
+      <h2>Rewrite examples</h2>
+      <p class="intro">Optional reference examples demonstrate editing decisions. AIDA still sends the complete actual page HTML and doormat set in every rewrite request.</p>
+      <div class="two-col">
+        <article class="card">
+          <h3>Reference library</h3>
+          <p>The <a href="./skills/topic-doormats/rewrite/references/examples.json">example library</a> preserves both complete bilingual sets from <strong>Doormat examples - rewrites - Sept 24.docx</strong>: GST/HST for businesses and savings and pension plans. Tracked revisions are accepted and character-count annotations are removed.</p>
+          <p>Each pair uses the same link name and shows the original and revised descriptions. Annotations distinguish clarity improvements, compression, content selection, optional preferences, and unchanged wording. Destination evidence records supporting URLs and verification dates. The original descriptions are authentic, not deliberately bad examples.</p>
+        </article>
+        <article class="card">
+          <h3>What AIDA sends</h3>
+          <p>Enable <strong>Use examples for rewriting</strong> in the doormat AI options, then choose <strong>Before and after, with explanations</strong> or <strong>Final wording only</strong>. Examples remain off by default. AIDA preserves the enabled state and selected format when the page reloads; resetting the upload flow returns examples to off and the format to <strong>Before and after, with explanations</strong>.</p>
+          <p>Both formats select the same items by language and selected issue: up to two matched examples plus supporting context, capped at three reference doormats total. A paired neighbour takes priority when the lesson depends on comparing descriptions; otherwise an unchanged item from the selected set can demonstrate restraint.</p>
+          <p>No matching issue means no examples are sent. The library does not demonstrate link-name rewrites or every possible issue. Drafting missing descriptions uses the rebate guidance example and adjacent confirmation description.</p>
+        </article>
+      </div>
+      <div class="note" style="margin-top: 18px;">
+        <p>Reference subsets do not authorize extra edits. AIDA uses only lessons relevant to selected issues and grounds facts in the current destination evidence. Example facts, optional wording preferences, and changes to neighbouring reference items are not instructions to change the actual page.</p>
+      </div>
+    </section>
+
     <section class="panel" id="testing">
       <h2>Testing</h2>
       <p class="intro">
@@ -696,6 +724,40 @@
           </li>
         </ul>
       </article>
+    </section>
+
+    <section class="panel" id="example-comparison">
+      <h2>Comparing example formats</h2>
+      <p class="intro">Compare no examples, final-only examples, and before-and-after examples with explanations before deciding whether to enable examples by default.</p>
+      <div class="ex-hide-list">
+        <details class="ex-hide">
+          <summary>Comparison procedure</summary>
+          <div class="ex-hide-content">
+            <ol>
+              <li>Start with GST/HST, then savings and pensions, in both languages. Keep the original HTML, destination evidence, selected issues, model, and generation settings identical across conditions.</li>
+              <li>Turn examples off for the baseline. Enable examples and choose each format for the other two conditions. Confirm the selected condition after reloading AIDA; AIDA normally restores it from local storage.</li>
+              <li>Restore the original HTML before each run. Reuse the same analysis and selected issues so issue-detection changes do not affect the comparison. Do not use a previous rewrite as the next input.</li>
+              <li>Run each condition at least three times and compare outputs without revealing which condition produced them.</li>
+              <li>Repeat on unrelated pages with comparable issues. Results on the teaching pages alone do not establish whether the examples help on other pages.</li>
+            </ol>
+          </div>
+        </details>
+        <details class="ex-hide">
+          <summary>What to assess</summary>
+          <div class="ex-hide-content">
+            <ul>
+              <li><strong>Issue resolution:</strong> selected issues fixed, unresolved, or made worse.</li>
+              <li><strong>Grounding:</strong> unsupported additions or altered destination meaning.</li>
+              <li><strong>Restraint:</strong> unnecessary changes to unaffected doormats or adequate wording.</li>
+              <li><strong>Readability:</strong> clearer descriptions and distinctions between neighbours.</li>
+              <li><strong>Length:</strong> links over the 45-character ideal, descriptions over 120, and whether any rewrite exceeding 120 is necessary to preserve essential meaning or accuracy after shorter alternatives were tried.</li>
+              <li><strong>Cost:</strong> request size, latency, and repair attempts.</li>
+            </ul>
+            <p>Keep examples opt-in unless the comparison shows a consistent benefit without additional factual errors or unnecessary edits.</p>
+          </div>
+        </details>
+      </div>
+      <p class="small" style="margin-top: 18px;">The comparison procedure describes the intended evaluation; live model comparisons have not been run as part of this implementation.</p>
     </section>
 
     <section class="panel" id="source-files">
@@ -829,9 +891,12 @@
         <article class="source-card">
           <h3>Topic doormat rewriting</h3>
           <p>Used to guide rewritten topic doormat content, issue-aware rewrite priorities, destination evidence for affected doormats, and output format.</p>
+          <p>Rewrite guidance uses destination intent to preserve link framing. Imperative link names are appropriate when the destination lets users start, complete, or continue a task. Gerund, how-to, or explanatory link names are appropriate when the destination mainly provides information, instructions, requirements, eligibility, timing, or rules about the task.</p>
+          <p>AIDA also protects link text after the model responds. Unless a selected issue for a doormat is explicitly about link text, AIDA restores that doormat's original link text in the rewritten HTML. Description issues, repeated-opening issues, review flags, and IA child-page flags can change descriptions, but they do not authorize link-name changes.</p>
           <ul>
             <li><a href="./skills/topic-doormats/rewrite/SKILL.md">skills/topic-doormats/rewrite/SKILL.md</a></li>
             <li><a href="./skills/topic-doormats/rewrite/references/rewrite-rules.json">skills/topic-doormats/rewrite/references/rewrite-rules.json</a></li>
+            <li><a href="./skills/topic-doormats/rewrite/references/examples.json">skills/topic-doormats/rewrite/references/examples.json</a></li>
             <li><a href="./skills/topic-doormats/rewrite/assets/rewrite-output-schema.json">skills/topic-doormats/rewrite/assets/rewrite-output-schema.json</a></li>
           </ul>
         </article>
@@ -852,8 +917,10 @@
         <p>Bottom line: AIDA evaluates Topic doormats together, uses H2 sections for
           section-local limits, style consistency, repeated openings, and IA review
           flags, strips doormat labels from destination-analysis text, validates
-          model classifications against supplied destination context, keeps
-          deterministic checks local, and stores selected issue rows plus cleaned
+          model classifications against supplied destination context, normalizes
+          informational gerund and how/when link names away from imperative action
+          style, keeps deterministic checks local, restores link text when selected
+          issues do not authorize link-name changes, and stores selected issue rows plus cleaned
           destination main HTML for affected doormats so the Doormats rewrite model
           can fix grounded issues while preserving doormats with no selected issue.
           The skill files linked above are the active source of issue and rewrite guidance.

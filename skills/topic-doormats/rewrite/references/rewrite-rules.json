@@ -1,10 +1,10 @@
 {
-  "version": "draft-2026-07-27",
+  "version": "2026-09-29",
   "scope": "Rewrite GCWeb topic page doormat link text and descriptions.",
   "rules": [
     {
       "id": "rewrite-complete-set",
-      "text": "Rewrite the complete doormat set together. Keep title style, description style, order, and destination choices consistent across each H2 section and the full set."
+      "text": "Rewrite the complete doormat set together. Keep link text style, order, and destination choices consistent across each H2 section and the full set. Treat description style as secondary to readability, destination accuracy, and useful information scent."
     },
     {
       "id": "return-full-updated-set",
@@ -16,11 +16,15 @@
     },
     {
       "id": "use-issue-analysis",
-      "text": "When selected topic doormat issues are supplied, use them as rewrite priorities. Fix each selected issue when possible without creating new length, style, destination, structure, or consistency problems. Preserve doormats that do not have selected issues. If an issue cannot be fixed safely, preserve the safest wording."
+      "text": "When selected topic doormat issues are supplied, use them as rewrite priorities. Fix each selected issue when possible without creating new length, style, destination, structure, or consistency problems. Preserve doormats that do not have selected issues. Preserve link text unless a selected issue for that doormat is explicitly about link text, such as link length, link clarity, link uniqueness, destination-title mismatch, or link-name style. Description issues, review flags, IA child-page flags, and repeated-opening issues do not authorize link text changes. If an issue cannot be fixed safely, preserve the safest wording."
+    },
+    {
+      "id": "minimal-formatting-and-length-fixes",
+      "text": "For formatting-only or length-only issues, make the smallest edit that fixes the issue. If the issue is trailing punctuation, remove final punctuation only. If the issue is length, shorten while preserving the destination intent and any existing explanatory or task framing. Do not change a guidance phrase into a direct task phrase, or change a direct task phrase into guidance wording, only to fix punctuation or length."
     },
     {
       "id": "link-text",
-      "text": "Use unique, descriptive link text that preserves destination meaning. Prefer action verbs or concise topic keywords; avoid vague terms, duplicate wording, unnecessary words, and trailing punctuation. Keep under 75 characters, including spaces, and aim for 35 or fewer."
+      "text": "Use unique, descriptive link text that preserves destination meaning. Keep link text style consistent within each H2 section because links are the first scannable part of the doormat set and often read like headings. Choose task framing based on destination intent: use imperative action wording when the destination or section lets users start, complete, or continue the task; use gerund, how-to, or explanatory wording when the destination mainly provides information, instructions, requirements, eligibility, timing, or rules about the task. Do not change an informational link into an imperative task link unless destination evidence shows the task can actually be completed or started there. Do not change a transactional task link into gerund or how-to wording when the destination is primarily where users complete the task. Avoid vague terms, duplicate wording, unnecessary words, and trailing punctuation. Keep under 75 characters, including spaces, and aim for 35 or fewer."
     },
     {
       "id": "description-evidence",
@@ -31,12 +35,24 @@
       "text": "Describe the destination's main topic, purpose, audience, or primary task so users can decide whether the link is relevant. Add useful information not already present in the link text and explain what users can expect to find or do after selecting it."
     },
     {
+      "id": "description-intent",
+      "text": "Choose description wording based on destination intent. Use direct task phrasing when the destination is where users can complete, start, or continue the task, such as open an account, apply for a benefit, file a return, make a payment, or update information. Use learning or explanatory phrasing when the destination explains how something works, who it applies to, what rules or requirements apply, what users need, or when something happens. In those cases, how/who/what/when phrasing, Learn about, or Find out can be appropriate. Do not rewrite a guidance destination such as how to open an account as the task open an account unless the destination actually lets users open the account or clearly starts that transaction. Do not add how to to a direct task link when the destination is primarily transactional. Avoid repeating the link text inside the description when using how/who/what/when phrasing; prefer the acronym or the specific concept after the link has already named the full product, service, program, or plan."
+    },
+    {
+      "id": "preserve-explanatory-framing",
+      "text": "Preserve useful explanatory framing. If the current description uses how, who, what, when, Learn about, or Find out to signal a guidance page, keep that framing unless a selected issue requires changing it. Do not convert explanatory wording into direct task wording just to make it shorter or more active."
+    },
+    {
+      "id": "preserve-human-framing",
+      "text": "Preserve human-centred wording when the person, audience, or lived situation is part of the destination meaning. Do not compress people into abstract nouns only to shorten wording. Prefer plain-language framing such as who is eligible, people with an impairment, people with disabilities, families, seniors, students, newcomers, residents, or beneficiaries when the destination is about who qualifies, applies, receives, needs, owes, or is affected. Avoid rewrites such as tax credit for impairments when the intended meaning is tax credit for people with an impairment, or eligibility when who is eligible is clearer and more user-centred."
+    },
+    {
       "id": "description-length",
-      "text": "Keep descriptions under 120 characters, including spaces. Aim for fewer than 100 characters when possible."
+      "text": "Keep descriptions within 120 characters, including spaces. First remove repetition, unnecessary wording, and secondary details; then try a shorter accurate phrasing. Only if those approaches cannot preserve essential meaning or accuracy may a description exceed 120 characters. Use the shortest clear, accurate wording possible and do not exceed 120 merely to retain optional detail."
     },
     {
       "id": "description-style",
-      "text": "Use one description style across the set. Prefer concise comma-separated keywords or task phrases. For keyword-list descriptions, separate parallel phrases with commas only; do not add 'and' before the final item unless it is part of a fixed phrase, program name, service name, common combined concept, or task phrase. Use a sentence-like description only when fragments cannot clearly describe the destination, and do not add final punctuation."
+      "text": "Description style is secondary to destination intent. Use the description form that best helps users predict the destination: an idiomatic short phrase, a task phrase, a how/who/what/when framing, Learn about, Find out, or a comma-separated keyword list. Prefer natural, readable phrasing over compressed noun lists. Use keyword lists only when the destination contains several distinct concepts that are easier to scan as parallel terms, or when the existing description is already list-like and only needs cleanup. Do not rewrite a whole section into one description style just to make descriptions look consistent. Keep descriptions compatible in length, tone, and specificity across the section without forcing every description into the same grammatical shape."
     },
     {
       "id": "description-quality",
@@ -44,7 +60,7 @@
     },
     {
       "id": "existing-description",
-      "text": "Treat existing descriptions as reference evidence only. Keep them when accurate, concise, and consistent; rewrite when incomplete, generic, repetitive, misleading, too long, or inconsistent."
+      "text": "Treat existing descriptions as strong source text. Keep or lightly tighten them when accurate, concise, readable, and specific enough. Rewrite when incomplete, generic, repetitive, misleading, too long, or hard to scan."
     },
     {
       "id": "localized-alignment",

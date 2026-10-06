@@ -38505,12 +38505,16 @@ var PromptKey;
 var AiModel;
 (function(AiModel2) {
   AiModel2["NemotronUltra"] = "nvidia/nemotron-3-ultra-550b-a55b:free";
-  AiModel2["GptOSS20BFree"] = "openai/gpt-oss-20b:free";
+  AiModel2["NemotronLightning"] = "nvidia/nemotron-3.5-lightning:free";
   AiModel2["NemotronSuper"] = "nvidia/nemotron-3-super-120b-a12b:free";
+  AiModel2["FreeModelsRouter"] = "openrouter/free";
+  AiModel2["AutoRouter"] = "openrouter/auto";
   AiModel2["GptOSS20B"] = "openai/gpt-oss-20b";
   AiModel2["Gemini"] = "google/gemini-3.1-flash-lite";
+  AiModel2["GPT56LunaPro"] = "openai/gpt-5.6-luna-pro";
+  AiModel2["GPT5Mini"] = "openai/gpt-5-mini";
   AiModel2["GPT54Mini"] = "openai/gpt-5.4-mini";
-  AiModel2["DeepSeekV4Flash"] = "deepseek/deepseek-v4-flash";
+  AiModel2["DeepSeekV4Flash"] = "deepseek/deepseek-v4-flash-latest";
   AiModel2["DeepSeekV4Pro"] = "deepseek/deepseek-v4-pro";
 })(AiModel || (AiModel = {}));
 
@@ -38551,7 +38555,10 @@ var UploadStateService = class _UploadStateService {
   aiModelKey = "pageAssistant.aiModel";
   editPromptKey = "pageAssistant.editPrompt";
   includeAlertRewriteExamplesKey = "pageAssistant.includeAlertRewriteExamples";
+  includeTopicDoormatRewriteExamplesKey = "pageAssistant.includeTopicDoormatRewriteExamples";
+  topicDoormatExampleFormatKey = "pageAssistant.topicDoormatExampleFormat";
   useCompactAlertsPageContextKey = "pageAssistant.useCompactAlertsPageContext";
+  useDescriptionStyleAsPrimaryIssueKey = "pageAssistant.useDescriptionStyleAsPrimaryIssue";
   // Upload source chosen in the drawer.
   selectedUploadType = signal("url");
   getSelectedUploadType = computed(() => this.selectedUploadType());
@@ -38580,12 +38587,33 @@ var UploadStateService = class _UploadStateService {
     this.includeAlertRewriteExamples.set(!!include);
     this.storage.saveData(this.includeAlertRewriteExamplesKey, String(!!include));
   }
+  // Whether topic doormat rewrite prompts should include selected good examples.
+  includeTopicDoormatRewriteExamples = signal(false);
+  getIncludeTopicDoormatRewriteExamples = computed(() => this.includeTopicDoormatRewriteExamples());
+  setIncludeTopicDoormatRewriteExamples(include) {
+    this.includeTopicDoormatRewriteExamples.set(!!include);
+    this.storage.saveData(this.includeTopicDoormatRewriteExamplesKey, String(!!include));
+  }
+  // Comparison format for the same selected doormat reference examples.
+  topicDoormatExampleFormat = signal("before-after");
+  getTopicDoormatExampleFormat = computed(() => this.topicDoormatExampleFormat());
+  setTopicDoormatExampleFormat(format) {
+    this.topicDoormatExampleFormat.set(format);
+    this.storage.saveData(this.topicDoormatExampleFormatKey, format);
+  }
   // Whether alert issue analysis uses compact extracted page context instead of raw HTML.
   useCompactAlertsPageContext = signal(true);
   getUseCompactAlertsPageContext = computed(() => this.useCompactAlertsPageContext());
   setUseCompactAlertsPageContext(useCompact) {
     this.useCompactAlertsPageContext.set(!!useCompact);
     this.storage.saveData(this.useCompactAlertsPageContextKey, String(!!useCompact));
+  }
+  // Whether doormat analysis treats description style as a primary issue again.
+  useDescriptionStyleAsPrimaryIssue = signal(false);
+  getUseDescriptionStyleAsPrimaryIssue = computed(() => this.useDescriptionStyleAsPrimaryIssue());
+  setUseDescriptionStyleAsPrimaryIssue(useAsPrimary) {
+    this.useDescriptionStyleAsPrimaryIssue.set(!!useAsPrimary);
+    this.storage.saveData(this.useDescriptionStyleAsPrimaryIssueKey, String(!!useAsPrimary));
   }
   // Working page data plus shallow history for undo.
   uploadData = signal(null);
@@ -38610,8 +38638,11 @@ var UploadStateService = class _UploadStateService {
       this.storage.removeData(this.aiModelKey);
       this.storage.removeData(this.uploadDataKey);
       this.storage.removeData(this.includeAlertRewriteExamplesKey);
+      this.storage.removeData(this.includeTopicDoormatRewriteExamplesKey);
+      this.storage.removeData(this.topicDoormatExampleFormatKey);
       this.storage.removeData("pageAssistant.useJsonAlertsIssuesPrompt");
       this.storage.removeData(this.useCompactAlertsPageContextKey);
+      this.storage.removeData(this.useDescriptionStyleAsPrimaryIssueKey);
       this.storage.removeData("pageAssistant.useSkillPrompts");
       return;
     }
@@ -38688,7 +38719,10 @@ var UploadStateService = class _UploadStateService {
     this.selectedAiModel.set(AiModel.Gemini);
     this.editPromptText.set("");
     this.includeAlertRewriteExamples.set(true);
+    this.includeTopicDoormatRewriteExamples.set(false);
+    this.topicDoormatExampleFormat.set("before-after");
     this.useCompactAlertsPageContext.set(true);
+    this.useDescriptionStyleAsPrimaryIssue.set(false);
     this.uploadData.set(null);
     this.recommendationReviewPending.set(false);
     this.bumpWorkingContentRevision();
@@ -38697,8 +38731,11 @@ var UploadStateService = class _UploadStateService {
     this.storage.removeData(this.aiModelKey);
     this.storage.removeData(this.editPromptKey);
     this.storage.removeData(this.includeAlertRewriteExamplesKey);
+    this.storage.removeData(this.includeTopicDoormatRewriteExamplesKey);
+    this.storage.removeData(this.topicDoormatExampleFormatKey);
     this.storage.removeData("pageAssistant.useJsonAlertsIssuesPrompt");
     this.storage.removeData(this.useCompactAlertsPageContextKey);
+    this.storage.removeData(this.useDescriptionStyleAsPrimaryIssueKey);
     this.storage.removeData("pageAssistant.useSkillPrompts");
     this.storage.removeData(this.uploadDataKey);
   }
@@ -38734,6 +38771,18 @@ var UploadStateService = class _UploadStateService {
     const storedUseCompactAlertsPageContext = this.storage.getData(this.useCompactAlertsPageContextKey);
     if (storedUseCompactAlertsPageContext === "true" || storedUseCompactAlertsPageContext === "false") {
       this.useCompactAlertsPageContext.set(storedUseCompactAlertsPageContext === "true");
+    }
+    const storedIncludeTopicDoormatRewriteExamples = this.storage.getData(this.includeTopicDoormatRewriteExamplesKey);
+    const storedTopicDoormatExampleFormat = this.storage.getData(this.topicDoormatExampleFormatKey);
+    if (storedTopicDoormatExampleFormat === "final-only" || storedTopicDoormatExampleFormat === "before-after") {
+      this.topicDoormatExampleFormat.set(storedTopicDoormatExampleFormat);
+    }
+    if (storedIncludeTopicDoormatRewriteExamples === "true" || storedIncludeTopicDoormatRewriteExamples === "false") {
+      this.includeTopicDoormatRewriteExamples.set(storedIncludeTopicDoormatRewriteExamples === "true");
+    }
+    const storedUseDescriptionStyleAsPrimaryIssue = this.storage.getData(this.useDescriptionStyleAsPrimaryIssueKey);
+    if (storedUseDescriptionStyleAsPrimaryIssue === "true" || storedUseDescriptionStyleAsPrimaryIssue === "false") {
+      this.useDescriptionStyleAsPrimaryIssue.set(storedUseDescriptionStyleAsPrimaryIssue === "true");
     }
     const storedData = this.storage.getData(this.uploadDataKey);
     if (!storedData)
@@ -40499,10 +40548,110 @@ var FetchService = class _FetchService {
   }], null, null);
 })();
 
+// src/app/views/page-assistant/services/writing-rules.service.ts
+var WritingRulesService = class _WritingRulesService {
+  spaceBeforeCommaCheckPattern = /[ \t\u00a0\u202f]+,/;
+  englishSpaceBeforePunctuationPattern = /[ \t\u00a0\u202f]+([,.;:!?])/g;
+  frenchSpaceBeforePunctuationPattern = /[ \t\u00a0\u202f]+([,.;!?])/g;
+  frenchSpaceBeforeColonPattern = /([\p{L})\]"»])[ \t\u00a0\u202f]+:(?![\d/])/gu;
+  frenchMissingSpaceBeforeColonPattern = /([\p{L})\]"»])(?=:(?![\d/]))/gu;
+  writingAttributeNames = [
+    "alt",
+    "aria-description",
+    "aria-label",
+    "label",
+    "placeholder",
+    "title"
+  ];
+  normalizeText(value, language = "en") {
+    const text = value || "";
+    if (language === "fr") {
+      return text.replace(this.frenchSpaceBeforePunctuationPattern, "$1").replace(this.frenchSpaceBeforeColonPattern, "$1\xA0:").replace(this.frenchMissingSpaceBeforeColonPattern, "$1\xA0");
+    }
+    return text.replace(this.englishSpaceBeforePunctuationPattern, "$1");
+  }
+  hasSpaceBeforeComma(value) {
+    return this.spaceBeforeCommaCheckPattern.test(value || "");
+  }
+  normalizeHtmlDocument(html, language = "en") {
+    if (!html)
+      return html;
+    try {
+      const doc = new DOMParser().parseFromString(html, "text/html");
+      this.normalizeNodeText(doc.body, language);
+      this.normalizeWritingAttributes(doc, language);
+      return this.serializeParsedHtmlLikeInput(html, doc);
+    } catch {
+      return this.normalizeText(html, language);
+    }
+  }
+  normalizeNodeText(root, language) {
+    const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+    const textNodes = [];
+    while (walker.nextNode()) {
+      const node = walker.currentNode;
+      if (this.shouldSkipTextNode(node))
+        continue;
+      textNodes.push(node);
+    }
+    textNodes.forEach((node) => {
+      node.nodeValue = this.normalizeText(node.nodeValue || "", language);
+    });
+  }
+  shouldSkipTextNode(node) {
+    const parent = node.parentElement;
+    if (!parent)
+      return false;
+    return ["script", "style", "template"].includes(parent.tagName.toLowerCase());
+  }
+  normalizeWritingAttributes(doc, language) {
+    this.writingAttributeNames.forEach((attributeName) => {
+      doc.querySelectorAll(`[${attributeName}]`).forEach((element) => {
+        const value = element.getAttribute(attributeName);
+        if (value === null)
+          return;
+        element.setAttribute(attributeName, this.normalizeText(value, language));
+      });
+    });
+    doc.querySelectorAll([
+      'meta[name="description"][content]',
+      'meta[name="dc.description"][content]',
+      'meta[name="dcterms.description"][content]',
+      'meta[name="twitter:description"][content]',
+      'meta[property="og:description"][content]'
+    ].join(", ")).forEach((element) => {
+      const value = element.getAttribute("content");
+      if (value === null)
+        return;
+      element.setAttribute("content", this.normalizeText(value, language));
+    });
+  }
+  serializeParsedHtmlLikeInput(originalHtml, doc) {
+    if (/<html[\s>]/i.test(originalHtml)) {
+      const doctype = originalHtml.trimStart().toLowerCase().startsWith("<!doctype") ? "<!doctype html>\n" : "";
+      return `${doctype}${doc.documentElement.outerHTML}`;
+    }
+    if (/<body[\s>]/i.test(originalHtml))
+      return doc.body.outerHTML;
+    return doc.body.innerHTML;
+  }
+  static \u0275fac = function WritingRulesService_Factory(__ngFactoryType__) {
+    return new (__ngFactoryType__ || _WritingRulesService)();
+  };
+  static \u0275prov = /* @__PURE__ */ \u0275\u0275defineInjectable({ token: _WritingRulesService, factory: _WritingRulesService.\u0275fac, providedIn: "root" });
+};
+(() => {
+  (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(WritingRulesService, [{
+    type: Injectable,
+    args: [{ providedIn: "root" }]
+  }], null, null);
+})();
+
 // src/app/views/page-assistant/services/url-data.service.ts
 var UrlDataService = class _UrlDataService {
   uploadState = inject(UploadStateService);
   fetchService = inject(FetchService);
+  writingRules = inject(WritingRulesService);
   /** Gets HTML content from a URL and processes it. **/
   fetchAndProcess(url) {
     return __async(this, null, function* () {
@@ -40536,7 +40685,7 @@ var UrlDataService = class _UrlDataService {
       }
       const content = main ? main.outerHTML : doc.body.innerHTML.trim();
       return {
-        html: yield this.formatHtml(content),
+        html: yield this.formatHtml(content, void 0, this.detectPageLanguage(doc, metadata)),
         found: foundFlags,
         metadata,
         breadcrumb
@@ -40545,10 +40694,11 @@ var UrlDataService = class _UrlDataService {
   }
   //START OF CLEAN-UP FUNCTIONS
   //Prettier HTML
-  formatHtml(html, source) {
+  formatHtml(html, source, language) {
     return __async(this, null, function* () {
       try {
         const { default: prettier } = yield import("./chunk-UKCQ235J.js");
+        const formatLanguage = language ?? this.detectFormatLanguage(html);
         if (source === "word") {
           html = `<main  property="mainContentOfPage" resource="#wb-main" typeof="WebPageElement" class="container">${html}</main>`;
           html = html.replace("<h1>", '<h1 property="name" id="wb-cont" dir="ltr">').replace("<table>", '<table class="wb-tables table table-striped">');
@@ -40567,7 +40717,7 @@ var UrlDataService = class _UrlDataService {
           printWidth: 200,
           singleAttributePerLine: false
         });
-        return this.cleanupFormattedSpacing(formatted);
+        return this.writingRules.normalizeHtmlDocument(this.cleanupFormattedSpacing(formatted, formatLanguage), formatLanguage);
       } catch (error) {
         console.error("Error formatting HTML:", error);
         return html;
@@ -40599,8 +40749,26 @@ var UrlDataService = class _UrlDataService {
     });
     return doc.body.outerHTML;
   }
-  cleanupFormattedSpacing(html) {
-    return html.replace(/(?:\r?\n[ \t\u00A0\u202F\u2007]*)+(?=\.)/g, "").replace(/(?:\r?\n[ \t\u00A0\u202F\u2007]*)+(?=<\/a>)/gi, "").replace(/(<p\b[^>]*>)(?:\r?\n[ \t\u00A0\u202F\u2007]*)+/gi, "$1").replace(/(?:\r?\n[ \t\u00A0\u202F\u2007]*)+(<\/p>)/gi, "$1");
+  cleanupFormattedSpacing(html, language) {
+    const punctuationPattern = language === "fr" ? /(?:\r?\n[ \t\u00A0\u202F\u2007]*)+(?=[,.;!?])/g : /(?:\r?\n[ \t\u00A0\u202F\u2007]*)+(?=[,.;:!?])/g;
+    return html.replace(punctuationPattern, "").replace(/(?:\r?\n[ \t\u00A0\u202F\u2007]*)+(?=<\/a>)/gi, "").replace(/(<p\b[^>]*>)(?:\r?\n[ \t\u00A0\u202F\u2007]*)+/gi, "$1").replace(/(?:\r?\n[ \t\u00A0\u202F\u2007]*)+(<\/p>)/gi, "$1");
+  }
+  detectFormatLanguage(html) {
+    const doc = new DOMParser().parseFromString(html || "", "text/html");
+    return this.detectPageLanguage(doc, this.uploadState.getUploadData()?.metadata ?? []);
+  }
+  detectPageLanguage(doc, metadata = []) {
+    const htmlLang = doc.documentElement.getAttribute("lang") || doc.querySelector("html")?.getAttribute("lang") || "";
+    if (htmlLang.trim().toLowerCase().startsWith("fr"))
+      return "fr";
+    if (htmlLang.trim().toLowerCase().startsWith("en"))
+      return "en";
+    const metaLanguage = doc.querySelector('meta[name="dcterms.language"]')?.content || String(metadata.find((item) => item.name === "dcterms.language")?.content ?? "");
+    const normalizedMetaLanguage = metaLanguage.trim().toLowerCase();
+    if (normalizedMetaLanguage === "fra" || normalizedMetaLanguage.startsWith("fr")) {
+      return "fr";
+    }
+    return "en";
   }
   fetchUrl(url, type) {
     return __async(this, null, function* () {
@@ -100287,6 +100455,9 @@ export {
   NG_VALIDATORS,
   NgControlStatus,
   NgModel,
+  SelectControlValueAccessor,
+  NgSelectOption,
+  ɵNgSelectMultipleOption,
   RequiredValidator,
   MaxLengthValidator,
   FormsModule,
@@ -100437,4 +100608,4 @@ export {
    * License: MIT
    *)
 */
-//# sourceMappingURL=chunk-AEQM6JS7.js.map
+//# sourceMappingURL=chunk-325IGRTZ.js.map
