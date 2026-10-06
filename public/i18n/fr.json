@@ -593,6 +593,9 @@
 	"common.modelSelector.placeholder": "Choisir un modèle",
 	"--------LLM EVALUATION---------------": "--------------------------------LLM EVALUATION---------------------------------------",
 	"llmEvaluation.content": "Cette page est un espace réservé pour les outils et les métriques d'évaluation des LLM.",
-	"--------NEW--------------------------": "--------------------------------NEW--------------------------------------------------"
+	"--------NEW--------------------------": "--------------------------------NEW--------------------------------------------------",
+  "page.ai-options.prompt.topicDoormatExampleFormat": "Format des exemples",
+  "page.ai-options.prompt.topicDoormatExamplesBeforeAfter": "Avant et après, avec explications",
+  "page.ai-options.prompt.topicDoormatExamplesFinalOnly": "Version finale seulement"
 }
 

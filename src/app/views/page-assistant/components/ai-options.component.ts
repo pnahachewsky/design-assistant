@@ -100,6 +100,7 @@ export class AiOptionsComponent implements OnInit {
 
   includeAlertRewriteExamples = true;
   includeTopicDoormatRewriteExamples = false;
+  topicDoormatExampleFormat: 'final-only' | 'before-after' = 'before-after';
   useCompactAlertsPageContext = true;
   useDescriptionStyleAsPrimaryIssue = false;
 
@@ -137,6 +138,7 @@ export class AiOptionsComponent implements OnInit {
       this.uploadState.getIncludeAlertRewriteExamples();
     this.includeTopicDoormatRewriteExamples =
       this.uploadState.getIncludeTopicDoormatRewriteExamples();
+    this.topicDoormatExampleFormat = this.uploadState.getTopicDoormatExampleFormat();
     this.useCompactAlertsPageContext =
       this.uploadState.getUseCompactAlertsPageContext();
     this.useDescriptionStyleAsPrimaryIssue =
@@ -167,6 +169,11 @@ export class AiOptionsComponent implements OnInit {
   onUseCompactAlertsPageContextSelect(useCompact: boolean): void {
     this.useCompactAlertsPageContext = useCompact;
     this.uploadState.setUseCompactAlertsPageContext(useCompact);
+  }
+
+  onTopicDoormatExampleFormatSelect(format: 'final-only' | 'before-after'): void {
+    this.topicDoormatExampleFormat = format;
+    this.uploadState.setTopicDoormatExampleFormat(format);
   }
 
   onUseDescriptionStyleAsPrimaryIssueSelect(useAsPrimary: boolean): void {

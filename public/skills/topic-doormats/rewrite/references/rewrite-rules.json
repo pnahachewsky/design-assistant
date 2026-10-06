@@ -1,5 +1,5 @@
 {
-  "version": "draft-2026-07-27",
+  "version": "2026-09-29",
   "scope": "Rewrite GCWeb topic page doormat link text and descriptions.",
   "rules": [
     {
@@ -48,7 +48,7 @@
     },
     {
       "id": "description-length",
-      "text": "Keep descriptions under 120 characters, including spaces. Aim for fewer than 100 characters when possible."
+      "text": "Keep descriptions within 120 characters, including spaces. First remove repetition, unnecessary wording, and secondary details; then try a shorter accurate phrasing. Only if those approaches cannot preserve essential meaning or accuracy may a description exceed 120 characters. Use the shortest clear, accurate wording possible and do not exceed 120 merely to retain optional detail."
     },
     {
       "id": "description-style",

@@ -108,6 +108,20 @@
                         {{ 'page.ai-options.prompt.includeTopicDoormatRewriteExamples' | translate }}
                       </label>
                     </div>
+                    @if (includeTopicDoormatRewriteExamples) {
+                      <label for="topicDoormatExampleFormat">
+                        {{ 'page.ai-options.prompt.topicDoormatExampleFormat' | translate }}
+                      </label>
+                      <select
+                        id="topicDoormatExampleFormat"
+                        class="p-inputtext"
+                        [(ngModel)]="topicDoormatExampleFormat"
+                        (ngModelChange)="onTopicDoormatExampleFormatSelect($event)"
+                      >
+                        <option value="before-after">{{ 'page.ai-options.prompt.topicDoormatExamplesBeforeAfter' | translate }}</option>
+                        <option value="final-only">{{ 'page.ai-options.prompt.topicDoormatExamplesFinalOnly' | translate }}</option>
+                      </select>
+                    }
                     <div class="p-field-checkbox mt-2">
                       <p-checkbox
                         [(ngModel)]="useDescriptionStyleAsPrimaryIssue"

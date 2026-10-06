@@ -16,37 +16,14 @@ import { TopicDoormatExtractorService } from './topic-doormat-extractor.service'
 import { TopicDoormatIssueAnalysisService } from './topic-doormat-issue-analysis.service';
 import { TopicDoormatTemplateNormalizerService } from './topic-doormat-template-normalizer.service';
 import {
+  selectTopicDoormatExamples,
+  TopicDoormatRewriteExample,
+} from './topic-doormat-example-selector';
+import {
   TopicDoormatIssueRow,
   TopicDoormatPageLanguage,
   TopicDoormatSummary,
 } from './topic-doormat.types';
-
-interface TopicDoormatRewriteExampleLanguageSet {
-  sourceHtmlShape?: unknown;
-  items?: unknown;
-  sourceHtml?: unknown;
-}
-
-interface TopicDoormatRewriteExampleItem {
-  position?: unknown;
-  linkText?: unknown;
-  description?: unknown;
-}
-
-interface TopicDoormatRewriteExample {
-  id?: unknown;
-  languages?: unknown;
-  languagePair?: unknown;
-  pageTopic?: unknown;
-  setSize?: unknown;
-  setSizeBand?: unknown;
-  pageType?: unknown;
-  domainTags?: unknown;
-  patternTags?: unknown;
-  issueTags?: unknown;
-  notes?: unknown;
-  sets?: Partial<Record<TopicDoormatPageLanguage, TopicDoormatRewriteExampleLanguageSet>>;
-}
 
 export interface TopicDoormatAnalyzeAndRewriteResult {
   analyzedHtml: string;
@@ -196,13 +173,17 @@ export class TopicDoormatRewriteOrchestratorService {
         selectedIssuesForRewrite,
         doormatSummaries,
       );
-    const modelRequiredDoormatIndexes = this.getAffectedDoormatIndexesForRewrite(
+    const modelRequiredDoormatIndexes = this.getRequiredChangeIndexes(
       modelRewriteIssues,
       doormatSummaries,
     );
 
     const prompt = await this.buildRewritePrompt();
-    const examples = await this.getExamplesForLanguageIfEnabled(pageLanguage);
+    const examples = await this.getExamplesForLanguageIfEnabled(pageLanguage, [
+      ...modelRewriteIssues.map((issue) => issue.issueId),
+      ...(doormatSummaries.some((summary) => this.hasGeneratedPlaceholderDescription(summary))
+        ? ['generated-placeholder-description'] : []),
+    ]);
     const userContent = this.buildRewriteUserContent(
       htmlForRewrite,
       issueRows,
@@ -257,7 +238,10 @@ export class TopicDoormatRewriteOrchestratorService {
           repairIssues,
           doormatSummaries,
           pageLanguage,
-          examples,
+          await this.getExamplesForLanguageIfEnabled(
+            pageLanguage,
+            repairIssues.map((issue) => issue.issueId),
+          ),
           unchangedModelRequiredIndexes,
         );
         const repair = await this.callOpenRouterForRewrite(model, [
@@ -346,7 +330,10 @@ export class TopicDoormatRewriteOrchestratorService {
       );
 
     const prompt = await this.buildRewritePrompt();
-    const examples = await this.getExamplesForLanguageIfEnabled(pageLanguage);
+    const examples = await this.getExamplesForLanguageIfEnabled(
+      pageLanguage,
+      ['generated-placeholder-description'],
+    );
     const userContent = this.buildDraftUserContent(
       workingHtml,
       doormatSummaries,
@@ -465,12 +452,17 @@ export class TopicDoormatRewriteOrchestratorService {
       allIssues,
       summaries,
     );
-    const modelRequiredDoormatIndexes = this.getAffectedDoormatIndexesForRewrite(
+    const modelRequiredDoormatIndexes = this.getRequiredChangeIndexes(
       selectedIssues,
       summaries,
     );
     const summariesByIndex = new Map(
       summaries.map((summary) => [summary.index, summary]),
+    );
+    const examplePayload = this.buildExamplePayload(
+      examples,
+      pageLanguage,
+      'rewrite',
     );
 
     return JSON.stringify({
@@ -488,7 +480,7 @@ export class TopicDoormatRewriteOrchestratorService {
       model_required_selected_issues: {
         status: selectedIssues.length ? 'required' : 'none',
         instruction:
-          'These selected issues still require model rewriting. Rewrite the affected doormats to fix these issues unless the issue is impossible to fix safely. Do not return unchanged link text or descriptions for these targets when a selected issue is fixable. Preserve doormats not listed here.',
+          'Review these selected issues and fix them where safe. For a description-length issue, first remove repetition, unnecessary wording, and secondary details, then try a shorter accurate phrasing. Exceed 120 characters only when essential meaning or accuracy cannot otherwise be preserved. Other fixable issues require changes. Preserve doormats without selected issues.',
         selected_issues: selectedIssues.map((issue) =>
           this.toDoormatRewriteIssuePayload(issue),
         ),
@@ -498,17 +490,7 @@ export class TopicDoormatRewriteOrchestratorService {
         .map((index) => summariesByIndex.get(index))
         .filter((summary): summary is TopicDoormatSummary => summary !== undefined)
         .map((summary) => this.toDoormatDestinationRewritePayload(summary)),
-      ...(examples.length
-        ? {
-            topic_doormat_examples: {
-              status: 'language-filtered',
-              page_language: pageLanguage,
-              instruction:
-                'Use these examples as set-level pattern guidance only. Do not copy example wording or legacy source markup. Follow the rewrite rules and preserve the current page language.',
-              examples,
-            },
-          }
-        : {}),
+      ...examplePayload,
     });
   }
 
@@ -522,6 +504,11 @@ export class TopicDoormatRewriteOrchestratorService {
   ): string {
     const summariesByIndex = new Map(
       summaries.map((summary) => [summary.index, summary]),
+    );
+    const examplePayload = this.buildExamplePayload(
+      examples,
+      pageLanguage,
+      'repair',
     );
     return JSON.stringify({
       page_html: html,
@@ -538,17 +525,7 @@ export class TopicDoormatRewriteOrchestratorService {
         .map((index) => summariesByIndex.get(index))
         .filter((summary): summary is TopicDoormatSummary => summary !== undefined)
         .map((summary) => this.toDoormatDestinationRewritePayload(summary)),
-      ...(examples.length
-        ? {
-            topic_doormat_examples: {
-              status: 'language-filtered',
-              page_language: pageLanguage,
-              instruction:
-                'Use these examples as pattern guidance only. Do not copy wording. Preserve the current page language.',
-              examples,
-            },
-          }
-        : {}),
+      ...examplePayload,
     });
   }
 
@@ -560,6 +537,11 @@ export class TopicDoormatRewriteOrchestratorService {
   ): string {
     const draftIssues = summaries.map((summary) =>
       this.toGeneratedPlaceholderIssue(summary),
+    );
+    const examplePayload = this.buildExamplePayload(
+      examples,
+      pageLanguage,
+      'draft',
     );
     return JSON.stringify({
       page_html: html,
@@ -574,17 +556,7 @@ export class TopicDoormatRewriteOrchestratorService {
       doormats_with_selected_issues: summaries.map((summary) =>
         this.toDoormatDestinationRewritePayload(summary),
       ),
-      ...(examples.length
-        ? {
-            topic_doormat_examples: {
-              status: 'language-filtered',
-              page_language: pageLanguage,
-              instruction:
-                'Use these examples as set-level pattern guidance only. Do not copy example wording or legacy source markup. Follow the rewrite rules and preserve the current page language.',
-              examples,
-            },
-          }
-        : {}),
+      ...examplePayload,
     });
   }
 
@@ -656,6 +628,21 @@ export class TopicDoormatRewriteOrchestratorService {
     return issues.filter(
       (issue) => issue.issueId !== 'description-trailing-punctuation',
     );
+  }
+
+  private getRequiredChangeIndexes(
+    issues: TopicDoormatIssueRewriteInput[],
+    summaries: TopicDoormatSummary[],
+  ): Set<number> {
+    const required = new Set<number>();
+    for (const issue of issues) {
+      for (const index of this.getAffectedDoormatIndexesForRewrite([issue], summaries)) {
+        // The rewrite prompt may preserve an over-limit description only when
+        // shorter wording cannot retain essential meaning or accuracy.
+        if (issue.issueId !== 'description-too-long') required.add(index);
+      }
+    }
+    return required;
   }
 
   private extractGeneratedFeatureSummaries(doc: Document): TopicDoormatSummary[] {
@@ -766,20 +753,42 @@ export class TopicDoormatRewriteOrchestratorService {
     );
   }
 
-  private async getExamplesForLanguage(
-    pageLanguage: TopicDoormatPageLanguage,
-  ): Promise<Record<string, unknown>[]> {
-    const examples = await this.loadExamples();
-    return examples
-      .map((example) => this.toLanguageFilteredExample(example, pageLanguage))
-      .filter((example): example is Record<string, unknown> => !!example);
-  }
-
   private async getExamplesForLanguageIfEnabled(
     pageLanguage: TopicDoormatPageLanguage,
+    issueIds: string[],
   ): Promise<Record<string, unknown>[]> {
     if (!this.uploadState.getIncludeTopicDoormatRewriteExamples()) return [];
-    return this.getExamplesForLanguage(pageLanguage);
+    return selectTopicDoormatExamples(
+      await this.loadExamples(),
+      pageLanguage,
+      issueIds,
+      this.uploadState.getTopicDoormatExampleFormat(),
+    );
+  }
+
+  private getExampleInstruction(): string {
+    return 'These are reference subsets, not the page being edited. Use only lessons relevant to selected issues; context-only items do not authorize extra edits. Before text is not necessarily wrong and preference changes are optional. Preserve adequate descriptions, including unchanged examples. Ground all facts in the current page destination evidence, not example facts. Do not copy example wording. Preserve the page language and the complete actual doormat set.';
+  }
+
+  private buildExamplePayload(
+    examples: Record<string, unknown>[],
+    pageLanguage: TopicDoormatPageLanguage,
+    requestType: 'rewrite' | 'repair' | 'draft',
+  ): Record<string, unknown> {
+    if (!examples.length) return {};
+
+    const topicDoormatExamples = {
+      status: 'language-and-issue-filtered',
+      format: this.uploadState.getTopicDoormatExampleFormat(),
+      page_language: pageLanguage,
+      instruction: this.getExampleInstruction(),
+      examples,
+    };
+    console.info('[TopicDoormatRewrite] Example payload sent to model', {
+      requestType,
+      topic_doormat_examples: topicDoormatExamples,
+    });
+    return { topic_doormat_examples: topicDoormatExamples };
   }
 
   private async loadExamples(): Promise<TopicDoormatRewriteExample[]> {
@@ -812,50 +821,6 @@ export class TopicDoormatRewriteOrchestratorService {
       this.examplesCache = [];
       return [];
     }
-  }
-
-  private toLanguageFilteredExample(
-    example: TopicDoormatRewriteExample,
-    pageLanguage: TopicDoormatPageLanguage,
-  ): Record<string, unknown> | null {
-    const languageSet = example.sets?.[pageLanguage];
-    if (!languageSet || typeof languageSet !== 'object') return null;
-
-    return {
-      id: example.id,
-      languages: example.languages,
-      languagePair: example.languagePair,
-      pageTopic: example.pageTopic,
-      setSize: example.setSize,
-      setSizeBand: example.setSizeBand,
-      pageType: example.pageType,
-      domainTags: example.domainTags,
-      patternTags: example.patternTags,
-      issueTags: example.issueTags,
-      notes: example.notes,
-      selectedLanguage: pageLanguage,
-      set: this.toModelExampleSet(languageSet),
-    };
-  }
-
-  private toModelExampleSet(
-    languageSet: TopicDoormatRewriteExampleLanguageSet,
-  ): Record<string, unknown> {
-    return {
-      sourceHtmlShape: languageSet.sourceHtmlShape,
-      items: Array.isArray(languageSet.items)
-        ? languageSet.items
-            .filter(
-              (item): item is TopicDoormatRewriteExampleItem =>
-                !!item && typeof item === 'object' && !Array.isArray(item),
-            )
-            .map((item) => ({
-              position: item.position,
-              linkText: item.linkText,
-              description: item.description,
-            }))
-        : [],
-    };
   }
 
   private async callOpenRouterForRewrite(

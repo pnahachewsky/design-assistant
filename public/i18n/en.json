@@ -628,5 +628,8 @@
   "common.modelSelector.placeholder": "Choose a model",
   "--------LLM EVALUATION---------------": "--------------------------------LLM EVALUATION---------------------------------------",
   "llmEvaluation.content": "This page is a placeholder for LLM evaluation tools and metrics.",
-  "--------NEW--------------------------": "--------------------------------NEW--------------------------------------------------"
+  "--------NEW--------------------------": "--------------------------------NEW--------------------------------------------------",
+  "page.ai-options.prompt.topicDoormatExampleFormat": "Example format",
+  "page.ai-options.prompt.topicDoormatExamplesBeforeAfter": "Before and after, with explanations",
+  "page.ai-options.prompt.topicDoormatExamplesFinalOnly": "Final wording only"
 }

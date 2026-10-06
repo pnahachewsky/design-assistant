@@ -454,6 +454,7 @@
       <a href="#decision-boundary">Classification and decisions</a>
       <a href="#section-rules">Section rules</a>
       <a href="#quality-checks">How AIDA determines issues</a>
+      <a href="#rewrite-examples">Rewrite examples</a>
       <a href="#testing">Testing</a>
       <a href="#source-files">Reference files</a>
     </nav>
@@ -593,8 +594,10 @@
           <summary>Exact character counts</summary>
           <div class="ex-hide-content">
             <p>AIDA provides authoritative link text and description character counts and reports length issues locally. Extracted labels and badges are excluded from link and description counts in both languages. When both languages are available, AIDA compares the English and French equivalent doormat and uses the longer count for severity.</p>
-            <p>Link names use a 45-character ideal threshold and 75-character maximum threshold: 46-60 is Low, 61-75 is Medium, and more than 75 is High. Descriptions use a 120-character threshold: 121-130 is Low, 131-140 is Medium, and more than 140 is High.</p>
-            <p>AIDA reports at most one link-length issue and one description-length issue per section. Evidence keeps English and French counts in separate severity-coloured pills. Link pills keep the ideal limit, such as <span class="inline-code">FR 71/45</span>; description pills show only the count, such as <span class="inline-code">FR 133</span>.</p>
+            <p>The formal recommendation for link names remains an ideal limit of 45 characters and a maximum of 75 characters, including spaces. AIDA reports 46–60 characters as Low severity, 61–75 as Medium, and more than 75 as High.</p>
+            <p>The formal recommendation for descriptions remains 120 characters or fewer in both languages, including spaces. AIDA continues to report descriptions over 120 characters as length issues, using the existing severity bands: 121–130 is Low, 131–140 is Medium, and more than 140 is High.</p>
+            <p>The rewrite prompt treats 120 characters as the rule and tries other approaches first: remove repetition, unnecessary wording, and secondary details, then find a shorter accurate phrasing. A rewrite may exceed 120 only when that is absolutely necessary to preserve essential meaning or accuracy. This rewrite-only exception does not change the formal recommendation or prevent AIDA from reporting the length issue.</p>
+            <p>AIDA reports at most one link-length issue and one description-length issue per section. Evidence keeps English and French counts in separate severity-coloured pills. Link pills show the ideal limit, such as <span class="inline-code">FR 61/45</span>; description pills show only the count, such as <span class="inline-code">FR 133</span>.</p>
           </div>
         </details>
         <details class="ex-hide">
@@ -684,6 +687,27 @@
       </div>
     </section>
 
+    <section class="panel" id="rewrite-examples">
+      <h2>Rewrite examples</h2>
+      <p class="intro">Optional reference examples demonstrate editing decisions. AIDA still sends the complete actual page HTML and doormat set in every rewrite request.</p>
+      <div class="two-col">
+        <article class="card">
+          <h3>Reference library</h3>
+          <p>The <a href="./skills/topic-doormats/rewrite/references/examples.json">example library</a> preserves both complete bilingual sets from <strong>Doormat examples - rewrites - Sept 24.docx</strong>: GST/HST for businesses and savings and pension plans. Tracked revisions are accepted and character-count annotations are removed.</p>
+          <p>Each pair uses the same link name and shows the original and revised descriptions. Annotations distinguish clarity improvements, compression, content selection, optional preferences, and unchanged wording. Destination evidence records supporting URLs and verification dates. The original descriptions are authentic, not deliberately bad examples.</p>
+        </article>
+        <article class="card">
+          <h3>What AIDA sends</h3>
+          <p>Enable <strong>Use examples for rewriting</strong> in the doormat AI options, then choose <strong>Before and after, with explanations</strong> or <strong>Final wording only</strong>. Examples remain off by default. AIDA preserves the enabled state and selected format when the page reloads; resetting the upload flow returns examples to off and the format to <strong>Before and after, with explanations</strong>.</p>
+          <p>Both formats select the same items by language and selected issue: up to two matched examples plus supporting context, capped at three reference doormats total. A paired neighbour takes priority when the lesson depends on comparing descriptions; otherwise an unchanged item from the selected set can demonstrate restraint.</p>
+          <p>No matching issue means no examples are sent. The library does not demonstrate link-name rewrites or every possible issue. Drafting missing descriptions uses the rebate guidance example and adjacent confirmation description.</p>
+        </article>
+      </div>
+      <div class="note" style="margin-top: 18px;">
+        <p>Reference subsets do not authorize extra edits. AIDA uses only lessons relevant to selected issues and grounds facts in the current destination evidence. Example facts, optional wording preferences, and changes to neighbouring reference items are not instructions to change the actual page.</p>
+      </div>
+    </section>
+
     <section class="panel" id="testing">
       <h2>Testing</h2>
       <p class="intro">
@@ -700,6 +724,40 @@
           </li>
         </ul>
       </article>
+    </section>
+
+    <section class="panel" id="example-comparison">
+      <h2>Comparing example formats</h2>
+      <p class="intro">Compare no examples, final-only examples, and before-and-after examples with explanations before deciding whether to enable examples by default.</p>
+      <div class="ex-hide-list">
+        <details class="ex-hide">
+          <summary>Comparison procedure</summary>
+          <div class="ex-hide-content">
+            <ol>
+              <li>Start with GST/HST, then savings and pensions, in both languages. Keep the original HTML, destination evidence, selected issues, model, and generation settings identical across conditions.</li>
+              <li>Turn examples off for the baseline. Enable examples and choose each format for the other two conditions. Confirm the selected condition after reloading AIDA; AIDA normally restores it from local storage.</li>
+              <li>Restore the original HTML before each run. Reuse the same analysis and selected issues so issue-detection changes do not affect the comparison. Do not use a previous rewrite as the next input.</li>
+              <li>Run each condition at least three times and compare outputs without revealing which condition produced them.</li>
+              <li>Repeat on unrelated pages with comparable issues. Results on the teaching pages alone do not establish whether the examples help on other pages.</li>
+            </ol>
+          </div>
+        </details>
+        <details class="ex-hide">
+          <summary>What to assess</summary>
+          <div class="ex-hide-content">
+            <ul>
+              <li><strong>Issue resolution:</strong> selected issues fixed, unresolved, or made worse.</li>
+              <li><strong>Grounding:</strong> unsupported additions or altered destination meaning.</li>
+              <li><strong>Restraint:</strong> unnecessary changes to unaffected doormats or adequate wording.</li>
+              <li><strong>Readability:</strong> clearer descriptions and distinctions between neighbours.</li>
+              <li><strong>Length:</strong> links over the 45-character ideal, descriptions over 120, and whether any rewrite exceeding 120 is necessary to preserve essential meaning or accuracy after shorter alternatives were tried.</li>
+              <li><strong>Cost:</strong> request size, latency, and repair attempts.</li>
+            </ul>
+            <p>Keep examples opt-in unless the comparison shows a consistent benefit without additional factual errors or unnecessary edits.</p>
+          </div>
+        </details>
+      </div>
+      <p class="small" style="margin-top: 18px;">The comparison procedure describes the intended evaluation; live model comparisons have not been run as part of this implementation.</p>
     </section>
 
     <section class="panel" id="source-files">
@@ -838,6 +896,7 @@
           <ul>
             <li><a href="./skills/topic-doormats/rewrite/SKILL.md">skills/topic-doormats/rewrite/SKILL.md</a></li>
             <li><a href="./skills/topic-doormats/rewrite/references/rewrite-rules.json">skills/topic-doormats/rewrite/references/rewrite-rules.json</a></li>
+            <li><a href="./skills/topic-doormats/rewrite/references/examples.json">skills/topic-doormats/rewrite/references/examples.json</a></li>
             <li><a href="./skills/topic-doormats/rewrite/assets/rewrite-output-schema.json">skills/topic-doormats/rewrite/assets/rewrite-output-schema.json</a></li>
           </ul>
         </article>

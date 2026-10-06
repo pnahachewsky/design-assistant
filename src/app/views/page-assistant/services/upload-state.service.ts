@@ -1,6 +1,7 @@
 import { Injectable, signal, computed, inject } from '@angular/core';
 import { UploadData, ModifiedData, OriginalData, AiModel } from '../data/data.model'
 import { LocalStorageService } from '../../../services/local-storage.service';
+import type { TopicDoormatExampleFormat } from './topic-doormats/topic-doormat-example-selector';
 
 @Injectable({
   providedIn: 'root'
@@ -16,6 +17,7 @@ export class UploadStateService {
     'pageAssistant.includeAlertRewriteExamples';
   private readonly includeTopicDoormatRewriteExamplesKey =
     'pageAssistant.includeTopicDoormatRewriteExamples';
+  private readonly topicDoormatExampleFormatKey = 'pageAssistant.topicDoormatExampleFormat';
   private readonly useCompactAlertsPageContextKey =
     'pageAssistant.useCompactAlertsPageContext';
   private readonly useDescriptionStyleAsPrimaryIssueKey =
@@ -66,6 +68,14 @@ export class UploadStateService {
       this.includeTopicDoormatRewriteExamplesKey,
       String(!!include),
     );
+  }
+
+  // Comparison format for the same selected doormat reference examples.
+  private topicDoormatExampleFormat = signal<TopicDoormatExampleFormat>('before-after');
+  getTopicDoormatExampleFormat = computed(() => this.topicDoormatExampleFormat());
+  setTopicDoormatExampleFormat(format: TopicDoormatExampleFormat) {
+    this.topicDoormatExampleFormat.set(format);
+    this.storage.saveData(this.topicDoormatExampleFormatKey, format);
   }
 
   // Whether alert issue analysis uses compact extracted page context instead of raw HTML.
@@ -119,6 +129,7 @@ export class UploadStateService {
       this.storage.removeData(this.uploadDataKey);
       this.storage.removeData(this.includeAlertRewriteExamplesKey);
       this.storage.removeData(this.includeTopicDoormatRewriteExamplesKey);
+      this.storage.removeData(this.topicDoormatExampleFormatKey);
       this.storage.removeData('pageAssistant.useJsonAlertsIssuesPrompt');
       this.storage.removeData(this.useCompactAlertsPageContextKey);
       this.storage.removeData(this.useDescriptionStyleAsPrimaryIssueKey);
@@ -214,6 +225,7 @@ export class UploadStateService {
     this.editPromptText.set('');
     this.includeAlertRewriteExamples.set(true);
     this.includeTopicDoormatRewriteExamples.set(false);
+    this.topicDoormatExampleFormat.set('before-after');
     this.useCompactAlertsPageContext.set(true);
     this.useDescriptionStyleAsPrimaryIssue.set(false);
     this.uploadData.set(null);
@@ -225,6 +237,7 @@ export class UploadStateService {
     this.storage.removeData(this.editPromptKey);
     this.storage.removeData(this.includeAlertRewriteExamplesKey);
     this.storage.removeData(this.includeTopicDoormatRewriteExamplesKey);
+    this.storage.removeData(this.topicDoormatExampleFormatKey);
     this.storage.removeData('pageAssistant.useJsonAlertsIssuesPrompt');
     this.storage.removeData(this.useCompactAlertsPageContextKey);
     this.storage.removeData(this.useDescriptionStyleAsPrimaryIssueKey);
@@ -289,6 +302,10 @@ export class UploadStateService {
     const storedIncludeTopicDoormatRewriteExamples = this.storage.getData(
       this.includeTopicDoormatRewriteExamplesKey,
     );
+    const storedTopicDoormatExampleFormat = this.storage.getData(this.topicDoormatExampleFormatKey);
+    if (storedTopicDoormatExampleFormat === 'final-only' || storedTopicDoormatExampleFormat === 'before-after') {
+      this.topicDoormatExampleFormat.set(storedTopicDoormatExampleFormat);
+    }
     if (
       storedIncludeTopicDoormatRewriteExamples === 'true' ||
       storedIncludeTopicDoormatRewriteExamples === 'false'
