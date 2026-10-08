@@ -438,7 +438,7 @@
             <li>Detect current and legacy topic doormat blocks.</li>
             <li>Extract link text, labels, destination, description, counts, language, and H2 section metadata.</li>
             <li>Fetch destination context and local IA child-page context when available.</li>
-            <li>Run local deterministic checks for counts, link validity, structure, formatting, trailing description punctuation, list connector usage, repeated openings, Most requested duplicates, and IA review flags.</li>
+            <li>Run local deterministic checks for counts, link validity, structure, formatting, trailing description punctuation, repeated openings, Most requested duplicates, and IA review flags.</li>
             <li>Send the complete doormat set to the Topic doormats issue skill.</li>
             <li>Ask the model to classify every doormat using constrained values and grounded evidence.</li>
             <li>Let AIDA validate and aggregate the classifications, apply local decision rules, and build the displayed issues.</li>
@@ -512,7 +512,9 @@
             link style, destination relationship and its basis, plus destination element
             coverage. It identifies meaning, grammatical construction, and important
             destination elements; it does not return locally owned issues such as length,
-            punctuation, broken links, IA flags, content gaps, or section style mixes.
+            trailing punctuation, broken links, IA flags, content gaps, or section style
+            mixes. It may return a list-punctuation ambiguity candidate when the wording
+            supports two materially different readings.
           </p>
         </article>
         <article class="card">
@@ -539,9 +541,11 @@
           <h3>Model-owned judgment remains bounded</h3>
           <p>
             Some editorial issues cannot yet be derived from a stable local rule, such as
-            genuinely ambiguous description wording or unjustified labels. The model may
-            return those candidate issue rows directly, but AIDA still validates them
-            against the taxonomy and response contract before displaying them.
+            genuinely ambiguous description wording, ambiguous list punctuation, or
+            unjustified labels. The model may return those candidate issue rows directly,
+            but AIDA still validates them against the taxonomy and response contract before
+            displaying them. A list-punctuation ambiguity candidate must quote the exact
+            ambiguous span and provide two distinct plausible readings.
           </p>
         </article>
       </div>
@@ -611,7 +615,9 @@
           <div class="ex-hide-content">
             <p>AIDA reports objective structure and formatting issues locally where the page markup already proves the issue, including split heading links, multiple links in one doormat, links inside descriptions, trailing punctuation, first- or second-person description openings, and legacy topic doormat markup.</p>
             <p>Description trailing punctuation is handled deterministically in both the issue report and rewrite flow. When that issue is selected, AIDA removes only the final punctuation mark without asking the model to rewrite the wording for that issue.</p>
-            <p>AIDA also detects likely key-term descriptions that use <span class="inline-code">and</span> or <span class="inline-code">et</span> before final list items. English checks the comma-before-<span class="inline-code">and</span> pattern in comma-list descriptions. French also checks the normal <span class="inline-code">A, B et C</span> pattern. AIDA does not run the same check for <span class="inline-code">or</span> or <span class="inline-code">ou</span>.</p>
+            <p>Using <span class="inline-code">and</span> or <span class="inline-code">et</span> before the final item in an otherwise clear list is not an issue. Omitting the connector is a space-saving writing tip, not a compliance requirement, and it does not independently trigger issue analysis, rewriting, or repair.</p>
+            <p>The model may instead report <span class="inline-code">description-list-punctuation-ambiguity</span> at Medium severity when list punctuation permits at least two materially different plausible readings. The candidate must quote an exact span from the description and state both readings. The presence or absence of <span class="inline-code">and</span>, <span class="inline-code">et</span>, or an Oxford comma is not sufficient evidence by itself. Clear serial lists, fixed expressions, names, combined concepts, and natural task phrases are excluded.</p>
+            <p>When AIDA is already rewriting the same description for another selected description issue, the rewrite may opportunistically omit the final connector from a plain list of at least three parallel items. The connector remains when it supports clarity or belongs to a name, fixed expression, combined concept, or natural task phrase. This optional cleanup does not apply to a link-text-only change or an unrelated doormat.</p>
           </div>
         </details>
         <details class="ex-hide">
@@ -860,7 +866,7 @@
                 <li>
                   <strong>Description formatting</strong>
                   <ul>
-                    <li>Don't use "and" before the last item in the list</li>
+                    <li><strong>Tip:</strong> In a comma-separated list, omit "and" before the last item to save space and avoid an Oxford-comma decision. This is recommended style, not a compliance issue.</li>
                     <li>Don't use icons or images</li>
                     <li>No special formatting (bold, italics, bullets)</li>
                     <li>Capitalize the letter of the first word</li>
@@ -892,6 +898,7 @@
           <h3>Topic doormat rewriting</h3>
           <p>Used to guide rewritten topic doormat content, issue-aware rewrite priorities, destination evidence for affected doormats, and output format.</p>
           <p>Rewrite guidance uses destination intent to preserve link framing. Imperative link names are appropriate when the destination lets users start, complete, or continue a task. Gerund, how-to, or explanatory link names are appropriate when the destination mainly provides information, instructions, requirements, eligibility, timing, or rules about the task.</p>
+          <p>The final-list connector guidance is optional cleanup only. AIDA may apply it when another selected description issue already requires a rewrite, but it never authorizes a rewrite on its own. Actual ambiguity caused by list punctuation is handled separately through the model-owned <span class="inline-code">description-list-punctuation-ambiguity</span> issue.</p>
           <p>AIDA also protects link text after the model responds. Unless a selected issue for a doormat is explicitly about link text, AIDA restores that doormat's original link text in the rewritten HTML. Description issues, repeated-opening issues, review flags, and IA child-page flags can change descriptions, but they do not authorize link-name changes.</p>
           <ul>
             <li><a href="./skills/topic-doormats/rewrite/SKILL.md">skills/topic-doormats/rewrite/SKILL.md</a></li>
@@ -919,7 +926,9 @@
           flags, strips doormat labels from destination-analysis text, validates
           model classifications against supplied destination context, normalizes
           informational gerund and how/when link names away from imperative action
-          style, keeps deterministic checks local, restores link text when selected
+          style, keeps deterministic checks local, requires grounded evidence for
+          model-owned list-punctuation ambiguity, treats final-list connector omission
+          as optional rewrite cleanup rather than an issue, restores link text when selected
           issues do not authorize link-name changes, and stores selected issue rows plus cleaned
           destination main HTML for affected doormats so the Doormats rewrite model
           can fix grounded issues while preserving doormats with no selected issue.

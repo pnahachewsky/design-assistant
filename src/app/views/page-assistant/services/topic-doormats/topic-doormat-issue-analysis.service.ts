@@ -191,7 +191,6 @@ export class TopicDoormatIssueAnalysisService {
     'description-too-long',
     'description-trailing-punctuation',
     'description-uses-first-or-second-person',
-    'description-uses-and-before-final-item',
     'duplicate-link-in-most-requested',
     'link-name-too-long',
     'link-name-too-different-from-destination-title',
@@ -211,6 +210,7 @@ export class TopicDoormatIssueAnalysisService {
     'description-special-formatting',
     'description-capitalization',
     'description-list-separators',
+    'description-list-punctuation-ambiguity',
     'misdirected-link',
     'link-name-lacks-clarity',
     'link-name-not-unique',
@@ -2067,11 +2067,6 @@ export class TopicDoormatIssueAnalysisService {
         existingRows,
       ),
       ...this.buildLocalTopicDoormatDescriptionPersonRows(doormatSummaries),
-      ...this.buildLocalTopicDoormatAndBeforeFinalItemRows(
-        doormatSummaries,
-        existingRows,
-        pageLanguage,
-      ),
       ...this.buildLocalTopicDoormatMostRequestedDuplicateRows(
         doormatSummaries,
         mostRequestedLinks,
@@ -2629,86 +2624,6 @@ export class TopicDoormatIssueAnalysisService {
     }
       return '';
       */
-  }
-
-  private buildLocalTopicDoormatAndBeforeFinalItemRows(
-    doormatSummaries: TopicDoormatSummary[],
-    existingRows: TopicDoormatIssueRow[],
-    pageLanguage: TopicDoormatPageLanguage,
-  ): TopicDoormatIssueRow[] {
-    const existingIssueKeys = new Set(
-      existingRows
-        .filter((row) => row.doormatIndex)
-        .map((row) => `${row.doormatIndex}|${row.issueId}`),
-    );
-    return doormatSummaries.flatMap((summary) => {
-      if (
-        existingIssueKeys.has(
-          `${summary.index}|description-uses-and-before-final-item`,
-        ) ||
-        !this.getAndBeforeFinalItemConnectorInKeyTermDescription(
-          summary.description,
-          pageLanguage,
-        )
-      ) {
-        return [];
-      }
-      const connector = this.getAndBeforeFinalItemConnectorInKeyTermDescription(
-        summary.description,
-        pageLanguage,
-      );
-
-      return [
-        {
-          include: true,
-          rowType: 'doormat',
-          severity: 'Low',
-          doormat: this.buildTopicDoormatLabel(summary),
-          doormatLabel: summary.linkText || summary.href || 'Doormat',
-          issueId: 'description-uses-and-before-final-item',
-          issue: this.getTopicDoormatIssueLabel(
-            'description-uses-and-before-final-item',
-          ),
-          evidence: this.getTopicDoormatDeterministicText(
-            'descriptionAndBeforeFinalItem.evidence',
-            { connector },
-          ),
-          recommendation: this.getTopicDoormatDeterministicText(
-            'descriptionAndBeforeFinalItem.recommendation',
-            { connector },
-          ),
-          doormatIndex: summary.index || undefined,
-          sectionIndex: summary.sectionIndex || undefined,
-          sectionTitle: summary.sectionTitle || undefined,
-          sectionItemIndex: summary.sectionItemIndex || undefined,
-        } satisfies TopicDoormatIssueRow,
-      ];
-    });
-  }
-
-  private getAndBeforeFinalItemConnectorInKeyTermDescription(
-    description: string,
-    pageLanguage: TopicDoormatPageLanguage,
-  ): 'and' | 'et' | null {
-    const text = this.cleanVisibleText(description);
-    if (this.startsLikeTaskOrGuidanceDescription(text)) return null;
-    const commaCount = (text.match(/,/g) ?? []).length;
-    if (pageLanguage === 'fr') {
-      if (commaCount < 1) return null;
-      return /(?:,\s*et\s+|,\s*[^,]+?\s+et\s+)/i.test(text) ? 'et' : null;
-    }
-
-    const connector = text.match(/,\s+(and)\s+/i)?.[1]?.toLowerCase() as
-      | 'and'
-      | undefined;
-    if (!connector || commaCount < 2) return null;
-    return connector;
-  }
-
-  private startsLikeTaskOrGuidanceDescription(text: string): boolean {
-    return /^(?:apply|access|calculate|check|complete|contact|download|file|find|find out|get|join|learn|learn about|learn how|make|manage|open|pay|register|renew|report|request|review|set up|submit|update|use|view|how|who|what|when|where|why)\b/i.test(
-      text.trim(),
-    );
   }
 
   private buildLocalTopicDoormatTrailingPunctuationRows(
@@ -4286,6 +4201,12 @@ export class TopicDoormatIssueAnalysisService {
     if (issueCategory === 'description-lacks-clarity') {
       return this.hasValidTopicDoormatClarityEvidence(issue, doormat);
     }
+    if (issueCategory === 'description-list-punctuation-ambiguity') {
+      return this.hasValidTopicDoormatListPunctuationAmbiguityEvidence(
+        issue,
+        doormat,
+      );
+    }
     if (
       issueCategory !== 'link-name-too-long' &&
       issueCategory !== 'description-too-long'
@@ -4333,6 +4254,33 @@ export class TopicDoormatIssueAnalysisService {
     return this.cleanVisibleText(doormat.description)
       .toLocaleLowerCase()
       .includes(unclearPhrase.toLocaleLowerCase());
+  }
+
+  private hasValidTopicDoormatListPunctuationAmbiguityEvidence(
+    issue: Record<string, unknown>,
+    doormat?: TopicDoormatSummary,
+  ): boolean {
+    if (!doormat?.description) return false;
+    const details =
+      issue['evidence_details'] && typeof issue['evidence_details'] === 'object'
+        ? (issue['evidence_details'] as Record<string, unknown>)
+        : null;
+    const ambiguousSpan = this.cleanVisibleText(
+      this.cleanString(details?.['ambiguous_span']),
+    );
+    const firstReading = this.cleanVisibleText(
+      this.cleanString(details?.['first_possible_reading']),
+    );
+    const secondReading = this.cleanVisibleText(
+      this.cleanString(details?.['second_possible_reading']),
+    );
+    if (!ambiguousSpan || !firstReading || !secondReading) return false;
+    if (firstReading.toLocaleLowerCase() === secondReading.toLocaleLowerCase()) {
+      return false;
+    }
+    return this.cleanVisibleText(doormat.description)
+      .toLocaleLowerCase()
+      .includes(ambiguousSpan.toLocaleLowerCase());
   }
 
   private hasMeaningfulTopicDoormatDestinationTitleMismatch(

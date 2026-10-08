@@ -55,6 +55,10 @@
       "text": "Description style is secondary to destination intent. Use the description form that best helps users predict the destination: an idiomatic short phrase, a task phrase, a how/who/what/when framing, Learn about, Find out, or a comma-separated keyword list. Prefer natural, readable phrasing over compressed noun lists. Use keyword lists only when the destination contains several distinct concepts that are easier to scan as parallel terms, or when the existing description is already list-like and only needs cleanup. Do not rewrite a whole section into one description style just to make descriptions look consistent. Keep descriptions compatible in length, tone, and specificity across the section without forcing every description into the same grammatical shape."
     },
     {
+      "id": "optional-final-list-connector",
+      "text": "Only when a description is already being rewritten to fix another selected description issue, and the revised description is a plain comma-separated list of at least three parallel items, you may omit 'and' or 'et' before the final item to save space and avoid an Oxford-comma decision. This is an optional tip, not an issue or an independent reason to rewrite. Keep the connector when it belongs to a natural task phrase, fixed expression, name, combined concept, or when it improves clarity. Do not apply this tip during a link-text-only change or to an otherwise unrelated doormat."
+    },
+    {
       "id": "description-quality",
       "text": "Do not repeat the link text, reuse identical or near-identical descriptions, use promotional language, or start with filler such as Includes, Information on, Learn more about, or Find information about. Descriptions must be plain text only: no links, bold text, bullets, or markup."
     },
