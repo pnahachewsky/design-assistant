@@ -271,6 +271,9 @@ export class TopicDoormatIaCheckService {
           },
           sectionIndex: sectionIndex || undefined,
           sectionTitle: firstSummary.sectionTitle || undefined,
+          affectedDoormatIndexes: summaries
+            .map((summary) => summary.index)
+            .filter((index): index is number => Number.isFinite(index)),
         } satisfies TopicDoormatIssueRow);
       },
     );

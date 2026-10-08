@@ -626,8 +626,14 @@ export class TopicDoormatRewriteOrchestratorService {
     issues: TopicDoormatIssueRewriteInput[],
   ): TopicDoormatIssueRewriteInput[] {
     return issues.filter(
-      (issue) => issue.issueId !== 'description-trailing-punctuation',
+      (issue) =>
+        issue.issueId !== 'description-trailing-punctuation' &&
+        !this.isManualReviewIaIssue(issue.issueId),
     );
+  }
+
+  private isManualReviewIaIssue(issueId: string): boolean {
+    return issueId === 'missing-needed-doormat' || issueId === 'unnecessary-doormat';
   }
 
   private getRequiredChangeIndexes(
@@ -757,13 +763,37 @@ export class TopicDoormatRewriteOrchestratorService {
     pageLanguage: TopicDoormatPageLanguage,
     issueIds: string[],
   ): Promise<Record<string, unknown>[]> {
-    if (!this.uploadState.getIncludeTopicDoormatRewriteExamples()) return [];
-    return selectTopicDoormatExamples(
+    const enabled = this.uploadState.getIncludeTopicDoormatRewriteExamples();
+    const format = this.uploadState.getTopicDoormatExampleFormat();
+    const requestedIssueIds = Array.from(new Set(issueIds.filter(Boolean)));
+    if (!enabled) {
+      console.info('[TopicDoormatRewrite] Example selection', {
+        enabled,
+        format,
+        pageLanguage,
+        requestedIssueIds,
+        selectedExampleCount: 0,
+      });
+      return [];
+    }
+
+    const examples = selectTopicDoormatExamples(
       await this.loadExamples(),
       pageLanguage,
-      issueIds,
-      this.uploadState.getTopicDoormatExampleFormat(),
+      requestedIssueIds,
+      format,
     );
+    console.info('[TopicDoormatRewrite] Example selection', {
+      enabled,
+      format,
+      pageLanguage,
+      requestedIssueIds,
+      selectedExampleCount: examples.length,
+      selectedExampleIds: examples
+        .map((example) => example['id'])
+        .filter((id): id is string => typeof id === 'string' && !!id),
+    });
+    return examples;
   }
 
   private getExampleInstruction(): string {
