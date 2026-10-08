@@ -26052,7 +26052,8 @@ var TopicDoormatIaCheckService = class _TopicDoormatIaCheckService {
           recommendation: ["aida"]
         },
         sectionIndex: sectionIndex || void 0,
-        sectionTitle: firstSummary.sectionTitle || void 0
+        sectionTitle: firstSummary.sectionTitle || void 0,
+        affectedDoormatIndexes: summaries.map((summary) => summary.index).filter((index) => Number.isFinite(index))
       };
     });
   }
@@ -26894,7 +26895,6 @@ var TopicDoormatIssueAnalysisService = class _TopicDoormatIssueAnalysisService {
     "description-too-long",
     "description-trailing-punctuation",
     "description-uses-first-or-second-person",
-    "description-uses-and-before-final-item",
     "duplicate-link-in-most-requested",
     "link-name-too-long",
     "link-name-too-different-from-destination-title",
@@ -26914,6 +26914,7 @@ var TopicDoormatIssueAnalysisService = class _TopicDoormatIssueAnalysisService {
     "description-special-formatting",
     "description-capitalization",
     "description-list-separators",
+    "description-list-punctuation-ambiguity",
     "misdirected-link",
     "link-name-lacks-clarity",
     "link-name-not-unique",
@@ -28087,7 +28088,6 @@ var TopicDoormatIssueAnalysisService = class _TopicDoormatIssueAnalysisService {
       ...this.buildLocalTopicDoormatDescriptionLengthRows(doormatSummaries, pageLanguage),
       ...this.buildLocalTopicDoormatTrailingPunctuationRows(doormatSummaries, existingRows),
       ...this.buildLocalTopicDoormatDescriptionPersonRows(doormatSummaries),
-      ...this.buildLocalTopicDoormatAndBeforeFinalItemRows(doormatSummaries, existingRows, pageLanguage),
       ...this.buildLocalTopicDoormatMostRequestedDuplicateRows(doormatSummaries, mostRequestedLinks, existingRows, uploadData),
       ...this.buildLocalTopicDoormatLinkCodeRows(doormatSummaries),
       ...this.buildLocalTopicDoormatRepeatedDescriptionOpeningRows(doormatSummaries),
@@ -28393,50 +28393,6 @@ var TopicDoormatIssueAnalysisService = class _TopicDoormatIssueAnalysisService {
       "vos"
     ]);
     return openingPronouns.has(normalizedBase) ? firstToken : "";
-  }
-  buildLocalTopicDoormatAndBeforeFinalItemRows(doormatSummaries, existingRows, pageLanguage) {
-    const existingIssueKeys = new Set(existingRows.filter((row) => row.doormatIndex).map((row) => `${row.doormatIndex}|${row.issueId}`));
-    return doormatSummaries.flatMap((summary) => {
-      if (existingIssueKeys.has(`${summary.index}|description-uses-and-before-final-item`) || !this.getAndBeforeFinalItemConnectorInKeyTermDescription(summary.description, pageLanguage)) {
-        return [];
-      }
-      const connector = this.getAndBeforeFinalItemConnectorInKeyTermDescription(summary.description, pageLanguage);
-      return [
-        {
-          include: true,
-          rowType: "doormat",
-          severity: "Low",
-          doormat: this.buildTopicDoormatLabel(summary),
-          doormatLabel: summary.linkText || summary.href || "Doormat",
-          issueId: "description-uses-and-before-final-item",
-          issue: this.getTopicDoormatIssueLabel("description-uses-and-before-final-item"),
-          evidence: this.getTopicDoormatDeterministicText("descriptionAndBeforeFinalItem.evidence", { connector }),
-          recommendation: this.getTopicDoormatDeterministicText("descriptionAndBeforeFinalItem.recommendation", { connector }),
-          doormatIndex: summary.index || void 0,
-          sectionIndex: summary.sectionIndex || void 0,
-          sectionTitle: summary.sectionTitle || void 0,
-          sectionItemIndex: summary.sectionItemIndex || void 0
-        }
-      ];
-    });
-  }
-  getAndBeforeFinalItemConnectorInKeyTermDescription(description, pageLanguage) {
-    const text = this.cleanVisibleText(description);
-    if (this.startsLikeTaskOrGuidanceDescription(text))
-      return null;
-    const commaCount = (text.match(/,/g) ?? []).length;
-    if (pageLanguage === "fr") {
-      if (commaCount < 1)
-        return null;
-      return /(?:,\s*et\s+|,\s*[^,]+?\s+et\s+)/i.test(text) ? "et" : null;
-    }
-    const connector = text.match(/,\s+(and)\s+/i)?.[1]?.toLowerCase();
-    if (!connector || commaCount < 2)
-      return null;
-    return connector;
-  }
-  startsLikeTaskOrGuidanceDescription(text) {
-    return /^(?:apply|access|calculate|check|complete|contact|download|file|find|find out|get|join|learn|learn about|learn how|make|manage|open|pay|register|renew|report|request|review|set up|submit|update|use|view|how|who|what|when|where|why)\b/i.test(text.trim());
   }
   buildLocalTopicDoormatTrailingPunctuationRows(doormatSummaries, existingRows) {
     const existingDoormatIssueKeys = new Set(existingRows.filter((row) => row.doormatIndex).map((row) => `${row.doormatIndex}|${row.issueId}`));
@@ -29385,6 +29341,9 @@ ${JSON.stringify(contract)}`;
     if (issueCategory === "description-lacks-clarity") {
       return this.hasValidTopicDoormatClarityEvidence(issue, doormat);
     }
+    if (issueCategory === "description-list-punctuation-ambiguity") {
+      return this.hasValidTopicDoormatListPunctuationAmbiguityEvidence(issue, doormat);
+    }
     if (issueCategory !== "link-name-too-long" && issueCategory !== "description-too-long") {
       return true;
     }
@@ -29406,6 +29365,20 @@ ${JSON.stringify(contract)}`;
     if (!unclearPhrase || !ambiguityExplanation)
       return false;
     return this.cleanVisibleText(doormat.description).toLocaleLowerCase().includes(unclearPhrase.toLocaleLowerCase());
+  }
+  hasValidTopicDoormatListPunctuationAmbiguityEvidence(issue, doormat) {
+    if (!doormat?.description)
+      return false;
+    const details = issue["evidence_details"] && typeof issue["evidence_details"] === "object" ? issue["evidence_details"] : null;
+    const ambiguousSpan = this.cleanVisibleText(this.cleanString(details?.["ambiguous_span"]));
+    const firstReading = this.cleanVisibleText(this.cleanString(details?.["first_possible_reading"]));
+    const secondReading = this.cleanVisibleText(this.cleanString(details?.["second_possible_reading"]));
+    if (!ambiguousSpan || !firstReading || !secondReading)
+      return false;
+    if (firstReading.toLocaleLowerCase() === secondReading.toLocaleLowerCase()) {
+      return false;
+    }
+    return this.cleanVisibleText(doormat.description).toLocaleLowerCase().includes(ambiguousSpan.toLocaleLowerCase());
   }
   hasMeaningfulTopicDoormatDestinationTitleMismatch(issue, doormat) {
     if (!doormat?.linkText)
@@ -30746,7 +30719,10 @@ var TopicDoormatRewriteOrchestratorService = class _TopicDoormatRewriteOrchestra
     return indexes;
   }
   getModelRewriteIssues(issues) {
-    return issues.filter((issue) => issue.issueId !== "description-trailing-punctuation");
+    return issues.filter((issue) => issue.issueId !== "description-trailing-punctuation" && !this.isManualReviewIaIssue(issue.issueId));
+  }
+  isManualReviewIaIssue(issueId) {
+    return issueId === "missing-needed-doormat" || issueId === "unnecessary-doormat";
   }
   getRequiredChangeIndexes(issues, summaries) {
     const required = /* @__PURE__ */ new Set();
@@ -30838,9 +30814,29 @@ var TopicDoormatRewriteOrchestratorService = class _TopicDoormatRewriteOrchestra
   }
   getExamplesForLanguageIfEnabled(pageLanguage, issueIds) {
     return __async(this, null, function* () {
-      if (!this.uploadState.getIncludeTopicDoormatRewriteExamples())
+      const enabled = this.uploadState.getIncludeTopicDoormatRewriteExamples();
+      const format = this.uploadState.getTopicDoormatExampleFormat();
+      const requestedIssueIds = Array.from(new Set(issueIds.filter(Boolean)));
+      if (!enabled) {
+        console.info("[TopicDoormatRewrite] Example selection", {
+          enabled,
+          format,
+          pageLanguage,
+          requestedIssueIds,
+          selectedExampleCount: 0
+        });
         return [];
-      return selectTopicDoormatExamples(yield this.loadExamples(), pageLanguage, issueIds, this.uploadState.getTopicDoormatExampleFormat());
+      }
+      const examples = selectTopicDoormatExamples(yield this.loadExamples(), pageLanguage, requestedIssueIds, format);
+      console.info("[TopicDoormatRewrite] Example selection", {
+        enabled,
+        format,
+        pageLanguage,
+        requestedIssueIds,
+        selectedExampleCount: examples.length,
+        selectedExampleIds: examples.map((example) => example["id"]).filter((id) => typeof id === "string" && !!id)
+      });
+      return examples;
     });
   }
   getExampleInstruction() {
@@ -37493,9 +37489,9 @@ var ComponentGuidanceComponent = class _ComponentGuidanceComponent {
     "description-incorrect-style",
     "description-lacks-clarity",
     "description-list-separators",
+    "description-list-punctuation-ambiguity",
     "description-repeats-link-text",
     "description-special-formatting",
-    "description-uses-and-before-final-item",
     "description-uses-icons-or-images",
     "duplicate-or-near-duplicate-description",
     "enhancement-label-not-needed",
@@ -52966,4 +52962,4 @@ ${custom}` : promptBody;
 export {
   PageAssistantCompareComponent
 };
-//# sourceMappingURL=chunk-MMHMDMDE.js.map
+//# sourceMappingURL=chunk-K6VDKPM7.js.map

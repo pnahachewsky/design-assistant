@@ -221,6 +221,7 @@
                     "description-special-formatting",
                     "description-capitalization",
                     "description-list-separators",
+                    "description-list-punctuation-ambiguity",
                     "misdirected-link",
                     "link-name-lacks-clarity",
                     "link-name-not-unique",

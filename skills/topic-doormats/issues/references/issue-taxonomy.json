@@ -6,6 +6,7 @@
   "reporting_unit": "Return issue reports for each affected doormat item. If an editorial issue applies to a whole section rather than a single doormat, return it in section_issues with the affected section_index. Do not repeat section-level issues on every doormat. Unless runtime instructions say the description-style primary issue flag is enabled, do not return mixed-description-style-in-section or inconsistent-description-style; description style is secondary rewrite guidance, not a primary issue driver by default. Report too-many-doormats-in-section as one section_issues item for the affected H2 section, not as repeated per-doormat issues.",
   "runtime_editorial_evidence_overrides": {
     "description-lacks-clarity": "Report only genuinely ambiguous wording. evidence_details.unclear_phrase must quote an exact phrase from the description and evidence_details.ambiguity_explanation must explain competing interpretations. Generic wording, missing detail, repetition, and incomplete destination coverage are not clarity issues.",
+    "description-list-punctuation-ambiguity": "Report only when list punctuation creates at least two materially different plausible readings. evidence_details.ambiguous_span must quote an exact span from the description, and first_possible_reading and second_possible_reading must state the two different interpretations. The presence or absence of 'and', 'et', or an Oxford comma alone is not evidence of ambiguity.",
     "misdirected-link": "Do not infer misdirection from URL path structure, site hierarchy, section placement, labels, or closed/archived/replaced destination states. Doormat labels are acceptable when the substantive link text still matches the destination title or H1 in meaning. Do not require exact wording. Section suitability is handled by AIDA's IA checks."
   },
   "analysis_sequence": [
@@ -22,8 +23,7 @@
         "description-uses-icons-or-images",
         "description-special-formatting",
         "description-capitalization",
-        "description-list-separators",
-        "description-uses-and-before-final-item"
+        "description-list-separators"
       ]
     },
     {
@@ -35,6 +35,7 @@
         "link-name-not-unique",
         "link-name-too-different-from-destination-title",
         "description-lacks-clarity",
+        "description-list-punctuation-ambiguity",
         "description-repeats-link-text",
         "duplicate-or-near-duplicate-description",
         "mixed-link-name-styles-in-section",
@@ -53,6 +54,7 @@
       "description-special-formatting",
       "description-capitalization",
       "description-list-separators",
+      "description-list-punctuation-ambiguity",
       "misdirected-link",
       "link-name-lacks-clarity",
       "link-name-not-unique",
@@ -463,24 +465,17 @@
       ]
     },
     {
-      "id": "description-uses-and-before-final-item",
-      "group": "Description formatting",
-      "label": "Description uses and before final item",
-      "severity": "Low",
-      "condition": "A description is clearly a comma-separated list of parallel items, and the final item is introduced only by 'and' as a serial-list connector.",
-      "recommendation": "Remove 'and' before the final listed item only when it is a plain serial-list connector. Keep fixed phrases and combined concepts intact.",
-      "must_report_only_when": [
-        "The description has at least three parallel comma-separated list items.",
-        "The final 'and' introduces a standalone final list item.",
-        "Removing 'and' would not change the meaning of a fixed phrase, service name, program name, or combined concept."
-      ],
-      "do_not_report_when": [
-        "The word 'and' is part of a fixed phrase, program name, service name, or common concept such as benefits and allowances.",
-        "The phrase containing 'and' is a single combined concept rather than the final item in a comma-separated list.",
-        "There is no comma-separated list structure.",
-        "The description uses 'and' inside a task phrase, such as collect and remit, register and run, or receive and pay.",
-        "The description uses 'and' inside a topic label or combined service area, such as charities and giving, savings and pension plans, compliance and enforcement, deductions and contributions, benefits and allowances, scams and fraud, or objections or appeals.",
-        "The evidence is only that the description contains the word 'and'."
+      "id": "description-list-punctuation-ambiguity",
+      "group": "Description clarity",
+      "label": "List punctuation creates ambiguity",
+      "severity": "Medium",
+      "condition": "List punctuation permits at least two materially different plausible readings of which words belong together or which concepts are separate list items. Do not report merely because a clear list includes or omits 'and', 'et', or an Oxford comma.",
+      "recommendation": "Rewrite or repunctuate the list with the smallest change that makes the intended grouping unambiguous while preserving meaning.",
+      "reporting": "Report only when the supplied description supports two concrete interpretations. Fixed expressions, names, combined concepts, natural task phrases, and clear serial lists are not issues.",
+      "evidence_required": [
+        "ambiguous_span",
+        "first_possible_reading",
+        "second_possible_reading"
       ]
     },
     {
