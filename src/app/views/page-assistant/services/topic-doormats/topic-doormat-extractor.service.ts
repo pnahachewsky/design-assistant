@@ -699,8 +699,8 @@ export class TopicDoormatExtractorService {
   private getSubwayDescriptionElement(term: HTMLElement): HTMLElement | null {
     let current = term.nextElementSibling as HTMLElement | null;
     while (current) {
-      if (current.matches('dd')) return current;
-      if (current.matches('dt')) return null;
+      if (current.tagName === 'DD') return current;
+      if (current.tagName === 'DT') return null;
       current = current.nextElementSibling as HTMLElement | null;
     }
     return null;
