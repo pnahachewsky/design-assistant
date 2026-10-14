@@ -186,6 +186,7 @@ export class TopicDoormatIssueAnalysisService {
   ];
   private readonly locallyOwnedTopicDoormatIssueIds = new Set([
     'broken-link',
+    'redirected-link',
     'description-contains-link',
     'description-missing-needed-information',
     'description-too-long',
@@ -2956,6 +2957,21 @@ export class TopicDoormatIssueAnalysisService {
 
       const brokenLinkEvidence =
         this.getTopicDoormatBrokenLinkEvidence(summary);
+      if (summary.destinationReplacementUrl) {
+        rows.push({
+          ...baseRow,
+          severity: 'Low',
+          issueId: 'redirected-link',
+          issue: this.getTopicDoormatIssueLabel('redirected-link'),
+          evidence: this.getTopicDoormatDeterministicText(
+            'redirectedLink.evidence',
+            { url: summary.destinationReplacementUrl },
+          ),
+          recommendation: this.getTopicDoormatDeterministicText(
+            'redirectedLink.recommendation',
+          ),
+        } satisfies TopicDoormatIssueRow);
+      }
       if (brokenLinkEvidence) {
         rows.push({
           ...baseRow,

@@ -82,6 +82,7 @@ export interface TopicDoormatSummary {
   href: string;
   labels?: string[];
   destinationUrl?: string;
+  destinationReplacementUrl?: string;
   destinationPageTitle?: string;
   destinationPageHeading?: string;
   destinationMainHtml?: string;

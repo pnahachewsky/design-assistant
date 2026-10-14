@@ -155,27 +155,49 @@ export class TopicDoormatRewriteOrchestratorService {
       analyzedHtml,
       issueRows,
     );
-    const descriptionTrailingPunctuationIndexes =
-      this.getDescriptionTrailingPunctuationIndexes(
+    const verifiedRedirectReplacements =
+      this.getSelectedVerifiedRedirectReplacements(
         selectedIssuesForRewrite,
         doormatSummaries,
       );
-    const htmlForRewrite = this.applyDescriptionTrailingPunctuationCleanupToHtml(
+    const htmlWithVerifiedRedirects = this.applyVerifiedRedirectsToHtml(
       analyzedHtml,
       doormatSummaries,
+      verifiedRedirectReplacements,
+    );
+    const rewriteSummaries = doormatSummaries.map((summary) => ({
+      ...summary,
+      href: verifiedRedirectReplacements.has(summary.index)
+        ? this.formatVerifiedRedirectHref(
+            summary.href,
+            verifiedRedirectReplacements.get(summary.index)!,
+          )
+        : summary.href,
+    }));
+    const descriptionTrailingPunctuationIndexes =
+      this.getDescriptionTrailingPunctuationIndexes(
+        selectedIssuesForRewrite,
+        rewriteSummaries,
+      );
+    const htmlForRewrite = this.applyDescriptionTrailingPunctuationCleanupToHtml(
+      htmlWithVerifiedRedirects,
+      rewriteSummaries,
       descriptionTrailingPunctuationIndexes,
     );
-    const modelRewriteIssues = this.getModelRewriteIssues(
-      selectedIssuesForRewrite,
+    const frozenBrokenLinkIndexes = this.getBrokenLinkDoormatIndexes(issueRows);
+    const modelRewriteIssues = this.excludeDoormatIndexesFromRewriteIssues(
+      this.getModelRewriteIssues(selectedIssuesForRewrite),
+      frozenBrokenLinkIndexes,
+      rewriteSummaries,
     );
     const linkTextRewriteAllowedIndexes =
       this.getLinkTextRewriteAllowedIndexes(
         selectedIssuesForRewrite,
-        doormatSummaries,
+        rewriteSummaries,
       );
     const modelRequiredDoormatIndexes = this.getRequiredChangeIndexes(
       modelRewriteIssues,
-      doormatSummaries,
+      rewriteSummaries,
     );
 
     const prompt = await this.buildRewritePrompt();
@@ -187,7 +209,7 @@ export class TopicDoormatRewriteOrchestratorService {
     const userContent = this.buildRewriteUserContent(
       htmlForRewrite,
       issueRows,
-      doormatSummaries,
+      rewriteSummaries,
       pageLanguage,
       examples,
       modelRewriteIssues,
@@ -215,7 +237,7 @@ export class TopicDoormatRewriteOrchestratorService {
         htmlForRewrite,
         patchedHtml,
         modelRequiredDoormatIndexes,
-        doormatSummaries,
+        rewriteSummaries,
       );
     if (unchangedModelRequiredIndexes.size) {
       console.warn(
@@ -230,13 +252,13 @@ export class TopicDoormatRewriteOrchestratorService {
       const repairIssues = this.getRewriteIssuesForDoormatIndexes(
         modelRewriteIssues,
         unchangedModelRequiredIndexes,
-        doormatSummaries,
+        rewriteSummaries,
       );
       if (repairIssues.length) {
         const repairContent = this.buildModelRequiredRepairUserContent(
           patchedHtml,
           repairIssues,
-          doormatSummaries,
+          rewriteSummaries,
           pageLanguage,
           await this.getExamplesForLanguageIfEnabled(
             pageLanguage,
@@ -262,7 +284,7 @@ export class TopicDoormatRewriteOrchestratorService {
           htmlForRewrite,
           patchedHtml,
           unchangedModelRequiredIndexes,
-          doormatSummaries,
+          rewriteSummaries,
         );
         if (stillUnchanged.size) {
           console.warn(
@@ -280,16 +302,39 @@ export class TopicDoormatRewriteOrchestratorService {
     const cleanedPatchedHtml = this.preserveUnselectedLinkTextInHtml(
       this.applyDescriptionTrailingPunctuationCleanupToHtml(
         patchedHtml,
-        doormatSummaries,
+        rewriteSummaries,
         descriptionTrailingPunctuationIndexes,
       ),
-      doormatSummaries,
+      rewriteSummaries,
       linkTextRewriteAllowedIndexes,
     );
-    const rewrittenHtml = await this.urlDataService.formatHtml(
+    const finalPatchedHtml = this.restoreFrozenDoormatsFromOriginalHtml(
       cleanedPatchedHtml,
+      analyzedHtml,
+      doormatSummaries,
+      frozenBrokenLinkIndexes,
+    );
+    const rewrittenHtml = await this.urlDataService.formatHtml(
+      finalPatchedHtml,
       'ai',
     );
+    if (frozenBrokenLinkIndexes.size) {
+      const doormatIndexes = Array.from(frozenBrokenLinkIndexes)
+        .sort((left, right) => left - right)
+        .join(', ');
+      this.messageService.add({
+        severity: 'error',
+        summary: this.translate.instant(
+          'common.ai.topicDoormatBrokenLinksFrozen.summary',
+        ),
+        detail: this.translate.instant(
+          'common.ai.topicDoormatBrokenLinksFrozen.detail',
+          { doormatIndexes },
+        ),
+        sticky: true,
+        closable: true,
+      });
+    }
     return {
       analyzedHtml,
       rewrittenHtml,
@@ -628,8 +673,162 @@ export class TopicDoormatRewriteOrchestratorService {
     return issues.filter(
       (issue) =>
         issue.issueId !== 'description-trailing-punctuation' &&
+        issue.issueId !== 'broken-link' &&
+        issue.issueId !== 'redirected-link' &&
         !this.isManualReviewIaIssue(issue.issueId),
     );
+  }
+
+  private getBrokenLinkDoormatIndexes(
+    rows: TopicDoormatIssueRow[],
+  ): Set<number> {
+    return new Set(
+      rows
+        .filter(
+          (row) =>
+            row.issueId === 'broken-link' &&
+            typeof row.doormatIndex === 'number',
+        )
+        .map((row) => row.doormatIndex!),
+    );
+  }
+
+  private excludeDoormatIndexesFromRewriteIssues(
+    issues: TopicDoormatIssueRewriteInput[],
+    excludedIndexes: Set<number>,
+    summaries: TopicDoormatSummary[],
+  ): TopicDoormatIssueRewriteInput[] {
+    if (!excludedIndexes.size) return issues;
+    return issues.flatMap((issue) => {
+      if (
+        typeof issue.doormatIndex === 'number' &&
+        excludedIndexes.has(issue.doormatIndex)
+      ) {
+        return [];
+      }
+      if (
+        !issue.affectedDoormatIndexes?.length &&
+        issue.rowType === 'section' &&
+        typeof issue.sectionIndex === 'number'
+      ) {
+        const affectedDoormatIndexes = summaries
+          .filter(
+            (summary) =>
+              summary.sectionIndex === issue.sectionIndex &&
+              !excludedIndexes.has(summary.index),
+          )
+          .map((summary) => summary.index);
+        return affectedDoormatIndexes.length
+          ? [{ ...issue, affectedDoormatIndexes }]
+          : [];
+      }
+      if (!issue.affectedDoormatIndexes?.length) return [issue];
+      const affectedDoormatIndexes = issue.affectedDoormatIndexes.filter(
+        (index) => !excludedIndexes.has(index),
+      );
+      return affectedDoormatIndexes.length
+        ? [{ ...issue, affectedDoormatIndexes }]
+        : [];
+    });
+  }
+
+  private restoreFrozenDoormatsFromOriginalHtml(
+    html: string,
+    originalHtml: string,
+    summaries: TopicDoormatSummary[],
+    frozenIndexes: Set<number>,
+  ): string {
+    if (!frozenIndexes.size) return html;
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(html, 'text/html');
+    const originalDoc = parser.parseFromString(originalHtml, 'text/html');
+    const frozenHrefs = new Set(
+      summaries
+        .filter((summary) => frozenIndexes.has(summary.index))
+        .map((summary) => summary.href),
+    );
+    const originalItemsByHref = new Map<string, Element>();
+    Array.from(originalDoc.body.querySelectorAll('.gc-srvinfo')).forEach(
+      (section) => {
+        this.getDoormatItemsByHref(section).forEach((item, href) => {
+          if (frozenHrefs.has(href)) originalItemsByHref.set(href, item);
+        });
+      },
+    );
+    Array.from(doc.body.querySelectorAll('.gc-srvinfo')).forEach((section) => {
+      this.getDoormatItemsByHref(section).forEach((item, href) => {
+        const originalItem = originalItemsByHref.get(href);
+        if (!originalItem) return;
+        this.patchOriginalDoormatItemFromRewrite(
+          doc,
+          item,
+          originalItem,
+          href,
+        );
+      });
+    });
+    return this.serializeParsedHtmlLikeInput(html, doc);
+  }
+
+  private getSelectedVerifiedRedirectReplacements(
+    issues: TopicDoormatIssueRewriteInput[],
+    summaries: TopicDoormatSummary[],
+  ): Map<number, string> {
+    const redirectedLinkIndexes = this.getAffectedDoormatIndexesForRewrite(
+      issues.filter((issue) => issue.issueId === 'redirected-link'),
+      summaries,
+    );
+    return new Map(
+      summaries
+        .filter(
+          (summary) =>
+            redirectedLinkIndexes.has(summary.index) &&
+            !!summary.destinationReplacementUrl,
+        )
+        .map((summary) => [summary.index, summary.destinationReplacementUrl!]),
+    );
+  }
+
+  private applyVerifiedRedirectsToHtml(
+    html: string,
+    summaries: TopicDoormatSummary[],
+    replacements: Map<number, string>,
+  ): string {
+    if (!replacements.size) return html;
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(html, 'text/html');
+    const replacementsByHref = new Map(
+      summaries
+        .filter((summary) => replacements.has(summary.index))
+        .map((summary) => [summary.href, replacements.get(summary.index)!]),
+    );
+    Array.from(doc.body.querySelectorAll('.gc-srvinfo')).forEach((section) => {
+      this.getDoormatItemsByHref(section).forEach((item, href) => {
+        const replacement = replacementsByHref.get(href);
+        if (!replacement) return;
+        const link = this.findDoormatLinkByHref(item, href);
+        link?.setAttribute(
+          'href',
+          this.formatVerifiedRedirectHref(href, replacement),
+        );
+      });
+    });
+    return this.serializeParsedHtmlLikeInput(html, doc);
+  }
+
+  private formatVerifiedRedirectHref(
+    originalHref: string,
+    replacement: string,
+  ): string {
+    if (!originalHref.startsWith('/') || originalHref.startsWith('//')) {
+      return replacement;
+    }
+    try {
+      const replacementUrl = new URL(replacement);
+      return `${replacementUrl.pathname}${replacementUrl.search}${replacementUrl.hash}`;
+    } catch {
+      return replacement;
+    }
   }
 
   private isManualReviewIaIssue(issueId: string): boolean {

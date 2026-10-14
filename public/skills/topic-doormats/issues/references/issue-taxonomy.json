@@ -12,9 +12,10 @@
   "analysis_sequence": [
     {
       "pass": "deterministic_structural_checks",
-      "instruction": "Run these checks first. Do not return the response until every model-owned deterministic structural check has been evaluated for every doormat and every complete doormat section. Do not report broken-link, link-name-too-long, description-too-long, link-name-trailing-punctuation, description-trailing-punctuation, description-uses-first-or-second-person, duplicate-link-in-most-requested, missing-needed-doormat, or unnecessary-doormat; AIDA calculates and reports those issues deterministically from the extracted doormat text, destination HTTP status, Most requested links, IA child-page relationships, page-view data, and character counts.",
+      "instruction": "Run these checks first. Do not return the response until every model-owned deterministic structural check has been evaluated for every doormat and every complete doormat section. Do not report broken-link, redirected-link, link-name-too-long, description-too-long, link-name-trailing-punctuation, description-trailing-punctuation, description-uses-first-or-second-person, duplicate-link-in-most-requested, missing-needed-doormat, or unnecessary-doormat; AIDA calculates and reports those issues deterministically from the extracted doormat text, destination HTTP status or verified redirect, Most requested links, IA child-page relationships, page-view data, and character counts.",
       "issue_ids": [
         "broken-link",
+        "redirected-link",
         "too-many-doormats-in-section",
         "split-heading-link",
         "multiple-links",
@@ -243,6 +244,15 @@
       "condition": "The doormat link is empty, malformed, unsupported for a destination link, or the fetched destination returned an HTTP error status.",
       "recommendation": "Replace the link with a valid destination URL.",
       "reporting": "Do not return this issue directly. AIDA reports it deterministically from the extracted href and destination HTTP status. Do not classify resolved pages with outdated, closed, archived, or no-longer-available content as broken links unless the destination request itself returned an HTTP error status."
+    },
+    {
+      "id": "redirected-link",
+      "group": "Link code issue",
+      "label": "Redirected link",
+      "severity": "Low",
+      "condition": "The doormat link reaches a different verified HTTPS Canada.ca destination through a redirect.",
+      "recommendation": "Replace the old link with its verified redirect destination.",
+      "reporting": "Do not return this issue directly. AIDA reports it deterministically from the verified final response URL."
     },
     {
       "id": "misdirected-link",

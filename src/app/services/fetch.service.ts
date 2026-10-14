@@ -23,6 +23,10 @@ export class FetchService {
     //"gc-proto.github.io", //CORS error but redirects to test.canada.ca which works
     "test.canada.ca",
   ]);
+  private legacyRedirectHosts = new Set([
+    "cra-arc.gc.ca",
+    "www.cra-arc.gc.ca",
+  ]);
   private getAllowedHosts(mode: "prod" | "proto" | "both"): Set<string> {
     const allowed = new Set<string>();
     if (mode === "prod" || mode === "both") allowed.add(this.prodHost);
@@ -116,7 +120,36 @@ export class FetchService {
     delay: number | "random" | "none" = "none"
   ): Promise<FetchContentResponse> {
     const validatedUrl = this.validateHost(url, hostMode);
+    return this.fetchContentFromValidatedUrl(validatedUrl, retries, delay);
+  }
 
+  public async fetchLegacyRedirectContentWithResponse(
+    url: string,
+    retries = 1,
+    delay: number | "random" | "none" = "none"
+  ): Promise<FetchContentResponse> {
+    const trimmedUrl = url.trim();
+    let parsedUrl: URL;
+    try {
+      parsedUrl = new URL(trimmedUrl);
+    } catch {
+      throw new Error(`Invalid legacy redirect URL: ${trimmedUrl}`);
+    }
+    if (
+      !["http:", "https:"].includes(parsedUrl.protocol) ||
+      /\s/.test(trimmedUrl) ||
+      !this.legacyRedirectHosts.has(parsedUrl.hostname.toLowerCase())
+    ) {
+      throw new Error(`Blocked legacy redirect URL: ${trimmedUrl}`);
+    }
+    return this.fetchContentFromValidatedUrl(trimmedUrl, retries, delay);
+  }
+
+  private async fetchContentFromValidatedUrl(
+    validatedUrl: string,
+    retries: number,
+    delay: number | "random" | "none"
+  ): Promise<FetchContentResponse> {
     for (let attempt = 1; attempt <= retries; attempt++) {
       await this.simulateDelay(delay);
       try {

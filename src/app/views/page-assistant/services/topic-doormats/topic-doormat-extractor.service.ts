@@ -20,6 +20,13 @@ interface TopicDoormatLegacyLinkCandidate {
 export class TopicDoormatExtractorService {
   private readonly fetchService = inject(FetchService);
   private readonly destinationMainHtmlCharacterLimit = 12000;
+  private readonly legacyRedirectHosts = new Set([
+    'cra-arc.gc.ca',
+    'www.cra-arc.gc.ca',
+  ]);
+  private readonly approvedRedirectTargetHosts = new Set([
+    'www.canada.ca',
+  ]);
 
   parseHtmlDocument(html: string): Document | null {
     if (!html) return null;
@@ -42,6 +49,7 @@ export class TopicDoormatExtractorService {
         Pick<
           TopicDoormatSummary,
           | 'destinationUrl'
+          | 'destinationReplacementUrl'
           | 'destinationPageTitle'
           | 'destinationPageHeading'
           | 'destinationMainHtml'
@@ -60,16 +68,20 @@ export class TopicDoormatExtractorService {
 
     return Promise.all(
       doormatSummaries.map(async (summary) => {
-        const destinationUrl = this.resolveDestinationUrl(
+        const destinationRequest = this.resolveDestinationRequest(
           summary.href,
           uploadData,
         );
-        if (!destinationUrl) return summary;
+        if (!destinationRequest) return summary;
 
-        let contextPromise = contextByUrl.get(destinationUrl);
+        const cacheKey = `${destinationRequest.allowLegacyRedirect ? 'legacy' : 'standard'}|${destinationRequest.url}`;
+        let contextPromise = contextByUrl.get(cacheKey);
         if (!contextPromise) {
-          contextPromise = this.fetchDestinationContext(destinationUrl);
-          contextByUrl.set(destinationUrl, contextPromise);
+          contextPromise = this.fetchDestinationContext(
+            destinationRequest.url,
+            destinationRequest.allowLegacyRedirect,
+          );
+          contextByUrl.set(cacheKey, contextPromise);
         }
 
         const context = await contextPromise;
@@ -365,12 +377,12 @@ export class TopicDoormatExtractorService {
     }
   }
 
-  private resolveDestinationUrl(
+  private resolveDestinationRequest(
     href: string,
     uploadData?: TopicDoormatUploadData,
-  ): string {
+  ): { url: string; allowLegacyRedirect: boolean } | null {
     const trimmedHref = this.cleanString(href);
-    if (!trimmedHref || trimmedHref.startsWith('#')) return '';
+    if (!trimmedHref || trimmedHref.startsWith('#')) return null;
 
     const pageUrl =
       this.cleanString(uploadData?.originalUrl) ||
@@ -380,11 +392,18 @@ export class TopicDoormatExtractorService {
       const resolved = pageUrl
         ? new URL(trimmedHref, pageUrl)
         : new URL(trimmedHref);
-      if (resolved.protocol !== 'https:') return '';
+      const allowLegacyRedirect = this.legacyRedirectHosts.has(
+        resolved.hostname.toLowerCase(),
+      );
+      if (resolved.protocol !== 'https:' && !(
+        resolved.protocol === 'http:' && allowLegacyRedirect
+      )) {
+        return null;
+      }
       resolved.hash = '';
-      return resolved.toString();
+      return { url: resolved.toString(), allowLegacyRedirect };
     } catch {
-      return '';
+      return null;
     }
   }
 
@@ -438,10 +457,12 @@ export class TopicDoormatExtractorService {
 
   private async fetchDestinationContext(
     destinationUrl: string,
+    allowLegacyRedirect = false,
   ): Promise<
     Pick<
       TopicDoormatSummary,
       | 'destinationUrl'
+      | 'destinationReplacementUrl'
       | 'destinationPageTitle'
       | 'destinationPageHeading'
       | 'destinationMainHtml'
@@ -457,12 +478,23 @@ export class TopicDoormatExtractorService {
     >
   > {
     try {
-      const response = await this.fetchService.fetchContentWithResponse(
-        destinationUrl,
-        'both',
-        1,
-        'none',
-      );
+      const response = allowLegacyRedirect
+        ? await this.fetchLegacyRedirectContent(destinationUrl)
+        : await this.fetchService.fetchContentWithResponse(
+            destinationUrl,
+            'both',
+            1,
+            'none',
+          );
+      const resolvedDestinationUrl = response.url || destinationUrl;
+      if (
+        allowLegacyRedirect &&
+        !this.isApprovedRedirectDestination(resolvedDestinationUrl)
+      ) {
+        throw new Error(
+          `Legacy destination redirected to an unapproved host: ${resolvedDestinationUrl}`,
+        );
+      }
       const destinationDoc = response.document;
       const main = destinationDoc.querySelector<HTMLElement>('main');
       const heading =
@@ -514,7 +546,14 @@ export class TopicDoormatExtractorService {
       );
       const mainHtml = this.extractDestinationMainHtml(main);
       return {
-        destinationUrl,
+        destinationUrl: resolvedDestinationUrl,
+        destinationReplacementUrl:
+          !this.areEquivalentDestinationUrls(
+            destinationUrl,
+            resolvedDestinationUrl,
+          ) && this.isApprovedRedirectDestination(resolvedDestinationUrl)
+            ? resolvedDestinationUrl
+            : undefined,
         destinationPageTitle: this.cleanVisibleText(
           destinationDoc.querySelector('title')?.textContent,
         ),
@@ -536,7 +575,8 @@ export class TopicDoormatExtractorService {
       };
     } catch (error) {
       return {
-        destinationUrl,
+        destinationUrl: allowLegacyRedirect ? undefined : destinationUrl,
+        destinationReplacementUrl: undefined,
         destinationIntroParagraphs: [],
         destinationSectionHeadings: [],
         destinationPageType: 'content',
@@ -549,6 +589,51 @@ export class TopicDoormatExtractorService {
         destinationFetchError:
           error instanceof Error ? error.message : String(error),
       };
+    }
+  }
+
+  private async fetchLegacyRedirectContent(destinationUrl: string) {
+    try {
+      return await this.fetchService.fetchLegacyRedirectContentWithResponse(
+        destinationUrl,
+        1,
+        'none',
+      );
+    } catch (httpError) {
+      const secureFallback = new URL(destinationUrl);
+      if (secureFallback.protocol !== 'http:') throw httpError;
+      secureFallback.protocol = 'https:';
+      return this.fetchService.fetchLegacyRedirectContentWithResponse(
+        secureFallback.toString(),
+        1,
+        'none',
+      );
+    }
+  }
+
+  private isApprovedRedirectDestination(url: string): boolean {
+    try {
+      const parsed = new URL(url);
+      return (
+        parsed.protocol === 'https:' &&
+        this.approvedRedirectTargetHosts.has(
+          parsed.hostname.toLowerCase(),
+        )
+      );
+    } catch {
+      return false;
+    }
+  }
+
+  private areEquivalentDestinationUrls(first: string, second: string): boolean {
+    try {
+      const firstUrl = new URL(first);
+      const secondUrl = new URL(second);
+      firstUrl.hash = '';
+      secondUrl.hash = '';
+      return firstUrl.toString() === secondUrl.toString();
+    } catch {
+      return first === second;
     }
   }
 
