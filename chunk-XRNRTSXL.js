@@ -140,7 +140,7 @@ import {
   uuid,
   zindexutils,
   ɵNgSelectMultipleOption
-} from "./chunk-325IGRTZ.js";
+} from "./chunk-BNCNCDDQ.js";
 import {
   ChangeDetectionStrategy,
   ChangeDetectorRef,
@@ -25034,6 +25034,13 @@ var TopicDoormatAnalysisStateService = class _TopicDoormatAnalysisStateService {
 var TopicDoormatExtractorService = class _TopicDoormatExtractorService {
   fetchService = inject(FetchService);
   destinationMainHtmlCharacterLimit = 12e3;
+  legacyRedirectHosts = /* @__PURE__ */ new Set([
+    "cra-arc.gc.ca",
+    "www.cra-arc.gc.ca"
+  ]);
+  approvedRedirectTargetHosts = /* @__PURE__ */ new Set([
+    "www.canada.ca"
+  ]);
   parseHtmlDocument(html) {
     if (!html)
       return null;
@@ -25049,13 +25056,14 @@ var TopicDoormatExtractorService = class _TopicDoormatExtractorService {
         return doormatSummaries;
       const contextByUrl = /* @__PURE__ */ new Map();
       return Promise.all(doormatSummaries.map((summary) => __async(this, null, function* () {
-        const destinationUrl = this.resolveDestinationUrl(summary.href, uploadData);
-        if (!destinationUrl)
+        const destinationRequest = this.resolveDestinationRequest(summary.href, uploadData);
+        if (!destinationRequest)
           return summary;
-        let contextPromise = contextByUrl.get(destinationUrl);
+        const cacheKey = `${destinationRequest.allowLegacyRedirect ? "legacy" : "standard"}|${destinationRequest.url}`;
+        let contextPromise = contextByUrl.get(cacheKey);
         if (!contextPromise) {
-          contextPromise = this.fetchDestinationContext(destinationUrl);
-          contextByUrl.set(destinationUrl, contextPromise);
+          contextPromise = this.fetchDestinationContext(destinationRequest.url, destinationRequest.allowLegacyRedirect);
+          contextByUrl.set(cacheKey, contextPromise);
         }
         const context = yield contextPromise;
         return __spreadValues(__spreadValues({}, summary), context);
@@ -25235,19 +25243,21 @@ var TopicDoormatExtractorService = class _TopicDoormatExtractorService {
       return [];
     }
   }
-  resolveDestinationUrl(href, uploadData) {
+  resolveDestinationRequest(href, uploadData) {
     const trimmedHref = this.cleanString(href);
     if (!trimmedHref || trimmedHref.startsWith("#"))
-      return "";
+      return null;
     const pageUrl = this.cleanString(uploadData?.originalUrl) || this.cleanString(uploadData?.modifiedUrl);
     try {
       const resolved = pageUrl ? new URL(trimmedHref, pageUrl) : new URL(trimmedHref);
-      if (resolved.protocol !== "https:")
-        return "";
+      const allowLegacyRedirect = this.legacyRedirectHosts.has(resolved.hostname.toLowerCase());
+      if (resolved.protocol !== "https:" && !(resolved.protocol === "http:" && allowLegacyRedirect)) {
+        return null;
+      }
       resolved.hash = "";
-      return resolved.toString();
+      return { url: resolved.toString(), allowLegacyRedirect };
     } catch {
-      return "";
+      return null;
     }
   }
   resolveAlternateLanguageUrl(uploadData) {
@@ -25288,10 +25298,14 @@ var TopicDoormatExtractorService = class _TopicDoormatExtractorService {
   getSectionItemKey(sectionIndex, sectionItemIndex) {
     return `${sectionIndex}|${sectionItemIndex}`;
   }
-  fetchDestinationContext(destinationUrl) {
+  fetchDestinationContext(destinationUrl, allowLegacyRedirect = false) {
     return __async(this, null, function* () {
       try {
-        const response = yield this.fetchService.fetchContentWithResponse(destinationUrl, "both", 1, "none");
+        const response = allowLegacyRedirect ? yield this.fetchLegacyRedirectContent(destinationUrl) : yield this.fetchService.fetchContentWithResponse(destinationUrl, "both", 1, "none");
+        const resolvedDestinationUrl = response.url || destinationUrl;
+        if (allowLegacyRedirect && !this.isApprovedRedirectDestination(resolvedDestinationUrl)) {
+          throw new Error(`Legacy destination redirected to an unapproved host: ${resolvedDestinationUrl}`);
+        }
         const destinationDoc = response.document;
         const main = destinationDoc.querySelector("main");
         const heading = main?.querySelector("h1") ?? destinationDoc.querySelector("h1");
@@ -25304,7 +25318,8 @@ var TopicDoormatExtractorService = class _TopicDoormatExtractorService {
         const destinationLabelEvidence = this.extractDestinationLabelEvidence(destinationDoc, main, heading, destinationIntroParagraphs);
         const mainHtml = this.extractDestinationMainHtml(main);
         return {
-          destinationUrl,
+          destinationUrl: resolvedDestinationUrl,
+          destinationReplacementUrl: !this.areEquivalentDestinationUrls(destinationUrl, resolvedDestinationUrl) && this.isApprovedRedirectDestination(resolvedDestinationUrl) ? resolvedDestinationUrl : void 0,
           destinationPageTitle: this.cleanVisibleText(destinationDoc.querySelector("title")?.textContent),
           destinationPageHeading: this.cleanVisibleText(heading?.textContent),
           destinationMainHtml: mainHtml.html,
@@ -25319,7 +25334,8 @@ var TopicDoormatExtractorService = class _TopicDoormatExtractorService {
         };
       } catch (error) {
         return {
-          destinationUrl,
+          destinationUrl: allowLegacyRedirect ? void 0 : destinationUrl,
+          destinationReplacementUrl: void 0,
           destinationIntroParagraphs: [],
           destinationSectionHeadings: [],
           destinationPageType: "content",
@@ -25333,6 +25349,38 @@ var TopicDoormatExtractorService = class _TopicDoormatExtractorService {
         };
       }
     });
+  }
+  fetchLegacyRedirectContent(destinationUrl) {
+    return __async(this, null, function* () {
+      try {
+        return yield this.fetchService.fetchLegacyRedirectContentWithResponse(destinationUrl, 1, "none");
+      } catch (httpError) {
+        const secureFallback = new URL(destinationUrl);
+        if (secureFallback.protocol !== "http:")
+          throw httpError;
+        secureFallback.protocol = "https:";
+        return this.fetchService.fetchLegacyRedirectContentWithResponse(secureFallback.toString(), 1, "none");
+      }
+    });
+  }
+  isApprovedRedirectDestination(url) {
+    try {
+      const parsed = new URL(url);
+      return parsed.protocol === "https:" && this.approvedRedirectTargetHosts.has(parsed.hostname.toLowerCase());
+    } catch {
+      return false;
+    }
+  }
+  areEquivalentDestinationUrls(first, second) {
+    try {
+      const firstUrl = new URL(first);
+      const secondUrl = new URL(second);
+      firstUrl.hash = "";
+      secondUrl.hash = "";
+      return firstUrl.toString() === secondUrl.toString();
+    } catch {
+      return first === second;
+    }
   }
   detectDestinationPageType(doc, navigationItems) {
     if (this.hasSubwayDoormatStructure(doc))
@@ -26890,6 +26938,7 @@ var TopicDoormatIssueAnalysisService = class _TopicDoormatIssueAnalysisService {
   ];
   locallyOwnedTopicDoormatIssueIds = /* @__PURE__ */ new Set([
     "broken-link",
+    "redirected-link",
     "description-contains-link",
     "description-missing-needed-information",
     "description-too-long",
@@ -28562,6 +28611,15 @@ var TopicDoormatIssueAnalysisService = class _TopicDoormatIssueAnalysisService {
         }));
       }
       const brokenLinkEvidence = this.getTopicDoormatBrokenLinkEvidence(summary);
+      if (summary.destinationReplacementUrl) {
+        rows.push(__spreadProps(__spreadValues({}, baseRow), {
+          severity: "Low",
+          issueId: "redirected-link",
+          issue: this.getTopicDoormatIssueLabel("redirected-link"),
+          evidence: this.getTopicDoormatDeterministicText("redirectedLink.evidence", { url: summary.destinationReplacementUrl }),
+          recommendation: this.getTopicDoormatDeterministicText("redirectedLink.recommendation")
+        }));
+      }
       if (brokenLinkEvidence) {
         rows.push(__spreadProps(__spreadValues({}, baseRow), {
           issueId: "broken-link",
@@ -30492,17 +30550,23 @@ var TopicDoormatRewriteOrchestratorService = class _TopicDoormatRewriteOrchestra
         });
       }
       const selectedIssuesForRewrite = this.getSelectedRewriteIssuesForHtml(analyzedHtml, issueRows);
-      const descriptionTrailingPunctuationIndexes = this.getDescriptionTrailingPunctuationIndexes(selectedIssuesForRewrite, doormatSummaries);
-      const htmlForRewrite = this.applyDescriptionTrailingPunctuationCleanupToHtml(analyzedHtml, doormatSummaries, descriptionTrailingPunctuationIndexes);
-      const modelRewriteIssues = this.getModelRewriteIssues(selectedIssuesForRewrite);
-      const linkTextRewriteAllowedIndexes = this.getLinkTextRewriteAllowedIndexes(selectedIssuesForRewrite, doormatSummaries);
-      const modelRequiredDoormatIndexes = this.getRequiredChangeIndexes(modelRewriteIssues, doormatSummaries);
+      const verifiedRedirectReplacements = this.getSelectedVerifiedRedirectReplacements(selectedIssuesForRewrite, doormatSummaries);
+      const htmlWithVerifiedRedirects = this.applyVerifiedRedirectsToHtml(analyzedHtml, doormatSummaries, verifiedRedirectReplacements);
+      const rewriteSummaries = doormatSummaries.map((summary) => __spreadProps(__spreadValues({}, summary), {
+        href: verifiedRedirectReplacements.has(summary.index) ? this.formatVerifiedRedirectHref(summary.href, verifiedRedirectReplacements.get(summary.index)) : summary.href
+      }));
+      const descriptionTrailingPunctuationIndexes = this.getDescriptionTrailingPunctuationIndexes(selectedIssuesForRewrite, rewriteSummaries);
+      const htmlForRewrite = this.applyDescriptionTrailingPunctuationCleanupToHtml(htmlWithVerifiedRedirects, rewriteSummaries, descriptionTrailingPunctuationIndexes);
+      const frozenBrokenLinkIndexes = this.getBrokenLinkDoormatIndexes(issueRows);
+      const modelRewriteIssues = this.excludeDoormatIndexesFromRewriteIssues(this.getModelRewriteIssues(selectedIssuesForRewrite), frozenBrokenLinkIndexes, rewriteSummaries);
+      const linkTextRewriteAllowedIndexes = this.getLinkTextRewriteAllowedIndexes(selectedIssuesForRewrite, rewriteSummaries);
+      const modelRequiredDoormatIndexes = this.getRequiredChangeIndexes(modelRewriteIssues, rewriteSummaries);
       const prompt = yield this.buildRewritePrompt();
       const examples = yield this.getExamplesForLanguageIfEnabled(pageLanguage, [
         ...modelRewriteIssues.map((issue) => issue.issueId),
         ...doormatSummaries.some((summary) => this.hasGeneratedPlaceholderDescription(summary)) ? ["generated-placeholder-description"] : []
       ]);
-      const userContent = this.buildRewriteUserContent(htmlForRewrite, issueRows, doormatSummaries, pageLanguage, examples, modelRewriteIssues);
+      const userContent = this.buildRewriteUserContent(htmlForRewrite, issueRows, rewriteSummaries, pageLanguage, examples, modelRewriteIssues);
       const rewrite = yield this.callOpenRouterForRewrite(model, [
         { role: "system", content: prompt },
         { role: "user", content: userContent }
@@ -30513,15 +30577,15 @@ var TopicDoormatRewriteOrchestratorService = class _TopicDoormatRewriteOrchestra
       }
       let patchedHtml = this.applyDoormatRewriteToPageHtml(htmlForRewrite, rewriteHtml);
       let rewriteModel = rewrite.usedModel;
-      const unchangedModelRequiredIndexes = this.getUnchangedModelRequiredDoormatIndexes(htmlForRewrite, patchedHtml, modelRequiredDoormatIndexes, doormatSummaries);
+      const unchangedModelRequiredIndexes = this.getUnchangedModelRequiredDoormatIndexes(htmlForRewrite, patchedHtml, modelRequiredDoormatIndexes, rewriteSummaries);
       if (unchangedModelRequiredIndexes.size) {
         console.warn("[TopicDoormatRewrite] selected model-required doormats unchanged", {
           unchangedDoormatIndexes: Array.from(unchangedModelRequiredIndexes),
           selectedIssueIds: Array.from(new Set(modelRewriteIssues.map((issue) => issue.issueId)))
         });
-        const repairIssues = this.getRewriteIssuesForDoormatIndexes(modelRewriteIssues, unchangedModelRequiredIndexes, doormatSummaries);
+        const repairIssues = this.getRewriteIssuesForDoormatIndexes(modelRewriteIssues, unchangedModelRequiredIndexes, rewriteSummaries);
         if (repairIssues.length) {
-          const repairContent = this.buildModelRequiredRepairUserContent(patchedHtml, repairIssues, doormatSummaries, pageLanguage, yield this.getExamplesForLanguageIfEnabled(pageLanguage, repairIssues.map((issue) => issue.issueId)), unchangedModelRequiredIndexes);
+          const repairContent = this.buildModelRequiredRepairUserContent(patchedHtml, repairIssues, rewriteSummaries, pageLanguage, yield this.getExamplesForLanguageIfEnabled(pageLanguage, repairIssues.map((issue) => issue.issueId)), unchangedModelRequiredIndexes);
           const repair = yield this.callOpenRouterForRewrite(model, [
             { role: "system", content: prompt },
             { role: "user", content: repairContent }
@@ -30532,7 +30596,7 @@ var TopicDoormatRewriteOrchestratorService = class _TopicDoormatRewriteOrchestra
           }
           patchedHtml = this.applyDoormatRewriteToPageHtml(patchedHtml, repairHtml);
           rewriteModel = repair.usedModel;
-          const stillUnchanged = this.getUnchangedModelRequiredDoormatIndexes(htmlForRewrite, patchedHtml, unchangedModelRequiredIndexes, doormatSummaries);
+          const stillUnchanged = this.getUnchangedModelRequiredDoormatIndexes(htmlForRewrite, patchedHtml, unchangedModelRequiredIndexes, rewriteSummaries);
           if (stillUnchanged.size) {
             console.warn("[TopicDoormatRewrite] selected model-required doormats still unchanged after repair", {
               unchangedDoormatIndexes: Array.from(stillUnchanged),
@@ -30541,8 +30605,19 @@ var TopicDoormatRewriteOrchestratorService = class _TopicDoormatRewriteOrchestra
           }
         }
       }
-      const cleanedPatchedHtml = this.preserveUnselectedLinkTextInHtml(this.applyDescriptionTrailingPunctuationCleanupToHtml(patchedHtml, doormatSummaries, descriptionTrailingPunctuationIndexes), doormatSummaries, linkTextRewriteAllowedIndexes);
-      const rewrittenHtml = yield this.urlDataService.formatHtml(cleanedPatchedHtml, "ai");
+      const cleanedPatchedHtml = this.preserveUnselectedLinkTextInHtml(this.applyDescriptionTrailingPunctuationCleanupToHtml(patchedHtml, rewriteSummaries, descriptionTrailingPunctuationIndexes), rewriteSummaries, linkTextRewriteAllowedIndexes);
+      const finalPatchedHtml = this.restoreFrozenDoormatsFromOriginalHtml(cleanedPatchedHtml, analyzedHtml, doormatSummaries, frozenBrokenLinkIndexes);
+      const rewrittenHtml = yield this.urlDataService.formatHtml(finalPatchedHtml, "ai");
+      if (frozenBrokenLinkIndexes.size) {
+        const doormatIndexes = Array.from(frozenBrokenLinkIndexes).sort((left, right) => left - right).join(", ");
+        this.messageService.add({
+          severity: "error",
+          summary: this.translate.instant("common.ai.topicDoormatBrokenLinksFrozen.summary"),
+          detail: this.translate.instant("common.ai.topicDoormatBrokenLinksFrozen.detail", { doormatIndexes }),
+          sticky: true,
+          closable: true
+        });
+      }
       return {
         analyzedHtml,
         rewrittenHtml,
@@ -30719,7 +30794,83 @@ var TopicDoormatRewriteOrchestratorService = class _TopicDoormatRewriteOrchestra
     return indexes;
   }
   getModelRewriteIssues(issues) {
-    return issues.filter((issue) => issue.issueId !== "description-trailing-punctuation" && !this.isManualReviewIaIssue(issue.issueId));
+    return issues.filter((issue) => issue.issueId !== "description-trailing-punctuation" && issue.issueId !== "broken-link" && issue.issueId !== "redirected-link" && !this.isManualReviewIaIssue(issue.issueId));
+  }
+  getBrokenLinkDoormatIndexes(rows) {
+    return new Set(rows.filter((row) => row.issueId === "broken-link" && typeof row.doormatIndex === "number").map((row) => row.doormatIndex));
+  }
+  excludeDoormatIndexesFromRewriteIssues(issues, excludedIndexes, summaries) {
+    if (!excludedIndexes.size)
+      return issues;
+    return issues.flatMap((issue) => {
+      if (typeof issue.doormatIndex === "number" && excludedIndexes.has(issue.doormatIndex)) {
+        return [];
+      }
+      if (!issue.affectedDoormatIndexes?.length && issue.rowType === "section" && typeof issue.sectionIndex === "number") {
+        const affectedDoormatIndexes2 = summaries.filter((summary) => summary.sectionIndex === issue.sectionIndex && !excludedIndexes.has(summary.index)).map((summary) => summary.index);
+        return affectedDoormatIndexes2.length ? [__spreadProps(__spreadValues({}, issue), { affectedDoormatIndexes: affectedDoormatIndexes2 })] : [];
+      }
+      if (!issue.affectedDoormatIndexes?.length)
+        return [issue];
+      const affectedDoormatIndexes = issue.affectedDoormatIndexes.filter((index) => !excludedIndexes.has(index));
+      return affectedDoormatIndexes.length ? [__spreadProps(__spreadValues({}, issue), { affectedDoormatIndexes })] : [];
+    });
+  }
+  restoreFrozenDoormatsFromOriginalHtml(html, originalHtml, summaries, frozenIndexes) {
+    if (!frozenIndexes.size)
+      return html;
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(html, "text/html");
+    const originalDoc = parser.parseFromString(originalHtml, "text/html");
+    const frozenHrefs = new Set(summaries.filter((summary) => frozenIndexes.has(summary.index)).map((summary) => summary.href));
+    const originalItemsByHref = /* @__PURE__ */ new Map();
+    Array.from(originalDoc.body.querySelectorAll(".gc-srvinfo")).forEach((section) => {
+      this.getDoormatItemsByHref(section).forEach((item, href) => {
+        if (frozenHrefs.has(href))
+          originalItemsByHref.set(href, item);
+      });
+    });
+    Array.from(doc.body.querySelectorAll(".gc-srvinfo")).forEach((section) => {
+      this.getDoormatItemsByHref(section).forEach((item, href) => {
+        const originalItem = originalItemsByHref.get(href);
+        if (!originalItem)
+          return;
+        this.patchOriginalDoormatItemFromRewrite(doc, item, originalItem, href);
+      });
+    });
+    return this.serializeParsedHtmlLikeInput(html, doc);
+  }
+  getSelectedVerifiedRedirectReplacements(issues, summaries) {
+    const redirectedLinkIndexes = this.getAffectedDoormatIndexesForRewrite(issues.filter((issue) => issue.issueId === "redirected-link"), summaries);
+    return new Map(summaries.filter((summary) => redirectedLinkIndexes.has(summary.index) && !!summary.destinationReplacementUrl).map((summary) => [summary.index, summary.destinationReplacementUrl]));
+  }
+  applyVerifiedRedirectsToHtml(html, summaries, replacements) {
+    if (!replacements.size)
+      return html;
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(html, "text/html");
+    const replacementsByHref = new Map(summaries.filter((summary) => replacements.has(summary.index)).map((summary) => [summary.href, replacements.get(summary.index)]));
+    Array.from(doc.body.querySelectorAll(".gc-srvinfo")).forEach((section) => {
+      this.getDoormatItemsByHref(section).forEach((item, href) => {
+        const replacement = replacementsByHref.get(href);
+        if (!replacement)
+          return;
+        const link = this.findDoormatLinkByHref(item, href);
+        link?.setAttribute("href", this.formatVerifiedRedirectHref(href, replacement));
+      });
+    });
+    return this.serializeParsedHtmlLikeInput(html, doc);
+  }
+  formatVerifiedRedirectHref(originalHref, replacement) {
+    if (!originalHref.startsWith("/") || originalHref.startsWith("//")) {
+      return replacement;
+    }
+    try {
+      const replacementUrl = new URL(replacement);
+      return `${replacementUrl.pathname}${replacementUrl.search}${replacementUrl.hash}`;
+    } catch {
+      return replacement;
+    }
   }
   isManualReviewIaIssue(issueId) {
     return issueId === "missing-needed-doormat" || issueId === "unnecessary-doormat";
@@ -52962,4 +53113,4 @@ ${custom}` : promptBody;
 export {
   PageAssistantCompareComponent
 };
-//# sourceMappingURL=chunk-K6VDKPM7.js.map
+//# sourceMappingURL=chunk-XRNRTSXL.js.map

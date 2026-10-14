@@ -152,14 +152,14 @@ Use this skill for issue analysis of topic doormat sets.
   the link name is misleading, points to a different topic, product/service,
   action, audience, or no longer gives users the same destination scent as the
   destination title or heading.
-- Do not report `broken-link`, `link-name-too-long`, `description-too-long`,
+- Do not report `broken-link`, `redirected-link`, `link-name-too-long`, `description-too-long`,
   `link-name-trailing-punctuation`, `description-trailing-punctuation`,
   `description-uses-first-or-second-person`, `duplicate-link-in-most-requested`,
   `missing-needed-doormat`, `unnecessary-doormat`, or
   `repeated-description-opening`; AIDA calculates and reports those issues
   deterministically from the extracted doormat text, Most requested links,
-  destination HTTP status, IA child-page relationships, page-view data, and
-  character counts
+  destination HTTP status or verified redirect, IA child-page relationships,
+  page-view data, and character counts
 - Return JSON only
 - Report issues per affected doormat
 - Report section-level problems in `section_issues` rather than repeating
