@@ -25431,9 +25431,9 @@ var TopicDoormatExtractorService = class _TopicDoormatExtractorService {
   getSubwayDescriptionElement(term) {
     let current = term.nextElementSibling;
     while (current) {
-      if (current.matches("dd"))
+      if (current.tagName === "DD")
         return current;
-      if (current.matches("dt"))
+      if (current.tagName === "DT")
         return null;
       current = current.nextElementSibling;
     }
@@ -53113,4 +53113,4 @@ ${custom}` : promptBody;
 export {
   PageAssistantCompareComponent
 };
-//# sourceMappingURL=chunk-XRNRTSXL.js.map
+//# sourceMappingURL=chunk-COC2YVKQ.js.map
