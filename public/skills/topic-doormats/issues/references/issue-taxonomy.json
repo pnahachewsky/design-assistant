@@ -409,8 +409,8 @@
       "group": "Description clarity",
       "label": "Description repeats link text",
       "severity": "Medium",
-      "condition": "The description substantially restates words or meaning already present in the link text and adds little useful decision-making information. Necessary reuse of key terms is acceptable when it preserves destination scope, restores meaning omitted from concise link text, prevents ambiguity, or supports natural phrasing.",
-      "recommendation": "Remove only redundant restatement. Use the description to add distinct decision-making information while retaining any repeated terms needed for accuracy, scope, clarity, or natural phrasing."
+      "condition": "The description substantially restates the link text without adding useful decision-making information.",
+      "recommendation": "Add useful information beyond the link text. Keep necessary repetition when it preserves scope or makes the added information clear."
     },
     {
       "id": "duplicate-or-near-duplicate-description",

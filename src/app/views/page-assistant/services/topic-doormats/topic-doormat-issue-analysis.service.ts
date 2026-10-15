@@ -788,7 +788,7 @@ export class TopicDoormatIssueAnalysisService {
           'Do not re-analyze unrelated doormats or unrelated issues.',
           'For each supplied candidate, decide only whether description-repeats-link-text applies.',
           'The model owns the final decision. Confirm applies only when the description substantially restates words or meaning already present in the link text and adds little distinct decision-making information.',
-          'Decide does_not_apply when repeated key terms preserve destination scope, restore an important concept omitted from concise link text, prevent ambiguity, or support natural phrasing and the description adds useful information.',
+          'Decide does_not_apply when repeated terms preserve scope or clarify useful information added by the description.',
           'If decision is applies, include a complete issue object for description-repeats-link-text with description, evidence, recommendation, and severity.',
         ].join('\n'),
       },
