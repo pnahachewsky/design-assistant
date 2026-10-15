@@ -15,8 +15,9 @@ import {
 import { TopicDoormatExtractorService } from './topic-doormat-extractor.service';
 import { TopicDoormatIssueAnalysisService } from './topic-doormat-issue-analysis.service';
 import {
+  cleanTopicDoormatDescriptionElementTrailingPunctuation,
   cleanTopicDoormatDescriptionTrailingPunctuation,
-  removeFinalTopicDoormatDescriptionPunctuation,
+  cleanTopicDoormatLinkTrailingPunctuation,
 } from './topic-doormat-punctuation';
 import { TopicDoormatTemplateNormalizerService } from './topic-doormat-template-normalizer.service';
 import {
@@ -319,7 +320,7 @@ export class TopicDoormatRewriteOrchestratorService {
       frozenBrokenLinkIndexes,
     );
     const finalPatchedHtml =
-      this.applyDescriptionTrailingPunctuationCleanupToAllDoormats(
+      this.applyTrailingPunctuationCleanupToAllDoormats(
         restoredPatchedHtml,
       );
     const rewrittenHtml = await this.urlDataService.formatHtml(
@@ -411,7 +412,7 @@ export class TopicDoormatRewriteOrchestratorService {
       rewriteHtml,
     );
     const cleanedPatchedHtml =
-      this.applyDescriptionTrailingPunctuationCleanupToAllDoormats(
+      this.applyTrailingPunctuationCleanupToAllDoormats(
         patchedHtml,
       );
     return {
@@ -1267,19 +1268,20 @@ export class TopicDoormatRewriteOrchestratorService {
         if (!summariesByHref.has(href)) return;
         const description = item.querySelector('p');
         if (!description) return;
-        description.textContent = this.removeFinalDoormatPunctuation(
-          description.textContent,
+        cleanTopicDoormatDescriptionElementTrailingPunctuation(
+          description,
         );
       });
     });
     return this.serializeParsedHtmlLikeInput(html, doc);
   }
 
-  private applyDescriptionTrailingPunctuationCleanupToAllDoormats(
+  private applyTrailingPunctuationCleanupToAllDoormats(
     html: string,
   ): string {
     const parser = new DOMParser();
     const doc = parser.parseFromString(html, 'text/html');
+    cleanTopicDoormatLinkTrailingPunctuation(doc);
     cleanTopicDoormatDescriptionTrailingPunctuation(doc);
     return this.serializeParsedHtmlLikeInput(html, doc);
   }
@@ -1616,12 +1618,6 @@ export class TopicDoormatRewriteOrchestratorService {
 
   private hasDescriptionTrailingPunctuation(value: string): boolean {
     return /[.:;?!,]$/.test((value || '').trim());
-  }
-
-  private removeFinalDoormatPunctuation(
-    value: string | null | undefined,
-  ): string {
-    return removeFinalTopicDoormatDescriptionPunctuation(value);
   }
 
   private toHeadingLevel(heading: Element | null): number | null {

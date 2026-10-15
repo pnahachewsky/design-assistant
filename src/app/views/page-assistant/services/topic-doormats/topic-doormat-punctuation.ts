@@ -1,11 +1,20 @@
-const TRAILING_DOORMAT_DESCRIPTION_PUNCTUATION = /\s*[.:;?!,…]+\s*$/u;
+const TRAILING_DOORMAT_PUNCTUATION = /\s*[.:;?!,\u2026]+\s*$/u;
+const DOORMAT_LABEL_SELECTOR =
+  '.label, .badge, [class*="label-"], [class*="badge-"]';
 
-export function removeFinalTopicDoormatDescriptionPunctuation(
-  value: string | null | undefined,
-): string {
-  return (value || '')
-    .replace(TRAILING_DOORMAT_DESCRIPTION_PUNCTUATION, '')
-    .trim();
+export function cleanTopicDoormatLinkTrailingPunctuation(
+  root: ParentNode,
+): number {
+  return Array.from(
+    root.querySelectorAll<HTMLAnchorElement>(
+      '.gc-srvinfo h2 a[href], .gc-srvinfo h3 a[href]',
+    ),
+  ).reduce(
+    (cleanedCount, link) =>
+      cleanedCount +
+      cleanElementTrailingPunctuation(link, DOORMAT_LABEL_SELECTOR),
+    0,
+  );
 }
 
 export function cleanTopicDoormatDescriptionTrailingPunctuation(
@@ -34,31 +43,52 @@ export function cleanTopicDoormatDescriptionTrailingPunctuation(
 
   let cleanedCount = 0;
   descriptions.forEach((description) => {
-    const textNodes: Text[] = [];
-    const walker = description.ownerDocument.createTreeWalker(
+    cleanedCount += cleanTopicDoormatDescriptionElementTrailingPunctuation(
       description,
-      NodeFilter.SHOW_TEXT,
     );
-    let node = walker.nextNode();
-    while (node) {
-      textNodes.push(node as Text);
-      node = walker.nextNode();
-    }
-
-    for (let index = textNodes.length - 1; index >= 0; index -= 1) {
-      const textNode = textNodes[index];
-      if (!textNode.data.trim()) continue;
-      const cleaned = textNode.data.replace(
-        TRAILING_DOORMAT_DESCRIPTION_PUNCTUATION,
-        '',
-      );
-      if (cleaned !== textNode.data) {
-        textNode.data = cleaned;
-        cleanedCount += 1;
-      }
-      break;
-    }
   });
 
   return cleanedCount;
+}
+
+export function cleanTopicDoormatDescriptionElementTrailingPunctuation(
+  description: HTMLParagraphElement,
+): number {
+  return cleanElementTrailingPunctuation(
+    description,
+    DOORMAT_LABEL_SELECTOR,
+  );
+}
+
+function cleanElementTrailingPunctuation(
+  element: Element,
+  excludedAncestorSelector?: string,
+): number {
+  const textNodes: Text[] = [];
+  const walker = element.ownerDocument.createTreeWalker(
+    element,
+    NodeFilter.SHOW_TEXT,
+  );
+  let node = walker.nextNode();
+  while (node) {
+    const textNode = node as Text;
+    if (
+      !excludedAncestorSelector ||
+      !textNode.parentElement?.closest(excludedAncestorSelector)
+    ) {
+      textNodes.push(textNode);
+    }
+    node = walker.nextNode();
+  }
+
+  for (let index = textNodes.length - 1; index >= 0; index -= 1) {
+    const textNode = textNodes[index];
+    if (!textNode.data.trim()) continue;
+    const cleaned = textNode.data.replace(TRAILING_DOORMAT_PUNCTUATION, '');
+    if (cleaned === textNode.data) return 0;
+    textNode.data = cleaned;
+    return 1;
+  }
+
+  return 0;
 }
