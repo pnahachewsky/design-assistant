@@ -29879,6 +29879,61 @@ ${JSON.stringify(contract)}`;
   }], null, null);
 })();
 
+// src/app/views/page-assistant/services/topic-doormats/topic-doormat-punctuation.ts
+var TRAILING_DOORMAT_PUNCTUATION = /\s*[.:;?!,\u2026]+\s*$/u;
+var DOORMAT_LABEL_SELECTOR = '.label, .badge, [class*="label-"], [class*="badge-"]';
+function cleanTopicDoormatLinkTrailingPunctuation(root) {
+  return Array.from(root.querySelectorAll(".gc-srvinfo h2 a[href], .gc-srvinfo h3 a[href]")).reduce((cleanedCount, link) => cleanedCount + cleanElementTrailingPunctuation(link, DOORMAT_LABEL_SELECTOR), 0);
+}
+function cleanTopicDoormatDescriptionTrailingPunctuation(root) {
+  const descriptions = /* @__PURE__ */ new Set();
+  Array.from(root.querySelectorAll(".gc-srvinfo h2 a[href], .gc-srvinfo h3 a[href]")).forEach((link) => {
+    const section = link.closest(".gc-srvinfo");
+    if (!section)
+      return;
+    let current = link.parentElement;
+    while (current && current !== section) {
+      const description = current.querySelector("p");
+      if (description) {
+        descriptions.add(description);
+        return;
+      }
+      current = current.parentElement;
+    }
+  });
+  let cleanedCount = 0;
+  descriptions.forEach((description) => {
+    cleanedCount += cleanTopicDoormatDescriptionElementTrailingPunctuation(description);
+  });
+  return cleanedCount;
+}
+function cleanTopicDoormatDescriptionElementTrailingPunctuation(description) {
+  return cleanElementTrailingPunctuation(description, DOORMAT_LABEL_SELECTOR);
+}
+function cleanElementTrailingPunctuation(element, excludedAncestorSelector) {
+  const textNodes = [];
+  const walker = element.ownerDocument.createTreeWalker(element, NodeFilter.SHOW_TEXT);
+  let node = walker.nextNode();
+  while (node) {
+    const textNode = node;
+    if (!excludedAncestorSelector || !textNode.parentElement?.closest(excludedAncestorSelector)) {
+      textNodes.push(textNode);
+    }
+    node = walker.nextNode();
+  }
+  for (let index = textNodes.length - 1; index >= 0; index -= 1) {
+    const textNode = textNodes[index];
+    if (!textNode.data.trim())
+      continue;
+    const cleaned = textNode.data.replace(TRAILING_DOORMAT_PUNCTUATION, "");
+    if (cleaned === textNode.data)
+      return 0;
+    textNode.data = cleaned;
+    return 1;
+  }
+  return 0;
+}
+
 // src/app/views/page-assistant/data/canada-ca-snippets.constants.ts
 var TOPIC_PAGE_SNIPPETS = {
   mostRequestedSection: [
@@ -30606,7 +30661,8 @@ var TopicDoormatRewriteOrchestratorService = class _TopicDoormatRewriteOrchestra
         }
       }
       const cleanedPatchedHtml = this.preserveUnselectedLinkTextInHtml(this.applyDescriptionTrailingPunctuationCleanupToHtml(patchedHtml, rewriteSummaries, descriptionTrailingPunctuationIndexes), rewriteSummaries, linkTextRewriteAllowedIndexes);
-      const finalPatchedHtml = this.restoreFrozenDoormatsFromOriginalHtml(cleanedPatchedHtml, analyzedHtml, doormatSummaries, frozenBrokenLinkIndexes);
+      const restoredPatchedHtml = this.restoreFrozenDoormatsFromOriginalHtml(cleanedPatchedHtml, analyzedHtml, doormatSummaries, frozenBrokenLinkIndexes);
+      const finalPatchedHtml = this.applyTrailingPunctuationCleanupToAllDoormats(restoredPatchedHtml);
       const rewrittenHtml = yield this.urlDataService.formatHtml(finalPatchedHtml, "ai");
       if (frozenBrokenLinkIndexes.size) {
         const doormatIndexes = Array.from(frozenBrokenLinkIndexes).sort((left, right) => left - right).join(", ");
@@ -30653,8 +30709,9 @@ var TopicDoormatRewriteOrchestratorService = class _TopicDoormatRewriteOrchestra
         throw new Error("The AI returned structured JSON where HTML was expected. No comparison update was applied.");
       }
       const patchedHtml = this.applyDoormatRewriteToPageHtml(workingHtml, rewriteHtml);
+      const cleanedPatchedHtml = this.applyTrailingPunctuationCleanupToAllDoormats(patchedHtml);
       return {
-        rewrittenHtml: yield this.urlDataService.formatHtml(patchedHtml, "ai"),
+        rewrittenHtml: yield this.urlDataService.formatHtml(cleanedPatchedHtml, "ai"),
         rewriteModel: rewrite.usedModel
       };
     });
@@ -31185,9 +31242,16 @@ var TopicDoormatRewriteOrchestratorService = class _TopicDoormatRewriteOrchestra
         const description = item.querySelector("p");
         if (!description)
           return;
-        description.textContent = this.removeFinalDoormatPunctuation(description.textContent);
+        cleanTopicDoormatDescriptionElementTrailingPunctuation(description);
       });
     });
+    return this.serializeParsedHtmlLikeInput(html, doc);
+  }
+  applyTrailingPunctuationCleanupToAllDoormats(html) {
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(html, "text/html");
+    cleanTopicDoormatLinkTrailingPunctuation(doc);
+    cleanTopicDoormatDescriptionTrailingPunctuation(doc);
     return this.serializeParsedHtmlLikeInput(html, doc);
   }
   preserveUnselectedLinkTextInHtml(html, summaries, linkTextRewriteAllowedIndexes) {
@@ -31397,9 +31461,6 @@ var TopicDoormatRewriteOrchestratorService = class _TopicDoormatRewriteOrchestra
   }
   hasDescriptionTrailingPunctuation(value) {
     return /[.:;?!,]$/.test((value || "").trim());
-  }
-  removeFinalDoormatPunctuation(value) {
-    return (value || "").replace(/\s*[.:;?!,]\s*$/, "").trim();
   }
   toHeadingLevel(heading) {
     if (!heading)
@@ -53113,4 +53174,4 @@ ${custom}` : promptBody;
 export {
   PageAssistantCompareComponent
 };
-//# sourceMappingURL=chunk-COC2YVKQ.js.map
+//# sourceMappingURL=chunk-AZFWYJQQ.js.map
