@@ -14,6 +14,10 @@ import {
 } from './topic-doormat-analysis-state.service';
 import { TopicDoormatExtractorService } from './topic-doormat-extractor.service';
 import { TopicDoormatIssueAnalysisService } from './topic-doormat-issue-analysis.service';
+import {
+  cleanTopicDoormatDescriptionTrailingPunctuation,
+  removeFinalTopicDoormatDescriptionPunctuation,
+} from './topic-doormat-punctuation';
 import { TopicDoormatTemplateNormalizerService } from './topic-doormat-template-normalizer.service';
 import {
   selectTopicDoormatExamples,
@@ -308,12 +312,16 @@ export class TopicDoormatRewriteOrchestratorService {
       rewriteSummaries,
       linkTextRewriteAllowedIndexes,
     );
-    const finalPatchedHtml = this.restoreFrozenDoormatsFromOriginalHtml(
+    const restoredPatchedHtml = this.restoreFrozenDoormatsFromOriginalHtml(
       cleanedPatchedHtml,
       analyzedHtml,
       doormatSummaries,
       frozenBrokenLinkIndexes,
     );
+    const finalPatchedHtml =
+      this.applyDescriptionTrailingPunctuationCleanupToAllDoormats(
+        restoredPatchedHtml,
+      );
     const rewrittenHtml = await this.urlDataService.formatHtml(
       finalPatchedHtml,
       'ai',
@@ -402,8 +410,15 @@ export class TopicDoormatRewriteOrchestratorService {
       workingHtml,
       rewriteHtml,
     );
+    const cleanedPatchedHtml =
+      this.applyDescriptionTrailingPunctuationCleanupToAllDoormats(
+        patchedHtml,
+      );
     return {
-      rewrittenHtml: await this.urlDataService.formatHtml(patchedHtml, 'ai'),
+      rewrittenHtml: await this.urlDataService.formatHtml(
+        cleanedPatchedHtml,
+        'ai',
+      ),
       rewriteModel: rewrite.usedModel,
     };
   }
@@ -1260,6 +1275,15 @@ export class TopicDoormatRewriteOrchestratorService {
     return this.serializeParsedHtmlLikeInput(html, doc);
   }
 
+  private applyDescriptionTrailingPunctuationCleanupToAllDoormats(
+    html: string,
+  ): string {
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(html, 'text/html');
+    cleanTopicDoormatDescriptionTrailingPunctuation(doc);
+    return this.serializeParsedHtmlLikeInput(html, doc);
+  }
+
   private preserveUnselectedLinkTextInHtml(
     html: string,
     summaries: TopicDoormatSummary[],
@@ -1597,7 +1621,7 @@ export class TopicDoormatRewriteOrchestratorService {
   private removeFinalDoormatPunctuation(
     value: string | null | undefined,
   ): string {
-    return (value || '').replace(/\s*[.:;?!,]\s*$/, '').trim();
+    return removeFinalTopicDoormatDescriptionPunctuation(value);
   }
 
   private toHeadingLevel(heading: Element | null): number | null {
