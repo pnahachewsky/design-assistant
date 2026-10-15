@@ -7,6 +7,7 @@
   "runtime_editorial_evidence_overrides": {
     "description-lacks-clarity": "Report only genuinely ambiguous wording. evidence_details.unclear_phrase must quote an exact phrase from the description and evidence_details.ambiguity_explanation must explain competing interpretations. Generic wording, missing detail, repetition, and incomplete destination coverage are not clarity issues.",
     "description-list-punctuation-ambiguity": "Report only when list punctuation creates at least two materially different plausible readings. evidence_details.ambiguous_span must quote an exact span from the description, and first_possible_reading and second_possible_reading must state the two different interpretations. The presence or absence of 'and', 'et', or an Oxford comma alone is not evidence of ambiguity.",
+    "link-name-not-unique": "Compare every doormat link name with every other link name in the complete doormat set. For different destinations, report identical or near-identical names and names whose generic wording does not expose a meaningful difference in topic, task, audience, product or service, or destination purpose. Use destination title, H1, and destination context to confirm the intended distinction. Do not flag shared keywords or a consistent grammatical pattern when each name still provides a distinct choice. Matching text for the same destination is not a uniqueness issue. Report the issue on every affected doormat and identify the compared link name in the evidence.",
     "misdirected-link": "Do not infer misdirection from URL path structure, site hierarchy, section placement, labels, or closed/archived/replaced destination states. Doormat labels are acceptable when the substantive link text still matches the destination title or H1 in meaning. Do not require exact wording. Section suitability is handled by AIDA's IA checks."
   },
   "analysis_sequence": [
@@ -216,6 +217,7 @@
   },
   "set_level_checks": [
     "Check whether link texts use one grammatical style across the set, but report only clear outliers from a dominant style.",
+    "Compare every doormat link name with every other link name. For links to different destinations, report link-name-not-unique on every affected doormat when identical, near-identical, or generic wording fails to communicate a meaningful difference in topic, task, audience, product or service, or destination purpose. Use supplied destination evidence to confirm the distinction. Do not flag useful shared keywords when the remaining words provide distinct choices, and do not flag matching wording for the same destination.",
     "Unless the runtime description-style primary issue flag is enabled, return description_rewrite_guidance for every description and keep description style secondary to link style, clarity, destination accuracy, and useful information scent.",
     "Check whether each description is specific enough to distinguish its doormat from the others.",
     "Check for duplicate or near-duplicate descriptions across the set.",
@@ -291,8 +293,9 @@
       "group": "Link name",
       "label": "Link name not descriptive or unique",
       "severity": "High",
-      "condition": "The link text is vague, duplicated, or too similar to another link on the page.",
-      "recommendation": "Use unique link text that distinguishes this doormat from the other page links."
+      "condition": "Compared with the complete doormat set, links to different destinations are identical, nearly identical, or worded so generically that the link names do not communicate a meaningful difference in topic, task, audience, product or service, or destination purpose. Shared keywords and consistent grammatical patterns are acceptable when each link still provides a distinct choice. Matching link text for the same destination is not a uniqueness issue.",
+      "recommendation": "Use the destination title, H1, and purpose context to add the shortest meaningful distinguishing words so each doormat link describes a distinct choice.",
+      "reporting": "Report this issue on every affected doormat. In each issue's evidence, identify the other doormat link name being compared and state which destination distinction the link texts fail to communicate."
     },
     {
       "id": "link-name-too-long",

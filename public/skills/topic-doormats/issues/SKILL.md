@@ -16,6 +16,19 @@ Use this skill for issue analysis of topic doormat sets.
 - Run deterministic structural checks first, then judgment/editorial checks
 - Evaluate each doormat independently. Use the same reporting threshold for
   every doormat, regardless of whether other doormats have obvious issues.
+- For `link-name-not-unique`, compare every doormat link name with every other
+  link name in the complete doormat set. Report the issue when links to
+  different destinations are identical, nearly identical, or rely on generic
+  wording that does not communicate a meaningful difference in topic, task,
+  audience, product or service, or destination purpose. Use the supplied
+  destination title, H1, and destination context to understand the intended
+  distinction and to recommend wording that exposes it.
+- Do not report `link-name-not-unique` merely because link names share a useful
+  keyword or grammatical pattern. The issue applies only when the link names
+  themselves do not give people distinct choices. Matching link text for the
+  same destination is not a uniqueness issue. When the issue applies, report
+  it on every affected doormat and identify the compared doormat link in the
+  evidence.
 - For every doormat, return `issue_decisions` with one decision for each
   required model-owned per-doormat check in the output schema. Complete these
   decisions before writing the `issues` array. If a decision is `applies`, add
