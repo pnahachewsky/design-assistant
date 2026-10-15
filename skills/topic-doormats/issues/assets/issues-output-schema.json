@@ -1,6 +1,6 @@
 {
   "type": "object",
-  "required": ["doormats"],
+  "required": ["section_issues", "doormats"],
   "properties": {
     "page_summary": {
       "type": "object",
@@ -46,7 +46,7 @@
             "dropdown-enhancement",
             "mixed-or-unclear"
           ],
-          "description": "Optional legacy/advisory classification. Do not use this as the primary rewrite target."
+          "description": "Required when the runtime description-style primary issue flag is enabled; otherwise optional advisory output."
         },
         "overall_assessment": {
           "type": "string"
@@ -84,13 +84,20 @@
           "href",
           "description",
           "detected_link_text_style",
-          "description_rewrite_guidance",
           "destination_link_relationship",
           "destination_link_relationship_basis",
           "destination_link_relationship_reason",
           "destination_content_assessment",
           "issue_decisions",
           "issues"
+        ],
+        "anyOf": [
+          {
+            "required": ["description_rewrite_guidance"]
+          },
+          {
+            "required": ["detected_description_style"]
+          }
         ],
         "properties": {
           "doormat_index": {
@@ -144,7 +151,7 @@
               "dropdown-enhancement",
               "mixed-or-unclear"
             ],
-            "description": "Optional legacy/advisory classification. Do not use this as the primary rewrite target."
+            "description": "Required when the runtime description-style primary issue flag is enabled; otherwise optional advisory output."
           },
           "destination_link_relationship": {
             "type": "string",
@@ -185,7 +192,7 @@
                 "uniqueItems": true,
                 "items": {
                   "type": "string",
-                  "pattern": "^(intro|h2)-[1-9][0-9]*$"
+                  "pattern": "^(intro|h2|doormat)-[1-9][0-9]*$"
                 }
               },
               "covered_element_ids": {
@@ -193,7 +200,7 @@
                 "uniqueItems": true,
                 "items": {
                   "type": "string",
-                  "pattern": "^(intro|h2)-[1-9][0-9]*$"
+                  "pattern": "^(intro|h2|doormat)-[1-9][0-9]*$"
                 }
               },
               "missing_important_element_ids": {
@@ -201,7 +208,7 @@
                 "uniqueItems": true,
                 "items": {
                   "type": "string",
-                  "pattern": "^(intro|h2)-[1-9][0-9]*$"
+                  "pattern": "^(intro|h2|doormat)-[1-9][0-9]*$"
                 }
               }
             }

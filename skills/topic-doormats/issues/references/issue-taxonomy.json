@@ -3,7 +3,7 @@
   "scope": "Issue analysis for GCWeb topic page doormats.",
   "precondition": "Run this analysis only when AIDA heuristics have detected one or more topic doormat items. Missing doormat-section detection is handled before invoking this skill.",
   "analysis_unit": "Analyze one complete topic doormat set at a time. Compare doormats within each caller-provided H2 section before assigning section-scoped issues. Use caller-provided H2 section metadata for section-local numbering, the 9-doormat limit, and section-level style issues.",
-  "reporting_unit": "Return issue reports for each affected doormat item. If an editorial issue applies to a whole section rather than a single doormat, return it in section_issues with the affected section_index. Do not repeat section-level issues on every doormat. Unless runtime instructions say the description-style primary issue flag is enabled, do not return mixed-description-style-in-section or inconsistent-description-style; description style is secondary rewrite guidance, not a primary issue driver by default. Report too-many-doormats-in-section as one section_issues item for the affected H2 section, not as repeated per-doormat issues.",
+  "reporting_unit": "Return issue reports for each affected doormat item. If a model-owned editorial issue applies to a whole section rather than a single doormat, return it in section_issues with the affected section_index. Do not repeat section-level issues on every doormat. Unless runtime instructions say the description-style primary issue flag is enabled, do not return mixed-description-style-in-section or inconsistent-description-style; description style is secondary rewrite guidance, not a primary issue driver by default. AIDA calculates and reports too-many-doormats-in-section locally; do not return it.",
   "runtime_editorial_evidence_overrides": {
     "description-lacks-clarity": "Report only genuinely ambiguous wording. evidence_details.unclear_phrase must quote an exact phrase from the description and evidence_details.ambiguity_explanation must explain competing interpretations. Generic wording, missing detail, repetition, and incomplete destination coverage are not clarity issues.",
     "description-list-punctuation-ambiguity": "Report only when list punctuation creates at least two materially different plausible readings. evidence_details.ambiguous_span must quote an exact span from the description, and first_possible_reading and second_possible_reading must state the two different interpretations. The presence or absence of 'and', 'et', or an Oxford comma alone is not evidence of ambiguity.",
@@ -12,11 +12,10 @@
   "analysis_sequence": [
     {
       "pass": "deterministic_structural_checks",
-      "instruction": "Run these checks first. Do not return the response until every model-owned deterministic structural check has been evaluated for every doormat and every complete doormat section. Do not report broken-link, redirected-link, link-name-too-long, description-too-long, link-name-trailing-punctuation, description-trailing-punctuation, description-uses-first-or-second-person, duplicate-link-in-most-requested, missing-needed-doormat, or unnecessary-doormat; AIDA calculates and reports those issues deterministically from the extracted doormat text, destination HTTP status or verified redirect, Most requested links, IA child-page relationships, page-view data, and character counts.",
+      "instruction": "Run these checks first. Do not return the response until every model-owned deterministic structural check has been evaluated for every doormat and every complete doormat section. Do not report broken-link, redirected-link, link-name-too-long, description-too-long, link-name-trailing-punctuation, description-trailing-punctuation, description-uses-first-or-second-person, duplicate-link-in-most-requested, missing-needed-doormat, unnecessary-doormat, or too-many-doormats-in-section; AIDA calculates and reports those issues deterministically from the extracted doormat text, destination HTTP status or verified redirect, Most requested links, IA child-page relationships, page-view data, section counts, and character counts.",
       "issue_ids": [
         "broken-link",
         "redirected-link",
-        "too-many-doormats-in-section",
         "split-heading-link",
         "multiple-links",
         "missing-description",
@@ -79,7 +78,7 @@
     "runtime_missing_field_guardrail": "AIDA treats empty strings and dash-only placeholders as missing evidence or recommendation for model-owned issues. It sends only the incomplete issue fields back to the model for repair. If repair still returns unusable text, AIDA keeps the issue visible and displays 'No AI evidence was received.' or 'No AI recommendation was received.' for the missing field."
   },
   "description_rewrite_guidance": {
-    "instruction": "Return exactly one description_rewrite_guidance value for every doormat. This guidance is secondary to link text style, destination accuracy, clarity, and useful information scent. Prefer the smallest useful edit. Preserve accurate phrase-style descriptions when they are clear. Do not convert descriptions to keyword lists by default.",
+    "instruction": "Unless runtime instructions say the description-style primary issue flag is enabled, return exactly one description_rewrite_guidance value for every doormat. When the flag is enabled, return detected_description_style instead. Rewrite guidance is secondary to link text style, destination accuracy, clarity, and useful information scent. Prefer the smallest useful edit. Preserve accurate phrase-style descriptions when they are clear. Do not convert descriptions to keyword lists by default.",
     "allowed_values": [
       "leave-unchanged",
       "retain-phrase",
@@ -180,10 +179,10 @@
     "minimum_standard": "Do not report a style inconsistency just because descriptions are not identical. Unless runtime instructions say the description-style primary issue flag is enabled, description style is secondary rewrite guidance. Use description_rewrite_guidance to recommend the smallest useful edit and preserve clear phrases. Link text style remains the primary consistency contract.",
     "dominant_style_required": true,
     "outlier_only_reporting": true,
-    "mixed_section_reporting_allowed": false,
+    "mixed_section_reporting_allowed": "Only when runtime instructions say the description-style primary issue flag is enabled and the mix materially reduces scannability or comparison.",
     "different_style_required": true,
     "same_style_is_not_inconsistent": "If dominant_style and outlier_style are the same link style label, do not report inconsistent-link-name-style.",
-    "description_style_issue_ids_retired": "Unless runtime instructions say the description-style primary issue flag is enabled, do not return description-incorrect-style, mixed-description-style-in-section, or inconsistent-description-style.",
+    "description_style_issue_ids": "Return description-incorrect-style, mixed-description-style-in-section, or inconsistent-description-style only when runtime instructions say the description-style primary issue flag is enabled.",
     "forbidden_style_evidence_terms": [
       "verbose",
       "longer",
@@ -217,11 +216,11 @@
   },
   "set_level_checks": [
     "Check whether link texts use one grammatical style across the set, but report only clear outliers from a dominant style.",
-    "Return description_rewrite_guidance for every description. Keep description style secondary to link style, clarity, destination accuracy, and useful information scent.",
+    "Unless the runtime description-style primary issue flag is enabled, return description_rewrite_guidance for every description and keep description style secondary to link style, clarity, destination accuracy, and useful information scent.",
     "Check whether each description is specific enough to distinguish its doormat from the others.",
     "Check for duplicate or near-duplicate descriptions across the set.",
     "Check for repeated generic task lists across the set.",
-    "Check whether any topic doormat section contains more than 9 doormats. If it does, report too-many-doormats-in-section once in section_issues for the affected H2 section.",
+    "AIDA checks the 9-doormat section limit locally; do not assess or return too-many-doormats-in-section.",
     "AIDA checks whether the set is missing a needed doormat based on IA child-page relationships.",
     "AIDA checks whether the set includes an unnecessary or badly chosen doormat based on IA child-page relationships."
   ],
@@ -360,8 +359,8 @@
       "group": "Description clarity",
       "label": "Description lacks clarity",
       "severity": "High",
-      "condition": "The description is unclear or does not help users decide whether to follow the link.",
-      "recommendation": "Rewrite the description with specific information, tasks, services, audiences, or benefits found on the destination page."
+      "condition": "The description contains an exact phrase with at least two materially different plausible interpretations. Generic wording, missing detail, repetition, and incomplete destination coverage are not clarity issues.",
+      "recommendation": "Rewrite or repunctuate the ambiguous phrase with the smallest change that makes the intended meaning clear."
     },
     {
       "id": "description-missing-needed-information",
@@ -393,24 +392,24 @@
       "severity_override": {
         "Low": "Use Low when the description is 121 to 130 characters.",
         "Medium": "Use Medium when the description is 131 to 140 characters.",
-        "High": "Use High when the description is 121 characters or longer."
+        "High": "Use High when the description is 141 characters or longer."
       }
     },
     {
       "id": "description-incorrect-style",
       "group": "Description clarity",
-      "label": "Deprecated: description has incorrect style",
+      "label": "Description has an unsuitable style",
       "severity": "Medium",
-      "condition": "Deprecated. Do not use this issue.",
-      "recommendation": "Return description_rewrite_guidance instead. Preserve clear phrase-style descriptions when they work."
+      "condition": "Use only when runtime instructions say the description-style primary issue flag is enabled and the description form materially reduces clarity or scanning for this destination.",
+      "recommendation": "Use the description form that best communicates the destination intent. Do not force a clear phrase into a keyword list solely for consistency."
     },
     {
       "id": "description-repeats-link-text",
       "group": "Description clarity",
       "label": "Description repeats link text",
       "severity": "Medium",
-      "condition": "The description substantially restates words or meaning already present in the link text and adds little useful decision-making information. Necessary reuse of key terms is acceptable when it preserves destination scope, restores meaning omitted from concise link text, prevents ambiguity, or supports natural phrasing.",
-      "recommendation": "Remove only redundant restatement. Use the description to add distinct decision-making information while retaining any repeated terms needed for accuracy, scope, clarity, or natural phrasing."
+      "condition": "The description substantially restates the link text without adding useful decision-making information.",
+      "recommendation": "Add useful information beyond the link text. Keep necessary repetition when it preserves scope or makes the added information clear."
     },
     {
       "id": "duplicate-or-near-duplicate-description",
@@ -437,11 +436,11 @@
     {
       "id": "mixed-description-style-in-section",
       "group": "Description clarity",
-      "label": "Deprecated: mixed description styles in section",
+      "label": "Mixed description styles in section",
       "severity": "Low",
-      "condition": "Deprecated. Do not use this issue.",
-      "recommendation": "Return description_rewrite_guidance for individual descriptions only when a rewrite would materially improve clarity or scanning.",
-      "reporting": "Do not return this issue. AIDA no longer reports description style mixes as primary issues.",
+      "condition": "Use only when runtime instructions say the description-style primary issue flag is enabled and the section mixes description styles in a way that materially reduces scannability or comparison.",
+      "recommendation": "Align descriptions only where the style mix reduces clarity or comparison; preserve clear phrasing that suits the destination intent.",
+      "reporting": "When the feature flag is disabled, return description_rewrite_guidance instead and do not return this issue.",
       "evidence_required": [
         "section_description_styles",
         "representative_doormat_indexes",
@@ -464,10 +463,10 @@
     {
       "id": "inconsistent-description-style",
       "group": "Description clarity",
-      "label": "Deprecated: inconsistent description style",
+      "label": "Inconsistent description style",
       "severity": "Low",
-      "condition": "Deprecated. Do not use this issue.",
-      "recommendation": "Return description_rewrite_guidance instead. Do not force a clear phrase into a keyword list solely for consistency.",
+      "condition": "Use only when runtime instructions say the description-style primary issue flag is enabled and one or two descriptions are clear outliers from a dominant section style in a way that reduces comparison.",
+      "recommendation": "Align the outlier with the section where that improves comparison, without forcing a clear phrase into a keyword list solely for consistency.",
       "evidence_required": [
         "dominant_style",
         "outlier_style",

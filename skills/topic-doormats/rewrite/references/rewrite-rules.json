@@ -4,7 +4,7 @@
   "rules": [
     {
       "id": "rewrite-complete-set",
-      "text": "Rewrite the complete doormat set together. Keep link text style, order, and destination choices consistent across each H2 section and the full set. Treat description style as secondary to readability, destination accuracy, and useful information scent."
+      "text": "Evaluate the complete doormat set together and return the complete updated set. Edit only doormats authorized by selected issues or by an explicit draft request. Keep link text style, order, and destination choices consistent across each H2 section and the full set. Treat description style as secondary to readability, destination accuracy, and useful information scent."
     },
     {
       "id": "return-full-updated-set",
@@ -19,24 +19,28 @@
       "text": "When selected topic doormat issues are supplied, use them as rewrite priorities. Fix each selected issue when possible without creating new length, style, destination, structure, or consistency problems. Preserve doormats that do not have selected issues. Preserve link text unless a selected issue for that doormat is explicitly about link text, such as link length, link clarity, link uniqueness, destination-title mismatch, or link-name style. Description issues, review flags, IA child-page flags, and repeated-opening issues do not authorize link text changes. If an issue cannot be fixed safely, preserve the safest wording."
     },
     {
+      "id": "generated-topic-draft",
+      "text": "When topic_doormat_issue_analysis.status is generated-topic-draft, all supplied doormat link names and descriptions are authorized for drafting from destination context. The selected-issue preservation limits apply to issue-driven rewrites, not to this explicit draft request. Preserve hrefs, order, valid doormat markup, and unrelated page HTML."
+    },
+    {
       "id": "minimal-formatting-and-length-fixes",
       "text": "For formatting-only or length-only issues, make the smallest edit that fixes the issue. If the issue is trailing punctuation, remove final punctuation only. If the issue is length, shorten while preserving the destination intent and any existing explanatory or task framing. Do not change a guidance phrase into a direct task phrase, or change a direct task phrase into guidance wording, only to fix punctuation or length."
     },
     {
       "id": "link-text",
-      "text": "Use unique, descriptive link text that preserves destination meaning. Keep link text style consistent within each H2 section because links are the first scannable part of the doormat set and often read like headings. Choose task framing based on destination intent: use imperative action wording when the destination or section lets users start, complete, or continue the task; use gerund, how-to, or explanatory wording when the destination mainly provides information, instructions, requirements, eligibility, timing, or rules about the task. Do not change an informational link into an imperative task link unless destination evidence shows the task can actually be completed or started there. Do not change a transactional task link into gerund or how-to wording when the destination is primarily where users complete the task. Avoid vague terms, duplicate wording, unnecessary words, and trailing punctuation. Keep under 75 characters, including spaces, and aim for 35 or fewer."
+      "text": "Use unique, descriptive link text that preserves destination meaning. Keep link text style consistent within each H2 section because links are the first scannable part of the doormat set and often read like headings. Choose task framing based on destination intent: use imperative action wording when the destination or section lets users start, complete, or continue the task; use gerund, how-to, or explanatory wording when the destination mainly provides information, instructions, requirements, eligibility, timing, or rules about the task. Do not change an informational link into an imperative task link unless destination evidence shows the task can actually be completed or started there. Do not change a transactional task link into gerund or how-to wording when the destination is primarily where users complete the task. Avoid vague terms, duplicate wording, unnecessary words, and trailing punctuation. Keep below 75 characters, including spaces, and aim for 45, but do not remove a co-equal destination concept or move it into the description to shorten the link."
     },
     {
       "id": "description-evidence",
-      "text": "Ground each rewritten description in supplied destination evidence for the affected doormat: title, H1, intro paragraphs, section headings, labels, cleaned destination main HTML, current doormat text, and opposite-language doormat data when available. Use destination terminology when clear; do not invent unsupported programs, services, forms, benefits, credits, eligibility concepts, deadlines, or tasks."
+      "text": "Ground each rewritten description in supplied destination evidence for the affected doormat: title, H1, intro paragraphs, section headings, labels, cleaned destination main HTML, current doormat text, and opposite-language doormat data when available. Use destination terminology when clear; do not invent unsupported programs, services, forms, benefits, credits, eligibility concepts, deadlines, or tasks. Do not collapse distinct categories, qualifications, or reporting routes into broader wording; preserve distinctions that change who qualifies or what users must do."
     },
     {
       "id": "description-purpose",
-      "text": "Describe the destination's main topic, purpose, audience, or primary task so users can decide whether the link is relevant. Add useful information not already present in the link text and explain what users can expect to find or do after selecting it. Reuse the minimum link-text wording needed when it preserves destination scope, restores an important concept omitted from concise link text, prevents ambiguity, or keeps the description natural. Destination accuracy and useful information scent take precedence over eliminating every repeated word."
+      "text": "Describe the destination's main topic, purpose, audience, or primary task so users can decide whether the link is relevant. Descriptions must add useful information beyond the link text; necessary repetition is acceptable when it preserves scope or makes the added information clear. Explain what users can expect to find or do after selecting the link."
     },
     {
       "id": "description-intent",
-      "text": "Choose description wording based on destination intent. Use direct task phrasing when the destination is where users can complete, start, or continue the task, such as open an account, apply for a benefit, file a return, make a payment, or update information. Use learning or explanatory phrasing when the destination explains how something works, who it applies to, what rules or requirements apply, what users need, or when something happens. In those cases, how/who/what/when phrasing, Learn about, or Find out can be appropriate. Do not rewrite a guidance destination such as how to open an account as the task open an account unless the destination actually lets users open the account or clearly starts that transaction. Do not add how to to a direct task link when the destination is primarily transactional. Avoid unnecessary repetition of the link text inside the description when using how/who/what/when phrasing; prefer the acronym or the specific concept after the link has already named the full product, service, program, or plan. Keep repeated wording when removing it would lose an important destination concept, narrow or distort the scope, create ambiguity, or make the phrasing unnatural."
+      "text": "Choose description wording based on destination intent. Use direct task phrasing when the destination is where users can complete, start, or continue the task, such as open an account, apply for a benefit, file a return, make a payment, or update information. Use learning or explanatory phrasing when the destination explains how something works, who it applies to, what rules or requirements apply, what users need, or when something happens. In those cases, how/who/what/when phrasing, Learn about, or Find out can be appropriate. Do not rewrite a guidance destination such as how to open an account as the task open an account unless the destination actually lets users open the account or clearly starts that transaction. Do not add how to to a direct task link when the destination is primarily transactional. Avoid unnecessary repetition of the link text inside the description when using how/who/what/when phrasing; prefer the acronym or the specific concept after the link has already named the full product, service, program, or plan."
     },
     {
       "id": "preserve-explanatory-framing",
@@ -60,7 +64,7 @@
     },
     {
       "id": "description-quality",
-      "text": "Do not merely restate the link text or reuse identical or near-identical descriptions. Shared wording is acceptable when the description also adds useful information and the repeated terms are needed for accuracy, scope, clarity, or natural phrasing. Do not use promotional language or start with filler such as Includes, Information on, Learn more about, or Find information about. Descriptions must be plain text only: no links, bold text, bullets, or markup."
+      "text": "Do not merely restate the link text, reuse identical or near-identical descriptions, use promotional language, or start with filler such as Includes, Information on, Learn more about, or Find information about. Descriptions must be plain text only: no links, bold text, bullets, or markup."
     },
     {
       "id": "existing-description",

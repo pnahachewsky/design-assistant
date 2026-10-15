@@ -22,9 +22,9 @@ Use this skill for rewriting topic doormat sets.
 - Preserve all unrelated page HTML
 - Rewrite the doormat set consistently
 - Keep link text concise while preserving the destination meaning
-- Keep descriptions concise, specific, and parallel across the set
+- Keep descriptions concise and specific, with a comparable tone and level of detail across the set
 - If the user payload includes `topic_doormat_issue_analysis.selected_issues`,
-  use those issues as rewrite priorities while still following the rewrite rules
+  use those issues as rewrite priorities while still following the rewrite rulesS
 - If the user payload includes `doormats_with_selected_issues`, use each
   affected doormat's destination title, H1, intro paragraphs, H2 headings,
   labels, and cleaned destination main HTML as source evidence for the rewrite

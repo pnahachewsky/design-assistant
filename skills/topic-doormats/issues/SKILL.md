@@ -23,10 +23,7 @@ Use this skill for issue analysis of topic doormat sets.
   owns or derives that issue.
 - Treat caller-provided H2 section metadata as authoritative for section-local
   doormat numbering and the 9-doormat limit
-- Apply the 9-doormat limit per H2 section only; reset the count at each H2
-  section
-- Report `too-many-doormats-in-section` as one section-level issue for the
-  affected H2 section, not as repeated per-doormat issues
+- AIDA applies the 9-doormat limit per H2 section locally. Do not assess or return `too-many-doormats-in-section` from the model
 - Apply consistency checks within the caller-provided H2 section unless the
   taxonomy explicitly scopes a check more broadly
 - Audit link name style within each H2 section. Report a section-level mixed
@@ -156,7 +153,7 @@ Use this skill for issue analysis of topic doormat sets.
   `link-name-trailing-punctuation`, `description-trailing-punctuation`,
   `description-uses-first-or-second-person`, `duplicate-link-in-most-requested`,
   `missing-needed-doormat`, `unnecessary-doormat`, or
-  `repeated-description-opening`; AIDA calculates and reports those issues
+  `repeated-description-opening`, or `too-many-doormats-in-section`; AIDA calculates and reports those issues
   deterministically from the extracted doormat text, Most requested links,
   destination HTTP status or verified redirect, IA child-page relationships,
   page-view data, and character counts
