@@ -60,7 +60,7 @@
               "before": "When and how to remit (pay) the tax, including by instalments",
               "after": "When and how to remit (pay) the tax, including by instalments, how we charge interest",
               "issueTags": [
-                "description-missing-important-destination-content"
+                "description-missing-needed-information"
               ],
               "changeType": "content-selection",
               "reason": "Interest is supported by the destination. Add it only for a relevant content gap; secondary details do not justify exceeding the length target.",
@@ -159,7 +159,7 @@
               "before": "Quand et comment verser (payer) la taxe, y compris par acomptes provisionnels",
               "after": "Quand et comment verser (payer) la taxe, y compris par acomptes provisionnels, comment nous appliquons les intérêts",
               "issueTags": [
-                "description-missing-important-destination-content"
+                "description-missing-needed-information"
               ],
               "changeType": "content-selection",
               "reason": "Les intérêts sont appuyés par la destination. Les ajouter seulement pour un manque pertinent; les détails secondaires ne justifient pas de dépasser la longueur cible.",
@@ -220,7 +220,7 @@
               "after": "How to set up an RRSP, make contributions and withdrawals, find out about related plans",
               "issueTags": [
                 "description-repeats-link-text",
-                "description-missing-important-destination-content"
+                "description-missing-needed-information"
               ],
               "changeType": "content-selection",
               "reason": "Use the acronym after the link names the plan. Describe guidance and add only destination-supported topics; do not list every related plan.",
@@ -238,7 +238,7 @@
               "before": "How to open a TFSA, calculate your contribution room, and make withdrawals",
               "after": "How to open a TFSA, calculate your contribution room, make withdrawals and transfers",
               "issueTags": [
-                "description-missing-important-destination-content"
+                "description-missing-needed-information"
               ],
               "changeType": "content-selection",
               "reason": "Keep explanatory wording. Add transfers only for a relevant content gap; the original is not automatically incorrect.",
@@ -310,7 +310,7 @@
               "before": "Annual limits, administrative procedures for registered plans, and links to bulletins, newsletters, and manuals.",
               "after": "Annual limits, administrative procedures for registered plans, links to guides, forms, publications",
               "issueTags": [
-                "description-missing-important-destination-content"
+                "description-missing-needed-information"
               ],
               "changeType": "content-selection",
               "reason": "Use the resource types actually offered by the destination, only when this resolves the selected content gap.",
@@ -345,7 +345,7 @@
               "after": "Comment souscrire un REER, verser des cotisations et en retirer, en apprendre plus sur les régimes connexes",
               "issueTags": [
                 "description-repeats-link-text",
-                "description-missing-important-destination-content"
+                "description-missing-needed-information"
               ],
               "changeType": "content-selection",
               "reason": "Employer le sigle après le nom dans le lien. Présenter les conseils et seulement les sujets appuyés par la destination.",
@@ -363,7 +363,7 @@
               "before": "Comment ouvrir un CELI, calculer vos droits de cotisation et effectuer des retraits.",
               "after": "Comment ouvrir un CELI, calculer vos droits de cotisation, effectuer des retraits et des transferts",
               "issueTags": [
-                "description-missing-important-destination-content"
+                "description-missing-needed-information"
               ],
               "changeType": "content-selection",
               "reason": "Conserver la formulation explicative. Ajouter les transferts seulement pour un manque pertinent; la version originale n'est pas nécessairement incorrecte.",
@@ -436,7 +436,7 @@
               "before": "Plafonds annuels, procédures administratives pour les régimes et liens vers les bulletins, les manuels et l'information.",
               "after": "Plafonds annuels, procédures administratives pour les régimes, liens vers les guides, formulaires et publications",
               "issueTags": [
-                "description-missing-important-destination-content"
+                "description-missing-needed-information"
               ],
               "changeType": "content-selection",
               "reason": "Nommer les types de ressources offerts à destination seulement si cela corrige le manque de contenu sélectionné.",

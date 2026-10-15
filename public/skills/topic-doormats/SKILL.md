@@ -16,11 +16,12 @@ explicitly asks for them.
 
 Always treat doormats as a complete set.
 
-Do not analyze or rewrite one doormat in isolation when the full set is
-available. Compare link text, descriptions, order, and destination choices in
-context before reporting issues or making recommendations. For issue analysis,
-use the task-specific taxonomy for section-scoped style checks and local
-deterministic rules.
+Do not evaluate one doormat in isolation when the full set is available.
+Compare link text, descriptions, order, and destination choices in context
+before reporting issues or making recommendations. When only selected doormats
+are authorized for rewriting, evaluate them in the full-set context while
+preserving unselected doormats. For issue analysis, use the task-specific
+taxonomy for section-scoped style checks and local deterministic rules.
 
 ## Resource Authority
 

@@ -4,7 +4,7 @@
   "rules": [
     {
       "id": "rewrite-complete-set",
-      "text": "Rewrite the complete doormat set together. Keep link text style, order, and destination choices consistent across each H2 section and the full set. Treat description style as secondary to readability, destination accuracy, and useful information scent."
+      "text": "Evaluate the complete doormat set together and return the complete updated set. Edit only doormats authorized by selected issues or by an explicit draft request. Keep link text style, order, and destination choices consistent across each H2 section and the full set. Treat description style as secondary to readability, destination accuracy, and useful information scent."
     },
     {
       "id": "return-full-updated-set",
@@ -19,6 +19,10 @@
       "text": "When selected topic doormat issues are supplied, use them as rewrite priorities. Fix each selected issue when possible without creating new length, style, destination, structure, or consistency problems. Preserve doormats that do not have selected issues. Preserve link text unless a selected issue for that doormat is explicitly about link text, such as link length, link clarity, link uniqueness, destination-title mismatch, or link-name style. Description issues, review flags, IA child-page flags, and repeated-opening issues do not authorize link text changes. If an issue cannot be fixed safely, preserve the safest wording."
     },
     {
+      "id": "generated-topic-draft",
+      "text": "When topic_doormat_issue_analysis.status is generated-topic-draft, all supplied doormat link names and descriptions are authorized for drafting from destination context. The selected-issue preservation limits apply to issue-driven rewrites, not to this explicit draft request. Preserve hrefs, order, valid doormat markup, and unrelated page HTML."
+    },
+    {
       "id": "minimal-formatting-and-length-fixes",
       "text": "For formatting-only or length-only issues, make the smallest edit that fixes the issue. If the issue is trailing punctuation, remove final punctuation only. If the issue is length, shorten while preserving the destination intent and any existing explanatory or task framing. Do not change a guidance phrase into a direct task phrase, or change a direct task phrase into guidance wording, only to fix punctuation or length."
     },
@@ -28,7 +32,7 @@
     },
     {
       "id": "description-evidence",
-      "text": "Ground each rewritten description in supplied destination evidence for the affected doormat: title, H1, intro paragraphs, section headings, labels, cleaned destination main HTML, current doormat text, and opposite-language doormat data when available. Use destination terminology when clear; do not invent unsupported programs, services, forms, benefits, credits, eligibility concepts, deadlines, or tasks."
+      "text": "Ground each rewritten description in supplied destination evidence for the affected doormat: title, H1, intro paragraphs, section headings, labels, cleaned destination main HTML, current doormat text, and opposite-language doormat data when available. Use destination terminology when clear; do not invent unsupported programs, services, forms, benefits, credits, eligibility concepts, deadlines, or tasks. Do not collapse distinct categories, qualifications, or reporting routes into broader wording; preserve distinctions that change who qualifies or what users must do."
     },
     {
       "id": "description-purpose",
