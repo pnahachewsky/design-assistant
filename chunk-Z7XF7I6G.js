@@ -2753,6 +2753,14 @@ var DesignComponentsComponent = class _DesignComponentsComponent {
       return "chip-ok";
     return "chip-unk";
   }
+  markForTranslation() {
+    marker("problems.components.alerts.title");
+    marker("problems.components.health.unknown");
+    marker("problems.components.health.high");
+    marker("problems.components.health.medium");
+    marker("problems.components.health.low");
+    marker("problems.components.health.ok");
+  }
   static \u0275fac = function DesignComponentsComponent_Factory(__ngFactoryType__) {
     return new (__ngFactoryType__ || _DesignComponentsComponent)();
   };
@@ -2861,7 +2869,7 @@ var DesignComponentsComponent = class _DesignComponentsComponent {
   }], () => [], { beforeContent: [{ type: Input, args: [{ isSignal: true, alias: "beforeContent", required: false }] }], afterContent: [{ type: Input, args: [{ isSignal: true, alias: "afterContent", required: false }] }] });
 })();
 (() => {
-  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(DesignComponentsComponent, { className: "DesignComponentsComponent", filePath: "src/app/components/compare/compare-problems/design-components/design-components.component.ts", lineNumber: 34 });
+  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(DesignComponentsComponent, { className: "DesignComponentsComponent", filePath: "src/app/components/compare/compare-problems/design-components/design-components.component.ts", lineNumber: 35 });
 })();
 
 // src/app/components/compare/compare-problems/compare-problems.component.ts
@@ -5953,8 +5961,8 @@ var CompareAiService = class _CompareAiService {
       if (!initialBefore || !initialAfter)
         return;
       const pagePath = this.compareService.selectedPage();
-      const promptKey = this.compareService.selectedPrompt();
       this.projectCache.setAiJobStatus(pagePath, "pending");
+      const promptKey = this.compareService.selectedPrompt();
       const selectedTense = this.compareService.selectedTense();
       const basePrompt = PagePrompts[PagePromptKey[promptKey]];
       const prompt = promptKey === "Tense" ? __spreadProps(__spreadValues({}, basePrompt), {
@@ -7257,4 +7265,4 @@ var CompareComponent = class _CompareComponent {
 export {
   CompareComponent
 };
-//# sourceMappingURL=chunk-OSONGTQH.js.map
+//# sourceMappingURL=chunk-Z7XF7I6G.js.map

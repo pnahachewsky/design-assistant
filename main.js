@@ -8144,13 +8144,13 @@ var routes = [
       },
       {
         path: "edit-pages",
-        loadComponent: () => import("./chunk-OSONGTQH.js").then((m) => m.CompareComponent),
+        loadComponent: () => import("./chunk-Z7XF7I6G.js").then((m) => m.CompareComponent),
         title: "editPages._title",
         data: { mode: "ai" }
       },
       {
         path: "compare-pages",
-        loadComponent: () => import("./chunk-OSONGTQH.js").then((m) => m.CompareComponent),
+        loadComponent: () => import("./chunk-Z7XF7I6G.js").then((m) => m.CompareComponent),
         title: "compare._title",
         data: { mode: "compare" }
       }
