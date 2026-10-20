@@ -84,7 +84,7 @@ import {
 } from "./chunk-KRHY6Z2H.js";
 
 // src/app/components/user-settings/user-settings.component.ts
-var UserSettingsComponent_Conditional_4_Defer_24_DepsFn = () => [import("./chunk-XR4R7HYW.js").then((m) => m.DoormatsComponent), TranslatePipe];
+var UserSettingsComponent_Conditional_4_Defer_24_DepsFn = () => [import("./chunk-WHZN66L5.js").then((m) => m.DoormatsComponent), TranslatePipe];
 var _c0 = () => ({ width: "50vw" });
 var _c1 = () => ({ "1199px": "75vw", "575": "90vw" });
 var _c2 = () => ({ showPreview: true });
@@ -719,7 +719,7 @@ var UserSettingsComponent = class _UserSettingsComponent {
   }, dependencies: () => [CommonModule, NgTemplateOutlet, FormsModule, NgControlStatus, NgModel, ButtonModule, Button, PrimeTemplate, CheckboxModule, Checkbox, DialogModule, Dialog, SelectButtonModule, SelectButton, SelectModule, Select, TooltipModule, Tooltip, TranslatePipe], encapsulation: 2, changeDetection: 0 });
 };
 (() => {
-  (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadataAsync(UserSettingsComponent, () => [import("./chunk-XR4R7HYW.js").then((m) => m.DoormatsComponent)], (DoormatsComponent) => {
+  (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadataAsync(UserSettingsComponent, () => [import("./chunk-WHZN66L5.js").then((m) => m.DoormatsComponent)], (DoormatsComponent) => {
     setClassMetadata(UserSettingsComponent, [{
       type: Component,
       args: [{ selector: "aida-user-settings", imports: [CommonModule, FormsModule, TranslatePipe, ButtonModule, CheckboxModule, DialogModule, SelectButtonModule, SelectModule, TooltipModule, forwardRef(() => DoormatsComponent)], changeDetection: ChangeDetectionStrategy.OnPush, template: `<div class="flex flex-column gap-2">
@@ -919,4 +919,4 @@ var UserSettingsComponent = class _UserSettingsComponent {
 export {
   UserSettingsComponent
 };
-//# sourceMappingURL=chunk-N437RI73.js.map
+//# sourceMappingURL=chunk-MGMLVIHZ.js.map

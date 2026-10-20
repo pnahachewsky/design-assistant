@@ -1,9 +1,9 @@
 import {
   UserSettingsComponent
-} from "./chunk-N437RI73.js";
+} from "./chunk-MGMLVIHZ.js";
 import {
   AddPagesComponent
-} from "./chunk-ALJPLJQM.js";
+} from "./chunk-UK7EMC5B.js";
 import {
   ConfirmDialog,
   ConfirmDialogModule
@@ -17,7 +17,7 @@ import {
   KeyFilterModule,
   PatComponent,
   SetupRepoComponent
-} from "./chunk-QZ4PHMU6.js";
+} from "./chunk-DXUCBGQX.js";
 import {
   AutoComplete,
   AutoCompleteModule
@@ -27,13 +27,13 @@ import {
   DialogModule
 } from "./chunk-WLUUE74Y.js";
 import {
-  IftaLabel,
-  IftaLabelModule
-} from "./chunk-SFFTHMKD.js";
-import {
   Message,
   MessageModule
 } from "./chunk-HIIG3TAV.js";
+import {
+  IftaLabel,
+  IftaLabelModule
+} from "./chunk-SFFTHMKD.js";
 import {
   AidaLinks
 } from "./chunk-PM4ZAKXV.js";
@@ -3439,4 +3439,4 @@ export {
   SetupProjectComponent,
   ProjectMenuComponent
 };
-//# sourceMappingURL=chunk-ZPRU7CFY.js.map
+//# sourceMappingURL=chunk-MYJFWOWW.js.map

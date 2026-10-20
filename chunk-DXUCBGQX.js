@@ -7,13 +7,13 @@ import {
   DialogModule
 } from "./chunk-WLUUE74Y.js";
 import {
-  IftaLabel,
-  IftaLabelModule
-} from "./chunk-SFFTHMKD.js";
-import {
   Message,
   MessageModule
 } from "./chunk-HIIG3TAV.js";
+import {
+  IftaLabel,
+  IftaLabelModule
+} from "./chunk-SFFTHMKD.js";
 import {
   ProjectStateService
 } from "./chunk-Y6P4PL7N.js";
@@ -2864,4 +2864,4 @@ export {
   PatComponent,
   SetupRepoComponent
 };
-//# sourceMappingURL=chunk-QZ4PHMU6.js.map
+//# sourceMappingURL=chunk-DXUCBGQX.js.map

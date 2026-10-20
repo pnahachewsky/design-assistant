@@ -1,6 +1,6 @@
 import {
   PatComponent
-} from "./chunk-QZ4PHMU6.js";
+} from "./chunk-DXUCBGQX.js";
 import {
   Divider,
   DividerModule
@@ -607,4 +607,4 @@ var SignInBannerComponent = class _SignInBannerComponent {
 export {
   SignInBannerComponent
 };
-//# sourceMappingURL=chunk-ZFJ4BYAA.js.map
+//# sourceMappingURL=chunk-WXLHO44A.js.map

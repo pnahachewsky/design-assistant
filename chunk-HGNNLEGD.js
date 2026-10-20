@@ -14,11 +14,11 @@ import {
 import "./chunk-IAEHVNRB.js";
 import "./chunk-JUMOWLCN.js";
 import "./chunk-5F7XDNYM.js";
+import "./chunk-HIIG3TAV.js";
 import {
   IftaLabel,
   IftaLabelModule
 } from "./chunk-SFFTHMKD.js";
-import "./chunk-HIIG3TAV.js";
 import {
   DiffUndoStack
 } from "./chunk-D57SAGZH.js";
@@ -326,4 +326,4 @@ var StandaloneCompareComponent = class _StandaloneCompareComponent {
 export {
   StandaloneCompareComponent
 };
-//# sourceMappingURL=chunk-OSL3ZIUK.js.map
+//# sourceMappingURL=chunk-HGNNLEGD.js.map

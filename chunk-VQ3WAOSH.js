@@ -30,7 +30,7 @@ import {
 } from "./chunk-EYV3DLIL.js";
 import {
   EditNodeComponent
-} from "./chunk-F4UAJCXQ.js";
+} from "./chunk-CJBRMKOR.js";
 import {
   Tag,
   TagModule
@@ -62,11 +62,11 @@ import {
   Dialog,
   DialogModule
 } from "./chunk-WLUUE74Y.js";
+import "./chunk-HIIG3TAV.js";
 import {
   IftaLabel,
   IftaLabelModule
 } from "./chunk-SFFTHMKD.js";
-import "./chunk-HIIG3TAV.js";
 import "./chunk-2VUKUNZ3.js";
 import "./chunk-D57SAGZH.js";
 import {
@@ -273,7 +273,7 @@ function isKnownNumber(number) {
 var _c0 = ["dt"];
 var _c1 = ["menuContext"];
 var _c2 = ["menu"];
-var InventoryComponent_Defer_61_DepsFn = () => [import("./chunk-COREQVLO.js").then((m) => m.AddPagesComponent), import("./chunk-BP25C5Y6.js").then((m) => m.ViewPagesComponent)];
+var InventoryComponent_Defer_61_DepsFn = () => [import("./chunk-YCDLPDNC.js").then((m) => m.AddPagesComponent), import("./chunk-BP25C5Y6.js").then((m) => m.ViewPagesComponent)];
 var _c3 = () => ({ height: "90vh" });
 var _c4 = (a0, a1) => ({ shown: a0, total: a1 });
 var _c5 = (a0) => ({ column: a0 });
@@ -2799,7 +2799,7 @@ var InventoryComponent = class _InventoryComponent {
   ], styles: ["\n[_nghost-%COMP%] {\n  --top-toolbar-height: 6.7rem;\n  --bottom-toolbar-height: 3rem;\n  --group-header-height: 3rem;\n  --padding-right-desktop: 5rem;\n  --padding-right-mobile: 0rem;\n  --padding-left: 1.5rem;\n  --margin-left: -1.5rem;\n  --checkbox-width: 2rem;\n}\n.sticky-toolbar[_ngcontent-%COMP%] {\n  box-sizing: border-box;\n  left: calc(var(--mobile-nav-width));\n  margin-left: calc(var(--margin-left));\n  padding-left: calc(var(--padding-left));\n  padding-right: calc(var(--padding-right-mobile));\n  position: sticky;\n  width: calc(100vw - var(--mobile-nav-width) - 2rem);\n  z-index: 20;\n}\n.sticky-top-toolbar[_ngcontent-%COMP%] {\n  height: calc(var(--top-toolbar-height));\n  margin-top: -1.5rem;\n  padding-top: 1.5rem;\n  top: 0rem;\n  z-index: 20;\n}\n.sticky-bottom-toolbar[_ngcontent-%COMP%] {\n  height: calc(var(--bottom-toolbar-height));\n  top: calc(var(--top-toolbar-height));\n  z-index: 20;\n}\n@media screen and (min-width: 768px) {\n  .sticky-toolbar[_ngcontent-%COMP%] {\n    left: var(--desktop-nav-width);\n    padding-right: calc(var(--padding-right-desktop));\n    width: calc(100vw - var(--desktop-nav-width) - 5rem);\n  }\n}\n  .p-datatable-table-container {\n  overflow: visible !important;\n}\n.sticky-table[_ngcontent-%COMP%] {\n  margin-left: calc(var(--margin-left));\n  padding-left: calc(var(--padding-left));\n  position: sticky;\n  z-index: 11;\n}\n.sticky-table-column[_ngcontent-%COMP%] {\n  left: calc(var(--mobile-nav-width) + var(--checkbox-width));\n}\n.sticky-table-checkbox[_ngcontent-%COMP%] {\n  left: calc(var(--mobile-nav-width));\n}\n.sticky-table-group-header[_ngcontent-%COMP%] {\n  top: calc(var(--top-toolbar-height) + var(--bottom-toolbar-height));\n  height: calc(var(--group-header-height));\n}\n.sticky-table-header[_ngcontent-%COMP%] {\n  top: calc(var(--top-toolbar-height) + var(--bottom-toolbar-height) + var(--group-header-height));\n}\n.sticky-table-column.sticky-table-header[_ngcontent-%COMP%], \n.sticky-table-column.sticky-table-group-header[_ngcontent-%COMP%], \n.sticky-table-checkbox.sticky-table-header[_ngcontent-%COMP%], \n.sticky-table-checkbox.sticky-table-group-header[_ngcontent-%COMP%] {\n  z-index: 12;\n}\n.sticky-table-column.sticky-table-group-header.sticky-table-corner[_ngcontent-%COMP%] {\n  z-index: 13;\n}\n@media screen and (min-width: 768px) {\n  .sticky-table-column[_ngcontent-%COMP%] {\n    left: calc(var(--desktop-nav-width) + var(--checkbox-width));\n  }\n  .sticky-table-checkbox[_ngcontent-%COMP%] {\n    left: calc(var(--desktop-nav-width));\n  }\n}\n  .p-datatable .p-datatable-thead {\n  z-index: 13 !important;\n}\n.sticky-table[_ngcontent-%COMP%] {\n  transition: z-index 0s linear 0.1s;\n}\n.sticky-table[_ngcontent-%COMP%]:has([data-tooltip]:hover) {\n  transition: none;\n  z-index: 100 !important;\n}\n.sticky-horizontal[_ngcontent-%COMP%] {\n  position: sticky;\n  left: calc(var(--mobile-nav-width));\n  width: calc(100vw - var(--mobile-nav-width) - 2rem);\n  margin-left: calc(var(--margin-left));\n  padding-left: calc(var(--padding-left));\n  padding-right: calc(var(--padding-right-mobile));\n  box-sizing: border-box;\n  z-index: 21;\n}\n@media screen and (min-width: 768px) {\n  .sticky-horizontal[_ngcontent-%COMP%] {\n    left: var(--desktop-nav-width);\n    padding-right: calc(var(--padding-right-desktop));\n    width: calc(100vw - var(--desktop-nav-width) - 3.5rem);\n  }\n}\n.hasMenu[_ngcontent-%COMP%]:hover {\n  background-color: var(--p-primary-100) !important;\n  cursor: help;\n}\nhtml.dark-mode[_ngcontent-%COMP%]   .hasMenu[_ngcontent-%COMP%]:hover {\n  background-color: var(--p-primary-500) !important;\n  cursor: help;\n}\n/*# sourceMappingURL=inventory.component.css.map */"], changeDetection: 0 });
 };
 (() => {
-  (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadataAsync(InventoryComponent, () => [import("./chunk-COREQVLO.js").then((m) => m.AddPagesComponent), import("./chunk-BP25C5Y6.js").then((m) => m.ViewPagesComponent)], (AddPagesComponent, ViewPagesComponent) => {
+  (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadataAsync(InventoryComponent, () => [import("./chunk-YCDLPDNC.js").then((m) => m.AddPagesComponent), import("./chunk-BP25C5Y6.js").then((m) => m.ViewPagesComponent)], (AddPagesComponent, ViewPagesComponent) => {
     setClassMetadata(InventoryComponent, [{
       type: Component,
       args: [{ selector: "aida-inventory", imports: [
@@ -3379,4 +3379,4 @@ var InventoryComponent = class _InventoryComponent {
 export {
   InventoryComponent
 };
-//# sourceMappingURL=chunk-CBSLE6P4.js.map
+//# sourceMappingURL=chunk-VQ3WAOSH.js.map

@@ -16,7 +16,7 @@ import {
 } from "./chunk-D4OE7SQK.js";
 import {
   EditNodeComponent
-} from "./chunk-F4UAJCXQ.js";
+} from "./chunk-CJBRMKOR.js";
 import {
   Tag,
   TagModule
@@ -40,13 +40,13 @@ import {
   DialogModule
 } from "./chunk-WLUUE74Y.js";
 import {
-  IftaLabel,
-  IftaLabelModule
-} from "./chunk-SFFTHMKD.js";
-import {
   Message,
   MessageModule
 } from "./chunk-HIIG3TAV.js";
+import {
+  IftaLabel,
+  IftaLabelModule
+} from "./chunk-SFFTHMKD.js";
 import {
   AirtableService,
   ProjectStateService
@@ -2050,4 +2050,4 @@ var AddPagesComponent = class _AddPagesComponent {
 export {
   AddPagesComponent
 };
-//# sourceMappingURL=chunk-ALJPLJQM.js.map
+//# sourceMappingURL=chunk-UK7EMC5B.js.map

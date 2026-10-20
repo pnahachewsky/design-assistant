@@ -52,13 +52,13 @@ import {
 } from "./chunk-JUMOWLCN.js";
 import "./chunk-5F7XDNYM.js";
 import {
-  IftaLabel,
-  IftaLabelModule
-} from "./chunk-SFFTHMKD.js";
-import {
   Message,
   MessageModule
 } from "./chunk-HIIG3TAV.js";
+import {
+  IftaLabel,
+  IftaLabelModule
+} from "./chunk-SFFTHMKD.js";
 import "./chunk-EM76WITV.js";
 import {
   Checkbox,
@@ -1673,4 +1673,4 @@ ${updatedPrompts}
 export {
   PromptEditorComponent
 };
-//# sourceMappingURL=chunk-O5NVOBC4.js.map
+//# sourceMappingURL=chunk-A22F55Y4.js.map

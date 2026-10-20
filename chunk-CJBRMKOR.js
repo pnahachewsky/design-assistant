@@ -15,13 +15,13 @@ import {
   TextareaModule
 } from "./chunk-X3PHMRYB.js";
 import {
-  IftaLabel,
-  IftaLabelModule
-} from "./chunk-SFFTHMKD.js";
-import {
   Message,
   MessageModule
 } from "./chunk-HIIG3TAV.js";
+import {
+  IftaLabel,
+  IftaLabelModule
+} from "./chunk-SFFTHMKD.js";
 import {
   ProjectStateService
 } from "./chunk-Y6P4PL7N.js";
@@ -2815,4 +2815,4 @@ var EditNodeComponent = class _EditNodeComponent {
 export {
   EditNodeComponent
 };
-//# sourceMappingURL=chunk-F4UAJCXQ.js.map
+//# sourceMappingURL=chunk-CJBRMKOR.js.map

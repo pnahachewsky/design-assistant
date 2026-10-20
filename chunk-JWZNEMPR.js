@@ -11,13 +11,13 @@ import {
 } from "./chunk-X3PHMRYB.js";
 import "./chunk-5F7XDNYM.js";
 import {
-  IftaLabel,
-  IftaLabelModule
-} from "./chunk-SFFTHMKD.js";
-import {
   Message,
   MessageModule
 } from "./chunk-HIIG3TAV.js";
+import {
+  IftaLabel,
+  IftaLabelModule
+} from "./chunk-SFFTHMKD.js";
 import "./chunk-53YNRXA3.js";
 import {
   Select,
@@ -1058,4 +1058,4 @@ var DesignPatternsComponent = class _DesignPatternsComponent {
 export {
   DesignPatternsComponent
 };
-//# sourceMappingURL=chunk-WDGNUOHA.js.map
+//# sourceMappingURL=chunk-JWZNEMPR.js.map

@@ -1,27 +1,20 @@
 import {
-  DOORMATS,
-  DoormatsComponent
-} from "./chunk-ZPRU7CFY.js";
-import "./chunk-N437RI73.js";
-import "./chunk-ALJPLJQM.js";
+  AddPagesComponent
+} from "./chunk-UK7EMC5B.js";
 import "./chunk-37MIQF4I.js";
 import "./chunk-ZJEDW3IY.js";
 import "./chunk-D4OE7SQK.js";
-import "./chunk-ZES2LSO3.js";
-import "./chunk-EYV3DLIL.js";
-import "./chunk-F4UAJCXQ.js";
+import "./chunk-CJBRMKOR.js";
 import "./chunk-7EZBCBFO.js";
 import "./chunk-BD6KUTBP.js";
 import "./chunk-X3PHMRYB.js";
-import "./chunk-QZ4PHMU6.js";
 import "./chunk-B24NYOWZ.js";
 import "./chunk-VUVEB27N.js";
 import "./chunk-XIMGJIUL.js";
 import "./chunk-5F7XDNYM.js";
 import "./chunk-WLUUE74Y.js";
-import "./chunk-SFFTHMKD.js";
 import "./chunk-HIIG3TAV.js";
-import "./chunk-PM4ZAKXV.js";
+import "./chunk-SFFTHMKD.js";
 import "./chunk-Y6P4PL7N.js";
 import "./chunk-AU75ZWE3.js";
 import "./chunk-EM76WITV.js";
@@ -43,7 +36,6 @@ import "./chunk-DBOW7BSZ.js";
 import "./chunk-XMWDIV4O.js";
 import "./chunk-YCXP4XZS.js";
 export {
-  DOORMATS,
-  DoormatsComponent
+  AddPagesComponent
 };
-//# sourceMappingURL=chunk-XR4R7HYW.js.map
+//# sourceMappingURL=chunk-YCDLPDNC.js.map
