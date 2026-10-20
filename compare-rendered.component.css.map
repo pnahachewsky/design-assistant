@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["src/app/components/compare/compare-rendered/compare-rendered.component.css"],
+  "sourcesContent": ["/* Import fontawesome CSS <--see if there is a more efficient way to include these icons in shadowdom */\n@import url('https://use.fontawesome.com/releases/v5.15.4/css/all.css');\n\n@font-face {\n  font-family: 'Glyphicons Halflings';\n  src: url(https://www.canada.ca/etc/designs/canada/wet-boew/fonts/glyphicons-halflings-regular.woff2) format('woff2');\n}\n\n.diff-container {\n  border: 1px solid #dee2e6;\n  border-radius: 4px;\n  padding: 1rem;\n  overflow-y: scroll;\n  height: 75vh;\n  position: relative;\n}\n\n.diff-container.original {\n  border-color: #f3a59d;\n}\n\n.diff-container.modified {\n  border-color: #83d5a8;\n}\n\n.legend-box {\n  width: 16px;\n  height: 16px;\n  border-radius: 4px;\n  flex-shrink: 0;\n}\n"],
+  "mappings": ";;;AAGA;AACE,eAAa;AACb,OAAK,gGAAgG,OAAO;AAC9G;AAEA,CAAC;AACC,UAAQ,IAAI,MAAM;AAClB,iBAAe;AACf,WAAS;AACT,cAAY;AACZ,UAAQ;AACR,YAAU;AACZ;AAEA,CATC,cASc,CAAC;AACd,gBAAc;AAChB;AAEA,CAbC,cAac,CAAC;AACd,gBAAc;AAChB;AAEA,CAAC;AACC,SAAO;AACP,UAAQ;AACR,iBAAe;AACf,eAAa;AACf;",
+  "names": []
+}

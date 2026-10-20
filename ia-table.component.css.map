@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["src/app/components/ia-table/ia-table.component.css"],
+  "sourcesContent": [".ia-label {\n  white-space: pre-line;\n  display: inline-block;\n  color: var(--text-color) !important;\n  text-decoration: none !important;\n}\n\n::ng-deep .p-tree-node-droppoint {\n  min-height: 0.5rem !important;\n}\n"],
+  "mappings": ";AAAA,CAAC;AACC,eAAa;AACb,WAAS;AACT,SAAO,IAAI;AACX,mBAAiB;AACnB;AAEA,UAAU,CAAC;AACT,cAAY;AACd;",
+  "names": []
+}

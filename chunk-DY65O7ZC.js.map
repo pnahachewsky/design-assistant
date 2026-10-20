@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["src/app/views/utility/about/about.component.ts", "src/app/views/utility/about/about.component.html"],
+  "sourcesContent": ["import { ChangeDetectionStrategy, Component } from '@angular/core';\n\nimport { TranslatePipe } from '@ngx-translate/core';\n\n@Component({\n  selector: 'aida-about',\n  imports: [TranslatePipe],\n  templateUrl: './about.component.html',\n  changeDetection: ChangeDetectionStrategy.OnPush,\n})\nexport class AboutComponent {}\n", "<h1 id=\"wb-cont\">{{ 'about._title' | translate }}</h1>\n<div [innerHTML]=\"'about.content' | translate\"></div>\n"],
+  "mappings": ";;;;;;;;;;;;;;;;;;;;;AAUM,IAAO,iBAAP,MAAO,gBAAc;;qCAAd,iBAAc;EAAA;yEAAd,iBAAc,WAAA,CAAA,CAAA,YAAA,CAAA,GAAA,OAAA,GAAA,MAAA,GAAA,QAAA,CAAA,CAAA,MAAA,SAAA,GAAA,CAAA,GAAA,WAAA,CAAA,GAAA,UAAA,SAAA,wBAAA,IAAA,KAAA;AAAA,QAAA,KAAA,GAAA;ACV3B,MAAA,4BAAA,GAAA,MAAA,CAAA;AAAiB,MAAA,iBAAA,CAAA;;AAAgC,MAAA,0BAAA;AACjD,MAAA,uBAAA,GAAA,OAAA,CAAA;;;;AADiB,MAAA,oBAAA;AAAA,MAAA,4BAAA,sBAAA,GAAA,GAAA,cAAA,CAAA;AACZ,MAAA,oBAAA,CAAA;AAAA,MAAA,wBAAA,aAAA,sBAAA,GAAA,GAAA,eAAA,GAAA,wBAAA;;oBDKO,aAAa,GAAA,eAAA,GAAA,iBAAA,EAAA,CAAA;;;sEAIZ,gBAAc,CAAA;UAN1B;uBACW,cAAY,SACb,CAAC,aAAa,GAAC,iBAEP,wBAAwB,QAAM,UAAA;;EAAA,CAAA;;;;6EAEpC,gBAAc,EAAA,WAAA,kBAAA,UAAA,kDAAA,YAAA,GAAA,CAAA;AAAA,GAAA;",
+  "names": []
+}

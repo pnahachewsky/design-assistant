@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["src/app/views/toolbox/dev-tools/design-patterns/design-patterns.component.css"],
+  "sourcesContent": ["pre {\n  background-color: var(--surface-ground);\n  border: 1px solid var(--surface-border);\n  border-radius: var(--border-radius);\n  padding: 1rem;\n  overflow-x: auto;\n}\n\npre code {\n  font-family: 'Courier New', Courier, monospace;\n  font-size: 0.875rem;\n  line-height: 1.5;\n}\n"],
+  "mappings": ";AAAA;AACE,oBAAkB,IAAI;AACtB,UAAQ,IAAI,MAAM,IAAI;AACtB,iBAAe,IAAI;AACnB,WAAS;AACT,cAAY;AACd;AAEA,IAAI;AACF;AAAA,IAAa,aAAa;AAAA,IAAE,OAAO;AAAA,IAAE;AACrC,aAAW;AACX,eAAa;AACf;",
+  "names": []
+}

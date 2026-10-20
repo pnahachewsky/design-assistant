@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["src/app/views/tasks/ia-diagram/ia-diagram.component.css"],
+  "sourcesContent": [".fullscreen-overlay {\n  position: fixed;\n  top: 0;\n  left: 0;\n  right: 0;\n  bottom: 0;\n  z-index: 200;\n  display: flex;\n  flex-direction: column;\n}\n\n.z-200 {\n  z-index: 200 !important;\n}\n\n.legend-box {\n  width: 20px;\n  height: 20px;\n  border-radius: 4px;\n  flex-shrink: 0;\n}\n"],
+  "mappings": ";AAAA,CAAC;AACC,YAAU;AACV,OAAK;AACL,QAAM;AACN,SAAO;AACP,UAAQ;AACR,WAAS;AACT,WAAS;AACT,kBAAgB;AAClB;AAEA,CAAC;AACC,WAAS;AACX;AAEA,CAAC;AACC,SAAO;AACP,UAAQ;AACR,iBAAe;AACf,eAAa;AACf;",
+  "names": []
+}

@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["src/app/components/edit-node/edit-node.component.css"],
+  "sourcesContent": [":host ::ng-deep .p-message-content {\n  width: 100%;\n  justify-content: space-between;\n}\n\n:host ::ng-deep .p-message-text {\n  flex: 1;\n  justify-content: space-between;\n}\n\n:host ::ng-deep .p-textarea {\n  color: var(--p-inputtext-color) !important;\n  background: var(--p-inputtext-background) !important;\n}\n\n:host ::ng-deep .p-textarea:disabled {\n  opacity: 1 !important;\n  background: var(--p-inputtext-disabled-background) !important;\n  color: var(--p-inputtext-disabled-color) !important;\n}\n\n:host ::ng-deep .p-select {\n  color: var(--p-inputtext-color) !important;\n  background: var(--p-inputtext-background) !important;\n}\n\n:host ::ng-deep .p-select.p-disabled {\n  opacity: 1 !important;\n  background: var(--p-inputtext-disabled-background) !important;\n  color: var(--p-inputtext-disabled-color) !important;\n}\n\n.min-h-6rem {\n  min-height: 6rem;\n}\n"],
+  "mappings": ";AAAA,MAAM,UAAU,CAAC;AACf,SAAO;AACP,mBAAiB;AACnB;AAEA,MAAM,UAAU,CAAC;AACf,QAAM;AACN,mBAAiB;AACnB;AAEA,MAAM,UAAU,CAAC;AACf,SAAO,IAAI;AACX,cAAY,IAAI;AAClB;AAEA,MAAM,UAAU,CALC,UAKU;AACzB,WAAS;AACT,cAAY,IAAI;AAChB,SAAO,IAAI;AACb;AAEA,MAAM,UAAU,CAAC;AACf,SAAO,IAAI;AACX,cAAY,IAAI;AAClB;AAEA,MAAM,UAAU,CALC,QAKQ,CAAC;AACxB,WAAS;AACT,cAAY,IAAI;AAChB,SAAO,IAAI;AACb;AAEA,CAAC;AACC,cAAY;AACd;",
+  "names": []
+}
