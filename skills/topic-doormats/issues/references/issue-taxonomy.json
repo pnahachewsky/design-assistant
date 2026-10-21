@@ -1,0 +1,605 @@
+{
+  "version": "draft-2026-06-01",
+  "scope": "Issue analysis for GCWeb topic page doormats.",
+  "precondition": "Run this analysis only when AIDA heuristics have detected one or more topic doormat items. Missing doormat-section detection is handled before invoking this skill.",
+  "analysis_unit": "Analyze one complete topic doormat set at a time. Compare doormats within each caller-provided H2 section before assigning section-scoped issues. Use caller-provided H2 section metadata for section-local numbering, the 9-doormat limit, and section-level style issues.",
+  "reporting_unit": "Return issue reports for each affected doormat item. If a model-owned editorial issue applies to a whole section rather than a single doormat, return it in section_issues with the affected section_index. Do not repeat section-level issues on every doormat. Unless runtime instructions say the description-style primary issue flag is enabled, do not return mixed-description-style-in-section or inconsistent-description-style; description style is secondary rewrite guidance, not a primary issue driver by default. AIDA calculates and reports too-many-doormats-in-section locally; do not return it.",
+  "runtime_editorial_evidence_overrides": {
+    "description-lacks-clarity": "Report only genuinely ambiguous wording. evidence_details.unclear_phrase must quote an exact phrase from the description and evidence_details.ambiguity_explanation must explain competing interpretations. Generic wording, missing detail, repetition, and incomplete destination coverage are not clarity issues.",
+    "description-list-punctuation-ambiguity": "Report only when list punctuation creates at least two materially different plausible readings. evidence_details.ambiguous_span must quote an exact span from the description, and first_possible_reading and second_possible_reading must state the two different interpretations. The presence or absence of 'and', 'et', or an Oxford comma alone is not evidence of ambiguity.",
+    "link-name-not-unique": "Compare every doormat link name with every other link name in the complete doormat set. For different destinations, report identical or near-identical names and names whose generic wording does not expose a meaningful difference in topic, task, audience, product or service, or destination purpose. Use destination title, H1, and destination context to confirm the intended distinction. Do not flag shared keywords or a consistent grammatical pattern when each name still provides a distinct choice. Matching text for the same destination is not a uniqueness issue. Report the issue on every affected doormat and identify the compared link name in the evidence.",
+    "misdirected-link": "Do not infer misdirection from URL path structure, site hierarchy, section placement, labels, or closed/archived/replaced destination states. Doormat labels are acceptable when the substantive link text still matches the destination title or H1 in meaning. Do not require exact wording. Section suitability is handled by AIDA's IA checks."
+  },
+  "analysis_sequence": [
+    {
+      "pass": "deterministic_structural_checks",
+      "instruction": "Run these checks first. Do not return the response until every model-owned deterministic structural check has been evaluated for every doormat and every complete doormat section. Do not report broken-link, redirected-link, link-name-too-long, description-too-long, link-name-trailing-punctuation, description-trailing-punctuation, description-uses-first-or-second-person, duplicate-link-in-most-requested, missing-needed-doormat, unnecessary-doormat, or too-many-doormats-in-section; AIDA calculates and reports those issues deterministically from the extracted doormat text, destination HTTP status or verified redirect, Most requested links, IA child-page relationships, page-view data, section counts, and character counts.",
+      "issue_ids": [
+        "broken-link",
+        "redirected-link",
+        "split-heading-link",
+        "multiple-links",
+        "missing-description",
+        "description-contains-link",
+        "description-uses-icons-or-images",
+        "description-special-formatting",
+        "description-capitalization",
+        "description-list-separators"
+      ]
+    },
+    {
+      "pass": "judgment_editorial_checks",
+      "instruction": "Run these checks after the deterministic pass. Use only evidence available in the supplied doormat set, most requested links, destination context, or explicit page context. Do not guess missing traffic, priority, or destination facts.",
+      "issue_ids": [
+        "misdirected-link",
+        "link-name-lacks-clarity",
+        "link-name-not-unique",
+        "link-name-too-different-from-destination-title",
+        "description-lacks-clarity",
+        "description-list-punctuation-ambiguity",
+        "description-repeats-link-text",
+        "duplicate-or-near-duplicate-description",
+        "mixed-link-name-styles-in-section",
+        "inconsistent-link-name-style",
+        "enhancement-label-not-needed",
+        "enhancement-label-wrong-type"
+      ]
+    }
+  ],
+  "required_per_doormat_issue_decisions": {
+    "instruction": "For every doormat, return issue_decisions with exactly one decision for each listed model-owned per-doormat check. Complete these decisions before writing the issues array. Do not let the presence or absence of severe issues on one doormat change the threshold for another doormat.",
+    "decision_values": ["applies", "does_not_apply", "not_applicable"],
+    "issue_ids": [
+      "missing-description",
+      "description-uses-icons-or-images",
+      "description-special-formatting",
+      "description-capitalization",
+      "description-list-separators",
+      "description-list-punctuation-ambiguity",
+      "misdirected-link",
+      "link-name-lacks-clarity",
+      "link-name-not-unique",
+      "description-lacks-clarity",
+      "description-repeats-link-text",
+      "duplicate-or-near-duplicate-description",
+      "enhancement-label-not-needed",
+      "enhancement-label-wrong-type"
+    ]
+  },
+  "check_group_guidance": {
+    "deterministic_structural_checks": "These checks are objective. Apply them even when the doormat content appears clear or comes from a live Canada.ca page.",
+    "judgment_editorial_checks": "These checks require editorial judgment. Report them only when the evidence is concrete enough to justify a recommendation."
+  },
+  "evidence_style": {
+    "instruction": "Keep evidence concise. Do not quote full doormat descriptions unless the exact wording is needed to prove the issue.",
+    "section_level_issues": "Aim for under 180 characters. Summarize the pattern and include only representative doormat numbers. Do not list every doormat.",
+    "doormat_level_issues": "Keep evidence concise. State the concrete fact and avoid repeating full link text or description text unless needed.",
+    "url_evidence": "Do not include doormat_href, most_requested_href, destination URLs, or 'Most requested: n/a' in evidence unless the issue depends on broken links, misdirected links, duplicate links, destination-title comparison, or destination context.",
+    "mixed_description_style": "Unless runtime instructions say the description-style primary issue flag is enabled, do not report mixed-description-style-in-section. Description style is secondary rewrite guidance, not a primary issue driver by default.",
+    "runtime_missing_field_guardrail": "AIDA treats empty strings and dash-only placeholders as missing evidence or recommendation for model-owned issues. It sends only the incomplete issue fields back to the model for repair. If repair still returns unusable text, AIDA keeps the issue visible and displays 'No AI evidence was received.' or 'No AI recommendation was received.' for the missing field."
+  },
+  "description_rewrite_guidance": {
+    "instruction": "Unless runtime instructions say the description-style primary issue flag is enabled, return exactly one description_rewrite_guidance value for every doormat. When the flag is enabled, return detected_description_style instead. Rewrite guidance is secondary to link text style, destination accuracy, clarity, and useful information scent. Prefer the smallest useful edit. Preserve accurate phrase-style descriptions when they are clear. Do not convert descriptions to keyword lists by default.",
+    "allowed_values": [
+      "leave-unchanged",
+      "retain-phrase",
+      "tighten-phrase",
+      "add-specificity",
+      "convert-to-keyword-list",
+      "convert-to-task-list"
+    ],
+    "use_convert_to_keyword_list_only_when": [
+      "The description contains several distinct destination concepts that are easier to scan as parallel terms.",
+      "The existing description is already list-like and only needs cleanup.",
+      "A phrase-style rewrite would be less clear or harder to scan."
+    ],
+    "do_not_use_description_style_as_primary_issue": [
+      "Unless runtime instructions say the description-style primary issue flag is enabled, do not report mixed-description-style-in-section.",
+      "Unless runtime instructions say the description-style primary issue flag is enabled, do not report inconsistent-description-style.",
+      "Do not report description-incorrect-style only because a description is phrase-style."
+    ]
+  },
+  "language_thresholds": {
+    "en": {
+      "link_text_max_characters": 45,
+      "description_max_characters": 120
+    },
+    "fr": {
+      "link_text_max_characters": 45,
+      "description_max_characters": 120
+    }
+  },
+  "character_count_source": {
+    "instruction": "When the caller provides structured doormat fields with linkTextCharacterCount and descriptionCharacterCount, use those values as authoritative. Do not recalculate character counts from HTML or visible text.",
+    "fallback": "If caller-provided counts are missing, estimate only when needed and include the estimate as evidence_details.actual_character_count."
+  },
+  "style_detection": {
+    "required": true,
+    "link_text_styles": [
+      "topic",
+      "product-or-service",
+      "action",
+      "audience-group",
+      "mixed-or-unclear"
+    ],
+    "link_text_style_definitions": {
+      "topic": "A broad subject area or information category that names what the destination is about, such as Arts and media, History and heritage, Cultural trade and investment, or Sport.",
+      "product-or-service": "A named product, program, plan, benefit, credit, form, tool, service, or account, such as Registered retirement savings plan, Tax-free savings accounts, Registered education savings plan, Registered disability savings plan, or First home savings account.",
+      "action": "A link name framed as an imperative action the user can take or a task they can complete, such as Notify the CRA of the date of death, Apply for the CPP/QPP death benefit, Represent someone who died, or Apply for a clearance certificate. Classify gerund link names such as Filing a trust return or Submitting documents online as topic when they frame the destination as how to or instructions for a task. Do not classify a gerund as action only because the underlying subject is a task, unless destination evidence clearly shows the gerund link is being used as a direct transactional entry point.",
+      "audience-group": "A link name framed as an audience or user group, such as Individuals, Businesses, Charitable organizations, Non-Canadians, or Tax professionals.",
+      "mixed-or-unclear": "Use only when the link name genuinely cannot be assigned one of the other styles."
+    },
+    "instruction": "Return exactly one allowed detected_link_text_style for every doormat. Link text style is the primary style consistency contract. Unless runtime instructions say the description-style primary issue flag is enabled, return description_rewrite_guidance for descriptions and do not use description style as a primary consistency issue. AIDA aggregates link style classifications into section mixes and individual outliers. Do not return mixed-link-name-styles-in-section or inconsistent-link-name-style directly."
+  },
+  "destination_link_relationship": {
+    "required": true,
+    "allowed_values": [
+      "equivalent",
+      "narrower-but-accurate",
+      "broader-but-accurate",
+      "materially-different",
+      "unavailable"
+    ],
+    "allowed_bases": [
+      "literal-match",
+      "phrase-containment",
+      "grammatical-variant",
+      "synonym-or-paraphrase",
+      "acronym-or-program-term",
+      "compatible-scope",
+      "conflicting-core-concept",
+      "unavailable"
+    ],
+    "instruction": "Compare link meaning and information scent with the supplied destination title and H1. Use analysisLinkText and analysisDescription for this comparison when present; those fields remove doormat labels from the doormat text. Added action wording, shortened wording, grammatical inflection, synonyms, paraphrases, acronyms, and program terminology remain accurate when they preserve meaning. Return the relationship basis separately. Use materially-different with conflicting-core-concept only for a different topic, product/service, action, audience, or scope and explain the conflict in destination_link_relationship_reason. AIDA creates link-name-too-different-from-destination-title only from that grounded pair."
+  },
+  "destination_content_assessment": {
+    "required": true,
+    "instruction": "For every doormat, assess the supplied destinationContext before reporting issues. Select important_element_ids only from supplied destinationContext.elements IDs. When destinationContext.pageType is topic or subway, AIDA supplies the destination page's own doormat choices as doormat-* elements; treat those as the primary compact destination information because the important content on a topic or subway page is the set of doormats. For ordinary content pages, AIDA supplies intro and H2 element IDs instead; do not select every H2 automatically. Mark an element important only when users need it to decide whether this destination is relevant. Compare analysisLinkText and analysisDescription when present, otherwise compare link text and description, when determining coverage. Doormat labels may carry lifecycle or status information such as Closed, No longer available, Formerly, Replaced, New, or Updated. Do not require the doormat description to repeat lifecycle/status information when it is already exposed in the doormat label or visible doormat text. Evaluate the description for whether it explains the destination page's broad subject, purpose, or task, not whether it repeats the label. When the link text is a program, benefit, credit, rebate, payment, allowance, or relief name, do not treat the name alone as covering a destination intro that explains what the program or benefit was or is. If the doormat description only gives status, timing, eligibility, or residual filing context, mark the intro explanation as missing. missing_important_element_ids must be a subset of important_element_ids and must contain only supplied IDs that are not represented by covered_element_ids. When destinationContext.status is not available, return empty arrays.",
+    "model_must_not_report": "Do not return description-missing-needed-information as an issue. AIDA validates the assessment IDs against the extracted destination context and creates the issue locally.",
+    "important_element_examples": [
+      "A primary audience or eligibility condition needed to know whether the destination applies.",
+      "A major task, service, option, deadline, document, or outcome needed to distinguish the destination.",
+      "A destination section that materially changes what users should expect after following the link."
+    ],
+    "not_important_by_default": [
+      "Every H2 merely because it exists.",
+      "Secondary navigation, contact information, related links, or supporting details.",
+      "Information users can reasonably discover after they have correctly chosen the destination."
+    ]
+  },
+  "link_name_style_reporting": {
+    "minimum_standard": "Return detected_link_text_style for every doormat using the CRA link name style options: topic, product-or-service, action, audience-group, or mixed-or-unclear. AIDA uses mixed-link-name-styles-in-section when an H2 section has multiple represented styles and inconsistent-link-name-style only for one or two outliers from a dominant style.",
+    "reporting": "Do not return mixed-link-name-styles-in-section or inconsistent-link-name-style directly. AIDA derives them from the classifications and does not report individual outliers when the section is mixed.",
+    "do_not_report_when": [
+      "Most or all doormats in the section would receive the same link-name style issue.",
+      "The section is internally consistent even if another section uses a different style.",
+      "The only issue is that the link text is too long."
+    ]
+  },
+  "style_inconsistency_reporting": {
+    "minimum_standard": "Do not report a style inconsistency just because descriptions are not identical. Unless runtime instructions say the description-style primary issue flag is enabled, description style is secondary rewrite guidance. Use description_rewrite_guidance to recommend the smallest useful edit and preserve clear phrases. Link text style remains the primary consistency contract.",
+    "dominant_style_required": true,
+    "outlier_only_reporting": true,
+    "mixed_section_reporting_allowed": "Only when runtime instructions say the description-style primary issue flag is enabled and the mix materially reduces scannability or comparison.",
+    "different_style_required": true,
+    "same_style_is_not_inconsistent": "If dominant_style and outlier_style are the same link style label, do not report inconsistent-link-name-style.",
+    "description_style_issue_ids": "Return description-incorrect-style, mixed-description-style-in-section, or inconsistent-description-style only when runtime instructions say the description-style primary issue flag is enabled.",
+    "forbidden_style_evidence_terms": [
+      "verbose",
+      "longer",
+      "more detailed",
+      "more complex",
+      "length",
+      "too long",
+      "long"
+    ],
+    "do_not_report_when": [
+      "Most or all doormats would receive the same style inconsistency issue.",
+      "The issue depends only on description style classification.",
+      "The only evidence is that descriptions have different topics, lengths, or wording.",
+      "The only evidence is that one description is longer, more detailed, or more complex than descriptions in the same style category.",
+      "The doormat has description-too-long and the style concern depends on the description being long, verbose, detailed, or complex.",
+      "The style difference does not reduce clarity, scannability, or the user's ability to compare choices."
+    ],
+    "use_other_issue_instead": [
+      "Use description-too-long for length issues.",
+      "Use description-lacks-clarity for unclear descriptions. For incomplete descriptions, return a grounded destination_content_assessment so AIDA can determine whether a content-gap issue applies.",
+      "Use description_rewrite_guidance when a description would benefit from phrase retention, tightening, specificity, or conversion to a list."
+    ],
+    "evidence_required": [
+      "dominant_style",
+      "outlier_style",
+      "why_this_doormat_is_an_outlier"
+    ],
+    "evidence_format": "Evidence for link style outlier inconsistency must explicitly state dominant_style and outlier_style using two different values from the allowed link style list. Keep evidence concise. Do not use length, verbosity, detail level, or complexity as the reason.",
+    "severity_default": "Low",
+    "severity_escalation": "Use Medium only when the outlier style makes the doormat harder to compare with the rest of the set."
+  },
+  "set_level_checks": [
+    "Check whether link texts use one grammatical style across the set, but report only clear outliers from a dominant style.",
+    "Compare every doormat link name with every other link name. For links to different destinations, report link-name-not-unique on every affected doormat when identical, near-identical, or generic wording fails to communicate a meaningful difference in topic, task, audience, product or service, or destination purpose. Use supplied destination evidence to confirm the distinction. Do not flag useful shared keywords when the remaining words provide distinct choices, and do not flag matching wording for the same destination.",
+    "Unless the runtime description-style primary issue flag is enabled, return description_rewrite_guidance for every description and keep description style secondary to link style, clarity, destination accuracy, and useful information scent.",
+    "Check whether each description is specific enough to distinguish its doormat from the others.",
+    "Check for duplicate or near-duplicate descriptions across the set.",
+    "Check for repeated generic task lists across the set.",
+    "AIDA checks the 9-doormat section limit locally; do not assess or return too-many-doormats-in-section.",
+    "AIDA checks whether the set is missing a needed doormat based on IA child-page relationships.",
+    "AIDA checks whether the set includes an unnecessary or badly chosen doormat based on IA child-page relationships."
+  ],
+  "selectors": {
+    "preferred_doormat_container": ".gc-srvinfo",
+    "legacy_or_basic_wrapper": ".wb-eqht.row",
+    "expected_item": "section with heading link and paragraph description",
+    "most_requested_candidates": [
+      ".gc-most-requested a",
+      ".most-requested a",
+      ".most-requested-bullets a"
+    ]
+  },
+  "issue_categories": [
+    {
+      "id": "broken-link",
+      "group": "Link code issue",
+      "label": "Broken link",
+      "severity": "High",
+      "condition": "The doormat link is empty, malformed, unsupported for a destination link, or the fetched destination returned an HTTP error status.",
+      "recommendation": "Replace the link with a valid destination URL.",
+      "reporting": "Do not return this issue directly. AIDA reports it deterministically from the extracted href and destination HTTP status. Do not classify resolved pages with outdated, closed, archived, or no-longer-available content as broken links unless the destination request itself returned an HTTP error status."
+    },
+    {
+      "id": "redirected-link",
+      "group": "Link code issue",
+      "label": "Redirected link",
+      "severity": "Low",
+      "condition": "The doormat link reaches a different verified HTTPS Canada.ca destination through a redirect.",
+      "recommendation": "Replace the old link with its verified redirect destination.",
+      "reporting": "Do not return this issue directly. AIDA reports it deterministically from the verified final response URL."
+    },
+    {
+      "id": "misdirected-link",
+      "group": "Link code issue",
+      "label": "Misdirected link",
+      "severity": "High",
+      "condition": "The doormat link points to the wrong page or wrong anchored location for the substantive, non-label meaning of the link text and description.",
+      "recommendation": "Update the href so the doormat points to the intended destination page or anchor.",
+      "reporting": "Report only when the non-label portion of the doormat points to a different destination topic, product/service, action, audience, or scope than the destination title or H1. Do not report because a destination is closed, archived, replaced, inactive, no longer available, or carries a visible label. Do not require exact title/H1 wording when the meaning and information scent match."
+    },
+    {
+      "id": "split-heading-link",
+      "group": "Link code issue",
+      "label": "Heading link is split",
+      "severity": "High",
+      "condition": "A single doormat heading contains multiple links, often because one intended heading link was pasted as separate adjacent link fragments.",
+      "recommendation": "Use one link around the complete doormat heading text."
+    },
+    {
+      "id": "multiple-links",
+      "group": "Link code issue",
+      "label": "Doormat contains extra links",
+      "severity": "High",
+      "condition": "A single doormat item contains more than one link, excluding the more specific cases where the heading link is split or the description contains a link.",
+      "recommendation": "Use one link per doormat. Move any extra destination to a separate doormat if it is needed."
+    },
+    {
+      "id": "link-name-lacks-clarity",
+      "group": "Link name",
+      "label": "Link name lacks clarity",
+      "severity": "High",
+      "condition": "The link text does not provide a clear choice or does not help users decide whether the destination is relevant.",
+      "recommendation": "Rewrite the link text so it clearly identifies the destination information, service, task, or audience."
+    },
+    {
+      "id": "link-name-not-unique",
+      "group": "Link name",
+      "label": "Link name not descriptive or unique",
+      "severity": "High",
+      "condition": "Compared with the complete doormat set, links to different destinations are identical, nearly identical, or worded so generically that the link names do not communicate a meaningful difference in topic, task, audience, product or service, or destination purpose. Shared keywords and consistent grammatical patterns are acceptable when each link still provides a distinct choice. Matching link text for the same destination is not a uniqueness issue.",
+      "recommendation": "Use the destination title, H1, and purpose context to add the shortest meaningful distinguishing words so each doormat link describes a distinct choice.",
+      "reporting": "Report this issue on every affected doormat. In each issue's evidence, identify the other doormat link name being compared and state which destination distinction the link texts fail to communicate."
+    },
+    {
+      "id": "link-name-too-long",
+      "group": "Link name",
+      "label": "Link too long",
+      "severity": "Low",
+      "condition": "The link text exceeds 45 characters, including spaces.",
+      "recommendation": "Shorten the link text. Keep link text close to the ideal 45-character limit and below the 75-character maximum, including spaces.",
+      "local_deterministic": true,
+      "reporting": "AIDA reports this issue locally from linkTextCharacterCount. The model should not return this issue. AIDA reports one section-level row per affected H2 section, with a list of affected doormat numbers and character-count metrics.",
+      "severity_override": {
+        "Low": "Use Low when the link text is 46 to 60 characters.",
+        "Medium": "Use Medium when the link text is 61 to 75 characters.",
+        "High": "Use High when the link text is 76 characters or longer."
+      }
+    },
+    {
+      "id": "link-name-too-different-from-destination-title",
+      "group": "Link name",
+      "label": "Link name too different from destination",
+      "severity": "Low",
+      "condition": "The link text does not need to exactly match the destination page title or heading. It should be reported only when the link name gives users a different or misleading information scent, such as a different topic, product/service, action, audience, or destination purpose. Ignore boilerplate title suffixes such as '- Canada.ca' and allow wording changes that make the link fit the doormat style on the page.",
+      "recommendation": "Align the link text with the destination page meaning and information scent while keeping it concise and consistent with the page's doormat style.",
+      "reporting": "Do not return this issue directly. Return destination_link_relationship, destination_link_relationship_basis, and destination_link_relationship_reason. AIDA reports this issue only for a grounded materially-different plus conflicting-core-concept classification."
+    },
+    {
+      "id": "duplicate-link-in-most-requested",
+      "group": "Link name",
+      "label": "Doormat link in Most requested",
+      "severity": "Medium",
+      "condition": "A doormat links to the same destination as an item in the page's Most requested section. URL fragments are part of the destination: fragment-free links match only fragment-free links, and links with fragments match only when the fragments are identical.",
+      "recommendation": "Flag for manual review. In most cases, remove the duplicate from Most requested unless there is a strong page-specific reason to keep it.",
+      "evidence_required": [
+        "doormat_href",
+        "most_requested_href",
+        "doormat_link_text",
+        "most_requested_link_text"
+      ]
+    },
+    {
+      "id": "link-name-trailing-punctuation",
+      "group": "Link name",
+      "label": "Link ends with punctuation",
+      "severity": "Low",
+      "condition": "The link text ends with a period, colon, question mark, exclamation mark, semicolon, or comma. Link text should not end with punctuation regardless of whether it is classified as topic, product-or-service, action, or audience-group.",
+      "recommendation": "Remove trailing punctuation from the link text."
+    },
+    {
+      "id": "inconsistent-link-name-style",
+      "group": "Link name",
+      "label": "Inconsistent link name style",
+      "severity": "Low",
+      "condition": "One or more doormat link texts are clear outliers from a dominant link text style used by the rest of the set, such as a lone action link among topic links.",
+      "recommendation": "Use the dominant link name style unless this doormat has a clear reason to differ. Only revise if a more specific, equally accurate product/service label is available.",
+      "reporting": "Do not return this issue directly. AIDA derives it from detected_link_text_style only when a section has one dominant style and no reportable section-level mix.",
+      "evidence_required": [
+        "dominant_style",
+        "outlier_style",
+        "why_this_doormat_is_an_outlier"
+      ]
+    },
+    {
+      "id": "description-lacks-clarity",
+      "group": "Description clarity",
+      "label": "Description lacks clarity",
+      "severity": "High",
+      "condition": "The description contains an exact phrase with at least two materially different plausible interpretations. Generic wording, missing detail, repetition, and incomplete destination coverage are not clarity issues.",
+      "recommendation": "Rewrite or repunctuate the ambiguous phrase with the smallest change that makes the intended meaning clear."
+    },
+    {
+      "id": "description-missing-needed-information",
+      "group": "Description clarity",
+      "label": "Doormat has at least one content gap",
+      "severity": "Medium",
+      "condition": "One or more important intro paragraphs or H2 headings from the supplied destination context are not represented by the doormat link text or description, and the omission prevents users from deciding whether the destination is relevant. For doormats about a benefit, program, credit, rebate, payment, allowance, relief measure, service, form, or tool, do not require the doormat to list every expected destination facet such as who is eligible, what the program is, and how to apply, file, or use it. Treat those facets as covered when they are clearly implied by the link text and description together. Report a content gap only when a missing facet changes whether users can decide that this destination is relevant.",
+      "recommendation": "Add the missing decision-making detail while keeping the description concise.",
+      "local_from_model_assessment": true,
+      "reporting": "Do not return this issue directly. Return destination_content_assessment with grounded element IDs. AIDA reports the issue only when missing_important_element_ids is a non-empty validated subset of important_element_ids from an available destination context."
+    },
+    {
+      "id": "missing-description",
+      "group": "Description clarity",
+      "label": "Missing description",
+      "severity": "High",
+      "condition": "The doormat has no paragraph description.",
+      "recommendation": "Add a short description that helps users decide whether the linked page is relevant."
+    },
+    {
+      "id": "description-too-long",
+      "group": "Description clarity",
+      "label": "Description too long",
+      "severity": "Low",
+      "condition": "The description exceeds 120 characters in at least one official language, including spaces.",
+      "recommendation": "Shorten the description. Keep both the English and French versions within 120 characters, including spaces.",
+      "local_deterministic": true,
+      "reporting": "AIDA reports this issue locally from descriptionCharacterCount. The model should not return this issue. AIDA reports one section-level row per affected H2 section, with a list of affected doormat numbers and character-count metrics.",
+      "severity_override": {
+        "Low": "Use Low when the description is 121 to 130 characters.",
+        "Medium": "Use Medium when the description is 131 to 140 characters.",
+        "High": "Use High when the description is 141 characters or longer."
+      }
+    },
+    {
+      "id": "description-incorrect-style",
+      "group": "Description clarity",
+      "label": "Description has an unsuitable style",
+      "severity": "Medium",
+      "condition": "Use only when runtime instructions say the description-style primary issue flag is enabled and the description form materially reduces clarity or scanning for this destination.",
+      "recommendation": "Use the description form that best communicates the destination intent. Do not force a clear phrase into a keyword list solely for consistency."
+    },
+    {
+      "id": "description-repeats-link-text",
+      "group": "Description clarity",
+      "label": "Description repeats link text",
+      "severity": "Medium",
+      "condition": "The description substantially restates the link text without adding useful decision-making information.",
+      "recommendation": "Add useful information beyond the link text. Keep necessary repetition when it preserves scope or makes the added information clear."
+    },
+    {
+      "id": "duplicate-or-near-duplicate-description",
+      "group": "Description clarity",
+      "label": "Duplicate description",
+      "severity": "High",
+      "condition": "Two or more doormats have identical or nearly identical descriptions.",
+      "recommendation": "Rewrite each description so users can tell the doormats apart."
+    },
+    {
+      "id": "repeated-description-opening",
+      "group": "Description clarity",
+      "label": "Repeated description opening",
+      "severity": "Low",
+      "condition": "Within one H2 section, two or more doormat descriptions, representing at least 40% of the section, begin with the same first two normalized words.",
+      "recommendation": "Vary the description openings so users can scan and distinguish the doormats more easily.",
+      "local_deterministic": true,
+      "reporting": "AIDA reports at most one section-level issue per section for repeated two-word openings. If multiple openings each affect at least 40% of the section, report them together in the same section entry. Use Medium when any affected doormats are adjacent or when any opening affects more than 60% of the section; otherwise use Low. Do not classify this as an accessibility conformance issue.",
+      "severity_override": {
+        "Low": "Use Low when the repeated opening affects at least 40% but no more than 60% of the section and the affected doormats are not adjacent.",
+        "Medium": "Use Medium when affected doormats are adjacent or when the repeated opening affects more than 60% of the section."
+      }
+    },
+    {
+      "id": "mixed-description-style-in-section",
+      "group": "Description clarity",
+      "label": "Mixed description styles in section",
+      "severity": "Low",
+      "condition": "Use only when runtime instructions say the description-style primary issue flag is enabled and the section mixes description styles in a way that materially reduces scannability or comparison.",
+      "recommendation": "Align descriptions only where the style mix reduces clarity or comparison; preserve clear phrasing that suits the destination intent.",
+      "reporting": "When the feature flag is disabled, return description_rewrite_guidance instead and do not return this issue.",
+      "evidence_required": [
+        "section_description_styles",
+        "representative_doormat_indexes",
+        "why_the_mix_reduces_scannability"
+      ]
+    },
+    {
+      "id": "mixed-link-name-styles-in-section",
+      "group": "Link name",
+      "label": "Mixed link styles in section",
+      "severity": "Low",
+      "condition": "The doormat section mixes link name styles, such as topics, products or services, actions, and audience groups, in a way that reduces scannability or comparability.",
+      "recommendation": "Rewrite the link names so they use one consistent link name style across the section.",
+      "reporting": "Do not return this issue directly. AIDA derives one section-level issue from detected_link_text_style and does not also report inconsistent-link-name-style for that section.",
+      "evidence_required": [
+        "section_link_name_styles",
+        "representative_doormat_indexes"
+      ]
+    },
+    {
+      "id": "inconsistent-description-style",
+      "group": "Description clarity",
+      "label": "Inconsistent description style",
+      "severity": "Low",
+      "condition": "Use only when runtime instructions say the description-style primary issue flag is enabled and one or two descriptions are clear outliers from a dominant section style in a way that reduces comparison.",
+      "recommendation": "Align the outlier with the section where that improves comparison, without forcing a clear phrase into a keyword list solely for consistency.",
+      "evidence_required": [
+        "dominant_style",
+        "outlier_style",
+        "why_this_doormat_is_an_outlier"
+      ]
+    },
+    {
+      "id": "description-list-punctuation-ambiguity",
+      "group": "Description clarity",
+      "label": "List punctuation creates ambiguity",
+      "severity": "Medium",
+      "condition": "List punctuation permits at least two materially different plausible readings of which words belong together or which concepts are separate list items. Do not report merely because a clear list includes or omits 'and', 'et', or an Oxford comma.",
+      "recommendation": "Rewrite or repunctuate the list with the smallest change that makes the intended grouping unambiguous while preserving meaning.",
+      "reporting": "Report only when the supplied description supports two concrete interpretations. Fixed expressions, names, combined concepts, natural task phrases, and clear serial lists are not issues.",
+      "evidence_required": [
+        "ambiguous_span",
+        "first_possible_reading",
+        "second_possible_reading"
+      ]
+    },
+    {
+      "id": "description-uses-icons-or-images",
+      "group": "Description formatting",
+      "label": "Description uses icons or images",
+      "severity": "Medium",
+      "condition": "The description contains icons, images, or image-like decorative content.",
+      "recommendation": "Use plain text only in the description."
+    },
+    {
+      "id": "description-special-formatting",
+      "group": "Description formatting",
+      "label": "Description uses special formatting",
+      "severity": "Medium",
+      "condition": "The description contains bold, italics, bullets, or other special formatting.",
+      "recommendation": "Keep the description as plain text in a single paragraph."
+    },
+    {
+      "id": "description-capitalization",
+      "group": "Description formatting",
+      "label": "Description capitalization issue",
+      "severity": "Low",
+      "condition": "The first word of the description is not capitalized when it should be.",
+      "recommendation": "Capitalize the first word of the description and any proper nouns."
+    },
+    {
+      "id": "description-list-separators",
+      "group": "Description formatting",
+      "label": "Description list separators issue",
+      "severity": "Low",
+      "condition": "A list-style description does not use commas to separate listed items or phrases.",
+      "recommendation": "Use commas to separate listed items or phrases."
+    },
+    {
+      "id": "description-trailing-punctuation",
+      "group": "Description formatting",
+      "label": "Description ends with punctuation",
+      "severity": "Low",
+      "condition": "The description ends with punctuation. Topic doormat descriptions should not end with punctuation, even when the description is a complete sentence or sentence-like clause.",
+      "recommendation": "Remove final punctuation from the description."
+    },
+    {
+      "id": "description-uses-first-or-second-person",
+      "group": "Description wording",
+      "label": "Description starts with first or second person",
+      "severity": "Low",
+      "condition": "The description starts with first- or second-person wording, such as I, we, our, you, or your. Imperative descriptions that start with a verb, such as Find or Determine, are acceptable.",
+      "recommendation": "Rewrite the description without first or second person.",
+      "local_deterministic": true,
+      "reporting": "AIDA reports this issue locally from the extracted description text. The model should not return this issue."
+    },
+    {
+      "id": "description-contains-link",
+      "group": "Link code issue",
+      "label": "Description contains a link",
+      "severity": "Medium",
+      "condition": "The paragraph description contains one or more links.",
+      "recommendation": "Remove links from the description. The doormat heading should contain the only link."
+    },
+    {
+      "id": "enhancement-label-not-needed",
+      "group": "Enhancement label",
+      "label": "Enhancement label is not needed",
+      "severity": "Medium",
+      "condition": "A doormat uses an enhancement/status label such as New or Closed when there is no recent change or temporary status to justify it.",
+      "recommendation": "Remove the label unless it identifies a recent change or valid temporary status.",
+      "reporting": "Do not report this issue merely because the same lifecycle/status information appears in the destination title, H1, or destination context. A label may be useful when it exposes destination status before the user follows the link."
+    },
+    {
+      "id": "enhancement-label-wrong-type",
+      "group": "Enhancement label",
+      "label": "Enhancement label type is wrong",
+      "severity": "Medium",
+      "condition": "A doormat uses the wrong enhancement label type for the status, such as an info label where a danger label is needed.",
+      "recommendation": "Use the correct label type for the actual status, such as New for recent additions or Closed for ended programs."
+    },
+    {
+      "id": "missing-needed-doormat",
+      "group": "Choice of doormats",
+      "label": "Potentially missing a doormat",
+      "severity": "Medium",
+      "condition": "A direct child page is not represented in the doormat set. Treat this as a review flag, not proof that a doormat is required.",
+      "recommendation": "Review and consider adding a doormat for the missing child page."
+    },
+    {
+      "id": "unnecessary-doormat",
+      "group": "Choice of doormats",
+      "label": "Non-child-page doormat",
+      "severity": "Low",
+      "condition": "One or more doormat destinations in an H2 section are not direct child pages in the IA crawl. Treat this as a review flag, not proof that the doormats are unnecessary.",
+      "recommendation": "Flag for manual review and consider removing or replacing the doormats.",
+      "reporting": "AIDA reports this issue locally as one section-level row per affected H2 section, with evidence listing the section item numbers of all non-child-page doormats in that section."
+    },
+    {
+      "id": "too-many-doormats-in-section",
+      "group": "Choice of doormats",
+      "label": "Too many doormats",
+      "severity": "Low",
+      "condition": "A single topic doormat section contains more than 9 doormats.",
+      "recommendation": "Review. Should any doormats be removed? Should the section be divided?",
+      "reporting": "Report this issue once in section_issues for the affected H2 section. Do not report it on individual doormats.",
+      "evidence_required": [
+        "section_doormat_count",
+        "maximum_allowed",
+        "doormat_index"
+      ]
+    }
+  ],
+  "severity_guidance": {
+    "High": "Blocks users from understanding or using the doormat correctly, or makes doormats indistinguishable.",
+    "Medium": "Reduces clarity, scannability, consistency, or compliance with GCWeb guidance.",
+    "Low": "Minor style or cleanup issue that should be fixed when editing the doormat."
+  }
+}

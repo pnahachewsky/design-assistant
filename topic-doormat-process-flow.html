@@ -1,0 +1,943 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AIDA topic doormat process overview (in-progress)</title>
+  <style>
+    :root {
+      --bg: #f6f7f9;
+      --paper: #ffffff;
+      --ink: #202833;
+      --muted: #5e6a78;
+      --line: #d8dee6;
+      --soft: #eef2f6;
+      --blue: #245ca6;
+      --blue-soft: #e8f0fb;
+      --green: #23735a;
+      --green-soft: #e7f3ee;
+      --amber: #8a5b00;
+      --amber-soft: #fbf1da;
+      --shadow: 0 12px 28px rgba(32, 40, 51, 0.08);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      margin: 0;
+      font-family: Aptos, "Segoe UI", Arial, sans-serif;
+      color: var(--ink);
+      background: var(--bg);
+      line-height: 1.55;
+    }
+
+    main {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 36px 22px 64px;
+    }
+
+    a {
+      color: var(--blue);
+      text-decoration-thickness: 1px;
+      text-underline-offset: 3px;
+    }
+
+    h1,
+    h2,
+    h3 {
+      margin: 0;
+      line-height: 1.18;
+      letter-spacing: 0;
+    }
+
+    h1 {
+      max-width: 20ch;
+      font-size: clamp(2.2rem, 5vw, 4rem);
+    }
+
+    h2 {
+      font-size: 1.55rem;
+      margin-bottom: 10px;
+    }
+
+    h3 {
+      font-size: 1.08rem;
+      margin-bottom: 8px;
+    }
+
+    p {
+      margin: 0;
+    }
+
+    ul,
+    ol {
+      margin: 0;
+      padding-left: 1.25rem;
+    }
+
+    li + li {
+      margin-top: 7px;
+    }
+
+    .hero,
+    .panel,
+    .card,
+    .source-card {
+      border: 1px solid var(--line);
+      background: var(--paper);
+      border-radius: 8px;
+    }
+
+    .hero {
+      padding: 34px;
+      box-shadow: var(--shadow);
+    }
+
+    .hero-layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1.35fr) minmax(260px, 0.65fr);
+      gap: 28px;
+      align-items: end;
+    }
+
+    .eyebrow {
+      margin-bottom: 12px;
+      color: var(--green);
+      font-size: 0.8rem;
+      font-weight: 800;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    .lede {
+      max-width: 74ch;
+      margin-top: 18px;
+      color: var(--muted);
+      font-size: 1.08rem;
+    }
+
+    .process-summary {
+      padding: 18px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--soft);
+    }
+
+    .process-summary h2 {
+      margin-bottom: 12px;
+      font-size: 1.05rem;
+      font-family: Aptos, "Segoe UI", Arial, sans-serif;
+    }
+
+    .process-summary ol {
+      margin: 0;
+      padding-left: 1.45rem;
+      font-size: 0.9rem;
+      color: var(--muted);
+    }
+
+    .process-summary li + li {
+      margin-top: 6px;
+    }
+
+    .quick-nav {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin: 18px 0 22px;
+    }
+
+    .quick-nav a {
+      display: inline-flex;
+      align-items: center;
+      min-height: 38px;
+      padding: 8px 12px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: var(--paper);
+      color: var(--ink);
+      font-size: 0.92rem;
+      font-weight: 650;
+      text-decoration: none;
+    }
+
+    .panel {
+      padding: 26px;
+      margin-top: 18px;
+    }
+
+    .intro {
+      max-width: 78ch;
+      color: var(--muted);
+      margin-bottom: 18px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 14px;
+    }
+
+    .two-col {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 16px;
+      align-items: start;
+    }
+
+    .card,
+    .source-card {
+      padding: 18px;
+    }
+
+    .card p,
+    .source-card p {
+      color: var(--muted);
+    }
+
+    .label {
+      display: inline-flex;
+      align-items: center;
+      min-height: 28px;
+      padding: 4px 9px;
+      border-radius: 999px;
+      font-size: 0.75rem;
+      font-weight: 800;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      margin-bottom: 12px;
+    }
+
+    .label-blue {
+      color: var(--blue);
+      background: var(--blue-soft);
+    }
+
+    .label-green {
+      color: var(--green);
+      background: var(--green-soft);
+    }
+
+    .label-amber {
+      color: var(--amber);
+      background: var(--amber-soft);
+    }
+
+    .source-list {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 14px;
+    }
+
+    .ex-hide-list {
+      column-count: 2;
+      column-gap: 8px;
+    }
+
+    .ex-hide-list .ex-hide {
+      display: inline-block;
+      width: 100%;
+      margin-top: 0;
+      margin-bottom: 8px;
+      break-inside: avoid;
+    }
+
+    .ex-hide-list .ex-hide summary {
+      padding: 10px 14px;
+    }
+
+    .ex-hide-list .ex-hide-content {
+      padding: 0 14px 12px;
+    }
+
+    .source-card {
+      display: grid;
+      gap: 10px;
+    }
+
+    .source-card-with-aside {
+      grid-template-columns: minmax(0, 1fr) minmax(320px, 0.95fr);
+      align-items: start;
+    }
+
+    .source-card code,
+    .inline-code {
+      font-family: Consolas, "Liberation Mono", monospace;
+      font-size: 0.88rem;
+      color: var(--ink);
+      background: var(--soft);
+      border: 1px solid var(--line);
+      border-radius: 4px;
+      padding: 1px 4px;
+    }
+
+    .code-path {
+      display: block;
+      margin-top: 4px;
+      margin-left: 1rem;
+    }
+
+    .ex-hide {
+      margin-top: 14px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--paper);
+    }
+
+    .source-card .ex-hide {
+      margin-top: 0;
+      background: var(--soft);
+    }
+
+    .reference-box {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--soft);
+      padding: 14px 18px;
+    }
+
+    .reference-box h4 {
+      margin: 0 0 6px;
+      font-size: 1rem;
+    }
+
+    .reference-box p {
+      margin: 0;
+    }
+
+    .source-aside {
+      display: grid;
+      gap: 14px;
+    }
+
+    .ex-hide summary {
+      cursor: pointer;
+      padding: 14px 18px;
+      font-weight: 800;
+    }
+
+    .ex-hide pre {
+      margin: 0;
+      padding: 0 18px 18px;
+      color: var(--muted);
+      font-family: Aptos, "Segoe UI", Arial, sans-serif;
+      font-size: 0.95rem;
+      line-height: 1.55;
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+    }
+
+    .ex-hide-content {
+      padding: 0 18px 18px;
+      color: var(--muted);
+    }
+
+    .ex-hide-content p {
+      margin-bottom: 12px;
+    }
+
+    .ex-hide-content ul {
+      margin-top: 8px;
+    }
+
+    .ex-hide-content > ul {
+      padding-left: 1.1rem;
+    }
+
+    .note {
+      padding: 16px 18px;
+      border-left: 5px solid var(--green);
+      background: var(--green-soft);
+      border-radius: 0 8px 8px 0;
+    }
+
+    .small {
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+
+    @media (max-width: 760px) {
+      main {
+        padding: 22px 14px 46px;
+      }
+
+      .hero {
+        padding: 24px;
+      }
+
+      .hero-layout {
+        grid-template-columns: 1fr;
+      }
+
+      .process-summary {
+        margin-top: 18px;
+      }
+
+      .panel {
+        padding: 20px;
+      }
+
+      .source-card-with-aside {
+        grid-template-columns: 1fr;
+      }
+
+      .ex-hide-list {
+        column-count: 1;
+      }
+    }
+
+    @media print {
+      body {
+        background: #fff;
+      }
+
+      main {
+        max-width: none;
+        padding: 0;
+      }
+
+      .hero,
+      .panel,
+      .card,
+      .source-card {
+        box-shadow: none;
+        break-inside: avoid;
+      }
+
+      .quick-nav {
+        display: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <section class="hero">
+      <div class="hero-layout">
+        <div>
+          <p class="eyebrow">AIDA topic doormat process</p>
+          <h1>Topic doormat review and rewrite overview (in-progress)</h1>
+          <p class="lede">
+            This page summarizes how AIDA detects GCWeb topic doormats, sends structured
+            doormat data to the issue prompt, asks the model for bounded classifications
+            and editorial evidence, makes the final issue decisions in AIDA, and passes
+            selected issue rows into the rewrite prompt when users ask AI to rewrite the
+            doormat set.
+          </p>
+        </div>
+        <aside class="process-summary" aria-label="Process summary">
+          <h2>Process summary</h2>
+          <ol>
+            <li>Detect current and legacy topic doormat blocks.</li>
+            <li>Extract link text, labels, destination, description, counts, language, and H2 section metadata.</li>
+            <li>Fetch destination context and local IA child-page context when available.</li>
+            <li>Run local deterministic checks for counts, link validity, structure, formatting, trailing description punctuation, repeated openings, Most requested duplicates, and IA review flags.</li>
+            <li>Send the complete doormat set to the Topic doormats issue skill.</li>
+            <li>Ask the model to classify every doormat using constrained values and grounded evidence.</li>
+            <li>Let AIDA validate and aggregate the classifications, apply local decision rules, and build the displayed issues.</li>
+            <li>Store selected issue rows for the current working HTML.</li>
+            <li>When Doormats is selected in Send to AI, run the issue analysis if needed, compose the rewrite skill, and send current HTML plus selected issues and destination context for affected doormats.</li>
+          </ol>
+        </aside>
+      </div>
+    </section>
+
+    <nav class="quick-nav" aria-label="Page sections">
+      <a href="#review-flow">Review flow</a>
+      <a href="#decision-boundary">Classification and decisions</a>
+      <a href="#section-rules">Section rules</a>
+      <a href="#quality-checks">How AIDA determines issues</a>
+      <a href="#rewrite-examples">Rewrite examples</a>
+      <a href="#testing">Testing</a>
+      <a href="#source-files">Reference files</a>
+    </nav>
+
+    <section class="panel" id="review-flow">
+      <h2>Topic doormat review flow</h2>
+      <p class="intro">
+        The issue flow is set-based. AIDA sends all detected topic doormats together so
+        the model can classify each item in context while AIDA keeps deterministic and
+        classification-derived issue decisions local.
+      </p>
+      <div class="two-col">
+        <article class="card">
+          <span class="label label-blue">Input</span>
+          <h3>What AIDA sends</h3>
+          <p>
+            AIDA sends structured doormat summaries, including page order, section-local
+            order, link text, extracted labels, href, description, exact character counts,
+            language, structure flags, and H2 section metadata. AIDA also sends label-stripped
+            <span class="inline-code">analysisLinkText</span> and
+            <span class="inline-code">analysisDescription</span> for destination meaning
+            and content-coverage checks. For each resolved destination, AIDA supplies the
+            HTTP status when available, page title, H1, introductory paragraphs before the
+            first H2, all H2 headings, and destination label/status evidence.
+          </p>
+        </article>
+        <article class="card">
+          <span class="label label-green">Output</span>
+          <h3>What AIDA gets back</h3>
+          <p>
+            The model returns required description-style, link-style,
+            destination-relationship, relationship-basis, and destination-content
+            classifications for every doormat. It may also return bounded candidate
+            rows for the remaining model-owned editorial issues. These are structured
+            inputs to AIDA, not the final displayed report.
+          </p>
+        </article>
+      </div>
+    </section>
+
+    <section class="panel" id="decision-boundary">
+      <h2>Classification first, final decision in AIDA</h2>
+      <p class="intro">
+        For checks that depend on comparing doormats within a section or against a
+        destination, the model performs the language judgment and AIDA owns the issue decision. This keeps semantic
+        classification flexible without letting one model response directly determine
+        section-level findings, thresholds, severity, or suppression rules.
+      </p>
+      <div class="grid">
+        <article class="card">
+          <span class="label label-blue">1. Model classifies</span>
+          <h3>Bounded labels for every doormat</h3>
+          <p>
+            The model must return values from defined enums, such as description style,
+            link style, destination relationship and its basis, plus destination element
+            coverage. It identifies meaning, grammatical construction, and important
+            destination elements; it does not return locally owned issues such as length,
+            trailing punctuation, broken links, IA flags, content gaps, or section style
+            mixes. It may return a list-punctuation ambiguity candidate when the wording
+            supports two materially different readings.
+          </p>
+        </article>
+        <article class="card">
+          <span class="label label-amber">2. AIDA validates</span>
+          <h3>Ground classifications in supplied data</h3>
+          <p>
+            AIDA checks the response shape, allowed labels, doormat indexes, destination
+            element IDs, required reasons, destination status, label/status evidence,
+            and available page context. Invalid, unsupported, or ungrounded
+            classifications cannot create displayed issues.
+          </p>
+        </article>
+        <article class="card">
+          <span class="label label-green">3. AIDA decides</span>
+          <h3>Aggregate and apply the rule</h3>
+          <p>
+            AIDA groups valid classifications by section or page, applies thresholds and
+            deterministic safeguards, suppresses known false positives, assigns the
+            configured severity, and creates the final issue rows shown to users.
+          </p>
+        </article>
+        <article class="card">
+          <span class="label label-blue">Editorial exception</span>
+          <h3>Model-owned judgment remains bounded</h3>
+          <p>
+            Some editorial issues cannot yet be derived from a stable local rule, such as
+            genuinely ambiguous description wording, ambiguous list punctuation, or
+            unjustified labels. The model may return those candidate issue rows directly,
+            but AIDA still validates them against the taxonomy and response contract before
+            displaying them. A list-punctuation ambiguity candidate must quote the exact
+            ambiguous span and provide two distinct plausible readings.
+          </p>
+        </article>
+      </div>
+    </section>
+
+    <section class="panel" id="section-rules">
+      <h2>Section rules</h2>
+      <p class="intro">
+        H2 headings define section-local numbering for the doormat limit and section-level
+        style consistency.
+      </p>
+      <div class="grid">
+        <article class="card">
+          <span class="label label-green">Local structure</span>
+          <h3>H2 sections reset numbering</h3>
+          <p>
+            AIDA assigns each topic doormat to the nearest preceding H2 section and
+            numbers doormats from 1 inside that section.
+          </p>
+        </article>
+        <article class="card">
+          <span class="label label-amber">Limit rule</span>
+          <h3>Nine doormats per section</h3>
+          <p>
+            AIDA reports <span class="inline-code">too-many-doormats-in-section</span>
+            once as a section-level issue when an H2 section has more than 9 doormats.
+          </p>
+        </article>
+        <article class="card">
+          <span class="label label-blue">Style scope</span>
+          <h3>Style checks stay within each section</h3>
+          <p>
+            AIDA aggregates link-name and description style classifications inside each
+            H2 section.
+          </p>
+        </article>
+      </div>
+    </section>
+
+    <section class="panel" id="quality-checks">
+      <h2>How AIDA determines issues</h2>
+      <p class="intro">
+        The current flow separates model classification from AIDA decisions. AIDA owns
+        exact checks, local IA review flags, and final classification-derived issue
+        rules; the model supplies semantic classifications and handles the remaining
+        model-owned editorial judgment.
+      </p>
+      <div class="ex-hide-list">
+        <details class="ex-hide">
+          <summary>Exact character counts</summary>
+          <div class="ex-hide-content">
+            <p>AIDA provides authoritative link text and description character counts and reports length issues locally. Extracted labels and badges are excluded from link and description counts in both languages. When both languages are available, AIDA compares the English and French equivalent doormat and uses the longer count for severity.</p>
+            <p>The formal recommendation for link names remains an ideal limit of 45 characters and a maximum of 75 characters, including spaces. AIDA reports 46–60 characters as Low severity, 61–75 as Medium, and more than 75 as High.</p>
+            <p>The formal recommendation for descriptions remains 120 characters or fewer in both languages, including spaces. AIDA continues to report descriptions over 120 characters as length issues, using the existing severity bands: 121–130 is Low, 131–140 is Medium, and more than 140 is High.</p>
+            <p>The rewrite prompt treats 120 characters as the rule and tries other approaches first: remove repetition, unnecessary wording, and secondary details, then find a shorter accurate phrasing. A rewrite may exceed 120 only when that is absolutely necessary to preserve essential meaning or accuracy. This rewrite-only exception does not change the formal recommendation or prevent AIDA from reporting the length issue.</p>
+            <p>AIDA reports at most one link-length issue and one description-length issue per section. Evidence keeps English and French counts in separate severity-coloured pills. Link pills show the ideal limit, such as <span class="inline-code">FR 61/45</span>; description pills show only the count, such as <span class="inline-code">FR 133</span>.</p>
+          </div>
+        </details>
+        <details class="ex-hide">
+          <summary>Doormat count limit</summary>
+          <div class="ex-hide-content">
+            <p>AIDA applies the 9-doormat limit per H2 section.</p>
+          </div>
+        </details>
+        <details class="ex-hide">
+          <summary>Structure and formatting</summary>
+          <div class="ex-hide-content">
+            <p>AIDA reports objective structure and formatting issues locally where the page markup already proves the issue, including split heading links, multiple links in one doormat, links inside descriptions, trailing punctuation, first- or second-person description openings, and legacy topic doormat markup.</p>
+            <p>Description trailing punctuation is handled deterministically in both the issue report and rewrite flow. When that issue is selected, AIDA removes only the final punctuation mark without asking the model to rewrite the wording for that issue.</p>
+            <p>Using <span class="inline-code">and</span> or <span class="inline-code">et</span> before the final item in an otherwise clear list is not an issue. Omitting the connector is a space-saving writing tip, not a compliance requirement, and it does not independently trigger issue analysis, rewriting, or repair.</p>
+            <p>The model may instead report <span class="inline-code">description-list-punctuation-ambiguity</span> at Medium severity when list punctuation permits at least two materially different plausible readings. The candidate must quote an exact span from the description and state both readings. The presence or absence of <span class="inline-code">and</span>, <span class="inline-code">et</span>, or an Oxford comma is not sufficient evidence by itself. Clear serial lists, fixed expressions, names, combined concepts, and natural task phrases are excluded.</p>
+            <p>When AIDA is already rewriting the same description for another selected description issue, the rewrite may opportunistically omit the final connector from a plain list of at least three parallel items. The connector remains when it supports clarity or belongs to a name, fixed expression, combined concept, or natural task phrase. This optional cleanup does not apply to a link-text-only change or an unrelated doormat.</p>
+          </div>
+        </details>
+        <details class="ex-hide">
+          <summary>Description and link style</summary>
+          <div class="ex-hide-content">
+            <p>The model classifies each description and link by grammatical construction. Link styles are <span class="inline-code">topic</span>, <span class="inline-code">product-or-service</span>, <span class="inline-code">action</span>, <span class="inline-code">audience-group</span>, or <span class="inline-code">mixed-or-unclear</span>. Description rewrite guidance uses <span class="inline-code">leave-unchanged</span>, <span class="inline-code">retain-phrase</span>, <span class="inline-code">tighten-phrase</span>, <span class="inline-code">add-specificity</span>, <span class="inline-code">convert-to-keyword-list</span>, or <span class="inline-code">convert-to-task-list</span>. AIDA groups link-style labels by H2 section and creates section-level mixed-style rows or individual outlier rows when warranted. Mixed-style issues are Low severity. AIDA does not report individual outliers when the whole section is already mixed.</p>
+            <p>For link-style classification, gerund link names such as <span class="inline-code">Filing a trust return</span> or <span class="inline-code">Submitting documents online</span> are treated as <span class="inline-code">topic</span> when they mean how to or instructions for the task. AIDA also normalizes model classifications so gerund, how-to, and who/what/when/where/why link names are not treated as imperative <span class="inline-code">action</span> links merely because the underlying subject is a task.</p>
+            <p>For rewrites, AIDA also preserves human-centred framing when the person, audience, or lived situation is part of the meaning. It should not compress wording such as <span class="inline-code">people with an impairment</span> into abstract nouns such as <span class="inline-code">impairments</span>, or replace plain-language wording such as <span class="inline-code">who is eligible</span> with <span class="inline-code">eligibility</span> when the human framing helps users recognize themselves in the content.</p>
+          </div>
+        </details>
+        <details class="ex-hide">
+          <summary>Destination relationship</summary>
+          <div class="ex-hide-content">
+            <p>The model classifies whether each link name is equivalent, accurately broader or narrower, materially different, or unavailable, and identifies the basis for that decision. AIDA compares the non-label link text with the destination title or H1 by meaning, not exact wording, ignores Canada.ca title suffixes, allows compatible wording shifts, and reports only grounded core-concept conflicts.</p>
+          </div>
+        </details>
+        <details class="ex-hide">
+          <summary>Doormat labels</summary>
+          <div class="ex-hide-content">
+            <p>AIDA extracts visible label and badge text from each doormat and destination label/status evidence from titles, H1s, intros, alerts, labels, badges, time elements, and date metadata. Original link text and descriptions remain available for display and evidence, but AIDA removes extracted labels from <span class="inline-code">analysisLinkText</span> and <span class="inline-code">analysisDescription</span> before destination matching and content-coverage assessment. Labels such as Closed, Formerly, Replaced, New, or Updated can be valid when they expose destination status before the user follows the link.</p>
+          </div>
+        </details>
+        <details class="ex-hide">
+          <summary>Broken links</summary>
+          <div class="ex-hide-content">
+            <p>AIDA reports <span class="inline-code">broken-link</span> locally for objective link failures such as empty or invalid hrefs and fetched destination HTTP error statuses. The model does not report this issue directly.</p>
+          </div>
+        </details>
+        <details class="ex-hide">
+          <summary>Doormat content gaps</summary>
+          <div class="ex-hide-content">
+            <p>The model classifies supplied destination elements as important, covered, or missing by ID. AIDA reports a content gap only when a missing important ID matches extracted page context and passes deterministic local guardrails.</p>
+            <ul>
+              <li>AIDA rejects IDs that were not supplied in the extracted destination context or that the model also marked as covered.</li>
+              <li>AIDA suppresses English and French lifecycle/status/update text when it is already exposed by the visible doormat text or when it is not decision-critical.</li>
+              <li>AIDA suppresses generic H2 gaps when the same concept is already present in the doormat, such as <span class="inline-code">Eligibility</span>/<span class="inline-code">Admissibilite</span> already being represented by <span class="inline-code">eligible</span>/<span class="inline-code">admissible</span>, or by multiple concrete bilingual eligibility cues such as audience, age, income, disability, or family-care criteria.</li>
+              <li>AIDA suppresses broad intro-definition gaps when normalized tokens and bilingual concept groups show the doormat already covers the destination's program, payment, audience, eligibility, application, amount, deadline, or document concept.</li>
+              <li>AIDA still reports unmatched decision-critical concepts, such as an application, eligibility, deadline, amount, or required-document concept that is present in the destination context but not represented in the link text or description.</li>
+            </ul>
+          </div>
+        </details>
+        <details class="ex-hide">
+          <summary>Repeated description openings</summary>
+          <div class="ex-hide-content">
+            <p>AIDA checks each H2 section locally for descriptions that begin with the same first two normalized words. It reports at most one section-level row per section when an opening affects at least 40% of the section, with Medium severity when affected doormats are adjacent or the pattern affects more than 60%.</p>
+          </div>
+        </details>
+        <details class="ex-hide">
+          <summary>Most requested duplicates</summary>
+          <div class="ex-hide-content">
+            <p>AIDA compares doormat links with Most requested links locally to identify duplicate destinations. URL fragments must also match.</p>
+          </div>
+        </details>
+        <details class="ex-hide">
+          <summary>Choice of doormats</summary>
+          <div class="ex-hide-content">
+            <p>AIDA compares doormat destinations with direct child pages from the IA crawl. Missing child pages become Medium review flags, and non-child-page doormats become Low section-level review flags. AIDA also adds child-page and page-view metadata to displayed doormat rows when available.</p>
+          </div>
+        </details>
+        <details class="ex-hide">
+          <summary>No issues rows</summary>
+          <div class="ex-hide-content">
+            <p>AIDA keeps every detected doormat visible, including clean items.</p>
+          </div>
+        </details>
+        <details class="ex-hide">
+          <summary>Fallback behaviour</summary>
+          <div class="ex-hide-content">
+            <p>AIDA preserves the configured fallback order, logs request and response metrics for topic doormat issue calls, repairs invalid JSON when possible, and builds local <em>No issues</em> rows if no usable model output is available.</p>
+            <p>For model-owned issue rows, AIDA also checks the displayed evidence and recommendation after parsing. Empty strings and dash-only placeholders are treated as missing. AIDA sends only those incomplete issue fields back to the model for repair. If the repair still does not provide usable text, AIDA keeps the issue row visible and displays <span class="inline-code">No AI evidence was received.</span> or <span class="inline-code">No AI recommendation was received.</span> for the missing field.</p>
+          </div>
+        </details>
+      </div>
+    </section>
+
+    <section class="panel" id="rewrite-examples">
+      <h2>Rewrite examples</h2>
+      <p class="intro">Optional reference examples demonstrate editing decisions. AIDA still sends the complete actual page HTML and doormat set in every rewrite request.</p>
+      <div class="two-col">
+        <article class="card">
+          <h3>Reference library</h3>
+          <p>The <a href="./skills/topic-doormats/rewrite/references/examples.json">example library</a> preserves both complete bilingual sets from <strong>Doormat examples - rewrites - Sept 24.docx</strong>: GST/HST for businesses and savings and pension plans. Tracked revisions are accepted and character-count annotations are removed.</p>
+          <p>Each pair uses the same link name and shows the original and revised descriptions. Annotations distinguish clarity improvements, compression, content selection, optional preferences, and unchanged wording. Destination evidence records supporting URLs and verification dates. The original descriptions are authentic, not deliberately bad examples.</p>
+        </article>
+        <article class="card">
+          <h3>What AIDA sends</h3>
+          <p>Enable <strong>Use examples for rewriting</strong> in the doormat AI options, then choose <strong>Before and after, with explanations</strong> or <strong>Final wording only</strong>. Examples remain off by default. AIDA preserves the enabled state and selected format when the page reloads; resetting the upload flow returns examples to off and the format to <strong>Before and after, with explanations</strong>.</p>
+          <p>Both formats select the same items by language and selected issue: up to two matched examples plus supporting context, capped at three reference doormats total. A paired neighbour takes priority when the lesson depends on comparing descriptions; otherwise an unchanged item from the selected set can demonstrate restraint.</p>
+          <p>No matching issue means no examples are sent. The library does not demonstrate link-name rewrites or every possible issue. Drafting missing descriptions uses the rebate guidance example and adjacent confirmation description.</p>
+        </article>
+      </div>
+      <div class="note" style="margin-top: 18px;">
+        <p>Reference subsets do not authorize extra edits. AIDA uses only lessons relevant to selected issues and grounds facts in the current destination evidence. Example facts, optional wording preferences, and changes to neighbouring reference items are not instructions to change the actual page.</p>
+      </div>
+    </section>
+
+    <section class="panel" id="testing">
+      <h2>Testing</h2>
+      <p class="intro">
+        These testing references support Topic doormat issue review and rewrite checks.
+      </p>
+      <article class="source-card">
+        <h3>Testing resources</h3>
+        <ul>
+          <li>
+            <a href="https://122gc-my.sharepoint.com/:wb:/r/personal/parissa_nahachewsky_cra-arc_gc_ca/Documents/Whiteboards/AIDA%20Topic%20doormat%20tests.whiteboard?d=w515211d148334ac4a7d8f17ce61a03db&amp;csf=1&amp;web=1&amp;e=OMZons">Testing whiteboard</a>
+          </li>
+          <li>
+            <a href="https://cra-test-arc.canada.ca/aida-doormat-testing-2026/index.html">Testing repository</a>
+          </li>
+        </ul>
+      </article>
+    </section>
+
+    <section class="panel" id="example-comparison">
+      <h2>Comparing example formats</h2>
+      <p class="intro">Compare no examples, final-only examples, and before-and-after examples with explanations before deciding whether to enable examples by default.</p>
+      <div class="ex-hide-list">
+        <details class="ex-hide">
+          <summary>Comparison procedure</summary>
+          <div class="ex-hide-content">
+            <ol>
+              <li>Start with GST/HST, then savings and pensions, in both languages. Keep the original HTML, destination evidence, selected issues, model, and generation settings identical across conditions.</li>
+              <li>Turn examples off for the baseline. Enable examples and choose each format for the other two conditions. Confirm the selected condition after reloading AIDA; AIDA normally restores it from local storage.</li>
+              <li>Restore the original HTML before each run. Reuse the same analysis and selected issues so issue-detection changes do not affect the comparison. Do not use a previous rewrite as the next input.</li>
+              <li>Run each condition at least three times and compare outputs without revealing which condition produced them.</li>
+              <li>Repeat on unrelated pages with comparable issues. Results on the teaching pages alone do not establish whether the examples help on other pages.</li>
+            </ol>
+          </div>
+        </details>
+        <details class="ex-hide">
+          <summary>What to assess</summary>
+          <div class="ex-hide-content">
+            <ul>
+              <li><strong>Issue resolution:</strong> selected issues fixed, unresolved, or made worse.</li>
+              <li><strong>Grounding:</strong> unsupported additions or altered destination meaning.</li>
+              <li><strong>Restraint:</strong> unnecessary changes to unaffected doormats or adequate wording.</li>
+              <li><strong>Readability:</strong> clearer descriptions and distinctions between neighbours.</li>
+              <li><strong>Length:</strong> links over the 45-character ideal, descriptions over 120, and whether any rewrite exceeding 120 is necessary to preserve essential meaning or accuracy after shorter alternatives were tried.</li>
+              <li><strong>Cost:</strong> request size, latency, and repair attempts.</li>
+            </ul>
+            <p>Keep examples opt-in unless the comparison shows a consistent benefit without additional factual errors or unnecessary edits.</p>
+          </div>
+        </details>
+      </div>
+      <p class="small" style="margin-top: 18px;">The comparison procedure describes the intended evaluation; live model comparisons have not been run as part of this implementation.</p>
+    </section>
+
+    <section class="panel" id="source-files">
+      <h2>Reference files</h2>
+      <p class="intro">
+        These files contain the active instructions, schemas, shared guidance, and
+        runtime code used by the Topic doormats process.
+      </p>
+
+      <div class="source-list">
+        <article class="source-card source-card-with-aside">
+          <div>
+            <h3>Topic doormat issue review</h3>
+            <p>Used to identify topic doormat problems before rewriting starts.</p>
+            <ul>
+              <li><a href="./skills/topic-doormats/issues/SKILL.md">skills/topic-doormats/issues/SKILL.md</a></li>
+              <li><a href="./skills/topic-doormats/issues/references/issue-taxonomy.json">skills/topic-doormats/issues/references/issue-taxonomy.json</a></li>
+              <li><a href="./skills/topic-doormats/issues/assets/issues-output-schema.json">skills/topic-doormats/issues/assets/issues-output-schema.json</a></li>
+            </ul>
+          </div>
+
+          <div class="source-aside">
+            <div class="reference-box">
+              <h4>
+                <a href="https://github.com/cra-proto/IPD-template/blob/main/.claude/skills/gcweb-doormats/SKILL.md">Marvin's original skill</a>
+              </h4>
+            </div>
+
+            <details class="ex-hide">
+              <summary>Anne's original categories</summary>
+              <div class="ex-hide-content">
+                <p>
+                  I outlined some possible <strong>doormat pain point categories</strong>. In bold is the potential category,
+                  sub-bullets contain the more detailed issue. Let me know if this helps or if you need something else.
+                </p>
+                <ul>
+                <li>
+                  <strong>Link code issue</strong>
+                  <ul>
+                    <li>Broken link</li>
+                    <li>Misdirected link (wrong page or wrong anchored location)</li>
+                    <li>More than one link</li>
+                  </ul>
+                </li>
+                <li>
+                  <strong>Link name</strong>
+                  <ul>
+                    <li>
+                      Lacks clarity (must provide clear choice)
+                      <ul>
+                        <li>Must be descriptive and unique on page</li>
+                      </ul>
+                    </li>
+                    <li>
+                      Too long (wordy)
+                      <ul>
+                        <li>EN and FR: aim for 45 characters and keep below 75 characters (with spaces)</li>
+                      </ul>
+                    </li>
+                    <li>
+                      Too different from destination page title
+                      <ul>
+                        <li>Does not need to be exact match of destination page title, but should convey similar idea</li>
+                      </ul>
+                    </li>
+                  </ul>
+                </li>
+                <li>
+                  <strong>Repeat link</strong>
+                  <ul>
+                    <li>Don't repeat links in Most requested</li>
+                  </ul>
+                </li>
+                <li>
+                  <strong>Description lacks clarity</strong> (unclear)
+                  <ul>
+                    <li>Missing needed information (content gap)</li>
+                  </ul>
+                </li>
+                <li>
+                  <strong>Description too long</strong> (too wordy)
+                  <ul>
+                    <li>EN should be under 90 characters?</li>
+                    <li>FR under 120 characters?</li>
+                  </ul>
+                </li>
+                <li>
+                  <strong>Description has incorrect style</strong> (not sure of Marvin's wording on this)
+                  <ul>
+                    <li>Action verbs that summarize what can be done on the page</li>
+                    <li>list of keywords that summarize information on the page</li>
+                    <li>list of tasks that can be accomplished on the page</li>
+                    <li>
+                      (We have examples of the style options in the UCDG
+                      <a href="https://design.cra-arc.alpha.canada.ca/en/design-systems/gcweb/doormats/index.html">Doormats – GCWeb design system</a>)
+                    </li>
+                  </ul>
+                </li>
+                <li>
+                  <strong>Description formatting</strong>
+                  <ul>
+                    <li><strong>Tip:</strong> In a comma-separated list, omit "and" before the last item to save space and avoid an Oxford-comma decision. This is recommended style, not a compliance issue.</li>
+                    <li>Don't use icons or images</li>
+                    <li>No special formatting (bold, italics, bullets)</li>
+                    <li>Capitalize the letter of the first word</li>
+                    <li>Use commas to separate listed items or phrase</li>
+                    <li>Do not put any punctuation at the end</li>
+                    <li>No links in description</li>
+                  </ul>
+                </li>
+                <li>
+                  <strong>Enhancement label</strong>
+                  <ul>
+                    <li>Only for a recent change (e.g. info label "New", Danger label "Closed")</li>
+                  </ul>
+                </li>
+                <li>
+                  <strong>Choice of doormats</strong>
+                  <ul>
+                    <li>Direct child page missing from the doormats (Medium review flag)</li>
+                    <li>Doormat destination outside the direct child pages (Low review flag)</li>
+                  </ul>
+                </li>
+                </ul>
+              </div>
+            </details>
+          </div>
+        </article>
+
+        <article class="source-card">
+          <h3>Topic doormat rewriting</h3>
+          <p>Used to guide rewritten topic doormat content, issue-aware rewrite priorities, destination evidence for affected doormats, and output format.</p>
+          <p>Rewrite guidance uses destination intent to preserve link framing. Imperative link names are appropriate when the destination lets users start, complete, or continue a task. Gerund, how-to, or explanatory link names are appropriate when the destination mainly provides information, instructions, requirements, eligibility, timing, or rules about the task.</p>
+          <p>The final-list connector guidance is optional cleanup only. AIDA may apply it when another selected description issue already requires a rewrite, but it never authorizes a rewrite on its own. Actual ambiguity caused by list punctuation is handled separately through the model-owned <span class="inline-code">description-list-punctuation-ambiguity</span> issue.</p>
+          <p>AIDA also protects link text after the model responds. Unless a selected issue for a doormat is explicitly about link text, AIDA restores that doormat's original link text in the rewritten HTML. Description issues, repeated-opening issues, review flags, and IA child-page flags can change descriptions, but they do not authorize link-name changes.</p>
+          <ul>
+            <li><a href="./skills/topic-doormats/rewrite/SKILL.md">skills/topic-doormats/rewrite/SKILL.md</a></li>
+            <li><a href="./skills/topic-doormats/rewrite/references/rewrite-rules.json">skills/topic-doormats/rewrite/references/rewrite-rules.json</a></li>
+            <li><a href="./skills/topic-doormats/rewrite/references/examples.json">skills/topic-doormats/rewrite/references/examples.json</a></li>
+            <li><a href="./skills/topic-doormats/rewrite/assets/rewrite-output-schema.json">skills/topic-doormats/rewrite/assets/rewrite-output-schema.json</a></li>
+          </ul>
+        </article>
+
+        <article class="source-card">
+          <h3>Shared Topic doormat guidance</h3>
+          <p>Reusable domain guidance included in the issue and rewrite processes.</p>
+          <ul>
+            <li><a href="./skills/topic-doormats/SKILL.md">skills/topic-doormats/SKILL.md</a></li>
+          </ul>
+        </article>
+
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="note">
+        <p>Bottom line: AIDA evaluates Topic doormats together, uses H2 sections for
+          section-local limits, style consistency, repeated openings, and IA review
+          flags, strips doormat labels from destination-analysis text, validates
+          model classifications against supplied destination context, normalizes
+          informational gerund and how/when link names away from imperative action
+          style, keeps deterministic checks local, requires grounded evidence for
+          model-owned list-punctuation ambiguity, treats final-list connector omission
+          as optional rewrite cleanup rather than an issue, restores link text when selected
+          issues do not authorize link-name changes, and stores selected issue rows plus cleaned
+          destination main HTML for affected doormats so the Doormats rewrite model
+          can fix grounded issues while preserving doormats with no selected issue.
+          The skill files linked above are the active source of issue and rewrite guidance.
+        </p>
+      </div>
+      <p class="small" style="margin-top: 12px;">
+        This page is an initial overview. The visual flow can be added once the written flow is complete.
+      </p>
+    </section>
+  </main>
+</body>
+</html>

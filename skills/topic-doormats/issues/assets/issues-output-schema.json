@@ -1,0 +1,360 @@
+{
+  "type": "object",
+  "required": ["section_issues", "doormats"],
+  "properties": {
+    "page_summary": {
+      "type": "object",
+      "properties": {
+        "language": {
+          "type": "string",
+          "enum": ["en", "fr", "unknown"]
+        },
+        "doormat_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "detected_wrapper": {
+          "type": "string"
+        },
+        "detected_link_text_style": {
+          "type": "string",
+          "enum": [
+            "topic",
+            "product-or-service",
+            "action",
+            "audience-group",
+            "mixed-or-unclear"
+          ]
+        },
+        "description_rewrite_guidance": {
+          "type": "string",
+          "enum": [
+            "leave-unchanged",
+            "retain-phrase",
+            "tighten-phrase",
+            "add-specificity",
+            "convert-to-keyword-list",
+            "convert-to-task-list"
+          ]
+        },
+        "detected_description_style": {
+          "type": "string",
+          "enum": [
+            "keyword-list",
+            "task-list",
+            "benefit-eligibility",
+            "dropdown-enhancement",
+            "mixed-or-unclear"
+          ],
+          "description": "Required when the runtime description-style primary issue flag is enabled; otherwise optional advisory output."
+        },
+        "overall_assessment": {
+          "type": "string"
+        }
+      }
+    },
+    "section_issues": {
+      "type": "array",
+      "description": "Issues that apply to a whole doormat section rather than one individual doormat.",
+      "items": {
+        "allOf": [
+          {
+            "$ref": "#/$defs/issue"
+          },
+          {
+            "type": "object",
+            "required": ["section_index"],
+            "properties": {
+              "section_index": {
+                "type": "integer",
+                "minimum": 1
+              }
+            }
+          }
+        ]
+      }
+    },
+    "doormats": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "doormat_index",
+          "link_text",
+          "href",
+          "description",
+          "detected_link_text_style",
+          "destination_link_relationship",
+          "destination_link_relationship_basis",
+          "destination_link_relationship_reason",
+          "destination_content_assessment",
+          "issue_decisions",
+          "issues"
+        ],
+        "anyOf": [
+          {
+            "required": ["description_rewrite_guidance"]
+          },
+          {
+            "required": ["detected_description_style"]
+          }
+        ],
+        "properties": {
+          "doormat_index": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "link_text": {
+            "type": "string"
+          },
+          "href": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "link_text_character_count": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "description_character_count": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "detected_link_text_style": {
+            "type": "string",
+            "enum": [
+              "topic",
+              "product-or-service",
+              "action",
+              "audience-group",
+              "mixed-or-unclear"
+            ]
+          },
+          "description_rewrite_guidance": {
+            "type": "string",
+            "enum": [
+              "leave-unchanged",
+              "retain-phrase",
+              "tighten-phrase",
+              "add-specificity",
+              "convert-to-keyword-list",
+              "convert-to-task-list"
+            ]
+          },
+          "detected_description_style": {
+            "type": "string",
+            "enum": [
+              "keyword-list",
+              "task-list",
+              "benefit-eligibility",
+              "dropdown-enhancement",
+              "mixed-or-unclear"
+            ],
+            "description": "Required when the runtime description-style primary issue flag is enabled; otherwise optional advisory output."
+          },
+          "destination_link_relationship": {
+            "type": "string",
+            "enum": [
+              "equivalent",
+              "narrower-but-accurate",
+              "broader-but-accurate",
+              "materially-different",
+              "unavailable"
+            ]
+          },
+          "destination_link_relationship_basis": {
+            "type": "string",
+            "enum": [
+              "literal-match",
+              "phrase-containment",
+              "grammatical-variant",
+              "synonym-or-paraphrase",
+              "acronym-or-program-term",
+              "compatible-scope",
+              "conflicting-core-concept",
+              "unavailable"
+            ]
+          },
+          "destination_link_relationship_reason": {
+            "type": "string"
+          },
+          "destination_content_assessment": {
+            "type": "object",
+            "required": [
+              "important_element_ids",
+              "covered_element_ids",
+              "missing_important_element_ids"
+            ],
+            "properties": {
+              "important_element_ids": {
+                "type": "array",
+                "uniqueItems": true,
+                "items": {
+                  "type": "string",
+                  "pattern": "^(intro|h2|doormat)-[1-9][0-9]*$"
+                }
+              },
+              "covered_element_ids": {
+                "type": "array",
+                "uniqueItems": true,
+                "items": {
+                  "type": "string",
+                  "pattern": "^(intro|h2|doormat)-[1-9][0-9]*$"
+                }
+              },
+              "missing_important_element_ids": {
+                "type": "array",
+                "uniqueItems": true,
+                "items": {
+                  "type": "string",
+                  "pattern": "^(intro|h2|doormat)-[1-9][0-9]*$"
+                }
+              }
+            }
+          },
+          "issue_decisions": {
+            "type": "array",
+            "description": "Required audit decisions for model-owned per-doormat issue checks. Include one decision for every required issue ID, even when the issue does not apply.",
+            "items": {
+              "type": "object",
+              "required": ["issue_id", "decision", "reason"],
+              "properties": {
+                "issue_id": {
+                  "type": "string",
+                  "enum": [
+                    "missing-description",
+                    "description-uses-icons-or-images",
+                    "description-special-formatting",
+                    "description-capitalization",
+                    "description-list-separators",
+                    "description-list-punctuation-ambiguity",
+                    "misdirected-link",
+                    "link-name-lacks-clarity",
+                    "link-name-not-unique",
+                    "description-lacks-clarity",
+                    "description-incorrect-style",
+                    "description-repeats-link-text",
+                    "duplicate-or-near-duplicate-description",
+                    "inconsistent-description-style",
+                    "enhancement-label-not-needed",
+                    "enhancement-label-wrong-type"
+                  ]
+                },
+                "decision": {
+                  "type": "string",
+                  "enum": ["applies", "does_not_apply", "not_applicable"]
+                },
+                "reason": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "issues": {
+            "type": "array",
+            "items": {
+              "$ref": "#/$defs/issue"
+            }
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "issue": {
+      "type": "object",
+      "required": [
+        "issue_category",
+        "description",
+        "recommendation",
+        "severity"
+      ],
+      "properties": {
+        "issue_category": {
+          "type": "string"
+        },
+        "issue_group": {
+          "type": "string",
+          "enum": [
+            "Link code issue",
+            "Link name",
+            "Description clarity",
+            "Description formatting",
+            "Enhancement label",
+            "Choice of doormats"
+          ]
+        },
+        "description": {
+          "type": "string"
+        },
+        "recommendation": {
+          "type": "string"
+        },
+        "severity": {
+          "type": "string",
+          "enum": ["High", "Medium", "Low"]
+        },
+        "include": {
+          "type": "boolean"
+        },
+        "evidence": {
+          "type": "string"
+        },
+        "evidence_details": {
+          "type": "object",
+          "properties": {
+            "section_index": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "section_doormat_count": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "section_description_styles": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "representative_doormat_indexes": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "minimum": 1
+              }
+            },
+            "doormat_href": {
+              "type": "string"
+            },
+            "most_requested_href": {
+              "type": "string"
+            },
+            "doormat_link_text": {
+              "type": "string"
+            },
+            "most_requested_link_text": {
+              "type": "string"
+            },
+            "destination_page_title": {
+              "type": "string"
+            },
+            "character_limit": {
+              "type": "integer"
+            },
+            "actual_character_count": {
+              "type": "integer"
+            },
+            "unclear_phrase": {
+              "type": "string"
+            },
+            "ambiguity_explanation": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    }
+  }
+}

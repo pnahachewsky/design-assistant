@@ -1,0 +1,45 @@
+{
+  "type": "object",
+  "required": ["rewritten_doormat_set_html", "doormats"],
+  "properties": {
+    "rewritten_doormat_set_html": {
+      "type": "string"
+    },
+    "full_updated_html": {
+      "type": "string"
+    },
+    "set_level_changes": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "doormats": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "doormat_index",
+          "href",
+          "rewritten_link_text",
+          "rewritten_description"
+        ],
+        "properties": {
+          "doormat_index": { "type": "integer", "minimum": 1 },
+          "href": { "type": "string" },
+          "rewritten_link_text": { "type": "string" },
+          "rewritten_description": { "type": "string" },
+          "link_text_character_count": { "type": "integer", "minimum": 0 },
+          "description_character_count": { "type": "integer", "minimum": 0 },
+          "updated_html": { "type": "string" },
+          "changes_made": {
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "unresolved_notes": {
+            "type": "array",
+            "items": { "type": "string" }
+          }
+        }
+      }
+    }
+  }
+}
