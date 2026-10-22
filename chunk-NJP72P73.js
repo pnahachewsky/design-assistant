@@ -16,7 +16,7 @@ import {
 } from "./chunk-GGIC4QUJ.js";
 import {
   UserSettingsComponent
-} from "./chunk-5MRSS343.js";
+} from "./chunk-RBME4FR2.js";
 import {
   Textarea,
   TextareaModule
@@ -3845,4 +3845,4 @@ var ColorGeneratorComponent = class _ColorGeneratorComponent {
 export {
   ColorGeneratorComponent
 };
-//# sourceMappingURL=chunk-O43SQZG2.js.map
+//# sourceMappingURL=chunk-NJP72P73.js.map

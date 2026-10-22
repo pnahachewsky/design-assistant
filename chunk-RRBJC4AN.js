@@ -357,7 +357,6 @@ var OpenRouterService = class _OpenRouterService {
   aiPromptService = inject(AiPromptService);
   htmlNormalizationService = inject(HtmlNormalizationService);
   apiUrl = environment.openrouterFunctionUrl;
-  openrouterApiUrl = "https://openrouter.ai/api/v1/chat/completions";
   state = signal({
     loading: false,
     error: null,
@@ -367,22 +366,22 @@ var OpenRouterService = class _OpenRouterService {
     []
   ));
   // Returns full OpenRouter response
-  sendToAI(config, content, preferredModel, temperature = 0) {
+  sendToAI(config, content, preferredModel, temperature = 0, keyType = "paid") {
     return __async(this, null, function* () {
       const systemPrompt = yield this.aiPromptService.composePrompt(config);
       console.log(systemPrompt);
-      return this.sendRawPrompt(systemPrompt, content, preferredModel, temperature);
+      return this.sendRawPrompt(systemPrompt, content, preferredModel, temperature, keyType);
     });
   }
   // Sends an already-composed system/user message pair. Specialized runtimes,
   // such as alert rewriting, use this to preserve their tuned prompt assembly.
-  sendMessages(messages, preferredModel, temperature = 0) {
+  sendMessages(messages, preferredModel, temperature = 0, keyType = "paid") {
     return __async(this, null, function* () {
       const systemPrompt = messages.find((message) => message.role === "system")?.content ?? "";
       const content = messages.find((message) => message.role === "user")?.content ?? "";
       if (!systemPrompt)
         throw new Error("A system message is required.");
-      const response = yield this.sendRawPrompt(systemPrompt, content, preferredModel, temperature);
+      const response = yield this.sendRawPrompt(systemPrompt, content, preferredModel, temperature, keyType);
       return {
         text: response.choices?.[0]?.message?.content ?? "",
         usedModel: response.model ?? preferredModel ?? "unknown"
@@ -390,9 +389,9 @@ var OpenRouterService = class _OpenRouterService {
     });
   }
   // Returns just the text from the OpenRouter response
-  getTextFromAI(config, content, preferredModel, temperature = 0) {
+  getTextFromAI(config, content, preferredModel, temperature = 0, keyType = "paid") {
     return __async(this, null, function* () {
-      const response = yield this.sendToAI(config, content, preferredModel, temperature);
+      const response = yield this.sendToAI(config, content, preferredModel, temperature, keyType);
       const responseContent = response.choices?.[0]?.message?.content ?? "";
       if (config.output === OutputKey.Html) {
         this.htmlNormalizationService.aiCleanup(responseContent);
@@ -401,35 +400,18 @@ var OpenRouterService = class _OpenRouterService {
       return responseContent;
     });
   }
-  sendRawPrompt(systemPrompt, content, preferredModel, temperature = 0) {
+  sendRawPrompt(systemPrompt, content, preferredModel, temperature = 0, keyType = "paid") {
     return __async(this, null, function* () {
       this.state.set({ loading: true, error: null, respondingModel: null });
       const MAX_FALLBACK_MODELS = 3;
       const models = (preferredModel ? [preferredModel, ...AI_FREE_MODELS.filter((model) => model !== preferredModel)] : AI_FREE_MODELS).slice(0, MAX_FALLBACK_MODELS);
       try {
-        const localApiKey = this.getLocalApiKey();
-        const response = yield firstValueFrom(localApiKey ? this.http.post(this.openrouterApiUrl, {
-          models,
-          messages: [
-            { role: "system", content: systemPrompt },
-            { role: "user", content }
-          ],
-          temperature,
-          provider: {
-            allow_fallbacks: true
-          }
-        }, {
-          headers: {
-            Authorization: `Bearer ${localApiKey}`,
-            "Content-Type": "application/json",
-            "HTTP-Referer": window.location.origin,
-            "X-Title": "AWS-AIDA local development"
-          }
-        }) : this.http.post(this.apiUrl, {
+        const response = yield firstValueFrom(this.http.post(this.apiUrl, {
           models,
           systemPrompt,
           content,
-          temperature
+          temperature,
+          keyType
         }));
         this.state.set({ loading: false, error: null, respondingModel: response.model ?? null });
         return response;
@@ -439,15 +421,6 @@ var OpenRouterService = class _OpenRouterService {
         throw error;
       }
     });
-  }
-  getLocalApiKey() {
-    if (window.location.hostname !== "localhost" && window.location.hostname !== "127.0.0.1")
-      return null;
-    try {
-      return localStorage.getItem("openrouterApiKey")?.trim() || null;
-    } catch (e) {
-      return null;
-    }
   }
   static \u0275fac = function OpenRouterService_Factory(__ngFactoryType__) {
     return new (__ngFactoryType__ || _OpenRouterService)();
@@ -474,4 +447,4 @@ export {
   AiPromptService,
   OpenRouterService
 };
-//# sourceMappingURL=chunk-6VH377FR.js.map
+//# sourceMappingURL=chunk-RRBJC4AN.js.map

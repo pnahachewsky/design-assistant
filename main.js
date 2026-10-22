@@ -8,7 +8,7 @@ import {
   MenuProjectComponent,
   SetupProjectComponent,
   SignInButtonComponent
-} from "./chunk-ZGZVDY7Q.js";
+} from "./chunk-PMBMLHAU.js";
 import {
   SetupRepoComponent
 } from "./chunk-NC3BGFSW.js";
@@ -64,7 +64,7 @@ import {
 import {
   IaDiagramService
 } from "./chunk-4SEU7J4Z.js";
-import "./chunk-5MRSS343.js";
+import "./chunk-RBME4FR2.js";
 import {
   AddPagesLinkComponent
 } from "./chunk-3Y4CZOCC.js";
@@ -8160,12 +8160,12 @@ var routes = [
       },
       {
         path: "inventory",
-        loadComponent: () => import("./chunk-LE6NA2ZO.js").then((m) => m.InventoryComponent),
+        loadComponent: () => import("./chunk-GNZYZBDQ.js").then((m) => m.InventoryComponent),
         title: "inventory._title"
       },
       {
         path: "metadata",
-        loadComponent: () => import("./chunk-QBPSYVKJ.js").then((m) => m.MetadataComponent),
+        loadComponent: () => import("./chunk-PXIW2RPM.js").then((m) => m.MetadataComponent),
         title: "metadata._title"
       },
       {
@@ -8175,13 +8175,13 @@ var routes = [
       },
       {
         path: "edit-pages",
-        loadComponent: () => import("./chunk-BHW7QYMW.js").then((m) => m.CompareComponent),
+        loadComponent: () => import("./chunk-JO3FRIUP.js").then((m) => m.CompareComponent),
         title: "editPages._title",
         data: { mode: "ai" }
       },
       {
         path: "compare-pages",
-        loadComponent: () => import("./chunk-BHW7QYMW.js").then((m) => m.CompareComponent),
+        loadComponent: () => import("./chunk-JO3FRIUP.js").then((m) => m.CompareComponent),
         title: "compare._title",
         data: { mode: "compare" }
       }
@@ -8242,7 +8242,7 @@ var routes = [
   {
     path: "standalone",
     pathMatch: "full",
-    loadComponent: () => import("./chunk-UERMISZ2.js").then((m) => m.StandaloneComponent),
+    loadComponent: () => import("./chunk-MGFWYHXH.js").then((m) => m.StandaloneComponent),
     title: "standalone._title"
   },
   {
@@ -8260,7 +8260,7 @@ var routes = [
   {
     path: "dev",
     pathMatch: "full",
-    loadComponent: () => import("./chunk-PCW2MU24.js").then((m) => m.DevToolsComponent),
+    loadComponent: () => import("./chunk-QT34EFWC.js").then((m) => m.DevToolsComponent),
     title: "dev._title"
   },
   {
@@ -8274,7 +8274,7 @@ var routes = [
       },
       {
         path: "colour-generator",
-        loadComponent: () => import("./chunk-O43SQZG2.js").then((m) => m.ColorGeneratorComponent),
+        loadComponent: () => import("./chunk-NJP72P73.js").then((m) => m.ColorGeneratorComponent),
         title: "dev.colors._title"
       },
       {
@@ -8284,7 +8284,7 @@ var routes = [
       },
       {
         path: "prompt-editor",
-        loadComponent: () => import("./chunk-ZDFB5WIW.js").then((m) => m.PromptEditorComponent),
+        loadComponent: () => import("./chunk-TRLIMISF.js").then((m) => m.PromptEditorComponent),
         title: "dev.prompts._title"
       }
     ]

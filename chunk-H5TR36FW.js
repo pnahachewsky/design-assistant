@@ -3,7 +3,7 @@ import {
 } from "./chunk-TFIK6GFY.js";
 import {
   UserSettingsComponent
-} from "./chunk-5MRSS343.js";
+} from "./chunk-RBME4FR2.js";
 import {
   AddPagesLinkComponent
 } from "./chunk-3Y4CZOCC.js";
@@ -787,4 +787,4 @@ var CompareSelectComponent = class _CompareSelectComponent {
 export {
   CompareSelectComponent
 };
-//# sourceMappingURL=chunk-PMGMRIK4.js.map
+//# sourceMappingURL=chunk-H5TR36FW.js.map

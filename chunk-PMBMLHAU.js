@@ -21,7 +21,7 @@ import {
 } from "./chunk-GGIC4QUJ.js";
 import {
   UserSettingsComponent
-} from "./chunk-5MRSS343.js";
+} from "./chunk-RBME4FR2.js";
 import {
   StyleCardService
 } from "./chunk-XN4WNFGN.js";
@@ -2608,7 +2608,7 @@ var MenuProjectComponent = class _MenuProjectComponent {
         }
       });
     } else {
-      dropdownOptions[1].items.unshift({
+      dropdownOptions[0].items.unshift({
         label: this.translate.instant("common.signout"),
         icon: "logout",
         command: () => {
@@ -2622,7 +2622,7 @@ var MenuProjectComponent = class _MenuProjectComponent {
       if (!isLocked && this.projectState.getProject().storageType === "cloud") {
         dropdownOptions[1].items.push({
           label: this.translate.instant("project.global.lockProject"),
-          icon: "pi pi-lock",
+          icon: "lock",
           command: () => {
             this.projectState.setLockedBy();
           }
@@ -2630,7 +2630,7 @@ var MenuProjectComponent = class _MenuProjectComponent {
       } else if (isLocked) {
         dropdownOptions[1].items.push({
           label: this.translate.instant("project.global.unlockProject"),
-          icon: "pi pi-unlock",
+          icon: "lock_open",
           command: () => {
             this.unlockProject(isLocked);
           }
@@ -3443,4 +3443,4 @@ export {
   SetupProjectComponent,
   MenuProjectComponent
 };
-//# sourceMappingURL=chunk-ZGZVDY7Q.js.map
+//# sourceMappingURL=chunk-PMBMLHAU.js.map
