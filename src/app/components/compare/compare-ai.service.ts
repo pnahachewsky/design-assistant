@@ -74,7 +74,7 @@ export class CompareAiService {
         response = rewriteResult.formattedHtml;
         fallbackCount = rewriteResult.fallbackNotices.length;
       } else {
-        response = await this.openRouterService.getTextFromAI(prompt, JSON.stringify(initialAfter.html)); // note: this can take up to 5 min
+        response = await this.openRouterService.getTextFromAI(prompt, JSON.stringify(initialAfter.html), this.compareService.selectedModel()); // note: this can take up to 5 min
       }
 
       // Cached versions (or snapshot if no cached version available)
