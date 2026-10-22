@@ -72,6 +72,7 @@
               <aida-alerts
                 [analyzeOnInit]="true"
                 [preferredModel]="compareService.selectedModel()"
+                [reportScope]="reportScope()"
                 [selectAll]="alertSelectAll"
                 [sourceHtml]="sourceHtml()"
                 (stateChange)="onAlertStateChange($event)"

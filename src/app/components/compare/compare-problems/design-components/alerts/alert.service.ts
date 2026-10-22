@@ -11,7 +11,7 @@ import { coerceInteractiveResultLeadIns, getReportableAlerts } from './alert-rep
 import { AlertIssue, isNoAlertIssue } from './alert.config';
 import fallbackSeverityJson from './severity-include-fallback.json';
 
-interface AlertIssuesCacheEntry {
+export interface AlertIssuesCacheEntry {
   html: string;
   issues: AlertIssue[];
 }
@@ -22,6 +22,7 @@ export class AlertService {
   private readonly alertContext = inject(AlertContextService);
   private readonly translate = inject(TranslateService);
   private readonly cachedIssues = new Map<string, AlertIssuesCacheEntry>();
+  private readonly latestCachedIssueKeyByScope = new Map<string, string>();
 
   private readonly fallbackSeverities: Record<string, { severity: string; include?: boolean }> = Object.fromEntries(
     Object.entries(fallbackSeverityJson as Record<string, string | { severity?: string; include?: boolean }>).map(([key, value]) => {
@@ -30,39 +31,54 @@ export class AlertService {
     }),
   );
 
-  async analyze(sourceHtml: string, preferredModel?: string, force = false): Promise<AlertIssue[]> {
+  async analyze(sourceHtml: string, preferredModel?: string, force = false, reportScope = ''): Promise<AlertIssue[]> {
     if (!force) {
-      const cached = this.getCachedIssues(sourceHtml);
-      if (cached !== null) return cached;
+      const cached = this.getRetainedAnalysis(sourceHtml, reportScope);
+      if (cached !== null) return cached.issues;
     }
 
     const payload = this.alertContext.buildCompactAlertsIssuesPayload(sourceHtml);
     if (payload['alertCount'] === 0) {
-      this.cacheIssues(sourceHtml, []);
+      this.cacheIssues(sourceHtml, [], reportScope);
       return [];
     }
 
     const responseText = await this.openRouter.getTextFromAI(ProblemPrompts[ProblemPromptKey.AlertIssues], JSON.stringify(payload), preferredModel, 0);
     const issues = this.validateAlertIssuesAgainstHtml(this.parseIssues(responseText), sourceHtml);
-    this.cacheIssues(sourceHtml, issues);
+    this.cacheIssues(sourceHtml, issues, reportScope);
     return this.cloneIssues(issues);
   }
 
-  getCachedIssues(sourceHtml: string): AlertIssue[] | null {
-    const entry = this.cachedIssues.get(this.getCacheKey(sourceHtml));
+  getCachedIssues(sourceHtml: string, reportScope = ''): AlertIssue[] | null {
+    const entry = this.cachedIssues.get(this.getCacheKey(sourceHtml, reportScope));
     return entry ? this.cloneIssues(entry.issues) : null;
   }
 
-  getSelectedIssues(sourceHtml: string): AlertIssue[] {
-    return (this.getCachedIssues(sourceHtml) ?? []).filter((issue) => issue.include && !isNoAlertIssue(issue));
+  getLatestCachedAnalysis(reportScope: string): AlertIssuesCacheEntry | null {
+    const cacheKey = this.latestCachedIssueKeyByScope.get(reportScope);
+    if (!cacheKey) return null;
+    const entry = this.cachedIssues.get(cacheKey);
+    return entry ? { html: entry.html, issues: this.cloneIssues(entry.issues) } : null;
   }
 
-  cacheIssues(sourceHtml: string, issues: AlertIssue[]): void {
+  getRetainedAnalysis(sourceHtml: string, reportScope: string): AlertIssuesCacheEntry | null {
+    const exactIssues = this.getCachedIssues(sourceHtml, reportScope);
+    if (exactIssues !== null) return { html: sourceHtml, issues: exactIssues };
+    return this.getLatestCachedAnalysis(reportScope);
+  }
+
+  getSelectedIssues(sourceHtml: string, reportScope: string): AlertIssue[] {
+    return (this.getRetainedAnalysis(sourceHtml, reportScope)?.issues ?? []).filter((issue) => issue.include && !isNoAlertIssue(issue));
+  }
+
+  cacheIssues(sourceHtml: string, issues: AlertIssue[], reportScope = ''): void {
     const normalized = this.normalizeAlertIssues(issues);
-    this.cachedIssues.set(this.getCacheKey(sourceHtml), {
+    const cacheKey = this.getCacheKey(sourceHtml, reportScope);
+    this.cachedIssues.set(cacheKey, {
       html: sourceHtml,
       issues: this.cloneIssues(normalized),
     });
+    this.latestCachedIssueKeyByScope.set(reportScope, cacheKey);
   }
 
   normalizeAlertIssues(issues: AlertIssue[]): AlertIssue[] {
@@ -203,8 +219,8 @@ export class AlertService {
     return typeof value === 'string' ? value.trim() : '';
   }
 
-  private getCacheKey(sourceHtml: string): string {
-    return sourceHtml.trim();
+  private getCacheKey(sourceHtml: string, reportScope: string): string {
+    return `${reportScope}\u0000${sourceHtml.trim()}`;
   }
 
   private cloneIssues(issues: AlertIssue[]): AlertIssue[] {

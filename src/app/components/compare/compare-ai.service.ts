@@ -40,6 +40,7 @@ export class CompareAiService {
 
     //Set AI job cache
     const pagePath = this.compareService.selectedPage();
+    const alertReportScope = `${this.projectState.getProject().id}:${pagePath}`;
     this.projectCache.setAiJobStatus(pagePath, 'pending');
 
     //Build prompt
@@ -59,10 +60,10 @@ export class CompareAiService {
       let response: string;
       let fallbackCount = 0;
       if (promptKey === 'AlertRewrite') {
-        if (this.alertService.getCachedIssues(initialAfter.html) === null) {
-          await this.alertService.analyze(initialAfter.html, this.compareService.selectedModel());
+        if (this.alertService.getRetainedAnalysis(initialAfter.html, alertReportScope) === null) {
+          await this.alertService.analyze(initialAfter.html, this.compareService.selectedModel(), false, alertReportScope);
         }
-        const selectedAlertIssues = this.alertService.getSelectedIssues(initialAfter.html);
+        const selectedAlertIssues = this.alertService.getSelectedIssues(initialAfter.html, alertReportScope);
         const rewriteResult = await this.alertRewriteOrchestrator.generateRecommendations({
           html: initialAfter.html,
           issues: selectedAlertIssues,

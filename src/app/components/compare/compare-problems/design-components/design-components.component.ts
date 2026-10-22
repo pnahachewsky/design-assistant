@@ -1,6 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, effect, inject, input, signal } from '@angular/core';
 
+import { marker } from '@colsen1991/ngx-translate-extract-marker';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 
 import { ButtonModule } from 'primeng/button';
@@ -9,9 +10,9 @@ import { MessageModule } from 'primeng/message';
 import { TableModule } from 'primeng/table';
 
 import { AlertsComponent } from './alerts/alerts.component';
-import { marker } from '@colsen1991/ngx-translate-extract-marker';
 
 import { htmlProcessingResult } from '../../../../services/html-normalization.service';
+import { ProjectStateService } from '../../../../services/project-state.service';
 import { CompareService } from '../../../../views/tasks/compare/compare.service';
 import { AlertService } from './alerts/alert.service';
 
@@ -36,10 +37,12 @@ export class DesignComponentsComponent {
   protected readonly compareService = inject(CompareService);
   private readonly translate = inject(TranslateService);
   private readonly alertService = inject(AlertService);
+  private readonly projectState = inject(ProjectStateService);
   readonly beforeContent = input<htmlProcessingResult>();
   readonly afterContent = input<htmlProcessingResult>();
 
   protected readonly sourceHtml = computed(() => (this.afterContent() ?? this.beforeContent())?.html ?? '');
+  protected readonly reportScope = computed(() => `${this.projectState.getProject().id}:${this.compareService.selectedPage()}`);
   protected readonly rows = computed<GuidanceRow[]>(() => {
     const html = this.sourceHtml();
     if (!html) return [];
@@ -68,14 +71,14 @@ export class DesignComponentsComponent {
     effect(() => {
       const rows = this.rows();
       const sourceHtml = this.sourceHtml();
-      const cachedIssues = sourceHtml ? this.alertService.getCachedIssues(sourceHtml) : null;
-      const categories = computeAlertCategories(cachedIssues ?? []);
+      const cachedAnalysis = sourceHtml ? this.alertService.getRetainedAnalysis(sourceHtml, this.reportScope()) : null;
+      const categories = computeAlertCategories(cachedAnalysis?.issues ?? []);
       this.alertState.set({
         categories,
-        maxSeverity: computeAlertMaxSeverity(cachedIssues ?? []),
+        maxSeverity: computeAlertMaxSeverity(cachedAnalysis?.issues ?? []),
         loading: false,
         error: false,
-        hasAnalysis: cachedIssues !== null,
+        hasAnalysis: cachedAnalysis !== null,
       });
       this.previouslyHadAlertIssues = categories.length > 0;
       if (!rows.length) {
@@ -151,4 +154,3 @@ export class DesignComponentsComponent {
     marker('problems.components.health.ok');
   }
 }
-
