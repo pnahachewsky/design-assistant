@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["src/app/common/ai-models.config.ts"],
+  "sourcesContent": ["export type AiFreeModelOptions = (typeof AI_FREE_MODELS)[number];\nexport type AiPaidModelOptions = (typeof AI_PAID_MODELS)[number]['value'];\n\nexport type PriceTier = '$' | '$$' | '$$$';\n\nexport const AI_FREE_MODELS = ['nvidia/nemotron-3-ultra-550b-a55b:free', 'openai/gpt-oss-20b:free', 'nvidia/nemotron-3-super-120b-a12b:free', 'openrouter/free'] as const;\n\nexport const AI_PAID_MODELS = [\n  { value: 'openai/gpt-oss-20b', price: '$' },\n  { value: 'deepseek/deepseek-v4-flash', price: '$' },\n  { value: 'deepseek/deepseek-v4-pro', price: '$$' },\n  { value: 'google/gemini-3.1-flash-lite', price: '$$' },\n  { value: 'openai/gpt-5.4-mini', price: '$$$' },\n] as const satisfies { value: string; price: PriceTier }[];\n"],
+  "mappings": ";AAKO,IAAM,iBAAiB,CAAC,0CAA0C,2BAA2B,0CAA0C,iBAAiB;AAExJ,IAAM,iBAAiB;EAC5B,EAAE,OAAO,sBAAsB,OAAO,IAAG;EACzC,EAAE,OAAO,8BAA8B,OAAO,IAAG;EACjD,EAAE,OAAO,4BAA4B,OAAO,KAAI;EAChD,EAAE,OAAO,gCAAgC,OAAO,KAAI;EACpD,EAAE,OAAO,uBAAuB,OAAO,MAAK;;",
+  "names": []
+}
