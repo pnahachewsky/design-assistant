@@ -4,7 +4,7 @@
     <p>
       <strong>{{ 'compare.aiOptions.aiSource' | translate }}</strong> {{ 'common.source.' + compareService.selectedBefore() | translate }}
     </p>
-    <p-accordion value="1" class="flex flex-column gap-3">
+    <p-accordion [multiple]="true" [value]="['1']" class="flex flex-column gap-3">
       <!--TASK OPTIONS-->
       @if (!prod) {
         <p-accordion-panel value="0" class="border-1 border-round border-surface">
