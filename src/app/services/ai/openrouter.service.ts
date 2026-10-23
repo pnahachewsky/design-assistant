@@ -53,13 +53,13 @@ export class OpenRouterService {
 
   // Returns full OpenRouter response
   async sendToAI(config: PromptConfig, content: string, preferredModel?: string, temperature = 0, keyType: KeyType = 'paid'): Promise<OpenRouterResponse> {
+    // Prompt composition is async because it may resolve AWS-AIDA skill resources.
     const systemPrompt = await this.aiPromptService.composePrompt(config);
     console.log(systemPrompt);
     return this.sendRawPrompt(systemPrompt, content, preferredModel, temperature, keyType);
   }
 
-  // Sends an already-composed system/user message pair. Specialized runtimes,
-  // such as alert rewriting, use this to preserve their tuned prompt assembly.
+  // Sends the first precomposed system/user pair, as used by alert rewriting.
   async sendMessages(messages: ChatMessage[], preferredModel?: string, temperature = 0, keyType: KeyType = 'paid'): Promise<{ text: string; usedModel: string }> {
     const systemPrompt = messages.find((message) => message.role === 'system')?.content ?? '';
     const content = messages.find((message) => message.role === 'user')?.content ?? '';
@@ -83,6 +83,7 @@ export class OpenRouterService {
     return responseContent;
   }
 
+  // Centralizes OpenRouter fallbacks, transport, and request state.
   private async sendRawPrompt(systemPrompt: string, content: string, preferredModel?: string, temperature = 0, keyType: KeyType = 'paid'): Promise<OpenRouterResponse> {
     this.state.set({ loading: true, error: null, respondingModel: null });
 
