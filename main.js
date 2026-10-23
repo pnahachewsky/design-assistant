@@ -1,6 +1,6 @@
 import {
   SignInBannerComponent
-} from "./chunk-5MMK553J.js";
+} from "./chunk-BLX7X6ST.js";
 import {
   AddCollaboratorsComponent,
   DoormatsComponent,
@@ -8,13 +8,13 @@ import {
   MenuProjectComponent,
   SetupProjectComponent,
   SignInButtonComponent
-} from "./chunk-PMBMLHAU.js";
+} from "./chunk-7AOPUYAN.js";
 import {
   SetupRepoComponent
-} from "./chunk-NC3BGFSW.js";
+} from "./chunk-NM764PDY.js";
 import {
   AddPagesComponent
-} from "./chunk-YVOBPZ7I.js";
+} from "./chunk-4M322X6F.js";
 import {
   ProgressBar,
   ProgressBarModule
@@ -26,33 +26,33 @@ import {
 import "./chunk-4ECWLYHO.js";
 import {
   ViewPagesComponent
-} from "./chunk-NEQRDHOC.js";
-import "./chunk-CDCIX3OF.js";
+} from "./chunk-327QJNKW.js";
+import "./chunk-EK5NJ4BU.js";
 import {
   SaveButtonComponent
-} from "./chunk-3DYIQMLK.js";
+} from "./chunk-DYP475L4.js";
 import {
   Divider,
   DividerModule
 } from "./chunk-ATVW4L4U.js";
 import {
   AddUrlsService
-} from "./chunk-R3QN56LQ.js";
+} from "./chunk-45E4XN6P.js";
 import {
   ExportProjectComponent
-} from "./chunk-IBN5KQQ5.js";
+} from "./chunk-RGUUN666.js";
 import {
   MultiSelect,
   MultiSelectModule
-} from "./chunk-2LBPWPXO.js";
+} from "./chunk-5TWQCU5E.js";
 import {
   ConfirmDialog,
   ConfirmDialogModule
-} from "./chunk-7GO4SXKH.js";
+} from "./chunk-W64E4IQL.js";
 import {
   TimesCircleIcon
 } from "./chunk-ULNRCSK5.js";
-import "./chunk-YRT4I34E.js";
+import "./chunk-XDF2K2M5.js";
 import {
   Tag,
   TagModule
@@ -64,19 +64,19 @@ import {
 import {
   IaDiagramService
 } from "./chunk-4SEU7J4Z.js";
-import "./chunk-RBME4FR2.js";
+import "./chunk-2BSWUB25.js";
 import {
   AddPagesLinkComponent
 } from "./chunk-3Y4CZOCC.js";
 import "./chunk-OIQTDMBR.js";
-import "./chunk-J7SRKA75.js";
+import "./chunk-PN5M4GQP.js";
 import {
   TooltipDirective
 } from "./chunk-YEJSFSQN.js";
 import {
   StyleCardService
 } from "./chunk-XN4WNFGN.js";
-import "./chunk-LA5WKTZN.js";
+import "./chunk-FLOCU5FK.js";
 import "./chunk-P3TRDY63.js";
 import "./chunk-NQRO2LC7.js";
 import "./chunk-5QMHUOJQ.js";
@@ -85,19 +85,19 @@ import {
   MenuModule
 } from "./chunk-PL2PAX7Y.js";
 import "./chunk-YTOYTTTA.js";
-import "./chunk-VAGTSXG4.js";
+import "./chunk-AENIRXXJ.js";
 import "./chunk-Y576ZK6L.js";
 import {
   Dialog,
   DialogModule
-} from "./chunk-2YFXSVHN.js";
+} from "./chunk-ILW73YBV.js";
 import {
   IftaLabel,
   IftaLabelModule
 } from "./chunk-FQDO2XGS.js";
 import {
   ProjectCacheService
-} from "./chunk-ZP7AMFPN.js";
+} from "./chunk-2FR4EOOH.js";
 import "./chunk-D57SAGZH.js";
 import {
   AidaLinks
@@ -106,12 +106,12 @@ import "./chunk-MKX7R2UM.js";
 import {
   FocusTrap,
   ProjectStateService
-} from "./chunk-AW5MQYZC.js";
+} from "./chunk-KTNEX2EU.js";
 import {
   Checkbox,
   CheckboxModule
-} from "./chunk-REIT3HFO.js";
-import "./chunk-6U2RHGUD.js";
+} from "./chunk-GW63RQCY.js";
+import "./chunk-XFA5GYX6.js";
 import {
   CloudStorageService,
   CollaboratorService,
@@ -120,7 +120,7 @@ import {
   SelectButtonModule,
   UsageService,
   version
-} from "./chunk-5IS2DW3I.js";
+} from "./chunk-R6QXKFAV.js";
 import {
   GitHubAuthService,
   SignInService
@@ -128,7 +128,7 @@ import {
 import {
   PhaseStatus,
   ProjectPhase
-} from "./chunk-M6FDN6OY.js";
+} from "./chunk-B6BNTBK3.js";
 import {
   ChevronRightIcon
 } from "./chunk-BHVFX6OF.js";
@@ -8149,39 +8149,39 @@ var routes = [
       },
       {
         path: "add-pages",
-        loadComponent: () => import("./chunk-5OBEPSXV.js").then((m) => m.AddOrViewPagesComponent),
+        loadComponent: () => import("./chunk-2YWNDO7Q.js").then((m) => m.AddOrViewPagesComponent),
         title: "addPages._title"
       },
       {
         path: "ia-diagram",
         canActivate: [iaDiagramGuard],
-        loadComponent: () => import("./chunk-RSO6GCKZ.js").then((m) => m.IaDiagramComponent),
+        loadComponent: () => import("./chunk-TOZEEN5H.js").then((m) => m.IaDiagramComponent),
         title: "iaDiagram._title"
       },
       {
         path: "inventory",
-        loadComponent: () => import("./chunk-GNZYZBDQ.js").then((m) => m.InventoryComponent),
+        loadComponent: () => import("./chunk-SQ57ZTOO.js").then((m) => m.InventoryComponent),
         title: "inventory._title"
       },
       {
         path: "metadata",
-        loadComponent: () => import("./chunk-PXIW2RPM.js").then((m) => m.MetadataComponent),
+        loadComponent: () => import("./chunk-ONGQUBXF.js").then((m) => m.MetadataComponent),
         title: "metadata._title"
       },
       {
         path: "export-pages",
-        loadComponent: () => import("./chunk-FE2WIACR.js").then((m) => m.ExportPagesComponent),
+        loadComponent: () => import("./chunk-XYC2WFWL.js").then((m) => m.ExportPagesComponent),
         title: "exportPages._nav"
       },
       {
         path: "edit-pages",
-        loadComponent: () => import("./chunk-JO3FRIUP.js").then((m) => m.CompareComponent),
+        loadComponent: () => import("./chunk-S3TKPBAD.js").then((m) => m.CompareComponent),
         title: "editPages._title",
         data: { mode: "ai" }
       },
       {
         path: "compare-pages",
-        loadComponent: () => import("./chunk-JO3FRIUP.js").then((m) => m.CompareComponent),
+        loadComponent: () => import("./chunk-S3TKPBAD.js").then((m) => m.CompareComponent),
         title: "compare._title",
         data: { mode: "compare" }
       }
@@ -8242,7 +8242,7 @@ var routes = [
   {
     path: "standalone",
     pathMatch: "full",
-    loadComponent: () => import("./chunk-MGFWYHXH.js").then((m) => m.StandaloneComponent),
+    loadComponent: () => import("./chunk-ZQBHD7DP.js").then((m) => m.StandaloneComponent),
     title: "standalone._title"
   },
   {
@@ -8251,7 +8251,7 @@ var routes = [
     children: [
       {
         path: "compare-pages",
-        loadComponent: () => import("./chunk-R2FWTJEO.js").then((m) => m.StandaloneCompareComponent),
+        loadComponent: () => import("./chunk-UCMDLGZ5.js").then((m) => m.StandaloneCompareComponent),
         title: "compare._title"
       }
     ]
@@ -8260,7 +8260,7 @@ var routes = [
   {
     path: "dev",
     pathMatch: "full",
-    loadComponent: () => import("./chunk-QT34EFWC.js").then((m) => m.DevToolsComponent),
+    loadComponent: () => import("./chunk-F4VVBNTY.js").then((m) => m.DevToolsComponent),
     title: "dev._title"
   },
   {
@@ -8269,12 +8269,12 @@ var routes = [
     children: [
       {
         path: "monitoring",
-        loadComponent: () => import("./chunk-7ZRD65EV.js").then((m) => m.UsageMonitoringComponent),
+        loadComponent: () => import("./chunk-IJRZF2JY.js").then((m) => m.UsageMonitoringComponent),
         title: "dev.monitoring._title"
       },
       {
         path: "colour-generator",
-        loadComponent: () => import("./chunk-NJP72P73.js").then((m) => m.ColorGeneratorComponent),
+        loadComponent: () => import("./chunk-OQNZBVJ3.js").then((m) => m.ColorGeneratorComponent),
         title: "dev.colors._title"
       },
       {
@@ -8284,7 +8284,7 @@ var routes = [
       },
       {
         path: "prompt-editor",
-        loadComponent: () => import("./chunk-TRLIMISF.js").then((m) => m.PromptEditorComponent),
+        loadComponent: () => import("./chunk-CSK7RCBP.js").then((m) => m.PromptEditorComponent),
         title: "dev.prompts._title"
       }
     ]
