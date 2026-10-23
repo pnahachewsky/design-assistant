@@ -260,7 +260,7 @@
                     <span [aidaTooltip]="expandAll[col.field] ? null : node[col.field]">
                       <ul [class.line-clamp-1]="!isCellExpanded(col.field, rowIndex, col.field)" class="m-0 pl-0 min-w-max" style="list-style-position: inside">
                         @for (item of node[col.field]; track item) {
-                          <li [class.text-red-500]="col.field === 'phoneNumbers' && !isKnownNumber(item)">{{ item }}</li>
+                          <li [class.text-red]="col.field === 'phoneNumbers' && !isKnownNumber(item)">{{ item }}</li>
                         }
                       </ul>
                     </span>

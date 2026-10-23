@@ -109,7 +109,7 @@
                       <p-multiselect
                         [(ngModel)]="prompt.promptText.rubric"
                         [id]="prompt.enumKey + '_rubric'"
-                        [options]="rubricOptions"
+                        [options]="rubricOptions()"
                         [placeholder]="'common.none' | translate"
                         (onChange)="updateDiff()"
                         class="h-full"
@@ -117,20 +117,7 @@
                         fluid
                         optionLabel="label"
                         optionValue="value"
-                      >
-                        <ng-template #item let-option>
-                          {{ option.label | translate }}
-                        </ng-template>
-                        <ng-template #selectedItems let-options>
-                          @if (options?.length <= 2) {
-                            @for (option of options; track option.value; let last = $last) {
-                              {{ option.label | translate }}{{ last ? '' : ', ' }}
-                            }
-                          } @else {
-                            {{ options?.length }} {{ 'common.selected' | translate }}
-                          }
-                        </ng-template>
-                      </p-multiselect>
+                      />
                       <label [for]="prompt.enumKey + '_rubric'">{{ 'aiPrompt.component.rubric' | translate }}</label>
                     </p-iftalabel>
                   </div>
@@ -175,65 +162,29 @@
   </p-tabpanels>
 </p-tabs>
 
-<h2>{{ 'dev.prompts.test._title' | translate }}</h2>
-<div class="flex flex-column gap-3">
-  <div class="flex flex-column md:flex-row gap-2">
-    <p-select [(ngModel)]="selectedTestPrompt" [options]="testPromptOptions" (onChange)="resolveTestPrompt()" class="flex-1" fluid optionLabel="label" optionValue="value">
-      <ng-template let-option pTemplate="item">
-        {{ option.label | translate }}
-      </ng-template>
-      <ng-template let-option pTemplate="selectedItem">
-        {{ option.label | translate }}
-      </ng-template>
-    </p-select>
-    <p-button [label]="'dev.prompts.button.resolve' | translate" (click)="resolveTestPrompt()" icon="pi pi-refresh" />
-  </div>
-
-  @if (compositionLoading()) {
-    <p-progressspinner ariaLabel="Loading" />
-  }
-  @if (compositionError()) {
-    <p-message [text]="compositionError()!" severity="error" />
-  }
-  @if (composedPrompt(); as composed) {
-    <div class="flex flex-column gap-2">
-      <div>
-        <strong>{{ 'dev.prompts.test.loadedSkills' | translate }}:</strong>
-        {{ composed.loadedSkills.length ? composed.loadedSkills.join(', ') : ('common.none' | translate) }}
-      </div>
-      <div>
-        <strong>{{ 'dev.prompts.test.loadedResources' | translate }}:</strong>
-        {{ composed.loadedResources.length ? composed.loadedResources.join(', ') : ('common.none' | translate) }}
-      </div>
-      <div>
-        <strong>{{ 'dev.prompts.test.estimatedTokens' | translate }}:</strong>
-        {{ composed.estimatedTokens }}
-      </div>
-      @for (warning of composed.warnings; track warning) {
-        <p-message [text]="warning" severity="warn" />
-      }
-    </div>
-    <h3 class="mb-0">{{ 'dev.prompts.test.prompt' | translate }}</h3>
-    <pre class="white-space-pre-wrap">{{ composed.prompt }}</pre>
-  }
-
-  <p-iftalabel>
-    <textarea id="test_description" [(ngModel)]="description" fluid pTextarea rows="4"></textarea>
-    <label for="test_description">{{ 'dev.prompts.test.description' | translate }}</label>
-  </p-iftalabel>
-  <div class="flex flex-row flex-wrap gap-2">
-    <p-button [label]="'dev.prompts.test.result' | translate" (click)="testResult()" />
-    <p-button [label]="'dev.prompts.test.response' | translate" (click)="testResponse()" severity="secondary" />
-  </div>
-  @if (result) {
-    <h3 class="mb-0">{{ 'dev.prompts.test.result' | translate }}</h3>
-    <pre class="white-space-pre-wrap">{{ result }}</pre>
-  }
-  @if (response) {
-    <h3 class="mb-0">{{ 'dev.prompts.test.response' | translate }}</h3>
-    <pre class="white-space-pre-wrap">{{ response | json }}</pre>
-  }
-</div>
+<h2>Test prompt</h2>
+<p-select
+  [group]="true"
+  [ngModel]="selectedPrompt()"
+  [options]="promptGroups"
+  (ngModelChange)="selectedPrompt.set($event)"
+  inputId="promptSelect"
+  optionGroupChildren="items"
+  optionGroupLabel="label"
+  optionLabel="translationKey"
+  styleClass="w-20rem"
+>
+  <ng-template #group let-group>{{ group.label | translate }}</ng-template>
+  <ng-template #selectedItem let-selected>{{ selected.translationKey | translate }}</ng-template>
+  <ng-template #item let-prompt>{{ prompt.translationKey | translate }}</ng-template>
+</p-select>
+<pre>{{ aiPrompt() }}</pre>
+<h2>Test description</h2>
+<p>{{ description }}</p>
+<p-button (click)="testResult()">Test result</p-button>
+<p>Result: {{ result }}</p>
+<p-button (click)="testResponse()">Test response</p-button>
+<pre>Response: {{ response | json }}</pre>
 @if (aiState().loading) {
   <p-progressspinner />
 }

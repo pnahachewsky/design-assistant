@@ -394,7 +394,7 @@ export class SwitchProjectComponent implements OnInit {
     if (project.storageType === 'cloud') {
       this.confirmationService.confirm({
         key: 'delete',
-        icon: 'pi pi-exclamation-triangle text-red-500',
+        icon: 'pi pi-exclamation-triangle text-red',
         header: this.translate.instant('switch.confirmDelete.header'),
         message: this.translate.instant('switch.confirmDelete.message'),
         acceptButtonProps: {

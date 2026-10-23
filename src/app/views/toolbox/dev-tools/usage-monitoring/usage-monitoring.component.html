@@ -15,7 +15,7 @@
   <!-- Error (global stats) -->
   @if (error()) {
     <div [class]="styleCardService.cardStyles()" class="flex align-items-center gap-3">
-      <i class="pi pi-exclamation-triangle text-red-500 text-2xl"></i>
+      <i class="pi pi-exclamation-triangle text-red text-2xl"></i>
       <div>
         <p class="font-semibold m-0">{{ 'dev.monitoring.loadError' | translate }}</p>
         <p class="text-600 text-sm m-0">{{ error() }}</p>
@@ -190,7 +190,7 @@
     <!-- Feature load error -->
     @if (featureItemsError()) {
       <div class="bg-red-50 border-round shadow-2 p-4 flex align-items-center gap-3 mb-3">
-        <i class="pi pi-exclamation-triangle text-red-500 text-2xl"></i>
+        <i class="pi pi-exclamation-triangle text-red text-2xl"></i>
         <div>
           <p class="font-semibold m-0">{{ 'dev.monitoring.loadError' | translate }}</p>
           <p class="text-600 text-sm m-0">{{ featureItemsError() }}</p>

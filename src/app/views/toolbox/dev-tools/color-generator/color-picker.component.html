@@ -23,7 +23,7 @@
         <span>{{ test.shade }} vs {{ test.textColorName }}:</span>
         <div class="flex align-items-center gap-2">
           <span class="font-semibold">{{ getContrastRatio(test) }}</span>
-          <span [class.pi-check]="getContrastPasses(test)" [class.pi-times]="!getContrastPasses(test)" [class]="getContrastPasses(test) ? 'text-green-500' : 'text-red-500'" class="pi"> </span>
+          <span [class.pi-check]="getContrastPasses(test)" [class.pi-times]="!getContrastPasses(test)" [class]="getContrastPasses(test) ? 'text-green' : 'text-red'" class="pi"> </span>
         </div>
       </div>
     }

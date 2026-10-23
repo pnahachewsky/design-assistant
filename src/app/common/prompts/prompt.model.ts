@@ -31,12 +31,8 @@ function markForTranslation() {
   marker('aiPrompt.page.tense');
   marker('aiPrompt.page.alertRewrite');
 
-  marker('aiPrompt.problem.alertIssues');
-}
-
-export interface PromptSkillBinding {
-  id: string;
-  includeOptionalReferences?: boolean;
+  marker('aiPrompt.problem.alertsRewrite');
+  marker('aiPrompt.problem.alertsProblems');
 }
 
 export interface PromptConfig {
@@ -45,11 +41,14 @@ export interface PromptConfig {
   rubric: RubricKey[]; // Shared
   output: OutputKey; // Shared
   jsonSchema?: string; // Unique schema
-  skills?: PromptSkillBinding[]; // Explicit skill packages composed with this prompt
+  skill?: string; // Unique skill
+  skillReferences?: ReferenceKey[]; // Shared references used by skills
+  skillJsonSchema?: string; // Unique schema (same as jsonSchema but gets a different label when building prompt)
+  examples?: string; // reference to example set for additional prompt set-up
   available?: boolean; // Hides prompt in prod if not ready
 }
 
-//Shared fragments
+//Shared role fragments
 export enum RoleKey {
   None = 'aiPrompt.role.none',
   ContentDesigner = 'aiPrompt.role.contentDesigner',
@@ -59,12 +58,14 @@ export enum RoleKey {
   HTMLeditor = 'aiPrompt.role.htmlEditor',
 }
 
+//Shared output fragments
 export enum OutputKey {
   Text = 'aiPrompt.output.text',
   Html = 'aiPrompt.output.html',
   Json = 'aiPrompt.output.json',
 }
 
+//Shared rubric fragmens
 export enum RubricKey {
   NoCommentary = 'aiPrompt.rubric.noCommentary',
   PreserveHtmlStructure = 'aiPrompt.rubric.preserveHtmlStructure',
@@ -74,6 +75,11 @@ export enum RubricKey {
   DescriptionFR = 'aiPrompt.rubric.descriptionFR',
   Keywords = 'aiPrompt.rubric.keywords',
   CraTermTranslations = 'aiPrompt.rubric.craTermTranslations',
+}
+
+//Shared reference fragments
+export enum ReferenceKey {
+  IssueAnalysisInstructions = 'aiPrompt.references.issueAnalysisInstructions',
 }
 
 //Inventory task fragments
@@ -94,5 +100,6 @@ export enum PagePromptKey {
 
 //Problem task fragments
 export enum ProblemPromptKey {
-  AlertIssues = 'aiPrompt.problem.alertIssues',
+  AlertsRewrite = 'aiPrompt.problem.alertsRewrite',
+  AlertsProblems = 'aiPrompt.problem.alertsProblems',
 }

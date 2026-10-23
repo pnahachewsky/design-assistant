@@ -1,9 +1,9 @@
 import { CommonModule } from '@angular/common';
-import { ChangeDetectionStrategy, Component, effect, ElementRef, inject, signal, viewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, ElementRef, inject, signal, viewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 
 import { marker } from '@colsen1991/ngx-translate-extract-marker';
-import { TranslatePipe } from '@ngx-translate/core';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 
 import { ColorSchemeType } from 'diff2html/lib/types';
 import type { Diff2HtmlUIConfig } from 'diff2html/lib/ui/js/diff2html-ui-slim';
@@ -34,7 +34,7 @@ import { OutputFragment, RoleFragment, RubricFragment } from '../../../../common
 interface PromptEntry {
   enumKey: string;
   translationKey: string;
-  promptText: string | PromptConfig;
+  promptText: string | string[] | PromptConfig;
 }
 
 interface TabConfig {
@@ -75,6 +75,7 @@ interface TestPromptOption {
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class PromptEditorComponent {
+  private readonly translate = inject(TranslateService);
   private readonly exportGitHubService = inject(ExportGitHubService);
   private readonly settingsService = inject(UserSettingsService);
   private readonly openRouterService = inject(OpenRouterService);
@@ -150,10 +151,13 @@ export class PromptEditorComponent {
     label: key,
   }));
 
-  rubricOptions = Object.values(RubricKey).map((key) => ({
-    value: key,
-    label: key,
-  }));
+  protected readonly rubricOptions = computed(() => {
+    this.translate.currentLang();
+    return Object.values(RubricKey).map((key) => ({
+      value: key,
+      label: this.translate.instant(key),
+    }));
+  });
 
   outputOptions = Object.values(OutputKey).map((key) => ({
     value: key,
@@ -202,6 +206,19 @@ export class PromptEditorComponent {
     { title: 'aiPrompt.problems._title', value: 3, prompts: this.problemPrompts, tool: 'Problem', original: this.rebuildPromptFile('Problem', this.problemPrompts) },
   ];
 
+  // Dropdown
+  protected readonly promptGroups = [
+    { label: 'aiPrompt.inventory._title', items: this.inventoryPrompts },
+    { label: 'aiPrompt.pages._title', items: this.pagePrompts },
+    { label: 'aiPrompt.problems._title', items: this.problemPrompts },
+  ];
+  protected readonly selectedPrompt = signal<PromptEntry | undefined>(this.problemPrompts.find((p) => p.enumKey === 'Alerts'));
+  protected readonly aiPrompt = computed(() => {
+    const selected = this.selectedPrompt();
+    if (!selected || !this.isPromptConfig(selected)) return '';
+    return this.aiPromptService.composePrompt(selected.promptText);
+  });
+
   markForTranslation() {
     marker('aiPrompt.shared._title');
     marker('aiPrompt.inventory._title');
@@ -232,9 +249,7 @@ export class PromptEditorComponent {
 
   // Resolve and test prompts
   readonly aiState = this.openRouterService.state;
-  readonly composedPrompt = signal<ComposedPrompt | null>(null);
-  readonly compositionError = signal<string | null>(null);
-  readonly compositionLoading = signal(false);
+  //aiPrompt = this.aiPromptService.composePrompt(InventoryPrompts[InventoryPromptKey.Metadata]);
   description = 'Official CRA information on Canadian taxes. File your return, manage payments, and explore credits and deductions for individuals and businesses.';
   response: OpenRouterResponse | null = null;
   result = '';

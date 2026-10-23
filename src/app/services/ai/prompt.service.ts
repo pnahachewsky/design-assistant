@@ -2,7 +2,8 @@ import { inject, Injectable } from '@angular/core';
 
 import { SkillService } from './skill.service';
 
-import { OutputKey, PromptConfig, RubricKey } from '../../common/prompts/prompt.model';
+import { PromptConfig, ReferenceKey, RubricKey } from '../../common/prompts/prompt.model';
+import { ReferenceFragment } from '../../common/prompts/reference.prompt';
 import { OutputFragment, RoleFragment, RubricFragment } from '../../common/prompts/shared.prompts';
 import { ResolvedSkillResource } from '../../common/skills/skill.model';
 
@@ -35,38 +36,24 @@ export class AiPromptService {
       config.role ? `### Role\n${RoleFragment[config.role]}` : null,
       config.task ? `### Task\n${config.task}` : null,
       this.formatRubric(config.rubric),
-      ...instructionResources.map((resource) => this.formatSkillResource(resource)),
+      config.skill ? `### Activated skill: ${config.skill}` : null,
+      this.formatSkillReferences(config.skillReferences),
       config.output ? `### Output requirements\n${OutputFragment[config.output]}` : null,
+      config.jsonSchema ? `### JSON schema\n${config.jsonSchema}` : null,
+      config.skillJsonSchema ? `### Skill asset: ${config.skillJsonSchema}` : null,
     ].filter((p) => p);
-
-    if (config.output === OutputKey.Json && config.jsonSchema) {
-      parts.push(`### JSON schema\n${config.jsonSchema}`);
-    }
-    parts.push(...assetResources.map((resource) => this.formatSkillResource(resource)));
-
-    const prompt = parts.join('\n\n');
-    return {
-      prompt,
-      loadedSkills: resolvedSkills.skills.map((skill) => skill.id),
-      loadedResources: resolvedSkills.resources.map((resource) => resource.path),
-      estimatedTokens: Math.ceil(prompt.length / 4),
-      warnings: resolvedSkills.warnings,
-    };
+    return parts.join('\n\n');
   }
 
-  private formatRubric(rubricKeys: RubricKey[]): string {
-    if (!rubricKeys?.length) return '';
-    const criteria = rubricKeys.map((key) => RubricFragment[key]);
+  private formatRubric(rubricKeys: RubricKey[]): string | null {
+    if (!rubricKeys?.length) return null;
+    const criteria = rubricKeys.flatMap((key) => RubricFragment[key]);
     return `### Quality criteria\n${criteria.map((c, i) => `${i + 1}. ${c}`).join('\n')}`;
   }
 
-  private formatSkillResource(resource: ResolvedSkillResource): string {
-    const relationship = resource.included ? 'Included' : 'Activated';
-    if (resource.kind === 'instructions') {
-      return `### ${relationship} skill: ${resource.skillName}\n${resource.content}`;
-    }
-    const label = resource.kind === 'asset' ? 'Skill asset' : resource.kind === 'optionalReference' ? 'Optional skill reference' : 'Skill reference';
-    const fileName = resource.path.split('/').pop() || resource.path;
-    return `### ${label}: ${fileName}\n${resource.content}`;
+  private formatSkillReferences(referenceKeys: ReferenceKey[] | undefined): string | null {
+    if (!referenceKeys?.length) return null;
+    const references = referenceKeys.flatMap((key) => ReferenceFragment[key]);
+    return `### Skill reference: ${references.map((c) => c).join('\n')}`;
   }
 }
