@@ -265,6 +265,15 @@ export class ProjectCacheService {
     undoStack.push({ beforeContent: previousBefore, afterContent: previousAfter });
     map.set(path, { originalHtml: newBefore, modifiedHtml: newAfter, undoStack });
     this.pageEdits.set(map);
+    this.persistUpdatedHtml(path, newAfter);
+  }
+
+  public restorePersistedPageEdit(path: string, originalHtml: htmlProcessingResult, modifiedHtml: htmlProcessingResult): PageEditState {
+    const restored = { originalHtml, modifiedHtml, undoStack: new DiffUndoStack() };
+    const map = new Map(this.pageEdits());
+    map.set(path, restored);
+    this.pageEdits.set(map);
+    return restored;
   }
 
   public undoPageEdit(path: string): PageEditState | undefined {
@@ -275,11 +284,23 @@ export class ProjectCacheService {
     const updated = { ...existing, originalHtml: snapshot.beforeContent, modifiedHtml: snapshot.afterContent };
     map.set(path, updated);
     this.pageEdits.set(map);
+    this.persistUpdatedHtml(path, updated.modifiedHtml);
     return updated;
   }
 
   public getPageUndoStack(path: string): DiffUndoStack | undefined {
     return this.pageEdits().get(path)?.undoStack;
+  }
+
+  private persistUpdatedHtml(path: string, content: htmlProcessingResult): void {
+    this.projectState.setUpdatedHtml(path, {
+      html: content.html,
+      found: { ...content.found },
+      version: content.version,
+      url: content.url,
+      edited: true,
+      updatedAt: new Date().toISOString(),
+    });
   }
 
   // Track AI jobs

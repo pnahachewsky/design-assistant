@@ -1,11 +1,6 @@
-export interface AlertIssue {
-  alertIndex?: number;
-  category: string;
-  severity: string;
-  description: string;
-  recommendation: string;
-  include: boolean;
-}
+import { AlertIssueData } from '../../../../../common/data.model';
+
+export type AlertIssue = AlertIssueData;
 
 export interface AlertGuidanceState {
   categories: { label: string; severity: string }[];

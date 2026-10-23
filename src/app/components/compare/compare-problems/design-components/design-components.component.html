@@ -71,8 +71,8 @@
             @if (row.id === 'alerts') {
               <aida-alerts
                 [analyzeOnInit]="true"
+                [pagePath]="compareService.selectedPage()"
                 [preferredModel]="compareService.selectedModel()"
-                [reportScope]="reportScope()"
                 [selectAll]="alertSelectAll"
                 [sourceHtml]="sourceHtml()"
                 (stateChange)="onAlertStateChange($event)"

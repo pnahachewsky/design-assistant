@@ -27,7 +27,7 @@ export class AlertsComponent {
   private readonly translate = inject(TranslateService);
 
   readonly sourceHtml = input('');
-  readonly reportScope = input.required<string>();
+  readonly pagePath = input.required<string>();
   readonly preferredModel = input<string>();
   readonly selectAll = input(true);
   readonly analyzeOnInit = input(false);
@@ -36,8 +36,10 @@ export class AlertsComponent {
   protected readonly issues = signal<AlertIssue[]>([]);
   protected readonly loading = signal(false);
   protected readonly error = signal<string | null>(null);
-  private readonly analyzedHtml = signal('');
+  private readonly analyzedHtmlHash = signal('');
+  private readonly analysisCurrent = signal(false);
   private autoAnalysisKey = '';
+  private selectAllInitialized = false;
 
   protected readonly alertCount = computed(() => {
     const html = this.sourceHtml();
@@ -47,20 +49,21 @@ export class AlertsComponent {
     }).length;
   });
 
-  protected readonly hasAnalysis = computed(() => !!this.analyzedHtml());
-  protected readonly reanalysisRecommended = computed(() => !this.hasAnalysis() || this.analyzedHtml() !== this.sourceHtml());
+  protected readonly hasAnalysis = computed(() => !!this.analyzedHtmlHash());
+  protected readonly reanalysisRecommended = computed(() => !this.hasAnalysis() || !this.analysisCurrent());
 
   constructor() {
     effect(() => {
       const html = this.sourceHtml();
-      const reportScope = this.reportScope();
-      const cached = html ? this.alertService.getRetainedAnalysis(html, reportScope) : null;
+      const pagePath = this.pagePath();
+      const cached = html && pagePath ? this.alertService.getRetainedAnalysis(html, pagePath) : null;
       this.issues.set(cached?.issues ?? []);
-      this.analyzedHtml.set(cached?.html ?? '');
+      this.analyzedHtmlHash.set(cached?.analyzedHtmlHash ?? '');
+      this.analysisCurrent.set(cached?.isCurrent ?? false);
       this.error.set(null);
       untracked(() => this.emitState());
 
-      const autoAnalysisKey = `${reportScope}\u0000${html}`;
+      const autoAnalysisKey = `${pagePath}\u0000${html}`;
       if (this.analyzeOnInit() && html && cached === null && this.alertCount() > 0 && this.autoAnalysisKey !== autoAnalysisKey) {
         this.autoAnalysisKey = autoAnalysisKey;
         untracked(() => void this.analyze());
@@ -68,23 +71,29 @@ export class AlertsComponent {
     });
     effect(() => {
       const selectAll = this.selectAll();
+      if (!this.selectAllInitialized) {
+        this.selectAllInitialized = true;
+        return;
+      }
       untracked(() => this.applySelectAll(selectAll));
     });
   }
 
   protected async analyze(): Promise<void> {
     const requestHtml = this.sourceHtml();
-    const requestScope = this.reportScope();
+    const requestPagePath = this.pagePath();
     if (!requestHtml || !this.alertCount() || this.loading()) return;
 
     this.loading.set(true);
     this.error.set(null);
     this.emitState();
     try {
-      const issues = await this.alertService.analyze(requestHtml, this.preferredModel(), true, requestScope);
-      if (this.sourceHtml() !== requestHtml || this.reportScope() !== requestScope) return;
+      const issues = await this.alertService.analyze(requestHtml, requestPagePath, this.preferredModel(), true);
+      if (this.sourceHtml() !== requestHtml || this.pagePath() !== requestPagePath) return;
       this.issues.set(this.sortIssues(issues));
-      this.analyzedHtml.set(requestHtml);
+      const report = this.alertService.getRetainedAnalysis(requestHtml, requestPagePath);
+      this.analyzedHtmlHash.set(report?.analyzedHtmlHash ?? '');
+      this.analysisCurrent.set(report?.isCurrent ?? false);
       this.emitState();
     } catch (error) {
       this.error.set(error instanceof Error ? error.message : this.translate.instant('problems.alerts.analysisError'));
@@ -98,7 +107,7 @@ export class AlertsComponent {
   protected onIncludeToggle(): void {
     const sorted = this.sortIssues(this.issues());
     this.issues.set(sorted);
-    this.alertService.cacheIssues(this.analyzedHtml(), sorted, this.reportScope());
+    this.alertService.updateIssues(this.pagePath(), sorted);
     this.emitState();
   }
 
@@ -130,7 +139,7 @@ export class AlertsComponent {
       include: isNoAlertIssue(issue) ? false : selectAll,
     }));
     this.issues.set(updated);
-    if (this.analyzedHtml()) this.alertService.cacheIssues(this.analyzedHtml(), updated, this.reportScope());
+    if (this.analyzedHtmlHash()) this.alertService.updateIssues(this.pagePath(), updated);
     this.emitState();
   }
 

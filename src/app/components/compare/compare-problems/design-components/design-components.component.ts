@@ -12,7 +12,6 @@ import { TableModule } from 'primeng/table';
 import { AlertsComponent } from './alerts/alerts.component';
 
 import { htmlProcessingResult } from '../../../../services/html-normalization.service';
-import { ProjectStateService } from '../../../../services/project-state.service';
 import { CompareService } from '../../../../views/tasks/compare/compare.service';
 import { AlertService } from './alerts/alert.service';
 
@@ -37,12 +36,10 @@ export class DesignComponentsComponent {
   protected readonly compareService = inject(CompareService);
   private readonly translate = inject(TranslateService);
   private readonly alertService = inject(AlertService);
-  private readonly projectState = inject(ProjectStateService);
   readonly beforeContent = input<htmlProcessingResult>();
   readonly afterContent = input<htmlProcessingResult>();
 
   protected readonly sourceHtml = computed(() => (this.afterContent() ?? this.beforeContent())?.html ?? '');
-  protected readonly reportScope = computed(() => `${this.projectState.getProject().id}:${this.compareService.selectedPage()}`);
   protected readonly rows = computed<GuidanceRow[]>(() => {
     const html = this.sourceHtml();
     if (!html) return [];
@@ -66,12 +63,23 @@ export class DesignComponentsComponent {
   protected alertSelectAll = true;
   protected readonly alertState = signal<AlertGuidanceState>({ categories: [], maxSeverity: null, loading: false, error: false, hasAnalysis: false });
   private previouslyHadAlertIssues = false;
+  private autoExpandedReportKey = '';
 
   constructor() {
     effect(() => {
       const rows = this.rows();
       const sourceHtml = this.sourceHtml();
-      const cachedAnalysis = sourceHtml ? this.alertService.getRetainedAnalysis(sourceHtml, this.reportScope()) : null;
+      const pagePath = this.compareService.selectedPage();
+      const cachedAnalysis = sourceHtml && pagePath ? this.alertService.getRetainedAnalysis(sourceHtml, pagePath) : null;
+      if (cachedAnalysis) {
+        const reportKey = `${pagePath}\u0000${cachedAnalysis.analyzedAt}`;
+        if (reportKey !== this.autoExpandedReportKey) {
+          this.autoExpandedReportKey = reportKey;
+          this.expandedRows = { ...this.expandedRows, alerts: true };
+        }
+      } else {
+        this.autoExpandedReportKey = '';
+      }
       const categories = computeAlertCategories(cachedAnalysis?.issues ?? []);
       this.alertState.set({
         categories,

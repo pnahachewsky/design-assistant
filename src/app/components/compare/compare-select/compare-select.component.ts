@@ -120,12 +120,28 @@ export class CompareSelectComponent implements OnInit {
         this.compareService.originalHtml.set(cached.originalHtml);
         this.compareService.modifiedHtml.set(cached.modifiedHtml);
       } else {
-        //Load the comparison with unedited content from cache or source
-        if (this.compareMode()) {
+        const persistedHtml = this.projectState.getUpdatedHtml(path);
+        if (persistedHtml) {
+          if (persistedHtml.version) this.compareService.selectedAfter.set(persistedHtml.version);
           await this.onVersionSelectionChange(this.compareService.selectedBefore(), 'before');
-          await this.onVersionSelectionChange(this.compareService.selectedAfter(), 'after');
+          const modifiedHtml: htmlProcessingResult = {
+            html: persistedHtml.html,
+            found: { ...persistedHtml.found },
+            version: persistedHtml.version,
+            url: persistedHtml.url,
+            edited: true,
+          };
+          const originalHtml = this.compareService.originalHtml();
+          if (originalHtml) this.projectCache.restorePersistedPageEdit(path, originalHtml, modifiedHtml);
+          this.compareService.modifiedHtml.set(modifiedHtml);
         } else {
-          this.onVersionSelectionChange(this.compareService.selectedSource(), 'source');
+          //Load the comparison with unedited content from cache or source
+          if (this.compareMode()) {
+            await this.onVersionSelectionChange(this.compareService.selectedBefore(), 'before');
+            await this.onVersionSelectionChange(this.compareService.selectedAfter(), 'after');
+          } else {
+            this.onVersionSelectionChange(this.compareService.selectedSource(), 'source');
+          }
         }
       }
     } finally {

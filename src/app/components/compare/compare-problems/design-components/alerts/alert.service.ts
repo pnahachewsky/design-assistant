@@ -3,26 +3,24 @@ import { inject, Injectable } from '@angular/core';
 import { TranslateService } from '@ngx-translate/core';
 
 import { OpenRouterService } from '../../../../../services/ai/openrouter.service';
+import { FetchService } from '../../../../../services/fetch.service';
+import { ProjectStateService } from '../../../../../services/project-state.service';
 import { AlertContextService } from './alert-context.service';
 
+import { AlertIssuesReport } from '../../../../../common/data.model';
 import { ProblemPrompts } from '../../../../../common/prompts/problems.prompts';
 import { ProblemPromptKey } from '../../../../../common/prompts/prompt.model';
 import { coerceInteractiveResultLeadIns, getReportableAlerts } from './alert-reportable.utils';
 import { AlertIssue, isNoAlertIssue } from './alert.config';
 import fallbackSeverityJson from './severity-include-fallback.json';
 
-export interface AlertIssuesCacheEntry {
-  html: string;
-  issues: AlertIssue[];
-}
-
 @Injectable({ providedIn: 'root' })
 export class AlertService {
   private readonly openRouter = inject(OpenRouterService);
   private readonly alertContext = inject(AlertContextService);
+  private readonly fetchService = inject(FetchService);
+  private readonly projectState = inject(ProjectStateService);
   private readonly translate = inject(TranslateService);
-  private readonly cachedIssues = new Map<string, AlertIssuesCacheEntry>();
-  private readonly latestCachedIssueKeyByScope = new Map<string, string>();
 
   private readonly fallbackSeverities: Record<string, { severity: string; include?: boolean }> = Object.fromEntries(
     Object.entries(fallbackSeverityJson as Record<string, string | { severity?: string; include?: boolean }>).map(([key, value]) => {
@@ -31,54 +29,46 @@ export class AlertService {
     }),
   );
 
-  async analyze(sourceHtml: string, preferredModel?: string, force = false, reportScope = ''): Promise<AlertIssue[]> {
+  async analyze(sourceHtml: string, pagePath: string, preferredModel?: string, force = false): Promise<AlertIssue[]> {
     if (!force) {
-      const cached = this.getRetainedAnalysis(sourceHtml, reportScope);
+      const cached = this.getRetainedAnalysis(sourceHtml, pagePath);
       if (cached !== null) return cached.issues;
     }
 
     const payload = this.alertContext.buildCompactAlertsIssuesPayload(sourceHtml);
     if (payload['alertCount'] === 0) {
-      this.cacheIssues(sourceHtml, [], reportScope);
+      this.saveAnalysis(sourceHtml, pagePath, [], preferredModel);
       return [];
     }
 
     const responseText = await this.openRouter.getTextFromAI(ProblemPrompts[ProblemPromptKey.AlertIssues], JSON.stringify(payload), preferredModel, 0);
     const issues = this.validateAlertIssuesAgainstHtml(this.parseIssues(responseText), sourceHtml);
-    this.cacheIssues(sourceHtml, issues, reportScope);
+    this.saveAnalysis(sourceHtml, pagePath, issues, preferredModel);
     return this.cloneIssues(issues);
   }
 
-  getCachedIssues(sourceHtml: string, reportScope = ''): AlertIssue[] | null {
-    const entry = this.cachedIssues.get(this.getCacheKey(sourceHtml, reportScope));
-    return entry ? this.cloneIssues(entry.issues) : null;
+  getRetainedAnalysis(sourceHtml: string, pagePath: string): (AlertIssuesReport & { isCurrent: boolean }) | null {
+    const report = this.projectState.getAlertIssuesReport(pagePath);
+    if (!report) return null;
+    return {
+      ...report,
+      issues: this.cloneIssues(report.issues),
+      isCurrent: report.analyzedHtmlHash === this.fetchService.hashString(sourceHtml),
+    };
   }
 
-  getLatestCachedAnalysis(reportScope: string): AlertIssuesCacheEntry | null {
-    const cacheKey = this.latestCachedIssueKeyByScope.get(reportScope);
-    if (!cacheKey) return null;
-    const entry = this.cachedIssues.get(cacheKey);
-    return entry ? { html: entry.html, issues: this.cloneIssues(entry.issues) } : null;
+  getSelectedIssues(sourceHtml: string, pagePath: string): AlertIssue[] {
+    return (this.getRetainedAnalysis(sourceHtml, pagePath)?.issues ?? []).filter((issue) => issue.include && !isNoAlertIssue(issue));
   }
 
-  getRetainedAnalysis(sourceHtml: string, reportScope: string): AlertIssuesCacheEntry | null {
-    const exactIssues = this.getCachedIssues(sourceHtml, reportScope);
-    if (exactIssues !== null) return { html: sourceHtml, issues: exactIssues };
-    return this.getLatestCachedAnalysis(reportScope);
-  }
-
-  getSelectedIssues(sourceHtml: string, reportScope: string): AlertIssue[] {
-    return (this.getRetainedAnalysis(sourceHtml, reportScope)?.issues ?? []).filter((issue) => issue.include && !isNoAlertIssue(issue));
-  }
-
-  cacheIssues(sourceHtml: string, issues: AlertIssue[], reportScope = ''): void {
+  updateIssues(pagePath: string, issues: AlertIssue[]): void {
+    const report = this.projectState.getAlertIssuesReport(pagePath);
+    if (!report) return;
     const normalized = this.normalizeAlertIssues(issues);
-    const cacheKey = this.getCacheKey(sourceHtml, reportScope);
-    this.cachedIssues.set(cacheKey, {
-      html: sourceHtml,
+    this.projectState.setAlertIssuesReport(pagePath, {
+      ...report,
       issues: this.cloneIssues(normalized),
     });
-    this.latestCachedIssueKeyByScope.set(reportScope, cacheKey);
   }
 
   normalizeAlertIssues(issues: AlertIssue[]): AlertIssue[] {
@@ -219,8 +209,14 @@ export class AlertService {
     return typeof value === 'string' ? value.trim() : '';
   }
 
-  private getCacheKey(sourceHtml: string, reportScope: string): string {
-    return `${reportScope}\u0000${sourceHtml.trim()}`;
+  private saveAnalysis(sourceHtml: string, pagePath: string, issues: AlertIssue[], model?: string): void {
+    const saved = this.projectState.setAlertIssuesReport(pagePath, {
+      analyzedHtmlHash: this.fetchService.hashString(sourceHtml),
+      analyzedAt: new Date().toISOString(),
+      model,
+      issues: this.cloneIssues(this.normalizeAlertIssues(issues)),
+    });
+    if (!saved) throw new Error(this.translate.instant('problems.alerts.analysisError'));
   }
 
   private cloneIssues(issues: AlertIssue[]): AlertIssue[] {

@@ -18,6 +18,7 @@ import { UsageService } from './usage.service';
 import { version as appVersion } from '../../../package.json';
 import { environment } from '../../environments/environment';
 import {
+  AlertIssuesReport,
   FlattenedTreeNode,
   GitHubRepo,
   GitHubUser,
@@ -31,6 +32,7 @@ import {
   TreeNodeAction,
   TreeNodeData,
   TreeNodeTypes,
+  UpdatedPageHtml,
 } from '../common/data.model';
 import { STOP_WORDS } from '../common/url-word-exclusions.config';
 
@@ -338,6 +340,62 @@ export class ProjectStateService {
       projectData: tree,
       lastModified: new Date(),
     }));
+  }
+
+  public getAlertIssuesReport(path: string): AlertIssuesReport | null {
+    const match = this.findNodeAndLanguageByPath(path);
+    const report = match?.node.data?.issueReports?.[match.lang]?.alerts;
+    return report ? structuredClone(report) : null;
+  }
+
+  public setAlertIssuesReport(path: string, report: AlertIssuesReport): boolean {
+    const match = this.findNodeAndLanguageByPath(path);
+    if (!match?.node.data) {
+      console.warn(`Unable to store alert issues report: project page not found for path "${path}".`);
+      return false;
+    }
+
+    match.node.data.issueReports ??= {};
+    const languageReports = (match.node.data.issueReports[match.lang] ??= {});
+    languageReports.alerts = structuredClone(report);
+    this.project.update((project) => ({
+      ...project,
+      projectData: [...project.projectData],
+      lastModified: new Date(),
+    }));
+    return true;
+  }
+
+  public getUpdatedHtml(path: string): UpdatedPageHtml | null {
+    const match = this.findNodeAndLanguageByPath(path);
+    const updatedHtml = match?.node.data?.updatedHtml?.[match.lang];
+    return updatedHtml ? structuredClone(updatedHtml) : null;
+  }
+
+  public setUpdatedHtml(path: string, updatedHtml: UpdatedPageHtml): boolean {
+    const match = this.findNodeAndLanguageByPath(path);
+    if (!match?.node.data) {
+      console.warn(`Unable to store updated HTML: project page not found for path "${path}".`);
+      return false;
+    }
+
+    match.node.data.updatedHtml ??= {};
+    match.node.data.updatedHtml[match.lang] = structuredClone(updatedHtml);
+    this.project.update((project) => ({
+      ...project,
+      projectData: [...project.projectData],
+      lastModified: new Date(),
+    }));
+    return true;
+  }
+
+  private findNodeAndLanguageByPath(path: string): { node: TreeNode<TreeNodeData>; lang: 'en' | 'fr' } | null {
+    const tree = this.getProjectTree();
+    const enNode = this.findNodeByPath(tree, path, 'en') as TreeNode<TreeNodeData> | null;
+    if (enNode) return { node: enNode, lang: 'en' };
+
+    const frNode = this.findNodeByPath(tree, path, 'fr') as TreeNode<TreeNodeData> | null;
+    return frNode ? { node: frNode, lang: 'fr' } : null;
   }
 
   // Count pages
