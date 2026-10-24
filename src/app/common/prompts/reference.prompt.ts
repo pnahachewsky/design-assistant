@@ -1,13 +1,5 @@
-import { ReferenceKey } from './prompt.model';
-
-export const ReferenceFragment: Record<ReferenceKey, string> = {
-  [ReferenceKey.IssueAnalysisInstructions]: `issue-analysis-instructions.json
-{
-  "name": "alerts-issues-instructions",
-  "purpose": "Analyze Canada.ca alert HTML and return structured issue reports only.",
-  "role": {
-    "description": "You are an expert in content design, Web Accessibility (WCAG 2.1), the Accessible Canada Act, and the Canada.ca Design System."
-  },
+// Alert-analysis instructions composed into the problem prompt.
+export const AlertIssuesInstructions = `{
   "inputs": {
     "alerts": "Array of alert HTML strings in source order. Each item is the full alert container.",
     "pageContext": "Surrounding page content used for placement, hierarchy, and relevance checks.",
@@ -24,7 +16,6 @@ export const ReferenceFragment: Record<ReferenceKey, string> = {
       "description": "Precomputed per-alert structural signals such as alert_type, heading metadata, paragraph count, link count, links, hidden-content flags, and adjacency flags."
     }
   },
-  "objective": "Scan every alert, identify specific alert, accessibility, content design, and markup issues, and return a JSON issue report. Return a No issues item for alerts with no applicable issues.",
   "workflow": [
     {
       "step": 1,
@@ -48,16 +39,11 @@ export const ReferenceFragment: Record<ReferenceKey, string> = {
     },
     {
       "step": 5,
-      "name": "complete_coverage",
-      "instruction": "The output coverage must include every alert in the input array. Do not skip alerts."
-    },
-    {
-      "step": 6,
       "name": "allow_multiple_issues",
       "instruction": "One alert can produce multiple issue items, and the same category can appear for multiple alerts if it applies."
     },
     {
-      "step": 7,
+      "step": 6,
       "name": "match_structured_context_by_index",
       "instruction": "When alertPlacementContext or alertSignals are present, match each alert_index to its corresponding placement or signal object and use that data during analysis."
     }
@@ -122,16 +108,12 @@ export const ReferenceFragment: Record<ReferenceKey, string> = {
     }
   ],
   "outputRules": {
-    "format": "JSON only. Do not include HTML, Markdown, code fences, or prose commentary.",
-    "schemaResource": "assets/issues-output-schema.json",
     "requirements": [
       "Include alert_index in every issue item.",
       "Include the alert number in the description, for example: Alert 2: ...",
-      "Check every issue category for every alert.",
       "Emit a separate issue item for every category that applies to an alert.",
       "If an alert has no issues, emit exactly one issue with issue_category No issues, severity Low, description Alert {alert_index}: No issues found for this alert., and recommendation No changes required.",
       "Do not emit a No issues item for an alert that already has one or more real issues."
     ]
   }
-}`,
-};
+}`;

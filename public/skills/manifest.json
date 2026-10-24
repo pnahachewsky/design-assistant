@@ -2,23 +2,6 @@
   "version": 1,
   "skills": [
     {
-      "id": "alerts-issues",
-      "name": "alerts-issues",
-      "description": "Analyze Canada.ca web alerts and return issue reports only. Use when the task is to identify alert problems, classify issues, or assess alert accessibility and content quality.",
-      "skillMdPath": "alerts/alerts-issues/SKILL.md",
-      "includedSkillIds": [],
-      "defaultReferencePaths": [
-        "alerts/alerts-issues/references/issue-analysis-instructions.json"
-      ],
-      "optionalReferencePaths": [],
-      "defaultAssetPaths": [
-        "alerts/alerts-issues/assets/issues-output-schema.json"
-      ],
-      "outputModes": [
-        "json"
-      ]
-    },
-    {
       "id": "alerts-rewriting",
       "name": "alerts-rewriting",
       "description": "Rewrite Canada.ca web alerts and return corrected output only. Use when the task is to produce updated alert HTML from identified issues.",

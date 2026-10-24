@@ -28,7 +28,7 @@ import { UserSettingsService } from '../../../../services/user-settings.service'
 import { InventoryPrompts } from '../../../../common/prompts/inventory.prompts';
 import { PagePrompts } from '../../../../common/prompts/page.prompts';
 import { ProblemPrompts } from '../../../../common/prompts/problems.prompts';
-import { InventoryPromptKey, OutputKey, PagePromptKey, ProblemPromptKey, PromptConfig, ReferenceKey, RoleKey, RubricKey } from '../../../../common/prompts/prompt.model';
+import { InventoryPromptKey, OutputKey, PagePromptKey, ProblemPromptKey, PromptConfig, RoleKey, RubricKey } from '../../../../common/prompts/prompt.model';
 import { OutputFragment, RoleFragment, RubricFragment } from '../../../../common/prompts/shared.prompts';
 
 interface PromptEntry {
@@ -260,7 +260,7 @@ export class PromptEditorComponent {
       })
       .join('\n');
 
-    return `import { OutputKey, ${tool}PromptKey, PromptConfig, ReferenceKey, RoleKey, RubricKey } from './prompt.model';\n\nexport const ${tool}Prompts: Record<${tool}PromptKey, PromptConfig> = {\n${updatedPrompts}\n};\n`;
+    return `import { OutputKey, ${tool}PromptKey, PromptConfig, RoleKey, RubricKey } from './prompt.model';\n\nexport const ${tool}Prompts: Record<${tool}PromptKey, PromptConfig> = {\n${updatedPrompts}\n};\n`;
   }
 
   private getSelectedPromptConfig(): PromptConfig | null {
@@ -278,9 +278,6 @@ export class PromptEditorComponent {
     ];
 
     if (config.jsonSchema !== undefined) lines.push(`    jsonSchema: ${this.toTemplateLiteral(config.jsonSchema)},`);
-    if (config.skill !== undefined) lines.push(`    skill: ${this.toTemplateLiteral(config.skill)},`);
-    if (config.skillReferences?.length) lines.push(`    skillReferences: [${config.skillReferences.map((reference) => `ReferenceKey.${this.getEnumKey(ReferenceKey, reference)}`).join(', ')}],`);
-    if (config.skillJsonSchema !== undefined) lines.push(`    skillJsonSchema: ${this.toTemplateLiteral(config.skillJsonSchema)},`);
     if (config.examples !== undefined) lines.push(`    examples: ${this.toTemplateLiteral(config.examples)},`);
     if (config.available !== undefined) lines.push(`    available: ${config.available},`);
     lines.push('  }');

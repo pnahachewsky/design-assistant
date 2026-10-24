@@ -53,7 +53,7 @@ export class OpenRouterService {
 
   // Returns full OpenRouter response
   async sendToAI(config: PromptConfig, content: string, preferredModel?: string, temperature = 0, keyType: KeyType = 'paid'): Promise<OpenRouterResponse> {
-    // Prompt composition is async because it may resolve AWS-AIDA skill resources.
+    // Compose the configured system prompt before sending the request.
     const systemPrompt = await this.aiPromptService.composePrompt(config);
     console.log(systemPrompt);
     return this.sendRawPrompt(systemPrompt, content, preferredModel, temperature, keyType);

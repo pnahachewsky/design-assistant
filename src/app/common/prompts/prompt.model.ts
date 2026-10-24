@@ -41,9 +41,6 @@ export interface PromptConfig {
   rubric: RubricKey[]; // Shared
   output: OutputKey; // Shared
   jsonSchema?: string; // Unique schema
-  skill?: string; // Unique skill
-  skillReferences?: ReferenceKey[]; // Shared references used by skills
-  skillJsonSchema?: string; // Unique schema (same as jsonSchema but gets a different label when building prompt)
   examples?: string; // reference to example set for additional prompt set-up
   available?: boolean; // Hides prompt in prod if not ready
 }
@@ -75,11 +72,6 @@ export enum RubricKey {
   DescriptionFR = 'aiPrompt.rubric.descriptionFR',
   Keywords = 'aiPrompt.rubric.keywords',
   CraTermTranslations = 'aiPrompt.rubric.craTermTranslations',
-}
-
-//Shared reference fragments
-export enum ReferenceKey {
-  IssueAnalysisInstructions = 'aiPrompt.references.issueAnalysisInstructions',
 }
 
 //Inventory task fragments
