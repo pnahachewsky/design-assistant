@@ -58,7 +58,6 @@ export const AlertIssuesInstructions = `{
     { "name": "Wrong type", "rule": "The alert type must match the severity. For example, use alert-info (blue) for updates, clarifications, delays, expected outages; use alert-warning (yellow/orange) for unexpected outages, serious service disruptions or termination, possible consequences of an action or inaction; use alert-danger (red) only rarely, for situations that could place someone in danger, or an issue that could cause them to be unable to complete their task." },
     { "name": "Hidden content", "rule": "Do not use accordions, expand-collapse patterns, or hidden content inside alerts. Alert content must be visible." },
     { "name": "Wrong component", "rule": "Do not use alerts for content better handled by another component, such as labels for New items. These alerts should usually be removed." },
-    { "name": "Accessibility/code", "rule": "Icons and images need text alternatives, hierarchy must be valid, and markup must support accessibility." },
     { "name": "Too many links", "rule": "Limit alerts to one primary link when possible." },
     { "name": "Wrong placement", "rule": "Place alerts near the relevant section rather than globally when the message applies to specific content." },
     { "name": "Alert overload", "rule": "Flag multiple stacked or clustered alerts that may create alert fatigue." },
@@ -69,7 +68,8 @@ export const AlertIssuesInstructions = `{
   "complexIssueCategories": [
     { "name": "Focus order", "rule": "Ensure the alert's logical reading order is preserved and not skipped by assistive technologies." },
     { "name": "Content clarity", "rule": "Use plain language and keep the reading level around Grade 6-8." },
-    { "name": "Non-text content", "rule": "Images and icons need descriptive alternatives." }
+    { "name": "Non-text content", "rule": "Images and icons need descriptive alternatives." },
+    { "name": "Accessibility/code", "rule": "Flag accessibility or markup defects not covered by another issue category." }
   ],
   "structuredContextGuidance": {
     "pageSignals": [
