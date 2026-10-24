@@ -1,37 +1,12 @@
-import { inject, Injectable } from '@angular/core';
-
-import { SkillService } from './skill.service';
+import { Injectable } from '@angular/core';
 
 import { PromptConfig, ReferenceKey, RubricKey } from '../../common/prompts/prompt.model';
 import { ReferenceFragment } from '../../common/prompts/reference.prompt';
 import { OutputFragment, RoleFragment, RubricFragment } from '../../common/prompts/shared.prompts';
-import { ResolvedSkillResource } from '../../common/skills/skill.model';
-
-export interface ComposedPrompt {
-  prompt: string;
-  loadedSkills: string[];
-  loadedResources: string[];
-  estimatedTokens: number;
-  warnings: string[];
-}
 
 @Injectable({ providedIn: 'root' })
 export class AiPromptService {
-  private readonly skillService = inject(SkillService);
-
-  async composePrompt(config: PromptConfig): Promise<string> {
-    return (await this.composePromptDetails(config)).prompt;
-  }
-
-  async composePromptDetails(config: PromptConfig): Promise<ComposedPrompt> {
-    const resolvedSkills = await this.skillService.resolveBindings(config.skills ?? [], config.output);
-    const instructionResources = resolvedSkills.resources.filter((resource) => resource.kind !== 'asset');
-    const assetResources = resolvedSkills.resources.filter((resource) => resource.kind === 'asset');
-
-    if (config.jsonSchema && assetResources.length) {
-      throw new Error('Prompt configuration cannot define jsonSchema when an attached skill supplies an output asset.');
-    }
-
+  composePrompt(config: PromptConfig): string {
     const parts = [
       config.role ? `### Role\n${RoleFragment[config.role]}` : null,
       config.task ? `### Task\n${config.task}` : null,

@@ -127,30 +127,12 @@
                     <label [for]="prompt.enumKey + '_task'">{{ 'aiPrompt.component.task' | translate }}</label>
                   </p-iftalabel>
 
-                  <!-- Skill bindings are resolved from the generated skills manifest. -->
-                  @if (prompt.promptText.skills?.length) {
-                    <p-fieldset [legend]="'aiPrompt.component.skills' | translate">
-                      <div class="flex flex-column gap-2">
-                        @for (skill of prompt.promptText.skills; track skill.id) {
-                          <div class="flex flex-row flex-wrap align-items-center gap-2">
-                            <code>{{ skill.id }}</code>
-                            @if (skill.includeOptionalReferences) {
-                              <small>{{ 'aiPrompt.component.skillOptionalReferences' | translate }}</small>
-                            }
-                          </div>
-                        }
-                      </div>
-                    </p-fieldset>
-                  }
-
                   <!-- JSON schema -->
-                  @if (prompt.promptText.output === OutputKey.Json && !prompt.promptText.skills?.length) {
+                  @if (prompt.promptText.output === OutputKey.Json) {
                     <p-iftalabel>
                       <textarea [(ngModel)]="prompt.promptText.jsonSchema" [autoResize]="true" [id]="prompt.enumKey + '_jsonSchema'" (ngModelChange)="updateDiff()" fluid pTextarea rows="2"></textarea>
                       <label [for]="prompt.enumKey + '_jsonSchema'">{{ 'aiPrompt.component.jsonSchema' | translate }}</label>
                     </p-iftalabel>
-                  } @else if (prompt.promptText.output === OutputKey.Json) {
-                    <p-message [text]="'aiPrompt.component.skillSchema' | translate" severity="info" />
                   }
                 }
               }

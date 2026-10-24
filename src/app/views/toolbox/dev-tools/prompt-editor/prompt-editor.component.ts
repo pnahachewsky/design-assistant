@@ -21,14 +21,14 @@ import { TabsModule } from 'primeng/tabs';
 import { TextareaModule } from 'primeng/textarea';
 
 import { OpenRouterResponse, OpenRouterService } from '../../../../services/ai/openrouter.service';
-import { AiPromptService, ComposedPrompt } from '../../../../services/ai/prompt.service';
+import { AiPromptService } from '../../../../services/ai/prompt.service';
 import { ExportGitHubService } from '../../../../services/github/export-github.service';
 import { UserSettingsService } from '../../../../services/user-settings.service';
 
 import { InventoryPrompts } from '../../../../common/prompts/inventory.prompts';
 import { PagePrompts } from '../../../../common/prompts/page.prompts';
 import { ProblemPrompts } from '../../../../common/prompts/problems.prompts';
-import { InventoryPromptKey, OutputKey, PagePromptKey, ProblemPromptKey, PromptConfig, RoleKey, RubricKey } from '../../../../common/prompts/prompt.model';
+import { InventoryPromptKey, OutputKey, PagePromptKey, ProblemPromptKey, PromptConfig, ReferenceKey, RoleKey, RubricKey } from '../../../../common/prompts/prompt.model';
 import { OutputFragment, RoleFragment, RubricFragment } from '../../../../common/prompts/shared.prompts';
 
 interface PromptEntry {
@@ -44,12 +44,6 @@ interface TabConfig {
   fragments?: { key: string; label: string; data: PromptEntry[] }[];
   tool: string;
   original: string;
-}
-
-interface TestPromptOption {
-  value: string;
-  label: string;
-  prompt: PromptEntry;
 }
 
 @Component({
@@ -87,7 +81,6 @@ export class PromptEditorComponent {
       const isDarkMode = this.settingsService.darkMode(); //watching for changes to dark mode to update diff theme
       this.updateDiff();
     });
-    void this.resolveTestPrompt();
     effect(() => {
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const tab = this.selectedTab; //watching for changes to selected tab
@@ -230,62 +223,23 @@ export class PromptEditorComponent {
     marker('aiPrompt.component.rubric');
     marker('aiPrompt.component.task');
     marker('aiPrompt.component.jsonSchema');
-    marker('aiPrompt.component.skills');
-    marker('aiPrompt.component.skillOptionalReferences');
-    marker('aiPrompt.component.skillSchema');
-
     marker('dev.prompts.button.openPR');
-    marker('dev.prompts.button.resolve');
-    marker('dev.prompts.test._title');
-    marker('dev.prompts.test.compositionError');
-    marker('dev.prompts.test.description');
-    marker('dev.prompts.test.estimatedTokens');
-    marker('dev.prompts.test.loadedResources');
-    marker('dev.prompts.test.loadedSkills');
-    marker('dev.prompts.test.prompt');
-    marker('dev.prompts.test.response');
-    marker('dev.prompts.test.result');
   }
 
-  // Resolve and test prompts
+  // Test prompts
   readonly aiState = this.openRouterService.state;
   //aiPrompt = this.aiPromptService.composePrompt(InventoryPrompts[InventoryPromptKey.Metadata]);
   description = 'Official CRA information on Canadian taxes. File your return, manage payments, and explore credits and deductions for individuals and businesses.';
   response: OpenRouterResponse | null = null;
   result = '';
 
-  readonly testPromptOptions: TestPromptOption[] = this.tabs.flatMap((tab) =>
-    (tab.prompts ?? []).map((prompt) => ({
-      value: `${tab.tool}.${prompt.enumKey}`,
-      label: prompt.translationKey,
-      prompt,
-    })),
-  );
-  selectedTestPrompt = this.testPromptOptions[0]?.value ?? '';
-
-  async resolveTestPrompt(): Promise<void> {
-    const config = this.getSelectedTestPromptConfig();
-    this.composedPrompt.set(null);
-    this.compositionError.set(null);
-    if (!config) return;
-
-    this.compositionLoading.set(true);
-    try {
-      this.composedPrompt.set(await this.aiPromptService.composePromptDetails(config));
-    } catch (error) {
-      this.compositionError.set(error instanceof Error ? error.message : 'Unknown prompt composition error');
-    } finally {
-      this.compositionLoading.set(false);
-    }
-  }
-
   async testResponse() {
-    const config = this.getSelectedTestPromptConfig();
+    const config = this.getSelectedPromptConfig();
     if (!config) return;
     this.response = await this.openRouterService.sendToAI(config, this.description);
   }
   async testResult() {
-    const config = this.getSelectedTestPromptConfig();
+    const config = this.getSelectedPromptConfig();
     if (!config) return;
     this.result = await this.openRouterService.getTextFromAI(config, this.description);
   }
@@ -306,11 +260,11 @@ export class PromptEditorComponent {
       })
       .join('\n');
 
-    return `import { OutputKey, ${tool}PromptKey, PromptConfig, RoleKey, RubricKey } from './prompt.model';\n\nexport const ${tool}Prompts: Record<${tool}PromptKey, PromptConfig> = {\n${updatedPrompts}\n};\n`;
+    return `import { OutputKey, ${tool}PromptKey, PromptConfig, ReferenceKey, RoleKey, RubricKey } from './prompt.model';\n\nexport const ${tool}Prompts: Record<${tool}PromptKey, PromptConfig> = {\n${updatedPrompts}\n};\n`;
   }
 
-  private getSelectedTestPromptConfig(): PromptConfig | null {
-    const selected = this.testPromptOptions.find((option) => option.value === this.selectedTestPrompt)?.prompt;
+  private getSelectedPromptConfig(): PromptConfig | null {
+    const selected = this.selectedPrompt();
     return selected && this.isPromptConfig(selected) ? selected.promptText : null;
   }
 
@@ -324,10 +278,10 @@ export class PromptEditorComponent {
     ];
 
     if (config.jsonSchema !== undefined) lines.push(`    jsonSchema: ${this.toTemplateLiteral(config.jsonSchema)},`);
-    if (config.skills?.length) {
-      const skills = config.skills.map((skill) => `{ id: '${skill.id}'${skill.includeOptionalReferences === true ? ', includeOptionalReferences: true' : ''} }`).join(', ');
-      lines.push(`    skills: [${skills}],`);
-    }
+    if (config.skill !== undefined) lines.push(`    skill: ${this.toTemplateLiteral(config.skill)},`);
+    if (config.skillReferences?.length) lines.push(`    skillReferences: [${config.skillReferences.map((reference) => `ReferenceKey.${this.getEnumKey(ReferenceKey, reference)}`).join(', ')}],`);
+    if (config.skillJsonSchema !== undefined) lines.push(`    skillJsonSchema: ${this.toTemplateLiteral(config.skillJsonSchema)},`);
+    if (config.examples !== undefined) lines.push(`    examples: ${this.toTemplateLiteral(config.examples)},`);
     if (config.available !== undefined) lines.push(`    available: ${config.available},`);
     lines.push('  }');
     return lines.join('\n');

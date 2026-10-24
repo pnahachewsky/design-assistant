@@ -41,7 +41,7 @@ export class AlertService {
       return [];
     }
 
-    const responseText = await this.openRouter.getTextFromAI(ProblemPrompts[ProblemPromptKey.AlertIssues], JSON.stringify(payload), preferredModel, 0);
+    const responseText = await this.openRouter.getTextFromAI(ProblemPrompts[ProblemPromptKey.AlertsProblems], JSON.stringify(payload), preferredModel, 0);
     const issues = this.validateAlertIssuesAgainstHtml(this.parseIssues(responseText), sourceHtml);
     this.saveAnalysis(sourceHtml, pagePath, issues, preferredModel);
     return this.cloneIssues(issues);

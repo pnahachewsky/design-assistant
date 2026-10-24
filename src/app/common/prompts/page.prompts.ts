@@ -6,7 +6,6 @@ export const PagePrompts: Record<PagePromptKey, PromptConfig> = {
     task: 'Rewrite the supplied alerts, using identified issues where available, preserving valid content and returning safe alert replacements.',
     rubric: [RubricKey.NoCommentary],
     output: OutputKey.Json,
-    skills: [{ id: 'alerts-rewriting', includeOptionalReferences: true }],
     available: true,
   },
   [PagePromptKey.Headings]: {
