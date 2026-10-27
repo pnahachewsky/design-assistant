@@ -32,7 +32,6 @@ import {
   TreeNodeAction,
   TreeNodeData,
   TreeNodeTypes,
-  UpdatedPageHtml,
 } from '../common/data.model';
 import { STOP_WORDS } from '../common/url-word-exclusions.config';
 
@@ -358,29 +357,6 @@ export class ProjectStateService {
     match.node.data.issueReports ??= {};
     const languageReports = (match.node.data.issueReports[match.lang] ??= {});
     languageReports.alerts = structuredClone(report);
-    this.project.update((project) => ({
-      ...project,
-      projectData: [...project.projectData],
-      lastModified: new Date(),
-    }));
-    return true;
-  }
-
-  public getUpdatedHtml(path: string): UpdatedPageHtml | null {
-    const match = this.findNodeAndLanguageByPath(path);
-    const updatedHtml = match?.node.data?.updatedHtml?.[match.lang];
-    return updatedHtml ? structuredClone(updatedHtml) : null;
-  }
-
-  public setUpdatedHtml(path: string, updatedHtml: UpdatedPageHtml): boolean {
-    const match = this.findNodeAndLanguageByPath(path);
-    if (!match?.node.data) {
-      console.warn(`Unable to store updated HTML: project page not found for path "${path}".`);
-      return false;
-    }
-
-    match.node.data.updatedHtml ??= {};
-    match.node.data.updatedHtml[match.lang] = structuredClone(updatedHtml);
     this.project.update((project) => ({
       ...project,
       projectData: [...project.projectData],

@@ -169,19 +169,6 @@ export interface AlertIssuesReport {
   issues: AlertIssueData[];
 }
 
-export interface UpdatedPageHtml {
-  html: string;
-  found: {
-    hidden: boolean;
-    modal: boolean;
-    dynamic: boolean;
-  };
-  version?: SourceVersion;
-  url?: string;
-  edited: true;
-  updatedAt: string;
-}
-
 export interface OldNotes {
   problem: string;
   solution: string;
@@ -246,11 +233,6 @@ export interface TreeNodeData {
   issueReports?: {
     en?: { alerts?: AlertIssuesReport };
     fr?: { alerts?: AlertIssuesReport };
-  };
-  // Persisted working HTML from AI or manual editing
-  updatedHtml?: {
-    en?: UpdatedPageHtml;
-    fr?: UpdatedPageHtml;
   };
   // Approval tracking
   approved?: ApprovalData;
