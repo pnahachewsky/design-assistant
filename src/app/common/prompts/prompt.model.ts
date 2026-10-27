@@ -5,7 +5,6 @@ function markForTranslation() {
   marker('aiPrompt.role.none');
   marker('aiPrompt.role.contentDesigner');
   marker('aiPrompt.role.seoExpert');
-  marker('aiPrompt.role.accessibilityExpert');
   marker('aiPrompt.role.translator');
 
   marker('aiPrompt.output.text');
@@ -50,7 +49,6 @@ export enum RoleKey {
   None = 'aiPrompt.role.none',
   ContentDesigner = 'aiPrompt.role.contentDesigner',
   SeoExpert = 'aiPrompt.role.seoExpert',
-  AccessibilityExpert = 'aiPrompt.role.accessibilityExpert',
   Translator = 'aiPrompt.role.translator',
   HTMLeditor = 'aiPrompt.role.htmlEditor',
 }
