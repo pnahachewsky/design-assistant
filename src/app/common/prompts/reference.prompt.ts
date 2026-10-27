@@ -2,9 +2,10 @@
 export const AlertIssuesInstructions = `{
   "inputs": {
     "alerts": "Array of alert HTML strings in source order. Each item is the full alert container.",
+    "pageContext": "Surrounding page content used for placement, hierarchy, and relevance checks.",
     "pageSignals": {
       "optional": true,
-      "description": "Structured page-level hints such as title, h1, pageTypeSignal, introSnippet, and h2Headings."
+      "description": "Structured page-level hints such as title, h1, pageTypeSignal, and h2Headings."
     },
     "alertPlacementContext": {
       "optional": true,
@@ -19,17 +20,32 @@ export const AlertIssuesInstructions = `{
     {
       "step": 1,
       "name": "enumerate_alerts",
-      "instruction": "Use array order as alert_index, starting at 1."
+      "instruction": "Analyze every alert in the alerts array. Use array order as alert_index, starting at 1."
     },
     {
       "step": 2,
       "name": "use_structured_context",
-      "instruction": "Match alertPlacementContext and alertSignals to each alert by alert_index. Use pageSignals and the matched per-alert context as primary evidence when present. If structured context conflicts with a weak inference from raw HTML, prefer the structured context."
+      "instruction": "Use pageContext for placement, relevance, and hierarchy checks. Use pageSignals, alertPlacementContext, and alertSignals as primary evidence when present. If structured context conflicts with a weak inference from raw HTML, prefer the structured context."
     },
     {
       "step": 3,
-      "name": "check_issue_categories",
-      "instruction": "For every alert, check every category in simpleIssueCategories and complexIssueCategories."
+      "name": "check_simple_issues",
+      "instruction": "For each alert, check every simple issue category. Add a separate issue item for each category that applies."
+    },
+    {
+      "step": 4,
+      "name": "check_complex_issues",
+      "instruction": "For each alert, check every complex issue category. Add a separate issue item for each category that applies."
+    },
+    {
+      "step": 5,
+      "name": "allow_multiple_issues",
+      "instruction": "One alert can produce multiple issue items, and the same category can appear for multiple alerts if it applies."
+    },
+    {
+      "step": 6,
+      "name": "match_structured_context_by_index",
+      "instruction": "When alertPlacementContext or alertSignals are present, match each alert_index to its corresponding placement or signal object and use that data during analysis."
     }
   ],
   "simpleIssueCategories": [
@@ -93,10 +109,10 @@ export const AlertIssuesInstructions = `{
   ],
   "outputRules": {
     "requirements": [
+      "Include alert_index in every issue item.",
       "Include the alert number in the description, for example: Alert 2: ...",
       "Emit a separate issue item for every category that applies to an alert.",
-      "Assign High, Medium, or Low severity to each real issue based on its impact in the supplied context. Omit severity when issue_category is No issues.",
-      "If an alert has no issues, emit exactly one issue with issue_category No issues, description Alert {alert_index}: No issues found for this alert., and recommendation No changes required.",
+      "If an alert has no issues, emit exactly one issue with issue_category No issues, severity Low, description Alert {alert_index}: No issues found for this alert., and recommendation No changes required.",
       "Do not emit a No issues item for an alert that already has one or more real issues."
     ]
   }

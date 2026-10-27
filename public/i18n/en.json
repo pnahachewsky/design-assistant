@@ -69,6 +69,7 @@
 	"aiPrompt.problem.alertsProblems": "Alerts problems",
 	"aiPrompt.problem.alertsRewrite": "Alerts rewrite",
 	"aiPrompt.problems._title": "Problems",
+	"aiPrompt.role.accessibilityExpert": "Accessibility expert",
 	"aiPrompt.role.contentDesigner": "Content designer",
 	"aiPrompt.role.none": "None",
 	"aiPrompt.role.seoExpert": "SEO expert",
