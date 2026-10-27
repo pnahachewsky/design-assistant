@@ -2,7 +2,7 @@
 <div class="flex flex-column gap-2">
   <div [class]="styleCardService.cardStyles()" class="flex flex-column gap-2">
     <div class="flex gap-2 align-items-end">
-      <aida-compare-select [compareMode]="'page only'" />
+      <aida-compare-select [versionsToShow]="0" />
       <aida-project-settings [allowBoth]="true" [showLang]="true" />
 
       <div class="h-3rem w-full text-red">Test</div>
