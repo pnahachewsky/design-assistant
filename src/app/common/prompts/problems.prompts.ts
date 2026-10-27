@@ -23,15 +23,23 @@ ${AlertIssuesInstructions}`,
           "alert_index",
           "issue_category",
           "description",
-          "recommendation",
-          "severity"
+          "recommendation"
         ],
         "properties": {
           "alert_index": { "type": "integer", "minimum": 1 },
           "issue_category": { "type": "string" },
           "description": { "type": "string" },
           "recommendation": { "type": "string" },
-          "severity": { "type": "string", "enum": ["High", "Medium", "Low", "N/A"] }
+          "severity": { "type": "string", "enum": ["High", "Medium", "Low"] }
+        },
+        "if": {
+          "properties": {
+            "issue_category": { "not": { "const": "No issues" } }
+          },
+          "required": ["issue_category"]
+        },
+        "then": {
+          "required": ["severity"]
         }
       }
     }

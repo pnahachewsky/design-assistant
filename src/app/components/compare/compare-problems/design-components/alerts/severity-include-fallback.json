@@ -17,7 +17,6 @@
   "Incorrect hierarchy": { "severity": "High", "include": true },
   "Nothing actionable": { "severity": "Low", "include": true },
   "Focus order": { "severity": "High", "include": true },
-  "Sensory/color reliance": { "severity": "Medium", "include": true },
   "Content clarity": { "severity": "Medium", "include": true },
   "Non-text content": { "severity": "High", "include": true }
 }
