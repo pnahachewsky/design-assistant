@@ -112,7 +112,7 @@ export const AlertIssuesInstructions = `{
       "Include alert_index in every issue item.",
       "Include the alert number in the description, for example: Alert 2: ...",
       "Emit a separate issue item for every category that applies to an alert.",
-      "If an alert has no issues, emit exactly one issue with issue_category No issues, severity Low, description Alert {alert_index}: No issues found for this alert., and recommendation No changes required.",
+      "If an alert has no issues, emit exactly one issue with issue_category No issues, severity N/A, description Alert {alert_index}: No issues found for this alert., and recommendation No changes required.",
       "Do not emit a No issues item for an alert that already has one or more real issues."
     ]
   }
