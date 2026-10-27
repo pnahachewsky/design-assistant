@@ -36,7 +36,8 @@ export class AlertService {
     }
 
     const payload = this.alertContext.buildCompactAlertsIssuesPayload(sourceHtml);
-    if (payload['alertCount'] === 0) {
+    const alerts = payload['alerts'];
+    if (!Array.isArray(alerts) || alerts.length === 0) {
       this.saveAnalysis(sourceHtml, pagePath, [], preferredModel);
       return [];
     }

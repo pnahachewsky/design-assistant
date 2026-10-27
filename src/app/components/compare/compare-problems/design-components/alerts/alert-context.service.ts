@@ -30,7 +30,6 @@ export class AlertContextService {
 
     return {
       alerts: context.alerts.map((alertEl) => alertEl.outerHTML),
-      alertCount: context.alerts.length,
       pageSignals: {
         title: context.title,
         h1: context.h1,

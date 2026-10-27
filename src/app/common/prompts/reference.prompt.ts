@@ -93,7 +93,6 @@ export const AlertIssuesInstructions = `{
   ],
   "outputRules": {
     "requirements": [
-      "Include alert_index in every issue item.",
       "Include the alert number in the description, for example: Alert 2: ...",
       "Emit a separate issue item for every category that applies to an alert.",
       "Assign High, Medium, or Low severity to each real issue based on its impact in the supplied context. Omit severity when issue_category is No issues.",
