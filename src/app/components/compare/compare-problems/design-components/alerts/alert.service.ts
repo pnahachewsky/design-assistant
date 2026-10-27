@@ -82,7 +82,7 @@ export class AlertService {
         description: this.cleanString(issue.description),
         recommendation: this.cleanString(issue.recommendation),
         severity: noIssues ? 'N/A' : this.normalizeSeverity(issue.severity, category),
-        include: noIssues ? false : typeof issue.include === 'boolean' ? issue.include : (this.lookupFallbackInclude(category) ?? true),
+        include: noIssues ? false : typeof issue.include === 'boolean' ? issue.include : this.getDefaultInclude(category),
       };
     });
   }
@@ -111,7 +111,7 @@ export class AlertService {
           description,
           recommendation,
           severity: this.normalizeSeverity(item['severity'], category),
-          include: typeof item['include'] === 'boolean' ? item['include'] : (this.lookupFallbackInclude(category) ?? true),
+          include: this.getDefaultInclude(category),
         };
       })
       .filter((issue): issue is AlertIssue => issue !== null);
@@ -162,12 +162,13 @@ export class AlertService {
   }
 
   private normalizeSeverity(value: unknown, category?: string): string {
+    if (this.cleanString(category).toLowerCase() === 'no issues') return 'N/A';
     const raw = this.cleanString(value).toLowerCase();
     if (!raw) return this.lookupFallbackSeverity(category) ?? 'Unknown';
     if (raw === 'high' || raw === 'critical') return 'High';
     if (raw === 'medium' || raw === 'med' || raw === 'moderate') return 'Medium';
     if (raw === 'low' || raw === 'minor') return 'Low';
-    return raw.charAt(0).toUpperCase() + raw.slice(1);
+    return this.lookupFallbackSeverity(category) ?? 'Unknown';
   }
 
   private lookupFallbackSeverity(category: unknown): string | null {
@@ -178,6 +179,10 @@ export class AlertService {
   private lookupFallbackInclude(category: unknown): boolean | null {
     const include = this.fallbackSeverities[this.cleanString(category).toLowerCase()]?.include;
     return typeof include === 'boolean' ? include : null;
+  }
+
+  private getDefaultInclude(category: unknown): boolean {
+    return this.lookupFallbackInclude(category) ?? true;
   }
 
   private getInteractiveResultLeadIns(): string[] {

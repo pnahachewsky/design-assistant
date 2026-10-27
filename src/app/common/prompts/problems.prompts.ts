@@ -31,8 +31,7 @@ ${AlertIssuesInstructions}`,
           "issue_category": { "type": "string" },
           "description": { "type": "string" },
           "recommendation": { "type": "string" },
-          "severity": { "type": "string", "enum": ["High", "Medium", "Low", "N/A"] },
-          "include": { "type": "boolean" }
+          "severity": { "type": "string", "enum": ["High", "Medium", "Low", "N/A"] }
         }
       }
     }
