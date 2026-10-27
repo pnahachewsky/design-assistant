@@ -552,7 +552,8 @@ code.custom {
 }
 
 .p-togglebutton:not(.p-togglebutton-checked):not(.p-disabled) .p-togglebutton-content {
-  color: var(--surface-border) !important;
+  border-color: var(--surface-border) !important;
+  color: light-dark(var(--p-surface-600), var(--p-surface-400)) !important;
 }
 
 .p-togglebutton:not(.p-togglebutton-checked):not(.p-disabled) {

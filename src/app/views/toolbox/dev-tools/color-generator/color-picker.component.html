@@ -8,7 +8,7 @@
       <input [ngModel]="currentColor()" (change)="onColorChange()" (ngModelChange)="currentColor.set($event)" pInputText placeholder="#000000" type="text" />
       @if (showReset()) {
         <p-inputgroup-addon>
-          <p-button (onClick)="reset()" class="w-full h-full" label="Reset" severity="secondary" size="small" text />
+          <p-button (onClick)="reset()" class="w-full h-full" label="Reset" severity="secondary" text />
         </p-inputgroup-addon>
       }
     </p-inputgroup>
