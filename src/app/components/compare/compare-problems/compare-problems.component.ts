@@ -69,7 +69,7 @@ export class CompareProblemsComponent {
         description: this.translate.instant('problems.components.description'),
         template: this.componentsTemplate(),
         icon: 'draw',
-        visible: true,
+        visible: false,
       },
       {
         key: 'links',
