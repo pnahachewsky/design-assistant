@@ -50,7 +50,7 @@ export const AlertIssuesInstructions = `{
   ],
   "simpleIssueCategories": [
     { "name": "Misuse", "rule": "Do not use alerts for standard process steps, low-risk warnings, routine information, or emphasis." },
-    { "name": "Too wordy", "rule": "Alerts must be short and succinct. If more than 2 sentences are needed, the sentences must be short. To fix a longer alert, recommend a summary with a link to a page that contains the full information." },
+    { "name": "Too wordy", "rule": "Alerts must be short and easy to scan. Flag multiple paragraphs, avoidable detail, or more than 2 sentences unless the sentences are short. Do not flag based on character count alone. For longer content, recommend a short summary linking to the full details." },
     { "name": "Generic titles", "rule": "Flag headings such as Note, Info, Important, or New. Alert titles must be descriptive." },
     { "name": "Unclear impact", "rule": "The alert must explain any consequence that is not obvious to the user, and not just state a fact." },
     { "name": "Outdated", "rule": "Flag past dates, expired notices, or resolved events. Alerts are temporary." },
@@ -110,7 +110,6 @@ export const AlertIssuesInstructions = `{
   ],
   "outputRules": {
     "requirements": [
-      "Include alert_index in every issue item.",
       "Include the alert number in the description, for example: Alert 2: ...",
       "Emit a separate issue item for every category that applies to an alert.",
       "If an alert has no issues, emit exactly one issue with issue_category No issues, severity Low, description Alert {alert_index}: No issues found for this alert., and recommendation No changes required.",
