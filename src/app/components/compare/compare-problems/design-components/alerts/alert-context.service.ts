@@ -30,7 +30,6 @@ export class AlertContextService {
 
     return {
       alerts: context.alerts.map((alertEl) => alertEl.outerHTML),
-      alertCount: context.alerts.length,
       pageContext: `Title: ${context.title || 'N/A'}\nH1: ${context.h1 || 'N/A'}\nPage type signal: ${context.pageTypeSignal}\nMain intro: ${context.introSnippet || 'N/A'}\nH2 headings (${context.h2Headings.length}): ${context.h2Headings.join(' | ') || 'N/A'}`,
       pageSignals: {
         title: context.title,
