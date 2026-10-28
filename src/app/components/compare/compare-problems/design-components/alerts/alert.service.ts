@@ -7,7 +7,7 @@ import { FetchService } from '../../../../../services/fetch.service';
 import { ProjectStateService } from '../../../../../services/project-state.service';
 import { AlertContextService } from './alert-context.service';
 
-import { AlertIssuesReport } from '../../../../../common/data.model';
+import { AlertIssuesReport, AlertIssueTranslationData } from '../../../../../common/data.model';
 import { ProblemPrompts } from '../../../../../common/prompts/problems.prompts';
 import { ProblemPromptKey } from '../../../../../common/prompts/prompt.model';
 import { coerceInteractiveResultLeadIns, getReportableAlerts } from './alert-reportable.utils';
@@ -28,6 +28,11 @@ const ALERT_SEVERITY_ALIASES: Record<string, 'High' | 'Medium' | 'Low'> = {
   minor: 'Low',
 };
 
+const ALERT_TRANSLATION_SYSTEM_PROMPT = `Translate only the description and recommendation values in the supplied JSON from English into Canadian French.
+Return only valid JSON with this exact shape: {"items":[{"translation_id":"1","description":"...","recommendation":"..."}]}.
+Preserve every translation_id exactly. Do not add, remove, combine, split, or reorder items.
+Preserve HTML tags and attributes, URLs, code, placeholders, CSS classes, ARIA attributes, and quoted source text exactly.`;
+
 @Injectable({ providedIn: 'root' })
 export class AlertService {
   private readonly openRouter = inject(OpenRouterService);
@@ -35,6 +40,7 @@ export class AlertService {
   private readonly fetchService = inject(FetchService);
   private readonly projectState = inject(ProjectStateService);
   private readonly translate = inject(TranslateService);
+  private readonly translationRunIds = new Map<string, number>();
 
   private readonly fallbackSeverities: Record<string, { severity: string; include?: boolean; severityOverride?: boolean; recommendationOverride?: string }> = Object.fromEntries(
     Object.entries(fallbackSeverityJson as Record<string, string | { severity?: string; include?: boolean; severityOverride?: boolean; recommendationOverride?: string }>).map(([key, value]) => {
@@ -57,6 +63,10 @@ export class AlertService {
       if (cached !== null) return cached.issues;
     }
 
+    const translationRunId = (this.translationRunIds.get(pagePath) ?? 0) + 1;
+    this.translationRunIds.set(pagePath, translationRunId);
+    this.clearTranslations(pagePath);
+
     const payload = this.alertContext.buildCompactAlertsIssuesPayload(sourceHtml);
     const alerts = payload['alerts'];
     if (!Array.isArray(alerts) || alerts.length === 0) {
@@ -66,8 +76,9 @@ export class AlertService {
 
     const responseText = await this.openRouter.getTextFromAI(ProblemPrompts[ProblemPromptKey.AlertsProblems], JSON.stringify(payload), preferredModel, 0);
     const issues = this.validateAlertIssuesAgainstHtml(this.parseIssues(responseText), sourceHtml);
-    this.saveAnalysis(sourceHtml, pagePath, issues, preferredModel);
-    return this.cloneIssues(issues);
+    const report = this.saveAnalysis(sourceHtml, pagePath, issues, preferredModel);
+    this.requestFrenchTranslation(pagePath, report, preferredModel, translationRunId);
+    return this.cloneIssues(report.issues);
   }
 
   getRetainedAnalysis(sourceHtml: string, pagePath: string): (AlertIssuesReport & { isCurrent: boolean }) | null {
@@ -87,10 +98,44 @@ export class AlertService {
   updateIssues(pagePath: string, issues: AlertIssue[]): void {
     const report = this.projectState.getAlertIssuesReport(pagePath);
     if (!report) return;
-    const normalized = this.normalizeAlertIssues(issues);
+    const incomingByTranslationId = new Map(issues.filter((issue) => issue.translationId).map((issue) => [issue.translationId!, issue]));
+    const incomingByIdentity = new Map<string, AlertIssue[]>();
+    for (const issue of issues) {
+      const identity = this.getIssueIdentity(issue);
+      incomingByIdentity.set(identity, [...(incomingByIdentity.get(identity) ?? []), issue]);
+    }
+    const updatedIssues = report.issues.map((issue) => {
+      const byId = issue.translationId ? incomingByTranslationId.get(issue.translationId) : undefined;
+      const identityMatches = incomingByIdentity.get(this.getIssueIdentity(issue)) ?? [];
+      const incoming = byId ?? identityMatches.shift();
+      return incoming ? { ...issue, include: isNoAlertIssue(issue) ? false : incoming.include } : issue;
+    });
     this.projectState.setAlertIssuesReport(pagePath, {
       ...report,
-      issues: this.cloneIssues(normalized),
+      issues: this.cloneIssues(updatedIssues),
+    });
+  }
+
+  getIssuesForDisplay(report: AlertIssuesReport, language: string | null): AlertIssue[] {
+    const issues = this.cloneIssues(report.issues);
+    if (!(language ?? 'en').toLowerCase().startsWith('fr')) return issues;
+
+    const translations = new Map((report.translations?.fr?.issues ?? []).map((translation) => [translation.translationId, translation]));
+    return issues.map((issue) => {
+      if (isNoAlertIssue(issue)) {
+        return {
+          ...issue,
+          description: this.translate.instant('problems.alerts.noIssueDescription', { index: issue.alertIndex ?? '' }, 'fr'),
+          recommendation: this.translate.instant('problems.alerts.noChangesRequired', undefined, 'fr'),
+        };
+      }
+
+      const translation = issue.translationId ? translations.get(issue.translationId) : undefined;
+      return {
+        ...issue,
+        description: translation?.description ?? issue.description,
+        recommendation: this.lookupRecommendationOverride(issue.category, 'fr') ?? translation?.recommendation ?? issue.recommendation,
+      };
     });
   }
 
@@ -103,7 +148,7 @@ export class AlertService {
         alertIndex: Number.isFinite(Number(issue.alertIndex)) ? Number(issue.alertIndex) : undefined,
         category,
         description: this.cleanString(issue.description),
-        recommendation: this.lookupRecommendationOverride(category) ?? this.cleanString(issue.recommendation),
+        recommendation: this.lookupRecommendationOverride(category, 'en') ?? this.cleanString(issue.recommendation),
         severity: noIssues ? 'N/A' : this.normalizeSeverity(issue.severity, category),
         include: noIssues ? false : typeof issue.include === 'boolean' ? issue.include : this.getDefaultInclude(category),
       };
@@ -206,13 +251,109 @@ export class AlertService {
     return this.lookupFallbackInclude(category) ?? true;
   }
 
-  private lookupRecommendationOverride(category: unknown): string | null {
+  private lookupRecommendationOverride(category: unknown, language: 'en' | 'fr'): string | null {
     const key = this.fallbackSeverities[this.cleanString(category).toLowerCase()]?.recommendationOverride;
-    return key ? this.cleanString(this.translate.instant(key)) || null : null;
+    return key ? this.cleanString(this.translate.instant(key, undefined, language)) || null : null;
   }
 
   private getInteractiveResultLeadIns(): string[] {
     return coerceInteractiveResultLeadIns(this.translate.instant('problems.alerts.interactiveResultLeadIns'));
+  }
+
+  private clearTranslations(pagePath: string): void {
+    const report = this.projectState.getAlertIssuesReport(pagePath);
+    if (!report?.translations) return;
+    const updated = { ...report };
+    delete updated.translations;
+    this.projectState.setAlertIssuesReport(pagePath, updated);
+  }
+
+  private requestFrenchTranslation(pagePath: string, report: AlertIssuesReport, preferredModel: string | undefined, translationRunId: number): void {
+    const items = report.issues
+      .filter((issue) => !isNoAlertIssue(issue) && !!issue.translationId)
+      .map((issue) => ({
+        translation_id: issue.translationId!,
+        description: issue.description,
+        recommendation: issue.recommendation,
+      }));
+    if (!items.length) return;
+
+    void this.translateFrenchIssues(pagePath, report, items, preferredModel, translationRunId).catch((error: unknown) => {
+      console.warn('Unable to translate alert issues into French.', error);
+    });
+  }
+
+  private async translateFrenchIssues(
+    pagePath: string,
+    report: AlertIssuesReport,
+    items: { translation_id: string; description: string; recommendation: string }[],
+    preferredModel: string | undefined,
+    translationRunId: number,
+  ): Promise<void> {
+    const response = await this.openRouter.sendMessages(
+      [
+        { role: 'system', content: ALERT_TRANSLATION_SYSTEM_PROMPT },
+        { role: 'user', content: JSON.stringify({ target_language: 'fr-CA', items }) },
+      ],
+      preferredModel,
+      0,
+    );
+    const translatedIssues = this.parseFrenchTranslations(response.text, items);
+    if (!translatedIssues.length || this.translationRunIds.get(pagePath) !== translationRunId) return;
+
+    const current = this.projectState.getAlertIssuesReport(pagePath);
+    if (!current || current.analyzedAt !== report.analyzedAt || current.analyzedHtmlHash !== report.analyzedHtmlHash) return;
+
+    this.projectState.setAlertIssuesReport(pagePath, {
+      ...current,
+      translations: {
+        ...current.translations,
+        fr: {
+          translatedAt: new Date().toISOString(),
+          model: response.usedModel,
+          issues: translatedIssues,
+        },
+      },
+    });
+  }
+
+  private parseFrenchTranslations(
+    responseText: string,
+    expectedItems: { translation_id: string; description: string; recommendation: string }[],
+  ): AlertIssueTranslationData[] {
+    const parsed = this.looseJsonParse(this.stripCodeFences(responseText));
+    const root = parsed && typeof parsed === 'object' ? (parsed as Record<string, unknown>) : null;
+    const rawItems = Array.isArray(root?.['items']) ? root['items'] : [];
+    const expectedById = new Map(expectedItems.map((item) => [item.translation_id, item]));
+    const seen = new Set<string>();
+    const translations: AlertIssueTranslationData[] = [];
+
+    for (const raw of rawItems) {
+      if (!raw || typeof raw !== 'object') continue;
+      const item = raw as Record<string, unknown>;
+      const translationId = String(item['translation_id'] ?? '').trim();
+      const expected = expectedById.get(translationId);
+      if (!expected || seen.has(translationId)) continue;
+
+      const description = this.cleanString(item['description']);
+      const recommendation = this.cleanString(item['recommendation']);
+      if (!description || !recommendation) continue;
+      if (!this.preservesProtectedTokens(expected.description, description) || !this.preservesProtectedTokens(expected.recommendation, recommendation)) continue;
+
+      seen.add(translationId);
+      translations.push({ translationId, description, recommendation });
+    }
+
+    return translations;
+  }
+
+  private preservesProtectedTokens(source: string, translation: string): boolean {
+    const protectedTokens = source.match(/<\/?[^>]+>|https?:\/\/[^\s"'<>]+|\{\{[^}]+\}\}|`[^`]+`|\b(?:alert|aria|wb)-[a-z0-9_-]+\b/gi) ?? [];
+    return protectedTokens.every((token) => translation.includes(token));
+  }
+
+  private getIssueIdentity(issue: Pick<AlertIssue, 'alertIndex' | 'category'>): string {
+    return `${issue.alertIndex ?? ''}\u0000${this.cleanString(issue.category).toLowerCase()}`;
   }
 
   private stripCodeFences(value: string): string {
@@ -240,14 +381,16 @@ export class AlertService {
     return typeof value === 'string' ? value.trim() : '';
   }
 
-  private saveAnalysis(sourceHtml: string, pagePath: string, issues: AlertIssue[], model?: string): void {
-    const saved = this.projectState.setAlertIssuesReport(pagePath, {
+  private saveAnalysis(sourceHtml: string, pagePath: string, issues: AlertIssue[], model?: string): AlertIssuesReport {
+    const report: AlertIssuesReport = {
       analyzedHtmlHash: this.fetchService.hashString(sourceHtml),
       analyzedAt: new Date().toISOString(),
       model,
-      issues: this.cloneIssues(this.normalizeAlertIssues(issues)),
-    });
+      issues: this.normalizeAlertIssues(issues).map((issue, index) => ({ ...issue, translationId: String(index + 1) })),
+    };
+    const saved = this.projectState.setAlertIssuesReport(pagePath, report);
     if (!saved) throw new Error(this.translate.instant('problems.alerts.analysisError'));
+    return report;
   }
 
   private cloneIssues(issues: AlertIssue[]): AlertIssue[] {

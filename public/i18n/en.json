@@ -863,6 +863,8 @@
 	"problems.alerts.issueDescription": "Description",
 	"problems.alerts.noAlerts": "No reportable alerts were found in the modified page.",
 	"problems.alerts.noIssues": "No alert issues were identified.",
+	"problems.alerts.noIssueDescription": "Alert {{index}}: No issues found for this alert.",
+	"problems.alerts.noChangesRequired": "No changes required.",
 	"problems.alerts.noPage": "Select page versions before analyzing alerts.",
 	"problems.alerts.reanalyze": "Re-analyze current webpage",
 	"problems.alerts.recommendation": "Recommendation",

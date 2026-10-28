@@ -65,8 +65,9 @@ export class AlertsComponent {
     effect(() => {
       const html = this.sourceHtml();
       const pagePath = this.pagePath();
+      const currentLanguage = this.translate.currentLang();
       const cached = html && pagePath ? this.alertService.getRetainedAnalysis(html, pagePath) : null;
-      this.issues.set(cached?.issues ?? []);
+      this.issues.set(cached ? this.sortIssues(this.alertService.getIssuesForDisplay(cached, currentLanguage)) : []);
       this.analyzedHtmlHash.set(cached?.analyzedHtmlHash ?? '');
       this.analysisCurrent.set(cached?.isCurrent ?? false);
       this.error.set(null);
@@ -97,10 +98,10 @@ export class AlertsComponent {
     this.error.set(null);
     this.emitState();
     try {
-      const issues = await this.alertService.analyze(requestHtml, requestPagePath, this.preferredModel(), true);
+      await this.alertService.analyze(requestHtml, requestPagePath, this.preferredModel(), true);
       if (this.sourceHtml() !== requestHtml || this.pagePath() !== requestPagePath) return;
-      this.issues.set(this.sortIssues(issues));
       const report = this.alertService.getRetainedAnalysis(requestHtml, requestPagePath);
+      this.issues.set(report ? this.sortIssues(this.alertService.getIssuesForDisplay(report, this.translate.currentLang())) : []);
       this.analyzedHtmlHash.set(report?.analyzedHtmlHash ?? '');
       this.analysisCurrent.set(report?.isCurrent ?? false);
       this.emitState();
