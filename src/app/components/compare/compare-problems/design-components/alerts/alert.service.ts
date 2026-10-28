@@ -22,10 +22,18 @@ export class AlertService {
   private readonly projectState = inject(ProjectStateService);
   private readonly translate = inject(TranslateService);
 
-  private readonly fallbackSeverities: Record<string, { severity: string; include?: boolean }> = Object.fromEntries(
-    Object.entries(fallbackSeverityJson as Record<string, string | { severity?: string; include?: boolean }>).map(([key, value]) => {
+  private readonly fallbackSeverities: Record<string, { severity: string; include?: boolean; severityOverride?: boolean; recommendationOverride?: string }> = Object.fromEntries(
+    Object.entries(fallbackSeverityJson as Record<string, string | { severity?: string; include?: boolean; severityOverride?: boolean; recommendationOverride?: string }>).map(([key, value]) => {
       if (typeof value === 'string') return [key.toLowerCase(), { severity: value }];
-      return [key.toLowerCase(), { severity: value.severity ?? '', include: value.include }];
+      return [
+        key.toLowerCase(),
+        {
+          severity: value.severity ?? '',
+          include: value.include,
+          severityOverride: value.severityOverride,
+          recommendationOverride: value.recommendationOverride,
+        },
+      ];
     }),
   );
 
@@ -80,7 +88,7 @@ export class AlertService {
         alertIndex: Number.isFinite(Number(issue.alertIndex)) ? Number(issue.alertIndex) : undefined,
         category,
         description: this.cleanString(issue.description),
-        recommendation: this.cleanString(issue.recommendation),
+        recommendation: this.lookupRecommendationOverride(category) ?? this.cleanString(issue.recommendation),
         severity: noIssues ? 'N/A' : this.normalizeSeverity(issue.severity, category),
         include: noIssues ? false : typeof issue.include === 'boolean' ? issue.include : (this.lookupFallbackInclude(category) ?? true),
       };
@@ -111,7 +119,7 @@ export class AlertService {
           description,
           recommendation,
           severity: this.normalizeSeverity(item['severity'], category),
-          include: typeof item['include'] === 'boolean' ? item['include'] : (this.lookupFallbackInclude(category) ?? true),
+          include: this.lookupFallbackInclude(category) ?? true,
         };
       })
       .filter((issue): issue is AlertIssue => issue !== null);
@@ -162,6 +170,8 @@ export class AlertService {
   }
 
   private normalizeSeverity(value: unknown, category?: string): string {
+    const fallback = this.fallbackSeverities[this.cleanString(category).toLowerCase()];
+    if (fallback?.severityOverride && fallback.severity) return this.normalizeSeverity(fallback.severity);
     const raw = this.cleanString(value).toLowerCase();
     if (!raw) return this.lookupFallbackSeverity(category) ?? 'Unknown';
     if (raw === 'high' || raw === 'critical') return 'High';
@@ -178,6 +188,11 @@ export class AlertService {
   private lookupFallbackInclude(category: unknown): boolean | null {
     const include = this.fallbackSeverities[this.cleanString(category).toLowerCase()]?.include;
     return typeof include === 'boolean' ? include : null;
+  }
+
+  private lookupRecommendationOverride(category: unknown): string | null {
+    const key = this.fallbackSeverities[this.cleanString(category).toLowerCase()]?.recommendationOverride;
+    return key ? this.cleanString(this.translate.instant(key)) || null : null;
   }
 
   private getInteractiveResultLeadIns(): string[] {

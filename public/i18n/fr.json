@@ -845,6 +845,7 @@
 	"problems.alerts.noPage": "Sélectionnez les versions de la page avant d'analyser les alertes.",
 	"problems.alerts.reanalyze": "Analyser de nouveau la page Web actuelle",
 	"problems.alerts.recommendation": "Recommandation",
+	"problems.alerts.recommendation.missingAlertSemantics": "Il s’agit d’un problème connu du système de conception, et une solution approuvée est en cours d’élaboration. Entre-temps, vérifiez si une alerte est nécessaire pour ce sujet. Sinon, présentez l’information comme du contenu de page standard ou au moyen d’un autre composant approuvé.",
 	"problems.alerts.severity": "Gravité",
 	"problems.components.aiError": "Erreur de l'IA",
 	"problems.components.alerts.title": "Alertes",

@@ -845,6 +845,7 @@
 	"problems.alerts.noPage": "Select page versions before analyzing alerts.",
 	"problems.alerts.reanalyze": "Re-analyze current webpage",
 	"problems.alerts.recommendation": "Recommendation",
+	"problems.alerts.recommendation.missingAlertSemantics": "This is a known design-system issue, and an approved solution is being developed. In the meantime, review whether an alert is necessary for this topic. If not, present the information as standard page content or another approved component.",
 	"problems.alerts.severity": "Severity",
 	"problems.components.aiError": "AI error",
 	"problems.components.alerts.title": "Alerts",
