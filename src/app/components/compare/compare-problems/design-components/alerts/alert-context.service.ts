@@ -93,8 +93,9 @@ export class AlertContextService {
     // Intro text and page type help distinguish task flows from general content
     // pages when judging whether an alert fits its surrounding page.
     const title = this.truncateContextText(sourceDoc.querySelector('title')?.textContent || '', 200);
-    const h1 = this.truncateContextText(main.querySelector('h1')?.textContent || '', 200);
-    const introSnippet = this.truncateContextText(main.querySelector('p')?.textContent || '', 350);
+    const h1Element = main.querySelector('h1');
+    const h1 = this.truncateContextText(h1Element?.textContent || '', 200);
+    const introSnippet = this.extractIntroSnippet(main, h1Element);
     const pageTypeSignal = this.inferPageTypeSignal(title, h1);
     const alertsBeforeFirstH2Count = alerts.filter((alertEl) => {
       const mainIndex = mainIndexMap.get(alertEl);
@@ -175,6 +176,53 @@ export class AlertContextService {
 
   private getInteractiveResultLeadIns(): string[] {
     return coerceInteractiveResultLeadIns(this.translate.instant('problems.alerts.interactiveResultLeadIns'));
+  }
+
+  // Collects the introductory region after the H1 until substantive page
+  // content begins. Alerts and layout wrappers do not define the intro, while
+  // headings and content components end it. At least one paragraph is required.
+  private extractIntroSnippet(main: HTMLElement, h1Element: Element | null): string {
+    if (!h1Element) return '';
+
+    const introTags = new Set(['P', 'UL', 'OL', 'DL', 'BLOCKQUOTE', 'HR']);
+    const structuralTags = new Set(['DIV', 'SECTION', 'ARTICLE']);
+    const ignoredTags = new Set(['SCRIPT', 'STYLE', 'TEMPLATE']);
+    const introParts: string[] = [];
+    const elements = Array.from(main.querySelectorAll('*'));
+    const h1Index = elements.indexOf(h1Element);
+    if (h1Index < 0) return '';
+
+    let hasParagraph = false;
+    let consumedIntroRoot: Element | null = null;
+    const buildSnippet = (): string => (hasParagraph ? this.truncateContextText(introParts.join(' '), 350) : '');
+
+    for (const element of elements.slice(h1Index + 1)) {
+      if (h1Element.contains(element)) continue;
+
+      if (consumedIntroRoot?.contains(element)) continue;
+      consumedIntroRoot = null;
+
+      if (element.closest('.alert, [hidden], [aria-hidden="true"]')) continue;
+
+      if (ignoredTags.has(element.tagName)) continue;
+      if (structuralTags.has(element.tagName)) continue;
+
+      if (introTags.has(element.tagName)) {
+        consumedIntroRoot = element;
+        if (element.tagName === 'HR') continue;
+
+        const text = this.truncateContextText(element.textContent || '', 350);
+        if (text) {
+          introParts.push(text);
+          hasParagraph ||= element.tagName === 'P';
+        }
+        continue;
+      }
+
+      return buildSnippet();
+    }
+
+    return buildSnippet();
   }
 
   // Normalizes page text into short snippets so the compact payload stays cheap.
