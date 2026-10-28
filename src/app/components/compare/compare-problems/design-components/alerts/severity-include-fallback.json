@@ -23,7 +23,6 @@
   "Incorrect hierarchy": { "severity": "High" },
   "Nothing actionable": { "severity": "Low" },
   "Focus order": { "severity": "High" },
-  "Sensory/color reliance": { "severity": "Medium" },
   "Content clarity": { "severity": "Medium" },
   "Non-text content": { "severity": "High" }
 }
