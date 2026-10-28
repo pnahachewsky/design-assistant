@@ -14,6 +14,20 @@ import { coerceInteractiveResultLeadIns, getReportableAlerts } from './alert-rep
 import { AlertIssue, isNoAlertIssue } from './alert.config';
 import fallbackSeverityJson from './severity-include-fallback.json';
 
+const ALERT_SEVERITY_ALIASES: Record<string, 'High' | 'Medium' | 'Low'> = {
+  high: 'High',
+  critical: 'High',
+  severe: 'High',
+  major: 'High',
+  urgent: 'High',
+  medium: 'Medium',
+  med: 'Medium',
+  moderate: 'Medium',
+  important: 'Medium',
+  low: 'Low',
+  minor: 'Low',
+};
+
 @Injectable({ providedIn: 'root' })
 export class AlertService {
   private readonly openRouter = inject(OpenRouterService);
@@ -175,10 +189,7 @@ export class AlertService {
     if (fallback?.severityOverride && fallback.severity) return this.normalizeSeverity(fallback.severity);
     const raw = this.cleanString(value).toLowerCase();
     if (!raw) return this.lookupFallbackSeverity(category) ?? 'Unknown';
-    if (raw === 'high' || raw === 'critical') return 'High';
-    if (raw === 'medium' || raw === 'med' || raw === 'moderate') return 'Medium';
-    if (raw === 'low' || raw === 'minor') return 'Low';
-    return raw.charAt(0).toUpperCase() + raw.slice(1);
+    return ALERT_SEVERITY_ALIASES[raw] ?? this.lookupFallbackSeverity(category) ?? 'Unknown';
   }
 
   private lookupFallbackSeverity(category: unknown): string | null {

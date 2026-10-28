@@ -22,9 +22,9 @@
             <p-checkbox [(ngModel)]="issue.include" [binary]="true" [disabled]="isNoIssueRow(issue)" (onChange)="onIncludeToggle()" />
           </td>
           <td class="severity-col">
-            <span [ngClass]="severityClass(issue.severity)" class="chip">{{ issue.severity }}</span>
+            <span [ngClass]="severityClass(issue.severity)" class="chip">{{ severityI18nKey(issue.severity) | translate }}</span>
           </td>
-          <td>{{ issue.category }}</td>
+          <td>{{ categoryI18nKey(issue.category) | translate }}</td>
           <td class="wrap-col">{{ issue.description }}</td>
           <td class="wrap-col">{{ issue.recommendation }}</td>
         </tr>

@@ -16,7 +16,7 @@ import { CompareService } from '../../../../views/tasks/compare/compare.service'
 import { AlertService } from './alerts/alert.service';
 
 import { coerceInteractiveResultLeadIns, getReportableAlertsFromHtml } from './alerts/alert-reportable.utils';
-import { ALERT_SEVERITY_RANK, AlertGuidanceState, computeAlertCategories, computeAlertMaxSeverity } from './alerts/alert.config';
+import { ALERT_SEVERITY_RANK, AlertGuidanceState, computeAlertCategories, computeAlertMaxSeverity, getAlertCategoryI18nKey } from './alerts/alert.config';
 
 interface GuidanceRow {
   id: 'alerts';
@@ -153,6 +153,10 @@ export class DesignComponentsComponent {
     return 'chip-unk';
   }
 
+  protected categoryI18nKey(category: string): string {
+    return getAlertCategoryI18nKey(category);
+  }
+
   markForTranslation() {
     marker('problems.components.alerts.title');
     marker('problems.components.health.unknown');
@@ -160,5 +164,31 @@ export class DesignComponentsComponent {
     marker('problems.components.health.medium');
     marker('problems.components.health.low');
     marker('problems.components.health.ok');
+    marker('problems.alerts.categoryValue.misuse');
+    marker('problems.alerts.categoryValue.tooWordy');
+    marker('problems.alerts.categoryValue.genericTitles');
+    marker('problems.alerts.categoryValue.unclearImpact');
+    marker('problems.alerts.categoryValue.outdated');
+    marker('problems.alerts.categoryValue.missingHeading');
+    marker('problems.alerts.categoryValue.wrongType');
+    marker('problems.alerts.categoryValue.hiddenContent');
+    marker('problems.alerts.categoryValue.wrongComponent');
+    marker('problems.alerts.categoryValue.tooManyLinks');
+    marker('problems.alerts.categoryValue.wrongPlacement');
+    marker('problems.alerts.categoryValue.alertOverload');
+    marker('problems.alerts.categoryValue.lowRelevance');
+    marker('problems.alerts.categoryValue.incorrectHierarchy');
+    marker('problems.alerts.categoryValue.nothingActionable');
+    marker('problems.alerts.categoryValue.focusOrder');
+    marker('problems.alerts.categoryValue.contentClarity');
+    marker('problems.alerts.categoryValue.nonTextContent');
+    marker('problems.alerts.categoryValue.missingAlertSemantics');
+    marker('problems.alerts.categoryValue.accessibilityCode');
+    marker('problems.alerts.categoryValue.noIssues');
+    marker('problems.alerts.severityValue.high');
+    marker('problems.alerts.severityValue.medium');
+    marker('problems.alerts.severityValue.low');
+    marker('problems.alerts.severityValue.notApplicable');
+    marker('problems.alerts.severityValue.unknown');
   }
 }

@@ -52,7 +52,7 @@
           } @else if (alertState().categories.length) {
             <div class="chip-list">
               @for (category of alertState().categories; track category.label) {
-                <p-chip [label]="category.label" [styleClass]="'chip ' + severityChip(category.severity)" />
+                <p-chip [label]="categoryI18nKey(category.label) | translate" [styleClass]="'chip ' + severityChip(category.severity)" />
               }
             </div>
           } @else if (alertState().hasAnalysis) {

@@ -13,7 +13,16 @@ import { TableModule } from 'primeng/table';
 import { AlertService } from './alert.service';
 
 import { coerceInteractiveResultLeadIns, getReportableAlertsFromHtml } from './alert-reportable.utils';
-import { ALERT_SEVERITY_RANK, AlertGuidanceState, AlertIssue, computeAlertCategories, computeAlertMaxSeverity, isNoAlertIssue } from './alert.config';
+import {
+  ALERT_SEVERITY_RANK,
+  AlertGuidanceState,
+  AlertIssue,
+  computeAlertCategories,
+  computeAlertMaxSeverity,
+  getAlertCategoryI18nKey,
+  getAlertSeverityI18nKey,
+  isNoAlertIssue,
+} from './alert.config';
 
 @Component({
   selector: 'aida-alerts',
@@ -121,6 +130,14 @@ export class AlertsComponent {
     if (normalized === 'medium') return 'chip-med';
     if (normalized === 'high') return 'chip-severe';
     return 'chip-unk';
+  }
+
+  protected categoryI18nKey(category: string): string {
+    return getAlertCategoryI18nKey(category);
+  }
+
+  protected severityI18nKey(severity: string): string {
+    return getAlertSeverityI18nKey(severity);
   }
 
   private sortIssues(issues: AlertIssue[]): AlertIssue[] {
