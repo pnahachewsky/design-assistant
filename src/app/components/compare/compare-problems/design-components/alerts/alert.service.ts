@@ -90,7 +90,7 @@ export class AlertService {
         description: this.cleanString(issue.description),
         recommendation: this.lookupRecommendationOverride(category) ?? this.cleanString(issue.recommendation),
         severity: noIssues ? 'N/A' : this.normalizeSeverity(issue.severity, category),
-        include: noIssues ? false : typeof issue.include === 'boolean' ? issue.include : (this.lookupFallbackInclude(category) ?? true),
+        include: noIssues ? false : typeof issue.include === 'boolean' ? issue.include : this.getDefaultInclude(category),
       };
     });
   }
@@ -119,7 +119,7 @@ export class AlertService {
           description,
           recommendation,
           severity: this.normalizeSeverity(item['severity'], category),
-          include: this.lookupFallbackInclude(category) ?? true,
+          include: this.getDefaultInclude(category),
         };
       })
       .filter((issue): issue is AlertIssue => issue !== null);
@@ -188,6 +188,10 @@ export class AlertService {
   private lookupFallbackInclude(category: unknown): boolean | null {
     const include = this.fallbackSeverities[this.cleanString(category).toLowerCase()]?.include;
     return typeof include === 'boolean' ? include : null;
+  }
+
+  private getDefaultInclude(category: unknown): boolean {
+    return this.lookupFallbackInclude(category) ?? true;
   }
 
   private lookupRecommendationOverride(category: unknown): string | null {
