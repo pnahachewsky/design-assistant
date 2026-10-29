@@ -22,7 +22,7 @@ export const AlertIssuesInstructions = `{
     },
     { "step": 2,
       "name": "use_structured_context",
-      "instruction": "Use pageSignals, alertPlacementContext, and alertSignals as primary evidence when present. If structured context conflicts with a weak inference from raw HTML, prefer the structured context."
+      "instruction": "Use pageSignals, alertPlacementContext, and alertSignals as primary evidence when present. Match each alert_index to its corresponding alertPlacementContext and alertSignals objects. If structured context conflicts with a weak inference from raw HTML, prefer the structured context."
     },
     { "step": 3,
       "name": "check_simple_issues",
@@ -31,10 +31,6 @@ export const AlertIssuesInstructions = `{
     { "step": 4,
       "name": "check_complex_issues",
       "instruction": "For each alert, check every complex issue category. Add a separate issue item for each category that applies."
-    },
-    { "step": 5,
-      "name": "match_structured_context_by_index",
-      "instruction": "When alertPlacementContext or alertSignals are present, match each alert_index to its corresponding placement or signal object and use that data during analysis."
     }
   ],
   "simpleIssueCategories": [
