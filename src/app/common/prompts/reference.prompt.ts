@@ -2,10 +2,9 @@
 export const AlertIssuesInstructions = `{
   "inputs": {
     "alerts": "Array of alert HTML strings in source order. Each item is the full alert container.",
-    "pageContext": "Surrounding page content used for placement, hierarchy, and relevance checks.",
     "pageSignals": {
       "optional": true,
-      "description": "Structured page-level hints such as title, h1, pageTypeSignal, and h2Headings."
+      "description": "Structured page-level hints such as title, h1, pageTypeSignal, introSnippet, and h2Headings."
     },
     "alertPlacementContext": {
       "optional": true,
@@ -25,7 +24,7 @@ export const AlertIssuesInstructions = `{
     {
       "step": 2,
       "name": "use_structured_context",
-      "instruction": "Use pageContext for placement, relevance, and hierarchy checks. Use pageSignals, alertPlacementContext, and alertSignals as primary evidence when present. If structured context conflicts with a weak inference from raw HTML, prefer the structured context."
+      "instruction": "Use pageSignals, alertPlacementContext, and alertSignals as primary evidence when present. If structured context conflicts with a weak inference from raw HTML, prefer the structured context."
     },
     {
       "step": 3,
