@@ -33,10 +33,6 @@ export const AlertIssuesInstructions = `{
       "instruction": "For each alert, check every complex issue category. Add a separate issue item for each category that applies."
     },
     { "step": 5,
-      "name": "allow_multiple_issues",
-      "instruction": "One alert can produce multiple issue items, and the same category can appear for multiple alerts if it applies."
-    },
-    { "step": 6,
       "name": "match_structured_context_by_index",
       "instruction": "When alertPlacementContext or alertSignals are present, match each alert_index to its corresponding placement or signal object and use that data during analysis."
     }
@@ -109,6 +105,7 @@ export const AlertIssuesInstructions = `{
     "requirements": [
       "Include the alert number in the description, for example: Alert 2: ...",
       "Emit a separate issue item for every category that applies to an alert.",
+      "One alert can produce multiple issue items, and the same category can appear for multiple alerts if it applies.",
       "If an alert has no issues, emit exactly one issue with issue_category No issues, severity Low, description Alert {alert_index}: No issues found for this alert., and recommendation No changes required.",
       "Do not emit a No issues item for an alert that already has one or more real issues."
     ]
