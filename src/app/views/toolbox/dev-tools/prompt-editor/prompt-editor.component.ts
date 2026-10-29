@@ -66,6 +66,20 @@ interface TabConfig {
     TextareaModule,
   ],
   templateUrl: './prompt-editor.component.html',
+  styles: `
+    pre.prompt-preview {
+      display: block;
+      box-sizing: border-box;
+      width: 100%;
+      min-width: 0;
+      max-width: 100%;
+      font-size: 1rem;
+      white-space: pre-wrap !important;
+      overflow-wrap: anywhere;
+      word-break: break-word;
+      overflow-x: hidden;
+    }
+  `,
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class PromptEditorComponent {
