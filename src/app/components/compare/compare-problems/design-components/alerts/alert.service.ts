@@ -8,6 +8,7 @@ import { ProjectStateService } from '../../../../../services/project-state.servi
 import { AlertContextService } from './alert-context.service';
 
 import { AlertIssuesReport, AlertIssueTranslationData } from '../../../../../common/data.model';
+import { AI_ALERT_TRANSLATION_MODEL } from '../../../../../common/ai-models.config';
 import { ProblemPrompts } from '../../../../../common/prompts/problems.prompts';
 import { ProblemPromptKey } from '../../../../../common/prompts/prompt.model';
 import { coerceInteractiveResultLeadIns, getReportableAlerts } from './alert-reportable.utils';
@@ -77,7 +78,7 @@ export class AlertService {
     const responseText = await this.openRouter.getTextFromAI(ProblemPrompts[ProblemPromptKey.AlertsProblems], JSON.stringify(payload), preferredModel, 0);
     const issues = this.validateAlertIssuesAgainstHtml(this.parseIssues(responseText), sourceHtml);
     const report = this.saveAnalysis(sourceHtml, pagePath, issues, preferredModel);
-    this.requestFrenchTranslation(pagePath, report, preferredModel, translationRunId);
+    this.requestFrenchTranslation(pagePath, report, translationRunId);
     return this.cloneIssues(report.issues);
   }
 
@@ -283,7 +284,7 @@ export class AlertService {
     this.projectState.setAlertIssuesReport(pagePath, updated);
   }
 
-  private requestFrenchTranslation(pagePath: string, report: AlertIssuesReport, preferredModel: string | undefined, translationRunId: number): void {
+  private requestFrenchTranslation(pagePath: string, report: AlertIssuesReport, translationRunId: number): void {
     const items = report.issues
       .filter((issue) => !isNoAlertIssue(issue) && !!issue.translationId)
       .map((issue) => ({
@@ -297,7 +298,7 @@ export class AlertService {
     }
 
     this.setFrenchTranslationStatus(pagePath, translationRunId, 'pending');
-    void this.translateFrenchIssues(pagePath, report, items, preferredModel, translationRunId).catch((error: unknown) => {
+    void this.translateFrenchIssues(pagePath, report, items, translationRunId).catch((error: unknown) => {
       console.warn('Unable to translate alert issues into French.', error);
       this.setFrenchTranslationStatus(pagePath, translationRunId, 'failed');
     });
@@ -307,13 +308,16 @@ export class AlertService {
     pagePath: string,
     report: AlertIssuesReport,
     items: { translation_id: string; description: string; recommendation: string }[],
-    preferredModel: string | undefined,
     translationRunId: number,
   ): Promise<void> {
+    console.log('[Alert translation] Requesting', {
+      preferredModel: AI_ALERT_TRANSLATION_MODEL,
+      itemCount: items.length,
+    });
     const response = await this.openRouter.sendToAI(
       ProblemPrompts[ProblemPromptKey.TranslateIssueDetails],
       JSON.stringify({ target_language: 'fr-CA', items }),
-      preferredModel,
+      AI_ALERT_TRANSLATION_MODEL,
       0,
     );
     const responseText = response.choices?.[0]?.message?.content ?? '';
@@ -339,12 +343,17 @@ export class AlertService {
         ...current.translations,
         fr: {
           translatedAt: new Date().toISOString(),
-          model: response.model ?? preferredModel ?? 'unknown',
+          model: response.model ?? AI_ALERT_TRANSLATION_MODEL,
           issues: translatedIssues,
         },
       },
     });
     this.setFrenchTranslationStatus(pagePath, translationRunId, 'complete');
+    console.log('[Alert translation] Completed', {
+      requestedModel: AI_ALERT_TRANSLATION_MODEL,
+      respondingModel: response.model ?? 'unknown',
+      translatedItemCount: translatedIssues.length,
+    });
   }
 
   private parseFrenchTranslations(
