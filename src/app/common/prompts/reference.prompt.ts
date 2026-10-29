@@ -100,10 +100,8 @@ export const AlertIssuesInstructions = `{
   "outputRules": {
     "requirements": [
       "Include the alert number in the description, for example: Alert 2: ...",
-      "Emit a separate issue item for every category that applies to an alert.",
-      "One alert can produce multiple issue items, and the same category can appear for multiple alerts if it applies.",
-      "If an alert has no issues, emit exactly one issue with issue_category No issues, severity Low, description Alert {alert_index}: No issues found for this alert., and recommendation No changes required.",
-      "Do not emit a No issues item for an alert that already has one or more real issues."
+      "Emit a separate issue item for every category that applies to each alert.",
+      "If the same category applies to multiple alerts, emit a separate issue item for each alert."
     ]
   }
 }`;

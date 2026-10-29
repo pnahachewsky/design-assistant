@@ -76,7 +76,8 @@ export class AlertService {
     }
 
     const responseText = await this.openRouter.getTextFromAI(ProblemPrompts[ProblemPromptKey.AlertsProblems], JSON.stringify(payload), preferredModel, 0);
-    const issues = this.validateAlertIssuesAgainstHtml(this.parseIssues(responseText), sourceHtml);
+    const validatedIssues = this.validateAlertIssuesAgainstHtml(this.parseIssues(responseText), sourceHtml);
+    const issues = this.addNoIssuePlaceholders(validatedIssues, alerts.length);
     const report = this.saveAnalysis(sourceHtml, pagePath, issues, preferredModel);
     this.requestFrenchTranslation(pagePath, report, translationRunId);
     return this.cloneIssues(report.issues);
@@ -209,8 +210,7 @@ export class AlertService {
     const alerts = getReportableAlerts(doc.body, { interactiveResultLeadIns: this.getInteractiveResultLeadIns() });
     if (!alerts.length) return [];
 
-    const removedAlertIndexes = new Set<number>();
-    const validated = issues.filter((issue) => {
+    return issues.filter((issue) => {
       if (!this.claimsTargetBlankWithoutRel(issue)) return true;
       const alertIndex = issue.alertIndex;
       if (!alertIndex || !Number.isInteger(alertIndex)) return true;
@@ -221,13 +221,17 @@ export class AlertService {
         return target === '_blank' && !(anchor.getAttribute('rel') || '').trim();
       });
       if (claimIsTrue) return true;
-      removedAlertIndexes.add(alertIndex);
       return false;
     });
+  }
 
-    for (const alertIndex of removedAlertIndexes) {
-      if (validated.some((issue) => issue.alertIndex === alertIndex)) continue;
-      validated.push({
+  private addNoIssuePlaceholders(issues: AlertIssue[], alertCount: number): AlertIssue[] {
+    const realIssues = issues.filter((issue) => !isNoAlertIssue(issue));
+    const alertIndexesWithIssues = new Set(realIssues.map((issue) => issue.alertIndex).filter((alertIndex): alertIndex is number => Number.isInteger(alertIndex)));
+
+    for (let alertIndex = 1; alertIndex <= alertCount; alertIndex += 1) {
+      if (alertIndexesWithIssues.has(alertIndex)) continue;
+      realIssues.push({
         alertIndex,
         category: 'No issues',
         severity: 'N/A',
@@ -236,7 +240,8 @@ export class AlertService {
         include: false,
       });
     }
-    return validated;
+
+    return realIssues;
   }
 
   private claimsTargetBlankWithoutRel(issue: AlertIssue): boolean {
