@@ -70,7 +70,7 @@ export const AlertIssuesInstructions = `{
     { "name": "Content clarity", "rule": "Use plain language and keep the reading level around Grade 6-8." },
     { "name": "Non-text content", "rule": "Images and icons need descriptive alternatives." },
     { "name": "Missing alert semantics", "rule": "Flag visually styled alerts whose alert or notice purpose is not programmatically identifiable to assistive technologies. Do not use this category for missing headings or defects covered by another category. Recommend design-system review only. Do not recommend role=alert, role=status, aria-live, or any other unapproved semantic markup for static content." },
-    { "name": "Accessibility/code", "rule": "Flag accessibility or markup defects not covered by another issue category." }
+    { "name": "Accessibility/code", "rule": "Flag accessibility or markup defects not covered by another issue category. Do not flag a heading solely because its visual heading class differs from its semantic heading tag. This is acceptable when the tag follows the page hierarchy; classes such as h4 may intentionally control appearance." }
   ],
   "structuredContextGuidance": {
     "pageSignals": [
