@@ -1,4 +1,4 @@
-import { inject, Injectable } from '@angular/core';
+import { inject, Injectable, signal } from '@angular/core';
 
 import { TranslateService } from '@ngx-translate/core';
 
@@ -28,10 +28,7 @@ const ALERT_SEVERITY_ALIASES: Record<string, 'High' | 'Medium' | 'Low'> = {
   minor: 'Low',
 };
 
-const ALERT_TRANSLATION_SYSTEM_PROMPT = `Translate only the description and recommendation values in the supplied JSON from English into Canadian French.
-Return only valid JSON with this exact shape: {"items":[{"translation_id":"1","description":"...","recommendation":"..."}]}.
-Preserve every translation_id exactly. Do not add, remove, combine, split, or reorder items.
-Preserve HTML tags and attributes, URLs, code, placeholders, CSS classes, ARIA attributes, and quoted source text exactly.`;
+export type AlertFrenchTranslationStatus = 'idle' | 'pending' | 'complete' | 'failed';
 
 @Injectable({ providedIn: 'root' })
 export class AlertService {
@@ -41,6 +38,7 @@ export class AlertService {
   private readonly projectState = inject(ProjectStateService);
   private readonly translate = inject(TranslateService);
   private readonly translationRunIds = new Map<string, number>();
+  private readonly frenchTranslationStates = signal<Record<string, { runId: number; status: AlertFrenchTranslationStatus }>>({});
 
   private readonly fallbackSeverities: Record<string, { severity: string; include?: boolean; severityOverride?: boolean; recommendationOverride?: string }> = Object.fromEntries(
     Object.entries(fallbackSeverityJson as Record<string, string | { severity?: string; include?: boolean; severityOverride?: boolean; recommendationOverride?: string }>).map(([key, value]) => {
@@ -65,12 +63,14 @@ export class AlertService {
 
     const translationRunId = (this.translationRunIds.get(pagePath) ?? 0) + 1;
     this.translationRunIds.set(pagePath, translationRunId);
+    this.setFrenchTranslationStatus(pagePath, translationRunId, 'idle');
     this.clearTranslations(pagePath);
 
     const payload = this.alertContext.buildCompactAlertsIssuesPayload(sourceHtml);
     const alerts = payload['alerts'];
     if (!Array.isArray(alerts) || alerts.length === 0) {
       this.saveAnalysis(sourceHtml, pagePath, [], preferredModel);
+      this.setFrenchTranslationStatus(pagePath, translationRunId, 'complete');
       return [];
     }
 
@@ -93,6 +93,21 @@ export class AlertService {
 
   getSelectedIssues(sourceHtml: string, pagePath: string): AlertIssue[] {
     return (this.getRetainedAnalysis(sourceHtml, pagePath)?.issues ?? []).filter((issue) => issue.include && !isNoAlertIssue(issue));
+  }
+
+  getFrenchTranslationStatus(pagePath: string): AlertFrenchTranslationStatus {
+    return this.frenchTranslationStates()[pagePath]?.status ?? 'idle';
+  }
+
+  hasCompleteFrenchTranslation(report: AlertIssuesReport): boolean {
+    const reportableIssues = report.issues.filter((issue) => !isNoAlertIssue(issue));
+    if (!reportableIssues.length) return true;
+    const translations = new Map((report.translations?.fr?.issues ?? []).map((translation) => [translation.translationId, translation]));
+    return reportableIssues.every((issue) => {
+      if (!issue.translationId) return false;
+      const translation = translations.get(issue.translationId);
+      return !!translation?.description.trim() && !!translation.recommendation.trim();
+    });
   }
 
   updateIssues(pagePath: string, issues: AlertIssue[]): void {
@@ -276,10 +291,15 @@ export class AlertService {
         description: issue.description,
         recommendation: issue.recommendation,
       }));
-    if (!items.length) return;
+    if (!items.length) {
+      this.setFrenchTranslationStatus(pagePath, translationRunId, 'complete');
+      return;
+    }
 
+    this.setFrenchTranslationStatus(pagePath, translationRunId, 'pending');
     void this.translateFrenchIssues(pagePath, report, items, preferredModel, translationRunId).catch((error: unknown) => {
       console.warn('Unable to translate alert issues into French.', error);
+      this.setFrenchTranslationStatus(pagePath, translationRunId, 'failed');
     });
   }
 
@@ -290,19 +310,28 @@ export class AlertService {
     preferredModel: string | undefined,
     translationRunId: number,
   ): Promise<void> {
-    const response = await this.openRouter.sendMessages(
-      [
-        { role: 'system', content: ALERT_TRANSLATION_SYSTEM_PROMPT },
-        { role: 'user', content: JSON.stringify({ target_language: 'fr-CA', items }) },
-      ],
+    const response = await this.openRouter.sendToAI(
+      ProblemPrompts[ProblemPromptKey.TranslateIssueDetails],
+      JSON.stringify({ target_language: 'fr-CA', items }),
       preferredModel,
       0,
     );
-    const translatedIssues = this.parseFrenchTranslations(response.text, items);
-    if (!translatedIssues.length || this.translationRunIds.get(pagePath) !== translationRunId) return;
+    const responseText = response.choices?.[0]?.message?.content ?? '';
+    const translatedIssues = this.parseFrenchTranslations(responseText, items);
+    if (translatedIssues.length !== items.length) {
+      console.warn('Unable to translate all alert issue details into French. The English report remains available.');
+      this.setFrenchTranslationStatus(pagePath, translationRunId, 'failed');
+      return;
+    }
+    if (this.translationRunIds.get(pagePath) !== translationRunId) {
+      return;
+    }
 
     const current = this.projectState.getAlertIssuesReport(pagePath);
-    if (!current || current.analyzedAt !== report.analyzedAt || current.analyzedHtmlHash !== report.analyzedHtmlHash) return;
+    if (!current || current.analyzedAt !== report.analyzedAt || current.analyzedHtmlHash !== report.analyzedHtmlHash) {
+      this.setFrenchTranslationStatus(pagePath, translationRunId, 'failed');
+      return;
+    }
 
     this.projectState.setAlertIssuesReport(pagePath, {
       ...current,
@@ -310,11 +339,12 @@ export class AlertService {
         ...current.translations,
         fr: {
           translatedAt: new Date().toISOString(),
-          model: response.usedModel,
+          model: response.model ?? preferredModel ?? 'unknown',
           issues: translatedIssues,
         },
       },
     });
+    this.setFrenchTranslationStatus(pagePath, translationRunId, 'complete');
   }
 
   private parseFrenchTranslations(
@@ -345,6 +375,11 @@ export class AlertService {
     }
 
     return translations;
+  }
+
+  private setFrenchTranslationStatus(pagePath: string, runId: number, status: AlertFrenchTranslationStatus): void {
+    if (this.translationRunIds.get(pagePath) !== runId) return;
+    this.frenchTranslationStates.update((states) => ({ ...states, [pagePath]: { runId, status } }));
   }
 
   private preservesProtectedTokens(source: string, translation: string): boolean {

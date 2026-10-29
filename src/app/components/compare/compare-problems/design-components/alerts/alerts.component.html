@@ -19,7 +19,7 @@
       <ng-template let-issue pTemplate="body">
         <tr>
           <td class="include-col">
-            <p-checkbox [(ngModel)]="issue.include" [binary]="true" [disabled]="isNoIssueRow(issue)" (onChange)="onIncludeToggle()" />
+            <p-checkbox [(ngModel)]="issue.include" [binary]="true" [disabled]="isNoIssueRow(issue) || loading()" (onChange)="onIncludeToggle()" />
           </td>
           <td class="severity-col">
             <span [ngClass]="severityClass(issue.severity)" class="chip">{{ severityI18nKey(issue.severity) | translate }}</span>
@@ -30,12 +30,15 @@
         </tr>
       </ng-template>
     </p-table>
-  } @else if (hasAnalysis()) {
+  } @else if (hasAnalysis() && !hasHiddenFrenchIssues()) {
     <p-message [text]="'problems.alerts.noIssues' | translate" severity="success" />
   }
 
   @if (error()) {
     <p-message [text]="error()!" severity="error" />
+  }
+  @if (translationUnavailable()) {
+    <p-message [text]="'problems.alerts.translationUnavailable' | translate" severity="warn" />
   }
   @if (loading()) {
     <div class="flex justify-content-center mt-3"><p-progressspinner /></div>
@@ -43,7 +46,7 @@
 
   <div class="alert-table-actions">
     <p-button
-      [disabled]="loading()"
+      [disabled]="analysisLoading()"
       [label]="(hasAnalysis() ? 'problems.alerts.reanalyze' : 'problems.alerts.analyze') | translate"
       [severity]="reanalysisRecommended() ? 'primary' : 'secondary'"
       (click)="analyze()"

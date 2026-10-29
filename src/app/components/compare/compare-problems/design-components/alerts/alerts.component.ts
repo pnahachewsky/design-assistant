@@ -43,12 +43,30 @@ export class AlertsComponent {
   readonly stateChange = output<AlertGuidanceState>();
 
   protected readonly issues = signal<AlertIssue[]>([]);
-  protected readonly loading = signal(false);
+  protected readonly analysisLoading = signal(false);
   protected readonly error = signal<string | null>(null);
   private readonly analyzedHtmlHash = signal('');
   private readonly analysisCurrent = signal(false);
+  private readonly canonicalReportableIssueCount = signal(0);
+  private readonly frenchReportComplete = signal(false);
+  private readonly lastFrenchIssues = signal<AlertIssue[]>([]);
+  private lastFrenchPagePath = '';
   private autoAnalysisKey = '';
   private selectAllInitialized = false;
+
+  protected readonly isFrench = computed(() => (this.translate.currentLang() ?? 'en').toLowerCase().startsWith('fr'));
+  protected readonly translationStatus = computed(() => this.alertService.getFrenchTranslationStatus(this.pagePath()));
+  protected readonly waitingForFrench = computed(() => this.isFrench() && this.translationStatus() === 'pending');
+  protected readonly translationUnavailable = computed(
+    () =>
+      this.isFrench() &&
+      this.canonicalReportableIssueCount() > 0 &&
+      !this.frenchReportComplete() &&
+      !this.analysisLoading() &&
+      (this.translationStatus() === 'idle' || this.translationStatus() === 'failed'),
+  );
+  protected readonly loading = computed(() => this.analysisLoading() || this.waitingForFrench());
+  protected readonly hasHiddenFrenchIssues = computed(() => this.isFrench() && this.canonicalReportableIssueCount() > 0 && this.issues().length === 0);
 
   protected readonly alertCount = computed(() => {
     const html = this.sourceHtml();
@@ -67,7 +85,22 @@ export class AlertsComponent {
       const pagePath = this.pagePath();
       const currentLanguage = this.translate.currentLang();
       const cached = html && pagePath ? this.alertService.getRetainedAnalysis(html, pagePath) : null;
-      this.issues.set(cached ? this.sortIssues(this.alertService.getIssuesForDisplay(cached, currentLanguage)) : []);
+      if (this.lastFrenchPagePath !== pagePath) {
+        this.lastFrenchPagePath = pagePath;
+        this.lastFrenchIssues.set([]);
+      }
+      this.canonicalReportableIssueCount.set(cached?.issues.filter((issue) => !isNoAlertIssue(issue)).length ?? 0);
+      const hasCompleteFrenchReport = !!cached && this.alertService.hasCompleteFrenchTranslation(cached);
+      this.frenchReportComplete.set(hasCompleteFrenchReport);
+      const completeFrenchIssues = cached && hasCompleteFrenchReport ? this.sortIssues(this.alertService.getIssuesForDisplay(cached, 'fr')) : null;
+      if (completeFrenchIssues) this.lastFrenchIssues.set(completeFrenchIssues);
+      this.issues.set(
+        this.isFrench()
+          ? completeFrenchIssues ?? this.lastFrenchIssues()
+          : cached
+            ? this.sortIssues(this.alertService.getIssuesForDisplay(cached, currentLanguage))
+            : [],
+      );
       this.analyzedHtmlHash.set(cached?.analyzedHtmlHash ?? '');
       this.analysisCurrent.set(cached?.isCurrent ?? false);
       this.error.set(null);
@@ -87,21 +120,24 @@ export class AlertsComponent {
       }
       untracked(() => this.applySelectAll(selectAll));
     });
+    effect(() => {
+      this.loading();
+      untracked(() => this.emitState());
+    });
   }
 
   protected async analyze(): Promise<void> {
     const requestHtml = this.sourceHtml();
     const requestPagePath = this.pagePath();
-    if (!requestHtml || !this.alertCount() || this.loading()) return;
+    if (!requestHtml || !this.alertCount() || this.analysisLoading()) return;
 
-    this.loading.set(true);
+    this.analysisLoading.set(true);
     this.error.set(null);
     this.emitState();
     try {
       await this.alertService.analyze(requestHtml, requestPagePath, this.preferredModel(), true);
       if (this.sourceHtml() !== requestHtml || this.pagePath() !== requestPagePath) return;
       const report = this.alertService.getRetainedAnalysis(requestHtml, requestPagePath);
-      this.issues.set(report ? this.sortIssues(this.alertService.getIssuesForDisplay(report, this.translate.currentLang())) : []);
       this.analyzedHtmlHash.set(report?.analyzedHtmlHash ?? '');
       this.analysisCurrent.set(report?.isCurrent ?? false);
       this.emitState();
@@ -109,7 +145,7 @@ export class AlertsComponent {
       this.error.set(error instanceof Error ? error.message : this.translate.instant('problems.alerts.analysisError'));
       this.emitState();
     } finally {
-      this.loading.set(false);
+      this.analysisLoading.set(false);
       this.emitState();
     }
   }

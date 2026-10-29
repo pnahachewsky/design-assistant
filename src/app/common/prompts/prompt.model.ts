@@ -33,6 +33,7 @@ function markForTranslation() {
 
   marker('aiPrompt.problem.alertsRewrite');
   marker('aiPrompt.problem.alertsProblems');
+  marker('aiPrompt.problem.translateIssueDetails');
 }
 
 export interface PromptConfig {
@@ -94,4 +95,5 @@ export enum PagePromptKey {
 export enum ProblemPromptKey {
   AlertsRewrite = 'aiPrompt.problem.alertsRewrite',
   AlertsProblems = 'aiPrompt.problem.alertsProblems',
+  TranslateIssueDetails = 'aiPrompt.problem.translateIssueDetails',
 }
