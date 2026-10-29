@@ -22,7 +22,7 @@ export const AlertIssuesInstructions = `{
     },
     { "step": 2,
       "name": "use_structured_context",
-      "instruction": "Use pageSignals, alertPlacementContext, and alertSignals as primary evidence when present. Match each alert_index to its corresponding alertPlacementContext and alertSignals objects. If structured context conflicts with a weak inference from raw HTML, prefer the structured context."
+      "instruction": "Use pageSignals as page-level evidence when present. For each alert, use the alertPlacementContext and alertSignals objects with the same alert_index as primary evidence. If structured context conflicts with a weak inference from raw HTML, prefer the structured context."
     },
     { "step": 3,
       "name": "check_simple_issues",
