@@ -58,10 +58,10 @@ export const AlertIssuesInstructions = `{
     { "name": "Hidden content", "rule": "Do not use accordions, expand-collapse patterns, or hidden content inside alerts. Alert content must be visible." },
     { "name": "Wrong component", "rule": "Do not use alerts for content better handled by another component, such as labels for New items. These alerts should usually be removed." },
     { "name": "Too many links", "rule": "Limit alerts to one primary link when possible." },
-    { "name": "Wrong placement", "rule": "Place alerts near the relevant section rather than globally when the message applies to specific content." },
-    { "name": "Alert overload", "rule": "Flag multiple stacked or clustered alerts that may create alert fatigue." },
-    { "name": "Low relevance", "rule": "On home, landing, or broad overview pages, alerts should apply to more than half of the audience." },
-    { "name": "Incorrect hierarchy", "rule": "Alert headings must follow the heading structure of the page (e.g., there should never be an H4 after an H2)." },
+    { "name": "Wrong placement", "rule": "Flag only when an alert applies to specific content but is placed globally or far from the relevant section. Use nearby headings, section snippets, and position as supporting evidence. Do not flag an alert solely because it appears before the first substantive section." },
+    { "name": "Alert overload", "rule": "Flag multiple stacked or clustered alerts that may create alert fatigue. Strongly consider this issue when page-level or placement context indicates multiple alerts clustered near the same part of the page." },
+    { "name": "Low relevance", "rule": "On home, landing, or broad overview pages, alerts should apply to more than half of the audience. Strongly consider this issue when the alert appears narrowly targeted relative to the page signals." },
+    { "name": "Incorrect hierarchy", "rule": "Alert headings must follow the heading structure of the page (e.g., there should never be an H4 after an H2). Compare the alert heading pattern with nearby page headings and the section position, not just the alert markup in isolation." },
     { "name": "Nothing actionable", "rule": "If no next-step link exists, flag the alert to confirm that none is needed or whether it needs to be deleted and the information added to the page instead." }
   ],
   "complexIssueCategories": [
@@ -89,24 +89,6 @@ export const AlertIssuesInstructions = `{
       "Use previous_sibling_is_alert, next_sibling_is_alert, and adjacent_alert_cluster_size to strengthen Alert overload judgments."
     ]
   },
-  "contextSensitiveHeuristics": [
-    {
-      "category": "Wrong placement",
-      "instruction": "Strongly consider this category when the alert appears before the first substantive section, far from related headings, or when nearby section snippets do not support the alert topic."
-    },
-    {
-      "category": "Alert overload",
-      "instruction": "Strongly consider this category when page-level or placement context indicates multiple alerts clustered together near the same part of the page."
-    },
-    {
-      "category": "Low relevance",
-      "instruction": "Strongly consider this category on home, landing, or broad overview pages when the alert appears narrowly targeted relative to the page signals."
-    },
-    {
-      "category": "Incorrect hierarchy",
-      "instruction": "Compare the alert heading pattern with nearby page headings and the section position, not just the alert markup in isolation."
-    }
-  ],
   "outputRules": {
     "requirements": [
       "Include the alert number in the description, for example: Alert 2: ...",
