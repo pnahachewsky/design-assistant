@@ -85,9 +85,10 @@ export class AlertService {
     }
 
     const responseText = await this.openRouter.getTextFromAI(ProblemPrompts[ProblemPromptKey.AlertsProblems], JSON.stringify(payload), preferredModel, 0);
-    const validatedIssues = this.validateAlertIssuesAgainstHtml(this.parseIssues(responseText), sourceHtml);
-    const visibleIssues = this.suppressDeferredIssues(validatedIssues);
-    const issues = this.addNoIssuePlaceholders(visibleIssues, alerts.length);
+    const parsedIssues = this.parseIssues(responseText);
+    const visibleIssues = this.suppressDeferredIssues(parsedIssues);
+    const validatedIssues = this.validateAlertIssuesAgainstHtml(visibleIssues, sourceHtml);
+    const issues = this.addNoIssuePlaceholders(validatedIssues, alerts.length);
     const report = this.saveAnalysis(sourceHtml, pagePath, issues, preferredModel);
     this.requestFrenchTranslation(pagePath, report, translationRunId);
     return this.cloneIssues(report.issues);
@@ -145,7 +146,12 @@ export class AlertService {
 
   getIssuesForDisplay(report: AlertIssuesReport, language: string | null): AlertIssue[] {
     const issues = this.cloneIssues(report.issues);
-    if (!(language ?? 'en').toLowerCase().startsWith('fr')) return issues;
+    if (!(language ?? 'en').toLowerCase().startsWith('fr')) {
+      return issues.map((issue) => ({
+        ...issue,
+        recommendation: this.lookupRecommendationOverride(issue.category, 'en') ?? issue.recommendation,
+      }));
+    }
 
     const translations = new Map((report.translations?.fr?.issues ?? []).map((translation) => [translation.translationId, translation]));
     return issues.map((issue) => {
@@ -175,7 +181,7 @@ export class AlertService {
         alertIndex: Number.isFinite(Number(issue.alertIndex)) ? Number(issue.alertIndex) : undefined,
         category,
         description: this.cleanString(issue.description),
-        recommendation: this.lookupRecommendationOverride(category, 'en') ?? this.cleanString(issue.recommendation),
+        recommendation: this.cleanString(issue.recommendation),
         severity: noIssues ? 'N/A' : this.normalizeSeverity(issue.severity, category),
         include: noIssues ? false : typeof issue.include === 'boolean' ? issue.include : this.getDefaultInclude(category),
       };
