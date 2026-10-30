@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["angular:styles/component:css;7024e500bd8685665ff8aa9ee57160cbcad07610618ee047f58bf355b6d8987c;C:/my-working-files/GitHub/design-assistant-aws/src/app/views/toolbox/dev-tools/prompt-editor/prompt-editor.component.ts"],
+  "sourcesContent": ["\n    pre.prompt-preview {\n      display: block;\n      box-sizing: border-box;\n      width: 100%;\n      min-width: 0;\n      max-width: 100%;\n      font-size: 1rem;\n      white-space: pre-wrap !important;\n      overflow-wrap: anywhere;\n      word-break: break-word;\n      overflow-x: hidden;\n    }\n  "],
+  "mappings": ";AACI,GAAG,CAAC;AACF,WAAS;AACT,cAAY;AACZ,SAAO;AACP,aAAW;AACX,aAAW;AACX,aAAW;AACX,eAAa;AACb,iBAAe;AACf,cAAY;AACZ,cAAY;AACd;",
+  "names": []
+}

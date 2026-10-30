@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["src/app/common/ai-models.config.ts"],
+  "sourcesContent": ["export type AiFreeModelOptions = (typeof AI_FREE_MODELS)[number];\nexport type AiPaidModelOptions = (typeof AI_PAID_MODELS)[number]['value'];\n\nexport type PriceTier = '$' | '$$' | '$$$' | '$$$$';\n\nexport const AI_FREE_MODELS = [\n  'nvidia/nemotron-3-ultra-550b-a55b:free',\n  'openrouter/free',\n  'openai/gpt-oss-20b:free',\n  'nvidia/nemotron-3.5-lightning:free',\n  'nvidia/nemotron-3-super-120b-a12b:free',\n] as const;\n\nexport const AI_DEFAULT_MODEL = 'nvidia/nemotron-3-ultra-550b-a55b:free' satisfies AiFreeModelOptions;\nexport const AI_ALERT_TRANSLATION_MODEL = 'openrouter/free' satisfies AiFreeModelOptions;\n\nexport const AI_PAID_MODELS = [\n  { value: 'openai/gpt-oss-20b', price: '$' },\n  { value: 'google/gemini-3.1-flash-lite', price: '$$' },\n  { value: 'deepseek/deepseek-v4-flash-latest', price: '$$' },\n  { value: 'openai/gpt-5.6-luna-pro', price: '$$' },\n  { value: 'openai/gpt-5-mini', price: '$$' },\n  { value: 'openai/gpt-5.4-mini', price: '$$$' },\n  { value: 'openrouter/auto', price: '$$$$' },\n] as const satisfies { value: string; price: PriceTier }[];\n"],
+  "mappings": ";AAKO,IAAM,iBAAiB;EAC5B;EACA;EACA;EACA;EACA;;AAGK,IAAM,mBAAmB;AACzB,IAAM,6BAA6B;AAEnC,IAAM,iBAAiB;EAC5B,EAAE,OAAO,sBAAsB,OAAO,IAAG;EACzC,EAAE,OAAO,gCAAgC,OAAO,KAAI;EACpD,EAAE,OAAO,qCAAqC,OAAO,KAAI;EACzD,EAAE,OAAO,2BAA2B,OAAO,KAAI;EAC/C,EAAE,OAAO,qBAAqB,OAAO,KAAI;EACzC,EAAE,OAAO,uBAAuB,OAAO,MAAK;EAC5C,EAAE,OAAO,mBAAmB,OAAO,OAAM;;",
+  "names": []
+}
