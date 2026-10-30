@@ -26,11 +26,11 @@ export const AlertIssuesInstructions = `{
     },
     { "step": 3,
       "name": "check_simple_issues",
-      "instruction": "For each alert, check every simple issue category. Add a separate issue item for each category that applies."
+      "instruction": "For each alert, evaluate every simple issue category independently."
     },
     { "step": 4,
       "name": "check_complex_issues",
-      "instruction": "For each alert, check every complex issue category. Add a separate issue item for each category that applies."
+      "instruction": "For each alert, evaluate every complex issue category independently."
     }
   ],
   "simpleIssueCategories": [
@@ -100,8 +100,7 @@ export const AlertIssuesInstructions = `{
   "outputRules": {
     "requirements": [
       "Include the alert number in the description, for example: Alert 2: ...",
-      "Emit a separate issue item for every category that applies to each alert.",
-      "If the same category applies to multiple alerts, emit a separate issue item for each alert."
+      "Emit a separate issue item for every category that applies to each alert."
     ]
   }
 }`;
