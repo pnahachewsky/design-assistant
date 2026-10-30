@@ -31,6 +31,14 @@ const ALERT_SEVERITY_ALIASES: Record<string, 'High' | 'Medium' | 'Low'> = {
 
 export type AlertFrenchTranslationStatus = 'idle' | 'pending' | 'complete' | 'failed';
 
+interface AlertFallbackConfig {
+  severity: string;
+  include?: boolean;
+  display?: boolean;
+  severityOverride?: boolean;
+  recommendationOverride?: string;
+}
+
 @Injectable({ providedIn: 'root' })
 export class AlertService {
   private readonly openRouter = inject(OpenRouterService);
@@ -41,14 +49,15 @@ export class AlertService {
   private readonly translationRunIds = new Map<string, number>();
   private readonly frenchTranslationStates = signal<Record<string, { runId: number; status: AlertFrenchTranslationStatus }>>({});
 
-  private readonly fallbackSeverities: Record<string, { severity: string; include?: boolean; severityOverride?: boolean; recommendationOverride?: string }> = Object.fromEntries(
-    Object.entries(fallbackSeverityJson as Record<string, string | { severity?: string; include?: boolean; severityOverride?: boolean; recommendationOverride?: string }>).map(([key, value]) => {
+  private readonly fallbackSeverities: Record<string, AlertFallbackConfig> = Object.fromEntries(
+    Object.entries(fallbackSeverityJson as Record<string, string | Partial<AlertFallbackConfig>>).map(([key, value]) => {
       if (typeof value === 'string') return [key.toLowerCase(), { severity: value }];
       return [
         key.toLowerCase(),
         {
           severity: value.severity ?? '',
           include: value.include,
+          display: value.display,
           severityOverride: value.severityOverride,
           recommendationOverride: value.recommendationOverride,
         },
@@ -77,7 +86,8 @@ export class AlertService {
 
     const responseText = await this.openRouter.getTextFromAI(ProblemPrompts[ProblemPromptKey.AlertsProblems], JSON.stringify(payload), preferredModel, 0);
     const validatedIssues = this.validateAlertIssuesAgainstHtml(this.parseIssues(responseText), sourceHtml);
-    const issues = this.addNoIssuePlaceholders(validatedIssues, alerts.length);
+    const visibleIssues = this.suppressDeferredIssues(validatedIssues);
+    const issues = this.addNoIssuePlaceholders(visibleIssues, alerts.length);
     const report = this.saveAnalysis(sourceHtml, pagePath, issues, preferredModel);
     this.requestFrenchTranslation(pagePath, report, translationRunId);
     return this.cloneIssues(report.issues);
@@ -242,6 +252,26 @@ export class AlertService {
     }
 
     return realIssues;
+  }
+
+  private suppressDeferredIssues(issues: AlertIssue[]): AlertIssue[] {
+    const visibleIssues: AlertIssue[] = [];
+    const suppressedIssues: AlertIssue[] = [];
+
+    for (const issue of issues) {
+      const display = this.fallbackSeverities[this.cleanString(issue.category).toLowerCase()]?.display;
+      (display === false ? suppressedIssues : visibleIssues).push(issue);
+    }
+
+    if (suppressedIssues.length) {
+      console.info('[Alert analysis] Suppressed deferred issues.', {
+        count: suppressedIssues.length,
+        categories: [...new Set(suppressedIssues.map((issue) => issue.category))],
+        alertIndexes: suppressedIssues.map((issue) => issue.alertIndex).filter((alertIndex): alertIndex is number => Number.isInteger(alertIndex)),
+      });
+    }
+
+    return visibleIssues;
   }
 
   private claimsTargetBlankWithoutRel(issue: AlertIssue): boolean {

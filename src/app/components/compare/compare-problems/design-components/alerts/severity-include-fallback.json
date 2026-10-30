@@ -11,6 +11,7 @@
   "Wrong component": { "severity": "Medium" },
   "Missing alert semantics": { "severity": "Low",
     "include": false,
+    "display": false,
     "severityOverride": true,
     "recommendationOverride": "problems.alerts.recommendation.missingAlertSemantics"
   },
