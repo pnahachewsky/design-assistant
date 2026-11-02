@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["angular:styles/component:css;ca67b32af66193c80055f85130f15abf33b39de0c6bf15cb0103b096d3979485;C:/my-working-files/GitHub/design-assistant-aws/src/app/views/toolbox/standalone-tools/scratch-pad/scratch-pad.component.ts"],
+  "sourcesContent": ["\n    p-inputgroup,\n    p-inputgroup-addon,\n    .p-inputgroup-addon {\n      overflow: visible !important;\n    }\n  "],
+  "mappings": ";AACI;AACA;AACA,CAAC;AACC,YAAU;AACZ;",
+  "names": []
+}

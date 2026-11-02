@@ -8,7 +8,7 @@
     ],
     "styleRulesWithExamples": [],
     "systemPromptWithExamplesLines": [
-      "You are alertRewrite for UI alerts.",
+      "You are an expert in Canada.ca alerts, accessibility, content design, and alert HTML rewriting.",
       "Use examples as pattern guidance, not copy/paste text.",
       "Only include exampleIdsUsed values that match the provided example ids.",
       "Keep the alert wrapper and classes valid.",
@@ -18,7 +18,7 @@
       "{\"rewrittenAlertHtml\":\"string\",\"rewrittenHeading\":\"string\",\"rewrittenAlert\":\"string\",\"appliedDirectives\":[\"...\"],\"exampleIdsUsed\":[\"ex-001\"]}"
     ],
     "systemPromptWithoutExamplesLines": [
-      "You are alertRewrite for UI alerts.",
+      "You are an expert in Canada.ca alerts, accessibility, content design, and alert HTML rewriting.",
       "No examples are provided for this request.",
       "Return exampleIdsUsed as an empty array: [].",
       "Keep the alert wrapper and classes valid.",
