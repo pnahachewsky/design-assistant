@@ -8214,13 +8214,13 @@ var routes = [
       },
       {
         path: "edit-pages",
-        loadComponent: () => import("./chunk-XI6VSNMG.js").then((m) => m.CompareComponent),
+        loadComponent: () => import("./chunk-VU2RCL43.js").then((m) => m.CompareComponent),
         title: "editPages._title",
         data: { mode: "ai" }
       },
       {
         path: "compare-pages",
-        loadComponent: () => import("./chunk-XI6VSNMG.js").then((m) => m.CompareComponent),
+        loadComponent: () => import("./chunk-VU2RCL43.js").then((m) => m.CompareComponent),
         title: "compare._title",
         data: { mode: "compare" }
       }
@@ -8381,4 +8381,4 @@ var appConfig = {
 
 // src/main.ts
 bootstrapApplication(AppComponent, appConfig).catch((err) => console.error(err));
-//# sourceMappingURL=main-Z2JJ7AXR.js.map
+//# sourceMappingURL=main-JRVTZMYG.js.map

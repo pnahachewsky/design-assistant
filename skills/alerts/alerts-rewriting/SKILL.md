@@ -13,9 +13,13 @@ Use this skill only for alert rewriting. Do not return issue-analysis payloads.
 3. Return JSON only.
 
 ## Resources
-- Read `references/shared-rewrite-guidance.json` for shared rewrite, style, link, example, and self-check guidance.
+- Read `references/shared-rewrite-guidance.json` for shared rewrite, style, example, and self-check guidance.
 - Read `references/runtime-rewrite-rules.json` for the live per-alert prompt contract, output fields, and retry instructions.
 - Use `references/examples.json` for pattern guidance only. Do not copy wording.
+
+The AWS-AIDA runtime supplies shared link-writing guidance from
+`src/app/common/prompts/link-writing.prompt.ts`; it is not duplicated in this
+skill package.
 
 ## Source of Truth
 
