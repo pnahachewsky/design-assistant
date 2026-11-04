@@ -1,7 +1,11 @@
 import {
+  AlertRewriteExamples,
+  AlertRewriteRules,
   PagePrompts,
-  ProblemPrompts
-} from "./chunk-6H5RFQJ4.js";
+  ProblemPrompts,
+  getCanadaCaStylePromptRules,
+  getLinkWritingPromptRules
+} from "./chunk-3RQKJQKV.js";
 import {
   CompareRenderedComponent,
   CompareSourceComponent
@@ -9,10 +13,10 @@ import {
 import "./chunk-QIL4V2KY.js";
 import {
   CompareSelectComponent
-} from "./chunk-PBEREIFF.js";
+} from "./chunk-CGUQ24NA.js";
 import {
   CompareService
-} from "./chunk-GMKIASEW.js";
+} from "./chunk-3ARVE7OW.js";
 import {
   AI_ALERT_TRANSLATION_MODEL,
   AI_FREE_MODELS,
@@ -20,7 +24,7 @@ import {
   OpenRouterService,
   PagePromptKey,
   ProblemPromptKey
-} from "./chunk-B4BDB4FE.js";
+} from "./chunk-P6GTBMNV.js";
 import {
   ProgressSpinner,
   ProgressSpinnerModule
@@ -1449,7 +1453,7 @@ var AlertContextService = class _AlertContextService {
       interactiveResultLeadIns: this.getInteractiveResultLeadIns()
     });
     const main = sourceDoc.querySelector("main") ?? sourceDoc.body;
-    const h2Elements = Array.from(main.querySelectorAll("h2"));
+    const h2Elements = Array.from(main.querySelectorAll("h2")).filter((h2) => !h2.closest(".alert"));
     const h2Headings = h2Elements.map((h2) => this.truncateContextText(h2.textContent || "", 120)).filter((value) => !!value).slice(0, 20);
     const mainElements = Array.from(main.querySelectorAll("*"));
     const mainIndexMap = new Map(mainElements.map((el, idx) => [el, idx]));
@@ -1701,8 +1705,6 @@ var AlertContextService = class _AlertContextService {
     return {
       alertIndex,
       alertType: this.getAlertTypeClass(alertElement),
-      originalHeading: alertSignals.heading_text,
-      originalAlertText: this.truncateContextText(alertElement.textContent || "", 400),
       pageContext: `Title: ${context.title || "N/A"}
 H1: ${context.h1 || "N/A"}
 Page type signal: ${context.pageTypeSignal}
@@ -3512,449 +3514,6 @@ var CompareProblemsComponent = class _CompareProblemsComponent {
   (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(CompareProblemsComponent, { className: "CompareProblemsComponent", filePath: "src/app/components/compare/compare-problems/compare-problems.component.ts", lineNumber: 22 });
 })();
 
-// src/app/common/prompts/alert-rewrite.examples.ts
-var AlertRewriteExamples = [
-  {
-    id: "ex-001",
-    alertType: "info",
-    tags: ["housing", "gst", "rebate", "legislation", "policy-update", "missing-heading"],
-    purposeTags: ["policy-caveat", "legislative-update", "missing-heading", "remove-boilerplate"],
-    criteria: ["C2_too_wordy", "C4_missing_heading", "C7_too_vague"],
-    egHeading: "Rebate details may change",
-    egText: "The details provided on this rebate are based on proposed legislation and may change.",
-    egHtml: '<section class="alert alert-info"><h2 class="h3">Rebate details may change</h2><p>The details provided on this rebate are based on proposed legislation and may change.</p></section>',
-    notes: "Adds a descriptive heading, removes update/link boilerplate, and keeps the core policy caveat short and clear."
-  },
-  {
-    id: "ex-002",
-    alertType: "info",
-    tags: ["tax", "slips", "filing", "cra-account", "action-required"],
-    purposeTags: ["action-required", "account-service", "remove-process-detail", "replace-vague-heading"],
-    criteria: ["C1_missing_next_step", "C2_too_wordy"],
-    egHeading: "Finding your tax slips",
-    egText: "If you do not see a tax slip in your CRA account when you file your 2024 tax return, use the slip provided by your issuer (such as your employer or financial institution).",
-    egHtml: '<section class="alert alert-info"><h2 class="h3">Finding your tax slips</h2><p>If you do not see a tax slip in your CRA account when you file your 2024 tax return, use the slip provided by your issuer (such as your employer or financial institution).</p></section>',
-    notes: "Replaces a vague process heading with a descriptive one, removes process detail, and gives a direct next step."
-  },
-  {
-    id: "ex-003",
-    alertType: "info",
-    tags: ["wildfire", "disaster-support", "benefits", "tax-affairs"],
-    purposeTags: ["support-info", "keep-support-link"],
-    criteria: [],
-    egHeading: "Support for Canadians affected by wildfires",
-    egText: "If you've been impacted by wildfires, visit our disaster support page for information on managing your taxes and accessing benefit and credit payments during and after a disaster.",
-    egHtml: `<section class="alert alert-info"><h2 class="h3">Support for Canadians affected by wildfires</h2><p>If you've been impacted by wildfires, visit our <a href="https://www.canada.ca/en/revenue-agency/corporate/about-canada-revenue-agency-cra/managing-tax-affairs-during-after-disaster.html">disaster support page</a> for information on managing your taxes and accessing benefit and credit payments during and after a disaster.</p></section>`,
-    egLinks: [
-      {
-        id: "L1",
-        text: "disaster support page",
-        href: "https://www.canada.ca/en/revenue-agency/corporate/about-canada-revenue-agency-cra/managing-tax-affairs-during-after-disaster.html"
-      }
-    ],
-    notes: "Shows a complete support alert with a descriptive heading, visible content, and one clear service link."
-  },
-  {
-    id: "ex-004",
-    alertType: "info",
-    tags: ["business", "tariffs", "tax-relief", "support"],
-    purposeTags: ["support-info", "missing-source-context", "standalone-action-link"],
-    criteria: ["C4_missing_heading", "C7_too_vague"],
-    egHeading: "Support for businesses in response to tariffs",
-    egText: "Find the CRA's latest tariff-related tax relief measures and support for businesses.",
-    egHtml: `<section class="alert alert-info"><h2 class="h3">Support for businesses in response to tariffs</h2><p>Find the CRA's latest tariff-related <a href="https://www.canada.ca/en/revenue-agency/services/support-difficult-situations/tax-relief-businesses-tariffs.html">tax relief measures and support for businesses</a>.</p></section>`,
-    egLinks: [
-      {
-        id: "L1",
-        text: "tax relief measures and support for businesses",
-        href: "https://www.canada.ca/en/revenue-agency/services/support-difficult-situations/tax-relief-businesses-tariffs.html"
-      }
-    ],
-    notes: "Original source text is unavailable. Shows a complete support alert with a descriptive heading and one service link."
-  },
-  {
-    id: "ex-005",
-    alertType: "info",
-    tags: ["luxury-tax", "aircraft", "vessels", "legislation", "date-sensitive"],
-    purposeTags: ["legislative-update", "date-sensitive", "remove-secondary-link", "reference-link"],
-    criteria: ["C2_too_wordy", "C7_too_vague"],
-    egHeading: "Removal of the luxury tax on sales of aircraft and vessels",
-    egText: "The Government of Canada has proposed legislation to remove the luxury tax on sales of aircraft and vessels as of November 5, 2025. For more information: Notice LTN5, Luxury tax not payable on subject aircraft and subject vessels",
-    egHtml: '<section class="alert alert-info"><h2 class="h3">Removal of the luxury tax on sales of aircraft and vessels</h2><p>The Government of Canada has proposed legislation to remove the luxury tax on sales of aircraft and vessels as of November 5, 2025.</p><p>For more information: <a href="https://www.canada.ca/content/canadasite/en/revenue-agency/services/forms-publications/publications/ltn5/ltn5-luxury-tax-not-payable-subject-aircraft-and-vessels.html">Notice LTN5, Luxury tax not payable on subject aircraft and subject vessels</a></p></section>',
-    egLinks: [
-      {
-        id: "L2",
-        text: "Notice LTN5, Luxury tax not payable on subject aircraft and subject vessels",
-        href: "https://www.canada.ca/content/canadasite/en/revenue-agency/services/forms-publications/publications/ltn5/ltn5-luxury-tax-not-payable-subject-aircraft-and-vessels.html"
-      }
-    ],
-    notes: "Shortens a legislative update, explains the current impact, removes a secondary background link, and keeps one primary reference link."
-  },
-  {
-    id: "ex-006",
-    alertType: "info",
-    tags: ["business", "gst", "hst", "access-code", "cra-account", "filing"],
-    purposeTags: ["account-service", "action-required", "standalone-action-link", "missing-heading"],
-    criteria: ["C1_missing_next_step", "C4_missing_heading"],
-    egHeading: "Get your access code in your CRA account",
-    egText: "Business owners can get their GST/HST access code in their CRA account (My Business Account). How to get an access code",
-    egHtml: '<section class="alert alert-info"><h2 class="h3">Get your access code in your CRA account</h2><p>Business owners can get their GST/HST access code in their CRA account (My Business Account).</p><p><a href="https://www.canada.ca/en/revenue-agency/services/tax/businesses/topics/gst-hst-businesses/file-gst-hst-return/how-file/get-gst-hst-access-code.html#hw_gt">How to get an access code</a></p></section>',
-    egLinks: [
-      {
-        id: "L1",
-        text: "How to get an access code",
-        href: "https://www.canada.ca/en/revenue-agency/services/tax/businesses/topics/gst-hst-businesses/file-gst-hst-return/how-file/get-gst-hst-access-code.html#hw_gt"
-      }
-    ],
-    notes: "Adds a task-oriented heading and uses a standalone action-link paragraph without extra lead-in text."
-  },
-  {
-    id: "ex-007",
-    alertType: "warning",
-    tags: ["postal-service", "labour-disruption", "service-update", "mail-service"],
-    purposeTags: ["service-update", "status-change", "remove-secondary-link", "shorten-alert"],
-    criteria: ["C2_too_wordy", "C7_too_vague"],
-    egHeading: "Canada Post strike paused",
-    egText: "Canada Post has reached tentative agreements with its union. Mail service has resumed.",
-    egHtml: '<section class="alert alert-warning"><h2 class="h3">Canada Post strike paused</h2><p>Canada Post has reached tentative agreements with its union. Mail service has resumed.</p></section>',
-    egLinks: [],
-    notes: "Shortens a resolved labour-disruption status update and removes a secondary background link because the current service status is stated directly."
-  },
-  {
-    id: "ex-008",
-    alertType: "warning",
-    tags: ["dtc", "disability-tax-credit", "processing-delay", "form-t2201", "service-standard"],
-    purposeTags: ["service-delay", "action-required", "standalone-action-link", "remove-secondary-link"],
-    criteria: ["C1_missing_next_step", "C4_missing_heading"],
-    egHeading: "DTC processing delay",
-    egText: "The CRA is experiencing delays in processing Form T2201 Disability Tax Credit Certificate. Check CRA processing times",
-    egHtml: '<section class="alert alert-warning"><h2 class="h3">DTC processing delay</h2><p>The CRA is experiencing delays in processing Form T2201 Disability Tax Credit Certificate.</p><p><a href="https://www.canada.ca/en/revenue-agency/corporate/contact-information/check-cra-processing-times.html">Check CRA processing times</a>.</p></section>',
-    egLinks: [
-      {
-        id: "L1",
-        text: "Check CRA processing times",
-        href: "https://www.canada.ca/en/revenue-agency/corporate/contact-information/check-cra-processing-times.html"
-      }
-    ],
-    notes: "Uses a warning alert for a service delay and provides one clear standalone action link while removing secondary account-status detail."
-  },
-  {
-    id: "ex-009",
-    alertType: "info",
-    tags: ["benefits", "gst", "hst", "groceries", "essentials", "payment", "date-sensitive"],
-    purposeTags: ["benefit-change", "date-sensitive", "multiple-detail-links", "new-program"],
-    criteria: ["C1_missing_next_step", "C2_too_wordy"],
-    egHeading: "New Canada Groceries and Essentials Benefit",
-    egText: "The Canada Groceries and Essentials Benefit will replace the GST/HST credit in July 2026. An additional one-time GST/HST credit top-up payment will be issued starting on June 5, 2026 to recipients who qualify. For details: Groceries and Essentials benefit One-time GST/HST payment",
-    egHtml: '<section class="alert alert-info"><h2 class="h3">New Canada Groceries and Essentials Benefit</h2><p>The Canada Groceries and Essentials Benefit will replace the GST/HST credit in July 2026. An additional one-time GST/HST credit top-up payment will be issued starting on June 5, 2026 to recipients who qualify.</p><p>For details:</p><ul class="list-unstyled"><li><a href="https://www.canada.ca/en/revenue-agency/services/child-family-benefits/canada-groceries-essentials-benefit.html">Groceries and Essentials benefit</a></li><li><a href="https://www.canada.ca/en/revenue-agency/services/child-family-benefits/gst-hst-credit/how-much/one-time-top-up.html">One-time GST/HST payment</a></li></ul></section>',
-    egLinks: [
-      {
-        id: "L1",
-        text: "Groceries and Essentials benefit",
-        href: "https://www.canada.ca/en/revenue-agency/services/child-family-benefits/canada-groceries-essentials-benefit.html"
-      },
-      {
-        id: "L2",
-        text: "One-time GST/HST payment",
-        href: "https://www.canada.ca/en/revenue-agency/services/child-family-benefits/gst-hst-credit/how-much/one-time-top-up.html"
-      }
-    ],
-    notes: "Keeps the alert short while using an unstyled list for two necessary final detail links after one lead-in paragraph."
-  },
-  {
-    id: "ex-010",
-    alertType: "warning",
-    tags: ["benefits", "disinformation", "fraud-awareness", "payments", "official-sources"],
-    purposeTags: ["fraud-warning", "correction", "official-source-warning", "missing-heading"],
-    criteria: ["C4_missing_heading", "C7_too_vague"],
-    egHeading: "Beware of false information online",
-    egText: "There is false information online about a new one-time payment of $680 from the Government of Canada. This payment does not exist. To avoid disinformation about any benefits or payments, always check official government web pages.",
-    egHtml: '<section class="alert alert-warning"><h2 class="h3">Beware of false information online</h2><p>There is false information online about a new one-time payment of $680 from the Government of Canada. This payment does not exist. To avoid disinformation about any benefits or payments, always check official government web pages.</p></section>',
-    egLinks: [],
-    notes: "Uses a warning alert for disinformation, adds a descriptive heading, and states the correction directly."
-  },
-  {
-    id: "ex-011",
-    alertType: "warning",
-    tags: ["business", "registration", "business-number", "program-account", "service-change", "date-sensitive"],
-    purposeTags: ["service-change", "date-sensitive", "action-required", "standalone-action-link"],
-    criteria: ["C1_missing_next_step", "C4_missing_heading"],
-    egHeading: "Business registration by phone is ending",
-    egText: "As of November 5, 2026, you can no longer register a business number (BN) or CRA program account by phone. You must register using Business Registration Online (BRO). Learn more: Business registration online",
-    egHtml: '<section class="alert alert-warning"><h2 class="h3">Business registration by phone is ending</h2><p>As of November 5, 2026, you can no longer register a business number (BN) or CRA program account by phone. You must register using Business Registration Online (BRO).</p><p>Learn more: <a href="https://www.canada.ca/en/revenue-agency/services/tax/businesses/topics/business-registration/business-number-program-account/how-register/resident.html">Business registration online</a></p></section>',
-    egLinks: [
-      {
-        id: "L1",
-        text: "Business registration online",
-        href: "https://www.canada.ca/en/revenue-agency/services/tax/businesses/topics/business-registration/business-number-program-account/how-register/resident.html"
-      }
-    ],
-    notes: "Uses a warning alert for a service-channel change and gives the required online next step with one primary link."
-  },
-  {
-    id: "ex-012",
-    alertType: "info",
-    tags: ["excise-tax", "fuel", "legislation", "rates", "technical-information"],
-    purposeTags: ["legislative-update", "technical-notice", "remove-secondary-link", "standalone-action-link"],
-    criteria: ["C1_missing_next_step", "C4_missing_heading"],
-    egText: "The Government of Canada intends to reduce the excise tax rates on some types of fuel. Review the proposed excise tax rates",
-    egHtml: '<section class="alert alert-info"><p>The Government of Canada intends to reduce the excise tax rates on some types of fuel.</p><p><a href="https://www.canada.ca/content/canadasite/en/revenue-agency/services/tax/technical-information/excise-taxes-special-levies/excise-taxes-special-levies-notices/etsl82-proposed-temporary-rate-reductions-excise-tax-on-certain-types-fuel.html">Review the proposed excise tax rates</a></p></section>',
-    egLinks: [
-      {
-        id: "L2",
-        text: "Review the proposed excise tax rates",
-        href: "https://www.canada.ca/content/canadasite/en/revenue-agency/services/tax/technical-information/excise-taxes-special-levies/excise-taxes-special-levies-notices/etsl82-proposed-temporary-rate-reductions-excise-tax-on-certain-types-fuel.html"
-      }
-    ],
-    notes: "Uses concise legislative-update wording, removes a secondary announcement link, and keeps a separate action-link paragraph for the technical notice."
-  },
-  {
-    id: "ex-013",
-    alertType: "info",
-    tags: ["tax-return", "filing", "cra-account", "online-services", "action-required"],
-    purposeTags: ["online-service", "action-required", "duplicate-link-cleanup", "standalone-action-link"],
-    criteria: ["C1_missing_next_step", "C4_missing_heading"],
-    egHeading: "File your return online with your CRA Account",
-    egText: "You can file your tax return online using your CRA account. Sign in or register for a CRA Account",
-    egHtml: '<section class="alert alert-info"><h2 class="h3">File your return online with your CRA Account</h2><p>You can file your tax return online using your CRA account.</p><p>Sign in or register for a <a href="https://www.canada.ca/content/canadasite/en/revenue-agency/services/e-services/represent-a-client.html">CRA Account</a>.</p></section>',
-    egLinks: [
-      {
-        id: "L1",
-        text: "CRA Account",
-        href: "https://www.canada.ca/content/canadasite/en/revenue-agency/services/e-services/represent-a-client.html"
-      }
-    ],
-    notes: "Gives a direct filing action and consolidates repeated sign-in links into one standalone account action link."
-  }
-];
-
-// src/app/common/prompts/alert-rewrite.prompt.ts
-var AlertRewriteRules = {
-  alertRewrite: {
-    styleRulesBase: [
-      "Keep edits proportionate. Resolve selected issues and use selected examples only as style guidance. Preserve the alert's supported meaning, facts, and purpose.",
-      "Preserve the original alert type, such as info, warning, danger, or success, unless a selected issue explicitly identifies the alert type as incorrect.",
-      "Do not invent facts, dates, URLs, program names, or destination details.",
-      "Prefer short sentences. Use 1 or 2 sentences when the sentences are short, or 1 sentence when the sentence is longer. Treat these as flexible guidance, not hard limits.",
-      "Do not use semicolons to combine ideas just to reduce the sentence count.",
-      "If the alert includes a standalone lead-in to a link, first include one substantive sentence that explains the alert.",
-      "Do not output an alert whose only body text is a link-introduction sentence such as Learn about: or Refer to:.",
-      "Add or preserve a short, descriptive heading.",
-      "Do not rewrite alert content into accordions, disclosure widgets, expand-collapse components, or other containers that hide content from visual display. Inline assistive text that uses the wb-inv class is allowed: preserve it when it is needed, keep it in its original reading order, and make sure it flows with the surrounding visible text. Do not treat wb-inv text as prohibited hidden content.",
-      "Do not add new images or icons. Preserve meaningful non-text content and useful existing text alternatives. When a selected issue identifies a missing or incorrect text alternative for retained non-text content, add or correct it using only information supported by the source content. Keep decorative non-text content hidden from assistive technology with an empty text alternative where appropriate.",
-      "State what happened, then what to do.",
-      "Use plain, active, neutral language.",
-      "Include a next step when possible.",
-      "Keep alert content concise for UI.",
-      "Ensure each applicable selected issue that can be fixed within the alert results in a meaningful change. Do not claim an issue is fixed when the alert is unchanged, or alter valid content merely to show a change. Issues outside the alert, including placement, do not by themselves require a content change.",
-      "Do not add new links. If the original alert has one or more <a> links, rewrittenAlertHtml must include at least one real <a> element with an original href. Do not convert every link to plain text, omit all links, or replace links with placeholder text. You may rewrite anchor text only if it improves clarity and still describes the same destination. If the original alert has multiple links, only remove extra links when the selected issues or plan identify too many links or link removal.",
-      'Set rewrittenAlertHtml to full .alert wrapper HTML (for example: <div class="alert alert-info">...</div>).'
-    ],
-    styleRulesWithExamples: [
-      "Use examples as pattern guidance only.",
-      "When examples include egHtml, use that field as the example's final HTML pattern.",
-      "Do not copy example wording.",
-      "Keep wording specific to the input alert's own facts and wording."
-    ],
-    systemPromptWithExamplesLines: [
-      "You are an expert in Canada.ca alerts, accessibility, content design, and alert HTML rewriting.",
-      "Use examples as pattern guidance, not copy/paste text.",
-      "Only include exampleIdsUsed values that match the provided example ids.",
-      "Keep the alert wrapper and classes valid.",
-      "Do not return any sentence copied from the examples.",
-      "Return JSON only. No extra text.",
-      "Output schema:",
-      '{"rewrittenAlertHtml":"string","rewrittenHeading":"string","rewrittenAlert":"string","appliedDirectives":["..."],"exampleIdsUsed":["ex-001"]}'
-    ],
-    systemPromptWithoutExamplesLines: [
-      "You are an expert in Canada.ca alerts, accessibility, content design, and alert HTML rewriting.",
-      "No examples are provided for this request.",
-      "Return exampleIdsUsed as an empty array: [].",
-      "Keep the alert wrapper and classes valid.",
-      "Return JSON only. No extra text.",
-      "Output schema:",
-      '{"rewrittenAlertHtml":"string","rewrittenHeading":"string","rewrittenAlert":"string","appliedDirectives":["..."],"exampleIdsUsed":[]}'
-    ],
-    retryInstructions: {
-      invalidWrapperHtml: "Return valid rewrittenAlertHtml as a full .alert wrapper element.",
-      noLinksAllowed: "The original alert has no links. Do not add hyperlinks. Return rewrittenAlertHtml without any <a> tags.",
-      mustKeepLink: "The original alert has one or more required <a> links. Your previous rewrittenAlertHtml removed every link. Return rewrittenAlertHtml with at least one real <a> element using an original href. If the issue is too many links, remove only extra links and keep the most useful original link.",
-      mustHaveHeading: 'Alerts must include a semantic heading element in rewrittenAlertHtml. Add a short, descriptive heading using <h2 class="h3"> or <h3> to <h6> as needed, and place it before the body text.',
-      avoidExampleCopy: "Your previous output matched example wording. Rewrite using alert-specific wording and facts only.",
-      fullSentenceLinksNeedLeadIn: 'If a link stands alone as its own sentence or paragraph, or if a sentence mainly directs the user to a link, place that link direction in its own paragraph. Prefer putting a standalone link sentence or paragraph last in the alert content, but do not treat placement as a hard requirement. Use a natural lead-in before the anchor when the standalone link text does not already contain a clear action verb. "Refer to:" and "For details:" are both valid for supporting detail, reference, status, or explanatory links. Prefer "Refer to:" for required task, service, form, or procedural reference links. Prefer "For details:" when the link provides supporting information or more context. Prefer "Learn more:" for optional background, status, or update links. Do not add a lead-in before standalone action links such as "View CRA processing times", "Check CRA processing times", "Get an access code", "Sign up for direct deposit", "Create an account", "Cancel a payment", "Send documents", "Confirm your information", "Review the proposed rates", "Register a business", "Sign in or register for a CRA account", "Learn about the Canada Groceries and Essentials Benefit", "Find out how to get an access code", or "How to get an access code". Use "Learn about" without a colon when the linked text naturally completes the phrase, especially for explainer or topic pages. If the phrase needs an article, place it before the anchor, for example "Learn about the <a>Canada Groceries and Essentials Benefit</a>". Do not put a period or other punctuation after the closing anchor in a standalone link sentence or paragraph.'
-    }
-  }
-};
-
-// src/app/common/prompts/canada-ca-style.prompt.ts
-var CanadaCaStyleRules = [
-  {
-    id: "C1_avoid_please",
-    severity: "must",
-    condition: "always",
-    text: 'Do not use "please" as a courtesy filler in instructions or task-oriented copy. Start with the action verb when possible. If simply removing "please" leaves awkward wording, rewrite the sentence while preserving meaning.'
-  },
-  {
-    id: "C2_direct_instructions",
-    severity: "should",
-    condition: "task_or_instruction",
-    text: "Use direct imperative wording for task instructions. Lead with the action users need to take and avoid unnecessary introductory phrases."
-  },
-  {
-    id: "C3_plain_language",
-    severity: "should",
-    condition: "always",
-    text: "Use plain, concise language. Prefer familiar words and short sentences when meaning and required detail are preserved."
-  },
-  {
-    id: "C4_preserve_required_meaning",
-    severity: "must",
-    condition: "always",
-    text: "Preserve legal, eligibility, deadline, service, and policy meaning. Do not simplify content in a way that changes who qualifies, what action is required, when something happens, or what a service provides."
-  },
-  {
-    id: "C5_do_not_invent_operational_details",
-    severity: "must",
-    condition: "always",
-    text: "Do not invent service standards, contact channels, or other operational details that are not supported by the source content."
-  },
-  {
-    id: "C6_no_unverified_qa_claims",
-    severity: "must",
-    condition: "always",
-    text: "Do not claim that content passed a full quality assurance review unless the request explicitly states that a full review was performed."
-  }
-];
-var CanadaCaStyleExamples = [
-  { ruleId: "C1_avoid_please", avoid: "Please note that processing times may vary.", prefer: "Processing times may vary." },
-  { ruleId: "C1_avoid_please", avoid: "Please ensure your information is accurate.", prefer: "Make sure your information is accurate." },
-  {
-    ruleId: "C2_direct_instructions",
-    avoid: "You may want to review your information before submitting.",
-    prefer: "Review your information before submitting."
-  },
-  {
-    ruleId: "C2_direct_instructions",
-    avoid: "It is important that you keep a copy for your records.",
-    prefer: "Keep a copy for your records."
-  },
-  {
-    ruleId: "C3_plain_language",
-    avoid: "Prior to submitting your application, verify that all required fields have been completed.",
-    prefer: "Before you submit your application, make sure you have completed all required fields."
-  },
-  {
-    ruleId: "C3_plain_language",
-    avoid: "Individuals experiencing difficulty accessing their account may contact us for assistance.",
-    prefer: "If you cannot access your account, contact us for help."
-  },
-  {
-    ruleId: "C4_preserve_required_meaning",
-    avoid: "Apply by June 30 to keep receiving payments.",
-    prefer: "Apply by June 30 to keep receiving payments."
-  },
-  {
-    ruleId: "C4_preserve_required_meaning",
-    avoid: "You must be 18 years of age or older and live in Canada to apply.",
-    prefer: "You must be 18 years of age or older and live in Canada to apply."
-  }
-];
-function getCanadaCaStylePromptRules(options = {}) {
-  const rules = CanadaCaStyleRules.map((rule) => `[Canada.ca style ${rule.id} ${rule.severity}] ${rule.text}`);
-  if (options.includeExamples === false)
-    return rules;
-  const examples = CanadaCaStyleExamples.map((example) => `[Canada.ca style example ${example.ruleId}] Avoid: "${example.avoid}" Prefer: "${example.prefer}"`);
-  return [...rules, ...examples];
-}
-
-// src/app/common/prompts/link-writing.prompt.ts
-var LinkWritingRules = [
-  {
-    id: "L1_keep_links_default",
-    condition: "always",
-    text: "Keep links by default. If the original alert has exactly one <a> link, the rewritten alert must include one real <a> element with the same href."
-  },
-  {
-    id: "L2_keep_url_change_text",
-    condition: "always",
-    text: "Link text may be rewritten, but any kept link must keep its original URL. Do not convert a kept link to plain text, omit it, or replace it with placeholder text."
-  },
-  {
-    id: "L3_descriptive_text",
-    condition: "always",
-    text: "Link text must clearly describe the intended destination using available context (URL path/slug, current link text, and surrounding sentence), and avoid inventing destination details not supported by that context."
-  },
-  {
-    id: "L4_avoid_duplicate_link_text",
-    condition: "always",
-    text: 'Avoid duplicate wording. Do not repeat the linked phrase outside the anchor when meaning is preserved. Keep the destination phrase in the link. For phrasal lead-ins such as "Find out" or "Learn about", let the link text complete the phrase instead of repeating the object before the anchor. Avoid using "see" before links; use inclusive alternatives like "refer to" or "visit". When a link is present, prefer a short plain-text lead-in plus unique link text, with minimal repeated wording outside the anchor.'
-  },
-  {
-    id: "L5_no_vague_anchor_text",
-    condition: "always",
-    text: 'Never use vague anchor text (for example: "click here", "here", "learn more", or similar).'
-  },
-  {
-    id: "L6_sentence_end_preferred",
-    condition: "always",
-    text: "Prefer placing links at the end of their sentence."
-  },
-  {
-    id: "L7_standalone_link_structure",
-    condition: "always",
-    text: "If a link is an entire sentence, or if a sentence mainly directs the user to a link, move it to a new paragraph. When possible, place that standalone link paragraph last in the content. Add a natural lead-in before the anchor when the standalone link text does not already contain a clear action verb."
-  },
-  {
-    id: "L7a_multiple_standalone_links_list",
-    condition: "always",
-    text: 'When more than one standalone link must be kept at the end of the content, use one lead-in paragraph followed by <ul class="list-unstyled"> with one link per <li>. Do not use separate standalone link paragraphs for multiple final links.'
-  },
-  {
-    id: "L7b_standalone_link_terminal_punctuation",
-    condition: "always",
-    text: "Do not put a period or other terminal punctuation after the closing anchor in a standalone link sentence or paragraph."
-  },
-  {
-    id: "L8_remove_only_when_too_many",
-    condition: "too_many_links",
-    text: "Only remove links when the original alert has multiple links and a too-many-links issue is identified; keep one primary <a> link with its original href."
-  },
-  {
-    id: "L9_do_not_remove_without_issue",
-    condition: "not_too_many_links",
-    text: "Do not remove links unless the original alert has multiple links and a too-many-links issue is identified. If only one link is present, preserve a real <a> element with the original href."
-  },
-  {
-    id: "L10_concise_link_text",
-    condition: "always",
-    text: 'Keep link text concise when possible. Remove details already present in the alert or page context (for example, " - Canada.ca" is not needed).'
-  },
-  {
-    id: "L11_find_out_usage",
-    condition: "always",
-    text: 'Do not use "Find out:" with a colon. Use "Find out" only when the anchor text completes it naturally, for example "Find out how to...", "Find out if...", or "Find out whether...". Do not use "Find out" before imperative link text such as "Get...", "Apply...", or "Register...".'
-  },
-  {
-    id: "L12_lead_in_selection",
-    condition: "always",
-    text: 'Choose the lead-in that matches the destination and keep it in its own paragraph when the sentence mainly directs the user to the link. Prefer placing that paragraph last in the content, but treat this as a preference rather than a strict rule. Prefer "Refer to:" when the link is needed to complete a task, access a service, sign in, apply, register, submit, get a code, or take a required next step. Prefer "For details:" when the link provides supporting detail, reference, explanation, or more context. Prefer "Learn more:" when the link provides optional background, status, or update information. Use "Learn about" without a colon when the linked text naturally completes the phrase for explainer or topic pages. If the phrase needs an article, place it before the anchor, for example "Learn about the <a>Canada Groceries and Essentials Benefit</a>". Avoid repeating the topic noun outside the link if the anchor already names it.'
-  },
-  {
-    id: "L13_action_link_no_lead_in",
-    condition: "always",
-    text: 'If a standalone link already contains a clear action verb, do not add lead-in text such as "Refer to:", "For details:", or "Learn more:". Examples include standalone links such as "View CRA processing times", "Get an access code", "Apply for benefits", "Register a business", "Sign in or register for a CRA account", "File your return online", "Review the proposed rates", "Learn about the Canada Groceries and Essentials Benefit", "Find out how to get an access code", and "How to get an access code".'
-  }
-];
-function getLinkWritingPromptRules(options) {
-  return LinkWritingRules.filter((rule) => {
-    if (rule.condition === "always")
-      return true;
-    if (rule.condition === "too_many_links")
-      return options.hasTooManyLinksIssue;
-    return !options.hasTooManyLinksIssue;
-  }).map((rule) => rule.text);
-}
-
 // src/app/components/compare/compare-problems/design-components/alerts/alert-rewrite.service.ts
 var AlertRewriteService = class _AlertRewriteService {
   loadExamples() {
@@ -4050,12 +3609,12 @@ var AlertRewriteService = class _AlertRewriteService {
         linkRulesIncluded: originalHasLink,
         linkRuleCount: linkRules.length
       });
-      const styleRules = [...rules.alertRewrite.styleRulesBase, ...canadaCaStyleRules, ...linkRules, ...params.examples.length ? rules.alertRewrite.styleRulesWithExamples : []];
+      const styleRules = [...rules.alertRewrite.styleRulesBase, ...params.terminologyRules || [], ...canadaCaStyleRules, ...linkRules];
       if (this.hasAcceptableFinalStandaloneLinkSentence(params.originalAlertHtml)) {
-        styleRules.push('The original alert already ends with an acceptable standalone final link sentence or paragraph. Preserve that wording and placement unless a selected issue clearly requires a change. Do not rewrite a valid existing lead-in such as "For details:" to "Refer to:" when it already reads naturally.');
+        styleRules.push(rules.alertRewrite.conditionalInstructions.preserveFinalStandaloneLink);
       }
       if (linkManifest.hasLinks) {
-        styleRules.push("Use linkManifest as the source of truth for original links. If linkManifest.mustPreserveAtLeastOne is true, rewrittenAlertHtml must include at least one real <a> element whose href exactly matches one of linkManifest.items[].href values. If linkManifest.allowRemoval is true, you may remove extra links, but you must still keep at least one original link.");
+        styleRules.push(rules.alertRewrite.conditionalInstructions.enforceLinkManifest);
       }
       const retryInstructions = Array.from(new Set((params.retryInstructions || []).map((instruction) => (instruction || "").trim()).filter((instruction) => !!instruction)));
       if (retryInstructions.length) {
@@ -4073,7 +3632,9 @@ var AlertRewriteService = class _AlertRewriteService {
         }
         return __spreadValues(__spreadValues(__spreadValues(__spreadValues(__spreadValues(__spreadValues({}, alertIndex !== void 0 ? { alertIndex } : {}), category ? { category } : {}), severity ? { severity } : {}), description ? { description } : {}), recommendation ? { recommendation } : {}), include !== void 0 ? { include } : {});
       }).filter((issue) => !!issue);
-      const systemPrompt = (params.examples.length ? rules.alertRewrite.systemPromptWithExamplesLines : rules.alertRewrite.systemPromptWithoutExamplesLines).join("\n");
+      const systemPromptLines = params.examples.length ? rules.alertRewrite.systemPromptWithExamplesLines : rules.alertRewrite.systemPromptWithoutExamplesLines;
+      const outputSchema = params.examples.length ? rules.alertRewrite.outputSchemas.withExamples : rules.alertRewrite.outputSchemas.withoutExamples;
+      const systemPrompt = [rules.alertRewrite.role, ...systemPromptLines, rules.alertRewrite.outputRequirement, "Output schema:", outputSchema].join("\n");
       const userPayload = __spreadValues({
         styleRules,
         examples: params.examples.map((example) => ({
@@ -4090,8 +3651,7 @@ var AlertRewriteService = class _AlertRewriteService {
           alertType: params.plan.alertType,
           domainTags: params.plan.domainTags,
           purposeTags: params.plan.purposeTags,
-          criteriaMatched: params.plan.criteriaMatched,
-          directives: []
+          criteriaMatched: params.plan.criteriaMatched
         },
         issues: rawIssues,
         originalHeading: (params.originalHeading || "").trim(),
@@ -4107,7 +3667,6 @@ var AlertRewriteService = class _AlertRewriteService {
         baseStyleRuleCount: rules.alertRewrite.styleRulesBase.length,
         canadaCaStyleRuleCount: canadaCaStyleRules.length,
         linkRuleCount: linkRules.length,
-        exampleStyleRuleCount: params.examples.length ? rules.alertRewrite.styleRulesWithExamples.length : 0,
         finalStyleRuleCount: styleRules.length,
         systemPromptCharacters: systemPrompt.length,
         userPayloadCharacters: serializedUserPayload.length,
@@ -4233,8 +3792,8 @@ var AlertRewriteService = class _AlertRewriteService {
     const rawAlert = this.cleanStringFromKeys(root, ["rewrittenAlert", "rewritten_alert", "alertText", "alert_text", "text"]);
     const extractedHeading = this.extractHeadingFromAlertHtml(normalizedAlertHtml);
     const extractedBodyText = this.extractBodyTextFromAlertHtml(normalizedAlertHtml);
-    const rewrittenHeading = parsedHeading || extractedHeading || this.buildFallbackHeading();
-    const baseBodyText = rawAlert || extractedBodyText;
+    const rewrittenHeading = extractedHeading || parsedHeading || this.buildFallbackHeading();
+    const baseBodyText = extractedBodyText || rawAlert;
     if (!baseBodyText)
       return null;
     const rewrittenAlert = baseBodyText.trim();
@@ -4272,8 +3831,8 @@ var AlertRewriteService = class _AlertRewriteService {
     const rawAlert = this.cleanStringFromKeys(root, ["rewrittenAlert", "rewritten_alert", "alertText", "alert_text", "text"]);
     const extractedHeading = normalizedAlertHtml ? this.extractHeadingFromAlertHtml(normalizedAlertHtml) : "";
     const extractedBodyText = normalizedAlertHtml ? this.extractBodyTextFromAlertHtml(normalizedAlertHtml) : this.extractBodyTextFromHtmlFragment(rawAlertHtml);
-    const rewrittenHeading = parsedHeading || extractedHeading || this.buildFallbackHeading();
-    const baseBodyText = rawAlert || extractedBodyText;
+    const rewrittenHeading = extractedHeading || parsedHeading || this.buildFallbackHeading();
+    const baseBodyText = extractedBodyText || rawAlert;
     if (!rawAlertHtml && !baseBodyText) {
       return null;
     }
@@ -4403,14 +3962,15 @@ var AlertRewriteService = class _AlertRewriteService {
       tags.add("action-required");
     if (criteria.has("C2_too_wordy"))
       tags.add("shorten-alert");
-    if (criteria.has("C3_too_many_links"))
+    if (criteria.has("C3_too_many_links")) {
       tags.add("remove-secondary-link");
+      if (linkCount > 1) {
+        tags.add("multiple-detail-links");
+        tags.add("duplicate-link-cleanup");
+      }
+    }
     if (linkCount === 1)
       tags.add("standalone-action-link");
-    if (linkCount > 1) {
-      tags.add("multiple-detail-links");
-      tags.add("duplicate-link-cleanup");
-    }
     maybeAdd("service-delay", /\bdelay|processing time|service standard\b/);
     maybeAdd("service-change", /\bno longer|ending|must register|effective\b/);
     maybeAdd("service-update", /\bresumed|paused|interruption|operations\b/);
@@ -4818,6 +4378,24 @@ var AlertRewriteGuardService = class _AlertRewriteGuardService {
       return root.outerHTML.trim();
     } catch (e) {
       return alertHtml;
+    }
+  }
+  // Keeps the source alert type unless a selected issue authorizes changing it.
+  preserveOriginalAlertType(rewrittenHtml, originalHtml) {
+    try {
+      const typeClasses = ["alert-info", "alert-warning", "alert-danger", "alert-error", "alert-success"];
+      const originalDoc = new DOMParser().parseFromString(originalHtml || "", "text/html");
+      const rewrittenDoc = new DOMParser().parseFromString(rewrittenHtml || "", "text/html");
+      const originalAlert = originalDoc.body.querySelector(".alert");
+      const rewrittenAlert = rewrittenDoc.body.querySelector(".alert");
+      if (!originalAlert || !rewrittenAlert)
+        return rewrittenHtml;
+      const originalTypeClasses = typeClasses.filter((className) => originalAlert.classList.contains(className));
+      typeClasses.forEach((className) => rewrittenAlert.classList.remove(className));
+      originalTypeClasses.forEach((className) => rewrittenAlert.classList.add(className));
+      return rewrittenAlert.outerHTML.trim();
+    } catch (e) {
+      return rewrittenHtml;
     }
   }
   // Rejects outputs where link-direction text is malformed:
@@ -5396,6 +4974,66 @@ var AlertRewriteGuardService = class _AlertRewriteGuardService {
   }], null, null);
 })();
 
+// src/app/common/prompts/cra-terminology.prompt.ts
+var CraTerminologyInstructions = {
+  preserveAtomic: "If retained, keep these source expressions complete and unchanged; they may be removed with the ideas they name, but do not shorten or replace them: {{terms}}.",
+  retryAtomic: "If the related idea remains, use the complete source expression instead of a shortened form: {{terms}}.",
+  retrySourceOnly: "Do not introduce these source-only expressions because they do not appear in the source: {{terms}}."
+};
+var CraTerminologyEntries = [
+  {
+    id: "royal-assent-en",
+    language: "en",
+    termKey: "aiPrompt.craTerminology.terms.royalAssent",
+    introduction: "source-only",
+    disallowedShortFormKeys: ["aiPrompt.craTerminology.shortForms.royalAssent"]
+  },
+  {
+    id: "sanction-royale-fr",
+    language: "fr",
+    termKey: "aiPrompt.craTerminology.terms.royalAssent",
+    introduction: "source-only",
+    disallowedShortFormKeys: ["aiPrompt.craTerminology.shortForms.royalAssent"]
+  },
+  {
+    id: "retenues-sur-la-paie-fr",
+    language: "fr",
+    termKey: "aiPrompt.craTerminology.terms.payrollDeductions",
+    introduction: "allowed",
+    disallowedShortFormKeys: ["aiPrompt.craTerminology.shortForms.payrollDeductions"]
+  }
+];
+function resolveCraTerminologyEntries(language, translate) {
+  return CraTerminologyEntries.filter((entry) => entry.language === language).map((entry) => __spreadProps(__spreadValues({}, entry), {
+    term: translate(entry.termKey).trim(),
+    disallowedShortForms: entry.disallowedShortFormKeys.map((key) => translate(key).trim()).filter((value) => !!value)
+  })).filter((entry) => !!entry.term);
+}
+function getMatchedCraTerminology(source, entries) {
+  return entries.filter((entry) => containsCraTerm(source, entry.term));
+}
+function findCraTerminologyViolations(source, output2, entries) {
+  const violations = [];
+  for (const entry of entries) {
+    const sourceHasTerm = containsCraTerm(source, entry.term);
+    const outputHasTerm = containsCraTerm(output2, entry.term);
+    if (entry.introduction === "source-only" && !sourceHasTerm && outputHasTerm) {
+      violations.push({ type: "introduced", entry });
+      continue;
+    }
+    if (sourceHasTerm && !outputHasTerm && entry.disallowedShortForms.some((shortForm) => containsCraTerm(output2, shortForm))) {
+      violations.push({ type: "shortened", entry });
+    }
+  }
+  return violations;
+}
+function containsCraTerm(value, term) {
+  if (!value || !term)
+    return false;
+  const escaped = term.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  return new RegExp(`(^|[^\\p{L}\\p{N}])${escaped}(?=$|[^\\p{L}\\p{N}])`, "iu").test(value);
+}
+
 // src/app/components/compare/compare-problems/design-components/alerts/alert-rewrite-orchestrator.service.ts
 var AlertRewriteOrchestratorService = class _AlertRewriteOrchestratorService {
   alertRewrite = inject(AlertRewriteService);
@@ -5465,6 +5103,8 @@ var AlertRewriteOrchestratorService = class _AlertRewriteOrchestratorService {
       const retryInstructions = rewriteRules.alertRewrite.retryInstructions;
       let timingStart = performance.now();
       const alertDoc = new DOMParser().parseFromString(params.html, "text/html");
+      const contentLanguage = this.getContentLanguage(alertDoc);
+      const terminologyEntries = resolveCraTerminologyEntries(contentLanguage, (key) => String(this.translate.instant(key, void 0, contentLanguage)));
       const alertEls = getReportableAlerts(alertDoc, {
         interactiveResultLeadIns: this.getInteractiveResultLeadIns()
       });
@@ -5487,6 +5127,7 @@ var AlertRewriteOrchestratorService = class _AlertRewriteOrchestratorService {
         const alertIndex = i + 1;
         const relevantIssues = this.alertRewriteGuard.getIssuesForAlertIndex(params.issues, alertIndex);
         const needsPlacementReview = relevantIssues.some((issue) => (issue.category || "").trim().toLowerCase() === "wrong placement");
+        const mayChangeAlertType = relevantIssues.some((issue) => /^(?:wrong|incorrect) (?:alert )?type$/.test((issue.category || "").trim().toLowerCase()));
         if (!params.includeExamples && !relevantIssues.length) {
           console.info("Alert rewrite skipped for alert without selected issues", {
             alertIndex
@@ -5505,6 +5146,8 @@ var AlertRewriteOrchestratorService = class _AlertRewriteOrchestratorService {
           alertType: this.alertRewrite.inferAlertType(alertHtml),
           issues: relevantIssues
         });
+        const matchedTerminology = getMatchedCraTerminology(alertHtml, terminologyEntries);
+        const terminologyRules = matchedTerminology.length ? [this.buildTerminologyInstruction(CraTerminologyInstructions.preserveAtomic, matchedTerminology)] : [];
         const selectedExamples = params.includeExamples ? this.alertRewrite.selectExamples(initialPlan, examples, 2, {
           originalHeading,
           originalAlertText: alertText
@@ -5531,6 +5174,7 @@ var AlertRewriteOrchestratorService = class _AlertRewriteOrchestratorService {
             plan: initialPlan,
             issues: relevantIssues,
             examples: selectedExamples,
+            terminologyRules,
             retryInstructions: retryInstructionsForAttempt
           });
           this.addElapsed(timings, "rewritePromptMs", timingStart);
@@ -5597,6 +5241,15 @@ var AlertRewriteOrchestratorService = class _AlertRewriteOrchestratorService {
           }
           if (originalHasAnchor && !rewrittenHasAnchor) {
             addRetryInstruction("mustKeepLink", retryInstructions.mustKeepLink);
+          }
+          const terminologyViolations = findCraTerminologyViolations(alertHtml, parsedResult.rewrittenAlertHtml, terminologyEntries);
+          const introducedTerms = terminologyViolations.filter((violation) => violation.type === "introduced").map((violation) => violation.entry);
+          const shortenedTerms = terminologyViolations.filter((violation) => violation.type === "shortened").map((violation) => violation.entry);
+          if (introducedTerms.length) {
+            addRetryInstruction("protectedTerminologyIntroduced", this.buildTerminologyInstruction(CraTerminologyInstructions.retrySourceOnly, introducedTerms));
+          }
+          if (shortenedTerms.length) {
+            addRetryInstruction("protectedTerminologyShortened", this.buildTerminologyInstruction(CraTerminologyInstructions.retryAtomic, shortenedTerms));
           }
           const linkLeadInIssue = rewrittenHasAnchor ? this.alertRewriteGuard.getFullSentenceLinkLeadInIssue(parsedResult.rewrittenAlertHtml) : null;
           if (linkLeadInIssue) {
@@ -5722,10 +5375,32 @@ var AlertRewriteOrchestratorService = class _AlertRewriteOrchestratorService {
             reasons: [...lastRetryReasons]
           });
         }
+        const finalTerminologyViolations = findCraTerminologyViolations(alertHtml, rewriteResult.rewrittenAlertHtml, terminologyEntries);
+        if (finalTerminologyViolations.length) {
+          const terminologyReasons = Array.from(new Set(finalTerminologyViolations.map((violation) => `protectedTerminology${violation.type === "introduced" ? "Introduced" : "Shortened"}`)));
+          console.warn(`Alert rewrite falling back because protected terminology could not be safely validated for alert ${alertIndex}`, {
+            alertIndex,
+            reasons: terminologyReasons,
+            terms: finalTerminologyViolations.map((violation) => violation.entry.term)
+          });
+          rewriteResult = this.alertRewrite.buildPassthroughResult({
+            alertHtml,
+            originalHeading,
+            originalAlertText: alertText
+          });
+          rewriteResultSource = "passthrough";
+          fallbackNotices.push({
+            alertIndex,
+            reasons: terminologyReasons
+          });
+        }
         rewriteResult.rewrittenAlertHtml = this.alertRewriteGuard.ensureSemanticHeading(rewriteResult.rewrittenAlertHtml, rewriteResult.rewrittenHeading);
         rewriteResult.rewrittenAlertHtml = this.alertRewriteGuard.removeRedundantLeadInsBeforeActionLinks(rewriteResult.rewrittenAlertHtml);
         rewriteResult.rewrittenAlertHtml = this.alertRewriteGuard.preserveOriginalStandaloneLinkLeadIns(rewriteResult.rewrittenAlertHtml, alertHtml);
         rewriteResult.rewrittenAlertHtml = this.alertRewriteGuard.removeStandaloneLinkTerminalPunctuation(rewriteResult.rewrittenAlertHtml);
+        if (!mayChangeAlertType) {
+          rewriteResult.rewrittenAlertHtml = this.alertRewriteGuard.preserveOriginalAlertType(rewriteResult.rewrittenAlertHtml, alertHtml);
+        }
         if (needsPlacementReview) {
           rewriteResult.rewrittenAlertHtml = `${this.buildPlacementReviewNoticeHtml()}
 ${rewriteResult.rewrittenAlertHtml}`;
@@ -5743,8 +5418,21 @@ ${rewriteResult.rewrittenAlertHtml}`;
         }));
         const examplesUsedDetails = compactExampleDetails(rewriteResult.exampleIdsUsed.map((id) => selectedExamples.find((example) => example.id === id)).filter((example) => !!example));
         const suppliedExampleIds = selectedExamples.map((example) => example.id);
+        console.info("Alert rewrite terminology", {
+          alertIndex,
+          contentLanguage,
+          matchedTerminology: matchedTerminology.map((entry) => entry.term),
+          violations: finalTerminologyViolations.map((violation) => ({
+            type: violation.type,
+            term: violation.entry.term
+          }))
+        });
         console.info("Alert rewrite examples", {
           alertIndex,
+          originalAlertType: initialPlan.alertType,
+          finalAlertType: this.alertRewrite.inferAlertType(rewriteResult.rewrittenAlertHtml),
+          mayChangeAlertType,
+          selectedIssueCategories: relevantIssues.map((issue) => issue.category || "").filter((category) => !!category),
           suppliedExampleIds,
           exampleIdsUsed: rewriteResult.exampleIdsUsed
         });
@@ -5809,6 +5497,18 @@ ${rewriteResult.rewrittenAlertHtml}`;
   }
   getInteractiveResultLeadIns() {
     return coerceInteractiveResultLeadIns(this.translate.instant("problems.alerts.interactiveResultLeadIns"));
+  }
+  getContentLanguage(doc) {
+    const documentLanguage = (doc.documentElement.getAttribute("lang") || "").trim().toLowerCase();
+    if (documentLanguage.startsWith("fr"))
+      return "fr";
+    if (documentLanguage.startsWith("en"))
+      return "en";
+    return this.translate.currentLang()?.startsWith("fr") ? "fr" : "en";
+  }
+  buildTerminologyInstruction(template, entries) {
+    const terms = Array.from(new Set(entries.map((entry) => `"${entry.term}"`))).join("; ");
+    return template.replace("{{terms}}", terms).trim();
   }
   static \u0275fac = function AlertRewriteOrchestratorService_Factory(__ngFactoryType__) {
     return new (__ngFactoryType__ || _AlertRewriteOrchestratorService)();
@@ -7153,4 +6853,4 @@ var CompareComponent = class _CompareComponent {
 export {
   CompareComponent
 };
-//# sourceMappingURL=chunk-O3ZDAAKC.js.map
+//# sourceMappingURL=chunk-A3FKQRZJ.js.map

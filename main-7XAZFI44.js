@@ -8199,12 +8199,12 @@ var routes = [
       },
       {
         path: "inventory",
-        loadComponent: () => import("./chunk-WCRWUAB3.js").then((m) => m.InventoryComponent),
+        loadComponent: () => import("./chunk-FOEMCSIZ.js").then((m) => m.InventoryComponent),
         title: "inventory._title"
       },
       {
         path: "metadata",
-        loadComponent: () => import("./chunk-MNL237FI.js").then((m) => m.MetadataComponent),
+        loadComponent: () => import("./chunk-UTHIR4DN.js").then((m) => m.MetadataComponent),
         title: "metadata._title"
       },
       {
@@ -8214,13 +8214,13 @@ var routes = [
       },
       {
         path: "edit-pages",
-        loadComponent: () => import("./chunk-O3ZDAAKC.js").then((m) => m.CompareComponent),
+        loadComponent: () => import("./chunk-A3FKQRZJ.js").then((m) => m.CompareComponent),
         title: "editPages._title",
         data: { mode: "ai" }
       },
       {
         path: "compare-pages",
-        loadComponent: () => import("./chunk-O3ZDAAKC.js").then((m) => m.CompareComponent),
+        loadComponent: () => import("./chunk-A3FKQRZJ.js").then((m) => m.CompareComponent),
         title: "compare._title",
         data: { mode: "compare" }
       }
@@ -8328,7 +8328,7 @@ var routes = [
       },
       {
         path: "prompt-editor",
-        loadComponent: () => import("./chunk-FAVWSTQV.js").then((m) => m.PromptEditorComponent),
+        loadComponent: () => import("./chunk-52JKO3T2.js").then((m) => m.PromptEditorComponent),
         title: "dev.prompts._title"
       }
     ]
@@ -8381,4 +8381,4 @@ var appConfig = {
 
 // src/main.ts
 bootstrapApplication(AppComponent, appConfig).catch((err) => console.error(err));
-//# sourceMappingURL=main-KSYAKYR3.js.map
+//# sourceMappingURL=main-7XAZFI44.js.map
