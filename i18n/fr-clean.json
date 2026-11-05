@@ -422,6 +422,7 @@
 	"dev.prompts.alertRewrite.aiInstructions": "",
 	"dev.prompts.alertRewrite.baseRules": "",
 	"dev.prompts.alertRewrite.canadaCaStyle": "",
+	"dev.prompts.alertRewrite.canadaCaStyleExamples": "",
 	"dev.prompts.alertRewrite.conditionalInstructions": "",
 	"dev.prompts.alertRewrite.examplesIncluded": "",
 	"dev.prompts.alertRewrite.examplesNotIncluded": "",

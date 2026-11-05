@@ -5,7 +5,7 @@ import {
   ProblemPrompts,
   getCanadaCaStylePromptRules,
   getLinkWritingPromptRules
-} from "./chunk-O4F5RCJZ.js";
+} from "./chunk-J6MECSOH.js";
 import {
   CompareRenderedComponent,
   CompareSourceComponent
@@ -6927,4 +6927,4 @@ var CompareComponent = class _CompareComponent {
 export {
   CompareComponent
 };
-//# sourceMappingURL=chunk-WCKVJSEC.js.map
+//# sourceMappingURL=chunk-43T6RG3G.js.map

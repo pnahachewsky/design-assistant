@@ -8232,13 +8232,13 @@ var routes = [
       },
       {
         path: "edit-pages",
-        loadComponent: () => import("./chunk-WCKVJSEC.js").then((m) => m.CompareComponent),
+        loadComponent: () => import("./chunk-43T6RG3G.js").then((m) => m.CompareComponent),
         title: "editPages._title",
         data: { mode: "ai" }
       },
       {
         path: "compare-pages",
-        loadComponent: () => import("./chunk-WCKVJSEC.js").then((m) => m.CompareComponent),
+        loadComponent: () => import("./chunk-43T6RG3G.js").then((m) => m.CompareComponent),
         title: "compare._title",
         data: { mode: "compare" }
       }
@@ -8346,7 +8346,7 @@ var routes = [
       },
       {
         path: "prompt-editor",
-        loadComponent: () => import("./chunk-ZQBWHWXI.js").then((m) => m.PromptEditorComponent),
+        loadComponent: () => import("./chunk-5EFKHOY2.js").then((m) => m.PromptEditorComponent),
         title: "dev.prompts._title"
       }
     ]
@@ -8399,4 +8399,4 @@ var appConfig = {
 
 // src/main.ts
 bootstrapApplication(AppComponent, appConfig).catch((err) => console.error(err));
-//# sourceMappingURL=main-SUTFVN3I.js.map
+//# sourceMappingURL=main-O5XKYW3L.js.map
