@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["src/app/components/compare/compare-source/compare-source.component.css"],
+  "sourcesContent": [".diff-container {\n  border: 1px solid #dee2e6;\n  border-radius: 4px;\n  padding: 1rem;\n  overflow-y: scroll;\n  overflow-x: scroll;\n  max-height: 75vh;\n  max-width: 75vw;\n  position: relative;\n}\n\n.diff-container.original {\n  border-color: #ffb6ba;\n}\n\n.diff-container.modified {\n  border-color: #97f295;\n}\n\n:host-context(.dark-mode) .diff-container.original {\n  border-color: rgba(248, 81, 73, 0.4);\n}\n\n:host-context(.dark-mode) .diff-container.modified {\n  border-color: rgba(46, 160, 67, 0.4);\n}\n\n.legend-box {\n  width: 16px;\n  height: 16px;\n  border-radius: 4px;\n  flex-shrink: 0;\n}\n"],
+  "mappings": ";AAAA,CAAC;AACC,UAAQ,IAAI,MAAM;AAClB,iBAAe;AACf,WAAS;AACT,cAAY;AACZ,cAAY;AACZ,cAAY;AACZ,aAAW;AACX,YAAU;AACZ;AAEA,CAXC,cAWc,CAAC;AACd,gBAAc;AAChB;AAEA,CAfC,cAec,CAAC;AACd,gBAAc;AAChB;AAEA,cAAc,CAAC,WAAW,CAnBzB,cAmBwC,CARzB;AASd,gBAAc,KAAK,GAAG,EAAE,EAAE,EAAE,EAAE,EAAE;AAClC;AAEA,cAAc,CAAC,WAAW,CAvBzB,cAuBwC,CARzB;AASd,gBAAc,KAAK,EAAE,EAAE,GAAG,EAAE,EAAE,EAAE;AAClC;AAEA,CAAC;AACC,SAAO;AACP,UAAQ;AACR,iBAAe;AACf,eAAa;AACf;",
+  "names": []
+}
