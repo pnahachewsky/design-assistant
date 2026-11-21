@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": ["angular:styles/component:css;e5ed3f3479eecfaf4f6560dfa0b09a0617508e956bc29aefe063475e5bd20407;C:/my-working-files/GitHub/design-assistant-aws/src/app/views/toolbox/dev-tools/prompt-editor/prompt-editor.component.ts"],
-  "sourcesContent": ["\n    pre.prompt-preview {\n      display: block;\n      box-sizing: border-box;\n      width: 100%;\n      min-width: 0;\n      max-width: 100%;\n      font-size: 1rem;\n      white-space: pre-wrap !important;\n      overflow-wrap: anywhere;\n      word-break: break-word;\n      overflow-x: hidden;\n    }\n\n    .prompt-bullet-list {\n      display: grid;\n      gap: 0.4rem;\n      margin: 0;\n      padding-inline-start: 1.5rem;\n    }\n\n    .prompt-condition-list {\n      display: grid;\n      gap: 0.75rem;\n    }\n\n    .prompt-condition-item {\n      display: grid;\n      gap: 0.25rem;\n    }\n\n    .prompt-condition-item p {\n      margin: 0;\n    }\n  "],
-  "mappings": ";AACI,GAAG,CAAC;AACF,WAAS;AACT,cAAY;AACZ,SAAO;AACP,aAAW;AACX,aAAW;AACX,aAAW;AACX,eAAa;AACb,iBAAe;AACf,cAAY;AACZ,cAAY;AACd;AAEA,CAAC;AACC,WAAS;AACT,OAAK;AACL,UAAQ;AACR,wBAAsB;AACxB;AAEA,CAAC;AACC,WAAS;AACT,OAAK;AACP;AAEA,CAAC;AACC,WAAS;AACT,OAAK;AACP;AAEA,CALC,sBAKsB;AACrB,UAAQ;AACV;",
-  "names": []
-}

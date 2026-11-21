@@ -8230,17 +8230,17 @@ var routes = [
       },
       {
         path: "old-inventory",
-        loadComponent: () => import("./chunk-Z6TXRQLF.js").then((m) => m.InventoryComponent),
+        loadComponent: () => import("./chunk-H7O6YCKZ.js").then((m) => m.InventoryComponent),
         title: "inventory._title"
       },
       {
         path: "inventory",
-        loadComponent: () => import("./chunk-LZLYJOHV.js").then((m) => m.TableInventoryComponent),
+        loadComponent: () => import("./chunk-77FD45Z3.js").then((m) => m.TableInventoryComponent),
         title: "inventory._title"
       },
       {
         path: "metadata",
-        loadComponent: () => import("./chunk-FATQQGBI.js").then((m) => m.TableMetadataComponent),
+        loadComponent: () => import("./chunk-EN7RZTGS.js").then((m) => m.TableMetadataComponent),
         title: "metadata._title"
       },
       {
@@ -8250,19 +8250,19 @@ var routes = [
       },
       {
         path: "edit-pages",
-        loadComponent: () => import("./chunk-TKS742CL.js").then((m) => m.CompareComponent),
+        loadComponent: () => import("./chunk-EJFVN2AR.js").then((m) => m.CompareComponent),
         title: "editPages._title",
         data: { mode: "ai" }
       },
       {
         path: "compare-pages",
-        loadComponent: () => import("./chunk-TKS742CL.js").then((m) => m.CompareComponent),
+        loadComponent: () => import("./chunk-EJFVN2AR.js").then((m) => m.CompareComponent),
         title: "compare._title",
         data: { mode: "compare" }
       },
       {
         path: "compare-languages",
-        loadComponent: () => import("./chunk-X6EAOSXO.js").then((m) => m.CompareLanguagesComponent),
+        loadComponent: () => import("./chunk-A32HZMTS.js").then((m) => m.CompareLanguagesComponent),
         title: "languages._title"
       }
     ]
@@ -8369,12 +8369,12 @@ var routes = [
       },
       {
         path: "prompt-editor",
-        loadComponent: () => import("./chunk-GZON2TFN.js").then((m) => m.PromptEditorComponent),
+        loadComponent: () => import("./chunk-ZK2XEUCP.js").then((m) => m.PromptEditorComponent),
         title: "dev.prompts._title"
       },
       {
         path: "skill-editor",
-        loadComponent: () => import("./chunk-YZHO56WJ.js").then((m) => m.SkillEditorComponent),
+        loadComponent: () => import("./chunk-4FZ5YQF5.js").then((m) => m.SkillEditorComponent),
         title: "dev.skills._title"
       }
     ]
@@ -8427,4 +8427,4 @@ var appConfig = {
 
 // src/main.ts
 bootstrapApplication(AppComponent, appConfig).catch((err) => console.error(err));
-//# sourceMappingURL=main-AUDCBQXV.js.map
+//# sourceMappingURL=main-QOZKMBBA.js.map

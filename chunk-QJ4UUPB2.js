@@ -1,4 +1,7 @@
 import {
+  AI_DEFAULT_MODEL
+} from "./chunk-GVX5GQYP.js";
+import {
   Injectable,
   setClassMetadata,
   signal,
@@ -70,7 +73,7 @@ var CompareService = class _CompareService {
     /* istanbul ignore next */
     []
   ));
-  selectedPrompt = signal("AlertRewrite", ...ngDevMode ? [{ debugName: "selectedPrompt" }] : (
+  selectedPrompt = signal("Tense", ...ngDevMode ? [{ debugName: "selectedPrompt" }] : (
     /* istanbul ignore next */
     []
   ));
@@ -78,7 +81,7 @@ var CompareService = class _CompareService {
     /* istanbul ignore next */
     []
   ));
-  selectedModel = signal("google/gemini-3.1-flash-lite", ...ngDevMode ? [{ debugName: "selectedModel" }] : (
+  selectedModel = signal(AI_DEFAULT_MODEL, ...ngDevMode ? [{ debugName: "selectedModel" }] : (
     /* istanbul ignore next */
     []
   ));
@@ -99,4 +102,4 @@ var CompareService = class _CompareService {
 export {
   CompareService
 };
-//# sourceMappingURL=chunk-IZMD4P35.js.map
+//# sourceMappingURL=chunk-QJ4UUPB2.js.map

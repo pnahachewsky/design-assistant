@@ -4,10 +4,17 @@ import {
   ProblemPromptKey,
   RoleKey,
   RubricKey
-} from "./chunk-UANO6U7W.js";
+} from "./chunk-GVX5GQYP.js";
 
-// src/app/common/prompts/reference.prompt.ts
-var AlertIssuesInstructions = `{
+// src/app/common/prompts/problems.prompts.ts
+var ProblemPrompts = {
+  [ProblemPromptKey.AlertsProblems]: {
+    role: RoleKey.ContentDesigner,
+    task: `Analyze the reportable alerts in the supplied page context and identify applicable content design, accessibility, and markup issues.
+Return issue reports only. Do not rewrite alert HTML.
+
+### Analysis instructions
+{
   "inputs": {
     "alerts": "Array of alert HTML strings in source order. Each item is the full alert container.",
     "pageSignals": {
@@ -111,17 +118,7 @@ var AlertIssuesInstructions = `{
       "Emit a separate issue item for every category that applies to each alert."
     ]
   }
-}`;
-
-// src/app/common/prompts/problems.prompts.ts
-var ProblemPrompts = {
-  [ProblemPromptKey.AlertsProblems]: {
-    role: RoleKey.ContentDesigner,
-    task: `Analyze the reportable alerts in the supplied page context and identify applicable content design, accessibility, and markup issues.
-Return issue reports only. Do not rewrite alert HTML.
-
-### Analysis instructions
-${AlertIssuesInstructions}`,
+}`,
     rubric: [],
     output: OutputKey.Json,
     jsonSchema: `{
@@ -152,13 +149,6 @@ ${AlertIssuesInstructions}`,
 }`,
     available: false
   },
-  [ProblemPromptKey.AlertsRewrite]: {
-    role: RoleKey.ContentDesigner,
-    task: "Analyze the reportable alerts in the supplied page context and identify applicable content design, accessibility, and markup issues.",
-    rubric: [RubricKey.NoCommentary],
-    output: OutputKey.Json,
-    available: false
-  },
   [ProblemPromptKey.TranslateIssueDetails]: {
     role: RoleKey.Translator,
     task: `Translate only the description and recommendation values in the supplied JSON from English into Canadian French.
@@ -185,6 +175,13 @@ Preserve HTML tags and attributes, URLs, code, placeholders, CSS classes, ARIA a
     }
   }
 }`
+  },
+  [ProblemPromptKey.AlertsRewrite]: {
+    role: RoleKey.ContentDesigner,
+    task: "Analyze the reportable alerts in the supplied page context and identify applicable content design, accessibility, and markup issues.",
+    rubric: [RubricKey.NoCommentary],
+    output: OutputKey.Json,
+    available: false
   }
 };
 
@@ -588,6 +585,11 @@ var AlertRewritePipeline = {
 var PagePrompts = {
   [PagePromptKey.AlertRewrite]: {
     role: RoleKey.AlertRewrite,
+    // Placeholder for the future PromptConfig migration. The working alert rewrite
+    // prompt is currently assembled from pipeline fragments and runtime context in
+    // AlertRewriteService.buildAlertRewriteMessages(). Do not add this task text to
+    // the system prompt as-is; replace it with the working payload-generation
+    // structure when the alert rewrite prompt is consolidated into PromptConfig.
     task: "Rewrite the supplied alerts, using identified issues where available, preserving valid content and returning safe alert replacements.",
     rubric: [RubricKey.NoCommentary],
     output: OutputKey.Json,
@@ -707,4 +709,4 @@ export {
   getLinkWritingPromptRules,
   PagePrompts
 };
-//# sourceMappingURL=chunk-NK457JNB.js.map
+//# sourceMappingURL=chunk-CEQM7MSM.js.map

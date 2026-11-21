@@ -62,9 +62,9 @@ var PagePromptKey;
 })(PagePromptKey || (PagePromptKey = {}));
 var ProblemPromptKey;
 (function(ProblemPromptKey2) {
-  ProblemPromptKey2["AlertsRewrite"] = "aiPrompt.problem.alertsRewrite";
   ProblemPromptKey2["AlertsProblems"] = "aiPrompt.problem.alertsProblems";
   ProblemPromptKey2["TranslateIssueDetails"] = "aiPrompt.problem.translateIssueDetails";
+  ProblemPromptKey2["AlertsRewrite"] = "aiPrompt.problem.alertsRewrite";
 })(ProblemPromptKey || (ProblemPromptKey = {}));
 
 // src/app/common/prompts/shared.prompts.ts
@@ -157,6 +157,7 @@ var AI_FREE_MODELS = [
   "nvidia/nemotron-3.5-lightning:free",
   "nvidia/nemotron-3-super-120b-a12b:free"
 ];
+var AI_DEFAULT_MODEL = "nvidia/nemotron-3-ultra-550b-a55b:free";
 var AI_ALERT_TRANSLATION_MODEL = "openrouter/free";
 var AI_PAID_MODELS = [
   { value: "openai/gpt-oss-20b", price: "$" },
@@ -315,9 +316,10 @@ export {
   RubricFragment,
   AiPromptService,
   AI_FREE_MODELS,
+  AI_DEFAULT_MODEL,
   AI_ALERT_TRANSLATION_MODEL,
   AI_PAID_MODELS,
   OpenRouterService,
   ToolsPrompts
 };
-//# sourceMappingURL=chunk-UANO6U7W.js.map
+//# sourceMappingURL=chunk-GVX5GQYP.js.map
