@@ -1,10 +1,10 @@
 import {
   CompareLanguagesComponent
-} from "./chunk-CBIZQ6VD.js";
+} from "./chunk-FGM5LDFC.js";
 import "./chunk-CT3F4ZWS.js";
-import "./chunk-6TNTAII3.js";
-import "./chunk-QJ4UUPB2.js";
-import "./chunk-GVX5GQYP.js";
+import "./chunk-MNLTU2T7.js";
+import "./chunk-CTV6GVFP.js";
+import "./chunk-H6SCXNXI.js";
 import "./chunk-XNRBXGSS.js";
 import "./chunk-Q7243HY4.js";
 import "./chunk-FKPYNDRR.js";
@@ -48,4 +48,4 @@ import "./chunk-YCXP4XZS.js";
 export {
   CompareLanguagesComponent
 };
-//# sourceMappingURL=chunk-A32HZMTS.js.map
+//# sourceMappingURL=chunk-VX2KCMFH.js.map

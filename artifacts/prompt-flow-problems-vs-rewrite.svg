@@ -1,0 +1,202 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="2000" height="1500" viewBox="0 0 2000 1500" role="img" aria-labelledby="title desc">
+  <title id="title">AWS-AIDA prompt flows: Problems and Rewrite</title>
+  <desc id="desc">Problems and Rewrite build messages differently, converge on the same ChatMessage and OpenRouter transport, then separate again for response handling.</desc>
+  <defs>
+    <style>
+      :root { --bg:#fff; --fg:#172033; --muted:#526079; --border:#cbd5e1; --panel:#f8fafc; --blue:#1d4ed8; --blue-soft:#eaf1ff; --green:#047857; --green-soft:#e9f8f2; --purple:#7c3aed; --purple-soft:#f3edff; --orange:#b45309; --orange-soft:#fff4df; --red:#9f1239; --red-soft:#fff0f4; --shared:#334155; --shared-soft:#eef2f7; }
+      @media (prefers-color-scheme: dark) { :root { --bg:#111827; --fg:#f3f4f6; --muted:#cbd5e1; --border:#475569; --panel:#1f2937; --blue:#93b4ff; --blue-soft:#172554; --green:#6ee7b7; --green-soft:#073b31; --purple:#c4b5fd; --purple-soft:#2e1d57; --orange:#fbbf77; --orange-soft:#4a2b08; --red:#fda4af; --red-soft:#4c1023; --shared:#cbd5e1; --shared-soft:#273449; } }
+      text { font-family:Arial,Helvetica,sans-serif; fill:var(--fg); }
+      .title { font-size:38px; font-weight:500; }
+      .subtitle { font-size:22px; fill:var(--muted); }
+      .lane { font-size:29px; font-weight:500; }
+      .heading { font-size:21px; font-weight:500; }
+      .body { font-size:18px; }
+      .small { font-size:16px; fill:var(--muted); }
+      .legend-label { font-size:15px; }
+      .file { font:500 16px Consolas,"Courier New",monospace; }
+      .panel { fill:var(--panel); stroke:var(--border); stroke-width:2; }
+      .problem { fill:var(--blue-soft); stroke:var(--blue); stroke-width:2; }
+      .rewrite { fill:var(--green-soft); stroke:var(--green); stroke-width:2; }
+      .source { fill:var(--purple-soft); stroke:var(--purple); stroke-width:2; }
+      .runtime { fill:var(--orange-soft); stroke:var(--orange); stroke-width:2; }
+      .shared { fill:var(--shared-soft); stroke:var(--shared); stroke-width:2.5; }
+      .decision { fill:var(--red-soft); stroke:var(--red); stroke-width:2; }
+      .line { fill:none; stroke:var(--shared); stroke-width:3; marker-end:url(#arrow); }
+      .blue-line { fill:none; stroke:var(--blue); stroke-width:3; marker-end:url(#blue-arrow); }
+      .green-line { fill:none; stroke:var(--green); stroke-width:3; marker-end:url(#green-arrow); }
+      .retry-line { fill:none; stroke:var(--red); stroke-width:3; stroke-dasharray:10 7; marker-end:url(#red-arrow); }
+      .dependency { fill:none; stroke:var(--shared); stroke-width:3; stroke-dasharray:9 7; marker-end:url(#arrow); }
+      .divider { stroke:var(--border); stroke-width:2; }
+    </style>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M0 0L10 5L0 10Z" fill="var(--shared)" /></marker>
+    <marker id="blue-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M0 0L10 5L0 10Z" fill="var(--blue)" /></marker>
+    <marker id="green-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M0 0L10 5L0 10Z" fill="var(--green)" /></marker>
+    <marker id="red-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M0 0L10 5L0 10Z" fill="var(--red)" /></marker>
+  </defs>
+
+  <rect width="2000" height="1500" fill="var(--bg)" />
+  <text x="60" y="58" class="title">AWS-AIDA prompt flows</text>
+  <text x="60" y="94" class="subtitle">Different prompt construction, one shared message and transport backbone</text>
+
+  <!-- Legend -->
+  <text x="1045" y="24" class="small">Legend</text>
+  <rect x="1045" y="35" width="18" height="18" rx="4" class="problem" />
+  <text x="1073" y="50" class="legend-label">Problems</text>
+  <rect x="1270" y="35" width="18" height="18" rx="4" class="rewrite" />
+  <text x="1298" y="50" class="legend-label">Rewrite</text>
+  <rect x="1495" y="35" width="18" height="18" rx="4" class="source" />
+  <text x="1523" y="50" class="legend-label">Prompt sources</text>
+  <rect x="1720" y="35" width="18" height="18" rx="4" class="runtime" />
+  <text x="1748" y="50" class="legend-label">Runtime inputs</text>
+
+  <rect x="1045" y="72" width="18" height="18" rx="4" class="shared" />
+  <text x="1073" y="87" class="legend-label">Shared backbone</text>
+  <rect x="1270" y="72" width="18" height="18" rx="4" class="decision" />
+  <text x="1298" y="87" class="legend-label">Decision / retry</text>
+  <path d="M1495 81H1530" class="dependency" />
+  <text x="1542" y="87" class="legend-label">Flow dependency</text>
+
+  <rect x="45" y="125" width="910" height="650" rx="18" class="panel" />
+  <rect x="1045" y="125" width="910" height="650" rx="18" class="panel" />
+  <text x="85" y="178" class="lane" fill="var(--blue)">Problems prompt construction</text>
+  <text x="1085" y="178" class="lane" fill="var(--green)">Rewrite prompt construction</text>
+
+  <!-- Problems sources -->
+  <rect x="85" y="215" width="395" height="165" rx="13" class="problem" />
+  <text x="110" y="250" class="heading">Standard PromptConfig</text>
+  <text x="110" y="282" class="file">problems.prompts.ts</text>
+  <text x="110" y="318" class="body">ProblemPrompts.AlertsProblems</text>
+  <text x="110" y="348" class="small">role · task · output · JSON schema</text>
+
+  <rect x="520" y="215" width="395" height="165" rx="13" class="source" />
+  <text x="545" y="250" class="heading">Shared fragments</text>
+  <text x="545" y="282" class="file">shared.prompts.ts</text>
+  <text x="545" y="318" class="body">RoleFragment · OutputFragment</text>
+  <text x="545" y="348" class="small">Keys resolved from PromptConfig</text>
+
+  <rect x="85" y="415" width="395" height="135" rx="13" class="source" />
+  <text x="110" y="450" class="heading">Analysis instructions</text>
+  <text x="110" y="482" class="file">reference.prompt.ts</text>
+  <text x="110" y="518" class="body">AlertIssuesInstructions</text>
+
+  <rect x="520" y="415" width="395" height="135" rx="13" class="runtime" />
+  <text x="545" y="450" class="heading">Problems input</text>
+  <text x="545" y="482" class="file">alert-context.service.ts</text>
+  <text x="545" y="518" class="body">Compact page/alert payload JSON</text>
+
+  <rect x="205" y="595" width="590" height="135" rx="13" class="problem" />
+  <text x="235" y="632" class="heading">Generic message composer</text>
+  <text x="235" y="664" class="file">prompt.service.ts</text>
+  <text x="235" y="698" class="body">composeMessages(config, content)</text>
+  <text x="235" y="721" class="small">composePrompt() remains byte-identical</text>
+  <path d="M282 380V575H390V595" class="blue-line" />
+  <path d="M718 380V575H610V595" class="blue-line" />
+  <path d="M282 550V575" class="blue-line" />
+  <path d="M718 550V575" class="blue-line" />
+
+  <!-- Rewrite sources -->
+  <rect x="1085" y="215" width="395" height="165" rx="13" class="rewrite" />
+  <text x="1110" y="250" class="heading">PromptConfig entry point</text>
+  <text x="1110" y="282" class="file">page.prompts.ts</text>
+  <text x="1110" y="318" class="body">PagePrompts.AlertRewrite</text>
+  <text x="1110" y="348" class="small">role · output · pipeline reference</text>
+
+  <rect x="1520" y="215" width="395" height="210" rx="13" class="rewrite" />
+  <text x="1545" y="250" class="heading">Alert-specific pipeline</text>
+  <text x="1545" y="282" class="file">alert-rewrite.prompt.ts</text>
+  <text x="1545" y="318" class="body">Base rules · example variants</text>
+  <text x="1545" y="350" class="body">Schemas · conditions · retry rules</text>
+  <text x="1545" y="388" class="small">Typed by prompt.model.ts</text>
+
+  <rect x="1085" y="460" width="395" height="175" rx="13" class="source" />
+  <text x="1110" y="495" class="heading">Separate shared sources</text>
+  <text x="1110" y="527" class="file">canada-ca-style.prompt.ts</text>
+  <text x="1110" y="557" class="file">link-writing.prompt.ts</text>
+  <text x="1110" y="587" class="file">cra-terminology.prompt.ts</text>
+  <text x="1110" y="617" class="file">alert-rewrite.examples.ts</text>
+
+  <rect x="1520" y="460" width="395" height="175" rx="13" class="runtime" />
+  <text x="1545" y="495" class="heading">Per-alert inputs</text>
+  <text x="1545" y="527" class="file">alert-rewrite-orchestrator.service.ts</text>
+  <text x="1545" y="563" class="body">Selected issues · plan · original HTML</text>
+  <text x="1545" y="595" class="body">Link manifest · compact context</text>
+  <text x="1545" y="621" class="small">One alert at a time</text>
+
+  <rect x="1205" y="670" width="590" height="105" rx="13" class="rewrite" />
+  <text x="1235" y="707" class="heading">Custom message assembler</text>
+  <text x="1235" y="739" class="file">alert-rewrite.service.ts</text>
+  <text x="1235" y="765" class="small">buildAlertRewriteMessages(...)</text>
+  <path d="M1282 380V650H1380V670" class="green-line" />
+  <path d="M1718 425V650H1620V670" class="green-line" />
+  <path d="M1282 635V650" class="green-line" />
+  <path d="M1718 635V650" class="green-line" />
+
+  <!-- Shared backbone -->
+  <text x="60" y="835" class="lane" fill="var(--shared)">Shared message and OpenRouter backbone</text>
+  <rect x="180" y="870" width="390" height="135" rx="13" class="shared" />
+  <text x="375" y="910" text-anchor="middle" class="heading">ChatMessage[]</text>
+  <text x="375" y="945" text-anchor="middle" class="file">prompt.model.ts</text>
+  <text x="375" y="976" text-anchor="middle" class="small">system + user messages</text>
+
+  <rect x="655" y="870" width="390" height="135" rx="13" class="shared" />
+  <text x="850" y="910" text-anchor="middle" class="heading">sendMessages()</text>
+  <text x="850" y="945" text-anchor="middle" class="file">openrouter.service.ts</text>
+  <text x="850" y="976" text-anchor="middle" class="small">Extracts system and user content</text>
+
+  <rect x="1130" y="870" width="390" height="135" rx="13" class="shared" />
+  <text x="1325" y="910" text-anchor="middle" class="heading">sendRawPrompt()</text>
+  <text x="1325" y="945" text-anchor="middle" class="file">openrouter.service.ts</text>
+  <text x="1325" y="976" text-anchor="middle" class="small">Models · fallbacks · state · HTTP</text>
+
+  <rect x="1605" y="870" width="260" height="135" rx="13" class="shared" />
+  <text x="1735" y="925" text-anchor="middle" class="heading">OpenRouter model</text>
+  <text x="1735" y="960" text-anchor="middle" class="small">Same transport</text>
+
+  <path d="M500 730V820H375V870" class="blue-line" />
+  <path d="M1500 775V820H375V870" class="green-line" />
+  <path d="M570 938H655" class="line" />
+  <path d="M1045 938H1130" class="line" />
+  <path d="M1520 938H1605" class="line" />
+
+  <!-- Response branches -->
+  <text x="60" y="1075" class="lane" fill="var(--shared)">Domain-specific response handling remains separate</text>
+  <path d="M1735 1005V1040H500V1110" class="blue-line" />
+  <path d="M1735 1005V1040H1500V1110" class="green-line" />
+
+  <rect x="125" y="1110" width="750" height="225" rx="14" class="problem" />
+  <text x="155" y="1150" class="heading">Problems response: one call for the page</text>
+  <text x="155" y="1182" class="file">alert.service.ts</text>
+  <text x="155" y="1220" class="body">Parse and validate issue-report JSON</text>
+  <text x="155" y="1252" class="body">Normalize severity · add placeholders · cache report</text>
+  <text x="155" y="1284" class="body">Display issues and capture user selections</text>
+  <text x="155" y="1314" class="small">Output: selected issue objects for Rewrite</text>
+
+  <rect x="1090" y="1110" width="430" height="225" rx="14" class="rewrite" />
+  <text x="1120" y="1150" class="heading">Rewrite response: per alert</text>
+  <text x="1120" y="1182" class="file">alert-rewrite-orchestrator.service.ts</text>
+  <text x="1120" y="1220" class="body">Parse replacement HTML</text>
+  <text x="1120" y="1252" class="body">Run HTML, link, and copy guards</text>
+  <text x="1120" y="1284" class="body">Track model and timing</text>
+
+  <polygon points="1690,1110 1840,1195 1690,1280 1540,1195" class="decision" />
+  <text x="1690" y="1187" text-anchor="middle" class="heading">Passes</text>
+  <text x="1690" y="1217" text-anchor="middle" class="heading">guards?</text>
+  <path d="M1520 1195H1540" class="green-line" />
+
+  <rect x="1090" y="1370" width="430" height="90" rx="13" class="decision" />
+  <text x="1305" y="1407" text-anchor="middle" class="heading">Retry rule or local repair</text>
+  <text x="1305" y="1438" text-anchor="middle" class="small">Rebuild messages when retrying</text>
+  <path d="M1690 1280V1415H1520" class="retry-line" />
+  <text x="1710" y="1320" class="small">No</text>
+  <path d="M1090 1415H1015V722H1205" class="retry-line" />
+
+  <rect x="1580" y="1370" width="350" height="90" rx="13" class="rewrite" />
+  <text x="1755" y="1407" text-anchor="middle" class="heading">Patch page HTML</text>
+  <text x="1755" y="1438" text-anchor="middle" class="small">Accepted rewrite</text>
+  <path d="M1690 1280V1370" class="green-line" />
+  <text x="1710" y="1335" class="small">Yes</text>
+
+  <!-- Problems-to-Rewrite dependency -->
+  <path d="M875 1275H980V575H1520" class="dependency" />
+  <text x="900" y="1258" class="small">Selected issues feed Rewrite</text>
+</svg>

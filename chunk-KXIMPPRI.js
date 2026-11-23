@@ -4,7 +4,7 @@ import {
   ProblemPrompts,
   getCanadaCaStylePromptRules,
   getLinkWritingPromptRules
-} from "./chunk-CEQM7MSM.js";
+} from "./chunk-FYDK7IPA.js";
 import {
   require_types
 } from "./chunk-YIFK26D6.js";
@@ -21,7 +21,7 @@ import {
   RubricKey,
   ToolsPromptKey,
   ToolsPrompts
-} from "./chunk-GVX5GQYP.js";
+} from "./chunk-H6SCXNXI.js";
 import {
   MultiSelect,
   MultiSelectModule
@@ -1029,7 +1029,7 @@ var SkillEditorComponent = class _SkillEditorComponent {
     {
       label: "aiPrompt.alerts._title",
       items: [
-        ...this.problemPrompts.filter((prompt) => prompt.enumKey === "AlertsProblems" || prompt.enumKey === "TranslateIssueDetails"),
+        ...this.problemPrompts.filter((prompt) => prompt.enumKey === "AlertsProblems"),
         ...this.pagePrompts.filter((prompt) => prompt.enumKey === "AlertRewrite"),
         {
           enumKey: "AlertExamples",
@@ -1728,9 +1728,9 @@ ${updatedPrompts}
   }], () => [], { diffContainer: [{ type: ViewChild, args: ["diffContainer", { isSignal: true }] }], filePreview: [{ type: ViewChild, args: ["filePreview", { isSignal: true }] }] });
 })();
 (() => {
-  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(SkillEditorComponent, { className: "SkillEditorComponent", filePath: "src/app/views/toolbox/dev-tools/skill-editor/skill-editor.component.ts", lineNumber: 101 });
+  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(SkillEditorComponent, { className: "SkillEditorComponent", filePath: "src/app/views/toolbox/dev-tools/skill-editor/skill-editor.component.ts", lineNumber: 100 });
 })();
 export {
   SkillEditorComponent
 };
-//# sourceMappingURL=chunk-4FZ5YQF5.js.map
+//# sourceMappingURL=chunk-KXIMPPRI.js.map

@@ -4,29 +4,29 @@ import {
   getReportableAlerts,
   getReportableAlertsFromHtml,
   removeAlertRewritePlacementReviewNotices
-} from "./chunk-FWZ7TRL2.js";
+} from "./chunk-KNTIRVLE.js";
 import {
   AlertRewriteExamples,
   PagePrompts,
   ProblemPrompts,
   getCanadaCaStylePromptRules,
   getLinkWritingPromptRules
-} from "./chunk-CEQM7MSM.js";
+} from "./chunk-FYDK7IPA.js";
 import {
   CompareRenderedComponent,
   CompareSourceComponent
 } from "./chunk-PC7WHNDU.js";
 import {
   CompareLanguagesComponent
-} from "./chunk-CBIZQ6VD.js";
+} from "./chunk-FGM5LDFC.js";
 import "./chunk-CT3F4ZWS.js";
 import "./chunk-35WEPOT5.js";
 import {
   CompareSelectComponent
-} from "./chunk-6TNTAII3.js";
+} from "./chunk-MNLTU2T7.js";
 import {
   CompareService
-} from "./chunk-QJ4UUPB2.js";
+} from "./chunk-CTV6GVFP.js";
 import {
   AI_ALERT_TRANSLATION_MODEL,
   AI_FREE_MODELS,
@@ -35,8 +35,10 @@ import {
   OutputFragment,
   PagePromptKey,
   ProblemPromptKey,
-  RoleFragment
-} from "./chunk-GVX5GQYP.js";
+  RoleFragment,
+  ToolsPromptKey,
+  ToolsPrompts
+} from "./chunk-H6SCXNXI.js";
 import {
   ProgressSpinner,
   ProgressSpinnerModule
@@ -1788,7 +1790,7 @@ var AlertService = class _AlertService {
         preferredModel: AI_ALERT_TRANSLATION_MODEL,
         itemCount: items.length
       });
-      const response = yield this.openRouter.sendToAI(ProblemPrompts[ProblemPromptKey.TranslateIssueDetails], JSON.stringify({ target_language: "fr-CA", items }), AI_ALERT_TRANSLATION_MODEL, 0);
+      const response = yield this.openRouter.sendToAI(ToolsPrompts[ToolsPromptKey.TranslateIssueDetails], JSON.stringify({ target_language: "fr-CA", items }), AI_ALERT_TRANSLATION_MODEL, 0);
       const responseText = response.choices?.[0]?.message?.content ?? "";
       const translatedIssues = this.parseFrenchTranslations(responseText, items);
       if (translatedIssues.length !== items.length) {
@@ -5293,7 +5295,6 @@ ${rewriteResult.rewrittenAlertHtml}`;
         });
         const compactExampleDetails = (examples2) => examples2.map((example) => ({
           id: example.id,
-          alertType: example.alertType,
           criteria: example.criteria,
           tags: example.tags,
           egHeading: example.egHeading || ""
@@ -6738,4 +6739,4 @@ var CompareComponent = class _CompareComponent {
 export {
   CompareComponent
 };
-//# sourceMappingURL=chunk-EJFVN2AR.js.map
+//# sourceMappingURL=chunk-A7L3OBN7.js.map

@@ -1,19 +1,18 @@
 import {
   AlertContextService
-} from "./chunk-FWZ7TRL2.js";
+} from "./chunk-KNTIRVLE.js";
 import {
   AlertRewriteExamples,
-  CanadaCaStyleRules,
-  LinkWritingPromptRuleGroups,
   PagePrompts,
-  ProblemPrompts
-} from "./chunk-CEQM7MSM.js";
+  ProblemPrompts,
+  SkillPrompts
+} from "./chunk-FYDK7IPA.js";
 import {
   require_types
 } from "./chunk-YIFK26D6.js";
 import {
   CompareService
-} from "./chunk-QJ4UUPB2.js";
+} from "./chunk-CTV6GVFP.js";
 import {
   AiPromptService,
   OpenRouterService,
@@ -25,9 +24,10 @@ import {
   RoleKey,
   RubricFragment,
   RubricKey,
+  SkillPromptKey,
   ToolsPromptKey,
   ToolsPrompts
-} from "./chunk-GVX5GQYP.js";
+} from "./chunk-H6SCXNXI.js";
 import {
   MultiSelect,
   MultiSelectModule
@@ -127,7 +127,6 @@ import {
   ɵɵclassProp,
   ɵɵconditional,
   ɵɵconditionalCreate,
-  ɵɵdeclareLet,
   ɵɵdefineComponent,
   ɵɵelement,
   ɵɵelementEnd,
@@ -141,12 +140,10 @@ import {
   ɵɵproperty,
   ɵɵpureFunction1,
   ɵɵqueryAdvance,
-  ɵɵreadContextLet,
   ɵɵrepeater,
   ɵɵrepeaterCreate,
   ɵɵresetView,
   ɵɵrestoreView,
-  ɵɵstoreLet,
   ɵɵtemplate,
   ɵɵtemplateRefExtractor,
   ɵɵtext,
@@ -166,6 +163,8 @@ import "./chunk-DBOW7BSZ.js";
 import "./chunk-XMWDIV4O.js";
 import {
   __async,
+  __spreadProps,
+  __spreadValues,
   __toESM
 } from "./chunk-YCXP4XZS.js";
 
@@ -264,9 +263,9 @@ function PromptEditorComponent_For_23_Conditional_2_Conditional_5_For_1_Template
     const _r8 = \u0275\u0275getCurrentView();
     \u0275\u0275elementStart(0, "div", 28)(1, "p-checkbox", 26);
     \u0275\u0275listener("ngModelChange", function PromptEditorComponent_For_23_Conditional_2_Conditional_5_For_1_Template_p_checkbox_ngModelChange_1_listener() {
-      const prompt_r9 = \u0275\u0275restoreView(_r8).$implicit;
+      const skill_r9 = \u0275\u0275restoreView(_r8).$implicit;
       const ctx_r2 = \u0275\u0275nextContext(4);
-      return \u0275\u0275resetView(ctx_r2.togglePrompt(prompt_r9.enumKey));
+      return \u0275\u0275resetView(ctx_r2.togglePrompt(skill_r9.enumKey));
     });
     \u0275\u0275elementEnd();
     \u0275\u0275elementStart(2, "label", 27);
@@ -275,37 +274,107 @@ function PromptEditorComponent_For_23_Conditional_2_Conditional_5_For_1_Template
     \u0275\u0275elementEnd()();
   }
   if (rf & 2) {
-    const prompt_r9 = ctx.$implicit;
+    const skill_r9 = ctx.$implicit;
     const ctx_r2 = \u0275\u0275nextContext(4);
     \u0275\u0275advance();
-    \u0275\u0275property("binary", true)("inputId", "show_" + prompt_r9.enumKey)("ngModel", ctx_r2.isPromptVisible(prompt_r9.enumKey));
+    \u0275\u0275property("binary", true)("inputId", "show_" + skill_r9.enumKey)("ngModel", ctx_r2.isPromptVisible(skill_r9.enumKey));
     \u0275\u0275advance();
-    \u0275\u0275classProp("text-red", ctx_r2.isPromptConfig(prompt_r9) ? !prompt_r9.promptText.available : false);
-    \u0275\u0275property("for", "show_" + prompt_r9.enumKey);
+    \u0275\u0275property("for", "show_" + skill_r9.enumKey);
     \u0275\u0275advance();
-    \u0275\u0275textInterpolate1(" ", \u0275\u0275pipeBind1(4, 7, prompt_r9.translationKey), " ");
+    \u0275\u0275textInterpolate(\u0275\u0275pipeBind1(4, 5, skill_r9.translationKey));
   }
 }
 function PromptEditorComponent_For_23_Conditional_2_Conditional_5_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275repeaterCreate(0, PromptEditorComponent_For_23_Conditional_2_Conditional_5_For_1_Template, 5, 9, "div", 28, _forTrack2);
+    \u0275\u0275repeaterCreate(0, PromptEditorComponent_For_23_Conditional_2_Conditional_5_For_1_Template, 5, 7, "div", 28, _forTrack2);
+  }
+  if (rf & 2) {
+    const tab_r7 = \u0275\u0275nextContext(2).$implicit;
+    \u0275\u0275repeater(tab_r7.skills);
+  }
+}
+function PromptEditorComponent_For_23_Conditional_2_Conditional_6_For_1_Template(rf, ctx) {
+  if (rf & 1) {
+    const _r10 = \u0275\u0275getCurrentView();
+    \u0275\u0275elementStart(0, "div", 25)(1, "p-radiobutton", 26);
+    \u0275\u0275listener("ngModelChange", function PromptEditorComponent_For_23_Conditional_2_Conditional_6_For_1_Template_p_radiobutton_ngModelChange_1_listener() {
+      const exampleSet_r11 = \u0275\u0275restoreView(_r10).$implicit;
+      const ctx_r2 = \u0275\u0275nextContext(4);
+      return \u0275\u0275resetView(ctx_r2.selectExampleSet(exampleSet_r11));
+    });
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(2, "label", 27);
+    \u0275\u0275text(3);
+    \u0275\u0275pipe(4, "translate");
+    \u0275\u0275elementEnd()();
+  }
+  if (rf & 2) {
+    const exampleSet_r11 = ctx.$implicit;
+    const ctx_r2 = \u0275\u0275nextContext(4);
+    \u0275\u0275advance();
+    \u0275\u0275property("binary", true)("inputId", "show_example_set_" + exampleSet_r11.key)("ngModel", ctx_r2.selectedExampleSet().key === exampleSet_r11.key);
+    \u0275\u0275advance();
+    \u0275\u0275property("for", "show_example_set_" + exampleSet_r11.key);
+    \u0275\u0275advance();
+    \u0275\u0275textInterpolate(\u0275\u0275pipeBind1(4, 5, exampleSet_r11.title));
+  }
+}
+function PromptEditorComponent_For_23_Conditional_2_Conditional_6_Template(rf, ctx) {
+  if (rf & 1) {
+    \u0275\u0275repeaterCreate(0, PromptEditorComponent_For_23_Conditional_2_Conditional_6_For_1_Template, 5, 7, "div", 25, _forTrack1);
+  }
+  if (rf & 2) {
+    const tab_r7 = \u0275\u0275nextContext(2).$implicit;
+    \u0275\u0275repeater(tab_r7.exampleSets);
+  }
+}
+function PromptEditorComponent_For_23_Conditional_2_Conditional_7_For_1_Template(rf, ctx) {
+  if (rf & 1) {
+    const _r12 = \u0275\u0275getCurrentView();
+    \u0275\u0275elementStart(0, "div", 28)(1, "p-checkbox", 26);
+    \u0275\u0275listener("ngModelChange", function PromptEditorComponent_For_23_Conditional_2_Conditional_7_For_1_Template_p_checkbox_ngModelChange_1_listener() {
+      const prompt_r13 = \u0275\u0275restoreView(_r12).$implicit;
+      const ctx_r2 = \u0275\u0275nextContext(4);
+      return \u0275\u0275resetView(ctx_r2.togglePrompt(prompt_r13.enumKey));
+    });
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(2, "label", 27);
+    \u0275\u0275text(3);
+    \u0275\u0275pipe(4, "translate");
+    \u0275\u0275elementEnd()();
+  }
+  if (rf & 2) {
+    const prompt_r13 = ctx.$implicit;
+    const ctx_r2 = \u0275\u0275nextContext(4);
+    \u0275\u0275advance();
+    \u0275\u0275property("binary", true)("inputId", "show_" + prompt_r13.enumKey)("ngModel", ctx_r2.isPromptVisible(prompt_r13.enumKey));
+    \u0275\u0275advance();
+    \u0275\u0275classProp("text-red", ctx_r2.isPromptConfig(prompt_r13) ? !prompt_r13.promptText.available : false);
+    \u0275\u0275property("for", "show_" + prompt_r13.enumKey);
+    \u0275\u0275advance();
+    \u0275\u0275textInterpolate1(" ", \u0275\u0275pipeBind1(4, 7, prompt_r13.translationKey), " ");
+  }
+}
+function PromptEditorComponent_For_23_Conditional_2_Conditional_7_Template(rf, ctx) {
+  if (rf & 1) {
+    \u0275\u0275repeaterCreate(0, PromptEditorComponent_For_23_Conditional_2_Conditional_7_For_1_Template, 5, 9, "div", 28, _forTrack2);
   }
   if (rf & 2) {
     const tab_r7 = \u0275\u0275nextContext(2).$implicit;
     \u0275\u0275repeater(tab_r7.prompts);
   }
 }
-function PromptEditorComponent_For_23_Conditional_2_Conditional_7_For_1_Conditional_0_For_4_Template(rf, ctx) {
+function PromptEditorComponent_For_23_Conditional_2_Conditional_9_For_1_Conditional_0_For_4_Template(rf, ctx) {
   if (rf & 1) {
-    const _r10 = \u0275\u0275getCurrentView();
+    const _r14 = \u0275\u0275getCurrentView();
     \u0275\u0275elementStart(0, "p-iftalabel")(1, "textarea", 29);
-    \u0275\u0275twoWayListener("ngModelChange", function PromptEditorComponent_For_23_Conditional_2_Conditional_7_For_1_Conditional_0_For_4_Template_textarea_ngModelChange_1_listener($event) {
-      const item_r11 = \u0275\u0275restoreView(_r10).$implicit;
-      \u0275\u0275twoWayBindingSet(item_r11.promptText, $event) || (item_r11.promptText = $event);
+    \u0275\u0275twoWayListener("ngModelChange", function PromptEditorComponent_For_23_Conditional_2_Conditional_9_For_1_Conditional_0_For_4_Template_textarea_ngModelChange_1_listener($event) {
+      const item_r15 = \u0275\u0275restoreView(_r14).$implicit;
+      \u0275\u0275twoWayBindingSet(item_r15.promptText, $event) || (item_r15.promptText = $event);
       return \u0275\u0275resetView($event);
     });
-    \u0275\u0275listener("ngModelChange", function PromptEditorComponent_For_23_Conditional_2_Conditional_7_For_1_Conditional_0_For_4_Template_textarea_ngModelChange_1_listener() {
-      \u0275\u0275restoreView(_r10);
+    \u0275\u0275listener("ngModelChange", function PromptEditorComponent_For_23_Conditional_2_Conditional_9_For_1_Conditional_0_For_4_Template_textarea_ngModelChange_1_listener() {
+      \u0275\u0275restoreView(_r14);
       const ctx_r2 = \u0275\u0275nextContext(6);
       return \u0275\u0275resetView(ctx_r2.updateDiff());
     });
@@ -316,63 +385,272 @@ function PromptEditorComponent_For_23_Conditional_2_Conditional_7_For_1_Conditio
     \u0275\u0275elementEnd()();
   }
   if (rf & 2) {
-    const item_r11 = ctx.$implicit;
+    const item_r15 = ctx.$implicit;
     \u0275\u0275advance();
-    \u0275\u0275twoWayProperty("ngModel", item_r11.promptText);
-    \u0275\u0275property("autoResize", true)("id", item_r11.enumKey);
+    \u0275\u0275twoWayProperty("ngModel", item_r15.promptText);
+    \u0275\u0275property("autoResize", true)("id", item_r15.enumKey);
     \u0275\u0275advance();
-    \u0275\u0275property("for", item_r11.enumKey);
+    \u0275\u0275property("for", item_r15.enumKey);
     \u0275\u0275advance();
-    \u0275\u0275textInterpolate(\u0275\u0275pipeBind1(4, 5, item_r11.translationKey));
+    \u0275\u0275textInterpolate(\u0275\u0275pipeBind1(4, 5, item_r15.translationKey));
   }
 }
-function PromptEditorComponent_For_23_Conditional_2_Conditional_7_For_1_Conditional_0_Template(rf, ctx) {
+function PromptEditorComponent_For_23_Conditional_2_Conditional_9_For_1_Conditional_0_Template(rf, ctx) {
   if (rf & 1) {
     \u0275\u0275elementStart(0, "h2", 16);
     \u0275\u0275text(1);
     \u0275\u0275pipe(2, "translate");
     \u0275\u0275elementEnd();
-    \u0275\u0275repeaterCreate(3, PromptEditorComponent_For_23_Conditional_2_Conditional_7_For_1_Conditional_0_For_4_Template, 5, 7, "p-iftalabel", null, _forTrack2);
+    \u0275\u0275repeaterCreate(3, PromptEditorComponent_For_23_Conditional_2_Conditional_9_For_1_Conditional_0_For_4_Template, 5, 7, "p-iftalabel", null, _forTrack2);
   }
   if (rf & 2) {
-    const fragment_r12 = \u0275\u0275nextContext().$implicit;
+    const fragment_r16 = \u0275\u0275nextContext().$implicit;
     \u0275\u0275advance();
-    \u0275\u0275textInterpolate(\u0275\u0275pipeBind1(2, 1, fragment_r12.label));
+    \u0275\u0275textInterpolate(\u0275\u0275pipeBind1(2, 1, fragment_r16.label));
     \u0275\u0275advance(2);
-    \u0275\u0275repeater(fragment_r12.data);
+    \u0275\u0275repeater(fragment_r16.data);
   }
 }
-function PromptEditorComponent_For_23_Conditional_2_Conditional_7_For_1_Template(rf, ctx) {
+function PromptEditorComponent_For_23_Conditional_2_Conditional_9_For_1_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275conditionalCreate(0, PromptEditorComponent_For_23_Conditional_2_Conditional_7_For_1_Conditional_0_Template, 5, 3);
+    \u0275\u0275conditionalCreate(0, PromptEditorComponent_For_23_Conditional_2_Conditional_9_For_1_Conditional_0_Template, 5, 3);
   }
   if (rf & 2) {
-    const fragment_r12 = ctx.$implicit;
+    const fragment_r16 = ctx.$implicit;
     const ctx_r2 = \u0275\u0275nextContext(4);
-    \u0275\u0275conditional(ctx_r2.isFragmentVisible(fragment_r12.key) ? 0 : -1);
+    \u0275\u0275conditional(ctx_r2.isFragmentVisible(fragment_r16.key) ? 0 : -1);
   }
 }
-function PromptEditorComponent_For_23_Conditional_2_Conditional_7_Template(rf, ctx) {
+function PromptEditorComponent_For_23_Conditional_2_Conditional_9_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275repeaterCreate(0, PromptEditorComponent_For_23_Conditional_2_Conditional_7_For_1_Template, 1, 1, null, null, _forTrack1);
+    \u0275\u0275repeaterCreate(0, PromptEditorComponent_For_23_Conditional_2_Conditional_9_For_1_Template, 1, 1, null, null, _forTrack1);
   }
   if (rf & 2) {
     const tab_r7 = \u0275\u0275nextContext(2).$implicit;
     \u0275\u0275repeater(tab_r7.fragments);
   }
 }
-function PromptEditorComponent_For_23_Conditional_2_Conditional_8_For_1_Conditional_0_Template(rf, ctx) {
+function PromptEditorComponent_For_23_Conditional_2_Conditional_10_For_1_Conditional_0_For_4_For_4_Conditional_1_ng_template_2_Template(rf, ctx) {
   if (rf & 1) {
-    const _r13 = \u0275\u0275getCurrentView();
-    \u0275\u0275elementStart(0, "p-iftalabel")(1, "textarea", 29);
-    \u0275\u0275twoWayListener("ngModelChange", function PromptEditorComponent_For_23_Conditional_2_Conditional_8_For_1_Conditional_0_Template_textarea_ngModelChange_1_listener($event) {
-      \u0275\u0275restoreView(_r13);
-      const prompt_r14 = \u0275\u0275nextContext().$implicit;
-      \u0275\u0275twoWayBindingSet(prompt_r14.promptText, $event) || (prompt_r14.promptText = $event);
+    \u0275\u0275text(0);
+    \u0275\u0275pipe(1, "translate");
+  }
+  if (rf & 2) {
+    const option_r20 = ctx.$implicit;
+    \u0275\u0275textInterpolate(\u0275\u0275pipeBind1(1, 1, option_r20.label));
+  }
+}
+function PromptEditorComponent_For_23_Conditional_2_Conditional_10_For_1_Conditional_0_For_4_For_4_Conditional_1_ng_template_3_Template(rf, ctx) {
+  if (rf & 1) {
+    \u0275\u0275text(0);
+    \u0275\u0275pipe(1, "translate");
+  }
+  if (rf & 2) {
+    const option_r21 = ctx.$implicit;
+    \u0275\u0275textInterpolate(\u0275\u0275pipeBind1(1, 1, option_r21.label));
+  }
+}
+function PromptEditorComponent_For_23_Conditional_2_Conditional_10_For_1_Conditional_0_For_4_For_4_Conditional_1_Template(rf, ctx) {
+  if (rf & 1) {
+    const _r18 = \u0275\u0275getCurrentView();
+    \u0275\u0275elementStart(0, "p-iftalabel", 31)(1, "p-select", 32);
+    \u0275\u0275twoWayListener("ngModelChange", function PromptEditorComponent_For_23_Conditional_2_Conditional_10_For_1_Conditional_0_For_4_For_4_Conditional_1_Template_p_select_ngModelChange_1_listener($event) {
+      \u0275\u0275restoreView(_r18);
+      const rule_r19 = \u0275\u0275nextContext().$implicit;
+      \u0275\u0275twoWayBindingSet(rule_r19.severity, $event) || (rule_r19.severity = $event);
       return \u0275\u0275resetView($event);
     });
-    \u0275\u0275listener("ngModelChange", function PromptEditorComponent_For_23_Conditional_2_Conditional_8_For_1_Conditional_0_Template_textarea_ngModelChange_1_listener() {
-      \u0275\u0275restoreView(_r13);
+    \u0275\u0275listener("onChange", function PromptEditorComponent_For_23_Conditional_2_Conditional_10_For_1_Conditional_0_For_4_For_4_Conditional_1_Template_p_select_onChange_1_listener() {
+      \u0275\u0275restoreView(_r18);
+      const ctx_r2 = \u0275\u0275nextContext(8);
+      return \u0275\u0275resetView(ctx_r2.updateDiff());
+    });
+    \u0275\u0275template(2, PromptEditorComponent_For_23_Conditional_2_Conditional_10_For_1_Conditional_0_For_4_For_4_Conditional_1_ng_template_2_Template, 2, 3, "ng-template", 33)(3, PromptEditorComponent_For_23_Conditional_2_Conditional_10_For_1_Conditional_0_For_4_For_4_Conditional_1_ng_template_3_Template, 2, 3, "ng-template", 34);
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(4, "label", 30);
+    \u0275\u0275text(5);
+    \u0275\u0275pipe(6, "translate");
+    \u0275\u0275elementEnd()();
+  }
+  if (rf & 2) {
+    const rule_r19 = \u0275\u0275nextContext().$implicit;
+    const skill_r22 = \u0275\u0275nextContext(3).$implicit;
+    const ctx_r2 = \u0275\u0275nextContext(4);
+    \u0275\u0275advance();
+    \u0275\u0275twoWayProperty("ngModel", rule_r19.severity);
+    \u0275\u0275property("id", skill_r22.enumKey + "_" + rule_r19.id + "_severity")("options", ctx_r2.skillSeverityOptions);
+    \u0275\u0275advance(3);
+    \u0275\u0275property("for", skill_r22.enumKey + "_" + rule_r19.id + "_severity");
+    \u0275\u0275advance();
+    \u0275\u0275textInterpolate(\u0275\u0275pipeBind1(6, 5, "dev.prompts.skills.severity._label"));
+  }
+}
+function PromptEditorComponent_For_23_Conditional_2_Conditional_10_For_1_Conditional_0_For_4_For_4_Template(rf, ctx) {
+  if (rf & 1) {
+    const _r17 = \u0275\u0275getCurrentView();
+    \u0275\u0275elementStart(0, "div", 15);
+    \u0275\u0275conditionalCreate(1, PromptEditorComponent_For_23_Conditional_2_Conditional_10_For_1_Conditional_0_For_4_For_4_Conditional_1_Template, 7, 7, "p-iftalabel", 31);
+    \u0275\u0275elementStart(2, "p-iftalabel")(3, "textarea", 29);
+    \u0275\u0275twoWayListener("ngModelChange", function PromptEditorComponent_For_23_Conditional_2_Conditional_10_For_1_Conditional_0_For_4_For_4_Template_textarea_ngModelChange_3_listener($event) {
+      const rule_r19 = \u0275\u0275restoreView(_r17).$implicit;
+      \u0275\u0275twoWayBindingSet(rule_r19.text, $event) || (rule_r19.text = $event);
+      return \u0275\u0275resetView($event);
+    });
+    \u0275\u0275listener("ngModelChange", function PromptEditorComponent_For_23_Conditional_2_Conditional_10_For_1_Conditional_0_For_4_For_4_Template_textarea_ngModelChange_3_listener() {
+      \u0275\u0275restoreView(_r17);
+      const ctx_r2 = \u0275\u0275nextContext(7);
+      return \u0275\u0275resetView(ctx_r2.updateDiff());
+    });
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(4, "label", 30);
+    \u0275\u0275text(5);
+    \u0275\u0275elementEnd()()();
+  }
+  if (rf & 2) {
+    const rule_r19 = ctx.$implicit;
+    const skill_r22 = \u0275\u0275nextContext(3).$implicit;
+    \u0275\u0275advance();
+    \u0275\u0275conditional(rule_r19.severity ? 1 : -1);
+    \u0275\u0275advance(2);
+    \u0275\u0275twoWayProperty("ngModel", rule_r19.text);
+    \u0275\u0275property("autoResize", true)("id", skill_r22.enumKey + "_" + rule_r19.id);
+    \u0275\u0275advance();
+    \u0275\u0275property("for", skill_r22.enumKey + "_" + rule_r19.id);
+    \u0275\u0275advance();
+    \u0275\u0275textInterpolate(rule_r19.id);
+  }
+}
+function PromptEditorComponent_For_23_Conditional_2_Conditional_10_For_1_Conditional_0_For_4_Template(rf, ctx) {
+  if (rf & 1) {
+    \u0275\u0275elementStart(0, "h3");
+    \u0275\u0275text(1);
+    \u0275\u0275pipe(2, "translate");
+    \u0275\u0275elementEnd();
+    \u0275\u0275repeaterCreate(3, PromptEditorComponent_For_23_Conditional_2_Conditional_10_For_1_Conditional_0_For_4_For_4_Template, 6, 6, "div", 15, _forTrack3);
+  }
+  if (rf & 2) {
+    const group_r23 = ctx.$implicit;
+    const ctx_r2 = \u0275\u0275nextContext(6);
+    \u0275\u0275advance();
+    \u0275\u0275textInterpolate(\u0275\u0275pipeBind1(2, 1, ctx_r2.getSkillGroupLabel(group_r23.key)));
+    \u0275\u0275advance(2);
+    \u0275\u0275repeater(group_r23.rules);
+  }
+}
+function PromptEditorComponent_For_23_Conditional_2_Conditional_10_For_1_Conditional_0_Template(rf, ctx) {
+  if (rf & 1) {
+    \u0275\u0275elementStart(0, "h2", 16);
+    \u0275\u0275text(1);
+    \u0275\u0275pipe(2, "translate");
+    \u0275\u0275elementEnd();
+    \u0275\u0275repeaterCreate(3, PromptEditorComponent_For_23_Conditional_2_Conditional_10_For_1_Conditional_0_For_4_Template, 5, 3, null, null, _forTrack1);
+  }
+  if (rf & 2) {
+    const skill_r22 = \u0275\u0275nextContext().$implicit;
+    const ctx_r2 = \u0275\u0275nextContext(4);
+    \u0275\u0275advance();
+    \u0275\u0275textInterpolate(\u0275\u0275pipeBind1(2, 1, skill_r22.translationKey));
+    \u0275\u0275advance(2);
+    \u0275\u0275repeater(ctx_r2.getSkillGroups(skill_r22));
+  }
+}
+function PromptEditorComponent_For_23_Conditional_2_Conditional_10_For_1_Template(rf, ctx) {
+  if (rf & 1) {
+    \u0275\u0275conditionalCreate(0, PromptEditorComponent_For_23_Conditional_2_Conditional_10_For_1_Conditional_0_Template, 5, 3);
+  }
+  if (rf & 2) {
+    const skill_r22 = ctx.$implicit;
+    const ctx_r2 = \u0275\u0275nextContext(4);
+    \u0275\u0275conditional(ctx_r2.isPromptVisible(skill_r22.enumKey) ? 0 : -1);
+  }
+}
+function PromptEditorComponent_For_23_Conditional_2_Conditional_10_Template(rf, ctx) {
+  if (rf & 1) {
+    \u0275\u0275repeaterCreate(0, PromptEditorComponent_For_23_Conditional_2_Conditional_10_For_1_Template, 1, 1, null, null, _forTrack2);
+  }
+  if (rf & 2) {
+    const tab_r7 = \u0275\u0275nextContext(2).$implicit;
+    \u0275\u0275repeater(tab_r7.skills);
+  }
+}
+function PromptEditorComponent_For_23_Conditional_2_Conditional_11_For_4_Conditional_7_Template(rf, ctx) {
+  if (rf & 1) {
+    \u0275\u0275elementStart(0, "p-message", 38);
+    \u0275\u0275text(1);
+    \u0275\u0275pipe(2, "translate");
+    \u0275\u0275elementEnd();
+  }
+  if (rf & 2) {
+    \u0275\u0275advance();
+    \u0275\u0275textInterpolate(\u0275\u0275pipeBind1(2, 1, ctx));
+  }
+}
+function PromptEditorComponent_For_23_Conditional_2_Conditional_11_For_4_Template(rf, ctx) {
+  if (rf & 1) {
+    const _r24 = \u0275\u0275getCurrentView();
+    \u0275\u0275elementStart(0, "h2", 35);
+    \u0275\u0275text(1);
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(2, "pre", 36);
+    \u0275\u0275pipe(3, "translate");
+    \u0275\u0275text(4);
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(5, "textarea", 37);
+    \u0275\u0275pipe(6, "translate");
+    \u0275\u0275listener("ngModelChange", function PromptEditorComponent_For_23_Conditional_2_Conditional_11_For_4_Template_textarea_ngModelChange_5_listener($event) {
+      const example_r25 = \u0275\u0275restoreView(_r24).$implicit;
+      const ctx_r2 = \u0275\u0275nextContext(4);
+      return \u0275\u0275resetView(ctx_r2.updateExampleJsonDraft(example_r25, $event));
+    });
+    \u0275\u0275elementEnd();
+    \u0275\u0275conditionalCreate(7, PromptEditorComponent_For_23_Conditional_2_Conditional_11_For_4_Conditional_7_Template, 3, 3, "p-message", 38);
+  }
+  if (rf & 2) {
+    let tmp_32_0;
+    const example_r25 = ctx.$implicit;
+    const ctx_r2 = \u0275\u0275nextContext(4);
+    \u0275\u0275property("id", example_r25.id + "_heading");
+    \u0275\u0275advance();
+    \u0275\u0275textInterpolate(ctx_r2.getAlertRewriteExampleLegend(example_r25));
+    \u0275\u0275advance();
+    \u0275\u0275attribute("aria-label", \u0275\u0275pipeBind1(3, 8, "dev.prompts.examples.selectionMetadata"));
+    \u0275\u0275advance(2);
+    \u0275\u0275textInterpolate(ctx_r2.getExampleSelectionMetadata(example_r25));
+    \u0275\u0275advance();
+    \u0275\u0275property("id", example_r25.id + "_json")("ngModel", ctx_r2.getExampleJsonDraft(example_r25));
+    \u0275\u0275attribute("aria-label", \u0275\u0275pipeBind1(6, 10, "dev.prompts.examples.editableFinalExample"));
+    \u0275\u0275advance(2);
+    \u0275\u0275conditional((tmp_32_0 = ctx_r2.getExampleJsonError(example_r25)) ? 7 : -1, tmp_32_0);
+  }
+}
+function PromptEditorComponent_For_23_Conditional_2_Conditional_11_Template(rf, ctx) {
+  if (rf & 1) {
+    \u0275\u0275elementStart(0, "p");
+    \u0275\u0275text(1);
+    \u0275\u0275pipe(2, "translate");
+    \u0275\u0275elementEnd();
+    \u0275\u0275repeaterCreate(3, PromptEditorComponent_For_23_Conditional_2_Conditional_11_For_4_Template, 8, 12, null, null, _forTrack3);
+  }
+  if (rf & 2) {
+    const ctx_r2 = \u0275\u0275nextContext(3);
+    \u0275\u0275advance();
+    \u0275\u0275textInterpolate(\u0275\u0275pipeBind1(2, 1, ctx_r2.selectedExampleSet().description));
+    \u0275\u0275advance(2);
+    \u0275\u0275repeater(ctx_r2.selectedExampleSet().examples);
+  }
+}
+function PromptEditorComponent_For_23_Conditional_2_Conditional_12_For_1_Conditional_0_Template(rf, ctx) {
+  if (rf & 1) {
+    const _r26 = \u0275\u0275getCurrentView();
+    \u0275\u0275elementStart(0, "p-iftalabel")(1, "textarea", 29);
+    \u0275\u0275twoWayListener("ngModelChange", function PromptEditorComponent_For_23_Conditional_2_Conditional_12_For_1_Conditional_0_Template_textarea_ngModelChange_1_listener($event) {
+      \u0275\u0275restoreView(_r26);
+      const prompt_r27 = \u0275\u0275nextContext().$implicit;
+      \u0275\u0275twoWayBindingSet(prompt_r27.promptText, $event) || (prompt_r27.promptText = $event);
+      return \u0275\u0275resetView($event);
+    });
+    \u0275\u0275listener("ngModelChange", function PromptEditorComponent_For_23_Conditional_2_Conditional_12_For_1_Conditional_0_Template_textarea_ngModelChange_1_listener() {
+      \u0275\u0275restoreView(_r26);
       const ctx_r2 = \u0275\u0275nextContext(5);
       return \u0275\u0275resetView(ctx_r2.updateDiff());
     });
@@ -383,17 +661,17 @@ function PromptEditorComponent_For_23_Conditional_2_Conditional_8_For_1_Conditio
     \u0275\u0275elementEnd()();
   }
   if (rf & 2) {
-    const prompt_r14 = \u0275\u0275nextContext().$implicit;
+    const prompt_r27 = \u0275\u0275nextContext().$implicit;
     \u0275\u0275advance();
-    \u0275\u0275twoWayProperty("ngModel", prompt_r14.promptText);
-    \u0275\u0275property("autoResize", true)("id", prompt_r14.enumKey);
+    \u0275\u0275twoWayProperty("ngModel", prompt_r27.promptText);
+    \u0275\u0275property("autoResize", true)("id", prompt_r27.enumKey);
     \u0275\u0275advance();
-    \u0275\u0275property("for", prompt_r14.enumKey);
+    \u0275\u0275property("for", prompt_r27.enumKey);
     \u0275\u0275advance();
-    \u0275\u0275textInterpolate(\u0275\u0275pipeBind1(4, 5, prompt_r14.translationKey));
+    \u0275\u0275textInterpolate(\u0275\u0275pipeBind1(4, 5, prompt_r27.translationKey));
   }
 }
-function PromptEditorComponent_For_23_Conditional_2_Conditional_8_For_1_Conditional_1_For_4_For_1_Conditional_0_Conditional_0_Template(rf, ctx) {
+function PromptEditorComponent_For_23_Conditional_2_Conditional_12_For_1_Conditional_1_For_4_For_1_Conditional_0_Conditional_0_Template(rf, ctx) {
   if (rf & 1) {
     \u0275\u0275elementStart(0, "h3");
     \u0275\u0275text(1);
@@ -401,12 +679,12 @@ function PromptEditorComponent_For_23_Conditional_2_Conditional_8_For_1_Conditio
     \u0275\u0275elementEnd();
   }
   if (rf & 2) {
-    const section_r15 = \u0275\u0275nextContext(2).$implicit;
+    const section_r28 = \u0275\u0275nextContext(2).$implicit;
     \u0275\u0275advance();
-    \u0275\u0275textInterpolate(\u0275\u0275pipeBind1(2, 1, section_r15.label));
+    \u0275\u0275textInterpolate(\u0275\u0275pipeBind1(2, 1, section_r28.label));
   }
 }
-function PromptEditorComponent_For_23_Conditional_2_Conditional_8_For_1_Conditional_1_For_4_For_1_Conditional_0_For_2_Template(rf, ctx) {
+function PromptEditorComponent_For_23_Conditional_2_Conditional_12_For_1_Conditional_1_For_4_For_1_Conditional_0_For_2_Template(rf, ctx) {
   if (rf & 1) {
     \u0275\u0275elementStart(0, "h4");
     \u0275\u0275text(1);
@@ -417,27 +695,27 @@ function PromptEditorComponent_For_23_Conditional_2_Conditional_8_For_1_Conditio
     \u0275\u0275elementEnd();
   }
   if (rf & 2) {
-    const option_r16 = ctx.$implicit;
+    const option_r29 = ctx.$implicit;
     const ctx_r2 = \u0275\u0275nextContext(9);
     \u0275\u0275advance();
-    \u0275\u0275textInterpolate(\u0275\u0275pipeBind1(2, 2, option_r16.label));
+    \u0275\u0275textInterpolate(\u0275\u0275pipeBind1(2, 2, option_r29.label));
     \u0275\u0275advance(3);
-    \u0275\u0275textInterpolate(ctx_r2.getPipelineOptionContent(option_r16));
+    \u0275\u0275textInterpolate(ctx_r2.getPipelineOptionContent(option_r29));
   }
 }
-function PromptEditorComponent_For_23_Conditional_2_Conditional_8_For_1_Conditional_1_For_4_For_1_Conditional_0_Template(rf, ctx) {
+function PromptEditorComponent_For_23_Conditional_2_Conditional_12_For_1_Conditional_1_For_4_For_1_Conditional_0_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275conditionalCreate(0, PromptEditorComponent_For_23_Conditional_2_Conditional_8_For_1_Conditional_1_For_4_For_1_Conditional_0_Conditional_0_Template, 3, 3, "h3");
-    \u0275\u0275repeaterCreate(1, PromptEditorComponent_For_23_Conditional_2_Conditional_8_For_1_Conditional_1_For_4_For_1_Conditional_0_For_2_Template, 5, 4, null, null, _forTrack1);
+    \u0275\u0275conditionalCreate(0, PromptEditorComponent_For_23_Conditional_2_Conditional_12_For_1_Conditional_1_For_4_For_1_Conditional_0_Conditional_0_Template, 3, 3, "h3");
+    \u0275\u0275repeaterCreate(1, PromptEditorComponent_For_23_Conditional_2_Conditional_12_For_1_Conditional_1_For_4_For_1_Conditional_0_For_2_Template, 5, 4, null, null, _forTrack1);
   }
   if (rf & 2) {
-    const section_r15 = \u0275\u0275nextContext().$implicit;
-    \u0275\u0275conditional(!section_r15.hideLabel && section_r15.label ? 0 : -1);
+    const section_r28 = \u0275\u0275nextContext().$implicit;
+    \u0275\u0275conditional(!section_r28.hideLabel && section_r28.label ? 0 : -1);
     \u0275\u0275advance();
-    \u0275\u0275repeater(section_r15.options);
+    \u0275\u0275repeater(section_r28.options);
   }
 }
-function PromptEditorComponent_For_23_Conditional_2_Conditional_8_For_1_Conditional_1_For_4_For_1_Conditional_1_Template(rf, ctx) {
+function PromptEditorComponent_For_23_Conditional_2_Conditional_12_For_1_Conditional_1_For_4_For_1_Conditional_1_Template(rf, ctx) {
   if (rf & 1) {
     \u0275\u0275elementStart(0, "h3");
     \u0275\u0275text(1);
@@ -448,101 +726,101 @@ function PromptEditorComponent_For_23_Conditional_2_Conditional_8_For_1_Conditio
     \u0275\u0275elementEnd();
   }
   if (rf & 2) {
-    const section_r15 = \u0275\u0275nextContext().$implicit;
+    const section_r28 = \u0275\u0275nextContext().$implicit;
     const ctx_r2 = \u0275\u0275nextContext(7);
     \u0275\u0275advance();
-    \u0275\u0275textInterpolate(\u0275\u0275pipeBind1(2, 2, section_r15.label ?? ""));
+    \u0275\u0275textInterpolate(\u0275\u0275pipeBind1(2, 2, section_r28.label ?? ""));
     \u0275\u0275advance(3);
-    \u0275\u0275textInterpolate(ctx_r2.getPipelineSectionContent(section_r15));
+    \u0275\u0275textInterpolate(ctx_r2.getPipelineSectionContent(section_r28));
   }
 }
-function PromptEditorComponent_For_23_Conditional_2_Conditional_8_For_1_Conditional_1_For_4_For_1_Template(rf, ctx) {
+function PromptEditorComponent_For_23_Conditional_2_Conditional_12_For_1_Conditional_1_For_4_For_1_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275conditionalCreate(0, PromptEditorComponent_For_23_Conditional_2_Conditional_8_For_1_Conditional_1_For_4_For_1_Conditional_0_Template, 3, 1)(1, PromptEditorComponent_For_23_Conditional_2_Conditional_8_For_1_Conditional_1_For_4_For_1_Conditional_1_Template, 5, 4);
+    \u0275\u0275conditionalCreate(0, PromptEditorComponent_For_23_Conditional_2_Conditional_12_For_1_Conditional_1_For_4_For_1_Conditional_0_Template, 3, 1)(1, PromptEditorComponent_For_23_Conditional_2_Conditional_12_For_1_Conditional_1_For_4_For_1_Conditional_1_Template, 5, 4);
   }
   if (rf & 2) {
-    const section_r15 = ctx.$implicit;
-    \u0275\u0275conditional((section_r15.options == null ? null : section_r15.options.length) ? 0 : 1);
+    const section_r28 = ctx.$implicit;
+    \u0275\u0275conditional((section_r28.options == null ? null : section_r28.options.length) ? 0 : 1);
   }
 }
-function PromptEditorComponent_For_23_Conditional_2_Conditional_8_For_1_Conditional_1_For_4_Template(rf, ctx) {
+function PromptEditorComponent_For_23_Conditional_2_Conditional_12_For_1_Conditional_1_For_4_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275repeaterCreate(0, PromptEditorComponent_For_23_Conditional_2_Conditional_8_For_1_Conditional_1_For_4_For_1_Template, 2, 1, null, null, _forTrack1);
+    \u0275\u0275repeaterCreate(0, PromptEditorComponent_For_23_Conditional_2_Conditional_12_For_1_Conditional_1_For_4_For_1_Template, 2, 1, null, null, _forTrack1);
   }
   if (rf & 2) {
-    const group_r17 = ctx.$implicit;
-    \u0275\u0275repeater(group_r17.sections);
+    const group_r30 = ctx.$implicit;
+    \u0275\u0275repeater(group_r30.sections);
   }
 }
-function PromptEditorComponent_For_23_Conditional_2_Conditional_8_For_1_Conditional_1_Template(rf, ctx) {
+function PromptEditorComponent_For_23_Conditional_2_Conditional_12_For_1_Conditional_1_Template(rf, ctx) {
   if (rf & 1) {
     \u0275\u0275elementStart(0, "h2", 16);
     \u0275\u0275text(1);
     \u0275\u0275pipe(2, "translate");
     \u0275\u0275elementEnd();
-    \u0275\u0275repeaterCreate(3, PromptEditorComponent_For_23_Conditional_2_Conditional_8_For_1_Conditional_1_For_4_Template, 2, 0, null, null, _forTrack1);
+    \u0275\u0275repeaterCreate(3, PromptEditorComponent_For_23_Conditional_2_Conditional_12_For_1_Conditional_1_For_4_Template, 2, 0, null, null, _forTrack1);
   }
   if (rf & 2) {
-    const prompt_r14 = \u0275\u0275nextContext().$implicit;
+    const prompt_r27 = \u0275\u0275nextContext().$implicit;
     const ctx_r2 = \u0275\u0275nextContext(4);
     \u0275\u0275advance();
-    \u0275\u0275textInterpolate(\u0275\u0275pipeBind1(2, 1, prompt_r14.translationKey));
+    \u0275\u0275textInterpolate(\u0275\u0275pipeBind1(2, 1, prompt_r27.translationKey));
     \u0275\u0275advance(2);
     \u0275\u0275repeater(ctx_r2.alertRewritePipelineGroups);
   }
 }
-function PromptEditorComponent_For_23_Conditional_2_Conditional_8_For_1_Conditional_2_ng_template_6_Template(rf, ctx) {
+function PromptEditorComponent_For_23_Conditional_2_Conditional_12_For_1_Conditional_2_ng_template_6_Template(rf, ctx) {
   if (rf & 1) {
     \u0275\u0275text(0);
     \u0275\u0275pipe(1, "translate");
   }
   if (rf & 2) {
-    const option_r19 = ctx.$implicit;
-    \u0275\u0275textInterpolate1(" ", \u0275\u0275pipeBind1(1, 1, option_r19.label), " ");
+    const option_r32 = ctx.$implicit;
+    \u0275\u0275textInterpolate1(" ", \u0275\u0275pipeBind1(1, 1, option_r32.label), " ");
   }
 }
-function PromptEditorComponent_For_23_Conditional_2_Conditional_8_For_1_Conditional_2_ng_template_7_Template(rf, ctx) {
+function PromptEditorComponent_For_23_Conditional_2_Conditional_12_For_1_Conditional_2_ng_template_7_Template(rf, ctx) {
   if (rf & 1) {
     \u0275\u0275text(0);
     \u0275\u0275pipe(1, "translate");
   }
   if (rf & 2) {
-    const option_r20 = ctx.$implicit;
-    \u0275\u0275textInterpolate1(" ", \u0275\u0275pipeBind1(1, 1, option_r20.label), " ");
+    const option_r33 = ctx.$implicit;
+    \u0275\u0275textInterpolate1(" ", \u0275\u0275pipeBind1(1, 1, option_r33.label), " ");
   }
 }
-function PromptEditorComponent_For_23_Conditional_2_Conditional_8_For_1_Conditional_2_ng_template_13_Template(rf, ctx) {
+function PromptEditorComponent_For_23_Conditional_2_Conditional_12_For_1_Conditional_2_ng_template_13_Template(rf, ctx) {
   if (rf & 1) {
     \u0275\u0275text(0);
     \u0275\u0275pipe(1, "translate");
   }
   if (rf & 2) {
-    const option_r21 = ctx.$implicit;
-    \u0275\u0275textInterpolate1(" ", \u0275\u0275pipeBind1(1, 1, option_r21.label), " ");
+    const option_r34 = ctx.$implicit;
+    \u0275\u0275textInterpolate1(" ", \u0275\u0275pipeBind1(1, 1, option_r34.label), " ");
   }
 }
-function PromptEditorComponent_For_23_Conditional_2_Conditional_8_For_1_Conditional_2_ng_template_14_Template(rf, ctx) {
+function PromptEditorComponent_For_23_Conditional_2_Conditional_12_For_1_Conditional_2_ng_template_14_Template(rf, ctx) {
   if (rf & 1) {
     \u0275\u0275text(0);
     \u0275\u0275pipe(1, "translate");
   }
   if (rf & 2) {
-    const option_r22 = ctx.$implicit;
-    \u0275\u0275textInterpolate1(" ", \u0275\u0275pipeBind1(1, 1, option_r22.label), " ");
+    const option_r35 = ctx.$implicit;
+    \u0275\u0275textInterpolate1(" ", \u0275\u0275pipeBind1(1, 1, option_r35.label), " ");
   }
 }
-function PromptEditorComponent_For_23_Conditional_2_Conditional_8_For_1_Conditional_2_Conditional_29_Template(rf, ctx) {
+function PromptEditorComponent_For_23_Conditional_2_Conditional_12_For_1_Conditional_2_Conditional_29_Template(rf, ctx) {
   if (rf & 1) {
-    const _r23 = \u0275\u0275getCurrentView();
+    const _r36 = \u0275\u0275getCurrentView();
     \u0275\u0275elementStart(0, "p-iftalabel")(1, "textarea", 29);
-    \u0275\u0275twoWayListener("ngModelChange", function PromptEditorComponent_For_23_Conditional_2_Conditional_8_For_1_Conditional_2_Conditional_29_Template_textarea_ngModelChange_1_listener($event) {
-      \u0275\u0275restoreView(_r23);
-      const prompt_r14 = \u0275\u0275nextContext(2).$implicit;
-      \u0275\u0275twoWayBindingSet(prompt_r14.promptText.jsonSchema, $event) || (prompt_r14.promptText.jsonSchema = $event);
+    \u0275\u0275twoWayListener("ngModelChange", function PromptEditorComponent_For_23_Conditional_2_Conditional_12_For_1_Conditional_2_Conditional_29_Template_textarea_ngModelChange_1_listener($event) {
+      \u0275\u0275restoreView(_r36);
+      const prompt_r27 = \u0275\u0275nextContext(2).$implicit;
+      \u0275\u0275twoWayBindingSet(prompt_r27.promptText.jsonSchema, $event) || (prompt_r27.promptText.jsonSchema = $event);
       return \u0275\u0275resetView($event);
     });
-    \u0275\u0275listener("ngModelChange", function PromptEditorComponent_For_23_Conditional_2_Conditional_8_For_1_Conditional_2_Conditional_29_Template_textarea_ngModelChange_1_listener() {
-      \u0275\u0275restoreView(_r23);
+    \u0275\u0275listener("ngModelChange", function PromptEditorComponent_For_23_Conditional_2_Conditional_12_For_1_Conditional_2_Conditional_29_Template_textarea_ngModelChange_1_listener() {
+      \u0275\u0275restoreView(_r36);
       const ctx_r2 = \u0275\u0275nextContext(6);
       return \u0275\u0275resetView(ctx_r2.updateDiff());
     });
@@ -553,69 +831,69 @@ function PromptEditorComponent_For_23_Conditional_2_Conditional_8_For_1_Conditio
     \u0275\u0275elementEnd()();
   }
   if (rf & 2) {
-    const prompt_r14 = \u0275\u0275nextContext(2).$implicit;
+    const prompt_r27 = \u0275\u0275nextContext(2).$implicit;
     \u0275\u0275advance();
-    \u0275\u0275twoWayProperty("ngModel", prompt_r14.promptText.jsonSchema);
-    \u0275\u0275property("autoResize", true)("id", prompt_r14.enumKey + "_jsonSchema");
+    \u0275\u0275twoWayProperty("ngModel", prompt_r27.promptText.jsonSchema);
+    \u0275\u0275property("autoResize", true)("id", prompt_r27.enumKey + "_jsonSchema");
     \u0275\u0275advance();
-    \u0275\u0275property("for", prompt_r14.enumKey + "_jsonSchema");
+    \u0275\u0275property("for", prompt_r27.enumKey + "_jsonSchema");
     \u0275\u0275advance();
     \u0275\u0275textInterpolate(\u0275\u0275pipeBind1(4, 5, "aiPrompt.component.jsonSchema"));
   }
 }
-function PromptEditorComponent_For_23_Conditional_2_Conditional_8_For_1_Conditional_2_Template(rf, ctx) {
+function PromptEditorComponent_For_23_Conditional_2_Conditional_12_For_1_Conditional_2_Template(rf, ctx) {
   if (rf & 1) {
-    const _r18 = \u0275\u0275getCurrentView();
+    const _r31 = \u0275\u0275getCurrentView();
     \u0275\u0275elementStart(0, "h2", 16);
     \u0275\u0275text(1);
     \u0275\u0275pipe(2, "translate");
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(3, "div", 31)(4, "p-iftalabel", 32)(5, "p-select", 33);
-    \u0275\u0275twoWayListener("ngModelChange", function PromptEditorComponent_For_23_Conditional_2_Conditional_8_For_1_Conditional_2_Template_p_select_ngModelChange_5_listener($event) {
-      \u0275\u0275restoreView(_r18);
-      const prompt_r14 = \u0275\u0275nextContext().$implicit;
-      \u0275\u0275twoWayBindingSet(prompt_r14.promptText.role, $event) || (prompt_r14.promptText.role = $event);
+    \u0275\u0275elementStart(3, "div", 39)(4, "p-iftalabel", 40)(5, "p-select", 41);
+    \u0275\u0275twoWayListener("ngModelChange", function PromptEditorComponent_For_23_Conditional_2_Conditional_12_For_1_Conditional_2_Template_p_select_ngModelChange_5_listener($event) {
+      \u0275\u0275restoreView(_r31);
+      const prompt_r27 = \u0275\u0275nextContext().$implicit;
+      \u0275\u0275twoWayBindingSet(prompt_r27.promptText.role, $event) || (prompt_r27.promptText.role = $event);
       return \u0275\u0275resetView($event);
     });
-    \u0275\u0275listener("onChange", function PromptEditorComponent_For_23_Conditional_2_Conditional_8_For_1_Conditional_2_Template_p_select_onChange_5_listener() {
-      \u0275\u0275restoreView(_r18);
+    \u0275\u0275listener("onChange", function PromptEditorComponent_For_23_Conditional_2_Conditional_12_For_1_Conditional_2_Template_p_select_onChange_5_listener() {
+      \u0275\u0275restoreView(_r31);
       const ctx_r2 = \u0275\u0275nextContext(5);
       return \u0275\u0275resetView(ctx_r2.updateDiff());
     });
-    \u0275\u0275template(6, PromptEditorComponent_For_23_Conditional_2_Conditional_8_For_1_Conditional_2_ng_template_6_Template, 2, 3, "ng-template", 34)(7, PromptEditorComponent_For_23_Conditional_2_Conditional_8_For_1_Conditional_2_ng_template_7_Template, 2, 3, "ng-template", 35);
+    \u0275\u0275template(6, PromptEditorComponent_For_23_Conditional_2_Conditional_12_For_1_Conditional_2_ng_template_6_Template, 2, 3, "ng-template", 33)(7, PromptEditorComponent_For_23_Conditional_2_Conditional_12_For_1_Conditional_2_ng_template_7_Template, 2, 3, "ng-template", 34);
     \u0275\u0275elementEnd();
     \u0275\u0275elementStart(8, "label", 30);
     \u0275\u0275text(9);
     \u0275\u0275pipe(10, "translate");
     \u0275\u0275elementEnd()();
-    \u0275\u0275elementStart(11, "p-iftalabel", 32)(12, "p-select", 33);
-    \u0275\u0275twoWayListener("ngModelChange", function PromptEditorComponent_For_23_Conditional_2_Conditional_8_For_1_Conditional_2_Template_p_select_ngModelChange_12_listener($event) {
-      \u0275\u0275restoreView(_r18);
-      const prompt_r14 = \u0275\u0275nextContext().$implicit;
-      \u0275\u0275twoWayBindingSet(prompt_r14.promptText.output, $event) || (prompt_r14.promptText.output = $event);
+    \u0275\u0275elementStart(11, "p-iftalabel", 40)(12, "p-select", 41);
+    \u0275\u0275twoWayListener("ngModelChange", function PromptEditorComponent_For_23_Conditional_2_Conditional_12_For_1_Conditional_2_Template_p_select_ngModelChange_12_listener($event) {
+      \u0275\u0275restoreView(_r31);
+      const prompt_r27 = \u0275\u0275nextContext().$implicit;
+      \u0275\u0275twoWayBindingSet(prompt_r27.promptText.output, $event) || (prompt_r27.promptText.output = $event);
       return \u0275\u0275resetView($event);
     });
-    \u0275\u0275listener("onChange", function PromptEditorComponent_For_23_Conditional_2_Conditional_8_For_1_Conditional_2_Template_p_select_onChange_12_listener() {
-      \u0275\u0275restoreView(_r18);
+    \u0275\u0275listener("onChange", function PromptEditorComponent_For_23_Conditional_2_Conditional_12_For_1_Conditional_2_Template_p_select_onChange_12_listener() {
+      \u0275\u0275restoreView(_r31);
       const ctx_r2 = \u0275\u0275nextContext(5);
       return \u0275\u0275resetView(ctx_r2.updateDiff());
     });
-    \u0275\u0275template(13, PromptEditorComponent_For_23_Conditional_2_Conditional_8_For_1_Conditional_2_ng_template_13_Template, 2, 3, "ng-template", 34)(14, PromptEditorComponent_For_23_Conditional_2_Conditional_8_For_1_Conditional_2_ng_template_14_Template, 2, 3, "ng-template", 35);
+    \u0275\u0275template(13, PromptEditorComponent_For_23_Conditional_2_Conditional_12_For_1_Conditional_2_ng_template_13_Template, 2, 3, "ng-template", 33)(14, PromptEditorComponent_For_23_Conditional_2_Conditional_12_For_1_Conditional_2_ng_template_14_Template, 2, 3, "ng-template", 34);
     \u0275\u0275elementEnd();
     \u0275\u0275elementStart(15, "label", 30);
     \u0275\u0275text(16);
     \u0275\u0275pipe(17, "translate");
     \u0275\u0275elementEnd()();
-    \u0275\u0275elementStart(18, "p-iftalabel", 32)(19, "p-multiselect", 36);
+    \u0275\u0275elementStart(18, "p-iftalabel", 40)(19, "p-multiselect", 42);
     \u0275\u0275pipe(20, "translate");
-    \u0275\u0275twoWayListener("ngModelChange", function PromptEditorComponent_For_23_Conditional_2_Conditional_8_For_1_Conditional_2_Template_p_multiselect_ngModelChange_19_listener($event) {
-      \u0275\u0275restoreView(_r18);
-      const prompt_r14 = \u0275\u0275nextContext().$implicit;
-      \u0275\u0275twoWayBindingSet(prompt_r14.promptText.rubric, $event) || (prompt_r14.promptText.rubric = $event);
+    \u0275\u0275twoWayListener("ngModelChange", function PromptEditorComponent_For_23_Conditional_2_Conditional_12_For_1_Conditional_2_Template_p_multiselect_ngModelChange_19_listener($event) {
+      \u0275\u0275restoreView(_r31);
+      const prompt_r27 = \u0275\u0275nextContext().$implicit;
+      \u0275\u0275twoWayBindingSet(prompt_r27.promptText.rubric, $event) || (prompt_r27.promptText.rubric = $event);
       return \u0275\u0275resetView($event);
     });
-    \u0275\u0275listener("onChange", function PromptEditorComponent_For_23_Conditional_2_Conditional_8_For_1_Conditional_2_Template_p_multiselect_onChange_19_listener() {
-      \u0275\u0275restoreView(_r18);
+    \u0275\u0275listener("onChange", function PromptEditorComponent_For_23_Conditional_2_Conditional_12_For_1_Conditional_2_Template_p_multiselect_onChange_19_listener() {
+      \u0275\u0275restoreView(_r31);
       const ctx_r2 = \u0275\u0275nextContext(5);
       return \u0275\u0275resetView(ctx_r2.updateDiff());
     });
@@ -625,14 +903,14 @@ function PromptEditorComponent_For_23_Conditional_2_Conditional_8_For_1_Conditio
     \u0275\u0275pipe(23, "translate");
     \u0275\u0275elementEnd()()();
     \u0275\u0275elementStart(24, "p-iftalabel")(25, "textarea", 29);
-    \u0275\u0275twoWayListener("ngModelChange", function PromptEditorComponent_For_23_Conditional_2_Conditional_8_For_1_Conditional_2_Template_textarea_ngModelChange_25_listener($event) {
-      \u0275\u0275restoreView(_r18);
-      const prompt_r14 = \u0275\u0275nextContext().$implicit;
-      \u0275\u0275twoWayBindingSet(prompt_r14.promptText.task, $event) || (prompt_r14.promptText.task = $event);
+    \u0275\u0275twoWayListener("ngModelChange", function PromptEditorComponent_For_23_Conditional_2_Conditional_12_For_1_Conditional_2_Template_textarea_ngModelChange_25_listener($event) {
+      \u0275\u0275restoreView(_r31);
+      const prompt_r27 = \u0275\u0275nextContext().$implicit;
+      \u0275\u0275twoWayBindingSet(prompt_r27.promptText.task, $event) || (prompt_r27.promptText.task = $event);
       return \u0275\u0275resetView($event);
     });
-    \u0275\u0275listener("ngModelChange", function PromptEditorComponent_For_23_Conditional_2_Conditional_8_For_1_Conditional_2_Template_textarea_ngModelChange_25_listener() {
-      \u0275\u0275restoreView(_r18);
+    \u0275\u0275listener("ngModelChange", function PromptEditorComponent_For_23_Conditional_2_Conditional_12_For_1_Conditional_2_Template_textarea_ngModelChange_25_listener() {
+      \u0275\u0275restoreView(_r31);
       const ctx_r2 = \u0275\u0275nextContext(5);
       return \u0275\u0275resetView(ctx_r2.updateDiff());
     });
@@ -641,65 +919,65 @@ function PromptEditorComponent_For_23_Conditional_2_Conditional_8_For_1_Conditio
     \u0275\u0275text(27);
     \u0275\u0275pipe(28, "translate");
     \u0275\u0275elementEnd()();
-    \u0275\u0275conditionalCreate(29, PromptEditorComponent_For_23_Conditional_2_Conditional_8_For_1_Conditional_2_Conditional_29_Template, 5, 7, "p-iftalabel");
+    \u0275\u0275conditionalCreate(29, PromptEditorComponent_For_23_Conditional_2_Conditional_12_For_1_Conditional_2_Conditional_29_Template, 5, 7, "p-iftalabel");
   }
   if (rf & 2) {
-    const prompt_r14 = \u0275\u0275nextContext().$implicit;
+    const prompt_r27 = \u0275\u0275nextContext().$implicit;
     const ctx_r2 = \u0275\u0275nextContext(4);
     \u0275\u0275advance();
-    \u0275\u0275textInterpolate(\u0275\u0275pipeBind1(2, 25, prompt_r14.translationKey));
+    \u0275\u0275textInterpolate(\u0275\u0275pipeBind1(2, 25, prompt_r27.translationKey));
     \u0275\u0275advance(4);
-    \u0275\u0275twoWayProperty("ngModel", prompt_r14.promptText.role);
-    \u0275\u0275property("id", prompt_r14.enumKey + "_role")("options", ctx_r2.roleOptions);
+    \u0275\u0275twoWayProperty("ngModel", prompt_r27.promptText.role);
+    \u0275\u0275property("id", prompt_r27.enumKey + "_role")("options", ctx_r2.roleOptions);
     \u0275\u0275advance(3);
-    \u0275\u0275property("for", prompt_r14.enumKey + "_role");
+    \u0275\u0275property("for", prompt_r27.enumKey + "_role");
     \u0275\u0275advance();
     \u0275\u0275textInterpolate(\u0275\u0275pipeBind1(10, 27, "aiPrompt.component.role"));
     \u0275\u0275advance(3);
-    \u0275\u0275twoWayProperty("ngModel", prompt_r14.promptText.output);
-    \u0275\u0275property("id", prompt_r14.enumKey + "_output")("options", ctx_r2.outputOptions);
+    \u0275\u0275twoWayProperty("ngModel", prompt_r27.promptText.output);
+    \u0275\u0275property("id", prompt_r27.enumKey + "_output")("options", ctx_r2.outputOptions);
     \u0275\u0275advance(3);
-    \u0275\u0275property("for", prompt_r14.enumKey + "_output");
+    \u0275\u0275property("for", prompt_r27.enumKey + "_output");
     \u0275\u0275advance();
     \u0275\u0275textInterpolate(\u0275\u0275pipeBind1(17, 29, "aiPrompt.component.output"));
     \u0275\u0275advance(3);
-    \u0275\u0275twoWayProperty("ngModel", prompt_r14.promptText.rubric);
-    \u0275\u0275property("id", prompt_r14.enumKey + "_rubric")("options", ctx_r2.rubricOptions())("placeholder", \u0275\u0275pipeBind1(20, 31, "common.none"));
+    \u0275\u0275twoWayProperty("ngModel", prompt_r27.promptText.rubric);
+    \u0275\u0275property("id", prompt_r27.enumKey + "_rubric")("options", ctx_r2.rubricOptions())("placeholder", \u0275\u0275pipeBind1(20, 31, "common.none"));
     \u0275\u0275advance(2);
-    \u0275\u0275property("for", prompt_r14.enumKey + "_rubric");
+    \u0275\u0275property("for", prompt_r27.enumKey + "_rubric");
     \u0275\u0275advance();
     \u0275\u0275textInterpolate(\u0275\u0275pipeBind1(23, 33, "aiPrompt.component.rubric"));
     \u0275\u0275advance(3);
-    \u0275\u0275classProp("prompt-content-sized", prompt_r14.enumKey === "AlertsProblems");
-    \u0275\u0275twoWayProperty("ngModel", prompt_r14.promptText.task);
-    \u0275\u0275property("autoResize", prompt_r14.enumKey !== "AlertsProblems")("id", prompt_r14.enumKey + "_task");
+    \u0275\u0275classProp("prompt-content-sized", prompt_r27.enumKey === "AlertsProblems");
+    \u0275\u0275twoWayProperty("ngModel", prompt_r27.promptText.task);
+    \u0275\u0275property("autoResize", prompt_r27.enumKey !== "AlertsProblems")("id", prompt_r27.enumKey + "_task");
     \u0275\u0275advance();
-    \u0275\u0275property("for", prompt_r14.enumKey + "_task");
+    \u0275\u0275property("for", prompt_r27.enumKey + "_task");
     \u0275\u0275advance();
     \u0275\u0275textInterpolate(\u0275\u0275pipeBind1(28, 35, "aiPrompt.component.task"));
     \u0275\u0275advance(2);
-    \u0275\u0275conditional(prompt_r14.promptText.output === ctx_r2.OutputKey.Json ? 29 : -1);
+    \u0275\u0275conditional(prompt_r27.promptText.output === ctx_r2.OutputKey.Json ? 29 : -1);
   }
 }
-function PromptEditorComponent_For_23_Conditional_2_Conditional_8_For_1_Template(rf, ctx) {
+function PromptEditorComponent_For_23_Conditional_2_Conditional_12_For_1_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275conditionalCreate(0, PromptEditorComponent_For_23_Conditional_2_Conditional_8_For_1_Conditional_0_Template, 5, 7, "p-iftalabel");
-    \u0275\u0275conditionalCreate(1, PromptEditorComponent_For_23_Conditional_2_Conditional_8_For_1_Conditional_1_Template, 5, 3);
-    \u0275\u0275conditionalCreate(2, PromptEditorComponent_For_23_Conditional_2_Conditional_8_For_1_Conditional_2_Template, 30, 37);
+    \u0275\u0275conditionalCreate(0, PromptEditorComponent_For_23_Conditional_2_Conditional_12_For_1_Conditional_0_Template, 5, 7, "p-iftalabel");
+    \u0275\u0275conditionalCreate(1, PromptEditorComponent_For_23_Conditional_2_Conditional_12_For_1_Conditional_1_Template, 5, 3);
+    \u0275\u0275conditionalCreate(2, PromptEditorComponent_For_23_Conditional_2_Conditional_12_For_1_Conditional_2_Template, 30, 37);
   }
   if (rf & 2) {
-    const prompt_r14 = ctx.$implicit;
+    const prompt_r27 = ctx.$implicit;
     const ctx_r2 = \u0275\u0275nextContext(4);
-    \u0275\u0275conditional(ctx_r2.isPromptString(prompt_r14) ? 0 : -1);
+    \u0275\u0275conditional(ctx_r2.isPromptString(prompt_r27) ? 0 : -1);
     \u0275\u0275advance();
-    \u0275\u0275conditional(ctx_r2.isPromptConfig(prompt_r14) && ctx_r2.isPromptVisible(prompt_r14.enumKey) && ctx_r2.isAlertRewritePipeline(prompt_r14) ? 1 : -1);
+    \u0275\u0275conditional(ctx_r2.isPromptConfig(prompt_r27) && ctx_r2.isPromptVisible(prompt_r27.enumKey) && ctx_r2.isAlertRewritePipeline(prompt_r27) ? 1 : -1);
     \u0275\u0275advance();
-    \u0275\u0275conditional(ctx_r2.isPromptConfig(prompt_r14) && ctx_r2.isPromptVisible(prompt_r14.enumKey) && !ctx_r2.isAlertRewritePipeline(prompt_r14) ? 2 : -1);
+    \u0275\u0275conditional(ctx_r2.isPromptConfig(prompt_r27) && ctx_r2.isPromptVisible(prompt_r27.enumKey) && !ctx_r2.isAlertRewritePipeline(prompt_r27) ? 2 : -1);
   }
 }
-function PromptEditorComponent_For_23_Conditional_2_Conditional_8_Template(rf, ctx) {
+function PromptEditorComponent_For_23_Conditional_2_Conditional_12_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275repeaterCreate(0, PromptEditorComponent_For_23_Conditional_2_Conditional_8_For_1_Template, 3, 3, null, null, _forTrack2);
+    \u0275\u0275repeaterCreate(0, PromptEditorComponent_For_23_Conditional_2_Conditional_12_For_1_Template, 3, 3, null, null, _forTrack2);
   }
   if (rf & 2) {
     const tab_r7 = \u0275\u0275nextContext(2).$implicit;
@@ -713,30 +991,36 @@ function PromptEditorComponent_For_23_Conditional_2_Template(rf, ctx) {
     \u0275\u0275pipe(2, "translate");
     \u0275\u0275elementEnd();
     \u0275\u0275elementStart(3, "div", 23);
-    \u0275\u0275conditionalCreate(4, PromptEditorComponent_For_23_Conditional_2_Conditional_4_Template, 2, 0)(5, PromptEditorComponent_For_23_Conditional_2_Conditional_5_Template, 2, 0);
+    \u0275\u0275conditionalCreate(4, PromptEditorComponent_For_23_Conditional_2_Conditional_4_Template, 2, 0)(5, PromptEditorComponent_For_23_Conditional_2_Conditional_5_Template, 2, 0)(6, PromptEditorComponent_For_23_Conditional_2_Conditional_6_Template, 2, 0)(7, PromptEditorComponent_For_23_Conditional_2_Conditional_7_Template, 2, 0);
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(6, "div", 24);
-    \u0275\u0275conditionalCreate(7, PromptEditorComponent_For_23_Conditional_2_Conditional_7_Template, 2, 0);
-    \u0275\u0275conditionalCreate(8, PromptEditorComponent_For_23_Conditional_2_Conditional_8_Template, 2, 0);
+    \u0275\u0275elementStart(8, "div", 24);
+    \u0275\u0275conditionalCreate(9, PromptEditorComponent_For_23_Conditional_2_Conditional_9_Template, 2, 0);
+    \u0275\u0275conditionalCreate(10, PromptEditorComponent_For_23_Conditional_2_Conditional_10_Template, 2, 0);
+    \u0275\u0275conditionalCreate(11, PromptEditorComponent_For_23_Conditional_2_Conditional_11_Template, 5, 3);
+    \u0275\u0275conditionalCreate(12, PromptEditorComponent_For_23_Conditional_2_Conditional_12_Template, 2, 0);
     \u0275\u0275elementEnd();
   }
   if (rf & 2) {
     const tab_r7 = \u0275\u0275nextContext().$implicit;
     const ctx_r2 = \u0275\u0275nextContext();
     \u0275\u0275advance();
-    \u0275\u0275textInterpolate(\u0275\u0275pipeBind1(2, 4, tab_r7.description));
+    \u0275\u0275textInterpolate(\u0275\u0275pipeBind1(2, 6, tab_r7.description));
     \u0275\u0275advance(3);
-    \u0275\u0275conditional(ctx_r2.isFragmentsTab(tab_r7) ? 4 : 5);
-    \u0275\u0275advance(3);
-    \u0275\u0275conditional(ctx_r2.isFragmentsTab(tab_r7) ? 7 : -1);
+    \u0275\u0275conditional(ctx_r2.isFragmentsTab(tab_r7) ? 4 : ctx_r2.isSkillsTab(tab_r7) ? 5 : ctx_r2.isExamplesTab(tab_r7) ? 6 : 7);
+    \u0275\u0275advance(5);
+    \u0275\u0275conditional(ctx_r2.isFragmentsTab(tab_r7) ? 9 : -1);
     \u0275\u0275advance();
-    \u0275\u0275conditional(!ctx_r2.isFragmentsTab(tab_r7) ? 8 : -1);
+    \u0275\u0275conditional(ctx_r2.isSkillsTab(tab_r7) ? 10 : -1);
+    \u0275\u0275advance();
+    \u0275\u0275conditional(ctx_r2.isExamplesTab(tab_r7) ? 11 : -1);
+    \u0275\u0275advance();
+    \u0275\u0275conditional(!ctx_r2.isFragmentsTab(tab_r7) && !ctx_r2.isSkillsTab(tab_r7) && !ctx_r2.isExamplesTab(tab_r7) ? 12 : -1);
   }
 }
 function PromptEditorComponent_For_23_Template(rf, ctx) {
   if (rf & 1) {
     \u0275\u0275elementStart(0, "p-tabpanel", 13)(1, "div", 14);
-    \u0275\u0275conditionalCreate(2, PromptEditorComponent_For_23_Conditional_2_Template, 9, 6);
+    \u0275\u0275conditionalCreate(2, PromptEditorComponent_For_23_Conditional_2_Template, 13, 8);
     \u0275\u0275elementEnd()();
   }
   if (rf & 2) {
@@ -755,8 +1039,8 @@ function PromptEditorComponent_ng_template_35_Template(rf, ctx) {
     \u0275\u0275pipe(1, "translate");
   }
   if (rf & 2) {
-    const group_r24 = ctx.$implicit;
-    \u0275\u0275textInterpolate(\u0275\u0275pipeBind1(1, 1, group_r24.label));
+    const group_r37 = ctx.$implicit;
+    \u0275\u0275textInterpolate(\u0275\u0275pipeBind1(1, 1, group_r37.label));
   }
 }
 function PromptEditorComponent_ng_template_37_Template(rf, ctx) {
@@ -765,8 +1049,8 @@ function PromptEditorComponent_ng_template_37_Template(rf, ctx) {
     \u0275\u0275pipe(1, "translate");
   }
   if (rf & 2) {
-    const selected_r25 = ctx.$implicit;
-    \u0275\u0275textInterpolate(\u0275\u0275pipeBind1(1, 1, selected_r25.translationKey));
+    const selected_r38 = ctx.$implicit;
+    \u0275\u0275textInterpolate(\u0275\u0275pipeBind1(1, 1, selected_r38.translationKey));
   }
 }
 function PromptEditorComponent_ng_template_39_Template(rf, ctx) {
@@ -777,10 +1061,10 @@ function PromptEditorComponent_ng_template_39_Template(rf, ctx) {
     \u0275\u0275elementEnd();
   }
   if (rf & 2) {
-    const prompt_r26 = ctx.$implicit;
-    \u0275\u0275classProp("text-red", !prompt_r26.promptText.available);
+    const prompt_r39 = ctx.$implicit;
+    \u0275\u0275classProp("text-red", !prompt_r39.promptText.available);
     \u0275\u0275advance();
-    \u0275\u0275textInterpolate(\u0275\u0275pipeBind1(2, 3, prompt_r26.translationKey));
+    \u0275\u0275textInterpolate(\u0275\u0275pipeBind1(2, 3, prompt_r39.translationKey));
   }
 }
 function PromptEditorComponent_Conditional_41_For_4_For_1_Conditional_0_Conditional_0_Template(rf, ctx) {
@@ -791,9 +1075,9 @@ function PromptEditorComponent_Conditional_41_For_4_For_1_Conditional_0_Conditio
     \u0275\u0275elementEnd();
   }
   if (rf & 2) {
-    const section_r27 = \u0275\u0275nextContext(2).$implicit;
+    const section_r40 = \u0275\u0275nextContext(2).$implicit;
     \u0275\u0275advance();
-    \u0275\u0275textInterpolate(\u0275\u0275pipeBind1(2, 1, section_r27.label));
+    \u0275\u0275textInterpolate(\u0275\u0275pipeBind1(2, 1, section_r40.label));
   }
 }
 function PromptEditorComponent_Conditional_41_For_4_For_1_Conditional_0_For_2_Template(rf, ctx) {
@@ -807,12 +1091,12 @@ function PromptEditorComponent_Conditional_41_For_4_For_1_Conditional_0_For_2_Te
     \u0275\u0275elementEnd();
   }
   if (rf & 2) {
-    const option_r28 = ctx.$implicit;
+    const option_r41 = ctx.$implicit;
     const ctx_r2 = \u0275\u0275nextContext(5);
     \u0275\u0275advance();
-    \u0275\u0275textInterpolate(\u0275\u0275pipeBind1(2, 2, option_r28.label));
+    \u0275\u0275textInterpolate(\u0275\u0275pipeBind1(2, 2, option_r41.label));
     \u0275\u0275advance(3);
-    \u0275\u0275textInterpolate(ctx_r2.getPipelineOptionContent(option_r28));
+    \u0275\u0275textInterpolate(ctx_r2.getPipelineOptionContent(option_r41));
   }
 }
 function PromptEditorComponent_Conditional_41_For_4_For_1_Conditional_0_Template(rf, ctx) {
@@ -821,10 +1105,10 @@ function PromptEditorComponent_Conditional_41_For_4_For_1_Conditional_0_Template
     \u0275\u0275repeaterCreate(1, PromptEditorComponent_Conditional_41_For_4_For_1_Conditional_0_For_2_Template, 5, 4, null, null, _forTrack1);
   }
   if (rf & 2) {
-    const section_r27 = \u0275\u0275nextContext().$implicit;
-    \u0275\u0275conditional(!section_r27.hideLabel && section_r27.label ? 0 : -1);
+    const section_r40 = \u0275\u0275nextContext().$implicit;
+    \u0275\u0275conditional(!section_r40.hideLabel && section_r40.label ? 0 : -1);
     \u0275\u0275advance();
-    \u0275\u0275repeater(section_r27.options);
+    \u0275\u0275repeater(section_r40.options);
   }
 }
 function PromptEditorComponent_Conditional_41_For_4_For_1_Conditional_1_Template(rf, ctx) {
@@ -838,12 +1122,12 @@ function PromptEditorComponent_Conditional_41_For_4_For_1_Conditional_1_Template
     \u0275\u0275elementEnd();
   }
   if (rf & 2) {
-    const section_r27 = \u0275\u0275nextContext().$implicit;
+    const section_r40 = \u0275\u0275nextContext().$implicit;
     const ctx_r2 = \u0275\u0275nextContext(3);
     \u0275\u0275advance();
-    \u0275\u0275textInterpolate(\u0275\u0275pipeBind1(2, 2, section_r27.label ?? ""));
+    \u0275\u0275textInterpolate(\u0275\u0275pipeBind1(2, 2, section_r40.label ?? ""));
     \u0275\u0275advance(3);
-    \u0275\u0275textInterpolate(ctx_r2.getPipelineSectionContent(section_r27));
+    \u0275\u0275textInterpolate(ctx_r2.getPipelineSectionContent(section_r40));
   }
 }
 function PromptEditorComponent_Conditional_41_For_4_For_1_Template(rf, ctx) {
@@ -851,8 +1135,8 @@ function PromptEditorComponent_Conditional_41_For_4_For_1_Template(rf, ctx) {
     \u0275\u0275conditionalCreate(0, PromptEditorComponent_Conditional_41_For_4_For_1_Conditional_0_Template, 3, 1)(1, PromptEditorComponent_Conditional_41_For_4_For_1_Conditional_1_Template, 5, 4);
   }
   if (rf & 2) {
-    const section_r27 = ctx.$implicit;
-    \u0275\u0275conditional((section_r27.options == null ? null : section_r27.options.length) ? 0 : 1);
+    const section_r40 = ctx.$implicit;
+    \u0275\u0275conditional((section_r40.options == null ? null : section_r40.options.length) ? 0 : 1);
   }
 }
 function PromptEditorComponent_Conditional_41_For_4_Template(rf, ctx) {
@@ -860,8 +1144,8 @@ function PromptEditorComponent_Conditional_41_For_4_Template(rf, ctx) {
     \u0275\u0275repeaterCreate(0, PromptEditorComponent_Conditional_41_For_4_For_1_Template, 2, 1, null, null, _forTrack1);
   }
   if (rf & 2) {
-    const group_r29 = ctx.$implicit;
-    \u0275\u0275repeater(group_r29.sections);
+    const group_r42 = ctx.$implicit;
+    \u0275\u0275repeater(group_r42.sections);
   }
 }
 function PromptEditorComponent_Conditional_41_Template(rf, ctx) {
@@ -887,21 +1171,20 @@ function PromptEditorComponent_Conditional_42_For_1_Template(rf, ctx) {
     \u0275\u0275elementEnd();
     \u0275\u0275elementStart(2, "pre", 19);
     \u0275\u0275text(3);
-    \u0275\u0275pipe(4, "json");
     \u0275\u0275elementEnd();
   }
   if (rf & 2) {
-    const example_r30 = ctx.$implicit;
+    const example_r43 = ctx.$implicit;
     const ctx_r2 = \u0275\u0275nextContext(2);
     \u0275\u0275advance();
-    \u0275\u0275textInterpolate(ctx_r2.getAlertRewriteExampleLegend(example_r30));
+    \u0275\u0275textInterpolate(ctx_r2.getAlertRewriteExampleLegend(example_r43));
     \u0275\u0275advance(2);
-    \u0275\u0275textInterpolate(\u0275\u0275pipeBind1(4, 2, example_r30));
+    \u0275\u0275textInterpolate(ctx_r2.getFormattedExamplePreview(example_r43));
   }
 }
 function PromptEditorComponent_Conditional_42_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275repeaterCreate(0, PromptEditorComponent_Conditional_42_For_1_Template, 5, 4, null, null, _forTrack3);
+    \u0275\u0275repeaterCreate(0, PromptEditorComponent_Conditional_42_For_1_Template, 4, 2, null, null, _forTrack3);
   }
   if (rf & 2) {
     const ctx_r2 = \u0275\u0275nextContext();
@@ -919,11 +1202,11 @@ function PromptEditorComponent_Conditional_43_For_1_Template(rf, ctx) {
     \u0275\u0275elementEnd();
   }
   if (rf & 2) {
-    const section_r31 = ctx.$implicit;
+    const section_r44 = ctx.$implicit;
     \u0275\u0275advance();
-    \u0275\u0275textInterpolate(\u0275\u0275pipeBind1(2, 2, section_r31.label ?? ""));
+    \u0275\u0275textInterpolate(\u0275\u0275pipeBind1(2, 2, section_r44.label ?? ""));
     \u0275\u0275advance(3);
-    \u0275\u0275textInterpolate(section_r31.content);
+    \u0275\u0275textInterpolate(section_r44.content);
   }
 }
 function PromptEditorComponent_Conditional_43_Template(rf, ctx) {
@@ -935,7 +1218,57 @@ function PromptEditorComponent_Conditional_43_Template(rf, ctx) {
     \u0275\u0275repeater(ctx_r2.alertProblemsSections);
   }
 }
+function PromptEditorComponent_Conditional_44_For_4_For_4_Template(rf, ctx) {
+  if (rf & 1) {
+    \u0275\u0275elementStart(0, "h4");
+    \u0275\u0275text(1);
+    \u0275\u0275elementEnd();
+    \u0275\u0275elementStart(2, "pre", 19);
+    \u0275\u0275text(3);
+    \u0275\u0275elementEnd();
+  }
+  if (rf & 2) {
+    const rule_r45 = ctx.$implicit;
+    \u0275\u0275advance();
+    \u0275\u0275textInterpolate(rule_r45.id);
+    \u0275\u0275advance(2);
+    \u0275\u0275textInterpolate(rule_r45.text);
+  }
+}
+function PromptEditorComponent_Conditional_44_For_4_Template(rf, ctx) {
+  if (rf & 1) {
+    \u0275\u0275elementStart(0, "h3");
+    \u0275\u0275text(1);
+    \u0275\u0275pipe(2, "translate");
+    \u0275\u0275elementEnd();
+    \u0275\u0275repeaterCreate(3, PromptEditorComponent_Conditional_44_For_4_For_4_Template, 4, 2, null, null, _forTrack3);
+  }
+  if (rf & 2) {
+    const group_r46 = ctx.$implicit;
+    const ctx_r2 = \u0275\u0275nextContext(2);
+    \u0275\u0275advance();
+    \u0275\u0275textInterpolate(\u0275\u0275pipeBind1(2, 1, ctx_r2.getSkillGroupLabel(group_r46.key)));
+    \u0275\u0275advance(2);
+    \u0275\u0275repeater(group_r46.rules);
+  }
+}
 function PromptEditorComponent_Conditional_44_Template(rf, ctx) {
+  if (rf & 1) {
+    \u0275\u0275elementStart(0, "p");
+    \u0275\u0275text(1);
+    \u0275\u0275pipe(2, "translate");
+    \u0275\u0275elementEnd();
+    \u0275\u0275repeaterCreate(3, PromptEditorComponent_Conditional_44_For_4_Template, 5, 3, null, null, _forTrack1);
+  }
+  if (rf & 2) {
+    const ctx_r2 = \u0275\u0275nextContext();
+    \u0275\u0275advance();
+    \u0275\u0275textInterpolate(\u0275\u0275pipeBind1(2, 1, "dev.prompts.skills.testUnavailable"));
+    \u0275\u0275advance(2);
+    \u0275\u0275repeater(ctx_r2.getSelectedSkillGroups());
+  }
+}
+function PromptEditorComponent_Conditional_45_Template(rf, ctx) {
   if (rf & 1) {
     \u0275\u0275elementStart(0, "pre", 19);
     \u0275\u0275text(1);
@@ -947,14 +1280,14 @@ function PromptEditorComponent_Conditional_44_Template(rf, ctx) {
     \u0275\u0275textInterpolate(ctx_r2.aiPrompt());
   }
 }
-function PromptEditorComponent_Conditional_45_Conditional_1_Conditional_10_Template(rf, ctx) {
+function PromptEditorComponent_Conditional_46_Conditional_1_Conditional_10_Template(rf, ctx) {
   if (rf & 1) {
     \u0275\u0275element(0, "p-progressspinner");
   }
 }
-function PromptEditorComponent_Conditional_45_Conditional_1_Conditional_11_Template(rf, ctx) {
+function PromptEditorComponent_Conditional_46_Conditional_1_Conditional_11_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275elementStart(0, "p-message", 39);
+    \u0275\u0275elementStart(0, "p-message", 38);
     \u0275\u0275text(1);
     \u0275\u0275pipe(2, "translate");
     \u0275\u0275elementEnd();
@@ -965,9 +1298,9 @@ function PromptEditorComponent_Conditional_45_Conditional_1_Conditional_11_Templ
     \u0275\u0275textInterpolate1(" ", \u0275\u0275pipeBind2(2, 1, "dev.prompts.preview.alertProblems.loadError", \u0275\u0275pureFunction1(4, _c2, ctx_r2.alertProblemsTestError())), " ");
   }
 }
-function PromptEditorComponent_Conditional_45_Conditional_1_Conditional_17_Template(rf, ctx) {
+function PromptEditorComponent_Conditional_46_Conditional_1_Conditional_17_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275elementStart(0, "p-message", 39);
+    \u0275\u0275elementStart(0, "p-message", 38);
     \u0275\u0275text(1);
     \u0275\u0275pipe(2, "translate");
     \u0275\u0275elementEnd();
@@ -977,51 +1310,51 @@ function PromptEditorComponent_Conditional_45_Conditional_1_Conditional_17_Templ
     \u0275\u0275textInterpolate(\u0275\u0275pipeBind1(2, 1, "dev.prompts.preview.alertProblems.invalidPayload"));
   }
 }
-function PromptEditorComponent_Conditional_45_Conditional_1_Template(rf, ctx) {
+function PromptEditorComponent_Conditional_46_Conditional_1_Template(rf, ctx) {
   if (rf & 1) {
-    const _r33 = \u0275\u0275getCurrentView();
+    const _r48 = \u0275\u0275getCurrentView();
     \u0275\u0275elementStart(0, "h3", 17);
     \u0275\u0275text(1);
     \u0275\u0275pipe(2, "translate");
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(3, "div", 40)(4, "div", 41)(5, "input", 42);
+    \u0275\u0275elementStart(3, "div", 45)(4, "div", 46)(5, "input", 47);
     \u0275\u0275pipe(6, "translate");
     \u0275\u0275pipe(7, "translate");
-    \u0275\u0275listener("ngModelChange", function PromptEditorComponent_Conditional_45_Conditional_1_Template_input_ngModelChange_5_listener($event) {
-      \u0275\u0275restoreView(_r33);
+    \u0275\u0275listener("ngModelChange", function PromptEditorComponent_Conditional_46_Conditional_1_Template_input_ngModelChange_5_listener($event) {
+      \u0275\u0275restoreView(_r48);
       const ctx_r2 = \u0275\u0275nextContext(2);
       return \u0275\u0275resetView(ctx_r2.onAlertProblemsTestUrlChange($event));
     });
     \u0275\u0275elementEnd()();
-    \u0275\u0275elementStart(8, "p-button", 43);
+    \u0275\u0275elementStart(8, "p-button", 48);
     \u0275\u0275pipe(9, "translate");
-    \u0275\u0275listener("onClick", function PromptEditorComponent_Conditional_45_Conditional_1_Template_p_button_onClick_8_listener() {
-      \u0275\u0275restoreView(_r33);
+    \u0275\u0275listener("onClick", function PromptEditorComponent_Conditional_46_Conditional_1_Template_p_button_onClick_8_listener() {
+      \u0275\u0275restoreView(_r48);
       const ctx_r2 = \u0275\u0275nextContext(2);
       return \u0275\u0275resetView(ctx_r2.loadAlertProblemsTestPage());
     });
     \u0275\u0275elementEnd()();
-    \u0275\u0275conditionalCreate(10, PromptEditorComponent_Conditional_45_Conditional_1_Conditional_10_Template, 1, 0, "p-progressspinner");
-    \u0275\u0275conditionalCreate(11, PromptEditorComponent_Conditional_45_Conditional_1_Conditional_11_Template, 3, 6, "p-message", 39);
+    \u0275\u0275conditionalCreate(10, PromptEditorComponent_Conditional_46_Conditional_1_Conditional_10_Template, 1, 0, "p-progressspinner");
+    \u0275\u0275conditionalCreate(11, PromptEditorComponent_Conditional_46_Conditional_1_Conditional_11_Template, 3, 6, "p-message", 38);
     \u0275\u0275elementStart(12, "h3");
     \u0275\u0275text(13);
     \u0275\u0275pipe(14, "translate");
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(15, "textarea", 44);
+    \u0275\u0275elementStart(15, "textarea", 49);
     \u0275\u0275pipe(16, "translate");
-    \u0275\u0275twoWayListener("ngModelChange", function PromptEditorComponent_Conditional_45_Conditional_1_Template_textarea_ngModelChange_15_listener($event) {
-      \u0275\u0275restoreView(_r33);
+    \u0275\u0275twoWayListener("ngModelChange", function PromptEditorComponent_Conditional_46_Conditional_1_Template_textarea_ngModelChange_15_listener($event) {
+      \u0275\u0275restoreView(_r48);
       const ctx_r2 = \u0275\u0275nextContext(2);
       \u0275\u0275twoWayBindingSet(ctx_r2.alertProblemsTestContent, $event) || (ctx_r2.alertProblemsTestContent = $event);
       return \u0275\u0275resetView($event);
     });
-    \u0275\u0275listener("ngModelChange", function PromptEditorComponent_Conditional_45_Conditional_1_Template_textarea_ngModelChange_15_listener() {
-      \u0275\u0275restoreView(_r33);
+    \u0275\u0275listener("ngModelChange", function PromptEditorComponent_Conditional_46_Conditional_1_Template_textarea_ngModelChange_15_listener() {
+      \u0275\u0275restoreView(_r48);
       const ctx_r2 = \u0275\u0275nextContext(2);
       return \u0275\u0275resetView(ctx_r2.alertProblemsTestPayloadInvalid.set(false));
     });
     \u0275\u0275elementEnd();
-    \u0275\u0275conditionalCreate(17, PromptEditorComponent_Conditional_45_Conditional_1_Conditional_17_Template, 3, 3, "p-message", 39);
+    \u0275\u0275conditionalCreate(17, PromptEditorComponent_Conditional_46_Conditional_1_Conditional_17_Template, 3, 3, "p-message", 38);
   }
   if (rf & 2) {
     const ctx_r2 = \u0275\u0275nextContext(2);
@@ -1045,22 +1378,22 @@ function PromptEditorComponent_Conditional_45_Conditional_1_Template(rf, ctx) {
     \u0275\u0275conditional(ctx_r2.alertProblemsTestPayloadInvalid() ? 17 : -1);
   }
 }
-function PromptEditorComponent_Conditional_45_Conditional_2_Template(rf, ctx) {
+function PromptEditorComponent_Conditional_46_Conditional_2_Template(rf, ctx) {
   if (rf & 1) {
-    const _r34 = \u0275\u0275getCurrentView();
+    const _r49 = \u0275\u0275getCurrentView();
     \u0275\u0275elementStart(0, "h3", 17);
     \u0275\u0275text(1);
     \u0275\u0275pipe(2, "translate");
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(3, "p-iftalabel")(4, "textarea", 45);
-    \u0275\u0275twoWayListener("ngModelChange", function PromptEditorComponent_Conditional_45_Conditional_2_Template_textarea_ngModelChange_4_listener($event) {
-      \u0275\u0275restoreView(_r34);
+    \u0275\u0275elementStart(3, "p-iftalabel")(4, "textarea", 50);
+    \u0275\u0275twoWayListener("ngModelChange", function PromptEditorComponent_Conditional_46_Conditional_2_Template_textarea_ngModelChange_4_listener($event) {
+      \u0275\u0275restoreView(_r49);
       const ctx_r2 = \u0275\u0275nextContext(2);
       \u0275\u0275twoWayBindingSet(ctx_r2.description, $event) || (ctx_r2.description = $event);
       return \u0275\u0275resetView($event);
     });
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(5, "label", 46);
+    \u0275\u0275elementStart(5, "label", 51);
     \u0275\u0275text(6);
     \u0275\u0275pipe(7, "translate");
     \u0275\u0275elementEnd()();
@@ -1075,14 +1408,14 @@ function PromptEditorComponent_Conditional_45_Conditional_2_Template(rf, ctx) {
     \u0275\u0275textInterpolate(\u0275\u0275pipeBind1(7, 5, "dev.prompts.preview.testContentLabel"));
   }
 }
-function PromptEditorComponent_Conditional_45_Conditional_10_Template(rf, ctx) {
+function PromptEditorComponent_Conditional_46_Conditional_10_Template(rf, ctx) {
   if (rf & 1) {
     \u0275\u0275element(0, "p-progressspinner");
   }
 }
-function PromptEditorComponent_Conditional_45_Conditional_11_Template(rf, ctx) {
+function PromptEditorComponent_Conditional_46_Conditional_11_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275elementStart(0, "p-message", 39);
+    \u0275\u0275elementStart(0, "p-message", 38);
     \u0275\u0275text(1);
     \u0275\u0275elementEnd();
   }
@@ -1092,7 +1425,7 @@ function PromptEditorComponent_Conditional_45_Conditional_11_Template(rf, ctx) {
     \u0275\u0275textInterpolate(ctx_r2.aiState().error);
   }
 }
-function PromptEditorComponent_Conditional_45_Conditional_12_Template(rf, ctx) {
+function PromptEditorComponent_Conditional_46_Conditional_12_Template(rf, ctx) {
   if (rf & 1) {
     \u0275\u0275elementStart(0, "small");
     \u0275\u0275text(1);
@@ -1104,7 +1437,7 @@ function PromptEditorComponent_Conditional_45_Conditional_12_Template(rf, ctx) {
     \u0275\u0275textInterpolate1("Answered by: ", ctx_r2.aiState().respondingModel);
   }
 }
-function PromptEditorComponent_Conditional_45_Conditional_13_Template(rf, ctx) {
+function PromptEditorComponent_Conditional_46_Conditional_13_Template(rf, ctx) {
   if (rf & 1) {
     \u0275\u0275elementStart(0, "pre", 19);
     \u0275\u0275text(1);
@@ -1116,7 +1449,7 @@ function PromptEditorComponent_Conditional_45_Conditional_13_Template(rf, ctx) {
     \u0275\u0275textInterpolate(ctx_r2.formatTestResult(ctx_r2.result));
   }
 }
-function PromptEditorComponent_Conditional_45_Conditional_14_Template(rf, ctx) {
+function PromptEditorComponent_Conditional_46_Conditional_14_Template(rf, ctx) {
   if (rf & 1) {
     \u0275\u0275elementStart(0, "pre", 19);
     \u0275\u0275text(1);
@@ -1129,35 +1462,35 @@ function PromptEditorComponent_Conditional_45_Conditional_14_Template(rf, ctx) {
     \u0275\u0275textInterpolate(\u0275\u0275pipeBind1(2, 1, ctx_r2.response));
   }
 }
-function PromptEditorComponent_Conditional_45_Template(rf, ctx) {
+function PromptEditorComponent_Conditional_46_Template(rf, ctx) {
   if (rf & 1) {
-    const _r32 = \u0275\u0275getCurrentView();
+    const _r47 = \u0275\u0275getCurrentView();
     \u0275\u0275elementStart(0, "div");
-    \u0275\u0275conditionalCreate(1, PromptEditorComponent_Conditional_45_Conditional_1_Template, 18, 24)(2, PromptEditorComponent_Conditional_45_Conditional_2_Template, 8, 7);
+    \u0275\u0275conditionalCreate(1, PromptEditorComponent_Conditional_46_Conditional_1_Template, 18, 24)(2, PromptEditorComponent_Conditional_46_Conditional_2_Template, 8, 7);
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(3, "div", 37)(4, "p-button", 38);
-    \u0275\u0275listener("onClick", function PromptEditorComponent_Conditional_45_Template_p_button_onClick_4_listener() {
-      \u0275\u0275restoreView(_r32);
+    \u0275\u0275elementStart(3, "div", 43)(4, "p-button", 44);
+    \u0275\u0275listener("onClick", function PromptEditorComponent_Conditional_46_Template_p_button_onClick_4_listener() {
+      \u0275\u0275restoreView(_r47);
       const ctx_r2 = \u0275\u0275nextContext();
       return \u0275\u0275resetView(ctx_r2.testResult());
     });
     \u0275\u0275text(5);
     \u0275\u0275pipe(6, "translate");
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(7, "p-button", 38);
-    \u0275\u0275listener("onClick", function PromptEditorComponent_Conditional_45_Template_p_button_onClick_7_listener() {
-      \u0275\u0275restoreView(_r32);
+    \u0275\u0275elementStart(7, "p-button", 44);
+    \u0275\u0275listener("onClick", function PromptEditorComponent_Conditional_46_Template_p_button_onClick_7_listener() {
+      \u0275\u0275restoreView(_r47);
       const ctx_r2 = \u0275\u0275nextContext();
       return \u0275\u0275resetView(ctx_r2.testResponse());
     });
     \u0275\u0275text(8);
     \u0275\u0275pipe(9, "translate");
     \u0275\u0275elementEnd()();
-    \u0275\u0275conditionalCreate(10, PromptEditorComponent_Conditional_45_Conditional_10_Template, 1, 0, "p-progressspinner");
-    \u0275\u0275conditionalCreate(11, PromptEditorComponent_Conditional_45_Conditional_11_Template, 2, 1, "p-message", 39);
-    \u0275\u0275conditionalCreate(12, PromptEditorComponent_Conditional_45_Conditional_12_Template, 2, 1, "small");
-    \u0275\u0275conditionalCreate(13, PromptEditorComponent_Conditional_45_Conditional_13_Template, 2, 1, "pre", 19);
-    \u0275\u0275conditionalCreate(14, PromptEditorComponent_Conditional_45_Conditional_14_Template, 3, 3, "pre", 19);
+    \u0275\u0275conditionalCreate(10, PromptEditorComponent_Conditional_46_Conditional_10_Template, 1, 0, "p-progressspinner");
+    \u0275\u0275conditionalCreate(11, PromptEditorComponent_Conditional_46_Conditional_11_Template, 2, 1, "p-message", 38);
+    \u0275\u0275conditionalCreate(12, PromptEditorComponent_Conditional_46_Conditional_12_Template, 2, 1, "small");
+    \u0275\u0275conditionalCreate(13, PromptEditorComponent_Conditional_46_Conditional_13_Template, 2, 1, "pre", 19);
+    \u0275\u0275conditionalCreate(14, PromptEditorComponent_Conditional_46_Conditional_14_Template, 3, 3, "pre", 19);
   }
   if (rf & 2) {
     const ctx_r2 = \u0275\u0275nextContext();
@@ -1183,38 +1516,35 @@ function PromptEditorComponent_Conditional_45_Template(rf, ctx) {
     \u0275\u0275conditional(ctx_r2.response ? 14 : -1);
   }
 }
-function PromptEditorComponent_Conditional_51_Template(rf, ctx) {
+function PromptEditorComponent_Conditional_52_Template(rf, ctx) {
   if (rf & 1) {
-    const _r35 = \u0275\u0275getCurrentView();
-    \u0275\u0275declareLet(0);
-    \u0275\u0275element(1, "div", null, 3);
-    \u0275\u0275elementStart(3, "p-fieldset", 47);
-    \u0275\u0275pipe(4, "translate");
-    \u0275\u0275elementStart(5, "pre", null, 4)(7, "code", 48);
-    \u0275\u0275text(8);
+    const _r50 = \u0275\u0275getCurrentView();
+    \u0275\u0275element(0, "div", null, 3);
+    \u0275\u0275elementStart(2, "p-fieldset", 52);
+    \u0275\u0275pipe(3, "translate");
+    \u0275\u0275elementStart(4, "pre", null, 4)(6, "code", 53);
+    \u0275\u0275text(7);
     \u0275\u0275elementEnd()()();
-    \u0275\u0275elementStart(9, "p-button", 49);
-    \u0275\u0275pipe(10, "translate");
-    \u0275\u0275listener("onClick", function PromptEditorComponent_Conditional_51_Template_p_button_onClick_9_listener() {
-      \u0275\u0275restoreView(_r35);
-      const prompts_r36 = \u0275\u0275readContextLet(0);
+    \u0275\u0275elementStart(8, "p-button", 54);
+    \u0275\u0275pipe(9, "translate");
+    \u0275\u0275listener("onClick", function PromptEditorComponent_Conditional_52_Template_p_button_onClick_8_listener() {
+      \u0275\u0275restoreView(_r50);
       const ctx_r2 = \u0275\u0275nextContext();
-      return \u0275\u0275resetView(ctx_r2.openPullRequest(ctx_r2.tabs[ctx_r2.selectedPromptTab()].tool, prompts_r36));
+      return \u0275\u0275resetView(ctx_r2.openPullRequest(ctx_r2.tabs[ctx_r2.selectedPromptTab()]));
     });
     \u0275\u0275elementEnd();
   }
   if (rf & 2) {
     const ctx_r2 = \u0275\u0275nextContext();
-    const prompts_r37 = \u0275\u0275storeLet(ctx_r2.tabs[ctx_r2.selectedPromptTab()].prompts);
-    \u0275\u0275advance(3);
-    \u0275\u0275property("collapsed", true)("legend", \u0275\u0275pipeBind1(4, 7, "dev.prompts.pr.filePreview"))("toggleable", true);
+    \u0275\u0275advance(2);
+    \u0275\u0275property("collapsed", true)("legend", \u0275\u0275pipeBind1(3, 6, "dev.prompts.pr.filePreview"))("toggleable", true);
     \u0275\u0275advance(5);
-    \u0275\u0275textInterpolate(prompts_r37 ? ctx_r2.rebuildPromptFile(ctx_r2.tabs[ctx_r2.selectedPromptTab()].tool, prompts_r37) : ctx_r2.rebuildSharedFile());
+    \u0275\u0275textInterpolate(ctx_r2.rebuildTabFile(ctx_r2.tabs[ctx_r2.selectedPromptTab()]));
     \u0275\u0275advance();
-    \u0275\u0275property("disabled", !ctx_r2.signInService.user())("label", \u0275\u0275pipeBind1(10, 9, "dev.prompts.button.openPR"));
+    \u0275\u0275property("disabled", !ctx_r2.signInService.user() || ctx_r2.isExamplesTab(ctx_r2.tabs[ctx_r2.selectedPromptTab()]) && ctx_r2.hasInvalidExampleJson())("label", \u0275\u0275pipeBind1(9, 8, "dev.prompts.button.openPR"));
   }
 }
-function PromptEditorComponent_Conditional_52_Template(rf, ctx) {
+function PromptEditorComponent_Conditional_53_Template(rf, ctx) {
   if (rf & 1) {
     \u0275\u0275elementStart(0, "p-message", 20);
     \u0275\u0275text(1);
@@ -1244,7 +1574,7 @@ var PromptEditorComponent = class _PromptEditorComponent {
     });
     effect(() => {
       const tab = this.selectedTab();
-      if (tab < 5) {
+      if (this.tabs.some((candidate) => candidate.value === tab)) {
         this.selectedPromptTab.set(tab);
       }
       this.updateDiff();
@@ -1252,7 +1582,7 @@ var PromptEditorComponent = class _PromptEditorComponent {
   }
   // Type guard
   isPromptConfig(entry) {
-    return typeof entry.promptText === "object" && entry.promptText !== null;
+    return typeof entry.promptText === "object" && entry.promptText !== null && "role" in entry.promptText && "task" in entry.promptText;
   }
   isPromptString(entry) {
     return typeof entry.promptText === "string";
@@ -1265,6 +1595,15 @@ var PromptEditorComponent = class _PromptEditorComponent {
   }
   isFragmentsTab(tab) {
     return tab.fragments !== void 0;
+  }
+  isSkillsTab(tab) {
+    return tab.skills !== void 0;
+  }
+  isExamplesTab(tab) {
+    return tab.exampleSets !== void 0;
+  }
+  isSkillEntry(entry) {
+    return typeof entry.promptText === "object" && entry.promptText !== null && "groups" in entry.promptText;
   }
   OutputKey = OutputKey;
   // Shared prompt fragments
@@ -1314,6 +1653,10 @@ var PromptEditorComponent = class _PromptEditorComponent {
     value: key,
     label: key
   }));
+  skillSeverityOptions = [
+    { value: "must", label: marker("dev.prompts.skills.severity.must") },
+    { value: "should", label: marker("dev.prompts.skills.severity.should") }
+  ];
   // Prompts
   inventoryPrompts = Object.keys(ToolsPromptKey).map((enumKey) => ({
     enumKey,
@@ -1330,12 +1673,47 @@ var PromptEditorComponent = class _PromptEditorComponent {
     translationKey: ProblemPromptKey[enumKey],
     promptText: ProblemPrompts[ProblemPromptKey[enumKey]]
   }));
-  alertRewritePipelineGroups = this.buildAlertRewritePipelineGroups();
+  skillPrompts = Object.keys(SkillPromptKey).map((enumKey) => ({
+    enumKey,
+    translationKey: SkillPromptKey[enumKey],
+    promptText: SkillPrompts[SkillPromptKey[enumKey]]
+  }));
+  exampleSets = [
+    {
+      key: "alertRewrite",
+      kind: "alertRewrite",
+      title: marker("aiPrompt.examples.alertRewrite"),
+      description: marker("aiPrompt.examples.alertRewriteDescription"),
+      sourcePath: "src/app/common/prompts/alert-rewrite.examples.ts",
+      fileName: "alert-rewrite.examples.ts",
+      examples: AlertRewriteExamples,
+      original: this.rebuildAlertRewriteExamplesFile(AlertRewriteExamples)
+    }
+  ];
+  selectedExampleSet = signal(this.exampleSets[0], ...ngDevMode ? [{ debugName: "selectedExampleSet" }] : (
+    /* istanbul ignore next */
+    []
+  ));
+  exampleJsonDrafts = signal(Object.fromEntries(AlertRewriteExamples.map((example) => [example.id, this.formatExampleJson(example)])), ...ngDevMode ? [{ debugName: "exampleJsonDrafts" }] : (
+    /* istanbul ignore next */
+    []
+  ));
+  exampleJsonErrors = signal({}, ...ngDevMode ? [{ debugName: "exampleJsonErrors" }] : (
+    /* istanbul ignore next */
+    []
+  ));
+  hasInvalidExampleJson = computed(() => Object.keys(this.exampleJsonErrors()).length > 0, ...ngDevMode ? [{ debugName: "hasInvalidExampleJson" }] : (
+    /* istanbul ignore next */
+    []
+  ));
+  get alertRewritePipelineGroups() {
+    return this.buildAlertRewritePipelineGroups();
+  }
   get alertProblemsSections() {
     return this.buildAlertProblemsSections();
   }
   alertRewriteExamples = AlertRewriteExamples;
-  selectedPrompts = new Set([this.inventoryPrompts[0]?.enumKey, this.pagePrompts[0]?.enumKey, this.problemPrompts[0]?.enumKey].filter(Boolean));
+  selectedPrompts = new Set([this.inventoryPrompts[0]?.enumKey, this.pagePrompts[0]?.enumKey, this.problemPrompts[0]?.enumKey, this.skillPrompts[0]?.enumKey].filter(Boolean));
   togglePrompt(enumKey) {
     if (this.selectedPrompts.has(enumKey)) {
       this.selectedPrompts.delete(enumKey);
@@ -1380,6 +1758,22 @@ var PromptEditorComponent = class _PromptEditorComponent {
       prompts: this.problemPrompts,
       tool: "Problem",
       original: this.rebuildPromptFile("Problem", this.problemPrompts)
+    },
+    {
+      title: marker("aiPrompt.skills._title"),
+      description: marker("aiPrompt.skills._description"),
+      value: 4,
+      skills: this.skillPrompts,
+      tool: "Skills",
+      original: this.rebuildSkillsFile()
+    },
+    {
+      title: marker("aiPrompt.examples._title"),
+      description: marker("aiPrompt.examples._description"),
+      value: 5,
+      exampleSets: this.exampleSets,
+      tool: "Examples",
+      original: ""
     }
   ];
   // Dropdown
@@ -1387,7 +1781,7 @@ var PromptEditorComponent = class _PromptEditorComponent {
     {
       label: "aiPrompt.alerts._title",
       items: [
-        ...this.problemPrompts.filter((prompt) => prompt.enumKey === "AlertsProblems" || prompt.enumKey === "TranslateIssueDetails"),
+        ...this.problemPrompts.filter((prompt) => prompt.enumKey === "AlertsProblems"),
         ...this.pagePrompts.filter((prompt) => prompt.enumKey === "AlertRewrite"),
         {
           enumKey: "AlertExamples",
@@ -1397,10 +1791,11 @@ var PromptEditorComponent = class _PromptEditorComponent {
       ]
     },
     { label: "aiPrompt.tools._title", items: this.inventoryPrompts },
+    { label: "aiPrompt.skills._title", items: this.skillPrompts },
     { label: "aiPrompt.page._title", items: this.pagePrompts.filter((prompt) => prompt.enumKey !== "AlertRewrite") },
     {
       label: "aiPrompt.problems._title",
-      items: this.problemPrompts.filter((prompt) => prompt.enumKey !== "AlertsProblems" && prompt.enumKey !== "TranslateIssueDetails")
+      items: this.problemPrompts.filter((prompt) => prompt.enumKey !== "AlertsProblems")
     }
   ];
   selectedPrompt = signal(this.pagePrompts.find((prompt) => prompt.enumKey === "AlertRewrite"), ...ngDevMode ? [{ debugName: "selectedPrompt" }] : (
@@ -1425,15 +1820,29 @@ var PromptEditorComponent = class _PromptEditorComponent {
     /* istanbul ignore next */
     []
   ));
-  aiPrompt = computed(() => {
+  selectedPromptIsSkill = computed(() => {
     const selected = this.selectedPrompt();
-    if (!selected || !this.isPromptConfig(selected))
-      return "";
-    return this.aiPromptService.composePrompt(selected.promptText);
-  }, ...ngDevMode ? [{ debugName: "aiPrompt" }] : (
+    return !!selected && this.isSkillEntry(selected);
+  }, ...ngDevMode ? [{ debugName: "selectedPromptIsSkill" }] : (
     /* istanbul ignore next */
     []
   ));
+  aiPrompt() {
+    const selected = this.selectedPrompt();
+    if (!selected || this.isSkillEntry(selected) || !this.isPromptConfig(selected))
+      return "";
+    return this.aiPromptService.composePrompt(selected.promptText);
+  }
+  getSkillGroups(skill) {
+    return Object.entries(skill.promptText.groups).map(([key, rules]) => ({ key, rules }));
+  }
+  getSelectedSkillGroups() {
+    const selected = this.selectedPrompt();
+    return selected && this.isSkillEntry(selected) ? this.getSkillGroups(selected) : [];
+  }
+  getSkillGroupLabel(groupKey) {
+    return `dev.prompts.skills.group.${groupKey}`;
+  }
   buildAlertRewritePipelineGroups() {
     const promptConfig = PagePrompts[PagePromptKey.AlertRewrite];
     const rules = promptConfig.pipeline;
@@ -1552,7 +1961,7 @@ var PromptEditorComponent = class _PromptEditorComponent {
           {
             key: "linkRulesCommon",
             label: "dev.prompts.alertRewrite.linkRulesCommon",
-            bulletItems: LinkWritingPromptRuleGroups.common.map((rule) => rule.text),
+            bulletItems: SkillPrompts[SkillPromptKey.LinkWriting].groups.common.map((rule) => rule.text),
             collapsed: false
           },
           {
@@ -1562,13 +1971,13 @@ var PromptEditorComponent = class _PromptEditorComponent {
               {
                 key: "linkRulesDefault",
                 label: "dev.prompts.alertRewrite.linkRulesDefault",
-                bulletItems: LinkWritingPromptRuleGroups.preserveLinks.map((rule) => rule.text),
+                bulletItems: SkillPrompts[SkillPromptKey.LinkWriting].groups.preserveLinks.map((rule) => rule.text),
                 collapsed: false
               },
               {
                 key: "linkRulesTooMany",
                 label: "dev.prompts.alertRewrite.linkRulesTooMany",
-                bulletItems: LinkWritingPromptRuleGroups.tooManyLinks.map((rule) => rule.text),
+                bulletItems: SkillPrompts[SkillPromptKey.LinkWriting].groups.tooManyLinks.map((rule) => rule.text),
                 collapsed: false
               }
             ]
@@ -1659,7 +2068,7 @@ ${instruction}`.trim();
     }
   }
   formatCanadaCaStyleRulesJson() {
-    const rules = CanadaCaStyleRules.map((rule) => `{
+    const rules = SkillPrompts[SkillPromptKey.CanadaCaStyle].groups.common.map((rule) => `{
       "id": ${JSON.stringify(rule.id)}, "severity": ${JSON.stringify(rule.severity)},
       "text": ${JSON.stringify(rule.text)} }`).join(",\n    ");
     return `{ "rules": [ ${rules} ]}`;
@@ -1823,7 +2232,7 @@ ${updatedPrompts}
   }
   getSelectedPromptConfig() {
     const selected = this.selectedPrompt();
-    return selected && this.isPromptConfig(selected) ? selected.promptText : null;
+    return selected && !this.isSkillEntry(selected) && this.isPromptConfig(selected) ? selected.promptText : null;
   }
   serializePromptConfig(config, enumKey) {
     const lines = [
@@ -1862,6 +2271,223 @@ ${updatedPrompts}
     }
     return `\`${value.replace(/\\/g, "\\\\").replace(/`/g, "\\`").replace(/\$\{/g, "\\${")}\``;
   }
+  rebuildSkillsFile() {
+    const skillEntries = this.skillPrompts.map((skill) => {
+      const groupEntries = this.getSkillGroups(skill).map((group) => {
+        const ruleEntries = group.rules.map((rule) => {
+          const severity = rule.severity ? `
+          severity: '${rule.severity}',` : "";
+          return `        {
+          id: '${rule.id}',${severity}
+          text: ${this.toSkillStringLiteral(rule.text)},
+        },`;
+        }).join("\n");
+        return `      ${group.key}: [
+${ruleEntries}
+      ],`;
+      }).join("\n");
+      return `  [SkillPromptKey.${skill.enumKey}]: {
+    groups: {
+${groupEntries}
+    },
+  },`;
+    }).join("\n");
+    return `import { SkillPromptKey } from './prompt.model';
+
+export type SkillPromptRuleSeverity = 'must' | 'should';
+
+export interface SkillPromptRule {
+  id: string;
+  severity?: SkillPromptRuleSeverity;
+  text: string;
+}
+
+export interface SkillPromptConfig {
+  groups: Readonly<Record<string, readonly SkillPromptRule[]>>;
+}
+
+export const SkillPrompts = {
+${skillEntries}
+} satisfies Record<SkillPromptKey, SkillPromptConfig>;
+
+export interface LinkWritingPromptOptions {
+  hasTooManyLinksIssue: boolean;
+}
+
+export function getCanadaCaStylePromptRules(): string[] {
+  return SkillPrompts[SkillPromptKey.CanadaCaStyle].groups.common.map((rule) => \`[Canada.ca style \${rule.id} \${rule.severity}] \${rule.text}\`);
+}
+
+export function getLinkWritingPromptRules(options: LinkWritingPromptOptions): string[] {
+  const groups = SkillPrompts[SkillPromptKey.LinkWriting].groups;
+  const conditionalRules = options.hasTooManyLinksIssue ? groups.tooManyLinks : groups.preserveLinks;
+  return [...groups.common, ...conditionalRules].map((rule) => rule.text);
+}
+`;
+  }
+  toSkillStringLiteral(value) {
+    if (value.includes("'"))
+      return JSON.stringify(value);
+    return `'${value.replace(/\\/g, "\\\\")}'`;
+  }
+  rebuildAlertRewriteExamplesFile(examples) {
+    const serializedExamples = examples.map((example) => this.serializeAlertRewriteExample(example)).join("\n");
+    return `export interface AlertRewriteExample {
+  id: string;
+  tags: string[];
+  purposeTags?: string[];
+  criteria: string[];
+  egText: string;
+  egHeading?: string;
+  egHtml?: string;
+  egLinks?: AlertRewriteExampleLink[];
+  notes?: string;
+}
+
+export interface AlertRewriteExampleLink {
+  id: string;
+  text: string;
+  href?: string;
+}
+
+export const AlertRewriteExamples: AlertRewriteExample[] = [
+${serializedExamples}
+];
+`;
+  }
+  serializeAlertRewriteExample(example) {
+    const properties = [
+      `    id: ${this.toExampleStringLiteral(example.id)},`,
+      this.serializeExampleArrayProperty("tags", example.tags),
+      ...example.purposeTags ? [this.serializeExampleArrayProperty("purposeTags", example.purposeTags)] : [],
+      this.serializeExampleArrayProperty("criteria", example.criteria),
+      ...example.egHeading !== void 0 ? [this.serializeExampleStringProperty("egHeading", example.egHeading)] : [],
+      this.serializeExampleStringProperty("egText", example.egText),
+      ...example.egHtml !== void 0 ? [this.serializeExampleStringProperty("egHtml", example.egHtml)] : [],
+      ...example.egLinks !== void 0 ? [this.serializeExampleLinks(example.egLinks)] : [],
+      ...example.notes !== void 0 ? [this.serializeExampleStringProperty("notes", example.notes)] : []
+    ];
+    return `  {
+${properties.join("\n")}
+  },`;
+  }
+  serializeExampleStringProperty(name, value) {
+    const literal = this.toExampleStringLiteral(value);
+    const singleLine = `    ${name}: ${literal},`;
+    return singleLine.length <= 200 ? singleLine : `    ${name}:
+      ${literal},`;
+  }
+  serializeExampleArrayProperty(name, values) {
+    const literals = values.map((value) => this.toExampleStringLiteral(value));
+    const singleLine = `    ${name}: [${literals.join(", ")}],`;
+    if (singleLine.length <= 200)
+      return singleLine;
+    return `    ${name}: [
+${literals.map((literal) => `      ${literal},`).join("\n")}
+    ],`;
+  }
+  serializeExampleLinks(links) {
+    if (!links?.length)
+      return "    egLinks: [],";
+    const serializedLinks = links.map((link) => {
+      const properties = [`        id: ${this.toExampleStringLiteral(link.id)},`, `        text: ${this.toExampleStringLiteral(link.text)},`];
+      if (link.href !== void 0)
+        properties.push(`        href: ${this.toExampleStringLiteral(link.href)},`);
+      return `      {
+${properties.join("\n")}
+      },`;
+    }).join("\n");
+    return `    egLinks: [
+${serializedLinks}
+    ],`;
+  }
+  toExampleStringLiteral(value) {
+    if (value.includes("'") && !value.includes('"'))
+      return JSON.stringify(value);
+    return `'${value.replace(/\\/g, "\\\\").replace(/'/g, "\\'")}'`;
+  }
+  getExampleJsonDraft(example) {
+    return this.exampleJsonDrafts()[example.id] ?? this.formatExampleJson(example);
+  }
+  formatExampleJson(example) {
+    const editableExample = __spreadValues(__spreadValues(__spreadProps(__spreadValues({}, example.egHeading !== void 0 ? { egHeading: example.egHeading } : {}), {
+      egText: example.egText
+    }), example.egHtml !== void 0 ? { egHtml: example.egHtml } : {}), example.egLinks !== void 0 ? { egLinks: example.egLinks } : {});
+    return this.formatJsonWithInlineStringArrays(editableExample);
+  }
+  formatJsonWithInlineStringArrays(value) {
+    return JSON.stringify(value, null, 2).replace(/\[\n((?:\s+"(?:\\.|[^"\\])*",?\n)+)\s*\]/g, (_match, items) => {
+      const values = items.match(/"(?:\\.|[^"\\])*"/g) ?? [];
+      return `[${values.join(", ")}]`;
+    });
+  }
+  getExampleSelectionMetadata(example) {
+    return this.formatJsonWithInlineStringArrays({
+      id: example.id,
+      tags: example.tags,
+      purposeTags: example.purposeTags,
+      criteria: example.criteria,
+      notes: example.notes
+    });
+  }
+  getFormattedExamplePreview(example) {
+    return this.formatJsonWithInlineStringArrays(example);
+  }
+  getExampleJsonError(example) {
+    return this.exampleJsonErrors()[example.id];
+  }
+  updateExampleJsonDraft(example, value) {
+    this.exampleJsonDrafts.update((drafts) => __spreadProps(__spreadValues({}, drafts), { [example.id]: value }));
+    let parsed;
+    try {
+      parsed = JSON.parse(value);
+    } catch (e) {
+      this.setExampleJsonError(example.id, "dev.prompts.examples.invalidJson");
+      return;
+    }
+    if (!this.isValidAlertRewriteExample(parsed)) {
+      this.setExampleJsonError(example.id, "dev.prompts.examples.invalidStructure");
+      return;
+    }
+    const mutableExample = example;
+    for (const key of ["egHeading", "egText", "egHtml", "egLinks"])
+      delete mutableExample[key];
+    Object.assign(mutableExample, parsed);
+    this.exampleJsonErrors.update((errors) => {
+      const updated = __spreadValues({}, errors);
+      delete updated[example.id];
+      return updated;
+    });
+    void this.updateDiff();
+  }
+  setExampleJsonError(exampleId, translationKey) {
+    this.exampleJsonErrors.update((errors) => __spreadProps(__spreadValues({}, errors), { [exampleId]: translationKey }));
+  }
+  isValidAlertRewriteExample(value) {
+    if (!value || typeof value !== "object" || Array.isArray(value))
+      return false;
+    const example = value;
+    const allowedKeys = /* @__PURE__ */ new Set(["egText", "egHeading", "egHtml", "egLinks"]);
+    if (Object.keys(example).some((key) => !allowedKeys.has(key)))
+      return false;
+    if (typeof example["egText"] !== "string")
+      return false;
+    for (const key of ["egHeading", "egHtml"]) {
+      if (example[key] !== void 0 && typeof example[key] !== "string")
+        return false;
+    }
+    if (example["egLinks"] !== void 0) {
+      if (!Array.isArray(example["egLinks"]))
+        return false;
+      if (example["egLinks"].some((link) => !link || typeof link !== "object" || Array.isArray(link) || typeof link["id"] !== "string" || typeof link["text"] !== "string" || link["href"] !== void 0 && typeof link["href"] !== "string"))
+        return false;
+    }
+    return true;
+  }
+  selectExampleSet(exampleSet) {
+    this.selectedExampleSet.set(exampleSet);
+    void this.updateDiff();
+  }
   // Rebuild prompt file (older version)
   rebuildPromptFileOld(tool, prompts) {
     const updatedPrompts = prompts.map((p) => ` [${tool}PromptKey.${p.enumKey}]: \`${p.promptText}\`,`).join("\n");
@@ -1888,28 +2514,43 @@ export const RubricFragment: Record<RubricKey, string> = {
 ${rubricEntries}
 }`;
   }
+  rebuildTabFile(tab) {
+    if (tab.fragments)
+      return this.rebuildSharedFile();
+    if (tab.skills)
+      return this.rebuildSkillsFile();
+    if (tab.exampleSets)
+      return this.rebuildAlertRewriteExamplesFile(this.selectedExampleSet().examples);
+    if (tab.prompts)
+      return this.rebuildPromptFile(tab.tool, tab.prompts);
+    return "";
+  }
   /** Tracks if changes have been made to current tab */
   hasChanges(promptTab) {
     const tabNumber = promptTab ?? this.selectedPromptTab();
     const tab = this.tabs[tabNumber];
-    if (tabNumber === 0) {
-      const updatedContent2 = this.rebuildSharedFile();
-      const originalContent2 = tab.original;
-      return updatedContent2 !== originalContent2;
-    }
-    if (!tab?.prompts)
+    if (!tab)
       return false;
-    const updatedContent = this.rebuildPromptFile(tab.tool, tab.prompts);
-    const originalContent = tab.original;
-    return updatedContent !== originalContent;
+    const original = tab.exampleSets ? this.selectedExampleSet().original : tab.original;
+    return this.rebuildTabFile(tab) !== original;
   }
   // Open pull request
   pullRequestUrl = null;
   /** Open pull request for selected tab */
-  openPullRequest(tool, prompts) {
+  openPullRequest(tab) {
     return __async(this, null, function* () {
-      const content = !prompts ? this.rebuildSharedFile() : this.rebuildPromptFile(tool, prompts);
-      const toolLC = tool.toLowerCase();
+      const content = this.rebuildTabFile(tab);
+      if (tab.exampleSets) {
+        const exampleSet = this.selectedExampleSet();
+        try {
+          const result = yield this.exportGitHubService.createPullRequestForPrompts(exampleSet.key.toLowerCase(), exampleSet.sourcePath, exampleSet.fileName, content);
+          this.pullRequestUrl = result.prUrl;
+        } catch (error) {
+          console.error("Failed to create PR:", error);
+        }
+        return;
+      }
+      const toolLC = tab.tool.toLowerCase();
       try {
         const result = yield this.exportGitHubService.createPullRequestForPrompts(toolLC, `src/app/common/prompts/${toolLC}.prompts.ts`, `${toolLC}.prompts.ts`, content);
         this.pullRequestUrl = result.prUrl;
@@ -1930,9 +2571,10 @@ ${rubricEntries}
         return;
       const [{ createPatch }, { Diff2HtmlUI }] = yield Promise.all([import("./chunk-56GJLXIB.js"), import("./chunk-7G2QHIEK.js")]);
       const tab = this.tabs[this.selectedPromptTab()];
-      const updatedContent = this.selectedPromptTab() === 0 ? this.rebuildSharedFile() : tab.prompts ? this.rebuildPromptFile(tab.tool, tab.prompts) : "";
-      const originalContent = tab.original;
-      const patch = createPatch(`${tab.tool.toLowerCase()}.prompts.ts`, originalContent, updatedContent);
+      const updatedContent = this.rebuildTabFile(tab);
+      const originalContent = tab.exampleSets ? this.selectedExampleSet().original : tab.original;
+      const diffFileName = tab.exampleSets ? this.selectedExampleSet().fileName : `${tab.tool.toLowerCase()}.prompts.ts`;
+      const patch = createPatch(diffFileName, originalContent, updatedContent);
       const config = {
         drawFileList: false,
         matching: "words",
@@ -1956,8 +2598,8 @@ ${rubricEntries}
       const filePreview = this.filePreview();
       if (!filePreview)
         return;
-      const prompts = this.tabs[this.selectedPromptTab()].prompts;
-      if (!prompts)
+      const tab = this.tabs[this.selectedPromptTab()];
+      if (!tab)
         return;
       try {
         const { default: Prism } = yield import("./chunk-7W6HYFOI.js");
@@ -1970,7 +2612,7 @@ ${rubricEntries}
           pre.removeAttribute("data-highlighted");
           pre.removeAttribute("tabindex");
           codeBlock.className = "language-typescript";
-          codeBlock.textContent = this.rebuildPromptFile(this.tabs[this.selectedPromptTab()].tool, prompts);
+          codeBlock.textContent = this.rebuildTabFile(tab);
           Prism.highlightElement(codeBlock);
         }
       } catch (error) {
@@ -2004,7 +2646,7 @@ ${rubricEntries}
     if (rf & 2) {
       \u0275\u0275queryAdvance(2);
     }
-  }, decls: 53, vars: 41, consts: [["group", ""], ["selectedItem", ""], ["item", ""], ["diffContainer", ""], ["filePreview", ""], ["id", "wb-cont"], [1, "w-limited", 3, "valueChange", "value"], [1, "surface-ground"], [1, "surface-card", "border-1", "border-bottom-none", "surface-border", "hover:bg-primary-light", 3, "value"], [1, "ml-auto", "surface-card", "border-1", "border-bottom-none", "surface-border", "hover:bg-primary-light", 3, "value"], [1, "flex", "align-content-center", "gap-2"], [1, "material-icons-outlined", "text-primary"], [1, "p-0", "m-0"], [3, "value"], [1, "w-limited"], [1, "flex", "flex-column", "gap-2"], [1, "my-0"], [1, "my-1"], ["inputId", "promptSelect", "optionGroupChildren", "items", "optionGroupLabel", "label", "optionLabel", "translationKey", 1, "w-20rem", 3, "ngModelChange", "group", "ngModel", "options"], [1, "prompt-preview"], ["icon", "pi pi-info-circle", "severity", "info"], [1, "surface-card", "border-1", "border-bottom-none", "surface-border", "hover:bg-primary-light", 3, "click", "value"], [1, "mt-0"], [1, "flex", "flex-row", "flex-wrap", "gap-4", "mt-0", "mb-4"], [1, "flex", "flex-column", "gap-3", "mt-0"], [1, "flex", "flex-row", "align-items-center", "gap-2"], [3, "ngModelChange", "binary", "inputId", "ngModel"], [1, "cursor-pointer", "font-semibold", 3, "for"], [1, "flex", "flex-row", "align-content-center", "gap-2"], ["fluid", "", "pTextarea", "", "rows", "2", 3, "ngModelChange", "ngModel", "autoResize", "id"], [3, "for"], [1, "flex", "flex-column", "lg:flex-row", "gap-2"], [1, "flex-1"], ["appendTo", "body", "fluid", "", "optionLabel", "label", "optionValue", "value", 1, "h-full", 3, "ngModelChange", "onChange", "ngModel", "id", "options"], ["pTemplate", "item"], ["pTemplate", "selectedItem"], ["appendTo", "body", "fluid", "", "optionLabel", "label", "optionValue", "value", 1, "h-full", 3, "ngModelChange", "onChange", "ngModel", "id", "options", "placeholder"], [1, "flex", "gap-2"], ["type", "button", 3, "onClick", "disabled"], ["severity", "error"], [1, "flex", "flex-column", "md:flex-row", "gap-2", "align-items-start"], [1, "flex-1", "w-full"], ["id", "alertProblemsTestUrl", "fluid", "", "pInputText", "", "type", "url", 1, "w-full", 3, "ngModelChange", "ngModel", "placeholder"], ["icon", "pi pi-download", 3, "onClick", "disabled", "label"], ["id", "alertProblemsTestContent", "fluid", "", "pTextarea", "", "rows", "12", "variant", "outlined", 1, "secondary-outline", "min-h-6rem", 3, "ngModelChange", "ngModel"], ["id", "content", "autoResize", "true", "fluid", "", "pTextarea", "", "rows", "3", "variant", "outlined", 1, "secondary-outline", "min-h-6rem", 3, "ngModelChange", "ngModel"], ["for", "content"], ["styleClass", "secondary-outline mb-3", 3, "collapsed", "legend", "toggleable"], [1, "language-typescript"], ["icon", "pi pi-send", 3, "onClick", "disabled", "label"]], template: function PromptEditorComponent_Template(rf, ctx) {
+  }, decls: 54, vars: 41, consts: [["group", ""], ["selectedItem", ""], ["item", ""], ["diffContainer", ""], ["filePreview", ""], ["id", "wb-cont"], [1, "w-limited", 3, "valueChange", "value"], [1, "surface-ground"], [1, "surface-card", "border-1", "border-bottom-none", "surface-border", "hover:bg-primary-light", 3, "value"], [1, "ml-auto", "surface-card", "border-1", "border-bottom-none", "surface-border", "hover:bg-primary-light", 3, "value"], [1, "flex", "align-content-center", "gap-2"], [1, "material-icons-outlined", "text-primary"], [1, "p-0", "m-0"], [3, "value"], [1, "w-limited"], [1, "flex", "flex-column", "gap-2"], [1, "my-0"], [1, "my-1"], ["inputId", "promptSelect", "optionGroupChildren", "items", "optionGroupLabel", "label", "optionLabel", "translationKey", 1, "w-20rem", 3, "ngModelChange", "group", "ngModel", "options"], [1, "prompt-preview"], ["icon", "pi pi-info-circle", "severity", "info"], [1, "surface-card", "border-1", "border-bottom-none", "surface-border", "hover:bg-primary-light", 3, "click", "value"], [1, "mt-0"], [1, "flex", "flex-row", "flex-wrap", "gap-4", "mt-0", "mb-4"], [1, "flex", "flex-column", "gap-3", "mt-0"], [1, "flex", "flex-row", "align-items-center", "gap-2"], [3, "ngModelChange", "binary", "inputId", "ngModel"], [1, "cursor-pointer", "font-semibold", 3, "for"], [1, "flex", "flex-row", "align-content-center", "gap-2"], ["fluid", "", "pTextarea", "", "rows", "2", 3, "ngModelChange", "ngModel", "autoResize", "id"], [3, "for"], [1, "w-12rem"], ["appendTo", "body", "fluid", "", "optionLabel", "label", "optionValue", "value", 3, "ngModelChange", "onChange", "ngModel", "id", "options"], ["pTemplate", "item"], ["pTemplate", "selectedItem"], [1, "my-0", 3, "id"], [1, "prompt-preview", "example-metadata"], ["fluid", "", "pTextarea", "", "rows", "6", 1, "example-json-editor", 3, "ngModelChange", "id", "ngModel"], ["severity", "error"], [1, "flex", "flex-column", "lg:flex-row", "gap-2"], [1, "flex-1"], ["appendTo", "body", "fluid", "", "optionLabel", "label", "optionValue", "value", 1, "h-full", 3, "ngModelChange", "onChange", "ngModel", "id", "options"], ["appendTo", "body", "fluid", "", "optionLabel", "label", "optionValue", "value", 1, "h-full", 3, "ngModelChange", "onChange", "ngModel", "id", "options", "placeholder"], [1, "flex", "gap-2"], ["type", "button", 3, "onClick", "disabled"], [1, "flex", "flex-column", "md:flex-row", "gap-2", "align-items-start"], [1, "flex-1", "w-full"], ["id", "alertProblemsTestUrl", "fluid", "", "pInputText", "", "type", "url", 1, "w-full", 3, "ngModelChange", "ngModel", "placeholder"], ["icon", "pi pi-download", 3, "onClick", "disabled", "label"], ["id", "alertProblemsTestContent", "fluid", "", "pTextarea", "", "rows", "12", "variant", "outlined", 1, "secondary-outline", "min-h-6rem", 3, "ngModelChange", "ngModel"], ["id", "content", "autoResize", "true", "fluid", "", "pTextarea", "", "rows", "3", "variant", "outlined", 1, "secondary-outline", "min-h-6rem", 3, "ngModelChange", "ngModel"], ["for", "content"], ["styleClass", "secondary-outline mb-3", 3, "collapsed", "legend", "toggleable"], [1, "language-typescript"], ["icon", "pi pi-send", 3, "onClick", "disabled", "label"]], template: function PromptEditorComponent_Template(rf, ctx) {
     if (rf & 1) {
       const _r1 = \u0275\u0275getCurrentView();
       \u0275\u0275elementStart(0, "h1", 5);
@@ -2050,15 +2692,15 @@ ${rubricEntries}
       });
       \u0275\u0275template(35, PromptEditorComponent_ng_template_35_Template, 2, 3, "ng-template", null, 0, \u0275\u0275templateRefExtractor)(37, PromptEditorComponent_ng_template_37_Template, 2, 3, "ng-template", null, 1, \u0275\u0275templateRefExtractor)(39, PromptEditorComponent_ng_template_39_Template, 3, 5, "ng-template", null, 2, \u0275\u0275templateRefExtractor);
       \u0275\u0275elementEnd();
-      \u0275\u0275conditionalCreate(41, PromptEditorComponent_Conditional_41_Template, 5, 3)(42, PromptEditorComponent_Conditional_42_Template, 2, 0)(43, PromptEditorComponent_Conditional_43_Template, 2, 0)(44, PromptEditorComponent_Conditional_44_Template, 2, 1, "pre", 19);
+      \u0275\u0275conditionalCreate(41, PromptEditorComponent_Conditional_41_Template, 5, 3)(42, PromptEditorComponent_Conditional_42_Template, 2, 0)(43, PromptEditorComponent_Conditional_43_Template, 2, 0)(44, PromptEditorComponent_Conditional_44_Template, 5, 3)(45, PromptEditorComponent_Conditional_45_Template, 2, 1, "pre", 19);
       \u0275\u0275elementEnd();
-      \u0275\u0275conditionalCreate(45, PromptEditorComponent_Conditional_45_Template, 15, 14);
+      \u0275\u0275conditionalCreate(46, PromptEditorComponent_Conditional_46_Template, 15, 14);
       \u0275\u0275elementEnd()()();
-      \u0275\u0275elementStart(46, "p-tabpanel", 13)(47, "div", 14)(48, "h2", 17);
-      \u0275\u0275text(49);
-      \u0275\u0275pipe(50, "translate");
+      \u0275\u0275elementStart(47, "p-tabpanel", 13)(48, "div", 14)(49, "h2", 17);
+      \u0275\u0275text(50);
+      \u0275\u0275pipe(51, "translate");
       \u0275\u0275elementEnd();
-      \u0275\u0275conditionalCreate(51, PromptEditorComponent_Conditional_51_Template, 11, 11)(52, PromptEditorComponent_Conditional_52_Template, 3, 3, "p-message", 20);
+      \u0275\u0275conditionalCreate(52, PromptEditorComponent_Conditional_52_Template, 10, 10)(53, PromptEditorComponent_Conditional_53_Template, 3, 3, "p-message", 20);
       \u0275\u0275elementEnd()()()();
     }
     if (rf & 2) {
@@ -2095,17 +2737,17 @@ ${rubricEntries}
       \u0275\u0275advance(2);
       \u0275\u0275property("group", true)("ngModel", ctx.selectedPrompt())("options", ctx.promptGroups);
       \u0275\u0275advance(7);
-      \u0275\u0275conditional(ctx.selectedPromptIsAlertRewritePipeline() ? 41 : ctx.selectedPromptIsAlertRewriteExamples() ? 42 : ctx.selectedPromptIsAlertProblems() ? 43 : 44);
-      \u0275\u0275advance(4);
-      \u0275\u0275conditional(!ctx.selectedPromptIsAlertRewritePipeline() && !ctx.selectedPromptIsAlertRewriteExamples() ? 45 : -1);
+      \u0275\u0275conditional(ctx.selectedPromptIsAlertRewritePipeline() ? 41 : ctx.selectedPromptIsAlertRewriteExamples() ? 42 : ctx.selectedPromptIsAlertProblems() ? 43 : ctx.selectedPromptIsSkill() ? 44 : 45);
+      \u0275\u0275advance(5);
+      \u0275\u0275conditional(!ctx.selectedPromptIsAlertRewritePipeline() && !ctx.selectedPromptIsAlertRewriteExamples() && !ctx.selectedPromptIsSkill() ? 46 : -1);
       \u0275\u0275advance();
       \u0275\u0275property("value", 11);
       \u0275\u0275advance();
       \u0275\u0275classMap(ctx.styleCardService.cardStyles(void 0, void 0, void 0, void 0, void 0, "border-top-none border-noround-top"));
       \u0275\u0275advance(2);
-      \u0275\u0275textInterpolate(\u0275\u0275pipeBind1(50, 39, "dev.prompts.pr.header"));
+      \u0275\u0275textInterpolate(\u0275\u0275pipeBind1(51, 39, "dev.prompts.pr.header"));
       \u0275\u0275advance(2);
-      \u0275\u0275conditional(ctx.hasChanges() ? 51 : 52);
+      \u0275\u0275conditional(ctx.hasChanges() ? 52 : 53);
     }
   }, dependencies: [
     CommonModule,
@@ -2144,7 +2786,7 @@ ${rubricEntries}
     Textarea,
     JsonPipe,
     TranslatePipe
-  ], styles: ["\npre.prompt-preview[_ngcontent-%COMP%] {\n  display: block;\n  box-sizing: border-box;\n  width: 100%;\n  min-width: 0;\n  max-width: 100%;\n  font-size: 1rem;\n  white-space: pre-wrap !important;\n  overflow-wrap: anywhere;\n  word-break: break-word;\n  overflow-x: hidden;\n}\n.prompt-content-sized[_ngcontent-%COMP%] {\n  field-sizing: content;\n  min-height: 24rem;\n  overflow-y: auto;\n}\n/*# sourceMappingURL=prompt-editor.component-XTAAJJ2P.css.map */"], changeDetection: 0 });
+  ], styles: ["\npre.prompt-preview[_ngcontent-%COMP%] {\n  display: block;\n  box-sizing: border-box;\n  width: 100%;\n  min-width: 0;\n  max-width: 100%;\n  font-size: 1rem;\n  white-space: pre-wrap !important;\n  overflow-wrap: anywhere;\n  word-break: break-word;\n  overflow-x: hidden;\n}\n.prompt-content-sized[_ngcontent-%COMP%] {\n  field-sizing: content;\n  min-height: 24rem;\n  overflow-y: auto;\n}\n.example-json-editor[_ngcontent-%COMP%] {\n  field-sizing: content;\n  min-height: 8rem;\n  overflow-y: auto;\n  font-size: 1.25rem !important;\n}\n.example-metadata[_ngcontent-%COMP%] {\n  margin: 0.5rem 0;\n  font-size: 1.25rem !important;\n}\n/*# sourceMappingURL=prompt-editor.component-L5J6LQOH.css.map */"], changeDetection: 0 });
 };
 (() => {
   (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(PromptEditorComponent, [{
@@ -2212,6 +2854,25 @@ ${rubricEntries}
                     <label [for]="'show_' + fragment.key" class="cursor-pointer font-semibold">{{ fragment.label | translate }}</label>
                   </div>
                 }
+              } @else if (isSkillsTab(tab)) {
+                @for (skill of tab.skills; track skill.enumKey) {
+                  <div class="flex flex-row align-content-center gap-2">
+                    <p-checkbox [binary]="true" [inputId]="'show_' + skill.enumKey" [ngModel]="isPromptVisible(skill.enumKey)" (ngModelChange)="togglePrompt(skill.enumKey)" />
+                    <label [for]="'show_' + skill.enumKey" class="cursor-pointer font-semibold">{{ skill.translationKey | translate }}</label>
+                  </div>
+                }
+              } @else if (isExamplesTab(tab)) {
+                @for (exampleSet of tab.exampleSets; track exampleSet.key) {
+                  <div class="flex flex-row align-items-center gap-2">
+                    <p-radiobutton
+                      [binary]="true"
+                      [inputId]="'show_example_set_' + exampleSet.key"
+                      [ngModel]="selectedExampleSet().key === exampleSet.key"
+                      (ngModelChange)="selectExampleSet(exampleSet)"
+                    />
+                    <label [for]="'show_example_set_' + exampleSet.key" class="cursor-pointer font-semibold">{{ exampleSet.title | translate }}</label>
+                  </div>
+                }
               } @else {
                 @for (prompt of tab.prompts; track prompt.enumKey) {
                   <div class="flex flex-row align-content-center gap-2">
@@ -2239,8 +2900,74 @@ ${rubricEntries}
                   }
                 }
               }
+              <!--Skills-->
+              @if (isSkillsTab(tab)) {
+                @for (skill of tab.skills; track skill.enumKey) {
+                  @if (isPromptVisible(skill.enumKey)) {
+                    <h2 class="my-0">{{ skill.translationKey | translate }}</h2>
+                    @for (group of getSkillGroups(skill); track group.key) {
+                      <h3>{{ getSkillGroupLabel(group.key) | translate }}</h3>
+                      @for (rule of group.rules; track rule.id) {
+                        <div class="flex flex-column gap-2">
+                          @if (rule.severity) {
+                            <p-iftalabel class="w-12rem">
+                              <p-select
+                                [(ngModel)]="rule.severity"
+                                [id]="skill.enumKey + '_' + rule.id + '_severity'"
+                                [options]="skillSeverityOptions"
+                                (onChange)="updateDiff()"
+                                appendTo="body"
+                                fluid
+                                optionLabel="label"
+                                optionValue="value"
+                              >
+                                <ng-template let-option pTemplate="item">{{ option.label | translate }}</ng-template>
+                                <ng-template let-option pTemplate="selectedItem">{{ option.label | translate }}</ng-template>
+                              </p-select>
+                              <label [for]="skill.enumKey + '_' + rule.id + '_severity'">{{ 'dev.prompts.skills.severity._label' | translate }}</label>
+                            </p-iftalabel>
+                          }
+                          <p-iftalabel>
+                            <textarea
+                              [(ngModel)]="rule.text"
+                              [autoResize]="true"
+                              [id]="skill.enumKey + '_' + rule.id"
+                              (ngModelChange)="updateDiff()"
+                              fluid
+                              pTextarea
+                              rows="2"
+                            ></textarea>
+                            <label [for]="skill.enumKey + '_' + rule.id">{{ rule.id }}</label>
+                          </p-iftalabel>
+                        </div>
+                      }
+                    }
+                  }
+                }
+              }
+              <!--Examples-->
+              @if (isExamplesTab(tab)) {
+                <p>{{ selectedExampleSet().description | translate }}</p>
+                @for (example of selectedExampleSet().examples; track example.id) {
+                  <h2 [id]="example.id + '_heading'" class="my-0">{{ getAlertRewriteExampleLegend(example) }}</h2>
+                  <pre class="prompt-preview example-metadata" [attr.aria-label]="'dev.prompts.examples.selectionMetadata' | translate">{{ getExampleSelectionMetadata(example) }}</pre>
+                  <textarea
+                    [attr.aria-label]="'dev.prompts.examples.editableFinalExample' | translate"
+                    [id]="example.id + '_json'"
+                    [ngModel]="getExampleJsonDraft(example)"
+                    (ngModelChange)="updateExampleJsonDraft(example, $event)"
+                    class="example-json-editor"
+                    fluid
+                    pTextarea
+                    rows="6"
+                  ></textarea>
+                  @if (getExampleJsonError(example); as errorKey) {
+                    <p-message severity="error">{{ errorKey | translate }}</p-message>
+                  }
+                }
+              }
               <!--Full prompts-->
-              @if (!isFragmentsTab(tab)) {
+              @if (!isFragmentsTab(tab) && !isSkillsTab(tab) && !isExamplesTab(tab)) {
                 @for (prompt of tab.prompts; track prompt.enumKey) {
                   <!-- String editor -->
                   @if (isPromptString(prompt)) {
@@ -2416,29 +3143,38 @@ ${rubricEntries}
             } @else if (selectedPromptIsAlertRewriteExamples()) {
               @for (example of alertRewriteExamples; track example.id) {
                 <h3>{{ getAlertRewriteExampleLegend(example) }}</h3>
-                <pre class="prompt-preview">{{ example | json }}</pre>
+                <pre class="prompt-preview">{{ getFormattedExamplePreview(example) }}</pre>
               }
             } @else if (selectedPromptIsAlertProblems()) {
               @for (section of alertProblemsSections; track section.key) {
                 <h3>{{ section.label ?? '' | translate }}</h3>
                 <pre class="prompt-preview">{{ section.content }}</pre>
               }
+            } @else if (selectedPromptIsSkill()) {
+              <p>{{ 'dev.prompts.skills.testUnavailable' | translate }}</p>
+              @for (group of getSelectedSkillGroups(); track group.key) {
+                <h3>{{ getSkillGroupLabel(group.key) | translate }}</h3>
+                @for (rule of group.rules; track rule.id) {
+                  <h4>{{ rule.id }}</h4>
+                  <pre class="prompt-preview">{{ rule.text }}</pre>
+                }
+              }
             } @else {
               <pre class="prompt-preview">{{ aiPrompt() }}</pre>
             }
           </div>
-          @if (!selectedPromptIsAlertRewritePipeline() && !selectedPromptIsAlertRewriteExamples()) {
+          @if (!selectedPromptIsAlertRewritePipeline() && !selectedPromptIsAlertRewriteExamples() && !selectedPromptIsSkill()) {
             <div>
               @if (selectedPromptIsAlertProblems()) {
                 <h3 class="my-1">{{ 'dev.prompts.preview.alertProblems.testPage' | translate }}</h3>
                 <div class="flex flex-column md:flex-row gap-2 align-items-start">
                   <div class="flex-1 w-full">
                     <input
-                      [ngModel]="alertProblemsTestUrl"
-                      (ngModelChange)="onAlertProblemsTestUrlChange($event)"
-                      [attr.aria-label]="'dev.prompts.preview.alertProblems.enterTestPageUrl' | translate"
-                      [placeholder]="'dev.prompts.preview.alertProblems.enterTestPageUrl' | translate"
                       id="alertProblemsTestUrl"
+                      [attr.aria-label]="'dev.prompts.preview.alertProblems.enterTestPageUrl' | translate"
+                      [ngModel]="alertProblemsTestUrl"
+                      [placeholder]="'dev.prompts.preview.alertProblems.enterTestPageUrl' | translate"
+                      (ngModelChange)="onAlertProblemsTestUrlChange($event)"
                       class="w-full"
                       fluid
                       pInputText
@@ -2464,8 +3200,8 @@ ${rubricEntries}
                 <textarea
                   id="alertProblemsTestContent"
                   [(ngModel)]="alertProblemsTestContent"
-                  (ngModelChange)="alertProblemsTestPayloadInvalid.set(false)"
                   [attr.aria-label]="'dev.prompts.preview.alertProblems.generatedPayload' | translate"
+                  (ngModelChange)="alertProblemsTestPayloadInvalid.set(false)"
                   class="secondary-outline min-h-6rem"
                   fluid
                   pTextarea
@@ -2484,10 +3220,10 @@ ${rubricEntries}
               }
             </div>
             <div class="flex gap-2">
-              <p-button type="button" [disabled]="!getSelectedPromptConfig() || !hasTestContent() || alertProblemsTestLoading()" (onClick)="testResult()">
+              <p-button [disabled]="!getSelectedPromptConfig() || !hasTestContent() || alertProblemsTestLoading()" (onClick)="testResult()" type="button">
                 {{ 'dev.prompts.preview.getResult' | translate }}
               </p-button>
-              <p-button type="button" [disabled]="!getSelectedPromptConfig() || !hasTestContent() || alertProblemsTestLoading()" (onClick)="testResponse()">
+              <p-button [disabled]="!getSelectedPromptConfig() || !hasTestContent() || alertProblemsTestLoading()" (onClick)="testResponse()" type="button">
                 {{ 'dev.prompts.preview.getResponse' | translate }}
               </p-button>
             </div>
@@ -2514,15 +3250,19 @@ ${rubricEntries}
       <div [class]="styleCardService.cardStyles(undefined, undefined, undefined, undefined, undefined, 'border-top-none border-noround-top')" class="w-limited">
         <h2 class="my-1">{{ 'dev.prompts.pr.header' | translate }}</h2>
         @if (hasChanges()) {
-          @let prompts = tabs[selectedPromptTab()].prompts;
           <!--Review-->
           <div #diffContainer></div>
           <!--Export-->
           <p-fieldset [collapsed]="true" [legend]="'dev.prompts.pr.filePreview' | translate" [toggleable]="true" styleClass="secondary-outline mb-3">
-            <pre #filePreview><code class="language-typescript">{{ prompts ? rebuildPromptFile(tabs[selectedPromptTab()].tool, prompts) : rebuildSharedFile() }}</code></pre>
+            <pre #filePreview><code class="language-typescript">{{ rebuildTabFile(tabs[selectedPromptTab()]) }}</code></pre>
           </p-fieldset>
           <!--Open PR-->
-          <p-button [disabled]="!signInService.user()" [label]="'dev.prompts.button.openPR' | translate" (onClick)="openPullRequest(tabs[selectedPromptTab()].tool, prompts)" icon="pi pi-send" />
+          <p-button
+            [disabled]="!signInService.user() || (isExamplesTab(tabs[selectedPromptTab()]) && hasInvalidExampleJson())"
+            [label]="'dev.prompts.button.openPR' | translate"
+            (onClick)="openPullRequest(tabs[selectedPromptTab()])"
+            icon="pi pi-send"
+          />
         } @else {
           <p-message icon="pi pi-info-circle" severity="info">{{ 'dev.prompts.pr.noChangesMessage' | translate }}</p-message>
         }
@@ -2530,13 +3270,13 @@ ${rubricEntries}
     </p-tabpanel>
   </p-tabpanels>
 </p-tabs>
-`, styles: ["/* angular:styles/component:css;6b7a6eafda040b5f577e6fcd3f1e81c73f16629f202845fa9627b7c2fcd65c6a;C:/my-working-files/GitHub/design-assistant-aws/src/app/views/toolbox/dev-tools/prompt-editor/prompt-editor.component.ts */\npre.prompt-preview {\n  display: block;\n  box-sizing: border-box;\n  width: 100%;\n  min-width: 0;\n  max-width: 100%;\n  font-size: 1rem;\n  white-space: pre-wrap !important;\n  overflow-wrap: anywhere;\n  word-break: break-word;\n  overflow-x: hidden;\n}\n.prompt-content-sized {\n  field-sizing: content;\n  min-height: 24rem;\n  overflow-y: auto;\n}\n/*# sourceMappingURL=prompt-editor.component-XTAAJJ2P.css.map */\n"] }]
+`, styles: ["/* angular:styles/component:css;f8289e4191d63e5d324ee34653d23883d341a0a51f3abf50ad6ac90f13191920;C:/my-working-files/GitHub/design-assistant-aws/src/app/views/toolbox/dev-tools/prompt-editor/prompt-editor.component.ts */\npre.prompt-preview {\n  display: block;\n  box-sizing: border-box;\n  width: 100%;\n  min-width: 0;\n  max-width: 100%;\n  font-size: 1rem;\n  white-space: pre-wrap !important;\n  overflow-wrap: anywhere;\n  word-break: break-word;\n  overflow-x: hidden;\n}\n.prompt-content-sized {\n  field-sizing: content;\n  min-height: 24rem;\n  overflow-y: auto;\n}\n.example-json-editor {\n  field-sizing: content;\n  min-height: 8rem;\n  overflow-y: auto;\n  font-size: 1.25rem !important;\n}\n.example-metadata {\n  margin: 0.5rem 0;\n  font-size: 1.25rem !important;\n}\n/*# sourceMappingURL=prompt-editor.component-L5J6LQOH.css.map */\n"] }]
   }], () => [], { diffContainer: [{ type: ViewChild, args: ["diffContainer", { isSignal: true }] }], filePreview: [{ type: ViewChild, args: ["filePreview", { isSignal: true }] }] });
 })();
 (() => {
-  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(PromptEditorComponent, { className: "PromptEditorComponent", filePath: "src/app/views/toolbox/dev-tools/prompt-editor/prompt-editor.component.ts", lineNumber: 133 });
+  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(PromptEditorComponent, { className: "PromptEditorComponent", filePath: "src/app/views/toolbox/dev-tools/prompt-editor/prompt-editor.component.ts", lineNumber: 170 });
 })();
 export {
   PromptEditorComponent
 };
-//# sourceMappingURL=chunk-ZK2XEUCP.js.map
+//# sourceMappingURL=chunk-VPSGLMXF.js.map

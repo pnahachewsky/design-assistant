@@ -51,7 +51,13 @@ var ToolsPromptKey;
   ToolsPromptKey2["Description"] = "aiPrompt.tools.description";
   ToolsPromptKey2["Keywords"] = "aiPrompt.tools.keywords";
   ToolsPromptKey2["Languages"] = "aiPrompt.tools.languages";
+  ToolsPromptKey2["TranslateIssueDetails"] = "aiPrompt.tools.translateIssueDetails";
 })(ToolsPromptKey || (ToolsPromptKey = {}));
+var SkillPromptKey;
+(function(SkillPromptKey2) {
+  SkillPromptKey2["CanadaCaStyle"] = "aiPrompt.skills.canadaCaStyle";
+  SkillPromptKey2["LinkWriting"] = "aiPrompt.skills.linkWriting";
+})(SkillPromptKey || (SkillPromptKey = {}));
 var PagePromptKey;
 (function(PagePromptKey2) {
   PagePromptKey2["AlertRewrite"] = "aiPrompt.page.alertRewrite";
@@ -63,7 +69,6 @@ var PagePromptKey;
 var ProblemPromptKey;
 (function(ProblemPromptKey2) {
   ProblemPromptKey2["AlertsProblems"] = "aiPrompt.problem.alertsProblems";
-  ProblemPromptKey2["TranslateIssueDetails"] = "aiPrompt.problem.translateIssueDetails";
   ProblemPromptKey2["AlertsRewrite"] = "aiPrompt.problem.alertsRewrite";
 })(ProblemPromptKey || (ProblemPromptKey = {}));
 
@@ -301,6 +306,33 @@ var ToolsPrompts = {
   ]
 }`,
     available: true
+  },
+  [ToolsPromptKey.TranslateIssueDetails]: {
+    role: RoleKey.Translator,
+    task: `Translate only the description and recommendation values in the supplied JSON from English into Canadian French.
+Return only valid JSON with this exact shape: {"items":[{"translation_id":"1","description":"...","recommendation":"..."}]}.
+Preserve every translation_id exactly. Do not add, remove, combine, split, or reorder items.
+Preserve HTML tags and attributes, URLs, code, placeholders, CSS classes, ARIA attributes, and quoted source text exactly.`,
+    rubric: [],
+    output: OutputKey.Json,
+    jsonSchema: `{
+  "type": "object",
+  "required": ["items"],
+  "properties": {
+    "items": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["translation_id", "description", "recommendation"],
+        "properties": {
+          "translation_id": { "type": "string" },
+          "description": { "type": "string" },
+          "recommendation": { "type": "string" }
+        }
+      }
+    }
+  }
+}`
   }
 };
 
@@ -309,6 +341,7 @@ export {
   OutputKey,
   RubricKey,
   ToolsPromptKey,
+  SkillPromptKey,
   PagePromptKey,
   ProblemPromptKey,
   RoleFragment,
@@ -322,4 +355,4 @@ export {
   OpenRouterService,
   ToolsPrompts
 };
-//# sourceMappingURL=chunk-GVX5GQYP.js.map
+//# sourceMappingURL=chunk-H6SCXNXI.js.map

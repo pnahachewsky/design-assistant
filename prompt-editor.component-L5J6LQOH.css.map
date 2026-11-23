@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["angular:styles/component:css;f8289e4191d63e5d324ee34653d23883d341a0a51f3abf50ad6ac90f13191920;C:/my-working-files/GitHub/design-assistant-aws/src/app/views/toolbox/dev-tools/prompt-editor/prompt-editor.component.ts"],
+  "sourcesContent": ["\n    pre.prompt-preview {\n      display: block;\n      box-sizing: border-box;\n      width: 100%;\n      min-width: 0;\n      max-width: 100%;\n      font-size: 1rem;\n      white-space: pre-wrap !important;\n      overflow-wrap: anywhere;\n      word-break: break-word;\n      overflow-x: hidden;\n    }\n\n    .prompt-content-sized {\n      field-sizing: content;\n      min-height: 24rem;\n      overflow-y: auto;\n    }\n\n    .example-json-editor {\n      field-sizing: content;\n      min-height: 8rem;\n      overflow-y: auto;\n      font-size: 1.25rem !important;\n    }\n\n    .example-metadata {\n      margin: 0.5rem 0;\n      font-size: 1.25rem !important;\n    }\n  "],
+  "mappings": ";AACI,GAAG,CAAC;AACF,WAAS;AACT,cAAY;AACZ,SAAO;AACP,aAAW;AACX,aAAW;AACX,aAAW;AACX,eAAa;AACb,iBAAe;AACf,cAAY;AACZ,cAAY;AACd;AAEA,CAAC;AACC,gBAAc;AACd,cAAY;AACZ,cAAY;AACd;AAEA,CAAC;AACC,gBAAc;AACd,cAAY;AACZ,cAAY;AACZ,aAAW;AACb;AAEA,CAAC;AACC,UAAQ,OAAO;AACf,aAAW;AACb;",
+  "names": []
+}
