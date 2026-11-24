@@ -11,22 +11,22 @@ import {
   ProblemPrompts,
   getCanadaCaStylePromptRules,
   getLinkWritingPromptRules
-} from "./chunk-FYDK7IPA.js";
+} from "./chunk-H2HMG54Z.js";
 import {
   CompareRenderedComponent,
   CompareSourceComponent
 } from "./chunk-PC7WHNDU.js";
 import {
   CompareLanguagesComponent
-} from "./chunk-FGM5LDFC.js";
+} from "./chunk-CHODEBJW.js";
 import "./chunk-CT3F4ZWS.js";
 import "./chunk-35WEPOT5.js";
 import {
   CompareSelectComponent
-} from "./chunk-MNLTU2T7.js";
+} from "./chunk-XBOMM2SL.js";
 import {
   CompareService
-} from "./chunk-CTV6GVFP.js";
+} from "./chunk-CHTZ3US5.js";
 import {
   AI_ALERT_TRANSLATION_MODEL,
   AI_FREE_MODELS,
@@ -38,7 +38,7 @@ import {
   RoleFragment,
   ToolsPromptKey,
   ToolsPrompts
-} from "./chunk-H6SCXNXI.js";
+} from "./chunk-ZIRIQAQJ.js";
 import {
   ProgressSpinner,
   ProgressSpinnerModule
@@ -6739,4 +6739,4 @@ var CompareComponent = class _CompareComponent {
 export {
   CompareComponent
 };
-//# sourceMappingURL=chunk-A7L3OBN7.js.map
+//# sourceMappingURL=chunk-C4VMZYXK.js.map

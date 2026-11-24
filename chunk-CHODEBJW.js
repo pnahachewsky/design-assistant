@@ -3,16 +3,16 @@ import {
 } from "./chunk-CT3F4ZWS.js";
 import {
   CompareSelectComponent
-} from "./chunk-MNLTU2T7.js";
+} from "./chunk-XBOMM2SL.js";
 import {
   CompareService
-} from "./chunk-CTV6GVFP.js";
+} from "./chunk-CHTZ3US5.js";
 import {
   AI_PAID_MODELS,
   OpenRouterService,
   ToolsPromptKey,
   ToolsPrompts
-} from "./chunk-H6SCXNXI.js";
+} from "./chunk-ZIRIQAQJ.js";
 import {
   Tab,
   TabList,
@@ -3157,4 +3157,4 @@ var CompareLanguagesComponent = class _CompareLanguagesComponent {
 export {
   CompareLanguagesComponent
 };
-//# sourceMappingURL=chunk-FGM5LDFC.js.map
+//# sourceMappingURL=chunk-CHODEBJW.js.map

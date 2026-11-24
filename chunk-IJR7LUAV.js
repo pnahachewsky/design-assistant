@@ -4,7 +4,7 @@ import {
   ProblemPrompts,
   getCanadaCaStylePromptRules,
   getLinkWritingPromptRules
-} from "./chunk-FYDK7IPA.js";
+} from "./chunk-H2HMG54Z.js";
 import {
   require_types
 } from "./chunk-YIFK26D6.js";
@@ -21,7 +21,7 @@ import {
   RubricKey,
   ToolsPromptKey,
   ToolsPrompts
-} from "./chunk-H6SCXNXI.js";
+} from "./chunk-ZIRIQAQJ.js";
 import {
   MultiSelect,
   MultiSelectModule
@@ -1733,4 +1733,4 @@ ${updatedPrompts}
 export {
   SkillEditorComponent
 };
-//# sourceMappingURL=chunk-KXIMPPRI.js.map
+//# sourceMappingURL=chunk-IJR7LUAV.js.map

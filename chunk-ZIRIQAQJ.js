@@ -69,7 +69,6 @@ var PagePromptKey;
 var ProblemPromptKey;
 (function(ProblemPromptKey2) {
   ProblemPromptKey2["AlertsProblems"] = "aiPrompt.problem.alertsProblems";
-  ProblemPromptKey2["AlertsRewrite"] = "aiPrompt.problem.alertsRewrite";
 })(ProblemPromptKey || (ProblemPromptKey = {}));
 
 // src/app/common/prompts/shared.prompts.ts
@@ -355,4 +354,4 @@ export {
   OpenRouterService,
   ToolsPrompts
 };
-//# sourceMappingURL=chunk-H6SCXNXI.js.map
+//# sourceMappingURL=chunk-ZIRIQAQJ.js.map
