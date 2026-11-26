@@ -1,17 +1,19 @@
 import {
   AlertContextService,
   coerceInteractiveResultLeadIns,
+  countStructurallyStandaloneLinks,
+  getExpectedAlertHeadingTag,
   getReportableAlerts,
   getReportableAlertsFromHtml,
   removeAlertRewritePlacementReviewNotices
-} from "./chunk-KNTIRVLE.js";
+} from "./chunk-PIQRMBF2.js";
 import {
   AlertRewriteExamples,
   PagePrompts,
   ProblemPrompts,
   getCanadaCaStylePromptRules,
   getLinkWritingPromptRules
-} from "./chunk-H2HMG54Z.js";
+} from "./chunk-4L25LKGS.js";
 import {
   CompareRenderedComponent,
   CompareSourceComponent
@@ -1551,7 +1553,9 @@ var AlertService = class _AlertService {
       const responseText = yield this.openRouter.getTextFromAI(ProblemPrompts[ProblemPromptKey.AlertsProblems], JSON.stringify(payload), preferredModel, 0);
       const parsedIssues = this.parseIssues(responseText);
       const visibleIssues = this.suppressDeferredIssues(parsedIssues);
-      const validatedIssues = this.validateAlertIssuesAgainstHtml(visibleIssues, sourceHtml);
+      const contextValidatedIssues = this.suppressStructurallyInvalidHierarchyIssues(visibleIssues, payload);
+      const clusterValidatedIssues = this.suppressDuplicateAlertOverloadIssues(contextValidatedIssues, payload);
+      const validatedIssues = this.validateAlertIssuesAgainstHtml(clusterValidatedIssues, sourceHtml);
       const issues = this.addNoIssuePlaceholders(validatedIssues, alerts.length);
       const report = this.saveAnalysis(sourceHtml, pagePath, issues, preferredModel);
       this.requestFrenchTranslation(pagePath, report, translationRunId);
@@ -1693,6 +1697,106 @@ var AlertService = class _AlertService {
         return true;
       return false;
     });
+  }
+  suppressStructurallyInvalidHierarchyIssues(issues, payload) {
+    const signals = Array.isArray(payload["alertSignals"]) ? payload["alertSignals"] : [];
+    const signalsByAlertIndex = /* @__PURE__ */ new Map();
+    for (const signal2 of signals) {
+      const record = this.asRecord(signal2);
+      const alertIndex = Number(record?.["alert_index"]);
+      if (record && Number.isInteger(alertIndex))
+        signalsByAlertIndex.set(alertIndex, record);
+    }
+    const suppressedAlertIndexes = [];
+    const validatedIssues = issues.filter((issue) => {
+      if (this.cleanString(issue.category).toLowerCase() !== "incorrect hierarchy")
+        return true;
+      const alertIndex = Number(issue.alertIndex);
+      if (!Number.isInteger(alertIndex))
+        return true;
+      const signal2 = signalsByAlertIndex.get(alertIndex);
+      if (!signal2)
+        return true;
+      const expectedHeadingTag = this.cleanString(signal2["expected_heading_tag"]).toLowerCase();
+      const headingTag = this.cleanString(signal2["heading_tag"]).toLowerCase();
+      const hasValidSemanticHierarchy = !!expectedHeadingTag && signal2["heading_hierarchy_valid"] === true && this.cleanString(signal2["heading_source"]).toLowerCase() === "semantic" && headingTag === expectedHeadingTag;
+      if (!hasValidSemanticHierarchy)
+        return true;
+      suppressedAlertIndexes.push(alertIndex);
+      return false;
+    });
+    if (suppressedAlertIndexes.length) {
+      console.info("[Alert analysis] Suppressed structurally invalid hierarchy findings.", {
+        count: suppressedAlertIndexes.length,
+        alertIndexes: suppressedAlertIndexes
+      });
+    }
+    return validatedIssues;
+  }
+  suppressDuplicateAlertOverloadIssues(issues, payload) {
+    const signals = Array.isArray(payload["alertSignals"]) ? payload["alertSignals"] : [];
+    const signalsByAlertIndex = /* @__PURE__ */ new Map();
+    for (const signal2 of signals) {
+      const record = this.asRecord(signal2);
+      const alertIndex = Number(record?.["alert_index"]);
+      if (record && Number.isInteger(alertIndex))
+        signalsByAlertIndex.set(alertIndex, record);
+    }
+    const clusterStartByAlertIndex = /* @__PURE__ */ new Map();
+    for (const alertIndex of signalsByAlertIndex.keys()) {
+      let clusterStart = alertIndex;
+      while (clusterStart > 1 && signalsByAlertIndex.get(clusterStart)?.["previous_sibling_is_alert"] === true) {
+        clusterStart -= 1;
+      }
+      clusterStartByAlertIndex.set(alertIndex, clusterStart);
+    }
+    const lowestIssueIndexByCluster = /* @__PURE__ */ new Map();
+    for (const issue of issues) {
+      if (this.cleanString(issue.category).toLowerCase() !== "alert overload")
+        continue;
+      const alertIndex = Number(issue.alertIndex);
+      if (!Number.isInteger(alertIndex))
+        continue;
+      const clusterStart = clusterStartByAlertIndex.get(alertIndex);
+      if (clusterStart === void 0)
+        continue;
+      const lowestIssueIndex = lowestIssueIndexByCluster.get(clusterStart);
+      if (lowestIssueIndex === void 0 || alertIndex < lowestIssueIndex) {
+        lowestIssueIndexByCluster.set(clusterStart, alertIndex);
+      }
+    }
+    const retainedClusters = /* @__PURE__ */ new Set();
+    const suppressedAlertIndexes = [];
+    const validatedIssues = issues.filter((issue) => {
+      if (this.cleanString(issue.category).toLowerCase() !== "alert overload")
+        return true;
+      const alertIndex = Number(issue.alertIndex);
+      if (!Number.isInteger(alertIndex))
+        return true;
+      const clusterStart = clusterStartByAlertIndex.get(alertIndex);
+      if (clusterStart === void 0)
+        return true;
+      if (lowestIssueIndexByCluster.get(clusterStart) !== alertIndex) {
+        suppressedAlertIndexes.push(alertIndex);
+        return false;
+      }
+      if (!retainedClusters.has(clusterStart)) {
+        retainedClusters.add(clusterStart);
+        return true;
+      }
+      suppressedAlertIndexes.push(alertIndex);
+      return false;
+    });
+    if (suppressedAlertIndexes.length) {
+      console.info("[Alert analysis] Suppressed duplicate alert overload findings.", {
+        count: suppressedAlertIndexes.length,
+        alertIndexes: suppressedAlertIndexes
+      });
+    }
+    return validatedIssues;
+  }
+  asRecord(value) {
+    return value && typeof value === "object" && !Array.isArray(value) ? value : null;
   }
   addNoIssuePlaceholders(issues, alertCount) {
     const realIssues = issues.filter((issue) => !isNoAlertIssue(issue));
@@ -3593,6 +3697,7 @@ var AlertRewriteService = class _AlertRewriteService {
     const combined = `${lower} ${issueText}`;
     const criteria = new Set(criteriaMatched || []);
     const linkCount = (alertHtml.match(/<a\b/gi) || []).length;
+    const standaloneLinkCount = countStructurallyStandaloneLinks(new DOMParser().parseFromString(alertHtml || "", "text/html").body);
     const maybeAdd = (tag, pattern) => {
       if (pattern.test(combined)) {
         tags.add(tag);
@@ -3607,10 +3712,11 @@ var AlertRewriteService = class _AlertRewriteService {
     if (criteria.has("C3_too_many_links")) {
       tags.add("remove-secondary-link");
       if (linkCount > 1) {
-        tags.add("multiple-detail-links");
         tags.add("duplicate-link-cleanup");
       }
     }
+    if (standaloneLinkCount > 1)
+      tags.add("multiple-detail-links");
     if (linkCount === 1)
       tags.add("standalone-action-link");
     maybeAdd("service-delay", /\bdelay|processing time|service standard\b/);
@@ -4000,16 +4106,7 @@ var AlertRewriteGuardService = class _AlertRewriteGuardService {
     }
   }
   getExpectedAlertHeadingTag(alertElement) {
-    const doc = alertElement.ownerDocument;
-    let nearestPageHeading = null;
-    const pageHeadings = Array.from(doc.querySelectorAll("h1, h2, h3, h4, h5, h6")).filter((heading) => !heading.closest(".alert"));
-    for (const heading of pageHeadings) {
-      if (heading.compareDocumentPosition(alertElement) & Node.DOCUMENT_POSITION_FOLLOWING) {
-        nearestPageHeading = heading;
-      }
-    }
-    const parentLevel = Number(nearestPageHeading?.tagName.slice(1)) || 1;
-    return `h${Math.min(parentLevel + 1, 6)}`;
+    return getExpectedAlertHeadingTag(alertElement);
   }
   hasAlertHeadingHierarchy(alertHtml, expectedTag) {
     try {
@@ -5131,7 +5228,7 @@ var AlertRewriteOrchestratorService = class _AlertRewriteOrchestratorService {
           if (shortenedTerms.length) {
             addRetryInstruction("protectedTerminologyShortened", this.buildTerminologyInstruction(CraTerminologyInstructions.retryAtomic, shortenedTerms));
           }
-          const linkLeadInIssue = rewrittenHasAnchor ? this.alertRewriteGuard.getFullSentenceLinkLeadInIssue(parsedResult.rewrittenAlertHtml) : null;
+          const linkLeadInIssue = originalHasAnchor && rewrittenHasAnchor ? this.alertRewriteGuard.getFullSentenceLinkLeadInIssue(parsedResult.rewrittenAlertHtml) : null;
           if (linkLeadInIssue) {
             addRetryInstruction(linkLeadInIssue, retryInstructions.fullSentenceLinksNeedLeadIn.join(" "));
           }
@@ -6739,4 +6836,4 @@ var CompareComponent = class _CompareComponent {
 export {
   CompareComponent
 };
-//# sourceMappingURL=chunk-C4VMZYXK.js.map
+//# sourceMappingURL=chunk-CGXIIFI6.js.map

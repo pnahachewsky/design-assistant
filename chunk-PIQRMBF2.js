@@ -12,6 +12,86 @@ function removeAlertRewritePlacementReviewNotices(root) {
   root.querySelectorAll(PLACEMENT_REVIEW_NOTICE_SELECTOR).forEach((notice) => notice.remove());
 }
 
+// src/app/components/compare/compare-problems/design-components/alerts/alert-heading-hierarchy.utils.ts
+var UTILITY_HEADING_LABELS = /* @__PURE__ */ new Set(["on this page", "sur cette page", "note", "notes", "remarque", "remarques"]);
+function normalizeHeadingLabel(value) {
+  return value.replace(/\s+/g, " ").trim().toLowerCase().replace(/[:：]\s*$/g, "");
+}
+function isAlertHierarchyUtilityHeading(heading) {
+  return UTILITY_HEADING_LABELS.has(normalizeHeadingLabel(heading.textContent || ""));
+}
+function isHeadingRelevantToAlert(heading, alertElement) {
+  if (heading.closest(".alert, .pagedetails"))
+    return false;
+  if (isAlertHierarchyUtilityHeading(heading))
+    return false;
+  const containingPanel = heading.closest(".panel");
+  return !containingPanel || containingPanel.contains(alertElement);
+}
+function getExpectedAlertHeadingTag(alertElement) {
+  let nearestPageHeading = null;
+  const pageHeadings = Array.from(alertElement.ownerDocument.querySelectorAll("h1, h2, h3, h4, h5, h6")).filter((heading) => isHeadingRelevantToAlert(heading, alertElement));
+  for (const heading of pageHeadings) {
+    if (heading.compareDocumentPosition(alertElement) & Node.DOCUMENT_POSITION_FOLLOWING) {
+      nearestPageHeading = heading;
+    }
+  }
+  const parentLevel = Number(nearestPageHeading?.tagName.slice(1)) || 1;
+  return `h${Math.min(parentLevel + 1, 6)}`;
+}
+
+// src/app/components/compare/compare-problems/design-components/alerts/alert-link-structure.utils.ts
+var STANDALONE_LINK_LEAD_IN = /^(?:for details|learn more|learn about(?: the)?|refer to|en savoir plus|pour en savoir plus|consultez|d[e\u00e9]tails)$/;
+function normalizeLinkSupportText(value) {
+  return value.replace(/[\s\u00a0]+/g, " ").replace(/[:;,.!?\s]+$/g, "").trim().toLowerCase();
+}
+function hasHeadingUtilityClass(element) {
+  return Array.from(element.classList).some((className) => /^h[1-6]$/i.test(className));
+}
+function isStructurallyStandaloneLink(anchor) {
+  const block = anchor.closest("p, li");
+  if (!block || block.querySelectorAll("a").length !== 1)
+    return false;
+  const blockWithoutLink = block.cloneNode(true);
+  blockWithoutLink.querySelector("a")?.remove();
+  const remainingText = normalizeLinkSupportText(blockWithoutLink.textContent || "");
+  return !remainingText || STANDALONE_LINK_LEAD_IN.test(remainingText);
+}
+function countStructurallyStandaloneLinks(root) {
+  return Array.from(root.querySelectorAll("a")).filter((anchor) => isStructurallyStandaloneLink(anchor)).length;
+}
+function isLinkOnlyList(element) {
+  if (!element?.matches("ul, ol"))
+    return false;
+  const items = Array.from(element.children).filter((child) => child.matches("li"));
+  return !!items.length && items.every((item) => item.querySelectorAll("a").length === 1 && isStructurallyStandaloneLink(item.querySelector("a")));
+}
+function isLinkSupportParagraph(paragraph) {
+  const anchors = Array.from(paragraph.querySelectorAll("a"));
+  if (anchors.length === 1 && isStructurallyStandaloneLink(anchors[0]))
+    return true;
+  const text = normalizeLinkSupportText(paragraph.textContent || "");
+  return !!text && STANDALONE_LINK_LEAD_IN.test(text) && isLinkOnlyList(paragraph.nextElementSibling);
+}
+function countSentences(value) {
+  return value.match(/[^.!?]+[.!?]?/g)?.map((sentence) => sentence.trim()).filter((sentence) => !!sentence).length ?? 0;
+}
+function getAlertProseMetrics(alertElement) {
+  const paragraphs = Array.from(alertElement.querySelectorAll("p")).filter((paragraph) => !!normalizeLinkSupportText(paragraph.textContent || "") && !hasHeadingUtilityClass(paragraph));
+  const linkSupportParagraphs = paragraphs.filter((paragraph) => isLinkSupportParagraph(paragraph));
+  const linkSupportSet = new Set(linkSupportParagraphs);
+  const substantiveParagraphs = paragraphs.filter((paragraph) => !linkSupportSet.has(paragraph));
+  const substantiveText = substantiveParagraphs.map((paragraph) => (paragraph.textContent || "").replace(/[\s\u00a0]+/g, " ").trim()).join(" ");
+  return {
+    paragraphCount: paragraphs.length,
+    substantiveParagraphCount: substantiveParagraphs.length,
+    linkSupportParagraphCount: linkSupportParagraphs.length,
+    substantiveSentenceCount: countSentences(substantiveText),
+    substantiveTextLengthChars: substantiveText.length,
+    standaloneLinkCount: countStructurallyStandaloneLinks(alertElement)
+  };
+}
+
 // src/app/components/compare/compare-problems/design-components/alerts/alert-reportable.utils.ts
 var HIDDEN_STYLE_RE = /(display\s*:\s*none|visibility\s*:\s*hidden)/i;
 var HIDDEN_CLASS_NAMES = /* @__PURE__ */ new Set(["hidden", "hide", "d-none", "is-hidden", "wb-inv"]);
@@ -121,7 +201,11 @@ var AlertContextService = class _AlertContextService {
       interactiveResultLeadIns: this.getInteractiveResultLeadIns()
     });
     const main = sourceDoc.querySelector("main") ?? sourceDoc.body;
-    const h2Elements = Array.from(main.querySelectorAll("h2")).filter((h2) => !h2.closest(".alert"));
+    const h2Elements = Array.from(main.querySelectorAll("h2")).filter((h2) => {
+      if (h2.closest(".alert, .pagedetails"))
+        return false;
+      return !isAlertHierarchyUtilityHeading(h2);
+    });
     const h2Headings = h2Elements.map((h2) => this.truncateContextText(h2.textContent || "", 120)).filter((value) => !!value).slice(0, 20);
     const mainElements = Array.from(main.querySelectorAll("*"));
     const mainIndexMap = new Map(mainElements.map((el, idx) => [el, idx]));
@@ -177,8 +261,9 @@ var AlertContextService = class _AlertContextService {
   // Builds the per-alert facts that commonly drive issue decisions.
   buildCompactAlertSignals(alertElement, alertIndex, context) {
     const heading = this.getAlertHeadingMetadata(alertElement);
+    const expectedHeadingTag = getExpectedAlertHeadingTag(alertElement);
     const links = this.getAlertLinks(alertElement);
-    const paragraphCount = this.getAlertParagraphCount(alertElement);
+    const proseMetrics = getAlertProseMetrics(alertElement);
     const visibleText = this.truncateContextText(alertElement.textContent || "", 400);
     const flowElement = this.getMainFlowElement(alertElement, context.main);
     const previousSiblingIsAlert = this.containsReportableAlert(flowElement.previousElementSibling, context.alerts);
@@ -190,9 +275,16 @@ var AlertContextService = class _AlertContextService {
       heading_level: heading.level,
       heading_source: heading.source,
       heading_tag: heading.tag,
+      expected_heading_tag: expectedHeadingTag,
+      heading_hierarchy_valid: heading.source === "semantic" && heading.tag === expectedHeadingTag,
       has_heading: heading.source !== "none",
-      paragraph_count: paragraphCount,
-      has_multiple_paragraphs: paragraphCount > 1,
+      paragraph_count: proseMetrics.paragraphCount,
+      has_multiple_paragraphs: proseMetrics.paragraphCount > 1,
+      substantive_paragraph_count: proseMetrics.substantiveParagraphCount,
+      link_support_paragraph_count: proseMetrics.linkSupportParagraphCount,
+      substantive_sentence_count: proseMetrics.substantiveSentenceCount,
+      substantive_text_length_chars: proseMetrics.substantiveTextLengthChars,
+      standalone_link_count: proseMetrics.standaloneLinkCount,
       text_length_chars: visibleText.length,
       link_count: links.length,
       has_multiple_links: links.length > 1,
@@ -401,13 +493,6 @@ var AlertContextService = class _AlertContextService {
   hasHiddenAlertContent(alertElement) {
     return Boolean(alertElement.querySelector('details, [hidden], [aria-hidden="true"], [aria-expanded], .wb-toggle, .collapse, .collapsible, .accordion, [data-toggle]'));
   }
-  // Counts body paragraphs while ignoring utility-class heading wrappers.
-  getAlertParagraphCount(alertElement) {
-    return Array.from(alertElement.querySelectorAll("p")).filter((paragraph) => {
-      const text = this.truncateContextText(paragraph.textContent || "", 80);
-      return !!text && !this.getHeadingUtilityLevel(paragraph);
-    }).length;
-  }
   // Counts the contiguous alert run that contains this alert, including itself.
   getAdjacentAlertClusterSize(flowElement, reportableAlerts) {
     let clusterSize = 1;
@@ -452,9 +537,11 @@ var AlertContextService = class _AlertContextService {
 
 export {
   removeAlertRewritePlacementReviewNotices,
+  getExpectedAlertHeadingTag,
+  countStructurallyStandaloneLinks,
   getReportableAlerts,
   getReportableAlertsFromHtml,
   coerceInteractiveResultLeadIns,
   AlertContextService
 };
-//# sourceMappingURL=chunk-KNTIRVLE.js.map
+//# sourceMappingURL=chunk-PIQRMBF2.js.map

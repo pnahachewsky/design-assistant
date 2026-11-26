@@ -1,12 +1,12 @@
 import {
   AlertContextService
-} from "./chunk-KNTIRVLE.js";
+} from "./chunk-PIQRMBF2.js";
 import {
   AlertRewriteExamples,
   PagePrompts,
   ProblemPrompts,
   SkillPrompts
-} from "./chunk-H2HMG54Z.js";
+} from "./chunk-4L25LKGS.js";
 import {
   require_types
 } from "./chunk-YIFK26D6.js";
@@ -2709,9 +2709,7 @@ ${arrayLines(rules.systemPromptWithExamplesLines)}
         mustHaveHeading:
           ${this.toExampleStringLiteral(rules.retryInstructions.mustHaveHeading)},
         avoidExampleCopy: ${this.toExampleStringLiteral(rules.retryInstructions.avoidExampleCopy)},
-        // This intentionally reinforces permanent link rules on a fresh retry call.
-        // A-B testing showed that suppressing it when noLinksAllowed also applied
-        // caused the regenerated alert to weaken a precise source timing distinction.
+        // Reinforce permanent link-formatting rules when a source link needs a retry.
         fullSentenceLinksNeedLeadIn: [
 ${arrayLines(rules.retryInstructions.fullSentenceLinksNeedLeadIn, "          ")}
         ],
@@ -3782,4 +3780,4 @@ ${rubricEntries}
 export {
   PromptEditorComponent
 };
-//# sourceMappingURL=chunk-JF4M2QKA.js.map
+//# sourceMappingURL=chunk-LRE5FN2J.js.map

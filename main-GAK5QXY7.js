@@ -8250,13 +8250,13 @@ var routes = [
       },
       {
         path: "edit-pages",
-        loadComponent: () => import("./chunk-C4VMZYXK.js").then((m) => m.CompareComponent),
+        loadComponent: () => import("./chunk-CGXIIFI6.js").then((m) => m.CompareComponent),
         title: "editPages._title",
         data: { mode: "ai" }
       },
       {
         path: "compare-pages",
-        loadComponent: () => import("./chunk-C4VMZYXK.js").then((m) => m.CompareComponent),
+        loadComponent: () => import("./chunk-CGXIIFI6.js").then((m) => m.CompareComponent),
         title: "compare._title",
         data: { mode: "compare" }
       },
@@ -8369,12 +8369,12 @@ var routes = [
       },
       {
         path: "prompt-editor",
-        loadComponent: () => import("./chunk-JF4M2QKA.js").then((m) => m.PromptEditorComponent),
+        loadComponent: () => import("./chunk-LRE5FN2J.js").then((m) => m.PromptEditorComponent),
         title: "dev.prompts._title"
       },
       {
         path: "skill-editor",
-        loadComponent: () => import("./chunk-IJR7LUAV.js").then((m) => m.SkillEditorComponent),
+        loadComponent: () => import("./chunk-MFV2QBS3.js").then((m) => m.SkillEditorComponent),
         title: "dev.skills._title"
       }
     ]
@@ -8427,4 +8427,4 @@ var appConfig = {
 
 // src/main.ts
 bootstrapApplication(AppComponent, appConfig).catch((err) => console.error(err));
-//# sourceMappingURL=main-NCI3Q55O.js.map
+//# sourceMappingURL=main-GAK5QXY7.js.map

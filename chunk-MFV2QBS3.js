@@ -4,7 +4,7 @@ import {
   ProblemPrompts,
   getCanadaCaStylePromptRules,
   getLinkWritingPromptRules
-} from "./chunk-H2HMG54Z.js";
+} from "./chunk-4L25LKGS.js";
 import {
   require_types
 } from "./chunk-YIFK26D6.js";
@@ -1733,4 +1733,4 @@ ${updatedPrompts}
 export {
   SkillEditorComponent
 };
-//# sourceMappingURL=chunk-IJR7LUAV.js.map
+//# sourceMappingURL=chunk-MFV2QBS3.js.map
